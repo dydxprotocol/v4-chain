@@ -1,0 +1,3 @@
+[submodule "v4-proto"]
+	path = v4-proto
+	url = git@github.com:dydxprotocol/v4-proto.git
