@@ -1,16 +1,12 @@
 name: Price Daemon Exchange Integration Tests
 on:  # yamllint disable-line rule:truthy
   pull_request:
-    branches:
-      - 'release/v[0-9]+.x'  # e.g. release/v1.x
-      - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/ibctestnet/v1.x
-      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+    paths:
+      - 'protocol/**'
   push:
     branches:
       - main
-      - master
-      - 'release/v[0-9]+.x'  # e.g. release/v1.x
-      - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/ibctestnet/v1.x
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
       - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
 
 concurrency:
@@ -21,6 +17,9 @@ jobs:
   # Runs Price Daemon Exchange Integration Tests
   exchange-tests:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     steps:
       -
         name: Check out repository code

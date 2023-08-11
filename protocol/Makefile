@@ -7,6 +7,7 @@ PROJECT_NAME := $(shell git remote get-url origin | xargs basename -s .git)
 CGO_ENABLED=1
 export GIT_COMMIT_HASH=$(shell git rev-parse --short HEAD)
 export COMMIT=$(shell git rev-parse HEAD)
+export TAG_VERSION=$(shell git describe --tags | sed 's/^v//')
 
 export GO111MODULE = on
 
@@ -349,10 +350,10 @@ proto-download-deps:
 ###############################################################################
 
 localnet-new-validator:
-	@docker run --rm -it $(shell docker build . -t dydxprotocol-base && docker build . -q -f ./testing/util/Dockerfile)
+	@docker run --rm -it $(shell docker build --build-arg VERSION=$(TAG_VERSION) --build-arg COMMIT=$(COMMIT) . -t dydxprotocol-base && docker build . -q -f ./testing/util/Dockerfile)
 
 localnet-build:
-	@docker build . -t dydxprotocol-base --no-cache
+	docker build --build-arg VERSION=$(TAG_VERSION) --build-arg COMMIT=$(COMMIT) . -t dydxprotocol-base --no-cache
 
 localnet-init:
 	rm -rf localnet
