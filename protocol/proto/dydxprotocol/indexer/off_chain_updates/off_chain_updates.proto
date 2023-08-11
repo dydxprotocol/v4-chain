@@ -1,0 +1,126 @@
+syntax = "proto3";
+package dydxprotocol.indexer.off_chain_updates;
+
+import "dydxprotocol/clob/order.proto";
+
+option go_package = "github.com/dydxprotocol/v4/indexer/off_chain_updates";
+
+// OrderPlace messages contain the order placed/replaced.
+message OrderPlace {
+  dydxprotocol.clob.Order order = 1;
+  OrderPlacementStatus placement_status = 2;
+
+  // OrderPlacementStatus is an enum for the resulting status after an order is
+  // placed.
+  enum OrderPlacementStatus {
+    // Default value, this is invalid and unused.
+    ORDER_PLACEMENT_STATUS_UNSPECIFIED = 0;
+    // A best effort opened order is one that has only been confirmed to be
+    // placed on the V4 node sending the off-chain update message.
+    // The cases where this happens includes:
+    // - The V4 node places an order in it's in-memory orderbook during the
+    //   CheckTx flow.
+    // A best effort placed order may not have been placed on other V4
+    // nodes including other V4 validator nodes and may still be excluded in
+    // future order matches.
+    ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED = 1;
+    // An opened order is one that is confirmed to be placed on all V4 nodes
+    // (discounting dishonest V4 nodes) and will be included in any future
+    // order matches.
+    // This status is used internally by the indexer and will not be sent
+    // out by protocol.
+    ORDER_PLACEMENT_STATUS_OPENED = 2;
+  }
+}
+
+// OrderRemove messages contain the id of the order removed, the reason for the
+// removal and the resulting status from the removal.
+message OrderRemove {
+  dydxprotocol.clob.OrderId removed_order_id = 1;
+  OrderRemovalReason reason = 2;
+  OrderRemovalStatus removal_status = 3;
+
+  // TODO(DEC-869): Update reasons/statuses for Advanced Orders.
+
+  // OrderRemovalReason is an enum of all the reasons an order was removed.
+  enum OrderRemovalReason {
+    // Default value, this is invalid and unused.
+    ORDER_REMOVAL_REASON_UNSPECIFIED = 0;
+    // The order was removed due to being expired.
+    ORDER_REMOVAL_REASON_EXPIRED = 1;
+    // The order was removed due to being canceled by a user.
+    ORDER_REMOVAL_REASON_USER_CANCELED = 2;
+    // The order was removed due to being undercollateralized.
+    ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED = 3;
+    // The order caused an internal error during order placement and was
+    // removed.
+    ORDER_REMOVAL_REASON_INTERNAL_ERROR = 4;
+    // The order would have matched against another order placed by the same
+    // subaccount and was removed.
+    ORDER_REMOVAL_REASON_SELF_TRADE_ERROR = 5;
+    // The order would have matched against maker orders on the orderbook
+    // despite being a post-only order and was removed.
+    ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER = 6;
+    // The order was an ICO order and would have been placed on the orderbook as
+    // resting liquidity and was removed.
+    ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK = 7;
+    // The order was a fill-or-kill order that could not be fully filled and was
+    // removed.
+    ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED = 8;
+    // The order was a reduce-only order that was removed due to either:
+    // - being a taker order and fully-filling the order would flip the side of
+    //    the subaccount's position, in this case the remaining size of the
+    //    order is removed
+    // - being a maker order resting on the book and being removed when either
+    //    the subaccount's position is closed or flipped sides
+    ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE = 9;
+    // The order should be expired, according to the Indexer's cached data, but
+    // the Indexer has yet to receive a message to remove the order. In order to
+    // keep the data cached by the Indexer up-to-date and accurate, clear out
+    // the data if it's expired by sending an order removal with this reason.
+    // Protocol should never send this reason to Indexer.
+    ORDER_REMOVAL_REASON_INDEXER_EXPIRED = 10;
+  }
+
+  // OrderRemovalStatus is an enum for the resulting status after an order is
+  // removed.
+  enum OrderRemovalStatus {
+    // Default value, this is invalid and unused.
+    ORDER_REMOVAL_STATUS_UNSPECIFIED = 0;
+    // A best effort canceled order is one that has only been confirmed to be
+    // removed on the V4 node sending the off-chain update message.
+    // The cases where this happens includes:
+    // - the order was removed due to the V4 node receiving a CancelOrder
+    //   transaction for the order.
+    // - the order was removed due to being undercollateralized during
+    //   optimistic matching.
+    // A best effort canceled order may not have been removed on other V4
+    // nodes including other V4 validator nodes and may still be included in
+    // future order matches.
+    ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED = 1;
+    // A canceled order is one that is confirmed to be removed on all V4 nodes
+    // (discounting dishonest V4 nodes) and will not be included in any future
+    // order matches.
+    // The cases where this happens includes:
+    // - the order is expired.
+    ORDER_REMOVAL_STATUS_CANCELED = 2;
+  }
+}
+
+// OrderUpdate messages contain the id of the order being updated, and the
+// updated total filled quantums of the order.
+message OrderUpdate {
+  dydxprotocol.clob.OrderId order_id = 1;
+  uint64 total_filled_quantums = 2;
+}
+
+// An OffChainUpdate message is the message type which will be sent on Kafka to
+// the Indexer.
+message OffChainUpdate {
+  // Contains one of an OrderPlace, OrderRemove, and OrderUpdate message.
+  oneof update_message {
+    OrderPlace order_place = 1;
+    OrderRemove order_remove = 2;
+    OrderUpdate order_update = 3;
+  }
+}

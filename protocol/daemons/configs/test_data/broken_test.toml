@@ -1,0 +1,6 @@
+[[exchanges]
+ExchangeFeedId = 1
+IntervalMs = 2_000
+TimeoutMs = 3_000
+MaxQueries = 3
+MaxBufferSize = 10

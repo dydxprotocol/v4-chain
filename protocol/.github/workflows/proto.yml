@@ -1,0 +1,35 @@
+name: Protobuf
+# Protobuf runs buf (https://buf.build/) lint and check-breakage
+# This workflow is only run when a .proto file has been changed
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - "**.proto"
+jobs:
+  # Verify protos were generated with `make proto-gen`
+  verify-proto-gen:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.11.5
+      options: --user root
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - run: git config --global --add safe.directory /__w/v4/v4
+      - run: make proto-gen-without-container && git diff --exit-code
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - name: lint
+        run: make proto-lint
+
+# Note this isn't working for now as our repository is private.
+# This will matter more once we care about breaking changes.
+#  breakage:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: check-breakage
+#        run: make proto-check-breaking

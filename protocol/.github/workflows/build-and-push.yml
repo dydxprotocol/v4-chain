@@ -1,0 +1,80 @@
+name: Build & Push Image to AWS ECR
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+      - 'v[0-9]+.x'  # e.g. v11.x
+
+jobs:
+  build-and-push-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          aws-region: us-east-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, Tag, and Push the Image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: dev-validator
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --platform amd64 \
+            -t dydxprotocol-base \
+            -f Dockerfile .
+          commit_hash=$(git rev-parse --short=7 HEAD)
+          docker build \
+            --platform amd64 \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
+            -f testing/testnet-dev/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
+
+  build-and-push-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-region: us-east-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, Tag, and Push the Image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: staging-validator
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --platform amd64 \
+            -t dydxprotocol-base \
+            -f Dockerfile .
+          commit_hash=$(git rev-parse --short=7 HEAD)
+          docker build \
+            --platform amd64 \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
+            -f testing/testnet-staging/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags

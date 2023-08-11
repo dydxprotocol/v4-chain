@@ -1,0 +1,190 @@
+syntax = "proto3";
+package dydxprotocol.indexer.events;
+
+import "gogoproto/gogo.proto";
+import "dydxprotocol/clob/order.proto";
+import "dydxprotocol/subaccounts/asset_position.proto";
+import "dydxprotocol/subaccounts/perpetual_position.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
+import "dydxprotocol/perpetuals/tx.proto";
+
+option go_package = "github.com/dydxprotocol/v4/indexer/events";
+
+// FundingEvent message contains a list of per-market funding values. The
+// funding values in the list is of the same type and the types are: which can
+// have one of the following types:
+// 1. Premium vote: votes on the premium values injected by block proposers.
+// 2. Premium sample: combined value from all premium votes during a
+//    `funding-sample` epoch.
+// 3. Funding rate: final funding rate combining all premium samples during
+//    a `funding-tick` epoch.
+message FundingEvent {
+  // values is a list of per-market funding values for all existing perpetual
+  // markets. The list is sorted by `perpetualId`s which are unique.
+  // TODO(DEC-1503): Rename `FundingPremium` to `FundingValue` to reflect
+  // it can represent funding rate as well.
+  repeated dydxprotocol.perpetuals.FundingPremium values = 1
+      [ (gogoproto.nullable) = false ];
+
+  // Type is the type for funding values.
+  enum Type {
+    // Unspecified type.
+    TYPE_UNSPECIFIED = 0;
+    // Premium sample is the combined value from all premium votes during a
+    // `funding-sample` epoch.
+    TYPE_PREMIUM_SAMPLE = 1;
+    // Funding rate is the final funding rate combining all premium samples
+    // during a `funding-tick` epoch.
+    TYPE_FUNDING_RATE = 2;
+    // TODO(DEC-1513): Investigate whether premium vote values need to be
+    // sent to indexer.
+    TYPE_PREMIUM_VOTE = 3;
+  }
+
+  // type stores the type of funding values.
+  Type type = 2;
+}
+
+// MarketEvent message contains all the information about a market event on
+// the V4 chain.
+message MarketEvent {
+  // market id.
+  uint32 market_id = 1;
+
+  // either an event for price update, market creation, or market modification.
+  oneof event {
+    MarketPriceUpdateEvent price_update = 2;
+    MarketCreateEvent market_create = 3;
+    MarketModifyEvent market_modify = 4;
+  }
+}
+
+// MarketPriceUpdateEvent message contains all the information about a price
+// update on the V4 chain.
+message MarketPriceUpdateEvent {
+  // price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
+  // price in dollars. For example if `Exponent == -5` then a `exponent_price`
+  // of `1,000,000,000` represents “$10,000`.
+  uint64 price_with_exponent = 1;
+}
+
+// shared fields between MarketCreateEvent and MarketModifyEvent
+message MarketBaseEvent {
+  // String representation of the market pair, e.g. `BTC-USD`
+  string pair = 1;
+  // The minimum allowable change in the Price value for a given update.
+  // Measured as 1e-6.
+  uint32 min_price_change_ppm = 2;
+}
+
+// MarketCreateEvent message contains all the information about a new market on
+// the V4 chain.
+message MarketCreateEvent {
+  MarketBaseEvent base = 1;
+  // Static value. The exponent of the price.
+  // For example if Exponent == -5 then a `exponent_price` of 1,000,000,000
+  // represents $10,000. Therefore 10 ^ Exponent represents the smallest
+  // price step (in dollars) that can be recorded.
+  sint32 exponent = 2;
+}
+
+// MarketModifyEvent message contains all the information about a market update
+// on the V4 chain
+message MarketModifyEvent { MarketBaseEvent base = 1; }
+
+// TransferEvent message contains all the information about a transfer on
+// the V4 chain. A transfer also produces 2 separate SubaccountUpdateEvent
+// messages, 1 for recipient and 1 for sender, with the updated asset
+// positions.
+message TransferEvent {
+  // The sender subaccount ID.
+  dydxprotocol.subaccounts.SubaccountId sender_subaccount_id = 1
+      [ (gogoproto.nullable) = false ];
+  // The recipient subaccount ID.
+  dydxprotocol.subaccounts.SubaccountId recipient_subaccount_id = 2
+      [ (gogoproto.nullable) = false ];
+  // Id of the asset transfered.
+  uint32 asset_id = 3;
+  // The amount of asset in quantums to transfer.
+  uint64 amount = 4;
+}
+
+// OrderFillEvent message contains all the information from an order match in
+// the V4 chain. This includes the maker/taker orders that matched and the
+// amount filled.
+message OrderFillEvent {
+  dydxprotocol.clob.Order maker_order = 1 [ (gogoproto.nullable) = false ];
+  // The type of order fill this event represents.
+  oneof taker_order {
+    dydxprotocol.clob.Order order = 2;
+    LiquidationOrder liquidation_order = 4;
+  }
+  uint64 fill_amount = 3;
+}
+
+// LiquidationOrder represents the liquidation taker order to be included in a
+// liquidation order fill event.
+message LiquidationOrder {
+  // ID of the subaccount that was liquidated.
+  dydxprotocol.subaccounts.SubaccountId liquidated = 1
+      [ (gogoproto.nullable) = false ];
+  // The ID of the clob pair involved in the liquidation.
+  uint32 clob_pair_id = 2;
+  // The ID of the perpetual involved in the liquidation.
+  uint32 perpetual_id = 3;
+  // The total size of the liquidation order including any unfilled size,
+  // in base quantums.
+  uint64 total_size = 4;
+  // `true` if liquidating a short position, `false` otherwise.
+  bool is_buy = 5;
+  // The fillable price in subticks.
+  // This represents the lower-price-bound for liquidating longs
+  // and the upper-price-bound for liquidating shorts.
+  // Must be a multiple of ClobPair.SubticksPerTick
+  // (where `ClobPair.Id = orderId.ClobPairId`).
+  uint64 subticks = 6;
+}
+
+// SubaccountUpdateEvent message contains information about an update to a
+// subaccount in the V4 chain. This includes the list of updated perpetual
+// and asset positions for the subaccount.
+// Note: This event message will contain all the updates to a subaccount
+// at the end of a block which is why multiple asset/perpetual position
+// updates may exist.
+message SubaccountUpdateEvent {
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1;
+  // deprecated new_quote_balance field
+  reserved 2;
+  // updated_perpetual_positions will each be for unique perpetuals.
+  repeated dydxprotocol.subaccounts.PerpetualPosition
+      updated_perpetual_positions = 3;
+  // updated_asset_positions will each be for unique assets.
+  repeated dydxprotocol.subaccounts.AssetPosition updated_asset_positions = 4;
+}
+
+// StatefulOrderEvent message contains information about a change to a stateful
+// order. Currently, this is either the placement, cancelation, or expiration of
+// a stateful order.
+message StatefulOrderEvent {
+  // The type of event that this StatefulOrderEvent contains.
+  oneof event {
+    StatefulOrderPlacement order_place = 1;
+    StatefulOrderCancelation order_cancel = 2;
+    StatefulOrderExpiration order_expiration = 3;
+  }
+
+  // A stateful order placement contains an order.
+  message StatefulOrderPlacement { dydxprotocol.clob.Order order = 1; }
+
+  // A stateful order cancelation contains the id of an order that was already
+  // placed and is now cancelled.
+  message StatefulOrderCancelation {
+    dydxprotocol.clob.OrderId canceled_order_id = 1;
+  }
+
+  // A stateful order expiration contains the id of an order that was already
+  // placed and is now expired.
+  message StatefulOrderExpiration {
+    dydxprotocol.clob.OrderId expired_order_id = 1;
+  }
+}

@@ -1,0 +1,50 @@
+name: Deploy to Dev Environment
+
+on:  # yamllint disable-line rule:truthy
+  workflow_run:
+    workflows: ["Build & Push Image to AWS ECR"]
+    types:
+      - completed
+
+jobs:
+  deploy-to-dev:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          aws-region: us-east-2
+
+      - name: Get Commit Hash
+        run: echo "git_hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_ENV
+
+      - name: Print Commit Hash
+        run: echo "Git short commit hash is ${{ env.git_hash }}"
+
+      - name: Deploy to dev environment using Orb lambda
+        id: dev-deploy
+        uses: dydxprotocol/invoke-aws-lambda@master
+        with:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          REGION: us-east-2
+          FunctionName: orb_lambda_function
+          Payload: |
+            {
+              "imageTag": "${{ env.git_hash }}",
+              "options": {
+                "job": "deploy-network-service",
+                "serviceName": "v4-node",
+                "postToSlack": true,
+                "username": "Github",
+                "isCi": true
+              }
+            }

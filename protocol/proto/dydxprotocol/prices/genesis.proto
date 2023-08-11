@@ -1,0 +1,14 @@
+syntax = "proto3";
+package dydxprotocol.prices;
+
+import "gogoproto/gogo.proto";
+import "dydxprotocol/prices/market.proto";
+import "dydxprotocol/prices/exchange_feed.proto";
+
+option go_package = "github.com/dydxprotocol/v4/x/prices/types";
+
+// GenesisState defines the prices module's genesis state.
+message GenesisState {
+  repeated ExchangeFeed exchange_feeds = 1 [ (gogoproto.nullable) = false ];
+  repeated Market markets = 2 [ (gogoproto.nullable) = false ];
+}

@@ -1,0 +1,41 @@
+syntax = "proto3";
+package dydxprotocol.prices;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "dydxprotocol/prices/market.proto";
+
+option go_package = "github.com/dydxprotocol/v4/x/prices/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Queries a Market by id.
+  rpc Market(QueryMarketRequest) returns (QueryMarketResponse) {
+    option (google.api.http).get = "/dydxprotocol/prices/market/{id}";
+  }
+
+  // Queries a list of Market items.
+  rpc AllMarkets(QueryAllMarketsRequest) returns (QueryAllMarketsResponse) {
+    option (google.api.http).get = "/dydxprotocol/prices/market";
+  }
+}
+
+// QueryMarketRequest is request type for the Query/Params RPC method.
+message QueryMarketRequest { uint32 id = 1; }
+
+// QueryMarketResponse is response type for the Query/Params RPC method.
+message QueryMarketResponse {
+  Market market = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryAllMarketsRequest is request type for the Query/Params RPC method.
+message QueryAllMarketsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAllMarketsResponse is response type for the Query/Params RPC method.
+message QueryAllMarketsResponse {
+  repeated Market market = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

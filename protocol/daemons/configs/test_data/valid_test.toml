@@ -1,0 +1,5 @@
+[[exchanges]]
+ExchangeFeedId = 0
+IntervalMs = 2_000
+TimeoutMs = 3_000
+MaxQueries = 3

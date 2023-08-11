@@ -1,0 +1,41 @@
+name: Lint
+# Lint runs all linting jobs.
+# This workflow is run on every pull request and push to the `main` / `release` branches.
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - 'v[0-9]+.x'  # e.g. v11.x
+
+jobs:
+  # Validates that the YAML files in the V4 repository are formatted properly.
+  # The `validate-yaml` job will pass without running if no YAML files have been modified.
+  validate-yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          PATTERNS: |
+            .golangci.yml
+            .github/workflows/**.yml  # Note that this will ignore files with the `.yaml` extension.
+            .github/workflows/**.yaml
+            proto/buf.yaml
+            buf.work.yaml
+      - name: Validate config YAML file
+        run: >
+          yamllint .golangci.yml .github/workflows/**.yml proto/buf.yaml
+          buf.work.yaml
+  # Runs golangci-lint over the entire repository.
+  # The `golangci` job will pass without running if no *.{go, mod, sum} files have been modified.
+  golangci:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Run golangci-lint
+        run: make lint
