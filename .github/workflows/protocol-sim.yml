@@ -3,16 +3,12 @@ name: Sims
 # This workflow will run on all pushes to main, if a .go, .mod or .sum file have been changed
 on:  # yamllint disable-line rule:truthy
   pull_request:
-    branches:
-      - 'release/v[0-9]+.x'  # e.g. release/v1.x
-      - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/ibctestnet/v1.x
-      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+    paths:
+      - 'protocol/**'
   push:
     branches:
       - main
-      - master
-      - 'release/v[0-9]+.x'  # e.g. release/v1.x
-      - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/ibctestnet/v1.x
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
       - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
 
 concurrency:
@@ -22,12 +18,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.19
@@ -53,12 +49,12 @@ jobs:
 
   test-sim-nondeterminism:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.19
@@ -103,12 +99,12 @@ jobs:
 
   test-sim-import-export:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.19
@@ -153,12 +149,12 @@ jobs:
 
   test-sim-after-import:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.19
@@ -203,12 +199,12 @@ jobs:
 
   test-sim-multi-seed-short:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.19
