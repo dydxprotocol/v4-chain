@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4/lib/metrics"
 	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
 	"github.com/dydxprotocol/v4/testutil/nullify"
 	"github.com/dydxprotocol/v4/x/epochs/keeper"
@@ -78,12 +79,12 @@ func TestMaybeStartNextEpoch(t *testing.T) {
 			},
 			expectedEvents: []sdk.Event{
 				sdk.NewEvent(
-					types.EventTypeNewEpoch,
-					sdk.NewAttribute(types.AttributeEpochInfoName, keepertest.TestEpochInfoName),
-					sdk.NewAttribute(types.AttributeEpochNumber, "57"),
-					sdk.NewAttribute(types.AttributeEpochStartTickTime, "1800000060"),
-					sdk.NewAttribute(types.AttributeEpochStartBlockTime, "1800000060"),
-					sdk.NewAttribute(types.AttributeEpochStartBlock, "1234"),
+					metrics.EventTypeNewEpoch,
+					sdk.NewAttribute(metrics.EpochInfoName, keepertest.TestEpochInfoName),
+					sdk.NewAttribute(metrics.EpochNumber, "57"),
+					sdk.NewAttribute(metrics.EpochStartTickTime, "1800000060"),
+					sdk.NewAttribute(metrics.EpochStartBlockTime, "1800000060"),
+					sdk.NewAttribute(metrics.EpochStartBlock, "1234"),
 				),
 			},
 		},
@@ -109,12 +110,12 @@ func TestMaybeStartNextEpoch(t *testing.T) {
 			},
 			expectedEvents: []sdk.Event{
 				sdk.NewEvent(
-					types.EventTypeNewEpoch,
-					sdk.NewAttribute(types.AttributeEpochInfoName, keepertest.TestEpochInfoName),
-					sdk.NewAttribute(types.AttributeEpochNumber, "57"),
-					sdk.NewAttribute(types.AttributeEpochStartTickTime, "1800000060"),
-					sdk.NewAttribute(types.AttributeEpochStartBlockTime, "1800006660"),
-					sdk.NewAttribute(types.AttributeEpochStartBlock, "1234"),
+					metrics.EventTypeNewEpoch,
+					sdk.NewAttribute(metrics.EpochInfoName, keepertest.TestEpochInfoName),
+					sdk.NewAttribute(metrics.EpochNumber, "57"),
+					sdk.NewAttribute(metrics.EpochStartTickTime, "1800000060"),
+					sdk.NewAttribute(metrics.EpochStartBlockTime, "1800006660"),
+					sdk.NewAttribute(metrics.EpochStartBlock, "1234"),
 				),
 			},
 		},
@@ -187,12 +188,12 @@ func TestMaybeStartNextEpoch(t *testing.T) {
 			expectNextEpochTicked: true,
 			expectedEvents: []sdk.Event{
 				sdk.NewEvent(
-					types.EventTypeNewEpoch,
-					sdk.NewAttribute(types.AttributeEpochInfoName, keepertest.TestEpochInfoName),
-					sdk.NewAttribute(types.AttributeEpochNumber, "1"),
-					sdk.NewAttribute(types.AttributeEpochStartTickTime, "1800000000"),
-					sdk.NewAttribute(types.AttributeEpochStartBlockTime, "1800000001"),
-					sdk.NewAttribute(types.AttributeEpochStartBlock, "1234"),
+					metrics.EventTypeNewEpoch,
+					sdk.NewAttribute(metrics.EpochInfoName, keepertest.TestEpochInfoName),
+					sdk.NewAttribute(metrics.EpochNumber, "1"),
+					sdk.NewAttribute(metrics.EpochStartTickTime, "1800000000"),
+					sdk.NewAttribute(metrics.EpochStartBlockTime, "1800000001"),
+					sdk.NewAttribute(metrics.EpochStartBlock, "1234"),
 				),
 			},
 		},

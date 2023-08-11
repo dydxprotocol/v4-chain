@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4/indexer/events"
+	"github.com/dydxprotocol/v4/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -23,9 +24,9 @@ func TestNewTransferEvent_Success(t *testing.T) {
 		assetId,
 		amount,
 	)
-	expectedTransferEventProto := &events.TransferEvent{
-		SenderSubaccountId:    senderSubaccountId,
-		RecipientSubaccountId: recipientSubaccountId,
+	expectedTransferEventProto := &events.TransferEventV1{
+		SenderSubaccountId:    v1.SubaccountIdToIndexerSubaccountId(senderSubaccountId),
+		RecipientSubaccountId: v1.SubaccountIdToIndexerSubaccountId(recipientSubaccountId),
 		AssetId:               assetId,
 		Amount:                amount.ToUint64(),
 	}

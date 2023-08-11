@@ -21,16 +21,16 @@ const (
 	# StaticExchangeStartupConfig represents the mapping of exchanges to the parameters for
 	# querying from them.
 	#
-	# ExchangeFeedId - Unique uint32 identifying an exchange.
+	# ExchangeId - Unique string identifying an exchange.
 	#
 	# IntervalMs - Delays between sending API requests to get exchange market prices - cannot be 0.
 	#
 	# TimeoutMs - Max time to wait on an API call to an exchange - cannot be 0.
 	#
 	# MaxQueries - Max api calls to get market prices for an exchange to make in a task-loop -
-	# cannot be 0. For multi-market API exchanges, the behavior will default to 1.{{ range $exchangeFeedId, $element := .}}
+	# cannot be 0. For multi-market API exchanges, the behavior will default to 1.{{ range $exchangeId, $element := .}}
 	[[exchanges]]
-	ExchangeFeedId = {{$element.ExchangeFeedId}}
+	ExchangeId = "{{$element.ExchangeId}}"
 	IntervalMs = {{$element.IntervalMs}}
 	TimeoutMs = {{$element.TimeoutMs}}
 	MaxQueries = {{$element.MaxQueries}}{{end}}
@@ -68,12 +68,12 @@ func WriteDefaultPricefeedExchangeToml(homeDir string) {
 	}
 }
 
-// ReadExchangeStartupConfigFile gets a mapping of `exchangeFeedIds` to `ExchangeStartupConfigs`
+// ReadExchangeStartupConfigFile gets a mapping of `exchangeIds` to `ExchangeStartupConfigs`
 // where `ExchangeStartupConfig` for querying exchanges for market prices comes from parsing a TOML
 // file in the config directory.
 // NOTE: if the config file is not found for the price-daemon, return the static exchange startup
 // config.
-func ReadExchangeStartupConfigFile(homeDir string) map[uint32]*types.ExchangeStartupConfig {
+func ReadExchangeStartupConfigFile(homeDir string) map[types.ExchangeId]*types.ExchangeStartupConfig {
 	// Read file for exchange startup configurations.
 	tomlFile, err := os.ReadFile(getConfigFilePath(homeDir))
 	if err != nil {
@@ -87,7 +87,7 @@ func ReadExchangeStartupConfigFile(homeDir string) map[uint32]*types.ExchangeSta
 	}
 
 	// Populate configs for exchanges.
-	exchangeStartupConfigMap := make(map[uint32]*types.ExchangeStartupConfig, len(exchanges))
+	exchangeStartupConfigMap := make(map[types.ExchangeId]*types.ExchangeStartupConfig, len(exchanges))
 	for _, exchange := range exchanges["exchanges"] {
 		// Zero is an invalid configuration value for all parameters. This could also point to the
 		// configuration file being setup wrong with one or more exchange parameters unset.
@@ -96,18 +96,18 @@ func ReadExchangeStartupConfigFile(homeDir string) map[uint32]*types.ExchangeSta
 			exchange.MaxQueries == 0 {
 			panic(
 				fmt.Errorf(
-					"One or more startup config values are unset or are set to zero for exchange with id: %d",
-					exchange.ExchangeFeedId,
+					"One or more startup config values are unset or are set to zero for exchange with id: '%v'",
+					exchange.ExchangeId,
 				),
 			)
 		}
 
 		// Insert Key-Value pair into `exchangeStartupConfigMap`.
-		exchangeStartupConfigMap[exchange.ExchangeFeedId] = &types.ExchangeStartupConfig{
-			ExchangeFeedId: exchange.ExchangeFeedId,
-			IntervalMs:     exchange.IntervalMs,
-			TimeoutMs:      exchange.TimeoutMs,
-			MaxQueries:     exchange.MaxQueries,
+		exchangeStartupConfigMap[exchange.ExchangeId] = &types.ExchangeStartupConfig{
+			ExchangeId: exchange.ExchangeId,
+			IntervalMs: exchange.IntervalMs,
+			TimeoutMs:  exchange.TimeoutMs,
+			MaxQueries: exchange.MaxQueries,
 		}
 	}
 

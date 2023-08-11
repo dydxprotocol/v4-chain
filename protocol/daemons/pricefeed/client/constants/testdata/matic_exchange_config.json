@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"MATICUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"MATICUSD\""
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"MATIC-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"MATIC_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"maticusdt"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"MATIC-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"MATIC-USDT"
+    }
+  ]
+}

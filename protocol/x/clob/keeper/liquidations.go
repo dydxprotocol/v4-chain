@@ -14,34 +14,36 @@ import (
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
-// MaybeLiquidateSubaccount takes a subaccount ID and attempts to liquidate it. If the subaccount
-// is not currently liquidatable, it will do nothing. This function will return an error if calling
+// MaybeGetLiquidationOrder takes a subaccount ID and returns a liquidation order that can be used to
+// liquidate the subaccount.
+// If the subaccount is not currently liquidatable, it will do nothing. This function will return an error if calling
 // `IsLiquidatable`, `GetPerpetualPositionToLiquidate` or `GetFillablePrice` returns an error.
-func (k Keeper) MaybeLiquidateSubaccount(
+func (k Keeper) MaybeGetLiquidationOrder(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 ) (
+	liquidationOrder *types.LiquidationOrder,
 	err error,
 ) {
 	// If the subaccount is not liquidatable, do nothing.
 	isLiquidatable, err := k.IsLiquidatable(ctx, subaccountId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !isLiquidatable {
 		telemetry.IncrCounter(
 			1,
-			metrics.MaybeLiquidateSubaccount,
+			metrics.MaybeGetLiquidationOrder,
 			metrics.SubaccountsNotLiquidatable,
 			metrics.Count,
 		)
-		return nil
+		return nil, nil
 	}
 
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
 	clobPair, positionSizeBig, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	perpetualId := clobPair.GetPerpetualClobMetadata().PerpetualId
 
@@ -49,7 +51,7 @@ func (k Keeper) MaybeLiquidateSubaccount(
 	deltaQuantumsBig := positionSizeBig.Neg(positionSizeBig)
 	fillablePriceRat, err := k.GetFillablePrice(ctx, subaccountId, perpetualId, deltaQuantumsBig)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	isLiquidatingLong := deltaQuantumsBig.Sign() == -1
 	fillablePriceSubticks := k.ConvertFillablePriceToSubticks(
@@ -59,60 +61,21 @@ func (k Keeper) MaybeLiquidateSubaccount(
 		clobPair,
 	)
 
-	// Create and place the liquidation order.
+	// Create the liquidation order.
 	positionSize := deltaQuantumsBig.Abs(deltaQuantumsBig).Uint64()
-	liquidationOrder := types.NewLiquidationOrder(
+	liquidationOrder = types.NewLiquidationOrder(
 		subaccountId,
 		clobPair,
 		!isLiquidatingLong,
 		satypes.BaseQuantums(positionSize),
 		fillablePriceSubticks,
 	)
-	_, orderStatus, err := k.CheckTxPlacePerpetualLiquidation(ctx, *liquidationOrder)
-	if err != nil {
-		ctx.Logger().Error(
-			fmt.Sprintf(
-				"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
-				*liquidationOrder,
-				err,
-			),
-		)
-		panic(err)
-	}
-
-	if orderStatus == types.LiquidationRequiresDeleveraging {
-		// TODO(DEC-1477): Perform deleveraging by finding offsetting subaccounts and closing positions
-		// at bankruptcy prices.
-		ctx.Logger().Debug(
-			fmt.Sprintf(
-				"Liquidation requires deleveraging. Liquidation Order: (%+v).",
-				*liquidationOrder,
-			),
-		)
-	}
-
-	return nil
+	return liquidationOrder, nil
 }
 
-// DeliverTxPlacePerpetualLiquidation places an IOC liquidation order onto the book that results in fills of type
-// `PerpetualLiquidation`. This method is meant to be used in the DeliverTx consensus flow, where we apply
-// the Liquidation order on a new, specified memclob.
-func (k Keeper) DeliverTxPlacePerpetualLiquidation(
-	ctx sdk.Context,
-	liquidationOrder types.LiquidationOrder,
-	memclob types.MemClob,
-) (
-	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
-	orderStatus types.OrderStatus,
-	err error,
-) {
-	lib.AssertDeliverTxMode(ctx)
-	return k.placePerpetualLiquidation(ctx, liquidationOrder, memclob)
-}
-
-// CheckTxPlacePerpetualLiquidation places an IOC liquidation order onto the book that results in fills of type
-// `PerpetualLiquidation`. This method is meant to be used in the CheckTx flow.
-func (k Keeper) CheckTxPlacePerpetualLiquidation(
+// PlacePerpetualLiquidation places an IOC liquidation order onto the book that results in fills of type
+// `PerpetualLiquidation`.
+func (k Keeper) PlacePerpetualLiquidation(
 	ctx sdk.Context,
 	liquidationOrder types.LiquidationOrder,
 ) (
@@ -121,21 +84,7 @@ func (k Keeper) CheckTxPlacePerpetualLiquidation(
 	err error,
 ) {
 	lib.AssertCheckTxMode(ctx)
-	return k.placePerpetualLiquidation(ctx, liquidationOrder, k.MemClob)
-}
 
-// placePerpetualLiquidation contains shared logic for `CheckTxPlacePerpetualLiquidation` and
-// `DeliverTxPlacePerpetualLiquidation`. It places an IOC liquidation order onto the book that
-// results in fills of type `PerpetualLiquidation`.
-func (k Keeper) placePerpetualLiquidation(
-	ctx sdk.Context,
-	liquidationOrder types.LiquidationOrder,
-	memclob types.MemClob,
-) (
-	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
-	orderStatus types.OrderStatus,
-	err error,
-) {
 	telemetry.IncrCounter(
 		1,
 		metrics.Liquidations,
@@ -147,7 +96,7 @@ func (k Keeper) placePerpetualLiquidation(
 		orderStatus,
 		offchainUpdates,
 		err :=
-		memclob.PlacePerpetualLiquidation(
+		k.MemClob.PlacePerpetualLiquidation(
 			ctx,
 			liquidationOrder,
 		)

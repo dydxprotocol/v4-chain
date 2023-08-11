@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 )
 
 // ProductKeeper represents a generic interface for a keeper
@@ -61,6 +62,7 @@ type PerpetualsKeeper interface {
 		newFundingIndex *big.Int,
 		err error,
 	)
+	GetAllPerpetuals(ctx sdk.Context) []perptypes.Perpetual
 }
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

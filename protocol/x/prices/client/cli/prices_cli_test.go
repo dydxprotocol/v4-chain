@@ -1,9 +1,10 @@
-//go:build integration_test
+//go:build all || integration_test
 
 package cli_test
 
 import (
 	"fmt"
+	"time"
 
 	"path/filepath"
 	"testing"
@@ -12,12 +13,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4/app"
 	"github.com/dydxprotocol/v4/daemons/configs"
-	"github.com/dydxprotocol/v4/daemons/pricefeed"
+	daemonflags "github.com/dydxprotocol/v4/daemons/flags"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client"
 	"github.com/dydxprotocol/v4/testutil/appoptions"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	"github.com/dydxprotocol/v4/testutil/network"
 	epochstypes "github.com/dydxprotocol/v4/x/epochs/types"
+	feetierstypes "github.com/dydxprotocol/v4/x/feetiers/types"
 	"github.com/dydxprotocol/v4/x/prices/client/testutil"
 	"github.com/dydxprotocol/v4/x/prices/types"
 	"github.com/h2non/gock"
@@ -26,6 +28,30 @@ import (
 
 var (
 	genesisState = constants.Prices_MultiExchangeMarketGenesisState
+
+	medianUpdatedMarket1price = uint64(9_001_000_000)
+	medianUpdatedMarket0Price = uint64(10_100_000)
+
+	// expectedPricesWithNoUpdates is the set of genesis prices.
+	expectedPricesWithNoUpdates = map[uint32]uint64{
+		0: genesisState.MarketPrices[0].Price,
+		1: genesisState.MarketPrices[1].Price,
+	}
+
+	// expectedPricesWithPartialUpdate is the expected prices after updating prices with the partial update.
+	expectedPricesWithPartialUpdate = map[uint32]uint64{
+		// No price update; 2 error and 1 valid responses. However, min req for valid exchange prices is 2.
+		0: genesisState.MarketPrices[0].Price,
+		// Valid price update; 1 error and 2 valid responses. Min req for valid exchange prices is 2.
+		// Median of 9_000 and 9_002.
+		1: medianUpdatedMarket1price,
+	}
+
+	// expectedPricesWithFullUpdate is the expected prices after updating all prices.
+	expectedPricesWithFullUpdate = map[uint32]uint64{
+		0: medianUpdatedMarket0Price,
+		1: medianUpdatedMarket1price,
+	}
 )
 
 type PricesIntegrationTestSuite struct {
@@ -60,14 +86,14 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 				panic("incorrect validator type")
 			}
 
-			// Enable the PriceFeed daemon in the integration tests.
-			appOptions.Set(pricefeed.FlagPriceFeedEnabled, true)
+			// Enable the Price daemon in the integration tests.
+			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, true)
 			homeDir := filepath.Join(testval.Dir, "simd")
 			configs.WriteDefaultPricefeedExchangeToml(homeDir) // must manually create config file.
-			appOptions.Set(pricefeed.FlagPriceFeedPriceUpdaterLoopDelayMs, 1000)
+			appOptions.Set(daemonflags.FlagPriceDaemonLoopDelayMs, 1_000)
 
 			// Enable the common gRPC daemon server.
-			appOptions.Set(pricefeed.GrpcAddress, testval.AppConfig.GRPC.Address)
+			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
 		},
 	})
 
@@ -87,6 +113,13 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 	// Ensure that no funding-related epochs will occur during this test.
 	epstate := constants.GenerateEpochGenesisStateWithoutFunding()
 
+	feeTiersState := feetierstypes.GenesisState{}
+	feeTiersState.Params = constants.PerpetualFeeParams
+
+	feeTiersBuf, err := s.cfg.Codec.MarshalJSON(&feeTiersState)
+	s.Require().NoError(err)
+	s.cfg.GenesisState[feetierstypes.ModuleName] = feeTiersBuf
+
 	epbuf, err := s.cfg.Codec.MarshalJSON(&epstate)
 	s.Require().NoError(err)
 	s.cfg.GenesisState[epochstypes.ModuleName] = epbuf
@@ -100,91 +133,86 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 	// `gock` HTTP mocking must be setup before the network starts.
 }
 
-func (s *PricesIntegrationTestSuite) TestCLIPrices_AllErrorResponses_NoPriceUpdate() {
-	// Setup.
-	ts := s.T()
-	testutil.SetupExchangeResponses(ts, testutil.AllErrorResponses, genesisState)
+// expectMarketPricesWithTimeout waits for the specified timeout for the market prices to be updated with the
+// expected values. If the prices are not updated to match the expected prices within the timeout, the test fails.
+func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[uint32]uint64, timeout time.Duration) {
+	start := time.Now()
 
-	// Run.
-	s.network = network.New(ts, s.cfg)
+	for {
+		if time.Since(start) > timeout {
+			s.Require().Fail("timed out waiting for market prices")
+		}
 
-	_, err := s.network.WaitForHeight(5)
-	s.Require().NoError(err)
+		time.Sleep(100 * time.Millisecond)
 
-	// Verify.
-	val := s.network.Validators[0]
-	ctx := val.ClientCtx
-	resp, err := testutil.MsgQueryAllMarketExec(ctx)
-	s.Require().NoError(err)
+		val := s.network.Validators[0]
+		ctx := val.ClientCtx
+		resp, err := testutil.MsgQueryAllMarketPriceExec(ctx)
+		s.Require().NoError(err)
 
-	var allMarketQueryResponse types.QueryAllMarketsResponse
-	s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(resp.Bytes(), &allMarketQueryResponse))
-	s.Require().Len(allMarketQueryResponse.Market, 2)
+		var allMarketPricesQueryResponse types.QueryAllMarketPricesResponse
+		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(resp.Bytes(), &allMarketPricesQueryResponse))
 
-	s.Require().Equal(uint32(0), allMarketQueryResponse.Market[0].Id)
-	s.Require().Equal(uint64(0), allMarketQueryResponse.Market[0].Price)
+		if len(allMarketPricesQueryResponse.MarketPrices) != len(prices) {
+			continue
+		}
 
-	s.Require().Equal(uint32(1), allMarketQueryResponse.Market[1].Id)
-	s.Require().Equal(uint64(0), allMarketQueryResponse.Market[1].Price)
+		// Compare for equality. If prices are not equal, continue waiting.
+		actualPrices := make(map[uint32]uint64, len(allMarketPricesQueryResponse.MarketPrices))
+		for _, actualPrice := range allMarketPricesQueryResponse.MarketPrices {
+			actualPrices[actualPrice.Id] = actualPrice.Price
+		}
+
+		for marketId, expectedPrice := range prices {
+			actualPrice, ok := actualPrices[marketId]
+			if !ok {
+				continue
+			}
+			if actualPrice != expectedPrice {
+				continue
+			}
+		}
+
+		// All prices match - return.
+		return
+	}
 }
 
-func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialValidResponses_PartialPriceUpdate() {
+func (s *PricesIntegrationTestSuite) TestCLIPrices_AllEmptyResponses_NoPriceUpdate() {
 	// Setup.
 	ts := s.T()
-	testutil.SetupExchangeResponses(ts, testutil.MixedResponses, genesisState)
+
+	testutil.SetupExchangeResponses(ts, testutil.EmptyResponses_AllExchanges)
 
 	// Run.
 	s.network = network.New(ts, s.cfg)
 
-	_, err := s.network.WaitForHeight(5)
-	s.Require().NoError(err)
+	// Verify.
+	s.expectMarketPricesWithTimeout(expectedPricesWithNoUpdates, 30*time.Second)
+}
+
+func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPriceUpdate() {
+	// Setup.
+	ts := s.T()
+
+	// Add logging to see what's going on in circleCI.
+	testutil.SetupExchangeResponses(ts, testutil.PartialResponses_AllExchanges_Eth9001)
+
+	// Run.
+	s.network = network.New(ts, s.cfg)
 
 	// Verify.
-	val := s.network.Validators[0]
-	ctx := val.ClientCtx
-	resp, err := testutil.MsgQueryAllMarketExec(ctx)
-	s.Require().NoError(err)
-
-	var allMarketQueryResponse types.QueryAllMarketsResponse
-	s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(resp.Bytes(), &allMarketQueryResponse))
-	s.Require().Len(allMarketQueryResponse.Market, 2)
-
-	s.Require().Equal(uint32(0), allMarketQueryResponse.Market[0].Id)
-	// No price update; 2 error and 1 valid responses. However, min req for valid exchange prices is 2.
-	s.Require().Equal(uint64(0), allMarketQueryResponse.Market[0].Price)
-
-	s.Require().Equal(uint32(1), allMarketQueryResponse.Market[1].Id)
-	// Valid price update; 1 error and 2 valid responses. Min req for valid exchange prices is 2.
-	// Median of 9_000 and 9_002.
-	s.Require().Equal(uint64(9_001_000_000), allMarketQueryResponse.Market[1].Price)
+	s.expectMarketPricesWithTimeout(expectedPricesWithPartialUpdate, 30*time.Second)
 }
 
 func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceUpdate() {
 	// Setup.
 	ts := s.T()
-	testutil.SetupExchangeResponses(ts, testutil.AllValidResponses, genesisState)
+	testutil.SetupExchangeResponses(ts, testutil.FullResponses_AllExchanges_Btc101_Eth9001)
 
 	// Run.
 	s.network = network.New(ts, s.cfg)
 
-	_, err := s.network.WaitForHeight(5)
-	s.Require().NoError(err)
-
 	// Verify.
-	val := s.network.Validators[0]
-	ctx := val.ClientCtx
-	resp, err := testutil.MsgQueryAllMarketExec(ctx)
-	s.Require().NoError(err)
-
-	var allMarketQueryResponse types.QueryAllMarketsResponse
-	s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(resp.Bytes(), &allMarketQueryResponse))
-	s.Require().Len(allMarketQueryResponse.Market, 2)
-
-	s.Require().Equal(uint32(0), allMarketQueryResponse.Market[0].Id)
-	// Median of 100, 101, 102.
-	s.Require().Equal(uint64(10_100_000), allMarketQueryResponse.Market[0].Price)
-
-	s.Require().Equal(uint32(1), allMarketQueryResponse.Market[1].Id)
-	// Median of 9_000, 9_001, 9_002.
-	s.Require().Equal(uint64(9_001_000_000), allMarketQueryResponse.Market[1].Price)
+	s.expectMarketPricesWithTimeout(expectedPricesWithFullUpdate, 30*time.Second)
 }

@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"ATOMUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"ATOMUSD\""
+    },
+    {
+      "exchangeName":"Bybit",
+      "ticker":"ATOMUSDT"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"ATOM-USD"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"atomusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"ATOMUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"ATOM-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"ATOM-USDT"
+    }
+  ]
+}

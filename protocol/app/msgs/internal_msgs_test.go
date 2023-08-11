@@ -61,6 +61,32 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.MsgCancelUpgradeResponse",
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse",
+
+		// blocktime
+		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams",
+		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse",
+
+		// bridge
+		"/dydxprotocol.bridge.MsgCompleteBridge",
+		"/dydxprotocol.bridge.MsgCompleteBridgeResponse",
+		"/dydxprotocol.bridge.MsgUpdateEventParams",
+		"/dydxprotocol.bridge.MsgUpdateEventParamsResponse",
+		"/dydxprotocol.bridge.MsgUpdateProposeParams",
+		"/dydxprotocol.bridge.MsgUpdateProposeParamsResponse",
+		"/dydxprotocol.bridge.MsgUpdateSafetyParams",
+		"/dydxprotocol.bridge.MsgUpdateSafetyParamsResponse",
+
+		// feetiers
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
+
+		// rewards
+		"/dydxprotocol.rewards.MsgUpdateParams",
+		"/dydxprotocol.rewards.MsgUpdateParamsResponse",
+
+		// stats
+		"/dydxprotocol.stats.MsgUpdateParams",
+		"/dydxprotocol.stats.MsgUpdateParamsResponse",
 	}
 
 	require.Equal(t, expectedMsgs, maps.GetSortedKeys(msgs.InternalMsgSamplesGovAuth))

@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"github.com/dydxprotocol/v4/app/flags"
-	"github.com/dydxprotocol/v4/daemons/pricefeed"
+	appflags "github.com/dydxprotocol/v4/app/flags"
+	daemonflags "github.com/dydxprotocol/v4/daemons/flags"
 	"github.com/dydxprotocol/v4/indexer"
+	clobflags "github.com/dydxprotocol/v4/x/clob/flags"
 	"github.com/spf13/cobra"
 )
 
@@ -12,14 +13,16 @@ func GetOptionWithCustomStartCmd() *RootCmdOption {
 	option := newRootCmdOption()
 	f := func(cmd *cobra.Command) {
 		// Add app flags.
-		flags.AddFlagsToCmd(cmd)
+		appflags.AddFlagsToCmd(cmd)
 
-		// Add pricefeed flags.
-		pricefeed.AddSharedPriceFeedFlagsToCmd(cmd)
-		pricefeed.AddClientPriceFeedFlagsToCmd(cmd)
+		// Add daemon flags.
+		daemonflags.AddDaemonFlagsToCmd(cmd)
 
 		// Add indexer flags.
 		indexer.AddIndexerFlagsToCmd(cmd)
+
+		// Add clob flags.
+		clobflags.AddClobFlagsToCmd(cmd)
 	}
 	option.setCustomizeStartCmd(f)
 	return option

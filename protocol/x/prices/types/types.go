@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -8,48 +9,26 @@ type PricesKeeper interface {
 	// Market related.
 	CreateMarket(
 		ctx sdk.Context,
-		pair string,
-		exponent int32,
-		exchanges []uint32,
-		minExchanges uint32,
-		minPriceChangePpm uint32,
-	) (createdMarket Market, err error)
+		param MarketParam,
+		price MarketPrice,
+	) (createdMarketParam MarketParam, err error)
 
-	ModifyMarket(
+	ModifyMarketParam(
 		ctx sdk.Context,
-		id uint32,
-		pair string,
-		exchanges []uint32,
-		minExchanges uint32,
-		minPriceChangePpm uint32,
-	) (updatedMarket Market, err error)
+		param MarketParam,
+	) (updatedMarketParam MarketParam, err error)
 
 	UpdateMarketPrices(
 		ctx sdk.Context,
 		updates []*MsgUpdateMarketPrices_MarketPrice,
-		sendIndexerPriceUpdates bool,
 	) (err error)
 
-	GetMarket(ctx sdk.Context, id uint32) (market Market, err error)
-	GetAllMarkets(ctx sdk.Context) (markets []Market)
+	GetAllMarketParamPrices(ctx sdk.Context) (marketPramPrices []MarketParamPrice, err error)
+	GetMarketParam(ctx sdk.Context, id uint32) (marketParam MarketParam, err error)
+	GetAllMarketParams(ctx sdk.Context) (marketParams []MarketParam)
+	GetMarketPrice(ctx sdk.Context, id uint32) (marketPrice MarketPrice, err error)
+	GetAllMarketPrices(ctx sdk.Context) (marketPrices []MarketPrice)
 	GetNumMarkets(ctx sdk.Context) (numMarkets uint32)
-
-	// Exchange related.
-	CreateExchangeFeed(
-		ctx sdk.Context,
-		name string,
-		memo string,
-	) (createdExchange ExchangeFeed, err error)
-
-	ModifyExchangeFeed(
-		ctx sdk.Context,
-		id uint32,
-		memo string,
-	) (updatedExchange ExchangeFeed, err error)
-
-	GetExchangeFeed(ctx sdk.Context, id uint32) (exchange ExchangeFeed, err error)
-	GetAllExchangeFeeds(ctx sdk.Context) (exchanges []ExchangeFeed)
-	GetNumExchangeFeeds(ctx sdk.Context) (numExchanges uint32)
 
 	// Validation related.
 	PerformStatefulPriceUpdateValidation(
@@ -62,4 +41,7 @@ type PricesKeeper interface {
 	UpdateSmoothedPrices(
 		ctx sdk.Context,
 	) error
+
+	// Misc.
+	Logger(ctx sdk.Context) log.Logger
 }

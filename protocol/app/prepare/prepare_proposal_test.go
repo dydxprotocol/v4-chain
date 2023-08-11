@@ -44,16 +44,6 @@ func TestEmptyResponse(t *testing.T) {
 	require.Equal(t, abci.ResponsePrepareProposal{Txs: [][]byte{}}, prepare.EmptyResponse)
 }
 
-func TestPrepareProposalHandler_Height0_Fails(t *testing.T) {
-	mockContextHelper := mocks.ContextHelper{}
-	mockContextHelper.On("Height", mock.Anything).Return(int64(0))
-	handler := prepare.PrepareProposalHandler(nil, &mockContextHelper, nil, nil, nil)
-	resp := handler(ctx, abci.RequestPrepareProposal{
-		Txs: [][]byte{{1}, {2}, {3}, {4, 5}},
-	})
-	require.Equal(t, [][]byte{}, resp.Txs) // `resp.Txs` is empty regardless of `req.Txs`.
-}
-
 func TestPrepareProposalHandler(t *testing.T) {
 	msgSendTxBytesLen := int64(len(constants.Msg_Send_TxBytes))
 	msgSendAndTransferTxBytesLen := int64(len(constants.Msg_SendAndTransfer_TxBytes))
@@ -267,9 +257,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockContextHelper := mocks.ContextHelper{}
-			mockContextHelper.On("Height", mock.Anything).Return(int64(1))
-
 			mockTxConfig := createMockTxConfig(
 				nil,
 				[]sdktypes.TxEncoder{tc.pricesEncoder, tc.fundingEncoder, tc.clobEncoder},
@@ -291,7 +278,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 			handler := prepare.PrepareProposalHandler(
 				mockTxConfig,
-				&mockContextHelper,
 				&mockClobKeeper,
 				&mockPricesKeeper,
 				&mockPerpKeeper,
@@ -348,9 +334,6 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockContextHelper := mocks.ContextHelper{}
-			mockContextHelper.On("Height", mock.Anything).Return(int64(1))
-
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
 			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(constants.ValidMsgUpdateMarketPrices)
@@ -367,7 +350,6 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 
 			handler := prepare.PrepareProposalHandler(
 				encodingCfg.TxConfig,
-				&mockContextHelper,
 				&mockClobKeeper,
 				&mockPricesKeeper,
 				&mockPerpKeeper,
@@ -545,7 +527,7 @@ func TestGetProposedOperationsTx(t *testing.T) {
 		},
 		"valid message": {
 			keeperResp: &clobtypes.MsgProposedOperations{
-				OperationsQueue: []clobtypes.Operation{{}, {}},
+				OperationsQueue: []clobtypes.OperationRaw{{}, {}},
 			},
 			txEncoder: passingTxEncoderOne,
 

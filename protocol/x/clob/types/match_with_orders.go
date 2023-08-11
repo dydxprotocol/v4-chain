@@ -11,6 +11,8 @@ type MatchWithOrders struct {
 	MakerOrder MatchableOrder
 	TakerOrder MatchableOrder
 	FillAmount satypes.BaseQuantums
+	MakerFee   int64
+	TakerFee   int64
 }
 
 // Validate performs stateless validation on an order match. This validation does

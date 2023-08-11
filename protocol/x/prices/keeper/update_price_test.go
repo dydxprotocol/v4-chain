@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4/lib/metrics"
+	"github.com/dydxprotocol/v4/x/prices/keeper"
 	"testing"
 
 	"github.com/dydxprotocol/v4/daemons/pricefeed/api"
@@ -12,23 +14,25 @@ import (
 
 const (
 	fiveBillionAndFiveMillion         = constants.FiveBillion + constants.FiveMillion
+	fiveBillionAndTenMillion          = constants.FiveBillion + 2*constants.FiveMillion
 	fiveBillionMinusFiveMillionAndOne = constants.FiveBillion - constants.FiveMillion - 1
+
+	testPriceValidUpdate                    = fiveBillionAndFiveMillion
+	testPriceLargeValidUpdate               = fiveBillionAndTenMillion
+	testPriceDoesNotMeetMinPriceChange      = constants.FiveBillion + 2
+	testPriceCrossesOraclePrice             = fiveBillionMinusFiveMillionAndOne
+	testPriceCrossesAndDoesNotMeetMinChange = constants.FiveBillion - 1
 )
 
 var (
-	emptyResult = &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{},
+	testMarketParamPrice = types.MarketParamPrice{
+		Param: constants.TestMarketParams[0], // minPriceChangePpm of 50 - need 5 million to meet min change.
+		Price: constants.TestMarketPrices[0], // Price initialized to 5 billion.
 	}
 
-	validMarket0Update = &api.MarketPriceUpdate{
-		MarketId: constants.MarketId0,
-		ExchangePrices: []*api.ExchangePrice{
-			{
-				ExchangeFeedId: constants.ExchangeFeedId0,
-				Price:          fiveBillionAndFiveMillion,
-				LastUpdateTime: &constants.TimeT,
-			},
-		},
+	// MsgUpdateMarketPrices test constants.
+	emptyResult = &types.MsgUpdateMarketPrices{
+		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{},
 	}
 
 	validMarket0UpdateResult = &types.MsgUpdateMarketPrices{
@@ -37,19 +41,23 @@ var (
 		},
 	}
 
-	validMarket0SmoothedPrices = map[uint32]uint64{
-		constants.MarketId0: fiveBillionAndFiveMillion + 1,
-	}
-
-	invalidMarket0SmoothedPriceTrendsAwayFromIndexPrice = map[uint32]uint64{
-		constants.MarketId0: fiveBillionMinusFiveMillionAndOne,
+	// MarketPriceUpdate test constants.
+	validMarket0Update = &api.MarketPriceUpdate{
+		MarketId: constants.MarketId0,
+		ExchangePrices: []*api.ExchangePrice{
+			{
+				ExchangeId:     constants.ExchangeId0,
+				Price:          fiveBillionAndFiveMillion,
+				LastUpdateTime: &constants.TimeT,
+			},
+		},
 	}
 
 	invalidMarket1PriceIsZeroUpdate = &api.MarketPriceUpdate{
 		MarketId: constants.MarketId1,
 		ExchangePrices: []*api.ExchangePrice{
 			{
-				ExchangeFeedId: constants.ExchangeFeedId1,
+				ExchangeId:     constants.ExchangeId1,
 				Price:          0,
 				LastUpdateTime: &constants.TimeT,
 			},
@@ -60,40 +68,70 @@ var (
 		MarketId: constants.MarketId2,
 		ExchangePrices: []*api.ExchangePrice{
 			{
-				ExchangeFeedId: constants.ExchangeFeedId2,
+				ExchangeId:     constants.ExchangeId2,
 				Price:          constants.FiveBillion + 2, // 5,000,000,002
 				LastUpdateTime: &constants.TimeT,
 			},
 		},
 	}
-	invalidMarket2SmoothedPriceTrendsAwayFromIndexPrice = map[uint32]uint64{
-		constants.MarketId2: constants.FiveBillion - 2,
-	}
-
-	market2SmoothedPriceNotProposed = map[uint32]uint64{
-		constants.MarketId2: constants.FiveBillion + 3,
-	}
-
-	market2SmoothedPriceDoesNotMeetMinChangeUpdate = map[uint32]uint64{
-		constants.MarketId2: constants.FiveBillion + 1,
-	}
 
 	invalidMarket9DoesNotExistUpdate = constants.Market9_SingleExchange_AtTimeUpdate[0]
 
-	invalidMarket9DoesNotExistSmoothedPrice = map[uint32]uint64{
-		constants.MarketId9: 1_000_000,
+	// SmoothedPrice test constants.
+	validMarket0SmoothedPrices = map[uint32][]uint64{
+		constants.MarketId0: {fiveBillionAndFiveMillion + 1},
 	}
-	invalidMarket0SmoothedPriceIsZero = map[uint32]uint64{
-		constants.MarketId0: 0,
+
+	invalidMarket0HistoricalSmoothedPricesCrossesOraclePrice = map[uint32][]uint64{
+		constants.MarketId0: {
+			fiveBillionAndFiveMillion + 1,     // Valid
+			fiveBillionMinusFiveMillionAndOne, // Invalid: crosses oracle price.
+		},
+	}
+
+	invalidMarket0HistoricalSmoothedPricesDoesNotMeetMinPriceChange = map[uint32][]uint64{
+		constants.MarketId0: {
+			fiveBillionAndFiveMillion + 1, // Valid
+			constants.FiveBillion + 1,     // Invalid: does not meet min price change.
+		},
+	}
+
+	invalidMarket2HistoricalSmoothedPricesCrossesOraclePrice = map[uint32][]uint64{
+		constants.MarketId2: {
+			fiveBillionAndFiveMillion + 1,     // Valid
+			fiveBillionMinusFiveMillionAndOne, // Invalid: crosses oracle price.
+		},
+	}
+
+	invalidMarket0SmoothedPriceTrendsAwayFromIndexPrice = map[uint32][]uint64{
+		constants.MarketId0: {fiveBillionMinusFiveMillionAndOne},
+	}
+
+	invalidMarket2SmoothedPriceTrendsAwayFromIndexPrice = map[uint32][]uint64{
+		constants.MarketId2: {constants.FiveBillion - 2},
+	}
+
+	market2SmoothedPriceNotProposed = map[uint32][]uint64{
+		constants.MarketId2: {constants.FiveBillion + 3},
+	}
+
+	market2SmoothedPriceDoesNotMeetMinChangeUpdate = map[uint32][]uint64{
+		constants.MarketId2: {constants.FiveBillion + 1},
+	}
+
+	invalidMarket9DoesNotExistSmoothedPrice = map[uint32][]uint64{
+		constants.MarketId9: {1_000_000},
 	}
 )
 
-// Note: markets and exchanges are created by `CreateTestMarketsAndExchangeFeeds`.
+// Note: markets and exchanges are created by `CreateTestMarketsAndExchanges`.
 func TestGetValidMarketPriceUpdates(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		indexPrices                   []*api.MarketPriceUpdate
-		smoothedIndexPrices           types.MarketToSmoothedPrices
+		indexPrices []*api.MarketPriceUpdate
+		// historicalSmoothedIndexPrice prices for each market are expected to be ordered from most recent to least
+		// recent.
+		historicalSmoothedIndexPrices map[uint32][]uint64
 		skipCreateMarketsAndExchanges bool
 
 		// Expected.
@@ -120,46 +158,56 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			expectedMsg: validMarket0UpdateResult,
 		},
 		"Single result: no overlap between markets for index prices and smoothed prices": {
-			indexPrices:         []*api.MarketPriceUpdate{validMarket0Update},
-			smoothedIndexPrices: invalidMarket9DoesNotExistSmoothedPrice,
-			expectedMsg:         validMarket0UpdateResult,
-		},
-		"Single result: index price used when smoothed price is 0": {
-			indexPrices:         []*api.MarketPriceUpdate{validMarket0Update},
-			smoothedIndexPrices: invalidMarket0SmoothedPriceIsZero,
-			expectedMsg:         validMarket0UpdateResult,
+			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedIndexPrices: invalidMarket9DoesNotExistSmoothedPrice,
+			expectedMsg:                   validMarket0UpdateResult,
 		},
 		"Empty result: propose price is index price, does not meet min price change": {
-			indexPrices:         []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
-			smoothedIndexPrices: market2SmoothedPriceNotProposed,
-			expectedMsg:         emptyResult,
+			indexPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
+			historicalSmoothedIndexPrices: market2SmoothedPriceNotProposed,
+			expectedMsg:                   emptyResult,
 		},
 		"Empty result: propose price is smoothed price, does not meet min price change": {
-			indexPrices:         []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
-			smoothedIndexPrices: market2SmoothedPriceDoesNotMeetMinChangeUpdate,
-			expectedMsg:         emptyResult,
+			indexPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
+			historicalSmoothedIndexPrices: market2SmoothedPriceDoesNotMeetMinChangeUpdate,
+			expectedMsg:                   emptyResult,
+		},
+		"Empty result: propose price is good, but historical smoothed price does not meet min price change": {
+			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedIndexPrices: invalidMarket0HistoricalSmoothedPricesDoesNotMeetMinPriceChange,
+			expectedMsg:                   emptyResult,
+		},
+		"Empty result: propose price is good, but historical smoothed price crosses oracle price": {
+			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedIndexPrices: invalidMarket0HistoricalSmoothedPricesCrossesOraclePrice,
+			expectedMsg:                   emptyResult,
 		},
 		"Empty result: proposed price is smoothed price, meets min change but trends away from index price": {
-			indexPrices:         []*api.MarketPriceUpdate{validMarket0Update},
-			smoothedIndexPrices: invalidMarket0SmoothedPriceTrendsAwayFromIndexPrice,
-			expectedMsg:         emptyResult,
+			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedIndexPrices: invalidMarket0SmoothedPriceTrendsAwayFromIndexPrice,
+			expectedMsg:                   emptyResult,
+		},
+		"Empty result: proposed price does not meet min change and historical smoothed price crosses oracle price": {
+			indexPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
+			historicalSmoothedIndexPrices: invalidMarket2HistoricalSmoothedPricesCrossesOraclePrice,
+			expectedMsg:                   emptyResult,
 		},
 		"Empty result: proposed price does not meet min change and smoothed price is trending away from index price": {
-			indexPrices:         []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
-			smoothedIndexPrices: invalidMarket2SmoothedPriceTrendsAwayFromIndexPrice,
-			expectedMsg:         emptyResult,
+			indexPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
+			historicalSmoothedIndexPrices: invalidMarket2SmoothedPriceTrendsAwayFromIndexPrice,
+			expectedMsg:                   emptyResult,
 		},
 		"Single market price update": {
-			indexPrices:         []*api.MarketPriceUpdate{validMarket0Update},
-			smoothedIndexPrices: validMarket0SmoothedPrices,
-			expectedMsg:         validMarket0UpdateResult,
+			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedIndexPrices: validMarket0SmoothedPrices,
+			expectedMsg:                   validMarket0UpdateResult,
 		},
 		"Multiple market price updates, some from smoothed price and some from index price": {
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			smoothedIndexPrices: map[uint32]uint64{
-				constants.MarketId0: constants.Price4 - 1,
-				constants.MarketId1: constants.Price1 + 1,
-				constants.MarketId2: constants.Price2,
+			historicalSmoothedIndexPrices: map[uint32][]uint64{
+				constants.MarketId0: {constants.Price4 - 1},
+				constants.MarketId1: {constants.Price1 + 1},
+				constants.MarketId2: {constants.Price2},
 			},
 			expectedMsg: &types.MsgUpdateMarketPrices{
 				MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
@@ -176,24 +224,41 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 				invalidMarket2PriceDoesNotMeetMinChangeUpdate, // Price does not meet min price change req.
 				invalidMarket9DoesNotExistUpdate,              // Market with id 9 does not exist.
 			},
-			smoothedIndexPrices: map[uint32]uint64{
-				constants.MarketId0: validMarket0Update.ExchangePrices[0].Price,
-				constants.MarketId1: constants.Price4,
-				constants.MarketId2: constants.Price2,
-				constants.MarketId9: constants.Price4,
+			historicalSmoothedIndexPrices: map[uint32][]uint64{
+				constants.MarketId0: {validMarket0Update.ExchangePrices[0].Price},
+				constants.MarketId1: {constants.Price4},
+				constants.MarketId2: {constants.Price2},
+				constants.MarketId9: {constants.Price4},
 			},
 			expectedMsg: validMarket0UpdateResult,
 		},
 		"Mix of valid, invalid, and missing smoothed prices": {
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			smoothedIndexPrices: map[uint32]uint64{
-				constants.MarketId0: constants.Price4, // Same as index price.
-				constants.MarketId1: 0,                // Invalid price, so index price is used.
-				constants.MarketId9: constants.Price1, // Invalid market.
+			historicalSmoothedIndexPrices: map[uint32][]uint64{
+				constants.MarketId0: {constants.Price4}, // Same as index price.
+				constants.MarketId1: {0},                // Invalid price, so index price is used.
+				constants.MarketId9: {constants.Price1}, // Invalid market.
 			},
 			expectedMsg: &types.MsgUpdateMarketPrices{
 				MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
 					types.NewMarketPriceUpdate(constants.MarketId0, constants.Price4),
+					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
+					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+				},
+			},
+		},
+		"Mix of valid, invalid, and invalid historical smoothed prices": {
+			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
+			historicalSmoothedIndexPrices: map[uint32][]uint64{
+				constants.MarketId0: {
+					constants.Price4,          // Same as index price.
+					fiveBillionAndFiveMillion, // Invalid: crosses oracle price.
+				},
+				constants.MarketId1: {constants.Price1}, // Valid: same as index price.
+				constants.MarketId9: {constants.Price1}, // Invalid market.
+			},
+			expectedMsg: &types.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
 					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
 					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
 				},
@@ -205,12 +270,16 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, marketSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
 			if !tc.skipCreateMarketsAndExchanges {
-				keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
+				keepertest.CreateTestMarkets(t, ctx, k)
 			}
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 
-			for market, smoothedPrice := range tc.smoothedIndexPrices {
-				marketSmoothedPrices[market] = smoothedPrice
+			// Smoothed prices are listed in reverse chronological order for test case constant legibility.
+			// Therefore, add them in reverse order to the `marketSmoothedPrices` cache.
+			for market, historicalSmoothedPrices := range tc.historicalSmoothedIndexPrices {
+				for i := len(historicalSmoothedPrices) - 1; i >= 0; i-- {
+					marketSmoothedPrices.PushSmoothedPrice(market, historicalSmoothedPrices[i])
+				}
 			}
 
 			mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -223,6 +292,216 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			// TODO(DEC-532): validate on either metrics or logging.
 			// Validating metrics might be difficult because it's hard to mock `telemetry`.
 			// Alternatively, we can add mock logging in `ctx`.
+		})
+	}
+}
+
+func TestShouldProposePrice(t *testing.T) {
+	tests := map[string]struct {
+		proposalPrice            uint64
+		indexPrice               uint64
+		historicalSmoothedPrices []uint64
+		expectShouldPropose      bool
+		expectReasons            map[string]bool
+	}{
+		"Should not propose: proposal price is smoothed price, crosses index price": {
+			proposalPrice: testPriceCrossesOraclePrice,
+			indexPrice:    testPriceLargeValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceCrossesOraclePrice,
+				testPriceValidUpdate,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				// These are both true because the proposed price is the most recent smoothed price.
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
+				metrics.ProposedPriceCrossesOraclePrice:              true,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
+			},
+		},
+		"Should not propose: proposal price is smoothed price, does not meet min price change": {
+			proposalPrice: testPriceDoesNotMeetMinPriceChange,
+			indexPrice:    testPriceLargeValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceDoesNotMeetMinPriceChange,
+				testPriceValidUpdate,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				// These are both true because the proposed price is the most recent smoothed price.
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       true,
+			},
+		},
+		"Should not propose: proposal price is index price, does not meet min price change": {
+			proposalPrice: testPriceDoesNotMeetMinPriceChange,
+			indexPrice:    testPriceDoesNotMeetMinPriceChange,
+			historicalSmoothedPrices: []uint64{
+				testPriceLargeValidUpdate,
+				testPriceValidUpdate,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       true,
+			},
+		},
+		"Should not propose: a historical smoothed price crosses index price": {
+			proposalPrice: testPriceValidUpdate,
+			indexPrice:    testPriceValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceValidUpdate,
+				testPriceDoesNotMeetMinPriceChange,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
+			},
+		},
+		"Should not propose: multiple historical smoothed prices cross index price": {
+			proposalPrice: testPriceValidUpdate,
+			indexPrice:    testPriceValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceValidUpdate,
+				testPriceCrossesOraclePrice,
+				testPriceCrossesOraclePrice,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
+			},
+		},
+		"Should not propose: a historical smoothed price does not meet min price change": {
+			proposalPrice: testPriceValidUpdate,
+			indexPrice:    testPriceValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceValidUpdate,
+				testPriceDoesNotMeetMinPriceChange,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
+			},
+		},
+		"Should not propose: multiple historical smoothed prices do not meet min price change": {
+			proposalPrice: testPriceValidUpdate,
+			indexPrice:    testPriceValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceValidUpdate,
+				testPriceDoesNotMeetMinPriceChange,
+				testPriceDoesNotMeetMinPriceChange,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
+			},
+		},
+		"Should not propose: historical smoothed price crosses and does not meet min price change": {
+			proposalPrice: testPriceValidUpdate,
+			indexPrice:    testPriceValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceValidUpdate,
+				testPriceCrossesAndDoesNotMeetMinChange,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
+			},
+		},
+		"Should not propose: proposal price crosses and does not meet min price change": {
+			proposalPrice: testPriceCrossesAndDoesNotMeetMinChange,
+			indexPrice:    testPriceValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceValidUpdate,
+				testPriceLargeValidUpdate,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
+				metrics.ProposedPriceCrossesOraclePrice:              true,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       true,
+			},
+		},
+		"Should not propose: multiple historical smoothed prices issues": {
+			proposalPrice: testPriceValidUpdate,
+			indexPrice:    testPriceValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceValidUpdate,
+				testPriceDoesNotMeetMinPriceChange,
+				testPriceCrossesOraclePrice,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
+			},
+		},
+		"Should not propose: multiple issues": {
+			proposalPrice: testPriceDoesNotMeetMinPriceChange,
+			indexPrice:    testPriceValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceValidUpdate,
+				testPriceDoesNotMeetMinPriceChange,
+				testPriceCrossesOraclePrice,
+			},
+			expectShouldPropose: false,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       true,
+			},
+		},
+		"Should propose": {
+			proposalPrice: testPriceValidUpdate,
+			indexPrice:    testPriceLargeValidUpdate,
+			historicalSmoothedPrices: []uint64{
+				testPriceValidUpdate,
+				testPriceLargeValidUpdate,
+				testPriceValidUpdate,
+			},
+			expectShouldPropose: true,
+			expectReasons: map[string]bool{
+				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
+				metrics.ProposedPriceCrossesOraclePrice:              false,
+				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
+				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualShouldPropose, actualReasons := keeper.ShouldProposePrice(
+				tc.proposalPrice,
+				testMarketParamPrice,
+				tc.indexPrice,
+				tc.historicalSmoothedPrices,
+			)
+			require.Equal(t, tc.expectShouldPropose, actualShouldPropose)
+			require.Equal(t, tc.expectReasons, actualReasons)
 		})
 	}
 }

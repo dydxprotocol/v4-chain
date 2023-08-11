@@ -25,13 +25,11 @@ var _ = strconv.IntSize
 
 func TestClobPairQuerySingle(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx, keeper,
-		pricesKeeper, _, perpetualsKeeper, _, _, _ :=
-		keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-	wctx := sdk.WrapSDKContext(ctx)
-	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
-	perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-	msgs := createNClobPair(keeper, ctx, 2)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	wctx := sdk.WrapSDKContext(ks.Ctx)
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+	msgs := createNClobPair(ks.ClobKeeper, ks.Ctx, 2)
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryGetClobPairRequest
@@ -65,7 +63,7 @@ func TestClobPairQuerySingle(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			response, err := keeper.ClobPair(wctx, tc.request)
+			response, err := ks.ClobKeeper.ClobPair(wctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
@@ -81,13 +79,11 @@ func TestClobPairQuerySingle(t *testing.T) {
 
 func TestClobPairQueryPaginated(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx, keeper,
-		pricesKeeper, _, perpetualsKeeper, _, _, _ :=
-		keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-	wctx := sdk.WrapSDKContext(ctx)
-	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
-	perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-	msgs := createNClobPair(keeper, ctx, 5)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	wctx := sdk.WrapSDKContext(ks.Ctx)
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+	msgs := createNClobPair(ks.ClobKeeper, ks.Ctx, 5)
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllClobPairRequest {
 		return &types.QueryAllClobPairRequest{
@@ -102,7 +98,7 @@ func TestClobPairQueryPaginated(t *testing.T) {
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.ClobPairAll(wctx, request(nil, uint64(i), uint64(step), false))
+			resp, err := ks.ClobKeeper.ClobPairAll(wctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.ClobPair), step)
 			require.Subset(t,
@@ -115,7 +111,7 @@ func TestClobPairQueryPaginated(t *testing.T) {
 		step := 2
 		var next []byte
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.ClobPairAll(wctx, request(next, 0, uint64(step), false))
+			resp, err := ks.ClobKeeper.ClobPairAll(wctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.ClobPair), step)
 			require.Subset(t,
@@ -126,7 +122,7 @@ func TestClobPairQueryPaginated(t *testing.T) {
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
-		resp, err := keeper.ClobPairAll(wctx, request(nil, 0, 0, true))
+		resp, err := ks.ClobKeeper.ClobPairAll(wctx, request(nil, 0, 0, true))
 		require.NoError(t, err)
 		require.Equal(t, len(msgs), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
@@ -135,7 +131,7 @@ func TestClobPairQueryPaginated(t *testing.T) {
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
-		_, err := keeper.ClobPairAll(wctx, nil)
+		_, err := ks.ClobKeeper.ClobPairAll(wctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }

@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"XLMUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"XLMUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tXLMUSD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"XLM-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"XLM_USDT"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"XXLMZUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"XLM-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"XLM-USDT"
+    }
+  ]
+}

@@ -56,6 +56,18 @@ func (o *OrderId) MustBeStatefulOrder() {
 	}
 }
 
+// MustBeConditionalOrder panics if the orderId is not a conditional order, else it does nothing.
+func (o *OrderId) MustBeConditionalOrder() {
+	if !o.IsConditionalOrder() {
+		panic(
+			fmt.Errorf(
+				"MustBeConditionalOrder: called with non-conditional order ID (%+v)",
+				o,
+			),
+		)
+	}
+}
+
 // MustBeShortTermOrder panics if the orderId is not a short term order, else it does nothing.
 func (o *OrderId) MustBeShortTermOrder() {
 	if o.IsStatefulOrder() {

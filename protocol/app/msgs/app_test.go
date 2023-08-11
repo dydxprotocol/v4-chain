@@ -12,148 +12,192 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type testCase struct {
+	name      string
+	msg       sdk.Msg
+	multiMsgs bool
+}
+
+var (
+	appInjectedSingle = testCase{
+		name:      "app-injected, multimsgs=false",
+		msg:       constants.ValidMsgUpdateMarketPrices,
+		multiMsgs: false,
+	}
+	appInjectedMulti = testCase{
+		name:      "app-injected, multimsgs=true",
+		msg:       constants.ValidMsgUpdateMarketPrices,
+		multiMsgs: true,
+	}
+	internalSingle = testCase{
+		name:      "internal, multimsgs=false",
+		msg:       testmsgs.MsgSoftwareUpgrade,
+		multiMsgs: false,
+	}
+	internalMulti = testCase{
+		name:      "internal, multimsgs=true",
+		msg:       testmsgs.MsgSoftwareUpgrade,
+		multiMsgs: true,
+	}
+	nestedSingle = testCase{
+		name:      "nested, multimsgs=false",
+		msg:       testmsgs.MsgSubmitProposalWithAppInjectedInner,
+		multiMsgs: false,
+	}
+	nestedMulti = testCase{
+		name:      "nested, multimsgs=true",
+		msg:       testmsgs.MsgSubmitProposalWithAppInjectedInner,
+		multiMsgs: true,
+	}
+	unsupportedSingle = testCase{
+		name:      "unsupported, multimsgs=false",
+		msg:       testmsgs.GovBetaMsgSubmitProposal,
+		multiMsgs: false,
+	}
+	unsupportedMulti = testCase{
+		name:      "unsupported, multimsgs=true",
+		msg:       testmsgs.GovBetaMsgSubmitProposal,
+		multiMsgs: true,
+	}
+)
+
 func TestDisallowMsgs_CheckTx_Fail(t *testing.T) {
-	tests := map[string]struct {
-		msg       sdk.Msg
-		signTx    bool
-		multiMsgs bool
+	tests := []struct {
+		name   string
+		base   testCase
+		signTx bool
 
 		expectedErrorLog string
 	}{
 		// app-injected
-		"app-injected, signed=false, multimsgs=false": {
-			msg:       constants.ValidMsgUpdateMarketPrices,
-			signTx:    false,
-			multiMsgs: false,
+		{
+			name:   appInjectedSingle.name + ", signed=false",
+			base:   appInjectedSingle,
+			signTx: false,
 
 			expectedErrorLog: "app-injected msg must only be included in DeliverTx: invalid request",
 		},
-		"app-injected, signed=true,  multimsgs=false": {
-			msg:       constants.ValidMsgUpdateMarketPrices,
-			signTx:    true,
-			multiMsgs: false,
+		{
+			name:   appInjectedSingle.name + ", signed=true",
+			base:   appInjectedSingle,
+			signTx: true,
 
 			expectedErrorLog: "app-injected msg must only be included in DeliverTx: invalid request",
 		},
-		"app-injected, signed=false, multimsgs=true": {
-			msg:       constants.ValidMsgUpdateMarketPrices,
-			signTx:    false,
-			multiMsgs: true,
+		{
+			name:   appInjectedMulti.name + ", signed=false",
+			base:   appInjectedMulti,
+			signTx: false,
 
 			expectedErrorLog: "app-injected msg must be the only msg in a tx: invalid request",
 		},
-		"app-injected, signed=true,  multimsgs=true": {
-			msg:       constants.ValidMsgUpdateMarketPrices,
-			signTx:    true,
-			multiMsgs: true,
+		{
+			name:   appInjectedMulti.name + ", signed=true",
+			base:   appInjectedMulti,
+			signTx: true,
 
 			expectedErrorLog: "app-injected msg must be the only msg in a tx: invalid request",
 		},
 
 		// internal
-		"internal, signed=false, multimsgs=false": {
-			msg:       testmsgs.MsgSoftwareUpgrade,
-			signTx:    false,
-			multiMsgs: false,
+		{
+			name:   internalSingle.name + ", signed=false",
+			base:   internalSingle,
+			signTx: false,
 
 			expectedErrorLog: "internal msg cannot be submitted externally: invalid request",
 		},
-		"internal, signed=true,  multimsgs=false": {
-			msg:       testmsgs.MsgSoftwareUpgrade,
-			signTx:    true,
-			multiMsgs: false,
+		{
+			name:   internalSingle.name + ", signed=true",
+			base:   internalSingle,
+			signTx: true,
 
 			expectedErrorLog: "internal msg cannot be submitted externally: invalid request",
 		},
-		"internal, signed=false, multimsgs=true": {
-			msg:       testmsgs.MsgSoftwareUpgrade,
-			signTx:    false,
-			multiMsgs: true,
+		{
+			name:   internalMulti.name + ", signed=false",
+			base:   internalMulti,
+			signTx: false,
 
 			expectedErrorLog: "internal msg cannot be submitted externally: invalid request",
 		},
-		"internal, signed=true,  multimsgs=true": {
-			msg:       testmsgs.MsgSoftwareUpgrade,
-			signTx:    true,
-			multiMsgs: true,
+		{
+			name:   internalMulti.name + ", signed=true",
+			base:   internalMulti,
+			signTx: true,
 
 			expectedErrorLog: "internal msg cannot be submitted externally: invalid request",
 		},
 
 		// nested
-		"nested, signed=false, multimsgs=false": {
-			msg:       testmsgs.MsgSubmitProposalWithAppInjectedInner,
-			signTx:    false,
-			multiMsgs: false,
+		{
+			name:   nestedSingle.name + ", signed=false",
+			base:   nestedSingle,
+			signTx: false,
 
 			expectedErrorLog: "Invalid nested msg: app-injected msg type: invalid request",
 		},
-		"nested, signed=true,  multimsgs=false": {
-			msg:       testmsgs.MsgSubmitProposalWithAppInjectedInner,
-			signTx:    false,
-			multiMsgs: true,
+		{
+			name:   nestedSingle.name + ", signed=true",
+			base:   nestedSingle,
+			signTx: true,
 
 			expectedErrorLog: "Invalid nested msg: app-injected msg type: invalid request",
 		},
-		"nested, signed=false, multimsgs=true": {
-			msg:       testmsgs.MsgSubmitProposalWithAppInjectedInner,
-			signTx:    true,
-			multiMsgs: false,
+		{
+			name:   nestedMulti.name + ", signed=false",
+			base:   nestedMulti,
+			signTx: false,
 
 			expectedErrorLog: "Invalid nested msg: app-injected msg type: invalid request",
 		},
-		"nested, signed=true,  multimsgs=true": {
-			msg:       testmsgs.MsgSubmitProposalWithAppInjectedInner,
-			signTx:    true,
-			multiMsgs: true,
+		{
+			name:   nestedMulti.name + ", signed=true",
+			base:   nestedMulti,
+			signTx: true,
 
 			expectedErrorLog: "Invalid nested msg: app-injected msg type: invalid request",
 		},
 
 		// unsupported
-		"unsupported, signed=false, multimsgs=false": {
-			msg:       testmsgs.GovBetaMsgSubmitProposal,
-			signTx:    false,
-			multiMsgs: false,
+		{
+			name:   unsupportedSingle.name + ", signed=false",
+			base:   unsupportedSingle,
+			signTx: false,
 
 			expectedErrorLog: "unsupported msg: invalid request",
 		},
-		"unsupported, signed=true,  multimsgs=false": {
-			msg:       testmsgs.GovBetaMsgSubmitProposal,
-			signTx:    true,
-			multiMsgs: false,
+		{
+			name:   unsupportedSingle.name + ", signed=true",
+			base:   unsupportedSingle,
+			signTx: true,
 
 			expectedErrorLog: "unsupported msg: invalid request",
 		},
-		"unsupported, signed=false, multimsgs=true": {
-			msg:       testmsgs.GovBetaMsgSubmitProposal,
-			signTx:    false,
-			multiMsgs: true,
+		{
+			name:   unsupportedMulti.name + ", signed=false",
+			base:   unsupportedMulti,
+			signTx: false,
 
 			expectedErrorLog: "unsupported msg: invalid request",
 		},
-		"unsupported, signed=true,  multimsgs=true": {
-			msg:       testmsgs.GovBetaMsgSubmitProposal,
-			signTx:    true,
-			multiMsgs: true,
+		{
+			name:   unsupportedMulti.name + ", signed=true",
+			base:   unsupportedMulti,
+			signTx: true,
 
 			expectedErrorLog: "unsupported msg: invalid request",
 		},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Setup app.
 			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
-			// Note that due to TODO(DEC-1248) the minimum block height is 2.
-			ctx := tApp.AdvanceToBlock(2)
+			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Setup msgs.
-			msgs := make([]sdk.Msg, 0)
-			msgs = append(msgs, tc.msg)
-			if tc.multiMsgs { // append extra msg to the tx
-				msgs = append(msgs, constants.Msg_Send)
-			}
+			msgs := getMsgs(tc.base)
 
 			// Setup reqCheckTx.
 			var reqCheckTx abcitypes.RequestCheckTx
@@ -166,7 +210,7 @@ func TestDisallowMsgs_CheckTx_Fail(t *testing.T) {
 					},
 					msgs...,
 				)
-			} else { // simply encoded the tx without signing the msgs.
+			} else { // simply encode the tx without signing the msgs.
 				txBuilder := tApp.App.TxConfig().NewTxBuilder()
 				err := txBuilder.SetMsgs(msgs...)
 				require.NoError(t, err)
@@ -185,5 +229,137 @@ func TestDisallowMsgs_CheckTx_Fail(t *testing.T) {
 			require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), result.Code)
 			require.Equal(t, tc.expectedErrorLog, result.Log)
 		})
+	}
+}
+
+func TestDisallowMsgs_PrepareProposal_Filter(t *testing.T) {
+	tests := []testCase{
+		// app-injected
+		appInjectedSingle,
+		appInjectedMulti,
+
+		// internal
+		internalSingle,
+		internalMulti,
+
+		// nested
+		nestedSingle,
+		nestedMulti,
+
+		// unsupported
+		unsupportedSingle,
+		unsupportedMulti,
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup app.
+			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			// Setup msg tx.
+			msgs := getMsgs(tc)
+			txBuilder := tApp.App.TxConfig().NewTxBuilder()
+			err := txBuilder.SetMsgs(msgs...)
+			require.NoError(t, err)
+			otherTxsBytes, err := tApp.App.TxConfig().TxEncoder()(txBuilder.GetTx())
+			require.NoError(t, err)
+
+			// Test that PrepareProposal filters out the disallow msgs and ProcessProposal accepts the result.
+			tApp.AdvanceToBlock(
+				3,
+				testapp.AdvanceToBlockOptions{
+					// 1. Override the PrepareProposal txs with test case ones.
+					RequestPrepareProposalTxsOverride: [][]byte{otherTxsBytes},
+
+					// 2. Validate that PrepareProposal would filter out the disallow msgs.
+					ValidateRespPrepare: func(ctx sdk.Context, resp abcitypes.ResponsePrepareProposal) (haltChain bool) {
+						proposalTxs := resp.GetTxs()
+						require.Len(t, proposalTxs, 3)
+						require.Equal(t, constants.ValidEmptyMsgProposedOperationsTxBytes, proposalTxs[0])
+						require.Equal(t, constants.EmptyMsgAddPremiumVotesTxBytes, proposalTxs[1])
+						require.Equal(t, constants.EmptyMsgUpdateMarketPricesTxBytes, proposalTxs[2])
+						return false
+					},
+
+					// 3. Validate that the filtered PrepareProposal txs are accepted during ProcessProposal.
+					ValidateRespProcess: func(ctx sdk.Context, resp abcitypes.ResponseProcessProposal) (haltChain bool) {
+						require.Equal(t, abcitypes.ResponseProcessProposal_ACCEPT, resp.Status)
+						return false
+					},
+				},
+			)
+		})
+	}
+}
+
+func TestDisallowMsgs_ProcessProposal_Fail(t *testing.T) {
+	tests := []testCase{
+		// app-injected
+		appInjectedSingle,
+		appInjectedMulti,
+
+		// internal
+		internalSingle,
+		internalMulti,
+
+		// nested
+		nestedSingle,
+		nestedMulti,
+
+		// unsupported
+		unsupportedSingle,
+		unsupportedMulti,
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup app.
+			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			// Setup msgs.
+			msgs := getMsgs(tc)
+			txBuilder := tApp.App.TxConfig().NewTxBuilder()
+			err := txBuilder.SetMsgs(msgs...)
+			require.NoError(t, err)
+			otherTxsBytes, err := tApp.App.TxConfig().TxEncoder()(txBuilder.GetTx())
+			require.NoError(t, err)
+
+			tApp.AdvanceToBlock(
+				3,
+				testapp.AdvanceToBlockOptions{
+					// 1. Override the ProcessProposal txs with test case ones.
+					RequestProcessProposalTxsOverride: getProposalTxsWithOtherTxs(otherTxsBytes),
+
+					// 2. Test that ProcessProposal rejects when disallow msgs are in `OtherTxs`.
+					ValidateRespProcess: func(ctx sdk.Context, resp abcitypes.ResponseProcessProposal) (haltChain bool) {
+						require.Equal(t, abcitypes.ResponseProcessProposal_REJECT, resp.Status)
+						return true // halt chain.
+					},
+				},
+			)
+		})
+	}
+}
+
+func getMsgs(tc testCase) []sdk.Msg {
+	msgs := make([]sdk.Msg, 0)
+	msgs = append(msgs, tc.msg)
+	if tc.multiMsgs { // append extra msg to the tx
+		msgs = append(msgs, constants.Msg_Send)
+	}
+	return msgs
+}
+
+func getProposalTxsWithOtherTxs(otherTxsToAppend []byte) [][]byte {
+	if otherTxsToAppend == nil {
+		panic("otherTxsToAppend cannot be nil")
+	}
+	return [][]byte{
+		constants.ValidEmptyMsgProposedOperationsTxBytes,
+		otherTxsToAppend,
+		constants.EmptyMsgAddPremiumVotesTxBytes,
+		constants.EmptyMsgUpdateMarketPricesTxBytes,
 	}
 }

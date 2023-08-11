@@ -63,6 +63,21 @@ func TestString(t *testing.T) {
 
 			expectedString: "ReduceOnlyResized",
 		},
+		"Order status is LiquidationRequiresDeleveraging": {
+			orderStatus: types.LiquidationRequiresDeleveraging,
+
+			expectedString: "LiquidationRequiresDeleveraging",
+		},
+		"Order status is LiquidationExceededSubaccountMaxNotionalLiquidated": {
+			orderStatus: types.LiquidationExceededSubaccountMaxNotionalLiquidated,
+
+			expectedString: "LiquidationExceededSubaccountMaxNotionalLiquidated",
+		},
+		"Order status is LiquidationExceededSubaccountMaxInsuranceLost": {
+			orderStatus: types.LiquidationExceededSubaccountMaxInsuranceLost,
+
+			expectedString: "LiquidationExceededSubaccountMaxInsuranceLost",
+		},
 		"Order status is unknown enum value": {
 			orderStatus: 999,
 

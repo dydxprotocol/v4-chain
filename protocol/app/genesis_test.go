@@ -8,7 +8,6 @@ import (
 	"github.com/dydxprotocol/v4/app"
 	"github.com/dydxprotocol/v4/app/basic_manager"
 	"github.com/dydxprotocol/v4/lib/encoding"
-	"github.com/dydxprotocol/v4/testutil/stringutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,5 +20,5 @@ func TestDefaultGenesisState(t *testing.T) {
 
 	require.NoError(t, fileReadErr)
 	require.NoError(t, jsonUnmarshalErr)
-	require.Equal(t, stringutils.StripSpaces(expectedDefaultGenesisState), string(humanReadableDefaultGenesisState))
+	require.JSONEq(t, string(expectedDefaultGenesisState), string(humanReadableDefaultGenesisState))
 }

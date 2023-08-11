@@ -9,6 +9,8 @@ import (
 // InitGenesis initializes the subaccounts module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	k.InitializeForGenesis(ctx)
+
 	// Set all the subaccounts
 	for _, elem := range genState.Subaccounts {
 		k.SetSubaccount(ctx, elem)

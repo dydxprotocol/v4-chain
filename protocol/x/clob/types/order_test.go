@@ -501,7 +501,7 @@ func TestOrder_GetUnixGoodTilBlockTime(t *testing.T) {
 	require.Equal(
 		t,
 		time.Unix(15, 0),
-		constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
+		constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.MustGetUnixGoodTilBlockTime(),
 	)
 }
 

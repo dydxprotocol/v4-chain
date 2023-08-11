@@ -30,23 +30,24 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryMarketRequest is request type for the Query/Params RPC method.
-type QueryMarketRequest struct {
+// QueryMarketPriceRequest is request type for the Query/Params `MarketPrice`
+// RPC method.
+type QueryMarketPriceRequest struct {
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (m *QueryMarketRequest) Reset()         { *m = QueryMarketRequest{} }
-func (m *QueryMarketRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryMarketRequest) ProtoMessage()    {}
-func (*QueryMarketRequest) Descriptor() ([]byte, []int) {
+func (m *QueryMarketPriceRequest) Reset()         { *m = QueryMarketPriceRequest{} }
+func (m *QueryMarketPriceRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryMarketPriceRequest) ProtoMessage()    {}
+func (*QueryMarketPriceRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c306b315383f34f4, []int{0}
 }
-func (m *QueryMarketRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryMarketPriceRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMarketRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryMarketPriceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMarketRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryMarketPriceRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -56,42 +57,43 @@ func (m *QueryMarketRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *QueryMarketRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMarketRequest.Merge(m, src)
+func (m *QueryMarketPriceRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMarketPriceRequest.Merge(m, src)
 }
-func (m *QueryMarketRequest) XXX_Size() int {
+func (m *QueryMarketPriceRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMarketRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMarketRequest.DiscardUnknown(m)
+func (m *QueryMarketPriceRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMarketPriceRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMarketRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryMarketPriceRequest proto.InternalMessageInfo
 
-func (m *QueryMarketRequest) GetId() uint32 {
+func (m *QueryMarketPriceRequest) GetId() uint32 {
 	if m != nil {
 		return m.Id
 	}
 	return 0
 }
 
-// QueryMarketResponse is response type for the Query/Params RPC method.
-type QueryMarketResponse struct {
-	Market Market `protobuf:"bytes,1,opt,name=market,proto3" json:"market"`
+// QueryMarketPriceResponse is response type for the Query/Params `MarketPrice`
+// RPC method.
+type QueryMarketPriceResponse struct {
+	MarketPrice MarketPrice `protobuf:"bytes,1,opt,name=market_price,json=marketPrice,proto3" json:"market_price"`
 }
 
-func (m *QueryMarketResponse) Reset()         { *m = QueryMarketResponse{} }
-func (m *QueryMarketResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryMarketResponse) ProtoMessage()    {}
-func (*QueryMarketResponse) Descriptor() ([]byte, []int) {
+func (m *QueryMarketPriceResponse) Reset()         { *m = QueryMarketPriceResponse{} }
+func (m *QueryMarketPriceResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryMarketPriceResponse) ProtoMessage()    {}
+func (*QueryMarketPriceResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c306b315383f34f4, []int{1}
 }
-func (m *QueryMarketResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryMarketPriceResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMarketResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryMarketPriceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMarketResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryMarketPriceResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -101,42 +103,43 @@ func (m *QueryMarketResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *QueryMarketResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMarketResponse.Merge(m, src)
+func (m *QueryMarketPriceResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMarketPriceResponse.Merge(m, src)
 }
-func (m *QueryMarketResponse) XXX_Size() int {
+func (m *QueryMarketPriceResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMarketResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMarketResponse.DiscardUnknown(m)
+func (m *QueryMarketPriceResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMarketPriceResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMarketResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryMarketPriceResponse proto.InternalMessageInfo
 
-func (m *QueryMarketResponse) GetMarket() Market {
+func (m *QueryMarketPriceResponse) GetMarketPrice() MarketPrice {
 	if m != nil {
-		return m.Market
+		return m.MarketPrice
 	}
-	return Market{}
+	return MarketPrice{}
 }
 
-// QueryAllMarketsRequest is request type for the Query/Params RPC method.
-type QueryAllMarketsRequest struct {
+// QueryAllMarketPricesRequest is request type for the Query/Params
+// `AllMarketPrices` RPC method.
+type QueryAllMarketPricesRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryAllMarketsRequest) Reset()         { *m = QueryAllMarketsRequest{} }
-func (m *QueryAllMarketsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryAllMarketsRequest) ProtoMessage()    {}
-func (*QueryAllMarketsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryAllMarketPricesRequest) Reset()         { *m = QueryAllMarketPricesRequest{} }
+func (m *QueryAllMarketPricesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllMarketPricesRequest) ProtoMessage()    {}
+func (*QueryAllMarketPricesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c306b315383f34f4, []int{2}
 }
-func (m *QueryAllMarketsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllMarketPricesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryAllMarketsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllMarketPricesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryAllMarketsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllMarketPricesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -146,43 +149,44 @@ func (m *QueryAllMarketsRequest) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *QueryAllMarketsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllMarketsRequest.Merge(m, src)
+func (m *QueryAllMarketPricesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllMarketPricesRequest.Merge(m, src)
 }
-func (m *QueryAllMarketsRequest) XXX_Size() int {
+func (m *QueryAllMarketPricesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryAllMarketsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllMarketsRequest.DiscardUnknown(m)
+func (m *QueryAllMarketPricesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllMarketPricesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryAllMarketsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllMarketPricesRequest proto.InternalMessageInfo
 
-func (m *QueryAllMarketsRequest) GetPagination() *query.PageRequest {
+func (m *QueryAllMarketPricesRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryAllMarketsResponse is response type for the Query/Params RPC method.
-type QueryAllMarketsResponse struct {
-	Market     []Market            `protobuf:"bytes,1,rep,name=market,proto3" json:"market"`
-	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+// QueryAllMarketPricesResponse is response type for the Query/Params
+// `AllMarketPrices` RPC method.
+type QueryAllMarketPricesResponse struct {
+	MarketPrices []MarketPrice       `protobuf:"bytes,1,rep,name=market_prices,json=marketPrices,proto3" json:"market_prices"`
+	Pagination   *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryAllMarketsResponse) Reset()         { *m = QueryAllMarketsResponse{} }
-func (m *QueryAllMarketsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryAllMarketsResponse) ProtoMessage()    {}
-func (*QueryAllMarketsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryAllMarketPricesResponse) Reset()         { *m = QueryAllMarketPricesResponse{} }
+func (m *QueryAllMarketPricesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllMarketPricesResponse) ProtoMessage()    {}
+func (*QueryAllMarketPricesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c306b315383f34f4, []int{3}
 }
-func (m *QueryAllMarketsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllMarketPricesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryAllMarketsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllMarketPricesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryAllMarketsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllMarketPricesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -192,26 +196,218 @@ func (m *QueryAllMarketsResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *QueryAllMarketsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllMarketsResponse.Merge(m, src)
+func (m *QueryAllMarketPricesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllMarketPricesResponse.Merge(m, src)
 }
-func (m *QueryAllMarketsResponse) XXX_Size() int {
+func (m *QueryAllMarketPricesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryAllMarketsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllMarketsResponse.DiscardUnknown(m)
+func (m *QueryAllMarketPricesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllMarketPricesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryAllMarketsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllMarketPricesResponse proto.InternalMessageInfo
 
-func (m *QueryAllMarketsResponse) GetMarket() []Market {
+func (m *QueryAllMarketPricesResponse) GetMarketPrices() []MarketPrice {
 	if m != nil {
-		return m.Market
+		return m.MarketPrices
 	}
 	return nil
 }
 
-func (m *QueryAllMarketsResponse) GetPagination() *query.PageResponse {
+func (m *QueryAllMarketPricesResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryMarketParamsRequest is request type for the Query/Params `MarketParams`
+// RPC method.
+type QueryMarketParamRequest struct {
+	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (m *QueryMarketParamRequest) Reset()         { *m = QueryMarketParamRequest{} }
+func (m *QueryMarketParamRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryMarketParamRequest) ProtoMessage()    {}
+func (*QueryMarketParamRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c306b315383f34f4, []int{4}
+}
+func (m *QueryMarketParamRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMarketParamRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMarketParamRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMarketParamRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMarketParamRequest.Merge(m, src)
+}
+func (m *QueryMarketParamRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMarketParamRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMarketParamRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMarketParamRequest proto.InternalMessageInfo
+
+func (m *QueryMarketParamRequest) GetId() uint32 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+// QueryMarketParamResponse is response type for the Query/Params `MarketParams`
+// RPC method.
+type QueryMarketParamResponse struct {
+	MarketParam MarketParam `protobuf:"bytes,1,opt,name=market_param,json=marketParam,proto3" json:"market_param"`
+}
+
+func (m *QueryMarketParamResponse) Reset()         { *m = QueryMarketParamResponse{} }
+func (m *QueryMarketParamResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryMarketParamResponse) ProtoMessage()    {}
+func (*QueryMarketParamResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c306b315383f34f4, []int{5}
+}
+func (m *QueryMarketParamResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMarketParamResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMarketParamResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMarketParamResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMarketParamResponse.Merge(m, src)
+}
+func (m *QueryMarketParamResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMarketParamResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMarketParamResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMarketParamResponse proto.InternalMessageInfo
+
+func (m *QueryMarketParamResponse) GetMarketParam() MarketParam {
+	if m != nil {
+		return m.MarketParam
+	}
+	return MarketParam{}
+}
+
+// QueryAllMarketParamsRequest is request type for the Query/Params
+// `AllMarketParams` RPC method.
+type QueryAllMarketParamsRequest struct {
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAllMarketParamsRequest) Reset()         { *m = QueryAllMarketParamsRequest{} }
+func (m *QueryAllMarketParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllMarketParamsRequest) ProtoMessage()    {}
+func (*QueryAllMarketParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c306b315383f34f4, []int{6}
+}
+func (m *QueryAllMarketParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllMarketParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllMarketParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllMarketParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllMarketParamsRequest.Merge(m, src)
+}
+func (m *QueryAllMarketParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllMarketParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllMarketParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllMarketParamsRequest proto.InternalMessageInfo
+
+func (m *QueryAllMarketParamsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryAllMarketParamsResponse is response type for the Query/Params
+// `AllMarketParams` RPC method.
+type QueryAllMarketParamsResponse struct {
+	MarketParams []MarketParam       `protobuf:"bytes,1,rep,name=market_params,json=marketParams,proto3" json:"market_params"`
+	Pagination   *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAllMarketParamsResponse) Reset()         { *m = QueryAllMarketParamsResponse{} }
+func (m *QueryAllMarketParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllMarketParamsResponse) ProtoMessage()    {}
+func (*QueryAllMarketParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c306b315383f34f4, []int{7}
+}
+func (m *QueryAllMarketParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllMarketParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllMarketParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllMarketParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllMarketParamsResponse.Merge(m, src)
+}
+func (m *QueryAllMarketParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllMarketParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllMarketParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllMarketParamsResponse proto.InternalMessageInfo
+
+func (m *QueryAllMarketParamsResponse) GetMarketParams() []MarketParam {
+	if m != nil {
+		return m.MarketParams
+	}
+	return nil
+}
+
+func (m *QueryAllMarketParamsResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
@@ -219,43 +415,55 @@ func (m *QueryAllMarketsResponse) GetPagination() *query.PageResponse {
 }
 
 func init() {
-	proto.RegisterType((*QueryMarketRequest)(nil), "dydxprotocol.prices.QueryMarketRequest")
-	proto.RegisterType((*QueryMarketResponse)(nil), "dydxprotocol.prices.QueryMarketResponse")
-	proto.RegisterType((*QueryAllMarketsRequest)(nil), "dydxprotocol.prices.QueryAllMarketsRequest")
-	proto.RegisterType((*QueryAllMarketsResponse)(nil), "dydxprotocol.prices.QueryAllMarketsResponse")
+	proto.RegisterType((*QueryMarketPriceRequest)(nil), "dydxprotocol.prices.QueryMarketPriceRequest")
+	proto.RegisterType((*QueryMarketPriceResponse)(nil), "dydxprotocol.prices.QueryMarketPriceResponse")
+	proto.RegisterType((*QueryAllMarketPricesRequest)(nil), "dydxprotocol.prices.QueryAllMarketPricesRequest")
+	proto.RegisterType((*QueryAllMarketPricesResponse)(nil), "dydxprotocol.prices.QueryAllMarketPricesResponse")
+	proto.RegisterType((*QueryMarketParamRequest)(nil), "dydxprotocol.prices.QueryMarketParamRequest")
+	proto.RegisterType((*QueryMarketParamResponse)(nil), "dydxprotocol.prices.QueryMarketParamResponse")
+	proto.RegisterType((*QueryAllMarketParamsRequest)(nil), "dydxprotocol.prices.QueryAllMarketParamsRequest")
+	proto.RegisterType((*QueryAllMarketParamsResponse)(nil), "dydxprotocol.prices.QueryAllMarketParamsResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/prices/query.proto", fileDescriptor_c306b315383f34f4) }
 
 var fileDescriptor_c306b315383f34f4 = []byte{
-	// 420 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0xbf, 0x8f, 0xd3, 0x30,
-	0x1c, 0xc5, 0xe3, 0x00, 0x1d, 0x8c, 0x60, 0x70, 0x11, 0xa0, 0x14, 0xd2, 0x2a, 0x20, 0x5a, 0x7e,
-	0xc8, 0x56, 0x0b, 0x0b, 0x23, 0x45, 0x82, 0x09, 0xa9, 0x64, 0x64, 0xc2, 0x49, 0xac, 0x60, 0x91,
-	0xc6, 0x69, 0xec, 0x56, 0xad, 0x10, 0x0b, 0x12, 0x1b, 0x03, 0x12, 0x33, 0xf7, 0xf7, 0x74, 0xac,
-	0x74, 0xcb, 0x4d, 0xa7, 0x53, 0x7b, 0x7f, 0xc8, 0xa9, 0x76, 0xaa, 0xb6, 0x6a, 0x7a, 0xbd, 0xdb,
-	0x22, 0x7f, 0xdf, 0xf7, 0xbd, 0xcf, 0xb3, 0x03, 0xeb, 0xd1, 0x24, 0x1a, 0x67, 0xb9, 0x50, 0x22,
-	0x14, 0x09, 0xc9, 0x72, 0x1e, 0x32, 0x49, 0x06, 0x43, 0x96, 0x4f, 0xb0, 0x3e, 0x45, 0xd5, 0x4d,
-	0x01, 0x36, 0x02, 0xe7, 0x5e, 0x2c, 0x62, 0xa1, 0x0f, 0xc9, 0xf2, 0xcb, 0x48, 0x9d, 0x47, 0xb1,
-	0x10, 0x71, 0xc2, 0x08, 0xcd, 0x38, 0xa1, 0x69, 0x2a, 0x14, 0x55, 0x5c, 0xa4, 0xb2, 0x98, 0xbe,
-	0x08, 0x85, 0xec, 0x0b, 0x49, 0x02, 0x2a, 0x99, 0x49, 0x20, 0xa3, 0x76, 0xc0, 0x14, 0x6d, 0x93,
-	0x8c, 0xc6, 0x3c, 0xd5, 0xe2, 0x42, 0xdb, 0x28, 0xa3, 0xea, 0xd3, 0xfc, 0x3b, 0x53, 0x46, 0xe1,
-	0x3d, 0x85, 0xe8, 0xf3, 0xd2, 0xe3, 0x93, 0x3e, 0xf4, 0xd9, 0x60, 0xc8, 0xa4, 0x42, 0x77, 0xa1,
-	0xcd, 0xa3, 0x87, 0xa0, 0x01, 0x5a, 0x77, 0x7c, 0x9b, 0x47, 0x5e, 0x0f, 0x56, 0xb7, 0x54, 0x32,
-	0x13, 0xa9, 0x64, 0xe8, 0x2d, 0xac, 0x18, 0x33, 0x2d, 0xbd, 0xdd, 0xa9, 0xe1, 0x92, 0x92, 0xd8,
-	0x2c, 0x75, 0x6f, 0x4e, 0x4f, 0xeb, 0x96, 0x5f, 0x2c, 0x78, 0x5f, 0xe1, 0x7d, 0xed, 0xf8, 0x2e,
-	0x49, 0xcc, 0x5c, 0xae, 0xb2, 0x3f, 0x40, 0xb8, 0xee, 0x51, 0x18, 0x3f, 0xc3, 0xa6, 0x34, 0x5e,
-	0x96, 0xc6, 0xe6, 0x5a, 0x8b, 0xd2, 0xb8, 0x47, 0x63, 0x56, 0xec, 0xfa, 0x1b, 0x9b, 0xde, 0x7f,
-	0x00, 0x1f, 0xec, 0x44, 0x94, 0x80, 0xdf, 0xb8, 0x16, 0x38, 0xfa, 0xb8, 0x85, 0x67, 0x6b, 0xbc,
-	0xe6, 0x41, 0x3c, 0x93, 0xbb, 0xc9, 0xd7, 0x39, 0xb2, 0xe1, 0x2d, 0xcd, 0x87, 0x7e, 0x03, 0x58,
-	0x31, 0x59, 0xa8, 0x59, 0x0a, 0xb2, 0xfb, 0x42, 0x4e, 0xeb, 0xb0, 0xd0, 0x64, 0x7a, 0xad, 0x5f,
-	0xc7, 0xe7, 0xff, 0x6c, 0x0f, 0x35, 0xc8, 0xfe, 0x9f, 0x81, 0xfc, 0xe0, 0xd1, 0x4f, 0xf4, 0x07,
-	0x40, 0xb8, 0xbe, 0x2c, 0xf4, 0x72, 0x7f, 0xc4, 0xce, 0xab, 0x39, 0xaf, 0xae, 0x26, 0x2e, 0x98,
-	0x9e, 0x68, 0xa6, 0xc7, 0xa8, 0x76, 0x09, 0x53, 0xf7, 0xfd, 0x74, 0xee, 0x82, 0xd9, 0xdc, 0x05,
-	0x67, 0x73, 0x17, 0xfc, 0x5d, 0xb8, 0xd6, 0x6c, 0xe1, 0x5a, 0x27, 0x0b, 0xd7, 0xfa, 0xf2, 0x3c,
-	0xe6, 0xea, 0xdb, 0x30, 0xc0, 0xa1, 0xe8, 0x6f, 0x1b, 0x8c, 0xde, 0x90, 0xf1, 0xca, 0x45, 0x4d,
-	0x32, 0x26, 0x83, 0x8a, 0x9e, 0xbd, 0xbe, 0x08, 0x00, 0x00, 0xff, 0xff, 0x61, 0x55, 0xe3, 0x4e,
-	0xa0, 0x03, 0x00, 0x00,
+	// 548 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0x41, 0x6b, 0x13, 0x41,
+	0x14, 0xce, 0xc4, 0xea, 0x61, 0x92, 0x2a, 0x8c, 0x82, 0x21, 0xad, 0xdb, 0x30, 0x4a, 0xdb, 0x14,
+	0x9d, 0x31, 0xd5, 0x3f, 0x60, 0x05, 0x45, 0x44, 0xa8, 0x39, 0x7a, 0x91, 0x49, 0x76, 0x58, 0x17,
+	0x77, 0x77, 0xb6, 0x3b, 0x9b, 0xd2, 0x20, 0x5e, 0xfc, 0x05, 0x82, 0xde, 0xbc, 0xf9, 0x1b, 0xfc,
+	0x11, 0x3d, 0x16, 0xbc, 0x78, 0x12, 0x49, 0xfc, 0x1f, 0xca, 0xcc, 0x6c, 0xe8, 0x6c, 0xb2, 0xb1,
+	0x53, 0x90, 0xde, 0x92, 0xf7, 0xbe, 0x37, 0xef, 0x7b, 0xdf, 0xf7, 0xde, 0xc2, 0x0d, 0x7f, 0xec,
+	0x1f, 0xa5, 0x99, 0xc8, 0xc5, 0x50, 0x44, 0x34, 0xcd, 0xc2, 0x21, 0x97, 0xf4, 0x60, 0xc4, 0xb3,
+	0x31, 0xd1, 0x51, 0x74, 0xdd, 0x06, 0x10, 0x03, 0x68, 0xdf, 0x08, 0x44, 0x20, 0x74, 0x90, 0xaa,
+	0x5f, 0x06, 0xda, 0x5e, 0x0f, 0x84, 0x08, 0x22, 0x4e, 0x59, 0x1a, 0x52, 0x96, 0x24, 0x22, 0x67,
+	0x79, 0x28, 0x12, 0x59, 0x64, 0x77, 0x86, 0x42, 0xc6, 0x42, 0xd2, 0x01, 0x93, 0xdc, 0x74, 0xa0,
+	0x87, 0xbd, 0x01, 0xcf, 0x59, 0x8f, 0xa6, 0x2c, 0x08, 0x13, 0x0d, 0x2e, 0xb0, 0x9b, 0x55, 0xac,
+	0x62, 0x96, 0xbd, 0xe5, 0xf9, 0xeb, 0x94, 0x65, 0x2c, 0x76, 0xc1, 0xa9, 0x7f, 0x06, 0x87, 0xbb,
+	0xf0, 0xe6, 0x4b, 0xd5, 0xf1, 0x85, 0x4e, 0xed, 0xab, 0x4c, 0x9f, 0x1f, 0x8c, 0xb8, 0xcc, 0xd1,
+	0x55, 0x58, 0x0f, 0xfd, 0x16, 0xe8, 0x80, 0xed, 0xd5, 0x7e, 0x3d, 0xf4, 0x31, 0x87, 0xad, 0x45,
+	0xa8, 0x4c, 0x45, 0x22, 0x39, 0x7a, 0x06, 0x9b, 0xf6, 0xe3, 0xba, 0xaa, 0xb1, 0xdb, 0x21, 0x15,
+	0x12, 0x11, 0xab, 0x7e, 0x6f, 0xe5, 0xf8, 0xe7, 0x46, 0xad, 0xdf, 0x88, 0x4f, 0x43, 0x98, 0xc3,
+	0x35, 0xdd, 0xe6, 0x51, 0x14, 0x59, 0x48, 0x39, 0x63, 0xf5, 0x04, 0xc2, 0x53, 0x51, 0x8a, 0x3e,
+	0x9b, 0xc4, 0x28, 0x48, 0x94, 0x82, 0xc4, 0x78, 0x54, 0x28, 0x48, 0xf6, 0x59, 0x30, 0x9b, 0xa8,
+	0x6f, 0x55, 0xe2, 0x6f, 0x00, 0xae, 0x57, 0xf7, 0x29, 0x46, 0x7a, 0x0e, 0x57, 0xed, 0x91, 0x64,
+	0x0b, 0x74, 0x2e, 0x9d, 0x63, 0xa6, 0xa6, 0x35, 0x93, 0x44, 0x4f, 0x4b, 0xac, 0xeb, 0x9a, 0xf5,
+	0xd6, 0x99, 0xac, 0x0d, 0x93, 0x12, 0xed, 0x39, 0xbf, 0x94, 0xe3, 0x8e, 0x7e, 0x19, 0xe8, 0xa2,
+	0x5f, 0x2a, 0xee, 0xe2, 0x97, 0xc2, 0xcd, 0xf9, 0xa5, 0x42, 0x15, 0x7e, 0xa9, 0xf0, 0x45, 0xf8,
+	0x55, 0xf4, 0x59, 0xf4, 0x4b, 0x27, 0x5c, 0xfc, 0xb2, 0x66, 0x6a, 0x5a, 0x33, 0xfd, 0x3f, 0xbf,
+	0x76, 0xff, 0xac, 0xc0, 0xcb, 0x9a, 0x36, 0xfa, 0x0c, 0x60, 0xc3, 0x5a, 0x13, 0x74, 0xb7, 0x92,
+	0xd8, 0x92, 0x63, 0x6c, 0xdf, 0x73, 0x44, 0x1b, 0x0a, 0x78, 0xfb, 0xc3, 0xf7, 0xdf, 0x9f, 0xea,
+	0x18, 0x75, 0xe8, 0xf2, 0xef, 0x00, 0x7d, 0x17, 0xfa, 0xef, 0xd1, 0x17, 0x00, 0xaf, 0xcd, 0x9d,
+	0x00, 0xba, 0xbf, 0xbc, 0x59, 0xf5, 0x55, 0xb6, 0x7b, 0xe7, 0xa8, 0x28, 0x28, 0xde, 0xd6, 0x14,
+	0x6f, 0xa1, 0xb5, 0x7f, 0x50, 0x54, 0xec, 0x1a, 0x96, 0x57, 0x0e, 0xa2, 0x59, 0x17, 0xe1, 0x20,
+	0x9a, 0x7d, 0x14, 0x98, 0x6a, 0x46, 0x5d, 0xb4, 0x55, 0xc9, 0xc8, 0x6c, 0x55, 0x49, 0xbb, 0xaf,
+	0x25, 0xed, 0xcc, 0xe6, 0x38, 0x69, 0x67, 0x5f, 0x88, 0x9b, 0x76, 0xa5, 0x5d, 0xc7, 0x3b, 0x9a,
+	0xe9, 0x1d, 0x84, 0xcf, 0x66, 0xba, 0xf7, 0xf8, 0x78, 0xe2, 0x81, 0x93, 0x89, 0x07, 0x7e, 0x4d,
+	0x3c, 0xf0, 0x71, 0xea, 0xd5, 0x4e, 0xa6, 0x5e, 0xed, 0xc7, 0xd4, 0xab, 0xbd, 0xea, 0x06, 0x61,
+	0xfe, 0x66, 0x34, 0x20, 0x43, 0x11, 0x97, 0xdf, 0x39, 0x7c, 0x48, 0x8f, 0x66, 0x8f, 0xe5, 0xe3,
+	0x94, 0xcb, 0xc1, 0x15, 0x9d, 0x7b, 0xf0, 0x37, 0x00, 0x00, 0xff, 0xff, 0xfe, 0xf9, 0xd5, 0x70,
+	0x15, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -270,10 +478,14 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Queries a Market by id.
-	Market(ctx context.Context, in *QueryMarketRequest, opts ...grpc.CallOption) (*QueryMarketResponse, error)
-	// Queries a list of Market items.
-	AllMarkets(ctx context.Context, in *QueryAllMarketsRequest, opts ...grpc.CallOption) (*QueryAllMarketsResponse, error)
+	// Queries a MarketPrice by id.
+	MarketPrice(ctx context.Context, in *QueryMarketPriceRequest, opts ...grpc.CallOption) (*QueryMarketPriceResponse, error)
+	// Queries a list of MarketPrice items.
+	AllMarketPrices(ctx context.Context, in *QueryAllMarketPricesRequest, opts ...grpc.CallOption) (*QueryAllMarketPricesResponse, error)
+	// Queries a MarketParam by id.
+	MarketParam(ctx context.Context, in *QueryMarketParamRequest, opts ...grpc.CallOption) (*QueryMarketParamResponse, error)
+	// Queries a list of MarketParam items.
+	AllMarketParams(ctx context.Context, in *QueryAllMarketParamsRequest, opts ...grpc.CallOption) (*QueryAllMarketParamsResponse, error)
 }
 
 type queryClient struct {
@@ -284,18 +496,36 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) Market(ctx context.Context, in *QueryMarketRequest, opts ...grpc.CallOption) (*QueryMarketResponse, error) {
-	out := new(QueryMarketResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.prices.Query/Market", in, out, opts...)
+func (c *queryClient) MarketPrice(ctx context.Context, in *QueryMarketPriceRequest, opts ...grpc.CallOption) (*QueryMarketPriceResponse, error) {
+	out := new(QueryMarketPriceResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.prices.Query/MarketPrice", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) AllMarkets(ctx context.Context, in *QueryAllMarketsRequest, opts ...grpc.CallOption) (*QueryAllMarketsResponse, error) {
-	out := new(QueryAllMarketsResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.prices.Query/AllMarkets", in, out, opts...)
+func (c *queryClient) AllMarketPrices(ctx context.Context, in *QueryAllMarketPricesRequest, opts ...grpc.CallOption) (*QueryAllMarketPricesResponse, error) {
+	out := new(QueryAllMarketPricesResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.prices.Query/AllMarketPrices", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) MarketParam(ctx context.Context, in *QueryMarketParamRequest, opts ...grpc.CallOption) (*QueryMarketParamResponse, error) {
+	out := new(QueryMarketParamResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.prices.Query/MarketParam", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllMarketParams(ctx context.Context, in *QueryAllMarketParamsRequest, opts ...grpc.CallOption) (*QueryAllMarketParamsResponse, error) {
+	out := new(QueryAllMarketParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.prices.Query/AllMarketParams", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -304,59 +534,105 @@ func (c *queryClient) AllMarkets(ctx context.Context, in *QueryAllMarketsRequest
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Queries a Market by id.
-	Market(context.Context, *QueryMarketRequest) (*QueryMarketResponse, error)
-	// Queries a list of Market items.
-	AllMarkets(context.Context, *QueryAllMarketsRequest) (*QueryAllMarketsResponse, error)
+	// Queries a MarketPrice by id.
+	MarketPrice(context.Context, *QueryMarketPriceRequest) (*QueryMarketPriceResponse, error)
+	// Queries a list of MarketPrice items.
+	AllMarketPrices(context.Context, *QueryAllMarketPricesRequest) (*QueryAllMarketPricesResponse, error)
+	// Queries a MarketParam by id.
+	MarketParam(context.Context, *QueryMarketParamRequest) (*QueryMarketParamResponse, error)
+	// Queries a list of MarketParam items.
+	AllMarketParams(context.Context, *QueryAllMarketParamsRequest) (*QueryAllMarketParamsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) Market(ctx context.Context, req *QueryMarketRequest) (*QueryMarketResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Market not implemented")
+func (*UnimplementedQueryServer) MarketPrice(ctx context.Context, req *QueryMarketPriceRequest) (*QueryMarketPriceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarketPrice not implemented")
 }
-func (*UnimplementedQueryServer) AllMarkets(ctx context.Context, req *QueryAllMarketsRequest) (*QueryAllMarketsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AllMarkets not implemented")
+func (*UnimplementedQueryServer) AllMarketPrices(ctx context.Context, req *QueryAllMarketPricesRequest) (*QueryAllMarketPricesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllMarketPrices not implemented")
+}
+func (*UnimplementedQueryServer) MarketParam(ctx context.Context, req *QueryMarketParamRequest) (*QueryMarketParamResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarketParam not implemented")
+}
+func (*UnimplementedQueryServer) AllMarketParams(ctx context.Context, req *QueryAllMarketParamsRequest) (*QueryAllMarketParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllMarketParams not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_Market_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryMarketRequest)
+func _Query_MarketPrice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMarketPriceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Market(ctx, in)
+		return srv.(QueryServer).MarketPrice(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.prices.Query/Market",
+		FullMethod: "/dydxprotocol.prices.Query/MarketPrice",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Market(ctx, req.(*QueryMarketRequest))
+		return srv.(QueryServer).MarketPrice(ctx, req.(*QueryMarketPriceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AllMarkets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAllMarketsRequest)
+func _Query_AllMarketPrices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllMarketPricesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).AllMarkets(ctx, in)
+		return srv.(QueryServer).AllMarketPrices(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.prices.Query/AllMarkets",
+		FullMethod: "/dydxprotocol.prices.Query/AllMarketPrices",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).AllMarkets(ctx, req.(*QueryAllMarketsRequest))
+		return srv.(QueryServer).AllMarketPrices(ctx, req.(*QueryAllMarketPricesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_MarketParam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMarketParamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MarketParam(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.prices.Query/MarketParam",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MarketParam(ctx, req.(*QueryMarketParamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllMarketParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllMarketParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllMarketParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.prices.Query/AllMarketParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllMarketParams(ctx, req.(*QueryAllMarketParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -366,19 +642,27 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Market",
-			Handler:    _Query_Market_Handler,
+			MethodName: "MarketPrice",
+			Handler:    _Query_MarketPrice_Handler,
 		},
 		{
-			MethodName: "AllMarkets",
-			Handler:    _Query_AllMarkets_Handler,
+			MethodName: "AllMarketPrices",
+			Handler:    _Query_AllMarketPrices_Handler,
+		},
+		{
+			MethodName: "MarketParam",
+			Handler:    _Query_MarketParam_Handler,
+		},
+		{
+			MethodName: "AllMarketParams",
+			Handler:    _Query_AllMarketParams_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "dydxprotocol/prices/query.proto",
 }
 
-func (m *QueryMarketRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryMarketPriceRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -388,12 +672,12 @@ func (m *QueryMarketRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMarketRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryMarketPriceRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMarketRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryMarketPriceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -406,7 +690,7 @@ func (m *QueryMarketRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryMarketResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryMarketPriceResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -416,18 +700,18 @@ func (m *QueryMarketResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMarketResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryMarketPriceResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMarketResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryMarketPriceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size, err := m.Market.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.MarketPrice.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -439,7 +723,7 @@ func (m *QueryMarketResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryAllMarketsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllMarketPricesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -449,12 +733,12 @@ func (m *QueryAllMarketsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryAllMarketsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllMarketPricesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryAllMarketsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllMarketPricesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -474,7 +758,7 @@ func (m *QueryAllMarketsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryAllMarketsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllMarketPricesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -484,12 +768,12 @@ func (m *QueryAllMarketsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryAllMarketsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllMarketPricesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryAllMarketsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllMarketPricesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -506,10 +790,155 @@ func (m *QueryAllMarketsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Market) > 0 {
-		for iNdEx := len(m.Market) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.MarketPrices) > 0 {
+		for iNdEx := len(m.MarketPrices) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Market[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.MarketPrices[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryMarketParamRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMarketParamRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMarketParamRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Id != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryMarketParamResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMarketParamResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMarketParamResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.MarketParam.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllMarketParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllMarketParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllMarketParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllMarketParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllMarketParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllMarketParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.MarketParams) > 0 {
+		for iNdEx := len(m.MarketParams) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MarketParams[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -534,7 +963,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryMarketRequest) Size() (n int) {
+func (m *QueryMarketPriceRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -546,18 +975,18 @@ func (m *QueryMarketRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryMarketResponse) Size() (n int) {
+func (m *QueryMarketPriceResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.Market.Size()
+	l = m.MarketPrice.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
-func (m *QueryAllMarketsRequest) Size() (n int) {
+func (m *QueryAllMarketPricesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -570,14 +999,69 @@ func (m *QueryAllMarketsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryAllMarketsResponse) Size() (n int) {
+func (m *QueryAllMarketPricesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.Market) > 0 {
-		for _, e := range m.Market {
+	if len(m.MarketPrices) > 0 {
+		for _, e := range m.MarketPrices {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryMarketParamRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovQuery(uint64(m.Id))
+	}
+	return n
+}
+
+func (m *QueryMarketParamResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.MarketParam.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryAllMarketParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAllMarketParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.MarketParams) > 0 {
+		for _, e := range m.MarketParams {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -595,7 +1079,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryMarketRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryMarketPriceRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -618,10 +1102,10 @@ func (m *QueryMarketRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMarketRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryMarketPriceRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMarketRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryMarketPriceRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -664,7 +1148,7 @@ func (m *QueryMarketRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryMarketResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryMarketPriceResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -687,15 +1171,15 @@ func (m *QueryMarketResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMarketResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryMarketPriceResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMarketResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryMarketPriceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Market", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketPrice", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -722,7 +1206,7 @@ func (m *QueryMarketResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Market.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.MarketPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -747,7 +1231,7 @@ func (m *QueryMarketResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryAllMarketsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryAllMarketPricesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -770,10 +1254,10 @@ func (m *QueryAllMarketsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllMarketsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllMarketPricesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllMarketsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllMarketPricesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -833,7 +1317,7 @@ func (m *QueryAllMarketsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryAllMarketsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryAllMarketPricesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -856,15 +1340,15 @@ func (m *QueryAllMarketsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllMarketsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllMarketPricesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllMarketsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllMarketPricesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Market", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketPrices", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -891,8 +1375,366 @@ func (m *QueryAllMarketsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Market = append(m.Market, Market{})
-			if err := m.Market[len(m.Market)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.MarketPrices = append(m.MarketPrices, MarketPrice{})
+			if err := m.MarketPrices[len(m.MarketPrices)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMarketParamRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMarketParamRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMarketParamRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMarketParamResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMarketParamResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMarketParamResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketParam", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MarketParam.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllMarketParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllMarketParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllMarketParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllMarketParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllMarketParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllMarketParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketParams", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MarketParams = append(m.MarketParams, MarketParam{})
+			if err := m.MarketParams[len(m.MarketParams)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

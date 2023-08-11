@@ -79,6 +79,11 @@ var (
 		15,
 		"Premium vote clamp factor ppm is zero",
 	)
+	ErrImpactNotionalIsZero = sdkerrors.Register(
+		ModuleName,
+		16,
+		"Impact notional is zero",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding      = sdkerrors.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

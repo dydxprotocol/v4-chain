@@ -148,6 +148,11 @@ var (
 		30,
 		"An order with the same `OrderId` and `OrderHash` has already been processed for this CLOB",
 	)
+	ErrMissingMidPrice = sdkerrors.Register(
+		ModuleName,
+		31,
+		"Missing mid price for ClobPair",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(
@@ -250,10 +255,10 @@ var (
 		1019,
 		"Deleveraging match cannot have fills with zero amount",
 	)
-	ErrPositionCannotBeFullyDeleveraged = sdkerrors.Register(
+	ErrPositionCannotBeFullyOffset = sdkerrors.Register(
 		ModuleName,
 		1020,
-		"Position cannot be fully deleveraged",
+		"Position cannot be fully offset",
 	)
 
 	// Advanced order type errors.
@@ -289,10 +294,10 @@ var (
 		3001,
 		"Invalid order goodTilBlockTime",
 	)
-	ErrLongTermOrdersCannotRequireImmediateExecution = sdkerrors.Register(
+	ErrStatefulOrdersCannotRequireImmediateExecution = sdkerrors.Register(
 		ModuleName,
 		3002,
-		"Long-term orders cannot require immediate execution",
+		"Stateful orders cannot require immediate execution",
 	)
 	ErrTimeExceedsGoodTilBlockTime = sdkerrors.Register(
 		ModuleName,
@@ -313,6 +318,16 @@ var (
 		ModuleName,
 		3006,
 		"Stateful order does not exist",
+	)
+	ErrStatefulOrderCollateralizationCheckFailed = sdkerrors.Register(
+		ModuleName,
+		3007,
+		"Stateful order collateralization check failed",
+	)
+	ErrStatefulOrderPreviouslyCancelled = sdkerrors.Register(
+		ModuleName,
+		3008,
+		"Stateful order was previously cancelled and therefore cannot be placed",
 	)
 
 	// Operations Queue validation errors
@@ -336,10 +351,27 @@ var (
 		4003,
 		"Fill amount cannot be zero",
 	)
-	ErrOperationsQueueValidationFailure = sdkerrors.Register(
+	ErrInvalidDeleveragingFills = sdkerrors.Register(
 		ModuleName,
 		4004,
-		"Operations queue validation failed",
+		"Generated deleveraging fills do not match operations queue deleveraging fills",
+	)
+	ErrDeleveragedSubaccountNotLiquidatable = sdkerrors.Register(
+		ModuleName,
+		4005,
+		"Deleveraged subaccount in proposed match operation is not liquidatable",
+	)
+
+	// Block rate limit errors.
+	ErrInvalidBlockRateLimitConfig = sdkerrors.Register(
+		ModuleName,
+		5000,
+		"Proposed BlockRateLimitConfig is invalid",
+	)
+	ErrBlockRateLimitExceeded = sdkerrors.Register(
+		ModuleName,
+		5001,
+		"Block rate limit exceeded",
 	)
 
 	// Errors for unimplemented and disabled functionality.

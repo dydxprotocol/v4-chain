@@ -26,7 +26,6 @@ func (k Keeper) GetProcessProposerMatchesEvents(ctx sdk.Context) types.ProcessPr
 
 // MustSetProcessProposerMatchesEvents sets the process proposer matches events from the latest block.
 // This function panics if:
-//   - `placedStatefulOrders` or `expiredStatefulOrderIds` contains duplicates or references non stateful orders.
 //   - the current block height does not match the block height of the ProcessProposerMatchesEvents
 //   - called outside of deliver TX mode
 //
@@ -45,6 +44,22 @@ func (k Keeper) MustSetProcessProposerMatchesEvents(
 	memStore := ctx.KVStore(k.memKey)
 
 	// Write `processProposerMatchesEvents` to the `memStore`.
+	memStore.Set(
+		[]byte(types.ProcessProposerMatchesEventsKey),
+		k.cdc.MustMarshal(&processProposerMatchesEvents),
+	)
+}
+
+// InitializeProcessProposerMatchesEvents initializes the process proposer matches events.
+// This function should only be called from the CLOB genesis.
+func (k Keeper) InitializeProcessProposerMatchesEvents(
+	ctx sdk.Context,
+) {
+	processProposerMatchesEvents := types.ProcessProposerMatchesEvents{
+		BlockHeight: 1,
+	}
+
+	memStore := ctx.KVStore(k.memKey)
 	memStore.Set(
 		[]byte(types.ProcessProposerMatchesEventsKey),
 		k.cdc.MustMarshal(&processProposerMatchesEvents),

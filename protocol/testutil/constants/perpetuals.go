@@ -6,6 +6,9 @@ import (
 )
 
 func init() {
+	_ = TestTxBuilder.SetMsgs(EmptyMsgAddPremiumVotes)
+	EmptyMsgAddPremiumVotesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
+
 	_ = TestTxBuilder.SetMsgs(ValidMsgAddPremiumVotes)
 	ValidMsgAddPremiumVotesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
 
@@ -21,6 +24,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 1_000_000,
 		BasePositionNotional:   1_000_000,
+		ImpactNotional:         500_000_000,
 	},
 	{
 		Id:                     1,
@@ -28,6 +32,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 750_000,
 		BasePositionNotional:   1_000_000,
+		ImpactNotional:         500_000_000,
 	},
 	{
 		Id:                     2,
@@ -35,6 +40,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 0,
 		BasePositionNotional:   1_000_000,
+		ImpactNotional:         500_000_000,
 	},
 	{
 		Id:                     3,
@@ -42,6 +48,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       200_000,
 		MaintenanceFractionPpm: 500_000,
 		BasePositionNotional:   100_000_000_000,
+		ImpactNotional:         2_500_000_000,
 	},
 	{
 		Id:                     4,
@@ -49,6 +56,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       500_000,
 		MaintenanceFractionPpm: 800_000,
 		BasePositionNotional:   100_000_000_000,
+		ImpactNotional:         1_000_000_000,
 	},
 	{
 		Id:                     5,
@@ -56,6 +64,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       500_000,
 		MaintenanceFractionPpm: 600_000,
 		BasePositionNotional:   1_000_000,
+		ImpactNotional:         1_000_000_000,
 	},
 	{
 		Id:                     6,
@@ -63,6 +72,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       200_000,
 		MaintenanceFractionPpm: 900_000,
 		BasePositionNotional:   1_000_000,
+		ImpactNotional:         2_500_000_000,
 	},
 	{
 		Id:                     7,
@@ -70,6 +80,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       0,
 		MaintenanceFractionPpm: 0,
 		BasePositionNotional:   100_000_000_000,
+		ImpactNotional:         1_000_000_000,
 	},
 	{
 		Id:                     8,
@@ -77,16 +88,19 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       9_910, // 0.9910%
 		MaintenanceFractionPpm: 1_000_000,
 		BasePositionNotional:   100_000_000_000,
+		ImpactNotional:         50_454_000_000,
 	},
 }
 
 // Perpetual genesis parameters.
 const TestFundingRateClampFactorPpm = 6_000_000
 const TestPremiumVoteClampFactorPpm = 60_000_000
+const TestMinNumVotesPerSample = 15
 
 var PerpetualsGenesisParams = perptypes.Params{
 	FundingRateClampFactorPpm: TestFundingRateClampFactorPpm,
 	PremiumVoteClampFactorPpm: TestPremiumVoteClampFactorPpm,
+	MinNumVotesPerSample:      TestMinNumVotesPerSample,
 }
 
 var Perpetuals_GenesisState_ParamsOnly = perptypes.GenesisState{
@@ -168,7 +182,7 @@ var (
 		LiquidityTier:     uint32(4),
 	}
 	BtcUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
-		Ticker:            "BTC-USD 50/40 margin requirements",
+		Ticker:            "BTC-USD 20/10 margin requirements",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
 		AtomicResolution:  int32(-8),
@@ -235,6 +249,10 @@ var (
 			},
 		},
 	}
+
+	EmptyMsgAddPremiumVotes        = &perptypes.MsgAddPremiumVotes{}
+	EmptyMsgAddPremiumVotesTxBytes []byte
+
 	ValidMsgAddPremiumVotes = &perptypes.MsgAddPremiumVotes{
 		Votes: []perptypes.FundingPremium{
 			{PerpetualId: 1, PremiumPpm: 1_000},
@@ -259,6 +277,7 @@ var (
 				InitialMarginPpm:       200_000,
 				MaintenanceFractionPpm: 500_000,
 				BasePositionNotional:   1000_000_000,
+				ImpactNotional:         2_500_000_000,
 			},
 			{
 				Id:                     uint32(1),
@@ -266,6 +285,7 @@ var (
 				InitialMarginPpm:       300_000,
 				MaintenanceFractionPpm: 600_000,
 				BasePositionNotional:   500_000_000,
+				ImpactNotional:         1_667_000_000,
 			},
 			{
 				Id:                     uint32(2),
@@ -273,6 +293,7 @@ var (
 				InitialMarginPpm:       400_000,
 				MaintenanceFractionPpm: 700_000,
 				BasePositionNotional:   250_000_000,
+				ImpactNotional:         1_250_000_000,
 			},
 		},
 		Params: PerpetualsGenesisParams,

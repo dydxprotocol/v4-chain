@@ -8,6 +8,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4/indexer/common"
 	"github.com/dydxprotocol/v4/indexer/msgsender"
+	"github.com/dydxprotocol/v4/indexer/protocol/v1"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
@@ -43,7 +44,7 @@ func CreateOrderPlaceMessage(
 		return msgsender.Message{}, false
 	}
 
-	update, err := newOrderPlaceMessage(&order)
+	update, err := newOrderPlaceMessage(order)
 	if err != nil {
 		logger.Error(fmt.Sprintf("%s %s Err: %+v %s\n", errMessage, createErrMsg, err, errDetails))
 		return msgsender.Message{}, false
@@ -80,7 +81,7 @@ func CreateOrderUpdateMessage(
 		return msgsender.Message{}, false
 	}
 
-	update, err := newOrderUpdateMessage(&orderId, totalFilled)
+	update, err := newOrderUpdateMessage(orderId, totalFilled)
 	if err != nil {
 		logger.Error(fmt.Sprintf("%s %s Err: %+v %s\n", errMessage, createErrMsg, err, errDetails))
 		return msgsender.Message{}, false
@@ -94,8 +95,8 @@ func CreateOrderUpdateMessage(
 func MustCreateOrderRemoveMessageWithReason(
 	logger log.Logger,
 	orderId clobtypes.OrderId,
-	reason OrderRemove_OrderRemovalReason,
-	removalStatus OrderRemove_OrderRemovalStatus,
+	reason OrderRemoveV1_OrderRemovalReason,
+	removalStatus OrderRemoveV1_OrderRemovalStatus,
 ) msgsender.Message {
 	msg, ok := CreateOrderRemoveMessageWithReason(logger, orderId, reason, removalStatus)
 	if !ok {
@@ -109,8 +110,8 @@ func MustCreateOrderRemoveMessageWithReason(
 func CreateOrderRemoveMessageWithReason(
 	logger log.Logger,
 	orderId clobtypes.OrderId,
-	reason OrderRemove_OrderRemovalReason,
-	removalStatus OrderRemove_OrderRemovalStatus,
+	reason OrderRemoveV1_OrderRemovalReason,
+	removalStatus OrderRemoveV1_OrderRemovalStatus,
 ) (message msgsender.Message, success bool) {
 	errMessage := "Error creating off-chain update message for removing order."
 	errDetails := fmt.Sprintf(
@@ -140,7 +141,7 @@ func MustCreateOrderRemoveMessage(logger log.Logger,
 	orderId clobtypes.OrderId,
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
-	removalStatus OrderRemove_OrderRemovalStatus,
+	removalStatus OrderRemoveV1_OrderRemovalStatus,
 ) msgsender.Message {
 	msg, ok := CreateOrderRemoveMessage(logger, orderId, orderStatus, orderError, removalStatus)
 	if !ok {
@@ -156,7 +157,7 @@ func CreateOrderRemoveMessage(
 	orderId clobtypes.OrderId,
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
-	removalStatus OrderRemove_OrderRemovalStatus,
+	removalStatus OrderRemoveV1_OrderRemovalStatus,
 ) (message msgsender.Message, success bool) {
 	errDetails := fmt.Sprintf(
 		"OrderId: %+v, Removal status %d",
@@ -189,10 +190,10 @@ func CreateOrderRemoveMessageWithDefaultReason(
 	orderId clobtypes.OrderId,
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
-	removalStatus OrderRemove_OrderRemovalStatus,
-	defaultRemovalReason OrderRemove_OrderRemovalReason,
+	removalStatus OrderRemoveV1_OrderRemovalStatus,
+	defaultRemovalReason OrderRemoveV1_OrderRemovalReason,
 ) (message msgsender.Message, success bool) {
-	if defaultRemovalReason == OrderRemove_ORDER_REMOVAL_REASON_UNSPECIFIED {
+	if defaultRemovalReason == OrderRemoveV1_ORDER_REMOVAL_REASON_UNSPECIFIED {
 		panic(
 			fmt.Errorf(
 				"Invalid parameter: " +
@@ -225,14 +226,15 @@ func CreateOrderRemoveMessageWithDefaultReason(
 // newOrderPlaceMessage returns an `OffChainUpdate` struct populated with an `OrderPlace` struct
 // as the `UpdateMessage` parameter, encoded as a byte slice.
 func newOrderPlaceMessage(
-	order *clobtypes.Order,
+	order clobtypes.Order,
 ) ([]byte, error) {
-	update := OffChainUpdate{
-		UpdateMessage: &OffChainUpdate_OrderPlace{
-			&OrderPlace{
-				Order: order,
+	indexerOrder := v1.OrderToIndexerOrder(order)
+	update := OffChainUpdateV1{
+		UpdateMessage: &OffChainUpdateV1_OrderPlace{
+			&OrderPlaceV1{
+				Order: &indexerOrder,
 				// Protocol will always send best effort opened messages to indexer.
-				PlacementStatus: OrderPlace_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+				PlacementStatus: OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
 			},
 		},
 	}
@@ -244,13 +246,14 @@ func newOrderPlaceMessage(
 // The `OrderRemove` struct is instantiated with the given orderId, reason and status parameters.
 func newOrderRemoveMessage(
 	orderId clobtypes.OrderId,
-	reason OrderRemove_OrderRemovalReason,
-	status OrderRemove_OrderRemovalStatus,
+	reason OrderRemoveV1_OrderRemovalReason,
+	status OrderRemoveV1_OrderRemovalStatus,
 ) ([]byte, error) {
-	update := OffChainUpdate{
-		UpdateMessage: &OffChainUpdate_OrderRemove{
-			&OrderRemove{
-				RemovedOrderId: &orderId,
+	indexerOrderId := v1.OrderIdToIndexerOrderId(orderId)
+	update := OffChainUpdateV1{
+		UpdateMessage: &OffChainUpdateV1_OrderRemove{
+			&OrderRemoveV1{
+				RemovedOrderId: &indexerOrderId,
 				Reason:         reason,
 				RemovalStatus:  status,
 			},
@@ -263,13 +266,14 @@ func newOrderRemoveMessage(
 // struct as the `UpdateMessage` parameter, encoded as a byte slice.
 // The `OrderUpdate` struct is instantiated with the given orderId and totalFilled parameters.
 func newOrderUpdateMessage(
-	orderId *clobtypes.OrderId,
+	orderId clobtypes.OrderId,
 	totalFilled satypes.BaseQuantums,
 ) ([]byte, error) {
-	update := OffChainUpdate{
-		UpdateMessage: &OffChainUpdate_OrderUpdate{
-			&OrderUpdate{
-				OrderId:             orderId,
+	indexerOrderId := v1.OrderIdToIndexerOrderId(orderId)
+	update := OffChainUpdateV1{
+		UpdateMessage: &OffChainUpdateV1_OrderUpdate{
+			&OrderUpdateV1{
+				OrderId:             &indexerOrderId,
 				TotalFilledQuantums: totalFilled.ToUint64(),
 			},
 		},
@@ -278,16 +282,17 @@ func newOrderUpdateMessage(
 }
 
 func marshalOffchainUpdate(
-	offChainUpdate OffChainUpdate,
+	offChainUpdate OffChainUpdateV1,
 	marshaler common.Marshaler,
 ) ([]byte, error) {
 	updateBytes, err := marshaler.Marshal(&offChainUpdate)
 	return updateBytes, err
 }
 
-// GetOrderIdHash gets the SHA256 hash of an `OrderId`.
+// GetOrderIdHash gets the SHA256 hash of the `IndexerOrderId` mapped from an `OrderId`.
 func GetOrderIdHash(orderId clobtypes.OrderId) ([]byte, error) {
-	orderIdBytes, err := (&orderId).Marshal()
+	indexerOrderId := v1.OrderIdToIndexerOrderId(orderId)
+	orderIdBytes, err := (&indexerOrderId).Marshal()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -300,23 +305,23 @@ func GetOrderIdHash(orderId clobtypes.OrderId) ([]byte, error) {
 func GetOrderRemovalReason(
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
-) (OrderRemove_OrderRemovalReason, error) {
+) (OrderRemoveV1_OrderRemovalReason, error) {
 	switch {
 	case errors.Is(orderError, clobtypes.ErrPostOnlyWouldCrossMakerOrder):
-		return OrderRemove_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER, nil
+		return OrderRemoveV1_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER, nil
 	case errors.Is(orderError, clobtypes.ErrFokOrderCouldNotBeFullyFilled):
-		return OrderRemove_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED, nil
+		return OrderRemoveV1_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED, nil
 	}
 
 	switch orderStatus {
 	case clobtypes.Undercollateralized:
-		return OrderRemove_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED, nil
+		return OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED, nil
 	case clobtypes.InternalError:
-		return OrderRemove_ORDER_REMOVAL_REASON_INTERNAL_ERROR, nil
+		return OrderRemoveV1_ORDER_REMOVAL_REASON_INTERNAL_ERROR, nil
 	case clobtypes.ImmediateOrCancelWouldRestOnBook:
-		return OrderRemove_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK, nil
+		return OrderRemoveV1_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK, nil
 	case clobtypes.ReduceOnlyResized:
-		return OrderRemove_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE, nil
+		return OrderRemoveV1_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE, nil
 	default:
 		return 0, fmt.Errorf("unrecognized order status %d and error \"%w\"", orderStatus, orderError)
 	}
@@ -345,8 +350,43 @@ func ShouldSendOrderRemovalOnReplay(
 		fallthrough
 	// Order already exists on the book, order is still on the book.
 	case errors.Is(orderError, clobtypes.ErrStatefulOrderAlreadyExists):
+		fallthrough
+	// Order should have already been fully-filled or expired as the current height > GoodTilBlock.
+	case errors.Is(orderError, clobtypes.ErrHeightExceedsGoodTilBlock):
+		fallthrough
+	// TODO(IND-199): Resolve edge case where the stateful order which has this error was never included
+	// in a block and then expired. We do want to send the `OrderRemove` message as the order will not
+	// be in state, and thus a stateful order expiration message will not be sent for the order.
+	// Order should have already been fully-filled or expired as the  previous block time >= GoodTilBlockTime.
+	case errors.Is(orderError, clobtypes.ErrTimeExceedsGoodTilBlockTime):
 		return false
 	default:
 		return true
 	}
+}
+
+// ConvertOrderRemovalReasonToIndexerOrderRemovalReason converts a `OrderRemoval_RemovalReason` to indexer's
+// `OrderRemoveV1_OrderRemovalReason`. This is helpful in the memclob logic where we handle
+// a bulk of order removals and generate offchain updates for each order removal.
+func ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+	removalReason clobtypes.OrderRemoval_RemovalReason,
+) OrderRemoveV1_OrderRemovalReason {
+	var reason OrderRemoveV1_OrderRemovalReason
+	switch removalReason {
+	case clobtypes.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED:
+		reason = OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
+	case clobtypes.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
+		reason = OrderRemoveV1_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE
+	case clobtypes.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
+		reason = OrderRemoveV1_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
+	case clobtypes.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE:
+		reason = OrderRemoveV1_ORDER_REMOVAL_REASON_SELF_TRADE_ERROR
+	case clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED:
+		reason = OrderRemoveV1_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED
+	case clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK:
+		reason = OrderRemoveV1_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK
+	default:
+		panic("ConvertOrderRemovalReasonToIndexerOrderRemovalReason: unspecified removal reason not allowed")
+	}
+	return reason
 }

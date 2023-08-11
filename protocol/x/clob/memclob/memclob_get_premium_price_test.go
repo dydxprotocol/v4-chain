@@ -23,7 +23,7 @@ func TestGetPremiumPrice(t *testing.T) {
 
 		// Parameters.
 		clobPair                    types.ClobPair
-		market                      pricestypes.Market
+		marketPrice                 pricestypes.MarketPrice
 		baseAtomicResolution        int32
 		maxAbsPremiumVotePpm        *big.Int
 		impactNotionalQuoteQuantums *big.Int
@@ -41,9 +41,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_010_000,    // $10_001 (Impact Ask)
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_010_000,    // $10_001 (Impact Ask)
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -51,14 +52,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_990_000,     // $9_999 (Impact Bid)
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_990_000,     // $9_999 (Impact Bid)
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000.
 				Exponent: -5,
 			},
@@ -75,9 +77,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_010_000,    // $10_001 (Impact Ask)
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_010_000,    // $10_001 (Impact Ask)
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -85,9 +88,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 1_000_000_000, // 0.1 BTC
-					Subticks: 99_990_000,    // $9_999
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     1_000_000_000, // 0.1 BTC
+					Subticks:     99_990_000,    // $9_999
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -95,14 +99,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     1,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_980_000,     // $9_998 (Impact Bid = $9998.2)
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_980_000,     // $9_998 (Impact Bid = $9998.2)
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    900_000_000, // $9_000.
 				Exponent: -5,
 			},
@@ -119,9 +124,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     2,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_020_000,    // $10_002 (Impact Ask = $10001.7)
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_020_000,    // $10_002 (Impact Ask = $10001.7)
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -129,9 +135,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     1,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 1_000_000_000, // 0.1 BTC
-					Subticks: 100_015_000,   // $10_001.5
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     1_000_000_000, // 0.1 BTC
+					Subticks:     100_015_000,   // $10_001.5
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -139,9 +146,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 1_000_000_000, // 0.1 BTC
-					Subticks: 100_010_000,   // $10_001
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     1_000_000_000, // 0.1 BTC
+					Subticks:     100_010_000,   // $10_001
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -149,14 +157,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_990_000,     // $9_999
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_990_000,     // $9_999
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_000_300_000, // $10_003
 				Exponent: -5,
 			},
@@ -173,9 +182,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_010_000,    // $10_001
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_010_000,    // $10_001
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -183,14 +193,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_990_000,     // $9_999
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_990_000,     // $9_999
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_000_190_000, // $10_001.9
 				Exponent: -5,
 			},
@@ -207,9 +218,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_010_000,    // $10_001
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_010_000,    // $10_001
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -217,14 +229,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_999_000,     // $9_999.9
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_999_000,     // $9_999.9
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    999_750_000, // $9_997.5
 				Exponent: -5,
 			},
@@ -241,9 +254,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_010_000,    // $10_001
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_010_000,    // $10_001
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -251,9 +265,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 1_000_000_000, // 0.1 BTC
-					Subticks: 99_999_000,    // $9_999.9
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     1_000_000_000, // 0.1 BTC
+					Subticks:     99_999_000,    // $9_999.9
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -261,9 +276,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     1,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 0.1 BTC
-					Subticks: 99_995_000,     // $9_999.5
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 0.1 BTC
+					Subticks:     99_995_000,     // $9_999.5
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -279,7 +295,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    999_982_000, // $9_999.5
 				Exponent: -5,
 			},
@@ -296,9 +312,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 1_000_000_000, // 0.1 BTC
-					Subticks: 100_001_000,   // $10_000.1
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     1_000_000_000, // 0.1 BTC
+					Subticks:     100_001_000,   // $10_000.1
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -306,14 +323,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     1,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_998_000,     // $9_999.8
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_998_000,     // $9_999.8
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_000_100_000, // $10_001
 				Exponent: -5,
 			},
@@ -330,9 +348,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_001_000,    // $10_000.1
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_001_000,    // $10_000.1
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -340,14 +359,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     1,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 1_000_000_000, // 0.1 BTC
-					Subticks: 99_998_000,    // $9_999.8
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     1_000_000_000, // 0.1 BTC
+					Subticks:     99_998_000,    // $9_999.8
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    999_950_000, // $9_999.5
 				Exponent: -5,
 			},
@@ -364,9 +384,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 1_000_000_000, // 0.1 BTC
-					Subticks: 100_001_000,   // $10_000.1
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     1_000_000_000, // 0.1 BTC
+					Subticks:     100_001_000,   // $10_000.1
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -374,14 +395,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     1,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 1_000_000_000, // 0.1 BTC
-					Subticks: 99_998_000,    // $9_999.8
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     1_000_000_000, // 0.1 BTC
+					Subticks:     99_998_000,    // $9_999.8
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000
 				Exponent: -5,
 			},
@@ -394,7 +416,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			placedMatchableOrders: []types.MatchableOrder{},
 			clobPair:              constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm:  big.NewInt(100_000), // 10%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000
 				Exponent: -5,
 			},
@@ -411,9 +433,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_010_000,    // $10_001
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_010_000,    // $10_001
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -421,14 +444,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_999_000,     // $9_999.9
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_999_000,     // $9_999.9
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    600_000_000, // $6_000
 				Exponent: -5,
 			},
@@ -445,9 +469,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_010_000,    // $10_001
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_010_000,    // $10_001
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -455,14 +480,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_999_000,     // $9_999.9
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_999_000,     // $9_999.9
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_500_000_000, // $6_000
 				Exponent: -5,
 			},
@@ -479,9 +505,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 1_000_000_000, // 0.1 BTC
-					Subticks: 100_001_000,   // $10_000.1
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     1_000_000_000, // 0.1 BTC
+					Subticks:     100_001_000,   // $10_000.1
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -489,14 +516,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     1,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_998_000,     // $9_999.8
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_998_000,     // $9_999.8
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    999_900_000, // $9_999
 				Exponent: -5,
 			},
@@ -513,9 +541,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_001_000,    // $10_000.1
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_001_000,    // $10_000.1
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -523,14 +552,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     1,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 1_000_000_000, // 0.11 BTC
-					Subticks: 99_998_000,    // $9_999.8
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     1_000_000_000, // 0.11 BTC
+					Subticks:     99_998_000,    // $9_999.8
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_000_100_000, // $10_001
 				Exponent: -5,
 			},
@@ -547,9 +577,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_010_000,    // $10_001 (Impact Ask)
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_010_000,    // $10_001 (Impact Ask)
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			maxAbsPremiumVotePpm: big.NewInt(math.MaxInt32 + 1),
@@ -570,7 +601,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			maxAbsPremiumVotePpm:        big.NewInt(100_000), // 10%
 			impactNotionalQuoteQuantums: big.NewInt(1000),
 
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price: 0,
 			},
 			expectedErr: types.ErrZeroIndexPriceForPremiumCalculation,
@@ -583,9 +614,10 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_SELL,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 100_010_000,    // $10_001
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     100_010_000,    // $10_001
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 				&types.Order{
 					OrderId: types.OrderId{
@@ -593,14 +625,15 @@ func TestGetPremiumPrice(t *testing.T) {
 						ClientId:     0,
 						ClobPairId:   0,
 					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 10_000_000_000, // 1 BTC
-					Subticks: 99_999_000,     // $9_999.9
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     10_000_000_000, // 1 BTC
+					Subticks:     99_999_000,     // $9_999.9
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    999_750_000, // $9_997.5
 				Exponent: -5,
 			},
@@ -627,7 +660,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			}
 
 			pricePremiumParams := perptypes.GetPricePremiumParams{
-				Market:                      tc.market,
+				MarketPrice:                 tc.marketPrice,
 				BaseAtomicResolution:        tc.baseAtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: tc.impactNotionalQuoteQuantums,

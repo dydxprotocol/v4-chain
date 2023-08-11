@@ -20,6 +20,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err != nil {
 		panic(err)
 	}
+	err = k.SetMinNumVotesPerSample(ctx, genState.Params.MinNumVotesPerSample)
+	if err != nil {
+		panic(err)
+	}
 
 	// Create all liquidity tiers.
 	for _, elem := range genState.LiquidityTiers {
@@ -29,6 +33,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			elem.InitialMarginPpm,
 			elem.MaintenanceFractionPpm,
 			elem.BasePositionNotional,
+			elem.ImpactNotional,
 		)
 
 		if err != nil {

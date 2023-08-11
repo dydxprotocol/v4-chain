@@ -1,9 +1,11 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4/x/clob/rate_limit"
 	"testing"
 
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4/testutil/constants"
 
 	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,57 +16,47 @@ import (
 	asskeeper "github.com/dydxprotocol/v4/x/assets/keeper"
 	"github.com/dydxprotocol/v4/x/clob/keeper"
 	"github.com/dydxprotocol/v4/x/clob/types"
+	feetierskeeper "github.com/dydxprotocol/v4/x/feetiers/keeper"
 	perpkeeper "github.com/dydxprotocol/v4/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4/x/prices/keeper"
+	statskeeper "github.com/dydxprotocol/v4/x/stats/keeper"
 	subkeeper "github.com/dydxprotocol/v4/x/subaccounts/keeper"
 )
 
-func ClobKeepers(
-	t testing.TB,
-	memClob types.MemClob,
-	bankKeeper bankkeeper.Keeper,
-	indexerEventManager indexer_manager.IndexerEventManager,
-) (
-	ctx sdk.Context,
-	keeper *keeper.Keeper,
-	pricesKeeper *priceskeeper.Keeper,
-	assetsKeeper *asskeeper.Keeper,
-	perpetualsKeeper *perpkeeper.Keeper,
-	subaccountsKeeper *subkeeper.Keeper,
-	storeKey storetypes.StoreKey,
-	memKey storetypes.StoreKey,
-) {
-	ctx,
-		keeper,
-		pricesKeeper,
-		assetsKeeper,
-		perpetualsKeeper,
-		subaccountsKeeper,
-		storeKey,
-		memKey = ClobKeepersWithUninitializedMemStore(t, memClob, bankKeeper, indexerEventManager)
-
-	// Initialize the memstore.
-	keeper.InitMemStore(ctx)
-
-	return ctx, keeper, pricesKeeper, assetsKeeper, perpetualsKeeper, subaccountsKeeper, storeKey, memKey
+type ClobKeepersTestContext struct {
+	Ctx               sdk.Context
+	ClobKeeper        *keeper.Keeper
+	PricesKeeper      *priceskeeper.Keeper
+	AssetsKeeper      *asskeeper.Keeper
+	FeeTiersKeeper    *feetierskeeper.Keeper
+	PerpetualsKeeper  *perpkeeper.Keeper
+	StatsKeeper       *statskeeper.Keeper
+	SubaccountsKeeper *subkeeper.Keeper
+	StoreKey          storetypes.StoreKey
+	MemKey            storetypes.StoreKey
 }
 
-func ClobKeepersWithUninitializedMemStore(
+func NewClobKeepersTestContext(
 	t testing.TB,
 	memClob types.MemClob,
 	bankKeeper bankkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
-) (
-	ctx sdk.Context,
-	keeper *keeper.Keeper,
-	pricesKeeper *priceskeeper.Keeper,
-	assetsKeeper *asskeeper.Keeper,
-	perpetualsKeeper *perpkeeper.Keeper,
-	subaccountsKeeper *subkeeper.Keeper,
-	storeKey storetypes.StoreKey,
-	memKey storetypes.StoreKey,
-) {
-	ctx = initKeepers(t, func(
+) (ks ClobKeepersTestContext) {
+	ks = NewClobKeepersTestContextWithUninitializedMemStore(t, memClob, bankKeeper, indexerEventManager)
+
+	// Initialize the memstore.
+	ks.ClobKeeper.InitMemStore(ks.Ctx)
+
+	return ks
+}
+
+func NewClobKeepersTestContextWithUninitializedMemStore(
+	t testing.TB,
+	memClob types.MemClob,
+	bankKeeper bankkeeper.Keeper,
+	indexerEventManager indexer_manager.IndexerEventManager,
+) (ks ClobKeepersTestContext) {
+	ks.Ctx = initKeepers(t, func(
 		db *db.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
@@ -72,44 +64,66 @@ func ClobKeepersWithUninitializedMemStore(
 		indexerEventsTransientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, indexerEventsTransientStoreKey)
+		ks.PricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, indexerEventsTransientStoreKey)
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
-		perpetualsKeeper, _ = createPerpetualsKeeper(
+		ks.PerpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,
 			db,
 			cdc,
-			pricesKeeper,
+			ks.PricesKeeper,
 			epochsKeeper,
 			indexerEventsTransientStoreKey,
 		)
-		assetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, pricesKeeper)
-		subaccountsKeeper, _ = createSubaccountsKeeper(
+		ks.AssetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, ks.PricesKeeper)
+		ks.StatsKeeper, _ = createStatsKeeper(
+			stateStore,
+			epochsKeeper,
+			db,
+			cdc,
+		)
+		ks.FeeTiersKeeper, _ = createFeeTiersKeeper(
+			stateStore,
+			ks.StatsKeeper,
+			db,
+			cdc,
+		)
+		ks.SubaccountsKeeper, _ = createSubaccountsKeeper(
 			stateStore,
 			db,
 			cdc,
-			assetsKeeper,
+			ks.AssetsKeeper,
 			bankKeeper,
-			perpetualsKeeper,
+			ks.PerpetualsKeeper,
 			indexerEventsTransientStoreKey,
 			true,
 		)
-		keeper, storeKey, memKey = createClobKeeper(
+		ks.ClobKeeper, ks.StoreKey, ks.MemKey = createClobKeeper(
 			stateStore,
 			db,
 			cdc,
 			memClob,
-			assetsKeeper,
+			ks.AssetsKeeper,
 			bankKeeper,
-			perpetualsKeeper,
-			subaccountsKeeper,
+			ks.FeeTiersKeeper,
+			ks.PerpetualsKeeper,
+			ks.StatsKeeper,
+			ks.SubaccountsKeeper,
 			indexerEventManager,
 			indexerEventsTransientStoreKey,
 		)
 
-		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, subaccountsKeeper, keeper}
+		return []GenesisInitializer{
+			ks.PricesKeeper,
+			ks.PerpetualsKeeper,
+			ks.AssetsKeeper,
+			ks.SubaccountsKeeper,
+			ks.ClobKeeper,
+			ks.FeeTiersKeeper,
+			ks.StatsKeeper,
+		}
 	})
 
-	return ctx, keeper, pricesKeeper, assetsKeeper, perpetualsKeeper, subaccountsKeeper, storeKey, memKey
+	return ks
 }
 
 func createClobKeeper(
@@ -119,7 +133,9 @@ func createClobKeeper(
 	memClob types.MemClob,
 	aKeeper *asskeeper.Keeper,
 	bankKeeper types.BankKeeper,
+	feeTiersKeeper types.FeeTiersKeeper,
 	perpKeeper *perpkeeper.Keeper,
+	statsKeeper *statskeeper.Keeper,
 	saKeeper *subkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
@@ -127,6 +143,7 @@ func createClobKeeper(
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	transientStoreKey := sdk.NewTransientStoreKey(types.TransientStoreKey)
+	untriggeredConditionalOrders := make(map[types.ClobPairId]keeper.UntriggeredConditionalOrders)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
@@ -138,12 +155,21 @@ func createClobKeeper(
 		memKey,
 		transientStoreKey,
 		memClob,
+		untriggeredConditionalOrders,
 		saKeeper,
 		aKeeper,
 		bankKeeper,
+		feeTiersKeeper,
 		perpKeeper,
+		statsKeeper,
 		indexerEventManager,
+		constants.TestEncodingCfg.TxConfig.TxDecoder(),
+		"",
+		"",
+		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
+		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
 	)
+	k.SetAnteHandler(constants.EmptyAnteHandler)
 
 	return k, storeKey, memKey
 }

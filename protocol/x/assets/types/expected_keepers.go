@@ -6,9 +6,9 @@ import (
 )
 
 type PricesKeeper interface {
-	GetMarket(
+	GetMarketPrice(
 		ctx sdk.Context,
 		id uint32,
-	) (market prices.Market, err error)
+	) (market prices.MarketPrice, err error)
 	// Methods imported from prices should be defined here
 }

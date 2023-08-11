@@ -104,7 +104,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper                    keeper.Keeper
+	keeper                    *keeper.Keeper
 	accountKeeper             types.AccountKeeper
 	bankKeeper                types.BankKeeper
 	subaccountsKeeper         types.SubaccountsKeeper
@@ -114,7 +114,7 @@ type AppModule struct {
 
 func NewAppModule(
 	cdc codec.Codec,
-	keeper keeper.Keeper,
+	keeper *keeper.Keeper,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	subaccountsKeeper types.SubaccountsKeeper,
@@ -161,7 +161,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 
 // ExportGenesis returns the clob module's exported genesis state as raw JSON bytes.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	genState := ExportGenesis(ctx, am.keeper)
+	genState := ExportGenesis(ctx, *am.keeper)
 	return cdc.MustMarshalJSON(genState)
 }
 
@@ -186,7 +186,7 @@ func (am AppModule) EndBlock(
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyEndBlocker)
 	EndBlocker(
 		ctx,
-		am.keeper,
+		*am.keeper,
 	)
 	return []abci.ValidatorUpdate{}
 }
@@ -196,7 +196,7 @@ func (am AppModule) Commit(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyCommit)
 	PrepareCheckState(
 		ctx,
-		am.keeper,
+		*am.keeper,
 		am.memClob,
 		am.liquidatableSubaccountIds,
 	)

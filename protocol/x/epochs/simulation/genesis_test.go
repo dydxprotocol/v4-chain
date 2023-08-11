@@ -37,8 +37,8 @@ func TestRandomizedGenState(t *testing.T) {
 		var epochsGenesis types.GenesisState
 		simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &epochsGenesis)
 
-		require.True(t, len(epochsGenesis.EpochInfoList) >= 1+2)     // +2 comes from default genesis
-		require.True(t, len(epochsGenesis.EpochInfoList) <= 1_000+2) // +2 comes from default genesis
+		require.True(t, len(epochsGenesis.EpochInfoList) >= 1+3)     // +3 comes from default genesis
+		require.True(t, len(epochsGenesis.EpochInfoList) <= 1_000+3) // +3 comes from default genesis
 
 		for _, epochInfo := range epochsGenesis.EpochInfoList {
 			require.True(t, len(epochInfo.Name) >= 5)

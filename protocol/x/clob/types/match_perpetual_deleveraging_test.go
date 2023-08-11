@@ -21,8 +21,8 @@ func TestPerformStatelessMatchPerpetualDeleveragingValidation(t *testing.T) {
 				PerpetualId: constants.ClobPair_Eth.MustGetPerpetualId(),
 				Fills: []types.MatchPerpetualDeleveraging_Fill{
 					{
-						Deleveraged: constants.Bob_Num0,
-						FillAmount:  10,
+						OffsettingSubaccountId: constants.Bob_Num0,
+						FillAmount:             10,
 					},
 				},
 			},
@@ -42,8 +42,8 @@ func TestPerformStatelessMatchPerpetualDeleveragingValidation(t *testing.T) {
 				PerpetualId: constants.ClobPair_Eth.MustGetPerpetualId(),
 				Fills: []types.MatchPerpetualDeleveraging_Fill{
 					{
-						Deleveraged: constants.Alice_Num0,
-						FillAmount:  10,
+						OffsettingSubaccountId: constants.Alice_Num0,
+						FillAmount:             10,
 					},
 				},
 			},
@@ -55,12 +55,12 @@ func TestPerformStatelessMatchPerpetualDeleveragingValidation(t *testing.T) {
 				PerpetualId: constants.ClobPair_Eth.MustGetPerpetualId(),
 				Fills: []types.MatchPerpetualDeleveraging_Fill{
 					{
-						Deleveraged: constants.Bob_Num0,
-						FillAmount:  10,
+						OffsettingSubaccountId: constants.Bob_Num0,
+						FillAmount:             10,
 					},
 					{
-						Deleveraged: constants.Bob_Num0,
-						FillAmount:  5,
+						OffsettingSubaccountId: constants.Bob_Num0,
+						FillAmount:             5,
 					},
 				},
 			},
@@ -72,12 +72,12 @@ func TestPerformStatelessMatchPerpetualDeleveragingValidation(t *testing.T) {
 				PerpetualId: constants.ClobPair_Eth.MustGetPerpetualId(),
 				Fills: []types.MatchPerpetualDeleveraging_Fill{
 					{
-						Deleveraged: constants.Bob_Num0,
-						FillAmount:  10,
+						OffsettingSubaccountId: constants.Bob_Num0,
+						FillAmount:             10,
 					},
 					{
-						Deleveraged: constants.Bob_Num1,
-						FillAmount:  0,
+						OffsettingSubaccountId: constants.Bob_Num1,
+						FillAmount:             0,
 					},
 				},
 			},
@@ -89,12 +89,12 @@ func TestPerformStatelessMatchPerpetualDeleveragingValidation(t *testing.T) {
 				PerpetualId: constants.ClobPair_Eth.MustGetPerpetualId(),
 				Fills: []types.MatchPerpetualDeleveraging_Fill{
 					{
-						Deleveraged: constants.Bob_Num0,
-						FillAmount:  10,
+						OffsettingSubaccountId: constants.Bob_Num0,
+						FillAmount:             10,
 					},
 					{
-						Deleveraged: constants.Bob_Num1,
-						FillAmount:  5,
+						OffsettingSubaccountId: constants.Bob_Num1,
+						FillAmount:             5,
 					},
 				},
 			},
@@ -106,12 +106,12 @@ func TestPerformStatelessMatchPerpetualDeleveragingValidation(t *testing.T) {
 				PerpetualId: constants.ClobPair_Eth.MustGetPerpetualId(),
 				Fills: []types.MatchPerpetualDeleveraging_Fill{
 					{
-						Deleveraged: constants.InvalidSubaccountIdNumber,
-						FillAmount:  10,
+						OffsettingSubaccountId: constants.InvalidSubaccountIdNumber,
+						FillAmount:             10,
 					},
 					{
-						Deleveraged: constants.Bob_Num1,
-						FillAmount:  5,
+						OffsettingSubaccountId: constants.Bob_Num1,
+						FillAmount:             5,
 					},
 				},
 			},

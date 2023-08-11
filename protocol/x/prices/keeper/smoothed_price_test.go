@@ -4,20 +4,19 @@ import (
 	"github.com/dydxprotocol/v4/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/x/prices/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 var (
-	emptySmoothedPrices = types.NewMarketToSmoothedPrices()
+	emptySmoothedPrices = map[uint32]uint64{}
 )
 
 func TestUpdateSmoothedPrices(t *testing.T) {
 	tests := map[string]struct {
-		smoothedPrices types.MarketToSmoothedPrices
+		smoothedPrices map[uint32]uint64
 		indexPrices    []*api.MarketPriceUpdate
-		expectedResult types.MarketToSmoothedPrices
+		expectedResult map[uint32]uint64
 	}{
 		"Empty result - No index prices, no smoothed prices": {
 			expectedResult: emptySmoothedPrices,
@@ -54,10 +53,10 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
+			keepertest.CreateTestMarkets(t, ctx, k)
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 			for market, smoothedPrice := range tc.smoothedPrices {
-				marketToSmoothedPrices[market] = smoothedPrice
+				marketToSmoothedPrices.PushSmoothedPrice(market, smoothedPrice)
 			}
 
 			mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -67,7 +66,7 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 			require.NoError(t, err)
 
 			// Validate.
-			require.Equal(t, tc.expectedResult, marketToSmoothedPrices)
+			require.Equal(t, tc.expectedResult, marketToSmoothedPrices.GetSmoothedPricesForTest())
 		})
 	}
 }

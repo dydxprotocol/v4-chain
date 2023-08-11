@@ -40,7 +40,10 @@ func getValidGenesisStr() string {
 	gs += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
 	gs += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
 	gs += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
-	gs += `"spread_to_maintenance_margin_ratio_ppm":100000}}}`
+	gs += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
+	gs += `{"max_short_term_orders_per_market_per_n_blocks":[{"limit": 50,"num_blocks":1}],`
+	gs += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},{"limit": 20,"num_blocks":100}],`
+	gs += `"max_short_term_order_cancellations_per_market_per_n_blocks":[{"limit": 50,"num_blocks":1}]}}`
 	return gs
 }
 
@@ -63,18 +66,17 @@ func createAppModuleWithKeeper(t *testing.T) (
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx, keeper, pricesKeeper, _, perpetualsKeeper, _, _, _ := keeper.ClobKeepers(
-		t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keeper.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	return clob.NewAppModule(
 		appCodec,
-		*keeper,
+		ks.ClobKeeper,
 		nil,
 		nil,
 		nil,
 		memClob,
 		liqiudations_types.NewLiquidatableSubaccountIds(),
-	), keeper, pricesKeeper, perpetualsKeeper, ctx
+	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.Ctx
 }
 
 func createAppModuleBasic(t *testing.T) clob.AppModuleBasic {
@@ -159,9 +161,11 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	expected += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
 	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
-	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}}}`
+	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
+	expected += `{"max_short_term_orders_per_market_per_n_blocks":[],"max_stateful_orders_per_n_blocks":[],`
+	expected += `"max_short_term_order_cancellations_per_market_per_n_blocks":[]}}`
 
-	require.Equal(t, expected, string(json))
+	require.JSONEq(t, expected, string(json))
 }
 
 func TestAppModuleBasic_ValidateGenesisErrInvalidJSON(t *testing.T) {
@@ -322,6 +326,32 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.Equal(t, uint64(100_000_000_000_000), liquidationsConfig.SubaccountBlockLimits.MaxNotionalLiquidated)
 	require.Equal(t, uint64(100_000_000_000_000), liquidationsConfig.SubaccountBlockLimits.MaxQuantumsInsuranceLost)
 
+	blockRateLimitConfig := keeper.GetBlockRateLimitConfiguration(ctx)
+	require.Equal(t, clob_types.BlockRateLimitConfiguration{
+		MaxShortTermOrdersPerMarketPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
+			{
+				Limit:     50,
+				NumBlocks: 1,
+			},
+		},
+		MaxStatefulOrdersPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
+			{
+				Limit:     2,
+				NumBlocks: 1,
+			},
+			{
+				Limit:     20,
+				NumBlocks: 100,
+			},
+		},
+		MaxShortTermOrderCancellationsPerMarketPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
+			{
+				Limit:     50,
+				NumBlocks: 1,
+			},
+		},
+	}, blockRateLimitConfig)
+
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	expected := `{"clob_pairs":[{"id":0,"perpetual_clob_metadata":{"perpetual_id":0},`
 	expected += `"step_base_quantums":"5","subticks_per_tick":100,"quantum_conversion_exponent":0,`
@@ -331,8 +361,12 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
 	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
-	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}}}`
-	require.Equal(t, expected, string(genesisJson))
+	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
+	expected += `{"max_short_term_orders_per_market_per_n_blocks":[{"limit": 50,"num_blocks":1}],`
+	expected += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},`
+	expected += `{"limit": 20,"num_blocks":100}],"max_short_term_order_cancellations_per_market_per_n_blocks":`
+	expected += `[{"limit": 50,"num_blocks":1}]}}`
+	require.JSONEq(t, expected, string(genesisJson))
 }
 
 func TestAppModule_InitGenesisPanic(t *testing.T) {

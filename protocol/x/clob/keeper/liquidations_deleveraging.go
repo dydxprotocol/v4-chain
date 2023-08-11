@@ -69,9 +69,7 @@ func (k Keeper) ShouldPerformDeleveraging(
 // OffsetSubaccountPerpetualPosition iterates over all subaccounts and use those with positions
 // on the opposite side to offset the liquidated subaccount's position by `deltaQuantumsTotal`.
 //
-// This function returns an error when there are not enough subaccounts to offset the liquidated
-// subaccount's position (when there isn't enough position sizes held by subaccount's
-// with overlapping bankruptcy prices).
+// This function returns the fills that were processed and the remaining amount to offset.
 // Note that each deleveraging fill is being processed _optimistically_, and the state transitions are
 // still persisted even if there are not enough subaccounts to offset the liquidated subaccount's position.
 func (k Keeper) OffsetSubaccountPerpetualPosition(
@@ -81,9 +79,10 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	deltaQuantumsTotal *big.Int,
 ) (
 	fills []types.MatchPerpetualDeleveraging_Fill,
-	err error,
+	deltaQuantumsRemaining *big.Int,
 ) {
 	numSubaccountsIterated := 0
+	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
 	// TODO(DEC-1487): Determine how offsetting subaccounts should be selected.
@@ -95,16 +94,16 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			bigOffsettingPositionQuantums := offsettingPosition.GetBigQuantums()
 
 			// Skip subaccounts that do not have a position in the opposite direction as the liquidated subaccount.
-			if deltaQuantumsTotal.Sign() != bigOffsettingPositionQuantums.Sign() {
+			if deltaQuantumsRemaining.Sign() != bigOffsettingPositionQuantums.Sign() {
 				return false
 			}
 
 			// TODO(DEC-1495): Determine max amount to offset per offsetting subaccount.
 			var deltaQuantums *big.Int
-			if deltaQuantumsTotal.CmpAbs(bigOffsettingPositionQuantums) > 0 {
+			if deltaQuantumsRemaining.CmpAbs(bigOffsettingPositionQuantums) > 0 {
 				deltaQuantums = new(big.Int).Set(bigOffsettingPositionQuantums)
 			} else {
-				deltaQuantums = new(big.Int).Set(deltaQuantumsTotal)
+				deltaQuantums = new(big.Int).Set(deltaQuantumsRemaining)
 			}
 
 			// Try to process the deleveraging operation for both subaccounts.
@@ -116,13 +115,13 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 				deltaQuantums,
 			); err == nil {
 				// Update the remaining liquidatable quantums.
-				deltaQuantumsTotal = new(big.Int).Sub(
-					deltaQuantumsTotal,
+				deltaQuantumsRemaining = new(big.Int).Sub(
+					deltaQuantumsRemaining,
 					deltaQuantums,
 				)
 				fills = append(fills, types.MatchPerpetualDeleveraging_Fill{
-					Deleveraged: *offsettingSubaccount.Id,
-					FillAmount:  new(big.Int).Abs(deltaQuantums).Uint64(),
+					OffsettingSubaccountId: *offsettingSubaccount.Id,
+					FillAmount:             new(big.Int).Abs(deltaQuantums).Uint64(),
 				})
 			} else {
 				// If an error is returned, then the subaccounts' bankruptcy prices do not overlap.
@@ -132,7 +131,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					[]gometrics.Label{metrics.GetLabelForIntValue(metrics.BlockHeight, int(ctx.BlockHeight()))},
 				)
 			}
-			return deltaQuantumsTotal.Sign() == 0
+			return deltaQuantumsRemaining.Sign() == 0
 		},
 	)
 
@@ -143,34 +142,45 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		metrics.Count,
 	)
 
-	if deltaQuantumsTotal.Sign() != 0 {
-		// Not enough offsetting subaccounts to fully offset the liquidated subaccount's position.
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count},
-			1,
-			[]gometrics.Label{metrics.GetLabelForIntValue(metrics.BlockHeight, int(ctx.BlockHeight()))},
-		)
+	mode := metrics.DeliverTx
+	blockHeight := ctx.BlockHeight()
+	if ctx.IsCheckTx() {
+		mode = metrics.CheckTx
+		blockHeight += 1
+	}
 
-		err = sdkerrors.Wrapf(
-			types.ErrPositionCannotBeFullyDeleveraged,
-			"OffsetSubaccountPerpetualPosition: Not enough position to fully offset position, "+
-				"subaccount = (%+v), perpetual = (%d), num subaccounts iterated = (%d), quantums remaining = (%+v)",
-			liquidatedSubaccountId,
-			perpetualId,
-			numSubaccountsIterated,
-			deltaQuantumsTotal,
-		)
-		k.Logger(ctx).Error(err.Error())
-		return nil, err
-	} else {
+	if deltaQuantumsRemaining.Sign() == 0 {
 		// Deleveraging was successful.
 		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.Deleveraging, metrics.Success, metrics.Count},
+			[]string{types.ModuleName, mode, metrics.Deleveraging, metrics.Success, metrics.Count},
 			1,
-			[]gometrics.Label{metrics.GetLabelForIntValue(metrics.BlockHeight, int(ctx.BlockHeight()))},
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(metrics.BlockHeight, int(blockHeight)),
+			},
 		)
+	} else {
+		// Not enough offsetting subaccounts to fully offset the liquidated subaccount's position.
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, mode, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(metrics.BlockHeight, int(blockHeight)),
+			},
+		)
+		ctx.Logger().Error(
+			sdkerrors.Wrapf(
+				types.ErrPositionCannotBeFullyOffset,
+				"OffsetSubaccountPerpetualPosition: Not enough position to fully offset position, "+
+					"subaccount = (%+v), perpetual = (%d), quantums remaining = (%+v)",
+				liquidatedSubaccountId,
+				perpetualId,
+				deltaQuantumsRemaining.String(),
+			).Error(),
+		)
+		// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
 	}
-	return fills, nil
+
+	return fills, deltaQuantumsRemaining
 }
 
 // ProcessDeleveraging processes a deleveraging operation by closing both the liquidated subaccount's

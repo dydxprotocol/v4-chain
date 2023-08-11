@@ -52,6 +52,13 @@ func BigIntMulPpm(input *big.Int, ppm uint32) *big.Int {
 	return result.Div(result, big.NewInt(int64(OneMillion)))
 }
 
+// BigIntMulSignedPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`.
+func BigIntMulSignedPpm(input *big.Int, ppm int32) *big.Int {
+	result := new(big.Int)
+	result.Mul(input, big.NewInt(int64(ppm)))
+	return result.Div(result, big.NewInt(int64(OneMillion)))
+}
+
 // BigMin takes two `big.Int` as parameters and returns the smaller one.
 func BigMin(a, b *big.Int) *big.Int {
 	result := new(big.Int)

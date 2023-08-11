@@ -32,11 +32,16 @@ import (
 	"github.com/dydxprotocol/v4/testutil/constants"
 	testtx "github.com/dydxprotocol/v4/testutil/tx"
 	assettypes "github.com/dydxprotocol/v4/x/assets/types"
+	blocktimetypes "github.com/dydxprotocol/v4/x/blocktime/types"
+	bridgetypes "github.com/dydxprotocol/v4/x/bridge/types"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4/x/epochs/types"
+	feetiertypes "github.com/dydxprotocol/v4/x/feetiers/types"
 	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	rewardstypes "github.com/dydxprotocol/v4/x/rewards/types"
 	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
+	stattypes "github.com/dydxprotocol/v4/x/stats/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 
 	"github.com/stretchr/testify/require"
@@ -47,6 +52,48 @@ import (
 type MustMakeCheckTxOptions struct {
 	// AccAddressForSigning is the account that's used to sign the transaction.
 	AccAddressForSigning string
+	// AccSequenceNumberForSigning is the account sequence number that's used to sign the transaction.
+	AccSequenceNumberForSigning uint64
+	// Amount of Gas for the transaction.
+	Gas uint64
+}
+
+// ValidateResponsePrepareProposal is a function that validates the response from the PrepareProposalHandler.
+type ValidateResponsePrepareProposalFn func(sdk.Context, abcitypes.ResponsePrepareProposal) (haltChain bool)
+
+// ValidateResponseProcessProposal is a function that validates the response from the ProcessProposalHandler.
+type ValidateResponseProcessProposalFn func(sdk.Context, abcitypes.ResponseProcessProposal) (haltChain bool)
+
+// ValidateDeliverTxsFn is a function that validates the response from each transaction that is delivered.
+type ValidateDeliverTxsFn func(
+	ctx sdk.Context,
+	request abcitypes.RequestDeliverTx,
+	response abcitypes.ResponseDeliverTx,
+) (haltchain bool)
+
+// AdvanceToBlockOptions is a struct containing options for AdvanceToBlock.* functions.
+type AdvanceToBlockOptions struct {
+	// The time associated with the block. If left at the default value then block time will be left unchanged.
+	BlockTime time.Time
+
+	// RequestPrepareProposalTxsOverride allows overriding the txs that gets passed into the
+	// PrepareProposalHandler. This is useful for testing scenarios where unintended msg txs
+	// end up in the mempool (i.e. CheckTx failed to filter bad msg txs out).
+	RequestPrepareProposalTxsOverride [][]byte
+
+	// RequestProcessProposalTxsOverride allows overriding the txs that gets passed into the
+	// ProcessProposalHandler. This is useful for testing scenarios where bad validators end
+	// up proposing an invalid block proposal.
+	RequestProcessProposalTxsOverride [][]byte
+
+	// DeliverTxsOverride allows overriding the TestApp from being the block proposer and
+	// allows simulating transactions that were agreed to upon consensus to be delivered.
+	// This skips the PrepareProposal and ProcessProposal phase.
+	DeliverTxsOverride [][]byte
+
+	ValidateRespPrepare ValidateResponsePrepareProposalFn
+	ValidateRespProcess ValidateResponseProcessProposalFn
+	ValidateDeliverTxs  ValidateDeliverTxsFn
 }
 
 // Create an instance of app.App with default settings, suitable for unit testing,
@@ -116,12 +163,22 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = authtypes.ModuleName
 	case banktypes.GenesisState:
 		moduleName = banktypes.ModuleName
+	case blocktimetypes.GenesisState:
+		moduleName = blocktimetypes.ModuleName
+	case bridgetypes.GenesisState:
+		moduleName = bridgetypes.ModuleName
 	case perptypes.GenesisState:
 		moduleName = perptypes.ModuleName
 	case clobtypes.GenesisState:
 		moduleName = clobtypes.ModuleName
+	case feetiertypes.GenesisState:
+		moduleName = feetiertypes.ModuleName
 	case pricestypes.GenesisState:
 		moduleName = pricestypes.ModuleName
+	case rewardstypes.GenesisState:
+		moduleName = rewardstypes.ModuleName
+	case stattypes.GenesisState:
+		moduleName = stattypes.ModuleName
 	case satypes.GenesisState:
 		moduleName = satypes.ModuleName
 	case assettypes.GenesisState:
@@ -229,6 +286,7 @@ type TestApp struct {
 	header             tmproto.Header
 	passingCheckTxs    [][]byte
 	passingCheckTxsMtx sync.Mutex
+	halted             bool
 }
 
 func (tApp *TestApp) Builder() TestAppBuilder {
@@ -249,7 +307,6 @@ func (tApp *TestApp) initChainIfNeeded() {
 		return
 	}
 
-	fmt.Printf("!!!!!! %+v\n", tApp.genesis.AppState)
 	// Get the initial genesis state and initialize the chain and commit the results of the initialization.
 	tApp.genesis = tApp.builder.genesisDocFn()
 	tApp.App = tApp.builder.appCreatorFn()
@@ -282,44 +339,33 @@ func (tApp *TestApp) initChainIfNeeded() {
 	}
 }
 
-// AdvanceToBlockIfNecessary advances the chain to the specified block using the current block time.
-// If the block is the same, then this function results in a no-op.
-// Note that due to DEC-1248 the minimum block height is 2.
-func (tApp *TestApp) AdvanceToBlockIfNecessary(block uint32) sdk.Context {
+// AdvanceToBlock advances the chain to the specified block and block time.
+// If the specified block is the current block, simply returns the current context.
+// For example, block = 10, t = 90 will advance to a block with height 10 and with a time of 90.
+func (tApp *TestApp) AdvanceToBlock(
+	block uint32,
+	options AdvanceToBlockOptions,
+) sdk.Context {
+	tApp.panicIfChainIsHalted()
+	tApp.initChainIfNeeded()
+
+	if options.BlockTime.IsZero() { // if time is not specified, use the current block time.
+		options.BlockTime = tApp.header.Time
+	}
+	if int64(block) <= tApp.header.Height {
+		panic(fmt.Errorf("Expected block height (%d) > current block height (%d).", block, tApp.header.Height))
+	}
+	if options.BlockTime.UnixNano() < tApp.header.Time.UnixNano() {
+		panic(fmt.Errorf("Expected time (%v) >= current block time (%v).", options.BlockTime, tApp.header.Time))
+	}
 	if int64(block) == tApp.GetBlockHeight() {
 		return tApp.App.NewContext(true, tApp.header)
 	}
 
-	return tApp.AdvanceToBlock(block)
-}
-
-// AdvanceToBlock advances the chain to the specified block using the current block time.
-// For example, block = 10 will advance to a block with height 10 without changing the time.
-//
-// Note that due to DEC-1248 the minimum block height is 2.
-func (tApp *TestApp) AdvanceToBlock(block uint32) sdk.Context {
-	tApp.initChainIfNeeded()
-	return tApp.AdvanceToBlockWithTime(block, tApp.header.Time)
-}
-
-// AdvanceToBlockWithTime advances the chain to the specified block and block time.
-// For example, block = 10, t = 90 will advance to a block with height 10 and with a time of 90.
-//
-// Note that due to DEC-1248 the minimum block height is 2.
-func (tApp *TestApp) AdvanceToBlockWithTime(block uint32, t time.Time) sdk.Context {
-	if int64(block) <= tApp.header.Height {
-		panic(fmt.Errorf("Expected block height (%d) > current block height (%d).", block, tApp.header.Height))
-	}
-	if t.UnixNano() < tApp.header.Time.UnixNano() {
-		panic(fmt.Errorf("Expected time (%v) >= current block time (%v).", t, tApp.header.Time))
-	}
-
-	tApp.initChainIfNeeded()
-
 	// First advance to the prior block using the current block time. This ensures that we only update the time on
 	// the requested block.
-	if int64(block)-tApp.header.Height > 1 && t != tApp.header.Time {
-		tApp.AdvanceToBlock(block - 1)
+	if int64(block)-tApp.header.Height > 1 && options.BlockTime != tApp.header.Time {
+		tApp.AdvanceToBlock(block-1, options)
 	}
 
 	// Ensure that we grab the lock so that we can read and write passingCheckTxs correctly.
@@ -328,50 +374,87 @@ func (tApp *TestApp) AdvanceToBlockWithTime(block uint32, t time.Time) sdk.Conte
 
 	// Advance to the requested block using the requested block time.
 	for tApp.App.LastBlockHeight() < int64(block) {
+		tApp.panicIfChainIsHalted()
 		tApp.header.Height = tApp.App.LastBlockHeight() + 1
-		tApp.header.Time = t
+		tApp.header.Time = options.BlockTime
 		tApp.header.LastCommitHash = tApp.App.LastCommitID().Hash
 		tApp.header.NextValidatorsHash = tApp.App.LastCommitID().Hash
 
-		// Prepare the proposal and process it.
-		prepareProposalResponse := tApp.App.PrepareProposal(abcitypes.RequestPrepareProposal{
-			Txs:                tApp.passingCheckTxs,
-			MaxTxBytes:         math.MaxInt64,
-			Height:             tApp.header.Height,
-			Time:               tApp.header.Time,
-			NextValidatorsHash: tApp.header.NextValidatorsHash,
-			ProposerAddress:    tApp.header.ProposerAddress,
-		})
-		// Pass forward any transactions that were modified through the preparation phase and process them.
-		processProposalRequest := abcitypes.RequestProcessProposal{
-			Txs:                prepareProposalResponse.Txs,
-			Hash:               tApp.header.AppHash,
-			Height:             tApp.header.Height,
-			Time:               tApp.header.Time,
-			NextValidatorsHash: tApp.header.NextValidatorsHash,
-			ProposerAddress:    tApp.header.ProposerAddress,
-		}
-		processProposalResponse := tApp.App.ProcessProposal(processProposalRequest)
-		if tApp.builder.t == nil {
-			if !processProposalResponse.IsAccepted() {
-				panic(fmt.Errorf(
-					"Expected process proposal request %+v to be accepted, but failed with %+v.",
-					processProposalRequest,
-					processProposalResponse,
-				))
+		deliverTxs := options.DeliverTxsOverride
+		if deliverTxs == nil {
+			// Prepare the proposal and process it.
+			prepareRequest := abcitypes.RequestPrepareProposal{
+				Txs:                tApp.passingCheckTxs,
+				MaxTxBytes:         math.MaxInt64,
+				Height:             tApp.header.Height,
+				Time:               tApp.header.Time,
+				NextValidatorsHash: tApp.header.NextValidatorsHash,
+				ProposerAddress:    tApp.header.ProposerAddress,
 			}
-		} else {
-			require.Truef(
-				tApp.builder.t,
-				processProposalResponse.IsAccepted(),
-				"Expected process proposal request %+v to be accepted, but failed with %+v.",
-				processProposalRequest,
-				processProposalResponse,
-			)
+			if options.RequestPrepareProposalTxsOverride != nil {
+				prepareRequest.Txs = options.RequestPrepareProposalTxsOverride
+			}
+			prepareResponse := tApp.App.PrepareProposal(prepareRequest)
+
+			if options.ValidateRespPrepare != nil {
+				haltChain := options.ValidateRespPrepare(
+					tApp.App.NewContext(true, tApp.header),
+					prepareResponse,
+				)
+				tApp.halted = haltChain
+				if tApp.halted {
+					return tApp.App.NewContext(true, tApp.header)
+				}
+			}
+
+			// Pass forward any transactions that were modified through the preparation phase and process them.
+			if options.RequestProcessProposalTxsOverride != nil {
+				prepareResponse.Txs = options.RequestProcessProposalTxsOverride
+			}
+			processRequest := abcitypes.RequestProcessProposal{
+				Txs:                prepareResponse.Txs,
+				Hash:               tApp.header.AppHash,
+				Height:             tApp.header.Height,
+				Time:               tApp.header.Time,
+				NextValidatorsHash: tApp.header.NextValidatorsHash,
+				ProposerAddress:    tApp.header.ProposerAddress,
+			}
+			processResponse := tApp.App.ProcessProposal(processRequest)
+
+			if options.ValidateRespProcess != nil {
+				haltChain := options.ValidateRespProcess(
+					tApp.App.NewContext(true, tApp.header),
+					processResponse,
+				)
+				tApp.halted = haltChain
+				if tApp.halted {
+					return tApp.App.NewContext(true, tApp.header)
+				}
+			}
+
+			if tApp.builder.t == nil {
+				if !processResponse.IsAccepted() {
+					panic(fmt.Errorf(
+						"Expected process proposal request %+v to be accepted, but failed with %+v.",
+						processRequest,
+						processResponse,
+					))
+				}
+			} else {
+				require.Truef(
+					tApp.builder.t,
+					processResponse.IsAccepted(),
+					"Expected process proposal request %+v to be accepted, but failed with %+v.",
+					processRequest,
+					processResponse,
+				)
+			}
+			deliverTxs = prepareResponse.Txs
 		}
+
 		txsNotInLastProposal := make([][]byte, 0)
 		for _, tx := range tApp.passingCheckTxs {
-			if !slices.ContainsFunc(prepareProposalResponse.Txs, func(tx2 []byte) bool {
+			if !slices.ContainsFunc(deliverTxs, func(tx2 []byte) bool {
 				return bytes.Equal(tx, tx2)
 			}) {
 				txsNotInLastProposal = append(txsNotInLastProposal, tx)
@@ -385,22 +468,37 @@ func (tApp *TestApp) AdvanceToBlockWithTime(block uint32, t time.Time) sdk.Conte
 		})
 
 		// Deliver the transaction from the previous block
-		for _, bz := range prepareProposalResponse.Txs {
-			deliverTxResponse := tApp.App.DeliverTx(abcitypes.RequestDeliverTx{Tx: bz})
-			if tApp.builder.t == nil {
-				if !deliverTxResponse.IsOK() {
-					panic(fmt.Errorf(
-						"Failed to deliver transaction that was accepted: %+v.",
-						deliverTxResponse,
-					))
-				}
-			} else {
-				require.Truef(
-					tApp.builder.t,
-					deliverTxResponse.IsOK(),
-					"Failed to deliver transaction that was accepted: %+v.",
+		for _, bz := range deliverTxs {
+			deliverTxRequest := abcitypes.RequestDeliverTx{Tx: bz}
+			deliverTxResponse := tApp.App.DeliverTx(deliverTxRequest)
+			// Use the supplied validator otherwise use the default validation which expects all delivered
+			// transactions to succeed.
+			if options.ValidateDeliverTxs != nil {
+				haltChain := options.ValidateDeliverTxs(
+					tApp.App.NewContext(false, tApp.header),
+					deliverTxRequest,
 					deliverTxResponse,
 				)
+				tApp.halted = haltChain
+				if tApp.halted {
+					return tApp.App.NewContext(true, tApp.header)
+				}
+			} else {
+				if tApp.builder.t == nil {
+					if !deliverTxResponse.IsOK() {
+						panic(fmt.Errorf(
+							"Failed to deliver transaction that was accepted: %+v.",
+							deliverTxResponse,
+						))
+					}
+				} else {
+					require.Truef(
+						tApp.builder.t,
+						deliverTxResponse.IsOK(),
+						"Failed to deliver transaction that was accepted: %+v.",
+						deliverTxResponse,
+					)
+				}
 			}
 		}
 
@@ -418,11 +516,22 @@ func (tApp *TestApp) Reset() {
 	tApp.genesis = types.GenesisDoc{}
 	tApp.header = tmproto.Header{}
 	tApp.passingCheckTxs = nil
+	tApp.halted = false
+}
+
+// GetHeader fetches the current header of the test app.
+func (tApp *TestApp) GetHeader() tmproto.Header {
+	return tApp.header
 }
 
 // GetBlockHeight fetches the current block height of the test app.
 func (tApp *TestApp) GetBlockHeight() int64 {
 	return tApp.header.Height
+}
+
+// GetHalted fetches the halted flag.
+func (tApp *TestApp) GetHalted() bool {
+	return tApp.halted
 }
 
 // CheckTx adds the transaction to a test specific "mempool" that will be used to deliver the transaction during
@@ -431,10 +540,11 @@ func (tApp *TestApp) GetBlockHeight() int64 {
 //
 // This method is thread-safe.
 func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseCheckTx {
+	tApp.panicIfChainIsHalted()
 	res := tApp.App.CheckTx(req)
 	// Note that the dYdX fork of CometBFT explicitly excludes place and cancel order messages. See
 	// https://github.com/dydxprotocol/cometbft/blob/4d4d3b0/mempool/v0/clist_mempool.go#L416
-	if res.IsOK() && !mempool.IsClobOrderTransaction(req.Tx, log.TestingLogger()) {
+	if res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, log.TestingLogger()) {
 		// We want to ensure that we hold the lock only for updating passingCheckTxs so that App.CheckTx can execute
 		// concurrently.
 		tApp.passingCheckTxsMtx.Lock()
@@ -442,6 +552,26 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 		tApp.passingCheckTxs = append(tApp.passingCheckTxs, req.Tx)
 	}
 	return res
+}
+
+// panicIfChainIsHalted panics if the chain is halted.
+func (tApp *TestApp) panicIfChainIsHalted() {
+	if tApp.halted {
+		panic("Chain is halted")
+	}
+}
+
+// PrepareProposal creates an abci `RequestPrepareProposal` using the current state of the chain
+// and calls the PrepareProposal handler to return an abci `ResponsePrepareProposal`.
+func (tApp *TestApp) PrepareProposal() abcitypes.ResponsePrepareProposal {
+	return tApp.App.PrepareProposal(abcitypes.RequestPrepareProposal{
+		Txs:                tApp.passingCheckTxs,
+		MaxTxBytes:         math.MaxInt64,
+		Height:             tApp.header.Height,
+		Time:               tApp.header.Time,
+		NextValidatorsHash: tApp.header.NextValidatorsHash,
+		ProposerAddress:    tApp.header.ProposerAddress,
+	})
 }
 
 // MustMakeCheckTxsWithClobMsg creates one signed RequestCheckTx for each msg passed in.
@@ -532,16 +662,19 @@ func MustMakeCheckTxWithPrivKeySupplier(
 		panic("Account not found")
 	}
 	account := app.AccountKeeper.GetAccount(ctx, accAddress)
-
+	sequenceNumber := account.GetSequence()
+	if options.AccSequenceNumberForSigning > 0 {
+		sequenceNumber = options.AccSequenceNumberForSigning
+	}
 	checkTx, err := sims.GenSignedMockTx(
 		rand.New(rand.NewSource(42)),
 		app.TxConfig(),
 		messages,
 		sdk.Coins{},
-		0,
+		options.Gas,
 		ctx.ChainID(),
 		[]uint64{account.GetAccountNumber()},
-		[]uint64{account.GetSequence()},
+		[]uint64{sequenceNumber},
 		privKey,
 	)
 	if err != nil {

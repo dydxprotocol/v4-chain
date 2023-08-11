@@ -1,9 +1,6 @@
 package constants
 
 const (
-	// DaemonSocketAddr is the default file path for the `Server` socket.
-	DaemonSocketAddr = "/tmp/daemons.sock"
-
 	// UnixProtocol is the network for gRPC protocol used by the price daemon and server.
 	UnixProtocol = "unix"
 

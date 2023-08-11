@@ -62,7 +62,7 @@ func (k Keeper) ProcessTransfer(
 }
 
 // GenerateTransferEvent takes in a transfer and returns a transfer event.
-func (k Keeper) GenerateTransferEvent(transfer *types.Transfer) *indexerevents.TransferEvent {
+func (k Keeper) GenerateTransferEvent(transfer *types.Transfer) *indexerevents.TransferEventV1 {
 	return indexerevents.NewTransferEvent(
 		satypes.SubaccountId{
 			Owner:  transfer.Sender.Owner,
@@ -86,10 +86,16 @@ func (k Keeper) ProcessDepositToSubaccount(
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.ProcessDepositToSubaccount,
 		metrics.Latency)
 
+	// Convert sender address string to an sdk.AccAddress.
+	senderAccAddress, err := sdk.AccAddressFromBech32(msgDepositToSubaccount.Sender)
+	if err != nil {
+		return err
+	}
+
 	// Invoke account-to-subaccount transfer keeper method in subaccounts.
 	err = k.subaccountsKeeper.DepositFundsFromAccountToSubaccount(
 		ctx,
-		sdk.AccAddress(msgDepositToSubaccount.Sender),
+		senderAccAddress,
 		msgDepositToSubaccount.Recipient,
 		msgDepositToSubaccount.AssetId,
 		new(big.Int).SetUint64(msgDepositToSubaccount.Quantums),
@@ -124,11 +130,17 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.ProcessWithdrawFromSubaccount,
 		metrics.Latency)
 
+	// Convert recipient address string to an sdk.AccAddress.
+	recipientAccAddress, err := sdk.AccAddressFromBech32(msgWithdrawFromSubaccount.Recipient)
+	if err != nil {
+		return err
+	}
+
 	// Invoke subaccount-to-account transfer keeper method in subaccounts.
 	err = k.subaccountsKeeper.WithdrawFundsFromSubaccountToAccount(
 		ctx,
 		msgWithdrawFromSubaccount.Sender,
-		sdk.AccAddress(msgWithdrawFromSubaccount.Recipient),
+		recipientAccAddress,
 		msgWithdrawFromSubaccount.AssetId,
 		new(big.Int).SetUint64(msgWithdrawFromSubaccount.Quantums),
 	)

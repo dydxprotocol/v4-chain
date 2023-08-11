@@ -30,13 +30,13 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 					types.ProcessProposerMatchesEvents{
 						PlacedStatefulOrders: []types.Order{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 						},
 						OrdersIdsFilledInLastBlock: []types.OrderId{
@@ -50,13 +50,13 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				PlacedStatefulOrders: []types.Order{
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				},
 				ExpiredStatefulOrderIds: []types.OrderId{
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 				},
 				OrdersIdsFilledInLastBlock: []types.OrderId{
@@ -95,13 +95,13 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 					types.ProcessProposerMatchesEvents{
 						PlacedStatefulOrders: []types.Order{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 						},
 						OrdersIdsFilledInLastBlock: []types.OrderId{
@@ -120,7 +120,7 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 						},
 						OrdersIdsFilledInLastBlock: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
@@ -136,7 +136,7 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 				},
 				ExpiredStatefulOrderIds: []types.OrderId{
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 				},
 				OrdersIdsFilledInLastBlock: []types.OrderId{
 					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
@@ -150,7 +150,7 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
-			ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(
+			ks := keepertest.NewClobKeepersTestContext(
 				t,
 				memClob,
 				&mocks.BankKeeper{},
@@ -159,11 +159,11 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 
 			// Set the tracer on the multistore to verify the performed writes are correct.
 			traceDecoder := &tracer.TraceDecoder{}
-			ctx.MultiStore().SetTracer(traceDecoder)
+			ks.Ctx.MultiStore().SetTracer(traceDecoder)
 
-			tc.setup(ctx, *keeper)
+			tc.setup(ks.Ctx, *ks.ClobKeeper)
 
-			processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
+			processProposerMatchesEvents := ks.ClobKeeper.GetProcessProposerMatchesEvents(ks.Ctx)
 
 			require.Equal(t, tc.expectedProcessProposerMatchesEvents, processProposerMatchesEvents)
 
@@ -183,15 +183,15 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 func TestSetProcessProposerMatchesEvents_BadBlockHeight(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(
+	ks := keepertest.NewClobKeepersTestContext(
 		t,
 		memClob,
 		&mocks.BankKeeper{},
 		&mocks.IndexerEventManager{},
 	)
-	ctx = ctx.WithBlockHeight(1)
+	ctx := ks.Ctx.WithBlockHeight(1)
 	require.Panics(t, func() {
-		keeper.MustSetProcessProposerMatchesEvents(ctx, types.ProcessProposerMatchesEvents{
+		ks.ClobKeeper.MustSetProcessProposerMatchesEvents(ctx, types.ProcessProposerMatchesEvents{
 			BlockHeight: 5,
 		})
 	})

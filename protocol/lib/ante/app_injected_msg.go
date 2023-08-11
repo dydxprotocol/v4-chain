@@ -2,6 +2,8 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	blocktimetypes "github.com/dydxprotocol/v4/x/blocktime/types"
+	bridgetypes "github.com/dydxprotocol/v4/x/bridge/types"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
 	perpetualstypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
@@ -17,7 +19,10 @@ func IsSingleAppInjectedMsg(msgs []sdk.Msg) bool {
 // Otherwise, returns false.
 func IsAppInjectedMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
-	case *clobtypes.MsgProposedOperations,
+	case
+		*blocktimetypes.MsgIsDelayedBlock,
+		*bridgetypes.MsgAcknowledgeBridge,
+		*clobtypes.MsgProposedOperations,
 		*perpetualstypes.MsgAddPremiumVotes,
 		*pricestypes.MsgUpdateMarketPrices:
 		return true

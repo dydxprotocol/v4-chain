@@ -18,6 +18,14 @@ import (
 
 func TestAppInjectedMsgSamples_Key(t *testing.T) {
 	expectedMsgs := []string{
+		// blocktime
+		"/dydxprotocol.blocktime.MsgIsDelayedBlock",
+		"/dydxprotocol.blocktime.MsgIsDelayedBlockResponse",
+
+		// bridge
+		"/dydxprotocol.bridge.MsgAcknowledgeBridge",
+		"/dydxprotocol.bridge.MsgAcknowledgeBridgeResponse",
+
 		// clob
 		"/dydxprotocol.clob.MsgProposedOperations",
 		"/dydxprotocol.clob.MsgProposedOperationsResponse",

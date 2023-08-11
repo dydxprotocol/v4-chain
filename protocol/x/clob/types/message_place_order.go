@@ -60,7 +60,7 @@ func (msg *MsgPlaceOrder) ValidateBasic() error {
 	}
 
 	if orderId.IsLongTermOrder() && msg.Order.RequiresImmediateExecution() {
-		return ErrLongTermOrdersCannotRequireImmediateExecution
+		return ErrStatefulOrdersCannotRequireImmediateExecution
 	}
 
 	if msg.Order.ReduceOnly {

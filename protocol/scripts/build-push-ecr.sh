@@ -22,11 +22,17 @@ elif [ "$1" == "dev3" ]; then
 elif [ "$1" == "dev4" ]; then
 	aws_account="525975847385"
 	ecr_repo="dev4-validator"
+elif [ "$1" == "dev5" ]; then
+	aws_account="917958511744"
+	ecr_repo="dev5-validator"
 elif [ "$1" == "staging" ]; then
 	aws_account="677285201534"
 	ecr_repo="staging-validator"
+elif [ "$1" == "testnet" ]; then
+	aws_account="419937869548"
+	ecr_repo="testnet-validator"
 else
-	echo "Usage: build-push-ecr.sh (dev|dev2|dev3|dev4|staging)"
+	echo "Usage: build-push-ecr.sh (dev|dev2|dev3|dev4|dev5|staging) (optional: snapshot)"
 	exit 1
 fi
 
@@ -58,23 +64,24 @@ DOCKER_BUILDKIT=1 docker build \
 	-t dydxprotocol-base \
 	-f Dockerfile .
 
-if [ "$1" == "dev" ]; then
-	docker build \
-		--platform linux/amd64 \
-		-t "$ecr:$current_time-$commit_hash-test-build" \
-		-f testing/testnet-dev/Dockerfile \
-		--progress plain .
+docker_tag="$ecr:$current_time-$commit_hash-test-build"
+docker_file="testing/testnet-dev/Dockerfile"
+
+if [ "$2" == "snapshot" ]; then
+  docker_tag="$ecr:$current_time-$commit_hash-test-build-snapshot"
+  docker_file="testing/snapshotting/Dockerfile.snapshot"
+elif [ "$1" == "staging" ]; then
+	docker_file="testing/testnet-staging/Dockerfile"
 fi
 
-if [ "$1" == "staging" ]; then
-	docker build \
-		--platform linux/amd64 \
-		-t "$ecr:$current_time-$commit_hash-test-build" \
-		-f testing/testnet-staging/Dockerfile \
-		--progress plain .
-fi
+docker build \
+	--platform linux/amd64 \
+	-t $docker_tag \
+	-f $docker_file \
+	--progress plain .
+
 
 # Note: the following is based on this [AWS user guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html).
 aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin $aws_account.dkr.ecr.us-east-2.amazonaws.com
 
-docker push "$ecr:$current_time-$commit_hash-test-build"
+docker push $docker_tag

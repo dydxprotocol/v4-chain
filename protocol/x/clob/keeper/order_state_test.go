@@ -116,16 +116,16 @@ func TestGetAllOrderFillStates(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
-			ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(
+			ks := keepertest.NewClobKeepersTestContext(
 				t,
 				memClob,
 				&mocks.BankKeeper{},
 				&mocks.IndexerEventManager{},
 			)
 
-			tc.setup(ctx, *keeper)
+			tc.setup(ks.Ctx, *ks.ClobKeeper)
 
-			fillStates := keeper.GetAllOrderFillStates(ctx)
+			fillStates := ks.ClobKeeper.GetAllOrderFillStates(ks.Ctx)
 			require.ElementsMatch(t, fillStates, tc.expectedFillStates)
 		})
 	}
@@ -191,16 +191,16 @@ func TestSetGetOrderFillAmount(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
-			ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(
+			ks := keepertest.NewClobKeepersTestContext(
 				t,
 				memClob,
 				&mocks.BankKeeper{},
 				&mocks.IndexerEventManager{},
 			)
 
-			tc.setup(ctx, *keeper, tc.orderId)
+			tc.setup(ks.Ctx, *ks.ClobKeeper, tc.orderId)
 
-			exists, fillAmount, prunableBlockHeight := keeper.GetOrderFillAmount(ctx, tc.orderId)
+			exists, fillAmount, prunableBlockHeight := ks.ClobKeeper.GetOrderFillAmount(ks.Ctx, tc.orderId)
 
 			require.Equal(t, exists, tc.expectedExists)
 			if tc.expectedExists {
@@ -214,7 +214,7 @@ func TestSetGetOrderFillAmount(t *testing.T) {
 func TestOrderFillAmountInitMemStore_Success(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepersWithUninitializedMemStore(
+	ks := keepertest.NewClobKeepersTestContextWithUninitializedMemStore(
 		t,
 		memClob,
 		&mocks.BankKeeper{},
@@ -222,44 +222,44 @@ func TestOrderFillAmountInitMemStore_Success(t *testing.T) {
 	)
 
 	// Set some fill amounts.
-	keeper.SetOrderFillAmount(
-		ctx,
+	ks.ClobKeeper.SetOrderFillAmount(
+		ks.Ctx,
 		constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
 		satypes.BaseQuantums(100),
 		uint32(0),
 	)
 
-	keeper.SetOrderFillAmount(
-		ctx,
+	ks.ClobKeeper.SetOrderFillAmount(
+		ks.Ctx,
 		constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
 		satypes.BaseQuantums(100),
 		uint32(0),
 	)
 
 	// This fill amount overwrites the first previous fill amount.
-	keeper.SetOrderFillAmount(
-		ctx,
+	ks.ClobKeeper.SetOrderFillAmount(
+		ks.Ctx,
 		constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
 		satypes.BaseQuantums(200),
 		uint32(0),
 	)
 
 	// Init the memstore.
-	keeper.InitMemStore(ctx)
+	ks.ClobKeeper.InitMemStore(ks.Ctx)
 
 	// Assert that the values can be read after memStore has been warmed.
-	exists, amount, _ := keeper.GetOrderFillAmount(
-		ctx, constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId)
+	exists, amount, _ := ks.ClobKeeper.GetOrderFillAmount(
+		ks.Ctx, constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId)
 	require.True(t, exists)
 	require.Equal(t, satypes.BaseQuantums(100), amount)
 
-	exists, amount, _ = keeper.GetOrderFillAmount(
-		ctx, constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId)
+	exists, amount, _ = ks.ClobKeeper.GetOrderFillAmount(
+		ks.Ctx, constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId)
 	require.True(t, exists)
 	require.Equal(t, satypes.BaseQuantums(200), amount)
 
-	exists, _, _ = keeper.GetOrderFillAmount(
-		ctx, constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15.OrderId)
+	exists, _, _ = ks.ClobKeeper.GetOrderFillAmount(
+		ks.Ctx, constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15.OrderId)
 	require.False(t, exists)
 }
 
@@ -267,7 +267,7 @@ func TestAddOrdersForPruning_Determinism(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
-	ctx, keeper, _, _, _, _, storeKey, _ := keepertest.ClobKeepers(
+	ks := keepertest.NewClobKeepersTestContext(
 		t,
 		memClob,
 		&mocks.BankKeeper{},
@@ -277,7 +277,7 @@ func TestAddOrdersForPruning_Determinism(t *testing.T) {
 	blockHeight := uint32(10)
 
 	store := prefix.NewStore(
-		ctx.KVStore(storeKey),
+		ks.Ctx.KVStore(ks.StoreKey),
 		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
@@ -296,8 +296,8 @@ func TestAddOrdersForPruning_Determinism(t *testing.T) {
 	}
 
 	for i := 0; i < 100; i++ {
-		keeper.AddOrdersForPruning(
-			ctx,
+		ks.ClobKeeper.AddOrdersForPruning(
+			ks.Ctx,
 			orders,
 			blockHeight,
 		)
@@ -320,7 +320,7 @@ func TestAddOrdersForPruning_Determinism(t *testing.T) {
 func TestAddOrdersForPruning_DuplicateOrderIds(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper, _, _, _, _, storeKey, _ := keepertest.ClobKeepers(
+	ks := keepertest.NewClobKeepersTestContext(
 		t,
 		memClob,
 		&mocks.BankKeeper{},
@@ -329,8 +329,8 @@ func TestAddOrdersForPruning_DuplicateOrderIds(t *testing.T) {
 
 	blockHeight := uint32(10)
 
-	keeper.AddOrdersForPruning(
-		ctx,
+	ks.ClobKeeper.AddOrdersForPruning(
+		ks.Ctx,
 		[]types.OrderId{
 			constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
 			constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
@@ -341,7 +341,7 @@ func TestAddOrdersForPruning_DuplicateOrderIds(t *testing.T) {
 	)
 
 	store := prefix.NewStore(
-		ctx.KVStore(storeKey),
+		ks.Ctx.KVStore(ks.StoreKey),
 		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
@@ -555,16 +555,16 @@ func TestPruning(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
-			ctx, keeper, _, _, _, _, storeKey, _ := keepertest.ClobKeepers(
+			ks := keepertest.NewClobKeepersTestContext(
 				t,
 				memClob,
 				&mocks.BankKeeper{},
 				&mocks.IndexerEventManager{},
 			)
 
-			tc.setup(t, ctx, *keeper, tc.orderId)
+			tc.setup(t, ks.Ctx, *ks.ClobKeeper, tc.orderId)
 
-			exists, fillAmount, prunableBlockHeight := keeper.GetOrderFillAmount(ctx, tc.orderId)
+			exists, fillAmount, prunableBlockHeight := ks.ClobKeeper.GetOrderFillAmount(ks.Ctx, tc.orderId)
 
 			require.Equal(t, exists, tc.expectedExists)
 			if tc.expectedExists {
@@ -574,7 +574,7 @@ func TestPruning(t *testing.T) {
 
 			// Verify that expected `blockHeightToPotentiallyPrunableOrdersStore` were deleted.
 			blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
-				ctx.KVStore(storeKey),
+				ks.Ctx.KVStore(ks.StoreKey),
 				types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 			)
 
@@ -584,94 +584,6 @@ func TestPruning(t *testing.T) {
 				)
 				require.False(t, has)
 			}
-		})
-	}
-}
-
-func TestSetOrdersFilledDuringLatestBlock(t *testing.T) {
-	tests := map[string]struct {
-		// Invocation.
-		orderIds []types.OrderId
-
-		// Expectations.
-		expectedOrderIds []types.OrderId
-	}{
-		"Sets a nil slice": {
-			orderIds:         nil,
-			expectedOrderIds: nil,
-		},
-		"Sets a single order": {
-			orderIds: []types.OrderId{
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-			},
-			expectedOrderIds: []types.OrderId{
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-			},
-		},
-		"Sets no orders": {
-			orderIds:         []types.OrderId{},
-			expectedOrderIds: nil,
-		},
-		"Sets duplicate orders": {
-			orderIds: []types.OrderId{
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-			},
-			expectedOrderIds: []types.OrderId{
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-			},
-		},
-		"Sorts orders correctly": {
-			orderIds: []types.OrderId{
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-			},
-			expectedOrderIds: []types.OrderId{
-				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-			},
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			memClob := &mocks.MemClob{}
-			memClob.On("SetClobKeeper", mock.Anything).Return()
-			ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(
-				t,
-				memClob,
-				&mocks.BankKeeper{},
-				&mocks.IndexerEventManager{},
-			)
-
-			// Set the orders for the test case.
-			keeper.SetOrdersFilledDuringLatestBlock(ctx, tc.orderIds)
-
-			// Verify the orders match the expected orders.
-			orderIds := keeper.GetOrdersFilledDuringLatestBlock(ctx)
-			require.Equal(t, tc.expectedOrderIds, orderIds)
-
-			// Set the orders as though they've been filled in a previous block,
-			// and perform the same assertion.
-			keeper.SetOrdersFilledDuringLatestBlock(ctx, []types.OrderId{
-				constants.Order_Alice_Num0_Id9_Clob1_Buy15_Price45_GTB19.OrderId,
-			})
-
-			// Verify the orders match the expected orders.
-			orderIds = keeper.GetOrdersFilledDuringLatestBlock(ctx)
-			require.Equal(t, []types.OrderId{constants.Order_Alice_Num0_Id9_Clob1_Buy15_Price45_GTB19.OrderId}, orderIds)
-
-			// Set the orders for the test case.
-			keeper.SetOrdersFilledDuringLatestBlock(ctx, tc.orderIds)
-
-			// Verify the orders match the expected orders.
-			orderIds = keeper.GetOrdersFilledDuringLatestBlock(ctx)
-			require.Equal(t, tc.expectedOrderIds, orderIds)
 		})
 	}
 }
@@ -946,7 +858,7 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
-			ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(
+			ks := keepertest.NewClobKeepersTestContext(
 				t,
 				memClob,
 				&mocks.BankKeeper{},
@@ -955,11 +867,11 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 
 			// Set the tracer on the multistore to verify the performed writes are correct.
 			traceDecoder := &tracer.TraceDecoder{}
-			ctx.MultiStore().SetTracer(traceDecoder)
+			ks.Ctx.MultiStore().SetTracer(traceDecoder)
 
-			tc.setup(ctx, *keeper, tc.orderId)
+			tc.setup(ks.Ctx, *ks.ClobKeeper, tc.orderId)
 
-			exists, fillAmount, prunableBlockHeight := keeper.GetOrderFillAmount(ctx, tc.orderId)
+			exists, fillAmount, prunableBlockHeight := ks.ClobKeeper.GetOrderFillAmount(ks.Ctx, tc.orderId)
 
 			require.Equal(t, exists, tc.expectedExists)
 			if tc.expectedExists {

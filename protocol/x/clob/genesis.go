@@ -10,7 +10,7 @@ import (
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState) {
 	k.InitializeForGenesis(ctx)
 
 	// Create all `ClobPair` structs.
@@ -40,6 +40,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		panic(err)
 	}
 
+	if err := k.InitializeBlockRateLimit(ctx, genState.BlockRateLimitConfig); err != nil {
+		panic(err)
+	}
+
+	k.InitializeProcessProposerMatchesEvents(ctx)
+
 	// Set the last committed block-time to the genesis time.
 	k.SetBlockTimeForLastCommittedBlock(ctx)
 }
@@ -53,6 +59,9 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	// Read the liquidations config from state.
 	genesis.LiquidationsConfig = k.GetLiquidationsConfig(ctx)
+
+	// Read the block rate limit configuration from state.
+	genesis.BlockRateLimitConfig = k.GetBlockRateLimitConfiguration(ctx)
 
 	return genesis
 }

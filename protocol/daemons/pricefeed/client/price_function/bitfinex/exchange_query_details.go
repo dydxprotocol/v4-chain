@@ -7,12 +7,9 @@ import (
 
 var (
 	BitfinexDetails = types.ExchangeQueryDetails{
-		Exchange: exchange_common.EXCHANGE_FEED_BITFINEX,
-		Url:      "https://api.bitfinex.com/v2/ticker/$",
-		MarketSymbols: map[uint32]string{
-			exchange_common.MARKET_BTC_USD: "tBTCUSD",
-			exchange_common.MARKET_ETH_USD: "tETHUSD",
-		},
+		Exchange:      exchange_common.EXCHANGE_ID_BITFINEX,
+		Url:           "https://api-pub.bitfinex.com/v2/tickers?symbols=$",
 		PriceFunction: BitfinexPriceFunction,
+		IsMultiMarket: true,
 	}
 )

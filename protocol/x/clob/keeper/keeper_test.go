@@ -11,27 +11,27 @@ import (
 
 func TestLogger(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(
+	ks := keepertest.NewClobKeepersTestContext(
 		t,
 		memClob,
 		&mocks.BankKeeper{},
 		&mocks.IndexerEventManager{})
-	logger := keeper.Logger(ctx)
+	logger := ks.ClobKeeper.Logger(ks.Ctx)
 	require.NotNil(t, logger)
 }
 
 func TestInitMemStore_OnlyAllowedOnce(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx, k, _, _, _, _, _, _ := keepertest.ClobKeepersWithUninitializedMemStore(
+	ks := keepertest.NewClobKeepersTestContextWithUninitializedMemStore(
 		t,
 		memClob,
 		&mocks.BankKeeper{},
 		&mocks.IndexerEventManager{})
 
-	k.InitMemStore(ctx)
+	ks.ClobKeeper.InitMemStore(ks.Ctx)
 
 	// Initializing a second time causes a panic
 	require.Panics(t, func() {
-		k.InitMemStore(ctx)
+		ks.ClobKeeper.InitMemStore(ks.Ctx)
 	})
 }

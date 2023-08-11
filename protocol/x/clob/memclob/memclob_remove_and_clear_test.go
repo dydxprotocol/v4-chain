@@ -3,6 +3,7 @@ package memclob
 import (
 	"testing"
 
+	clobtest "github.com/dydxprotocol/v4/testutil/clob"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	memclobtestutil "github.com/dydxprotocol/v4/testutil/memclob"
 	sdktest "github.com/dydxprotocol/v4/testutil/sdk"
@@ -14,7 +15,7 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 	tests := map[string]struct {
 		// State.
 		placedOperations          []types.Operation
-		preexistingStatefulOrders []types.StatefulOrderPlacement
+		preexistingStatefulOrders []types.LongTermOrderPlacement
 
 		// Expectations.
 		expectedRemainingBids []OrderWithRemainingSize
@@ -26,7 +27,7 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 		},
 		"one short-term order is placed": {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedRemainingBids: []OrderWithRemainingSize{
@@ -38,11 +39,11 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 		},
 		"a pre-existing stateful order is placed": {
 			placedOperations: []types.Operation{
-				types.NewPreexistingStatefulOrderPlacementOperation(
+				clobtest.NewPreexistingStatefulOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				),
 			},
-			preexistingStatefulOrders: []types.StatefulOrderPlacement{
+			preexistingStatefulOrders: []types.LongTermOrderPlacement{
 				{
 					Order: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				},
@@ -57,17 +58,17 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 		},
 		"two short-term orders are placed and cross": {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedRemainingBids: []OrderWithRemainingSize{},
 		},
 		"two short-term orders are placed and cross, the partially filled order is canceled": {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30.OrderId,
 						31,
@@ -79,9 +80,9 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 		},
 		"two short-term orders are placed and cross, a new short-term is placed and does not cross": {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{
 				{
@@ -93,89 +94,49 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 		},
 		"two short-term orders are placed and cross, a new stateful order is placed and does not cross": {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
+				clobtest.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10),
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedRemainingBids: []OrderWithRemainingSize{},
+			expectedRemainingBids: []OrderWithRemainingSize{
+				{
+					Order:         constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+					RemainingSize: 25,
+				},
+			},
 		},
 		"two short-term orders are placed and cross, the previous taker order is replaced and crosses": {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell35_Price15_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell35_Price15_GTB25),
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedRemainingBids: []OrderWithRemainingSize{},
 		},
 		"two short-term orders are placed and cross, the previous taker order is replaced and does not cross": {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id10_Clob0_Buy10_Price30_GTB34),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell35_Price15_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id10_Clob0_Buy10_Price30_GTB34),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell35_Price15_GTB25),
 			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedRemainingBids: []OrderWithRemainingSize{},
-		},
-		"a new stateful order crosses a short-term order": {
-			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
+			expectedRemainingAsks: []OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num0_Id10_Clob0_Sell35_Price15_GTB25,
+					RemainingSize: 25,
+				},
 			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedRemainingBids: []OrderWithRemainingSize{},
 		},
 		"a pre-existing stateful order crosses a short-term order": {
 			placedOperations: []types.Operation{
-				types.NewPreexistingStatefulOrderPlacementOperation(
+				clobtest.NewPreexistingStatefulOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
 			},
-			preexistingStatefulOrders: []types.StatefulOrderPlacement{
-				{
-					Order: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedRemainingBids: []OrderWithRemainingSize{},
-		},
-		"a pre-existing stateful order crosses a short-term order, the stateful order is replaced": {
-			placedOperations: []types.Operation{
-				types.NewPreexistingStatefulOrderPlacementOperation(
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
-				types.NewOrderPlacementOperation(
-					constants.LongTermOrder_User2_Num0_Id0_Clob0_Buy35_Price30_GTBT11,
-				),
-			},
-			preexistingStatefulOrders: []types.StatefulOrderPlacement{
-				{
-					Order: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedRemainingBids: []OrderWithRemainingSize{},
-		},
-		"a pre-existing stateful order crosses a short-term order, the stateful order is replaced then canceled": {
-			placedOperations: []types.Operation{
-				types.NewPreexistingStatefulOrderPlacementOperation(
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
-				types.NewOrderPlacementOperation(
-					constants.LongTermOrder_User2_Num0_Id0_Clob0_Buy35_Price30_GTBT11,
-				),
-				types.NewOrderCancellationOperation(
-					types.NewMsgCancelOrderStateful(
-						constants.LongTermOrder_User2_Num0_Id0_Clob0_Buy35_Price30_GTBT11.OrderId,
-						11,
-					),
-				),
-			},
-			preexistingStatefulOrders: []types.StatefulOrderPlacement{
+			preexistingStatefulOrders: []types.LongTermOrderPlacement{
 				{
 					Order: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				},
@@ -201,9 +162,10 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 				tc.preexistingStatefulOrders,
 			)
 
+			operations, _ := memclob.operationsToPropose.GetOperationsToReplay()
 			memclob.RemoveAndClearOperationsQueue(
 				ctx,
-				memclob.pendingFills.operationsToPropose.GetOperationsQueue(),
+				operations,
 			)
 
 			AssertMemclobHasOrders(
@@ -214,7 +176,9 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 				tc.expectedRemainingAsks,
 			)
 
-			require.Empty(t, memclob.pendingFills.operationsToPropose.GetOperationsQueue())
+			operations, shortTermTxBytes := memclob.operationsToPropose.GetOperationsToReplay()
+			require.Empty(t, operations)
+			require.Empty(t, shortTermTxBytes)
 		})
 	}
 }

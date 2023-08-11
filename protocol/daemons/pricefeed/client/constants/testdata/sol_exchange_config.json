@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"SOLUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"SOLUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tSOLUSD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"SOL-USD"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"solusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"SOLUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"SOL-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"SOL-USDT"
+    }
+  ]
+}

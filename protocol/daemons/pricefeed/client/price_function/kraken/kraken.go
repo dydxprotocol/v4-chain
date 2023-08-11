@@ -19,20 +19,30 @@ var (
 // https://api.kraken.com/0/public/Ticker?pair=$
 // https://docs.kraken.com/rest/#tag/Market-Data/operation/getTickerInformation
 type KrakenTickerResult struct {
+	pair            string
 	AskPriceStats   []string `json:"a" validate:"len=3,dive,positive-float-string"`
 	BidPriceStats   []string `json:"b" validate:"len=3,dive,positive-float-string"`
 	ClosePriceStats []string `json:"c" validate:"len=2,dive,positive-float-string"`
 }
 
-func (ktr *KrakenTickerResult) AskPrice() string {
+func (ktr KrakenTickerResult) WithPair(pair string) KrakenTickerResult {
+	ktr.pair = pair
+	return ktr
+}
+
+func (ktr KrakenTickerResult) GetPair() string {
+	return ktr.pair
+}
+
+func (ktr KrakenTickerResult) GetAskPrice() string {
 	return ktr.AskPriceStats[0]
 }
 
-func (ktr *KrakenTickerResult) BidPrice() string {
+func (ktr KrakenTickerResult) GetBidPrice() string {
 	return ktr.BidPriceStats[0]
 }
 
-func (ktr *KrakenTickerResult) ClosePrice() string {
+func (ktr KrakenTickerResult) GetLastPrice() string {
 	return ktr.ClosePriceStats[0]
 }
 
@@ -53,7 +63,7 @@ func unmarshalKrakenResponse(body io.ReadCloser) (*KrakenResponseBody, error) {
 		return nil, fmt.Errorf("kraken API response JSON parse error (%w)", err)
 	}
 
-	// The Kraken API will return an empty list of errors with an API result containing valid symbols. However, it's
+	// The Kraken API will return an empty list of errors with an API result containing valid tickers. However, it's
 	// easier for us to validate that there were no errors if this field is set to nil whenever it's empty.
 	if len(responseBody.Errors) == 0 {
 		responseBody.Errors = nil
@@ -73,43 +83,13 @@ func unmarshalKrakenResponse(body io.ReadCloser) (*KrakenResponseBody, error) {
 	return &responseBody, nil
 }
 
-// extractPriceFromTicker takes a struct representation of the Kraken GetTicker response for a single
-// ticker and computes the market price based on the median of ask price, bid price and last trade
-// close price, shifted by the market-specific exponent.
-func extractPriceFromTicker(
-	result KrakenTickerResult,
-	exponent int32,
-	medianizer lib.Medianizer,
-) (uint64, error) {
-	bigFloatSlice, err := lib.ConvertStringSliceToBigFloatSlice([]string{
-		result.AskPrice(),
-		result.BidPrice(),
-		result.ClosePrice(),
-	})
-	if err != nil {
-		return 0, err
-	}
-
-	// Get the median uint64 value from the slice of big float price values.
-	medianPrice, err := price_function.GetUint64MedianFromReverseShiftedBigFloatValues(
-		bigFloatSlice,
-		exponent,
-		medianizer,
-	)
-	if err != nil {
-		return 0, err
-	}
-
-	return medianPrice, nil
-}
-
-// KrakenPriceFunction transforms an API response from Kraken into a map of market symbols
-// to prices that have been shifted by a market-specific exponent.
+// KrakenPriceFunction transforms an API response from Kraken into a map of tickers to prices that have been
+// shifted by a market-specific exponent.
 func KrakenPriceFunction(
 	response *http.Response,
-	marketPriceExponent map[string]int32,
+	tickerToExponent map[string]int32,
 	medianizer lib.Medianizer,
-) (marketSymbolsToPrice map[string]uint64, unavailableSymbols map[string]error, err error) {
+) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	responseBody, err := unmarshalKrakenResponse(response.Body)
 	if err != nil {
 		return nil, nil, err
@@ -123,20 +103,14 @@ func KrakenPriceFunction(
 		return nil, nil, apiCallError
 	}
 
-	marketSymbolsToPrice = make(map[string]uint64, len(marketPriceExponent))
-	unavailableSymbols = make(map[string]error)
-	for symbol, exponent := range marketPriceExponent {
-		ticker, ok := responseBody.Tickers[symbol]
-		if !ok {
-			unavailableSymbols[symbol] = fmt.Errorf("no ticker found for market symbol %v", symbol)
-			continue
-		}
-		medianPrice, err := extractPriceFromTicker(ticker, exponent, medianizer)
-		if err != nil {
-			unavailableSymbols[symbol] = err
-			continue
-		}
-		marketSymbolsToPrice[symbol] = medianPrice
+	tickers := make([]KrakenTickerResult, 0, len(responseBody.Tickers))
+	for pair, ticker := range responseBody.Tickers {
+		tickers = append(tickers, ticker.WithPair(pair))
 	}
-	return marketSymbolsToPrice, unavailableSymbols, nil
+
+	return price_function.GetMedianPricesFromTickers(
+		tickers,
+		tickerToExponent,
+		medianizer,
+	)
 }

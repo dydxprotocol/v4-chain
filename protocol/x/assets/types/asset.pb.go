@@ -26,18 +26,18 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Asset struct {
 	// Unique, sequentially-generated.
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The human readable symbol of the `Asset` (e.g. `DYDX`, `USDC`, `ATOM`).
+	// The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
 	// Must be uppercase, unique and correspond to the canonical symbol of the
 	// full coin.
 	Symbol string `protobuf:"bytes,2,opt,name=symbol,proto3" json:"symbol,omitempty"`
-	// The name of base denomination unit of the `Asset` (e.g. `udydx`, `uatom`,
+	// The name of base denomination unit of the `Asset` (e.g. `uatom`,
 	// 'ibc/xxxxx'). Must be unique and match the `denom` used in the `sdk.Coin`
 	// type in the `x/bank` module.
 	Denom string `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
 	// The exponent of converting one unit of `denom` to a full coin.
-	// For example, `name=DYDX, denom=udydx, denom_exponent=-6` defines that
-	// `1 udydx = 10^(-6) DYDX`. Note that `udydx` refers to a `Coin` type in
-	// `x/bank`, where the prefix `u` means `micro` by convetion. `udydx` is
+	// For example, `name=USDC, denom=uusdc, denom_exponent=-6` defines that
+	// `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a `Coin` type in
+	// `x/bank`, where the prefix `u` means `micro` by convetion. `uusdc` is
 	// a different concept from a "quantum" defined by `atomic_resolution` below.
 	// To convert from an amount of `denom` to quantums:
 	// `quantums = denom_amount * 10^(denom_exponent - atomic_resolution)`

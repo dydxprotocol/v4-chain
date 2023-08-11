@@ -8,9 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/app/prepare"
 	"github.com/dydxprotocol/v4/lib/metrics"
 )
+
+const ConsensusRound = sdk.ContextKey("consensus_round")
 
 // ProcessProposalHandler is responsible for ensuring that the list of txs in the proposed block are valid.
 // Specifically, this validates:
@@ -25,11 +26,18 @@ import (
 // to be valid, the proposed price update values are compared against the local index price. Because the
 // outcome depends on the local index price, this validation is dependent on "in-memory state"; therefore,
 // this check is NOT stateless.
+// Note: stakingKeeper and perpetualKeeper are only needed for MEV calculations.
 func ProcessProposalHandler(
-	ctxHelper prepare.ContextHelper,
 	txConfig client.TxConfig,
+	clobKeeper ProcessClobKeeper,
+	stakingKeeper ProcessStakingKeeper,
+	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ProcessPricesKeeper,
 ) sdk.ProcessProposalHandler {
+	// Keep track of the current block height and consensus round.
+	currentBlockHeight := int64(0)
+	currentConsensusRound := int64(0)
+
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		defer telemetry.ModuleMeasureSince(
 			ModuleName,
@@ -39,10 +47,14 @@ func ProcessProposalHandler(
 			metrics.Latency,
 		)
 
-		// TODO(DEC-1248): figure out why ctx returns weird store key error when block height == 0
-		if ctxHelper.Height(ctx) < 2 {
-			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+		// Update the current block height and consensus round.
+		if ctx.BlockHeight() != currentBlockHeight {
+			currentBlockHeight = ctx.BlockHeight()
+			currentConsensusRound = 0
+		} else {
+			currentConsensusRound += 1
 		}
+		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
 
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
 		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
@@ -65,6 +77,8 @@ func ProcessProposalHandler(
 			recordErrorMetricsWithLabel(metrics.Validate)
 			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}
+
+		clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
 
 		// Record a success metric.
 		recordSuccessMetrics(ctx, txs, len(req.Txs))

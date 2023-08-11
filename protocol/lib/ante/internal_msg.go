@@ -11,6 +11,11 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	blocktime "github.com/dydxprotocol/v4/x/blocktime/types"
+	bridge "github.com/dydxprotocol/v4/x/bridge/types"
+	feetiers "github.com/dydxprotocol/v4/x/feetiers/types"
+	rewards "github.com/dydxprotocol/v4/x/rewards/types"
+	stats "github.com/dydxprotocol/v4/x/stats/types"
 )
 
 // IsInternalMsg returns true if the given msg is an internal message.
@@ -19,16 +24,26 @@ func IsInternalMsg(msg sdk.Msg) bool {
 	case
 		// MsgUpdateParams
 		*auth.MsgUpdateParams,
+		*blocktime.MsgUpdateDowntimeParams,
 		*bank.MsgUpdateParams,
 		*consensus.MsgUpdateParams,
 		*crisis.MsgUpdateParams,
+		*feetiers.MsgUpdatePerpetualFeeParams,
 		*distribution.MsgUpdateParams,
 		*gov.MsgUpdateParams,
 		*slashing.MsgUpdateParams,
 		*staking.MsgUpdateParams,
+		*stats.MsgUpdateParams,
+		*rewards.MsgUpdateParams,
 
 		// bank
 		*bank.MsgSetSendEnabled,
+
+		// bridge
+		*bridge.MsgCompleteBridge,
+		*bridge.MsgUpdateEventParams,
+		*bridge.MsgUpdateProposeParams,
+		*bridge.MsgUpdateSafetyParams,
 
 		// distribution
 		*distribution.MsgCommunityPoolSpend,

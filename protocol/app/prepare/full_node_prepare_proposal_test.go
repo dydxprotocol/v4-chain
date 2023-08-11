@@ -192,9 +192,6 @@ func TestFullNodePrepareProposalHandler(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockContextHelper := mocks.ContextHelper{}
-			mockContextHelper.On("Height", mock.Anything).Return(int64(1))
-
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
 			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(tc.pricesResp)

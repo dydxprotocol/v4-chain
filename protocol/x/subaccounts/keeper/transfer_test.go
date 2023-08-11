@@ -59,7 +59,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			asset: asstypes.Asset{
 				Id:               0,
 				Symbol:           "USDC",
-				Denom:            "ibc/usdc-placeholder",
+				Denom:            asstypes.AssetUsdc.Denom,
 				DenomExponent:    int32(-3), // $1 = 1_000 coin unit.
 				HasMarket:        false,
 				MarketId:         uint32(0),
@@ -91,7 +91,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			asset: asstypes.Asset{
 				Id:               0,
 				Symbol:           "USDC",
-				Denom:            "ibc/usdc-placeholder",
+				Denom:            asstypes.AssetUsdc.Denom,
 				DenomExponent:    int32(-4), // $1 = 10_000 coin unit.
 				HasMarket:        false,
 				MarketId:         uint32(0),
@@ -134,7 +134,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _ := keepertest.SubaccountsKeepers(t, true)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -363,7 +363,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _ := keepertest.SubaccountsKeepers(t, true)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -662,7 +662,7 @@ func TestTransferFundsFromSubaccountToModule_TransferFundsFromModuleToSubaccount
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _ := keepertest.SubaccountsKeepers(t, true)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Create a mint module for funding test accounts and module accounts.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, minttypes.ModuleName, []string{authtypes.Minter})
@@ -868,14 +868,13 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			expectedSubaccountsModuleAccBalance: big.NewInt(500),
 			expectedFeeModuleAccBalance:         big.NewInt(1500),
 		},
-		"failure - transfer quantums is negative": {
+		"success - transfer quantums is negative": {
 			feeModuleAccBalance:                 big.NewInt(1500),
 			asset:                               *constants.Usdc,
 			subaccountModuleAccBalance:          big.NewInt(500),
 			quantums:                            big.NewInt(-500),
-			expectedErr:                         types.ErrAssetTransferQuantumsNotPositive,
-			expectedSubaccountsModuleAccBalance: big.NewInt(500),
-			expectedFeeModuleAccBalance:         big.NewInt(1500),
+			expectedSubaccountsModuleAccBalance: big.NewInt(1000),
+			expectedFeeModuleAccBalance:         big.NewInt(1000),
 		},
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
 		// is implemented.
@@ -884,7 +883,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _ := keepertest.SubaccountsKeepers(t, true)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -1064,7 +1063,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _ := keepertest.SubaccountsKeepers(t, true)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})

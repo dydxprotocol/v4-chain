@@ -3,6 +3,7 @@ package memclob
 import (
 	"testing"
 
+	clobtest "github.com/dydxprotocol/v4/testutil/clob"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	testutil_memclob "github.com/dydxprotocol/v4/testutil/memclob"
 	sdktest "github.com/dydxprotocol/v4/testutil/sdk"
@@ -22,14 +23,13 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 		order types.Order
 
 		// Expectations.
-		expectedFilledSize            satypes.BaseQuantums
-		expectedOrderStatus           types.OrderStatus
-		expectedRemainingBids         []OrderWithRemainingSize
-		expectedRemainingAsks         []OrderWithRemainingSize
-		expectedOperations            []types.Operation
-		expectedOperationToNonce      map[types.Operation]types.Nonce
-		expectedPendingStatefulOrders []types.Order
-		expectedErr                   error
+		expectedFilledSize         satypes.BaseQuantums
+		expectedOrderStatus        types.OrderStatus
+		expectedRemainingBids      []OrderWithRemainingSize
+		expectedRemainingAsks      []OrderWithRemainingSize
+		expectedOperations         []types.Operation
+		expectedInternalOperations []types.InternalOperation
+		expectedErr                error
 	}{
 		"Can place a valid Long-Term buy order on an empty orderbook": {
 			placedMatchableOrders: []types.MatchableOrder{},
@@ -64,16 +64,11 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15): 0,
-			},
-			expectedPendingStatefulOrders: []types.Order{
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-			},
+			expectedInternalOperations: []types.InternalOperation{},
 		},
 		`Matches a buy order when it overlaps the orderbook, and with no orders on the other side it places the remaining
 		size on the orderbook`: {
@@ -130,13 +125,13 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			expectedFilledSize:  10,
 			expectedOrderStatus: types.Success,
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 					[]types.MakerFill{
 						{
@@ -146,18 +141,22 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15):       0,
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10): 1,
-				types.NewMatchOperation(
-					&constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15,
+				),
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
 							FillAmount:   10,
 						},
 					},
-				): 2,
+				),
 			},
 			expectedRemainingBids: []OrderWithRemainingSize{
 				{
@@ -166,9 +165,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 				},
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedPendingStatefulOrders: []types.Order{
-				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-			},
 		},
 		`Fully matches a Long-Term sell order with other Long-Term buy orders when it overlaps the
 		orderbook`: {
@@ -236,16 +232,16 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			expectedFilledSize:  65,
 			expectedOrderStatus: types.Success,
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 					[]types.MakerFill{
 						{
@@ -259,12 +255,18 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10):    0,
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10):    1,
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25): 2,
-				types.NewMatchOperation(
-					&constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				),
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10,
+				),
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
@@ -275,7 +277,7 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							FillAmount:   40,
 						},
 					},
-				): 3,
+				),
 			},
 			expectedRemainingBids: []OrderWithRemainingSize{
 				{
@@ -284,11 +286,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 				},
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedPendingStatefulOrders: []types.Order{
-				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10,
-				constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
-			},
 		},
 		`Short-Term taker order can fully match with Long-Term maker order`: {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -329,16 +326,16 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			expectedFilledSize:  5,
 			expectedOrderStatus: types.Success,
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
@@ -348,19 +345,22 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10): 0,
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10): 1,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20):        2,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 3,
+				),
 			},
 			expectedRemainingBids: []OrderWithRemainingSize{
 				{
@@ -373,10 +373,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 				},
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedPendingStatefulOrders: []types.Order{
-				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10,
-			},
 		},
 		`A Long-Term sell order can partially match with a Long-Term buy order, fail collateralization
 			checks while matching, and all existing matches are considered valid`: {
@@ -444,16 +440,16 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			expectedFilledSize:  25,
 			expectedOrderStatus: types.Undercollateralized,
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 					[]types.MakerFill{
 						{
@@ -463,27 +459,33 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10):    0,
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10):    1,
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25): 2,
-				types.NewMatchOperation(
-					&constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewOrderRemovalInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+				),
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				),
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 							FillAmount:   25,
 						},
 					},
-				): 3,
+				),
+				types.NewOrderRemovalInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+				),
 			},
 			expectedRemainingBids: []OrderWithRemainingSize{},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedPendingStatefulOrders: []types.Order{
-				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10,
-				constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
-			},
 		},
 		`A Long-Term sell order can partially match with a Long-Term buy order, fail collateralization
 			checks when adding to orderbook, and all existing matches are considered valid`: {
@@ -540,13 +542,13 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			expectedFilledSize:  25,
 			expectedOrderStatus: types.Undercollateralized,
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 					[]types.MakerFill{
 						{
@@ -556,25 +558,29 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10):    0,
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25): 1,
-				types.NewMatchOperation(
-					&constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				),
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 							FillAmount:   25,
 						},
 					},
-				): 2,
+				),
+				types.NewOrderRemovalInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+				),
 			},
 			expectedRemainingBids: []OrderWithRemainingSize{},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedPendingStatefulOrders: []types.Order{
-				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
-			},
 		},
 		`A Long-Term post-only sell order can partially match with a Long-Term buy order,
 				all existing matches are reverted and it's not added to pendingStatefulOrders`: {
@@ -615,13 +621,15 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			expectedFilledSize:  0,
 			expectedOrderStatus: types.Success,
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10): 0,
-				// Post-only order not added to OperationsToPropose.
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewOrderRemovalInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25_PO.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
+				),
 			},
 			expectedRemainingBids: []OrderWithRemainingSize{
 				{
@@ -630,10 +638,50 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 				},
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedPendingStatefulOrders: []types.Order{
-				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+			expectedErr:           types.ErrPostOnlyWouldCrossMakerOrder,
+		},
+		`A Long-term buy order can self-match against a Long-term sell order from the same subaccount,
+			causing the maker order to be removed`: {
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 			},
-			expectedErr: types.ErrPostOnlyWouldCrossMakerOrder,
+			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{
+				0: {
+					CollatCheck: map[satypes.SubaccountId][]types.PendingOpenOrder{
+						constants.Alice_Num0: {
+							{
+								RemainingQuantums: constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.GetBaseQuantums(),
+								IsBuy:             constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.IsBuy(),
+								IsTaker:           false,
+								Subticks:          constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.GetOrderSubticks(),
+								ClobPairId:        constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.GetClobPairId(),
+							},
+						},
+					},
+					Result: map[satypes.SubaccountId]satypes.UpdateResult{
+						constants.Alice_Num0: satypes.Success,
+					},
+				},
+			},
+
+			order: constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+
+			expectedFilledSize:  0,
+			expectedOrderStatus: types.Success,
+			expectedOperations:  []types.Operation{},
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewOrderRemovalInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
+				),
+			},
+			expectedRemainingBids: []OrderWithRemainingSize{},
+			expectedRemainingAsks: []OrderWithRemainingSize{
+				{
+					Order:         constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+					RemainingSize: 65,
+				},
+			},
 		},
 	}
 
@@ -664,8 +712,7 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 				tc.expectedRemainingBids,
 				tc.expectedRemainingAsks,
 				tc.expectedOperations,
-				tc.expectedOperationToNonce,
-				tc.expectedPendingStatefulOrders,
+				tc.expectedInternalOperations,
 				fakeMemClobKeeper,
 			)
 
@@ -705,7 +752,7 @@ func TestPlaceOrder_PreexistingStatefulOrder(t *testing.T) {
 		&longTermOrder,
 	)
 
-	fakeMemClobKeeper.SetStatefulOrderPlacement(ctx, longTermOrder, uint32(5))
+	fakeMemClobKeeper.SetLongTermOrderPlacement(ctx, longTermOrder, uint32(5))
 
 	// Run the test case and verify expectations.
 	placeOrderAndVerifyExpectations(
@@ -727,7 +774,6 @@ func TestPlaceOrder_PreexistingStatefulOrder(t *testing.T) {
 		},
 		[]OrderWithRemainingSize{},
 		[]expectedMatch{},
-		[]types.Order{}, // Note the Long-Term order should not be added as a pending stateful order.
 		fakeMemClobKeeper,
 	)
 }

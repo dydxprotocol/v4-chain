@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"LINKUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"LINKUSD\""
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"LINK-USD"
+    },
+    {
+      "exchangeName":"CryptoCom",
+      "ticker":"LINK_USD"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"linkusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"LINKUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"LINK-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"LINK-USDT"
+    }
+  ]
+}

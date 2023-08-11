@@ -153,7 +153,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 					4, // Placed in previous block.
@@ -218,7 +218,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 					4, // Placed in previous block.
@@ -573,7 +573,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 					4, // Placed in previous block.
@@ -645,7 +645,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 					4, // Placed in previous block.
@@ -728,7 +728,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 					4, // Placed in previous block.
@@ -811,7 +811,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
 						OrderId: types.OrderId{
@@ -890,7 +890,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
 						OrderId: types.OrderId{
@@ -951,245 +951,6 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			runProcessProposerMatchSuccessTest(t, tc)
-		})
-	}
-}
-
-func TestPerformOrderPreprocessing(t *testing.T) {
-	tests := map[string]struct {
-		setupState  func(ctx sdk.Context, k *keeper.Keeper)
-		placeOrders []*types.MsgPlaceOrder
-
-		expectedError                        error
-		expectedTracerWrites                 []string
-		expectedProcessProposerMatchesEvents types.ProcessProposerMatchesEvents
-	}{
-		`Can persist empty place orders`: {
-			placeOrders: []*types.MsgPlaceOrder{},
-			expectedTracerWrites: []string{
-				"ProcessProposerMatchesEvents/value",
-			},
-			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{},
-		},
-		`Can persist place orders with only short-term orders`: {
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
-				},
-			},
-			expectedTracerWrites: []string{
-				"ProcessProposerMatchesEvents/value",
-			},
-			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{},
-		},
-		`Can persist place orders with single stateful order`: {
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			expectedTracerWrites: []string{
-				// Write the stateful order to state and memStore.
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-				"NextStatefulOrderBlockTransactionIndex/value",
-				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
-				"ProcessProposerMatchesEvents/value",
-			},
-			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders: []types.Order{
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-		},
-		`Can persist place orders with multiple stateful orders`: {
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30,
-				},
-				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			expectedTracerWrites: []string{
-				// Write the stateful order to state and memStore.
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30.OrderId.Marshal(),
-					)),
-				),
-				"NextStatefulOrderBlockTransactionIndex/value",
-				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:30.000000000",
-				// Write the stateful order to state and memStore.
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-				"NextStatefulOrderBlockTransactionIndex/value",
-				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
-				"ProcessProposerMatchesEvents/value",
-			},
-			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders: []types.Order{
-					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30,
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-		},
-		`Can persist place orders with a mix of short-term and stateful orders`: {
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
-				},
-				{
-					Order: constants.Order_Alice_Num0_Id1_Clob0_Sell5_Price15_GTB15,
-				},
-				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			expectedTracerWrites: []string{
-				// Write the stateful order to state and memStore.
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-				"NextStatefulOrderBlockTransactionIndex/value",
-				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
-				"ProcessProposerMatchesEvents/value",
-			},
-			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders: []types.Order{
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-		},
-		`Returns error when place order has duplicated orders`: {
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			expectedError: types.ErrStatefulOrderAlreadyExists,
-		},
-		`Returns error when place order has order with same order id but lower priority`: {
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
-				},
-				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			expectedError: types.ErrStatefulOrderAlreadyExists,
-		},
-		`Returns error when order already exist in state`: {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				k.SetStatefulOrderPlacement(
-					ctx,
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			expectedError: types.ErrStatefulOrderAlreadyExists,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			memClob := memclob.NewMemClobPriceTimePriority(false)
-			mockBankKeeper := &mocks.BankKeeper{}
-			ctx,
-				keeper,
-				pricesKeeper,
-				_,
-				perpetualsKeeper,
-				_,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
-
-			ctx = ctx.WithBlockTime(time.Unix(5, 0))
-			prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
-			perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-
-			_, err := keeper.CreatePerpetualClobPair(
-				ctx,
-				clobtest.MustPerpetualId(constants.ClobPair_Btc),
-				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
-				constants.ClobPair_Btc.QuantumConversionExponent,
-				constants.ClobPair_Btc.SubticksPerTick,
-				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.MakerFeePpm,
-				constants.ClobPair_Btc.TakerFeePpm,
-			)
-			require.NoError(t, err)
-			keeper.SetBlockTimeForLastCommittedBlock(ctx)
-
-			if tc.setupState != nil {
-				tc.setupState(ctx, keeper)
-			}
-			// Set the tracer on the multistore to verify the performed writes are correct.
-			traceDecoder := &tracer.TraceDecoder{}
-			ctx.MultiStore().SetTracer(traceDecoder)
-
-			err = keeper.PerformOrderPreprocessing(ctx, tc.placeOrders)
-			if tc.expectedError != nil {
-				require.ErrorContains(t, err, tc.expectedError.Error())
-			} else {
-				require.NoError(t, err)
-				traceDecoder.RequireKeyPrefixWrittenInSequence(
-					t,
-					tc.expectedTracerWrites,
-				)
-
-				require.Equal(
-					t,
-					tc.expectedProcessProposerMatchesEvents,
-					keeper.GetProcessProposerMatchesEvents(ctx),
-				)
-			}
 		})
 	}
 }
@@ -1269,7 +1030,7 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
@@ -1292,7 +1053,7 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20, // GTBT is 20.
 					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
@@ -1418,7 +1179,7 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
 						OrderId: types.OrderId{
@@ -1469,7 +1230,7 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
 						OrderId: types.OrderId{
@@ -1528,7 +1289,7 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 					4, // Placed in previous block.
@@ -1646,7 +1407,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
@@ -1669,7 +1430,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20, // GTBT is 20.
 					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
@@ -1795,7 +1556,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
 						OrderId: types.OrderId{
@@ -1846,7 +1607,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
 						OrderId: types.OrderId{
@@ -1905,7 +1666,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			},
 			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 					4, // Placed in previous block.

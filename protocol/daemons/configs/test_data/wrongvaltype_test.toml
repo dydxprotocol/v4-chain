@@ -1,6 +1,6 @@
 [[exchanges]]
-ExchangeFeedId = 1
+ExchangeId = "BinanceUS"
 IntervalMs = "a"
 TimeoutMs = 3_000
-MaxQueries = 3
+MaxQueries = 1
 MaxBufferSize = 10

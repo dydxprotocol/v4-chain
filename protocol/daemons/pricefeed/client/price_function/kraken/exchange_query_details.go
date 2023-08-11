@@ -7,13 +7,8 @@ import (
 
 var (
 	KrakenDetails = types.ExchangeQueryDetails{
-		Exchange: exchange_common.EXCHANGE_FEED_KRAKEN,
-		Url:      "https://api.kraken.com/0/public/Ticker?pair=$",
-		MarketSymbols: map[types.MarketId]string{
-			exchange_common.MARKET_BTC_USD:  "XXBTZUSD",
-			exchange_common.MARKET_ETH_USD:  "XETHZUSD",
-			exchange_common.MARKET_LINK_USD: "LINKUSD",
-		},
+		Exchange:      exchange_common.EXCHANGE_ID_KRAKEN,
+		Url:           "https://api.kraken.com/0/public/Ticker?pair=$",
 		PriceFunction: KrakenPriceFunction,
 		IsMultiMarket: true,
 	}

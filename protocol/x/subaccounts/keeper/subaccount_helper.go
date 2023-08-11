@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"math/big"
+	"fmt"
 	"sort"
 
 	"github.com/dydxprotocol/v4/dtypes"
@@ -51,10 +51,10 @@ func getUpdatedAssetPositions(
 
 // getUpdatedPerpetualPositions filters out all the perpetual positions on a subaccount that have
 // been updated. This will include any perpetual postions that were closed due to an update or that
-// received / paid out funding payments.
+// received / paid out funding payments..
 func getUpdatedPerpetualPositions(
 	update settledUpdate,
-	lastFundingPayments map[uint32]*big.Int,
+	fundingPayments map[uint32]dtypes.SerializableInt,
 ) []*types.PerpetualPosition {
 	perpetualIdToPositionMap := make(map[uint32]*types.PerpetualPosition)
 	for _, perpetualPosition := range update.SettledSubaccount.PerpetualPositions {
@@ -68,8 +68,8 @@ func getUpdatedPerpetualPositions(
 	for _, perpetualUpdate := range update.PerpetualUpdates {
 		updatedPerpetualIds[perpetualUpdate.PerpetualId] = struct{}{}
 	}
-	// Mark perpetuals with non-zero last funding also as updated.
-	for perpetualIdWithNonZeroLastFunding := range lastFundingPayments {
+	// Mark perpetuals with non-zero funding payment also as updated.
+	for perpetualIdWithNonZeroLastFunding := range fundingPayments {
 		updatedPerpetualIds[perpetualIdWithNonZeroLastFunding] = struct{}{}
 	}
 
@@ -82,16 +82,9 @@ func getUpdatedPerpetualPositions(
 		// properties are left as the default values as a 0-sized position indicates the position is
 		// closed and thus the funding index and the side of the position does not matter.
 		if !exists {
-			// Last funding payment is by default 0 if perpetual doesn't exist in `lastFundingPayments`.
-			lastFundingPayment := big.NewInt(0)
-			if value, found := lastFundingPayments[updatedId]; found {
-				lastFundingPayment = value
-			}
 			perpetualPosition = &types.PerpetualPosition{
 				PerpetualId: updatedId,
 				Quantums:    dtypes.ZeroInt(),
-				// Include last funding payment of a closed position to be later emitted in indexer events.
-				LastFundingPayment: dtypes.NewIntFromBigInt(lastFundingPayment),
 			}
 		}
 		updatedPerpetualPositions = append(updatedPerpetualPositions, perpetualPosition)
@@ -107,8 +100,10 @@ func getUpdatedPerpetualPositions(
 
 // For each settledUpdate in settledUpdates, updates its SettledSubaccount.PerpetualPositions
 // to reflect settledUpdate.PerpetualUpdates.
+// For newly created positions, use `perpIdToFundingIndex` map to populate the `FundingIndex` field.
 func UpdatePerpetualPositions(
 	settledUpdates []settledUpdate,
+	perpIdToFundingIndex map[uint32]dtypes.SerializableInt,
 ) (
 	success bool,
 	err error,
@@ -139,9 +134,16 @@ func UpdatePerpetualPositions(
 			} else {
 				// This subaccount does not have a matching position for this update.
 				// Create the new position.
+				fundingIndex, exists := perpIdToFundingIndex[pu.PerpetualId]
+				if !exists {
+					// Invariant: `perpIdToFundingIndex` contains all existing perpetauls,
+					// and perpetual position update must refer to an existing perpetual.
+					panic(fmt.Sprintf("perpetual id %d not found in perpIdToFundingIndex", pu.PerpetualId))
+				}
 				perpetualPosition := &types.PerpetualPosition{
-					PerpetualId: pu.PerpetualId,
-					Quantums:    dtypes.NewIntFromBigInt(pu.GetBigQuantums()),
+					PerpetualId:  pu.PerpetualId,
+					Quantums:     dtypes.NewIntFromBigInt(pu.GetBigQuantums()),
+					FundingIndex: fundingIndex,
 				}
 
 				// Add the new position to the map.

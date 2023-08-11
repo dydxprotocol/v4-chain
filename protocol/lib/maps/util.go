@@ -33,3 +33,16 @@ func GetSortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
 	})
 	return keys
 }
+
+// InvertMustHaveDistinctValues returns a new map with the keys and values of the input map swapped. If there are
+// duplicate values in the input map, the method will panic.
+func InvertMustHaveDistinctValues[K comparable, V comparable](m map[K]V) map[V]K {
+	invert := make(map[V]K, len(m))
+	for k, v := range m {
+		if _, exists := invert[v]; exists {
+			panic(fmt.Sprintf("duplicate map value: %v", v))
+		}
+		invert[v] = k
+	}
+	return invert
+}

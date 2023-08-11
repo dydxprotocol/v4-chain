@@ -8,11 +8,20 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 )
 
-// MsgQueryAllMarketExec lists all markets in `Prices`.
-func MsgQueryAllMarketExec(clientCtx client.Context) (testutil.BufferWriter, error) {
+// MsgQueryAllMarketParamExec lists all markets params in `Prices`.
+func MsgQueryAllMarketParamExec(clientCtx client.Context) (testutil.BufferWriter, error) {
 	return clitestutil.ExecTestCLICmd(
 		clientCtx,
-		pricescli.CmdListMarket(),
+		pricescli.CmdListMarketParam(),
+		[]string{},
+	)
+}
+
+// MsgQueryAllMarketPriceExec lists all markets prices in `Prices`.
+func MsgQueryAllMarketPriceExec(clientCtx client.Context) (testutil.BufferWriter, error) {
+	return clitestutil.ExecTestCLICmd(
+		clientCtx,
+		pricescli.CmdListMarketPrice(),
 		[]string{},
 	)
 }

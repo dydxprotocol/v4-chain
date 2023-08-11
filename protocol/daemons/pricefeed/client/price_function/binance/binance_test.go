@@ -2,8 +2,11 @@ package binance_test
 
 import (
 	"errors"
-	"github.com/dydxprotocol/v4/testutil/daemons/pricefeed"
+	"fmt"
+	"github.com/dydxprotocol/v4/testutil/constants"
 	"testing"
+
+	"github.com/dydxprotocol/v4/testutil/daemons/pricefeed"
 
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/binance"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/testutil"
@@ -13,11 +16,38 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test tickers for Binance.
+const (
+	BTCUSDC_TICKER = `"BTCUSDT"`
+	ETHUSDC_TICKER = `"ETHUSDT"`
+)
+
+// Test exponent maps.
 var (
-	binanceResponseString = `{"askPrice": "1368.5100", "bidPrice": "1368.0800", "lastPrice": "1368.2100"}`
+	BtcExponentMap = map[string]int32{
+		BTCUSDC_TICKER: constants.BtcUsdExponent,
+	}
+	EthExponentMap = map[string]int32{
+		ETHUSDC_TICKER: constants.EthUsdExponent,
+	}
+	BtcAndEthExponentMap = map[string]int32{
+		BTCUSDC_TICKER: constants.BtcUsdExponent,
+		ETHUSDC_TICKER: constants.EthUsdExponent,
+	}
 )
 
 func TestBinancePriceFunction_Mixed(t *testing.T) {
+	// Test response strings.
+	var (
+		btcTicker = pricefeed.ReadJsonTestFile(t, "btc_ticker_binance.json")
+		ethTicker = pricefeed.ReadJsonTestFile(t, "eth_ticker_binance.json")
+
+		ResponseStringTemplate  = `[%s]`
+		BtcResponseString       = fmt.Sprintf(ResponseStringTemplate, btcTicker)
+		EthResponseString       = fmt.Sprintf(ResponseStringTemplate, ethTicker)
+		BtcAndEthResponseString = fmt.Sprintf(`[%s,%s]`, btcTicker, ethTicker)
+	)
+
 	tests := map[string]struct {
 		// parameters
 		responseJsonString  string
@@ -29,116 +59,150 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 		expectedUnavailableMap map[string]error
 		expectedError          error
 	}{
-		"Failure - Empty market price exponent map": {
-			responseJsonString: binanceResponseString,
-			exponentMap:        map[string]int32{},
-			expectedError: errors.New(
-				"Invalid market price exponent map for Binance price function of length: 0, expected length 1",
-			),
-		},
-		"Failure - Two values in the market price exponent map": {
-			responseJsonString: binanceResponseString,
-			exponentMap: map[string]int32{
-				testutil.ETHUSDC: 2,
-				testutil.BTCUSDC: 3,
-			},
-			expectedError: errors.New(
-				"Invalid market price exponent map for Binance price function of length: 2, expected length 1",
-			),
-		},
 		"Unavailable - invalid response": {
 			// Invalid due to trailing comma in JSON.
-			responseJsonString: `{"askPrice": "1368.5100", "bidPrice": "1368.0800", "lastPrice": "1368.2100",}`,
-			exponentMap:        testutil.ExponentSymbolMap,
-			expectedUnavailableMap: map[string]error{
-				testutil.ETHUSDC: errors.New("invalid character '}' looking for beginning of object key string"),
-			},
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
+				`{"symbol":"ETHUSDT","lastPrice":"1780.29000000","bidPrice":"1780.24000000","askPrice":"1780.25000000",}`),
+			exponentMap:   EthExponentMap,
+			expectedError: errors.New("invalid character '}' looking for beginning of object key string"),
 		},
 		"Unavailable - invalid type in response: number": {
-			// Invalid due to integer bidPrice when string was expected.
-			responseJsonString: `{"askPrice": "1368.5100", "bidPrice": 1368.0800, "lastPrice": "1368.2100"}`,
-			exponentMap:        testutil.ExponentSymbolMap,
-			expectedUnavailableMap: map[string]error{
-				testutil.ETHUSDC: errors.New("json: cannot unmarshal number into Go struct field " +
-					"BinanceResponseBody.bidPrice of type string"),
-			},
+			// Invalid due to number askPrice when string was expected.
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
+				`{"symbol":"ETHUSDT","lastPrice":"1780.29000000","bidPrice":"1780.24000000","askPrice":1780.25000000}`),
+			exponentMap: EthExponentMap,
+			expectedError: errors.New("json: cannot unmarshal number into Go struct field " +
+				"BinanceTicker.askPrice of type string"),
 		},
-		"Unavailable - invalid type in response: malformed string": {
-			responseJsonString: `{"askPrice": "1368.5100", "bidPrice": "Not a Number", "lastPrice": "1368.2100"}`,
-			exponentMap:        testutil.ExponentSymbolMap,
+		"Unavailable - bid price is 0": {
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
+				`{"symbol":"ETHUSDT","lastPrice":"1780.29000000","bidPrice":"0","askPrice":"1780.25000000"}`),
+			exponentMap:      EthExponentMap,
+			expectedPriceMap: make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				testutil.ETHUSDC: errors.New("Key: 'BinanceResponseBody.BidPrice' Error:Field validation for " +
+				ETHUSDC_TICKER: errors.New("Key: 'BinanceTicker.BidPrice' Error:Field validation for " +
 					"'BidPrice' failed on the 'positive-float-string' tag"),
 			},
 		},
-		"Unavailable - empty response": {
-			responseJsonString: `{}`,
-			exponentMap:        testutil.ExponentSymbolMap,
+		"Unavailable - ask price is negative": {
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
+				`{"symbol":"ETHUSDT","lastPrice":"1780.29000000","bidPrice":"1780.24000000","askPrice":"-1780.25000000"}`),
+			exponentMap:      EthExponentMap,
+			expectedPriceMap: make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				testutil.ETHUSDC: errors.New(
-					"Key: 'BinanceResponseBody.AskPrice' Error:Field validation for 'AskPrice' failed on the 'required' tag\n" +
-						"Key: 'BinanceResponseBody.BidPrice' Error:Field validation for 'BidPrice' failed on the 'required' tag\n" +
-						"Key: 'BinanceResponseBody.LastPrice' Error:Field validation for 'LastPrice' failed on the 'required' tag",
-				),
+				ETHUSDC_TICKER: errors.New("Key: 'BinanceTicker.AskPrice' Error:Field validation for " +
+					"'AskPrice' failed on the 'positive-float-string' tag"),
+			},
+		},
+		"Unavailable - last price is negative": {
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
+				`{"symbol":"ETHUSDT","lastPrice":"-1780.29000000","bidPrice":"1780.24000000","askPrice":"1780.25000000"}`),
+			exponentMap:      EthExponentMap,
+			expectedPriceMap: make(map[string]uint64),
+			expectedUnavailableMap: map[string]error{
+				ETHUSDC_TICKER: errors.New("Key: 'BinanceTicker.LastPrice' Error:Field validation for " +
+					"'LastPrice' failed on the 'positive-float-string' tag"),
+			},
+		},
+		"Unavailable - empty response": {
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate, `{}`),
+			exponentMap:        BtcExponentMap,
+			expectedPriceMap:   make(map[string]uint64),
+			expectedUnavailableMap: map[string]error{
+				BTCUSDC_TICKER: errors.New(`no listing found for ticker "BTCUSDT"`),
+			},
+		},
+		"Unavailable - empty list response": {
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate, ``),
+			exponentMap:        BtcExponentMap,
+			expectedPriceMap:   make(map[string]uint64),
+			expectedUnavailableMap: map[string]error{
+				BTCUSDC_TICKER: errors.New(`no listing found for ticker "BTCUSDT"`),
 			},
 		},
 		"Unavailable - incomplete response": {
-			responseJsonString: `{"askPrice": "1368.5100", "bidPrice": "1368.0800"}`,
-			exponentMap:        testutil.ExponentSymbolMap,
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
+				`{"symbol":"ETHUSDT","lastPrice":"1780.29000000","askPrice":"1780.25000000"}`),
+			exponentMap:      EthExponentMap,
+			expectedPriceMap: make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				testutil.ETHUSDC: errors.New(
-					"Key: 'BinanceResponseBody.LastPrice' Error:Field validation for 'LastPrice' failed on the 'required' tag",
+				ETHUSDC_TICKER: errors.New(
+					"Key: 'BinanceTicker.BidPrice' Error:Field validation for 'BidPrice' failed on the 'required' tag",
 				),
 			},
 		},
 		"Failure - overflow due to massively negative exponent": {
-			responseJsonString: binanceResponseString,
-			exponentMap:        map[string]int32{testutil.ETHUSDC: -3000},
-			expectedError:      errors.New("value overflows uint64"),
+			responseJsonString: BtcResponseString,
+			exponentMap:        map[string]int32{BTCUSDC_TICKER: -3000},
+			expectedPriceMap:   make(map[string]uint64),
+			expectedUnavailableMap: map[string]error{
+				BTCUSDC_TICKER: errors.New("value overflows uint64"),
+			},
 		},
 		"Failure - medianization error": {
-			responseJsonString:  binanceResponseString,
-			exponentMap:         testutil.ExponentSymbolMap,
+			responseJsonString:  BtcResponseString,
+			exponentMap:         BtcExponentMap,
 			medianFunctionFails: true,
-			expectedError:       testutil.MedianizationError,
+			expectedPriceMap:    make(map[string]uint64),
+			expectedUnavailableMap: map[string]error{
+				BTCUSDC_TICKER: testutil.MedianizationError,
+			},
 		},
-		"Success - extra fields": {
-			responseJsonString: `{"askPrice": "1368.5100", "bidPrice": "1368.0800", "lastPrice": "1368.2100", "extra": false}`,
-			exponentMap:        testutil.ExponentSymbolMap,
+		"Mixed - missing btc response and has eth response": {
+			responseJsonString: EthResponseString,
+			exponentMap:        BtcAndEthExponentMap,
 			expectedPriceMap: map[string]uint64{
-				testutil.ETHUSDC: uint64(1_368_210_000),
+				ETHUSDC_TICKER: uint64(1_780_250_000),
+			},
+			expectedUnavailableMap: map[string]error{
+				BTCUSDC_TICKER: errors.New(`no listing found for ticker "BTCUSDT"`),
 			},
 		},
 		"Success - integers": {
-			responseJsonString: `{"askPrice": "1368.5100", "bidPrice": "1368", "lastPrice": "1368.2100"}`,
-			exponentMap:        testutil.ExponentSymbolMap,
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
+				`{"symbol":"ETHUSDT","lastPrice":"1780","bidPrice":"1780","askPrice":"1780.25000000"}`),
+			exponentMap: EthExponentMap,
 			expectedPriceMap: map[string]uint64{
-				testutil.ETHUSDC: uint64(1_368_210_000),
+				ETHUSDC_TICKER: uint64(1_780_000_000),
 			},
 		},
 		"Success - negative exponent": {
-			responseJsonString: binanceResponseString,
-			exponentMap:        testutil.ExponentSymbolMap,
+			responseJsonString: BtcResponseString,
+			exponentMap:        BtcExponentMap,
 			expectedPriceMap: map[string]uint64{
-				testutil.ETHUSDC: uint64(1_368_210_000),
+				BTCUSDC_TICKER: uint64(2_794_470_000),
 			},
 		},
 		"Success - decimals beyond supported precision ignored": {
-			responseJsonString: `
-			{"askPrice": "1368.5100", "bidPrice": "1368.0800", "lastPrice": "1368.211234656788"}
-			`,
-			exponentMap: testutil.ExponentSymbolMap,
+			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
+				`{"symbol":"ETHUSDT","lastPrice":"1780.2900","bidPrice":"1780.240","askPrice":"1780.25123752942"}`),
+			exponentMap: EthExponentMap,
 			expectedPriceMap: map[string]uint64{
-				testutil.ETHUSDC: uint64(1_368_211_234),
+				ETHUSDC_TICKER: uint64(1_780_251_237),
 			},
 		},
 		"Success - positive exponent": {
-			responseJsonString: binanceResponseString,
+			responseJsonString: BtcResponseString,
 			exponentMap: map[string]int32{
-				testutil.ETHUSDC: 2,
+				BTCUSDC_TICKER: 1,
 			},
 			expectedPriceMap: map[string]uint64{
-				testutil.ETHUSDC: uint64(13),
+				BTCUSDC_TICKER: uint64(2_794),
+			},
+		},
+		"Success - two tickers in request, two tickers in response": {
+			responseJsonString: BtcAndEthResponseString,
+			exponentMap:        BtcAndEthExponentMap,
+			expectedPriceMap: map[string]uint64{
+				BTCUSDC_TICKER: uint64(2_794_470_000),
+				ETHUSDC_TICKER: uint64(1_780_250_000),
+			},
+		},
+		"Success - one ticker in request, two tickers in response": {
+			responseJsonString: BtcAndEthResponseString,
+			exponentMap:        EthExponentMap,
+			expectedPriceMap: map[string]uint64{
+				ETHUSDC_TICKER: uint64(1_780_250_000),
 			},
 		},
 	}

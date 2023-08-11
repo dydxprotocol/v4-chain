@@ -37,20 +37,17 @@ func TestRandomizedGenState(t *testing.T) {
 		var pricesGenesis types.GenesisState
 		simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &pricesGenesis)
 
-		require.True(t, len(pricesGenesis.ExchangeFeeds) >= 1)
-		require.True(t, len(pricesGenesis.ExchangeFeeds) <= 1_000)
+		require.True(t, len(pricesGenesis.MarketParams) >= 1)
+		require.True(t, len(pricesGenesis.MarketParams) <= 1_000)
+		for _, marketParam := range pricesGenesis.MarketParams {
+			require.True(t, len(marketParam.Pair) >= 7)
+			require.True(t, strings.HasSuffix(marketParam.Pair, "-USD"))
 
-		require.True(t, len(pricesGenesis.Markets) >= 1)
-		require.True(t, len(pricesGenesis.Markets) <= 1_000)
-		for _, market := range pricesGenesis.Markets {
-			require.True(t, len(market.Pair) >= 7)
-			require.True(t, strings.HasSuffix(market.Pair, "-USD"))
+			require.True(t, marketParam.Exponent >= -15)
+			require.True(t, marketParam.Exponent <= 15)
 
-			require.True(t, market.Exponent >= -15)
-			require.True(t, market.Exponent <= 15)
-
-			require.True(t, market.MinPriceChangePpm >= 1)
-			require.True(t, market.MinPriceChangePpm < 10_000)
+			require.True(t, marketParam.MinPriceChangePpm >= 1)
+			require.True(t, marketParam.MinPriceChangePpm < 10_000)
 		}
 	}
 }

@@ -1,14 +1,15 @@
 package cmd
 
 import (
+	"time"
+
 	tmcfg "github.com/cometbft/cometbft/config"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )
 
 const (
-	// TODO(CORE-189): Support both USDC and DYDX for gas.
-	// TODO(CORE-194): Update denom for IBC USDC.
-	minGasPrice = "0ibc/usdc-placeholder"
+	// TODO(CORE-189): Support additional tokens for gas.
+	minGasPrice = "0ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
 )
 
 // DydxAppConfig specifies dYdX app specific config.
@@ -84,6 +85,12 @@ func initTendermintConfig() *tmcfg.Config {
 
 	// Enable telemetry.
 	cfg.Instrumentation.Prometheus = true
+
+	// Set default commit timeout to 999ms for faster block time.
+	// Note: avoid using 1s since it's considered tne default Tendermint value
+	// (https://github.com/dydxprotocol/tendermint/blob/dc03b21cf5d54c641e1d14b14fae5920fa7ba656/config/config.go#L982)
+	// and will be overridden by `interceptConfigs` in `cosmos-sdk`.
+	cfg.Consensus.TimeoutCommit = 999 * time.Millisecond
 
 	return cfg
 }

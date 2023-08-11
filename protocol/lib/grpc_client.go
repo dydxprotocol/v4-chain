@@ -23,7 +23,7 @@ type GrpcClient interface {
 	CloseConnection(grpcConn *grpc.ClientConn) error
 }
 
-// NewGrpcConnection calls `grpc.Dial` with custom paramaters to create a secure connection
+// NewGrpcConnection calls `grpc.Dial` with custom parameters to create a secure connection
 // with context that blocks until the underlying connection is up.
 func (g *GrpcClientImpl) NewGrpcConnection(
 	ctx context.Context,

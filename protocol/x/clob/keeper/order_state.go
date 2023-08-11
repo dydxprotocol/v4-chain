@@ -69,43 +69,6 @@ func (k Keeper) GetOrdersFilledDuringLatestBlock(ctx sdk.Context) []types.OrderI
 	return ordersFilledDuringLatestBlock.OrderIds
 }
 
-// SetOrdersFilledDuringLatestBlock sets the canonical list of OrderIds filled during the latest block.
-// - The `orderIds` provided will be automatically sorted.
-// - If the `orderIds` slice provided contains duplicates, the duplicates will removed.
-func (k Keeper) SetOrdersFilledDuringLatestBlock(
-	ctx sdk.Context,
-	orderIds []types.OrderId,
-) {
-	// Retrieve an instance of the memory store.
-	memStore := ctx.KVStore(k.memKey)
-
-	var ordersFilledDuringLatestBlockSet = make(map[types.OrderId]bool)
-
-	// Iterate over all `ordersFilledDuringLatestBlockOrderIds` and place them in the set in order to dedupe them.
-	for _, orderId := range orderIds {
-		ordersFilledDuringLatestBlockSet[orderId] = true
-	}
-
-	// Iterate over the set and build a list of `dedupedOrderIds`.
-	var dedupedOrderIds = make([]types.OrderId, 0, len(ordersFilledDuringLatestBlockSet))
-	for orderId := range ordersFilledDuringLatestBlockSet {
-		dedupedOrderIds = append(dedupedOrderIds, orderId)
-	}
-
-	// Sort the orderIds so that the `memStore` write is deterministic.
-	types.MustSortAndHaveNoDuplicates(dedupedOrderIds)
-
-	// Set the new `dedupedOrderIds` on the `ordersFilledDuringLatestBlock`.
-	var ordersFilledDuringLatestBlock = types.OrdersFilledDuringLatestBlock{}
-	ordersFilledDuringLatestBlock.OrderIds = dedupedOrderIds
-
-	// Write `ordersFilledDuringLatestBlock` to the `memStore`.
-	memStore.Set(
-		[]byte(types.OrdersFilledDuringLatestBlockKey),
-		k.cdc.MustMarshal(&ordersFilledDuringLatestBlock),
-	)
-}
-
 // SetOrderFillAmount writes the total `fillAmount` and `prunableBlockHeight` of an order to on-chain state.
 // TODO(DEC-1219): Determine whether we should continue using `OrderFillState` proto for stateful orders.
 func (k Keeper) SetOrderFillAmount(

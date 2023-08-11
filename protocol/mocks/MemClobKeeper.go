@@ -45,8 +45,8 @@ func (_m *MemClobKeeper) AddOrderToOrderbookCollatCheck(ctx types.Context, clobP
 	return r0, r1
 }
 
-// CheckTxCancelOrder provides a mock function with given fields: ctx, msgCancelOrder
-func (_m *MemClobKeeper) CheckTxCancelOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgCancelOrder) error {
+// CancelShortTermOrder provides a mock function with given fields: ctx, msgCancelOrder
+func (_m *MemClobKeeper) CancelShortTermOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgCancelOrder) error {
 	ret := _m.Called(ctx, msgCancelOrder)
 
 	var r0 error
@@ -59,8 +59,8 @@ func (_m *MemClobKeeper) CheckTxCancelOrder(ctx types.Context, msgCancelOrder *c
 	return r0
 }
 
-// DoesStatefulOrderExistInState provides a mock function with given fields: ctx, order
-func (_m *MemClobKeeper) DoesStatefulOrderExistInState(ctx types.Context, order clobtypes.Order) bool {
+// DoesLongTermOrderExistInState provides a mock function with given fields: ctx, order
+func (_m *MemClobKeeper) DoesLongTermOrderExistInState(ctx types.Context, order clobtypes.Order) bool {
 	ret := _m.Called(ctx, order)
 
 	var r0 bool
@@ -87,6 +87,27 @@ func (_m *MemClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventMa
 	}
 
 	return r0
+}
+
+// GetLongTermOrderPlacement provides a mock function with given fields: ctx, orderId
+func (_m *MemClobKeeper) GetLongTermOrderPlacement(ctx types.Context, orderId clobtypes.OrderId) (clobtypes.LongTermOrderPlacement, bool) {
+	ret := _m.Called(ctx, orderId)
+
+	var r0 clobtypes.LongTermOrderPlacement
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) clobtypes.LongTermOrderPlacement); ok {
+		r0 = rf(ctx, orderId)
+	} else {
+		r0 = ret.Get(0).(clobtypes.LongTermOrderPlacement)
+	}
+
+	var r1 bool
+	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.OrderId) bool); ok {
+		r1 = rf(ctx, orderId)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
 }
 
 // GetOrderFillAmount provides a mock function with given fields: ctx, orderId
@@ -133,22 +154,22 @@ func (_m *MemClobKeeper) GetStatePosition(ctx types.Context, subaccountId subacc
 	return r0
 }
 
-// GetStatefulOrderPlacement provides a mock function with given fields: ctx, orderId
-func (_m *MemClobKeeper) GetStatefulOrderPlacement(ctx types.Context, orderId clobtypes.OrderId) (clobtypes.StatefulOrderPlacement, bool) {
-	ret := _m.Called(ctx, orderId)
+// IsLiquidatable provides a mock function with given fields: ctx, subaccountId
+func (_m *MemClobKeeper) IsLiquidatable(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (bool, error) {
+	ret := _m.Called(ctx, subaccountId)
 
-	var r0 clobtypes.StatefulOrderPlacement
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) clobtypes.StatefulOrderPlacement); ok {
-		r0 = rf(ctx, orderId)
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) bool); ok {
+		r0 = rf(ctx, subaccountId)
 	} else {
-		r0 = ret.Get(0).(clobtypes.StatefulOrderPlacement)
+		r0 = ret.Get(0).(bool)
 	}
 
-	var r1 bool
-	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.OrderId) bool); ok {
-		r1 = rf(ctx, orderId)
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
+		r1 = rf(ctx, subaccountId)
 	} else {
-		r1 = ret.Get(1).(bool)
+		r1 = ret.Error(1)
 	}
 
 	return r0, r1
@@ -159,33 +180,58 @@ func (_m *MemClobKeeper) MustAddOrderToStatefulOrdersTimeSlice(ctx types.Context
 	_m.Called(ctx, goodTilBlockTime, orderId)
 }
 
+// OffsetSubaccountPerpetualPosition provides a mock function with given fields: ctx, liquidatedSubaccountId, perpetualId, deltaQuantumsTotal
+func (_m *MemClobKeeper) OffsetSubaccountPerpetualPosition(ctx types.Context, liquidatedSubaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantumsTotal *big.Int) ([]clobtypes.MatchPerpetualDeleveraging_Fill, *big.Int) {
+	ret := _m.Called(ctx, liquidatedSubaccountId, perpetualId, deltaQuantumsTotal)
+
+	var r0 []clobtypes.MatchPerpetualDeleveraging_Fill
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) []clobtypes.MatchPerpetualDeleveraging_Fill); ok {
+		r0 = rf(ctx, liquidatedSubaccountId, perpetualId, deltaQuantumsTotal)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]clobtypes.MatchPerpetualDeleveraging_Fill)
+		}
+	}
+
+	var r1 *big.Int
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Int); ok {
+		r1 = rf(ctx, liquidatedSubaccountId, perpetualId, deltaQuantumsTotal)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*big.Int)
+		}
+	}
+
+	return r0, r1
+}
+
 // ProcessSingleMatch provides a mock function with given fields: ctx, matchWithOrders
-func (_m *MemClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders clobtypes.MatchWithOrders) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *clobtypes.OffchainUpdates, error) {
+func (_m *MemClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *clobtypes.OffchainUpdates, error) {
 	ret := _m.Called(ctx, matchWithOrders)
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.MatchWithOrders) bool); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders) bool); ok {
 		r0 = rf(ctx, matchWithOrders)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 subaccountstypes.UpdateResult
-	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.MatchWithOrders) subaccountstypes.UpdateResult); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MatchWithOrders) subaccountstypes.UpdateResult); ok {
 		r1 = rf(ctx, matchWithOrders)
 	} else {
 		r1 = ret.Get(1).(subaccountstypes.UpdateResult)
 	}
 
 	var r2 subaccountstypes.UpdateResult
-	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.MatchWithOrders) subaccountstypes.UpdateResult); ok {
+	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MatchWithOrders) subaccountstypes.UpdateResult); ok {
 		r2 = rf(ctx, matchWithOrders)
 	} else {
 		r2 = ret.Get(2).(subaccountstypes.UpdateResult)
 	}
 
 	var r3 *clobtypes.OffchainUpdates
-	if rf, ok := ret.Get(3).(func(types.Context, clobtypes.MatchWithOrders) *clobtypes.OffchainUpdates); ok {
+	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders) *clobtypes.OffchainUpdates); ok {
 		r3 = rf(ctx, matchWithOrders)
 	} else {
 		if ret.Get(3) != nil {
@@ -194,7 +240,7 @@ func (_m *MemClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders c
 	}
 
 	var r4 error
-	if rf, ok := ret.Get(4).(func(types.Context, clobtypes.MatchWithOrders) error); ok {
+	if rf, ok := ret.Get(4).(func(types.Context, *clobtypes.MatchWithOrders) error); ok {
 		r4 = rf(ctx, matchWithOrders)
 	} else {
 		r4 = ret.Error(4)
@@ -240,8 +286,8 @@ func (_m *MemClobKeeper) ReplayPlaceOrder(ctx types.Context, msg *clobtypes.MsgP
 	return r0, r1, r2, r3
 }
 
-// SetStatefulOrderPlacement provides a mock function with given fields: ctx, order, blockHeight
-func (_m *MemClobKeeper) SetStatefulOrderPlacement(ctx types.Context, order clobtypes.Order, blockHeight uint32) {
+// SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight
+func (_m *MemClobKeeper) SetLongTermOrderPlacement(ctx types.Context, order clobtypes.Order, blockHeight uint32) {
 	_m.Called(ctx, order, blockHeight)
 }
 

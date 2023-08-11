@@ -18,6 +18,7 @@ func NewSdkContextWithMultistore() (
 	db = tmdb.NewMemDB()
 	stateStore = store.NewCommitMultiStore(db)
 	ctx = sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
+	ctx = ctx.WithTxBytes([]byte{1})
 	return ctx, stateStore, db
 }
 

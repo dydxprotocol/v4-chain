@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"ADAUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"ADAUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tADAUSD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"ADA-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"ADA_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"adausdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"ADAUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"ADA-USDT"
+    }
+  ]
+}

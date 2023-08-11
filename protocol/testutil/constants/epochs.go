@@ -17,24 +17,22 @@ var (
 // genesis state.
 func GenerateEpochGenesisStateWithoutFunding() types.GenesisState {
 	now := time.Now()
-	return types.GenesisState{
-		EpochInfoList: []types.EpochInfo{
-			{
-				Name:                   string(types.FundingSampleEpochInfoName),
-				NextTick:               uint32(now.Add(Duration_OneYear).Unix()),
-				Duration:               uint32(Duration_OneYear.Seconds()),
-				CurrentEpoch:           0,
-				CurrentEpochStartBlock: 0,
-				FastForwardNextTick:    false,
-			},
-			{
-				Name:                   string(types.FundingTickEpochInfoName),
-				NextTick:               uint32(now.Add(Duration_OneYear).Unix()),
-				Duration:               uint32(Duration_OneYear.Seconds()),
-				CurrentEpoch:           0,
-				CurrentEpochStartBlock: 0,
-				FastForwardNextTick:    false,
-			},
+	return *types.DefaultGenesisWithEpochs(
+		types.EpochInfo{
+			Name:                   string(types.FundingSampleEpochInfoName),
+			NextTick:               uint32(now.Add(Duration_OneYear).Unix()),
+			Duration:               uint32(Duration_OneYear.Seconds()),
+			CurrentEpoch:           0,
+			CurrentEpochStartBlock: 0,
+			FastForwardNextTick:    false,
 		},
-	}
+		types.EpochInfo{
+			Name:                   string(types.FundingTickEpochInfoName),
+			NextTick:               uint32(now.Add(Duration_OneYear).Unix()),
+			Duration:               uint32(Duration_OneYear.Seconds()),
+			CurrentEpoch:           0,
+			CurrentEpochStartBlock: 0,
+			FastForwardNextTick:    false,
+		},
+	)
 }

@@ -6,18 +6,18 @@ import (
 	"github.com/dydxprotocol/v4/x/clob/types"
 )
 
-// getStatefulOrderPlacementStore fetches a state store used for creating,
+// GetLongTermOrderPlacementStore fetches a state store used for creating,
 // reading, updating, and deleting a stateful order placement from state.
-func (k Keeper) getStatefulOrderPlacementStore(ctx sdk.Context) prefix.Store {
+func (k Keeper) GetLongTermOrderPlacementStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		types.KeyPrefix(types.StatefulOrderPlacementKeyPrefix),
 	)
 }
 
-// getStatefulOrderPlacementMemStore fetches a state store used for creating,
+// GetLongTermOrderPlacementMemStore fetches a state store used for creating,
 // reading, updating, and deleting a stateful order placement from state.
-func (k Keeper) getStatefulOrderPlacementMemStore(ctx sdk.Context) prefix.Store {
+func (k Keeper) GetLongTermOrderPlacementMemStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.memKey),
 		types.KeyPrefix(types.StatefulOrderPlacementKeyPrefix),

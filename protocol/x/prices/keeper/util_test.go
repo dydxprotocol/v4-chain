@@ -82,37 +82,53 @@ func TestGetProposalPrice(t *testing.T) {
 func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		market types.Market
+		marketParamPrice types.MarketParamPrice
 
 		// Expected.
 		expectedResult uint64
 		expectedPanic  error
 	}{
 		"Valid": {
-			market: types.Market{
-				Price:             uint64(123_000),
-				MinPriceChangePpm: uint32(1_000), // 0.1%
+			marketParamPrice: types.MarketParamPrice{
+				Price: types.MarketPrice{
+					Price: uint64(123_000),
+				},
+				Param: types.MarketParam{
+					MinPriceChangePpm: uint32(1_000), // 0.1%
+				},
 			},
 			expectedResult: 123,
 		},
 		"Valid: discards decimal": {
-			market: types.Market{
-				Price:             uint64(1_234),
-				MinPriceChangePpm: uint32(1_000), // 0.1%
+			marketParamPrice: types.MarketParamPrice{
+				Price: types.MarketPrice{
+					Price: uint64(1_234),
+				},
+				Param: types.MarketParam{
+					MinPriceChangePpm: uint32(1_000), // 0.1%
+				},
 			},
 			expectedResult: 1,
 		},
 		"Zero": {
-			market: types.Market{
-				Price:             uint64(0),
-				MinPriceChangePpm: uint32(1_000), // 0.1%
+			marketParamPrice: types.MarketParamPrice{
+				Price: types.MarketPrice{
+					Price: uint64(0),
+				},
+				Param: types.MarketParam{
+					MinPriceChangePpm: uint32(1_000), // 0.1%
+				},
 			},
 			expectedResult: 0,
 		},
 		"Result exceeds max uint64": {
-			market: types.Market{
-				Price:             math.MaxUint64,
-				MinPriceChangePpm: uint32(1_000_001), // must be <= 1,000,000
+			marketParamPrice: types.MarketParamPrice{
+				Price: types.MarketPrice{
+					Price: math.MaxUint64,
+				},
+				Param: types.MarketParam{
+					MinPriceChangePpm: uint32(1_000_001), // must be <= 1,000,000
+				},
 			},
 			expectedPanic: errors.New(
 				"getMinPriceChangeAmountForMarket: min price change amount is greater than max uint64 value",
@@ -124,11 +140,11 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 				require.PanicsWithError(
 					t,
 					tc.expectedPanic.Error(),
-					func() { getMinPriceChangeAmountForMarket(tc.market) })
+					func() { getMinPriceChangeAmountForMarket(tc.marketParamPrice) })
 				return
 			}
 
-			result := getMinPriceChangeAmountForMarket(tc.market)
+			result := getMinPriceChangeAmountForMarket(tc.marketParamPrice)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}

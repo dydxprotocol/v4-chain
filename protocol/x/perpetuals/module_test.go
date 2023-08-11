@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	pricetypes "github.com/dydxprotocol/v4/x/prices/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -121,7 +122,7 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	require.Equal(
 		t,
 		`{"perpetuals":[],"liquidity_tiers":[],"params":{"funding_rate_clamp_factor_ppm":6000000,`+
-			`"premium_vote_clamp_factor_ppm":60000000}}`,
+			`"premium_vote_clamp_factor_ppm":60000000,"min_num_votes_per_sample":15}}`,
 		string(json),
 	)
 }
@@ -146,7 +147,7 @@ func TestAppModuleBasic_ValidateGenesisErrBadState(t *testing.T) {
 
 	h := json.RawMessage(`{"perpetuals": [{ "ticker": "" }],
 			"params": { "funding_rate_clamp_factor_ppm": 6000000,
-			"premium_vote_clamp_factor_ppm": 60000000 }}`)
+			"premium_vote_clamp_factor_ppm": 60000000, "min_num_votes_per_sample":15 }}`)
 
 	err := am.ValidateGenesis(cdc, nil, h)
 	require.EqualError(t, err, "Ticker must be non-empty string")
@@ -160,7 +161,7 @@ func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
 
 	h := json.RawMessage(`{"perpetuals": [{ "ticker": "EXAM-USD", "market_id": 0 }],
 			"params": { "funding_rate_clamp_factor_ppm": 6000000,
-			"premium_vote_clamp_factor_ppm": 60000000 }}`)
+			"premium_vote_clamp_factor_ppm": 60000000, "min_num_votes_per_sample":15 }}`)
 
 	err := am.ValidateGenesis(cdc, nil, h)
 	require.NoError(t, err)
@@ -261,28 +262,29 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	// The corresponding `Market` must exist, so create it.
 	am, keeper, pricesKeeper, _, ctx := createAppModuleWithKeeper(t)
-	if _, err := pricesKeeper.CreateExchangeFeed(
-		ctx,
-		constants.CoinbaseExchangeName,
-		"test memo",
-	); err != nil {
-		t.Errorf("failed to create an exchange feed %s", err)
-	}
 	if _, err := pricesKeeper.CreateMarket(
 		ctx,
-		constants.EthUsdPair,
-		-2,
-		[]uint32{0},
-		1,
-		1_000,
+		pricetypes.MarketParam{
+			Id:                0,
+			Pair:              constants.EthUsdPair,
+			Exponent:          -2,
+			MinExchanges:      1,
+			MinPriceChangePpm: 1_000,
+		},
+		pricetypes.MarketPrice{
+			Id:       0,
+			Exponent: -2,
+			Price:    1_000,
+		},
 	); err != nil {
 		t.Errorf("failed to create a market %s", err)
 	}
 
 	msg := `{"perpetuals": [{ "ticker": "EXAM-USD", "market_id": 0, "liquidity_tier": 0 }],
 			"liquidity_tiers": [{ "name": "Large-Cap", "initial_margin_ppm": 50000,
-			"maintenance_fraction_ppm": 500000, "base_position_notional": 1000000000 }],
-			"params": { "funding_rate_clamp_factor_ppm": 6000000, "premium_vote_clamp_factor_ppm": 60000000 }}`
+			"maintenance_fraction_ppm": 500000, "base_position_notional": 1000000000, "impact_notional": 10000000000 }],
+			"params": { "funding_rate_clamp_factor_ppm": 6000000, "premium_vote_clamp_factor_ppm": 60000000,
+			"min_num_votes_per_sample": 15 }}`
 	gs := json.RawMessage(msg)
 
 	result := am.InitGenesis(ctx, cdc, gs)
@@ -298,8 +300,9 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected := `{"perpetuals":[{"id":0,"ticker":"EXAM-USD","market_id":0,"atomic_resolution":0,`
 	expected += `"default_funding_ppm":0,"liquidity_tier":0,"funding_index":"0","open_interest":"0"}],`
 	expected += `"liquidity_tiers":[{"id":0,"name":"Large-Cap","initial_margin_ppm":50000,`
-	expected += `"maintenance_fraction_ppm":500000,"base_position_notional":"1000000000"}],`
-	expected += `"params":{"funding_rate_clamp_factor_ppm":6000000,"premium_vote_clamp_factor_ppm":60000000}}`
+	expected += `"maintenance_fraction_ppm":500000,"base_position_notional":"1000000000",`
+	expected += `"impact_notional":"10000000000"}],"params":{"funding_rate_clamp_factor_ppm":6000000,`
+	expected += `"premium_vote_clamp_factor_ppm":60000000,"min_num_votes_per_sample":15}}`
 	require.Equal(t, expected, string(genesisJson))
 }
 

@@ -106,6 +106,8 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	expectedJson += `"current_epoch":0,"current_epoch_start_block":0,"is_initialized":false,`
 	expectedJson += `"fast_forward_next_tick":true},{"name":"funding-tick",`
 	expectedJson += `"next_tick":0,"duration":3600,"current_epoch":0,"current_epoch_start_block":0,`
+	expectedJson += `"is_initialized":false,"fast_forward_next_tick":true},{"name":"stats-epoch",`
+	expectedJson += `"next_tick":0,"duration":3600,"current_epoch":0,"current_epoch_start_block":0,`
 	expectedJson += `"is_initialized":false,"fast_forward_next_tick":true}]}`
 	require.Equal(t, expectedJson, string(json))
 }

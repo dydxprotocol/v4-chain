@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"BCHUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"BCHUSD\""
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"BCH-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"BCH_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"bchusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"BCHUSD"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"BCH-USDT"
+    }
+  ]
+}

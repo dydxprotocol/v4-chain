@@ -13,12 +13,10 @@ func (k msgServer) ProposedOperations(
 	msg *types.MsgProposedOperations,
 ) (*types.MsgProposedOperationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addToOrderbookCollatCheckOrderHashesSet := msg.GetAddToOrderbookCollatCheckOrderHashesSet()
 
 	if err := k.Keeper.ProcessProposerOperations(
 		ctx,
-		msg.OperationsQueue,
-		addToOrderbookCollatCheckOrderHashesSet,
+		msg.GetOperationsQueue(),
 	); err != nil {
 		panic(
 			sdkerrors.Wrapf(

@@ -1,15 +1,13 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 )
 
 // DefaultGenesis returns the default Prices genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Markets:       []Market{},
-		ExchangeFeeds: []ExchangeFeed{},
+		MarketParams: []MarketParam{},
 	}
 }
 
@@ -17,37 +15,32 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	// Check for duplicated key for Markets.
-	marketKeyMap := make(map[uint32]struct{})
+	marketParamKeyMap := make(map[uint32]struct{})
 	expectedMarketId := uint32(0)
-	for _, market := range gs.Markets {
-		if _, exists := marketKeyMap[market.Id]; exists {
-			return fmt.Errorf("duplicated market id")
+	for _, marketParam := range gs.MarketParams {
+		if _, exists := marketParamKeyMap[marketParam.Id]; exists {
+			return fmt.Errorf("duplicated market param id")
 		}
-		marketKeyMap[market.Id] = struct{}{}
+		marketParamKeyMap[marketParam.Id] = struct{}{}
 
-		if market.Id != expectedMarketId {
-			return fmt.Errorf("found gap in market id")
+		if marketParam.Id != expectedMarketId {
+			return fmt.Errorf("found gap in market param id")
 		}
 		expectedMarketId = expectedMarketId + 1
 
-		if len(market.Pair) == 0 {
-			return errors.New("Pair must be non-empty string")
+		if err := marketParam.Validate(); err != nil {
+			return err
 		}
 	}
 
-	// Check for duplicated key for ExchangeFeeds.
-	exchangeKeyMap := make(map[uint32]struct{})
-	expectedExchangeFeedId := uint32(0)
-	for _, exchange := range gs.ExchangeFeeds {
-		if _, exists := exchangeKeyMap[exchange.Id]; exists {
-			return fmt.Errorf("duplicated exchange feed id")
-		}
-		exchangeKeyMap[exchange.Id] = struct{}{}
+	if len(gs.MarketParams) != len(gs.MarketPrices) {
+		return fmt.Errorf("expected the same number of market prices and market params")
+	}
 
-		if exchange.Id != expectedExchangeFeedId {
-			return fmt.Errorf("found gap in exchange feed id")
+	for i, marketPrice := range gs.MarketPrices {
+		if err := marketPrice.ValidateFromParam(gs.MarketParams[i]); err != nil {
+			return err
 		}
-		expectedExchangeFeedId = expectedExchangeFeedId + 1
 	}
 
 	return nil

@@ -1,152 +1,59 @@
 package types
 
 import (
+	fmt "fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
-// OperationHash is used to represent the SHA256 hash of an operation.
-type OperationHash [32]byte
+// decodeOperationRawShortTermOrderPlacementBytes performs stateless validation
+// on a short term order placement given its underlying raw tx bytes. It also
+// runs the transaction through an antehandler. The antehandler is needed to
+// do signature validation. Returns an Operation if successful.
+func decodeOperationRawShortTermOrderPlacementBytes(
+	ctx sdk.Context,
+	bytes []byte,
+	decoder sdk.TxDecoder,
+	anteHandler sdk.AnteHandler,
+) (*InternalOperation, error) {
+	tx, err := decoder(bytes)
+	if err != nil {
+		return nil, err
+	}
 
-// GetOperationHash returns the SHA256 hash of this operation.
-func (o *Operation) GetOperationHash() OperationHash {
-	protoHash := GetHash(ProtobufHashable(o))
-	return OperationHash(protoHash)
-}
+	if _, err := anteHandler(ctx, tx, false); err != nil {
+		return nil, err
+	}
 
-// NewOrderPlacementOperation returns a new operation for placing an order.
-func NewOrderPlacementOperation(order Order) Operation {
-	return Operation{
-		Operation: &Operation_OrderPlacement{
-			OrderPlacement: NewMsgPlaceOrder(order.MustGetOrder()),
+	msgs := tx.GetMsgs()
+	if len(msgs) != 1 {
+		return nil, fmt.Errorf("expected 1 msg, got %d", len(msgs))
+	}
+
+	msg, ok := msgs[0].(*MsgPlaceOrder)
+	if !ok {
+		return nil, fmt.Errorf("expected MsgPlaceOrder, got %T", msgs[0])
+	}
+
+	return &InternalOperation{
+		Operation: &InternalOperation_ShortTermOrderPlacement{
+			ShortTermOrderPlacement: msg,
 		},
-	}
+	}, nil
 }
 
-// NewPreexistingStatefulOrderPlacementOperation returns a new operation for placing a
-// pre-existing stateful order.
-// Note this function panics if called with a non-stateful order.
-func NewPreexistingStatefulOrderPlacementOperation(order Order) Operation {
-	order.MustBeStatefulOrder()
-
-	orderId := order.GetOrderId()
-	return Operation{
-		Operation: &Operation_PreexistingStatefulOrder{
-			PreexistingStatefulOrder: &orderId,
-		},
-	}
-}
-
-// NewMatchOperation returns a new operation for matching maker orders against a matchable order.
-func NewMatchOperation(
-	takerMatchableOrder MatchableOrder,
-	makerFills []MakerFill,
-) Operation {
-	if takerMatchableOrder.IsLiquidation() {
-		return Operation{
-			Operation: &Operation_Match{
-				Match: &ClobMatch{
-					Match: &ClobMatch_MatchPerpetualLiquidation{
-						MatchPerpetualLiquidation: &MatchPerpetualLiquidation{
-							Liquidated:  takerMatchableOrder.GetSubaccountId(),
-							ClobPairId:  takerMatchableOrder.GetClobPairId().ToUint32(),
-							PerpetualId: takerMatchableOrder.MustGetLiquidatedPerpetualId(),
-							TotalSize:   takerMatchableOrder.GetBaseQuantums().ToUint64(),
-							IsBuy:       takerMatchableOrder.IsBuy(),
-							Fills:       makerFills,
-						},
-					},
-				},
-			},
-		}
-	} else {
-		order := takerMatchableOrder.MustGetOrder()
-		return Operation{
-			Operation: &Operation_Match{
-				Match: &ClobMatch{
-					Match: &ClobMatch_MatchOrders{
-						MatchOrders: &MatchOrders{
-							TakerOrderId:   order.GetOrderId(),
-							TakerOrderHash: order.GetOrderHash().ToBytes(),
-							Fills:          makerFills,
-						},
-					},
-				},
-			},
-		}
-	}
-}
-
-// NewMatchOperationFromPerpetualDeleveragingLiquidation returns a new match operation
-// wrapping the `perpDeleveraging` object.
-func NewMatchOperationFromPerpetualDeleveragingLiquidation(perpDeleveraging MatchPerpetualDeleveraging) Operation {
-	return Operation{
-		Operation: &Operation_Match{
-			Match: &ClobMatch{
-				Match: &ClobMatch_MatchPerpetualDeleveraging{
-					MatchPerpetualDeleveraging: &perpDeleveraging,
-				},
-			},
-		},
-	}
-}
-
-// NewMatchOperationFromPerpetualLiquidation returns a new match operation
-// wrapping the `perpLiquidation` object.
-func NewMatchOperationFromPerpetualLiquidation(perpLiquidation MatchPerpetualLiquidation) Operation {
-	return Operation{
-		Operation: &Operation_Match{
-			Match: &ClobMatch{
-				Match: &ClobMatch_MatchPerpetualLiquidation{
-					MatchPerpetualLiquidation: &perpLiquidation,
-				},
-			},
-		},
-	}
-}
-
-// NewDeleveragingMatchOperation returns a new match operation for deleveraging
-// against a undercollateralized subaccount that has failed liquidation.
-func NewDeleveragingMatchOperation(
-	liquidatedSubaccountId satypes.SubaccountId,
-	perpetualId uint32,
-	fills []MatchPerpetualDeleveraging_Fill,
-) Operation {
-	return Operation{
-		Operation: &Operation_Match{
-			Match: &ClobMatch{
-				Match: &ClobMatch_MatchPerpetualDeleveraging{
-					MatchPerpetualDeleveraging: &MatchPerpetualDeleveraging{
-						Liquidated:  liquidatedSubaccountId,
-						PerpetualId: perpetualId,
-						Fills:       fills,
-					},
-				},
-			},
-		},
-	}
-}
-
-// NewOrderCancellationOperation returns a new operation for canceling an order.
-func NewOrderCancellationOperation(msgCancelOrder *MsgCancelOrder) Operation {
-	return Operation{
-		Operation: &Operation_OrderCancellation{
-			OrderCancellation: msgCancelOrder,
-		},
-	}
-}
-
-// GetOperationTextString returns the text string representation of this operation.
+// GetInternalOperationTextString returns the text string representation of this operation.
 // TODO(DEC-1772): Add method for encoding operation protos as JSON to make debugging easier.
-func (o *Operation) GetOperationTextString() string {
+func (o *InternalOperation) GetInternalOperationTextString() string {
 	return proto.MarshalTextString(o)
 }
 
 // GetOperationsQueueString returns a string representation of the provided operations.
-func GetOperationsQueueTextString(operations []Operation) string {
+func GetInternalOperationsQueueTextString(operations []InternalOperation) string {
 	var result string
 	for _, operation := range operations {
-		result += operation.GetOperationTextString() + "\n"
+		result += operation.GetInternalOperationTextString() + "\n"
 	}
 
 	return result

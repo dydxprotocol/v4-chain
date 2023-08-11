@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"EOSUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"EOSUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tEOSUSD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"EOS-USD"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"eosusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"EOSUSD"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"EOS-USDT"
+    }
+  ]
+}

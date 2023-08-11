@@ -7,7 +7,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/dydxprotocol/v4/daemons/constants"
+	"github.com/dydxprotocol/v4/daemons/flags"
 	"github.com/dydxprotocol/v4/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/lib/metrics"
@@ -21,13 +21,12 @@ import (
 // 3) Sends a list of subaccount ids that potentially need to be liquidated to the application.
 func Start(
 	ctx context.Context,
-	queryServiceEndpoint string,
-	socketAddress string,
+	flags flags.DaemonFlags,
 	logger log.Logger,
 	grpcClient lib.GrpcClient,
 ) error {
 	// Make a connection to the Cosmos gRPC query services.
-	queryConn, err := grpcClient.NewTcpConnection(ctx, queryServiceEndpoint)
+	queryConn, err := grpcClient.NewTcpConnection(ctx, flags.Shared.GrpcServerAddress)
 	if err != nil {
 		logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
 		return err
@@ -39,7 +38,7 @@ func Start(
 	}()
 
 	// Make a connection to the private daemon gRPC server.
-	daemonConn, err := grpcClient.NewGrpcConnection(ctx, socketAddress)
+	daemonConn, err := grpcClient.NewGrpcConnection(ctx, flags.Shared.SocketAddress)
 	if err != nil {
 		logger.Error("Failed to establish gRPC connection to socket address", "error", err)
 		return err
@@ -54,10 +53,11 @@ func Start(
 	clobQueryClient := clobtypes.NewQueryClient(queryConn)
 	liquidationServiceClient := api.NewLiquidationServiceClient(daemonConn)
 
-	ticker := time.NewTicker(constants.LiquidationLoopDelayMs * time.Millisecond)
+	ticker := time.NewTicker(time.Duration(flags.Liquidation.LoopDelayMs) * time.Millisecond)
 	for ; true; <-ticker.C {
 		if err := RunLiquidationDaemonTaskLoop(
 			ctx,
+			flags.Liquidation,
 			subaccountQueryClient,
 			clobQueryClient,
 			liquidationServiceClient,
@@ -74,6 +74,7 @@ func Start(
 // to find the liquidatable subaccount ids.
 func RunLiquidationDaemonTaskLoop(
 	ctx context.Context,
+	liqFlags flags.LiquidationFlags,
 	subaccountQueryClient satypes.QueryClient,
 	clobQueryClient clobtypes.QueryClient,
 	liquidationServiceClient api.LiquidationServiceClient,
@@ -86,7 +87,11 @@ func RunLiquidationDaemonTaskLoop(
 	)
 
 	// Fetch all subaccounts from query service.
-	subaccounts, err := GetAllSubaccounts(ctx, subaccountQueryClient)
+	subaccounts, err := GetAllSubaccounts(
+		ctx,
+		subaccountQueryClient,
+		liqFlags.SubaccountPageLimit,
+	)
 	if err != nil {
 		return err
 	}
@@ -151,11 +156,12 @@ func RunLiquidationDaemonTaskLoop(
 	return nil
 }
 
-// getAllSubaccounts queries a gRPC server and returns a list of subaccounts and
+// GetAllSubaccounts queries a gRPC server and returns a list of subaccounts and
 // their balances and open positions.
 func GetAllSubaccounts(
 	ctx context.Context,
 	client satypes.QueryClient,
+	limit uint64,
 ) (
 	subaccounts []satypes.Subaccount,
 	err error,
@@ -167,7 +173,7 @@ func GetAllSubaccounts(
 		subaccountsFromKey, next, err := getSubaccountsFromKey(
 			ctx,
 			client,
-			constants.LiquidationGetSubaccountPageLimit,
+			limit,
 			nextKey,
 		)
 		if err != nil {

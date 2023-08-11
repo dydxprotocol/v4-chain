@@ -4,6 +4,8 @@ package simulation
 
 import (
 	"fmt"
+	"math"
+	"math/big"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/dydxprotocol/v4/dtypes"
+	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/testutil/sim_helpers"
 	"github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
@@ -99,10 +102,23 @@ func genBasePositionNotional(r *rand.Rand, isReasonableGenesis bool) uint64 {
 	)
 }
 
+// calculateImpactNotional calculates impact notional as 500 USDC / initial margin fraction.
+func calculateImpactNotional(initialMarginPpm uint32) uint64 {
+	// If initial margin is 0, return max uint64.
+	if initialMarginPpm == 0 {
+		return math.MaxUint64
+	}
+	impactNotional := big.NewInt(500_000_000) // 500 USDC in quote quantums
+	impactNotional.Mul(impactNotional, lib.BigIntOneMillion())
+	impactNotional.Quo(impactNotional, big.NewInt(int64(initialMarginPpm)))
+	return impactNotional.Uint64()
+}
+
 func genParams(r *rand.Rand, isReasonableGenesis bool) types.Params {
 	return types.Params{
 		FundingRateClampFactorPpm: genFundingRateClampFactorPpm(r, isReasonableGenesis),
 		PremiumVoteClampFactorPpm: genPremiumVoteClampFactorPpm(r, isReasonableGenesis),
+		MinNumVotesPerSample:      genMinNumVotesPerSample(r, isReasonableGenesis),
 	}
 }
 
@@ -127,6 +143,17 @@ func genPremiumVoteClampFactorPpm(r *rand.Rand, isReasonableGenesis bool) uint32
 	)
 }
 
+// genMinNumVotesPerSample returns a randomized uint32 for minimum number of votes per sample.
+func genMinNumVotesPerSample(r *rand.Rand, isReasonableGenesis bool) uint32 {
+	return uint32(
+		simtypes.RandIntBetween(
+			r,
+			sim_helpers.PickGenesisParameter(sim_helpers.MinMinNumVotesPerSample, isReasonableGenesis),
+			sim_helpers.PickGenesisParameter(sim_helpers.MaxMinNumVotesPerSample, isReasonableGenesis)+1,
+		),
+	)
+}
+
 // RandomizedGenState generates a random GenesisState for `Perpetuals`.
 func RandomizedGenState(simState *module.SimulationState) {
 	r := simState.Rand
@@ -141,11 +168,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 	for i := 0; i < numLiquidityTiers; i++ {
 		initialMarginPpm, maintenanceFractionPpm := genInitialAndMaintenanceFraction(r)
 		basePositionNotional := genBasePositionNotional(r, isReasonableGenesis)
+		impactNotional := calculateImpactNotional(initialMarginPpm)
 		liquidityTiers[i] = types.LiquidityTier{
 			Name:                   fmt.Sprintf("%d", i),
 			InitialMarginPpm:       initialMarginPpm,
 			MaintenanceFractionPpm: maintenanceFractionPpm,
 			BasePositionNotional:   basePositionNotional,
+			ImpactNotional:         impactNotional,
 		}
 	}
 
@@ -156,7 +185,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	if err := cdc.UnmarshalJSON(pricesGenesisBytes, &pricesGenesis); err != nil {
 		panic(fmt.Sprintf("Could not unmarshal Prices GenesisState %s", err))
 	}
-	numMarkets := len(pricesGenesis.GetMarkets())
+	numMarkets := len(pricesGenesis.GetMarketParams())
 	if numMarkets == 0 {
 		panic("Number of Markets cannot be zero")
 	}

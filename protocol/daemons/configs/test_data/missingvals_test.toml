@@ -1,4 +1,4 @@
 [[exchanges]]
-ExchangeFeedId = 1
-IntervalMs = 2_000
+ExchangeId = "BinanceUS"
+IntervalMs = 4_250
 TimeoutMs = 3_000

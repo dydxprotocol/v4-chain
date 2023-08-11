@@ -46,9 +46,7 @@ func createNPerpetuals(
 	require.Greater(t, numLiquidityTiers, uint32(0))
 
 	for i := range items {
-		if perr := keepertest.CreateNMarketsWithExchangeFeeds(t, ctx, pricesKeeper, n); perr != nil {
-			return items, perr
-		}
+		keepertest.CreateNMarkets(t, ctx, pricesKeeper, n)
 
 		var defaultFundingPpm int32
 		if i%3 == 0 {
@@ -168,7 +166,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(pricestypes.ErrMarketDoesNotExist, fmt.Sprint(999)),
+			expectedError:     sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Positive default funding magnitude exceeds maximum": {
 			id:                0,
@@ -216,8 +214,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 
 	// Test setup.
 	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-	err := keepertest.CreateNMarketsWithExchangeFeeds(t, ctx, pricesKeeper, 1)
-	require.NoError(t, err)
+	keepertest.CreateNMarkets(t, ctx, pricesKeeper, 1)
 	// Create Liquidity Tiers
 	keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
 
@@ -262,7 +259,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			marketId:          999,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(pricestypes.ErrMarketDoesNotExist, fmt.Sprint(999)),
+			expectedError:     sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Ticker is an empty string": {
 			id:                0,
@@ -575,20 +572,36 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Individual test setup.
 			ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-			// This should create exchange feeds with id `0`, `1` and `2`
-			keepertest.CreateTestExchangeFeeds(t, ctx, pricesKeeper)
-
-			// Create `Market` struct with exponent.
+			// Create a new market param and price.
+			marketId := pricesKeeper.GetNumMarkets(ctx)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
-				"marketName",   // Name
-				tc.exponent,    // Exponent
-				[]uint32{0, 1}, // Exchanges
-				uint32(1),      // MinExchanges
-				uint32(50),     // MinPriceChangePpm
+				// `ExchangeConfigJson` is left unset as it is not used by the server.
+				pricestypes.MarketParam{
+					Id:                marketId,
+					Pair:              "marketName",
+					Exponent:          tc.exponent,
+					MinExchanges:      uint32(1),
+					MinPriceChangePpm: uint32(50),
+				},
+				pricestypes.MarketPrice{
+					Id:       marketId,
+					Exponent: tc.exponent,
+					Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+				},
 			)
 			require.NoError(t, err)
-			marketId := pricesKeeper.GetNumMarkets(ctx) - 1
+
+			// Update `Market.price`. By updating prices this way, we can simulate conditions where the oracle
+			// price may become 0.
+			err = pricesKeeper.UpdateMarketPrices(
+				ctx,
+				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{pricestypes.NewMarketPriceUpdate(
+					marketId,
+					tc.price,
+				)},
+			)
+			require.NoError(t, err)
 
 			// Create `LiquidityTier` struct.
 			_, err = keeper.CreateLiquidityTier(
@@ -597,6 +610,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				tc.basePositionNotional,
+				1, // dummy impact notional value
 			)
 			require.NoError(t, err)
 
@@ -608,17 +622,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
-			)
-			require.NoError(t, err)
-
-			// Update `Market.price`.
-			err = pricesKeeper.UpdateMarketPrices(
-				ctx,
-				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{pricestypes.NewMarketPriceUpdate(
-					perpetual.MarketId,
-					tc.price,
-				)},
-				true,
 			)
 			require.NoError(t, err)
 
@@ -799,22 +802,24 @@ func TestGetNetNotional_Success(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Individual test setup.
-
-			// This should create exchanges with id `0`, `1` and `2`
-			keepertest.CreateTestExchangeFeeds(t, ctx, pricesKeeper)
-
-			// Create `Market` struct with exponent.
+			// Create a new market param and price.
+			marketId := pricesKeeper.GetNumMarkets(ctx)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
-				"marketName",   // Name
-				tc.exponent,    // Exponent
-				[]uint32{0, 1}, // Exchanges
-				uint32(1),      // MinExchanges
-				uint32(50),     // MinPriceChangePpm
+				pricestypes.MarketParam{
+					Id:                marketId,
+					Pair:              "marketName",
+					Exponent:          tc.exponent,
+					MinExchanges:      uint32(1),
+					MinPriceChangePpm: uint32(50),
+				},
+				pricestypes.MarketPrice{
+					Id:       marketId,
+					Exponent: tc.exponent,
+					Price:    tc.price,
+				},
 			)
 			require.NoError(t, err)
-			marketId := pricesKeeper.GetNumMarkets(ctx) - 1
 
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
@@ -824,17 +829,6 @@ func TestGetNetNotional_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
-			)
-			require.NoError(t, err)
-
-			// Update `Market.price`.
-			err = pricesKeeper.UpdateMarketPrices(
-				ctx,
-				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{pricestypes.NewMarketPriceUpdate(
-					perpetual.MarketId,
-					tc.price,
-				)},
-				true,
 			)
 			require.NoError(t, err)
 
@@ -973,22 +967,24 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Individual test setup.
-
-			// This should create exchanges with id `0`, `1` and `2`
-			keepertest.CreateTestExchangeFeeds(t, ctx, pricesKeeper)
-
-			// Create `Market` struct with exponent.
+			// Create a new market param and price.
+			marketId := pricesKeeper.GetNumMarkets(ctx)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
-				"marketName",   // Name
-				tc.exponent,    // Exponent
-				[]uint32{0, 1}, // Exchanges
-				uint32(1),      // MinExchanges
-				uint32(50),     // MinPriceChangePpm
+				pricestypes.MarketParam{
+					Id:                marketId,
+					Pair:              "marketName",
+					Exponent:          tc.exponent,
+					MinExchanges:      uint32(1),
+					MinPriceChangePpm: uint32(50),
+				},
+				pricestypes.MarketPrice{
+					Id:       marketId,
+					Exponent: tc.exponent,
+					Price:    tc.price,
+				},
 			)
 			require.NoError(t, err)
-			marketId := pricesKeeper.GetNumMarkets(ctx) - 1
 
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
@@ -998,17 +994,6 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
-			)
-			require.NoError(t, err)
-
-			// Update `Market.price`.
-			err = pricesKeeper.UpdateMarketPrices(
-				ctx,
-				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{pricestypes.NewMarketPriceUpdate(
-					perpetual.MarketId,
-					tc.price,
-				)},
-				true,
 			)
 			require.NoError(t, err)
 
@@ -1147,22 +1132,25 @@ func TestGetNetCollateral_Success(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Individual test setup.
-
-			// This should create exchanges with id `0`, `1` and `2`
-			keepertest.CreateTestExchangeFeeds(t, ctx, pricesKeeper)
-
-			// Create `Market` struct with exponent.
+			// Test setup.
+			// Create a new market.
+			marketId := pricesKeeper.GetNumMarkets(ctx)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
-				"marketName",   // Name
-				tc.exponent,    // Exponent
-				[]uint32{0, 1}, // Exchanges
-				uint32(1),      // MinExchanges
-				uint32(50),     // MinPriceChangePpm
+				pricestypes.MarketParam{
+					Id:                marketId,
+					Pair:              "marketName",
+					Exponent:          tc.exponent,
+					MinExchanges:      uint32(1),
+					MinPriceChangePpm: uint32(50),
+				},
+				pricestypes.MarketPrice{
+					Id:       marketId,
+					Exponent: tc.exponent,
+					Price:    tc.price,
+				},
 			)
 			require.NoError(t, err)
-			marketId := pricesKeeper.GetNumMarkets(ctx) - 1
 
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
@@ -1172,17 +1160,6 @@ func TestGetNetCollateral_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
-			)
-			require.NoError(t, err)
-
-			// Update `Market.price`.
-			err = pricesKeeper.UpdateMarketPrices(
-				ctx,
-				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{pricestypes.NewMarketPriceUpdate(
-					perpetual.MarketId,
-					tc.price,
-				)},
-				true,
 			)
 			require.NoError(t, err)
 
@@ -1541,7 +1518,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 		testFundingSamples               []int32
 		expectedFundingIndexDeltas       []*big.Int
 		expectedFundingIndexDeltaStrings []string
-		fundingRatesAndIndices           []indexerevents.FundingUpdate
+		fundingRatesAndIndices           []indexerevents.FundingUpdateV1
 	}{
 		"Success: 60 equivalent samples of 0.001 percent, 60 samples expected": {
 			testFundingSampleDuration: 60,
@@ -1552,7 +1529,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// Premium sample = 0.001%, length = 60.
 			testFundingSamples:               constants.GenerateConstantFundingPremiums(1000, 60),
 			expectedFundingIndexDeltaStrings: []string{"625"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 1_000,
@@ -1569,7 +1546,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// Premium sample = -0.001%, length = 60.
 			testFundingSamples:               constants.GenerateConstantFundingPremiums(-1000, 60),
 			expectedFundingIndexDeltaStrings: []string{"-625"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: -1_000,
@@ -1588,7 +1565,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// 8-hr funding rate capped at 1_500_000, prorated funding rate thus is 187_500
 			// funding index delta = 187_500 * 5_000_000_000 * 10^(-5 + -10) * 10^6 = 937500
 			expectedFundingIndexDeltaStrings: []string{"937500"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 1_500_000,
@@ -1606,7 +1583,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(math.MinInt32, 60),
 			// 8-hr funding rate capped at -1_500_000, prorated funding rate thus is -187_500
 			expectedFundingIndexDeltaStrings: []string{"-937500"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: -1_500_000,
@@ -1624,7 +1601,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(2000, 60),
 			// 8-hr funding rate is 2_000, prorated funding rate thus is 250
 			expectedFundingIndexDeltaStrings: []string{"1250"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 2_000,
@@ -1642,7 +1619,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(150_000, 60),
 			// 8-hr funding rate capped at 120_000, prorated funding rate thus is 15_000
 			expectedFundingIndexDeltaStrings: []string{"75000"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 120_000,
@@ -1660,7 +1637,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(-150_000, 60),
 			// 8-hr funding rate capped at -120_000, prorated funding rate thus is -15_000
 			expectedFundingIndexDeltaStrings: []string{"-75000"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: -120_000,
@@ -1679,7 +1656,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// 8-hr funding rate capped at 120_000 (same value as sample)
 			// prorated funding rate for one hour thus is 15_000
 			expectedFundingIndexDeltaStrings: []string{"75000"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 120_000,
@@ -1697,7 +1674,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(-120_000, 60),
 			// 8-hr funding rate is -120_000, prorated funding rate thus is -15_000
 			expectedFundingIndexDeltaStrings: []string{"-75000"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: -120_000,
@@ -1715,7 +1692,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(120_000, 60),
 			// funding rate is clamped to 0
 			expectedFundingIndexDeltaStrings: []string{"0"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 0,
@@ -1734,12 +1711,12 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(1000, 60),
 			// 8-hr funding rate is 1000, prorated funding rate thus is 125
 			expectedFundingIndexDeltaStrings: []string{
-				// Btc: 0.001% at %50000 (price_value= 5_000_000_000, base_atomic = -10, price_exponenet = -5)
+				// Btc: 0.001% at $50000 (price_value= 5_000_000_000, base_atomic = -10, price_exponenet = -5)
 				"625",
 				// Eth: 0.001% at $3000, (price_value= 3_000_000_000, base_atomic = -9, price_exponenet = -6)
 				"375",
 			},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 1_000,
@@ -1762,7 +1739,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(1000, 60),
 			// Average sampled rate = 0.0005% due to padding of zeros.
 			expectedFundingIndexDeltaStrings: []string{"312"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 500,
@@ -1779,7 +1756,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// Premium sample = 0.001%, length = 30. Average sampled rate = 0.0005% due to padding of zeros.
 			testFundingSamples:               constants.GenerateConstantFundingPremiums(1000, 30),
 			expectedFundingIndexDeltaStrings: []string{"312"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 500,
@@ -1796,7 +1773,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// Premium sample = 0.001%, length = 60.
 			testFundingSamples:               constants.GenerateConstantFundingPremiums(1000, 60),
 			expectedFundingIndexDeltaStrings: []string{"1250"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 2_000, // 0.001% (premium) + 0.001% (default funding)
@@ -1816,7 +1793,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 				[]uint32{75, 25},
 			),
 			expectedFundingIndexDeltaStrings: []string{"1250"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 2_000,
@@ -1833,7 +1810,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(math.MaxInt32, 60),
 			// 8-hr funding rate capped at 6_000_000, prorated funding rate thus is 750_000
 			expectedFundingIndexDeltaStrings: []string{"37500000000000000"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 6_000_000,
@@ -1849,7 +1826,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			},
 			testFundingSamples:               []int32{},
 			expectedFundingIndexDeltaStrings: []string{"0"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 0,
@@ -1865,7 +1842,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			},
 			testFundingSamples:               []int32{},
 			expectedFundingIndexDeltaStrings: []string{"-625"},
-			fundingRatesAndIndices: []indexerevents.FundingUpdate{
+			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: -1000,
@@ -1883,7 +1860,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			ctx, perpsKeeper, pricesKeeper, epochsKeeper, _ := keepertest.PerpetualsKeepers(t)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpsKeeper)
@@ -1984,9 +1961,9 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 func getFundingBlockEventsFromIndexerBlock(
 	ctx sdk.Context,
 	perpsKeeper *keeper.Keeper,
-) []*indexerevents.FundingEvent {
+) []*indexerevents.FundingEventV1 {
 	block := perpsKeeper.GetIndexerEventManager().ProduceBlock(ctx)
-	var fundingEvents []*indexerevents.FundingEvent
+	var fundingEvents []*indexerevents.FundingEventV1
 	for _, event := range block.Events {
 		if event.Subtype != indexerevents.SubtypeFundingValues {
 			continue
@@ -1994,7 +1971,7 @@ func getFundingBlockEventsFromIndexerBlock(
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_BlockEvent_); ok {
 			bytes := indexer_manager.GetBytesFromEventData(event.Data)
 			unmarshaler := common.UnmarshalerImpl{}
-			var fundingEvent indexerevents.FundingEvent
+			var fundingEvent indexerevents.FundingEventV1
 			err := unmarshaler.Unmarshal(bytes, &fundingEvent)
 			if err != nil {
 				panic(err)
@@ -2036,7 +2013,7 @@ func TestMaybeProcessNewFundingTickEpoch_Failure(t *testing.T) {
 			ctx, perpsKeeper, pricesKeeper, epochsKeeper, _ := keepertest.PerpetualsKeepers(t)
 
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Insert test funding sample.
 			keepertest.PopulateTestPremiumStore(
@@ -2500,6 +2477,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 	tests := map[string]struct {
 		currentEpochStartBlock uint32
 		currentBlockHeight     int64
+		minNumVotesPerSample   uint32
 		premiumVotes           types.PremiumStore
 		prevPremiumSamples     types.PremiumStore
 		expectedPremiumSamples types.PremiumStore
@@ -2617,9 +2595,10 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 			},
 			expectedPremiumVotes: types.PremiumStore{}, // reset to empty
 		},
-		"New epoch, add zero paddings": {
+		"New epoch, add zero paddings, NumPremiums > MinNumVotesPerSample": {
 			currentEpochStartBlock: 23,
 			currentBlockHeight:     23,
+			minNumVotesPerSample:   2,
 			premiumVotes: types.PremiumStore{
 				NumPremiums: 4,
 				AllMarketPremiums: []types.MarketPremiums{
@@ -2648,6 +2627,47 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 					{
 						PerpetualId: 2,
 						Premiums:    []int32{50},
+					},
+				},
+			},
+			expectedPremiumVotes: types.PremiumStore{}, // reset to empty
+		},
+		"New epoch, add zero paddings, NumPremiums < MinNumVotesPerSample": {
+			currentEpochStartBlock: 23,
+			currentBlockHeight:     23,
+			minNumVotesPerSample:   6,
+			premiumVotes: types.PremiumStore{
+				NumPremiums: 5,
+				AllMarketPremiums: []types.MarketPremiums{
+					{
+						PerpetualId: 0,
+						Premiums:    []int32{1000}, // median([0, 0, 0, 0, 0, 1000]) = 0
+					},
+					{
+						PerpetualId: 1,
+						Premiums:    []int32{20, -20}, // median([-20, 0, 0, 0, 0, 20]) = 0
+					},
+					{
+						PerpetualId: 2,
+						Premiums:    []int32{-5, -10, 2, -1}, // median([-10, -5, -1, 0, 0, 2]) = -1
+					},
+					{
+						PerpetualId: 3,
+						Premiums:    []int32{200, -100, 100, 30, 40}, // median([-100, 0, 30, 40, 100, 200]) = 35
+					},
+				},
+			},
+			prevPremiumSamples: types.PremiumStore{},
+			expectedPremiumSamples: types.PremiumStore{
+				NumPremiums: 1,
+				AllMarketPremiums: []types.MarketPremiums{
+					{
+						PerpetualId: 2,
+						Premiums:    []int32{-1},
+					},
+					{
+						PerpetualId: 3,
+						Premiums:    []int32{35},
 					},
 				},
 			},
@@ -2694,9 +2714,11 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create liquidity tiers and perpetuals,
-			_, err = createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 3)
+			_, err = createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 4)
 			require.NoError(t, err)
 
+			err = keeper.SetMinNumVotesPerSample(ctx, tc.minNumVotesPerSample)
+			require.NoError(t, err)
 			keeper.SetPremiumVotes(ctx, tc.premiumVotes)
 			keeper.SetPremiumSamples(ctx, tc.prevPremiumSamples)
 
@@ -2744,6 +2766,7 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.BasePositionNotional,
+			lt.ImpactNotional,
 		)
 		require.NoError(t, err)
 
@@ -2759,6 +2782,7 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 		require.Equal(t, lt.InitialMarginPpm, liquidityTier.InitialMarginPpm)
 		require.Equal(t, lt.MaintenanceFractionPpm, liquidityTier.MaintenanceFractionPpm)
 		require.Equal(t, lt.BasePositionNotional, liquidityTier.BasePositionNotional)
+		require.Equal(t, lt.ImpactNotional, liquidityTier.ImpactNotional)
 	}
 }
 
@@ -2769,6 +2793,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		basePositionNotional   uint64
+		impactNotional         uint64
 		expectedError          error
 	}{
 		"Initial Margin Ppm exceeds maximum": {
@@ -2777,6 +2802,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
 			basePositionNotional:   uint64(lib.OneMillion),
+			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          sdkerrors.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
@@ -2785,6 +2811,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			basePositionNotional:   uint64(lib.OneMillion),
+			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          sdkerrors.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Base Position Notional is zero": {
@@ -2793,7 +2820,17 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
+			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          sdkerrors.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+		},
+		"Impact Notional is zero": {
+			id:                     1,
+			name:                   "Small-Cap",
+			initialMarginPpm:       500_000,
+			maintenanceFractionPpm: lib.OneMillion,
+			basePositionNotional:   uint64(lib.OneMillion),
+			impactNotional:         uint64(0),
+			expectedError:          sdkerrors.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
 		},
 	}
 
@@ -2809,6 +2846,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				tc.basePositionNotional,
+				tc.impactNotional,
 			)
 
 			require.Error(t, err)
@@ -2826,6 +2864,7 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.BasePositionNotional,
+			lt.ImpactNotional,
 		)
 		require.NoError(t, err)
 	}
@@ -2837,6 +2876,7 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 		initialMarginPpm := uint32(i * 2)
 		maintenanceFractionPpm := uint32(i * 2)
 		basePositionNotional := uint64((i + 1) * 1_000_000)
+		impactNotional := uint64((i + 1) * 500_000_000)
 		modifiedLt, err := keeper.ModifyLiquidityTier(
 			ctx,
 			lt.Id,
@@ -2844,6 +2884,7 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			initialMarginPpm,
 			maintenanceFractionPpm,
 			basePositionNotional,
+			impactNotional,
 		)
 		require.NoError(t, err)
 		obtainedLt, err := keeper.GetLiquidityTier(ctx, lt.Id)
@@ -2873,6 +2914,11 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			basePositionNotional,
 			obtainedLt.BasePositionNotional,
 		)
+		require.Equal(
+			t,
+			impactNotional,
+			obtainedLt.ImpactNotional,
+		)
 	}
 }
 
@@ -2883,6 +2929,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		basePositionNotional   uint64
+		impactNotional         uint64
 		expectedError          error
 	}{
 		"Initial Margin Ppm exceeds maximum": {
@@ -2891,6 +2938,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
 			basePositionNotional:   uint64(lib.OneMillion),
+			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          sdkerrors.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
@@ -2899,6 +2947,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			basePositionNotional:   uint64(lib.OneMillion),
+			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          sdkerrors.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Base Position Notional is zero": {
@@ -2907,7 +2956,17 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
+			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          sdkerrors.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+		},
+		"Impact Notional is zero": {
+			id:                     1,
+			name:                   "Small-Cap",
+			initialMarginPpm:       500_000,
+			maintenanceFractionPpm: lib.OneMillion,
+			basePositionNotional:   uint64(lib.OneMillion),
+			impactNotional:         uint64(0),
+			expectedError:          sdkerrors.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
 		},
 	}
 
@@ -2926,6 +2985,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				tc.basePositionNotional,
+				tc.impactNotional,
 			)
 
 			require.Error(t, err)
@@ -3008,6 +3068,37 @@ func TestSetPremiumVoteClampFactorPpm(t *testing.T) {
 				got := keeper.GetPremiumVoteClampFactorPpm(ctx)
 				require.Equal(t, tc.premiumVoteClampFactorPpm, got)
 			}
+		})
+	}
+}
+
+func TestSetMinNumVotesPerSample(t *testing.T) {
+	tests := map[string]struct {
+		minNumVotesPerSample uint32
+	}{
+		"Sets successfully: zero": {
+			minNumVotesPerSample: 0,
+		},
+		"Sets successfully: default genesis value": {
+			minNumVotesPerSample: 15,
+		},
+		"Sets successfully: max uint32": {
+			minNumVotesPerSample: math.MaxUint32,
+		},
+	}
+
+	// Test setup.
+	ctx, keeper, _, _, _ := keepertest.PerpetualsKeepers(t)
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := keeper.SetMinNumVotesPerSample(ctx, tc.minNumVotesPerSample)
+
+			require.NoError(t, err)
+			// Check that value in store is as expected.
+			got := keeper.GetMinNumVotesPerSample(ctx)
+			require.Equal(t, tc.minNumVotesPerSample, got)
 		})
 	}
 }

@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"ZECUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"ZECUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tZECUSD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"ZEC-USD"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"XZECZUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"ZEC-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"ZEC-USDT"
+    }
+  ]
+}

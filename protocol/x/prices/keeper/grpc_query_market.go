@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -12,27 +11,26 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) AllMarkets(
+func (k Keeper) AllMarketPrices(
 	c context.Context,
-	req *types.QueryAllMarketsRequest,
-) (*types.QueryAllMarketsResponse, error) {
+	req *types.QueryAllMarketPricesRequest,
+) (*types.QueryAllMarketPricesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var markets []types.Market
+	var marketPrices []types.MarketPrice
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
-	marketStore := prefix.NewStore(store, types.KeyPrefix(types.MarketKeyPrefix))
+	marketPriceStore := k.newMarketPriceStore(ctx)
 
-	pageRes, err := query.Paginate(marketStore, req.Pagination, func(key []byte, value []byte) error {
-		var market types.Market
-		if err := k.cdc.Unmarshal(value, &market); err != nil {
+	pageRes, err := query.Paginate(marketPriceStore, req.Pagination, func(key []byte, value []byte) error {
+		var marketPrice types.MarketPrice
+		if err := k.cdc.Unmarshal(value, &marketPrice); err != nil {
 			return err
 		}
 
-		markets = append(markets, market)
+		marketPrices = append(marketPrices, marketPrice)
 		return nil
 	})
 
@@ -40,26 +38,89 @@ func (k Keeper) AllMarkets(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllMarketsResponse{Market: markets, Pagination: pageRes}, nil
+	return &types.QueryAllMarketPricesResponse{MarketPrices: marketPrices, Pagination: pageRes}, nil
 }
 
-func (k Keeper) Market(c context.Context, req *types.QueryMarketRequest) (*types.QueryMarketResponse, error) {
+func (k Keeper) MarketPrice(
+	c context.Context,
+	req *types.QueryMarketPriceRequest,
+) (
+	*types.QueryMarketPriceResponse,
+	error,
+) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, err := k.GetMarket(
+	val, err := k.GetMarketPrice(
 		ctx,
 		req.Id,
 	)
 	if err != nil {
-		if sdkerrors.IsOf(err, types.ErrMarketDoesNotExist) {
+		if sdkerrors.IsOf(err, types.ErrMarketPriceDoesNotExist) {
 			return nil, status.Error(codes.NotFound, "not found")
 		} else {
-			return nil, status.Error(codes.Internal, "unknown error getting market")
+			return nil, status.Error(codes.Internal, "unknown error getting market price")
 		}
 	}
 
-	return &types.QueryMarketResponse{Market: val}, nil
+	return &types.QueryMarketPriceResponse{MarketPrice: val}, nil
+}
+
+func (k Keeper) AllMarketParams(
+	c context.Context,
+	req *types.QueryAllMarketParamsRequest,
+) (*types.QueryAllMarketParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	var marketParams []types.MarketParam
+	ctx := sdk.UnwrapSDKContext(c)
+
+	marketParamStore := k.newMarketParamStore(ctx)
+
+	pageRes, err := query.Paginate(marketParamStore, req.Pagination, func(key []byte, value []byte) error {
+		var marketParam types.MarketParam
+		if err := k.cdc.Unmarshal(value, &marketParam); err != nil {
+			return err
+		}
+
+		marketParams = append(marketParams, marketParam)
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllMarketParamsResponse{MarketParams: marketParams, Pagination: pageRes}, nil
+}
+
+func (k Keeper) MarketParam(
+	c context.Context,
+	req *types.QueryMarketParamRequest,
+) (
+	*types.QueryMarketParamResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	val, err := k.GetMarketParam(
+		ctx,
+		req.Id,
+	)
+	if err != nil {
+		if sdkerrors.IsOf(err, types.ErrMarketParamDoesNotExist) {
+			return nil, status.Error(codes.NotFound, "not found")
+		} else {
+			return nil, status.Error(codes.Internal, "unknown error getting market param")
+		}
+	}
+
+	return &types.QueryMarketParamResponse{MarketParam: val}, nil
 }

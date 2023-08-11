@@ -191,13 +191,13 @@ create_validators() {
 		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}"
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,100000000000stake --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,100000000000$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 		for acct in "${FAUCET_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,100000000000stake --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,100000000000$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 
-		dydxprotocold gentx "${MONIKERS[$i]}" 500000000stake --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+		dydxprotocold gentx "${MONIKERS[$i]}" 500000000$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 		# Copy the gentx to a shared directory.
 		cp -a "$VAL_CONFIG_DIR/gentx/." /tmp/gentx
@@ -244,9 +244,6 @@ edit_config() {
 
 	# Disable pex
 	dasel put -t bool -f "$CONFIG_FOLDER"/config.toml '.p2p.pex' -v 'false'
-
-	# TODO(CORE-79): Set this parameter in the binary after we get a reasonable value from experiments.
-	dasel put -t string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' -v '1s'
 }
 
 install_prerequisites

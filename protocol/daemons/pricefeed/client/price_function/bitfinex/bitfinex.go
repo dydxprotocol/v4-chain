@@ -2,125 +2,118 @@ package bitfinex
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/go-playground/validator/v10"
-	"io"
-	"math/big"
+	"errors"
 	"net/http"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function"
 	"github.com/dydxprotocol/v4/lib"
 )
 
-// These indices into the REST API response are defined in https://docs.bitfinex.com/reference/rest-public-ticker
+// These indices into the REST API response are defined in https://docs.bitfinex.com/reference/rest-public-tickers
 const (
-	BidPriceIndex  = 0
-	AskPriceIndex  = 2
-	LastPriceIndex = 6
-	// We don't need all 10 fields, but 10 fields indicates this is a valid API response. See above link
+	PairIndex      = 0
+	BidPriceIndex  = 1
+	AskPriceIndex  = 3
+	LastPriceIndex = 7
+	// We don't need all 11 fields, but 11 fields indicates this is a valid API response. See above link
 	// for documentation on the response format.
-	BitfinexResponseLength = 10
+	BitfinexResponseLength = 11
 )
 
-var (
-	validate *validator.Validate
-)
-
-// BitfinexResponseBody is our representation of the response body for the request to the GET
+// BitfinexTicker is our representation of the ticker information in Bitfinex API response.
 // The raw response is a slice of floats. We use this constructed response to enable stricter
 // validation.
-// https://api.bitfinex.com/v2/ticker/$ Bitfinex API
-// Note that not all response values are included here. See the API response docs for more information.
-// Documentation: https://docs.bitfinex.com/reference/rest-public-ticker
-type BitfinexResponseBody struct {
-	BidPrice  float64 `validate:"gt=0"`
-	AskPrice  float64 `validate:"gt=0"`
-	LastPrice float64 `validate:"gt=0"`
+// BitfinexTicker implements interface `Ticker` in util.go.
+type BitfinexTicker struct {
+	Pair      string `validate:"required"`
+	BidPrice  string `validate:"required,positive-float-string"`
+	AskPrice  string `validate:"required,positive-float-string"`
+	LastPrice string `validate:"required,positive-float-string"`
 }
 
-// bitfinexRawResponse is the go representation of the raw response format
-type bitfinexRawResponse []float64
-
-// unmarshalBinfinexResponse converts a raw JSON string representation of the ticker REST API response from
-// Bitfinex into a strongly typed struct representation of relevant response fields.
-func unmarshalBitfinexResponse(body io.ReadCloser) (*BitfinexResponseBody, error) {
-	var responseBody BitfinexResponseBody
-	var rawResponse bitfinexRawResponse
-	err := json.NewDecoder(body).Decode(&rawResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	// Verify the API response is the expected length.
-	if len(rawResponse) != BitfinexResponseLength {
-		return nil, fmt.Errorf(
-			"Invalid response body length for %s with length of: %v, expected length %v",
-			exchange_common.EXCHANGE_NAME_BITFINEX,
-			len(rawResponse),
-			BitfinexResponseLength,
-		)
-	}
-	// Manually assign relevant slice fields to an annotated struct and validate field values for stricter validation.
-	responseBody.BidPrice = rawResponse[BidPriceIndex]
-	responseBody.AskPrice = rawResponse[AskPriceIndex]
-	responseBody.LastPrice = rawResponse[LastPriceIndex]
-
-	if validate == nil {
-		validate, err = price_function.GetApiResponseValidator()
-		if err != nil {
-			return nil, fmt.Errorf("Error creating API response validator (%w)", err)
-		}
-	}
-
-	err = validate.Struct(responseBody)
-	if err != nil {
-		return nil, err
-	}
-	return &responseBody, nil
+func (t BitfinexTicker) GetPair() string {
+	return t.Pair
 }
 
-// BitfinexPriceFunction transforms an API response from Bitfinex into a map of market symbols
+func (t BitfinexTicker) GetAskPrice() string {
+	return t.AskPrice
+}
+
+func (t BitfinexTicker) GetBidPrice() string {
+	return t.BidPrice
+}
+
+func (t BitfinexTicker) GetLastPrice() string {
+	return t.LastPrice
+}
+
+// BitfinexPriceFunction transforms an API response from Bitfinex into a map of tickers
 // to prices that have been shifted by a market specific exponent.
 func BitfinexPriceFunction(
 	response *http.Response,
-	marketPriceExponent map[string]int32,
+	tickerToExponent map[string]int32,
 	medianizer lib.Medianizer,
-) (marketSymbolsToPrice map[string]uint64, unavailableSymbols map[string]error, err error) {
-	// Get market symbol and value of exponent. The API response should only contain information
-	// for one market.
-	marketSymbol, exponent, err := price_function.GetOnlyMarketSymbolAndExponent(
-		marketPriceExponent,
-		exchange_common.EXCHANGE_NAME_BITFINEX,
-	)
+) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
+	// Unmarshal response body into raw format first.
+	var rawResponse [][]interface{}
+	err = json.NewDecoder(response.Body).Decode(&rawResponse)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Parse response body.
-	responseBody, err := unmarshalBitfinexResponse(response.Body)
-	// The most likely failure here would be due to a missing ticker, so this will be
-	// percolated up as a missing symbol to maintain price function semantics.
-	if err != nil {
-		return nil, map[string]error{marketSymbol: err}, nil
+	// Convert raw tickers in response into a list of `BitfinexTicker`.
+	bitfinexTickers := []BitfinexTicker{}
+	invalidRawTickers := map[string]error{}
+	for _, rawTicker := range rawResponse {
+		// Verify raw ticker is the expected length. If not, continue to next.
+		if len(rawTicker) != BitfinexResponseLength {
+			continue
+		}
+
+		// Get `pair` as `string`. If invalid, continue on to next raw ticker.
+		pair, ok := rawTicker[PairIndex].(string)
+		if !ok {
+			continue
+		}
+		// Get `bidPrice` as `float64`. If invalid, mark pair as invalid with bid price error.
+		bidPrice, ok := rawTicker[BidPriceIndex].(float64)
+		if !ok {
+			invalidRawTickers[pair] = errors.New("invalid bid price in response - not a float64")
+			continue
+		}
+		// Get `askPrice` as `float64`. If invalid, mark pair as invalid with ask price error.
+		askPrice, ok := rawTicker[AskPriceIndex].(float64)
+		if !ok {
+			invalidRawTickers[pair] = errors.New("invalid ask price in response - not a float64")
+			continue
+		}
+		// Get `lastPrice`. If invalid, mark pair as invalid with last price error.
+		lastPrice, ok := rawTicker[LastPriceIndex].(float64)
+		if !ok {
+			invalidRawTickers[pair] = errors.New("invalid last price in response - not a float64")
+			continue
+		}
+		bitfinexTickers = append(bitfinexTickers, BitfinexTicker{
+			Pair:      pair,
+			BidPrice:  price_function.ConvertFloat64ToString(bidPrice),
+			AskPrice:  price_function.ConvertFloat64ToString(askPrice),
+			LastPrice: price_function.ConvertFloat64ToString(lastPrice),
+		})
 	}
 
-	// Get big float values from transformed response prices.
-	bigFloatSlice := []*big.Float{
-		new(big.Float).SetFloat64(responseBody.BidPrice),
-		new(big.Float).SetFloat64(responseBody.AskPrice),
-		new(big.Float).SetFloat64(responseBody.LastPrice),
-	}
-
-	// Get the median uint64 value from the slice of big float price values.
-	medianPrice, err := price_function.GetUint64MedianFromReverseShiftedBigFloatValues(
-		bigFloatSlice,
-		exponent,
+	// Calculate median price of each ticker in `tickerToExponent`.
+	tickerToPrice, unavailableTickers, err = price_function.GetMedianPricesFromTickers(
+		bitfinexTickers,
+		tickerToExponent,
 		medianizer,
 	)
-	if err != nil {
-		return nil, nil, err
+
+	// Mark as unavailable requested tickers whose raw ticker response was invalid.
+	for ticker, err := range invalidRawTickers {
+		if _, exists := tickerToExponent[ticker]; exists {
+			unavailableTickers[ticker] = err
+		}
 	}
 
-	return map[string]uint64{marketSymbol: medianPrice}, nil, nil
+	return tickerToPrice, unavailableTickers, err
 }

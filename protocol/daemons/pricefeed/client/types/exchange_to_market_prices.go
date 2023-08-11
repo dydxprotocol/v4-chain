@@ -13,30 +13,30 @@ import (
 // prices from multiple market sources. Methods are goroutine safe in the underlying MarketToPrice
 // objects.
 type ExchangeToMarketPrices struct {
-	// {k: exchangeFeedId, v: market prices, read-write lock}
-	ExchangeMarketPrices map[ExchangeFeedId]*MarketToPrice
+	// {k: exchangeId, v: market prices, read-write lock}
+	ExchangeMarketPrices map[ExchangeId]*MarketToPrice
 }
 
 // NewExchangeToMarketPrices creates a new ExchangeToMarketPrices. Since `ExchangeToMarketPrices` is
 // not goroutine safe to write to, all key-value store creation is done on initialization.
-// Validation is also done to verify `exchangeFeedIds` is a valid input.
-func NewExchangeToMarketPrices(exchangeFeedIds []ExchangeFeedId) (*ExchangeToMarketPrices, error) {
-	// Verify `ExchangeToMarketPrices` will not be initialized without `exchangeFeedIds`.
-	if len(exchangeFeedIds) == 0 {
-		return nil, errors.New("exchangeFeedIds must not be empty")
+// Validation is also done to verify `exchangeIds` is a valid input.
+func NewExchangeToMarketPrices(exchangeIds []ExchangeId) (*ExchangeToMarketPrices, error) {
+	// Verify `ExchangeToMarketPrices` will not be initialized without `exchangeIds`.
+	if len(exchangeIds) == 0 {
+		return nil, errors.New("exchangeIds must not be empty")
 	}
 
 	exchangeToMarketPrices := &ExchangeToMarketPrices{
-		ExchangeMarketPrices: make(map[MarketId]*MarketToPrice, len(exchangeFeedIds)),
+		ExchangeMarketPrices: make(map[ExchangeId]*MarketToPrice, len(exchangeIds)),
 	}
 
-	for _, exchangeFeedId := range exchangeFeedIds {
-		// Verify no `exchangeFeedIds` are duplicates.
-		if _, ok := exchangeToMarketPrices.ExchangeMarketPrices[exchangeFeedId]; ok {
-			return nil, fmt.Errorf("exchangeFeedId: %d appears twice in request", exchangeFeedId)
+	for _, exchangeId := range exchangeIds {
+		// Verify no `exchangeIds` are duplicates.
+		if _, ok := exchangeToMarketPrices.ExchangeMarketPrices[exchangeId]; ok {
+			return nil, fmt.Errorf("exchangeId: '%v' appears twice in request", exchangeId)
 		}
 
-		exchangeToMarketPrices.ExchangeMarketPrices[exchangeFeedId] = NewMarketToPrice()
+		exchangeToMarketPrices.ExchangeMarketPrices[exchangeId] = NewMarketToPrice()
 	}
 
 	return exchangeToMarketPrices, nil
@@ -46,11 +46,11 @@ func NewExchangeToMarketPrices(exchangeFeedIds []ExchangeFeedId) (*ExchangeToMar
 // timestamp on the updates are greater than the timestamp on existing prices. NOTE:
 // `UpdatePrice` will only ever read from `ExchangeMarketPrices` and calls a
 // goroutine-safe method on the fetched `MarketToPrice`.
-// Note: if an invalid `exchangeFeedId` is being written to the `UpdatePrice` it is possible the
+// Note: if an invalid `exchangeId` is being written to the `UpdatePrice` it is possible the
 // underlying map was corrupted or the priceDaemon logic is invalid. Therefore, `UpdatePrice`
 // will panic.
 func (exchangeToMarketPrices *ExchangeToMarketPrices) UpdatePrice(
-	exchangeFeedId ExchangeFeedId,
+	exchangeId ExchangeId,
 	marketPriceTimestamp *MarketPriceTimestamp,
 ) {
 	// Measure latency to update price in in-memory map.
@@ -61,11 +61,11 @@ func (exchangeToMarketPrices *ExchangeToMarketPrices) UpdatePrice(
 		metrics.Latency,
 	)
 
-	exchangeToMarketPrices.ExchangeMarketPrices[exchangeFeedId].UpdatePrice(marketPriceTimestamp)
+	exchangeToMarketPrices.ExchangeMarketPrices[exchangeId].UpdatePrice(marketPriceTimestamp)
 }
 
-// GetAllPrices returns a map of exchangeFeedIds to a list of all `MarketPriceTimestamps` for the exchange.
-func (exchangeToMarketPrices *ExchangeToMarketPrices) GetAllPrices() map[MarketId][]MarketPriceTimestamp {
+// GetAllPrices returns a map of exchangeIds to a list of all `MarketPriceTimestamps` for the exchange.
+func (exchangeToMarketPrices *ExchangeToMarketPrices) GetAllPrices() map[ExchangeId][]MarketPriceTimestamp {
 	// Measure latency to get all prices from in-memory map.
 	defer telemetry.ModuleMeasureSince(
 		metrics.PricefeedDaemon,
@@ -74,15 +74,15 @@ func (exchangeToMarketPrices *ExchangeToMarketPrices) GetAllPrices() map[MarketI
 		metrics.Latency,
 	)
 
-	exchangeFeedIdToPrices := make(
-		map[MarketId][]MarketPriceTimestamp,
+	exchangeIdToPrices := make(
+		map[ExchangeId][]MarketPriceTimestamp,
 		len(exchangeToMarketPrices.ExchangeMarketPrices),
 	)
 
-	for exchangeFeedId, mtp := range exchangeToMarketPrices.ExchangeMarketPrices {
+	for exchangeId, mtp := range exchangeToMarketPrices.ExchangeMarketPrices {
 		marketPrices := mtp.GetAllPrices()
-		exchangeFeedIdToPrices[exchangeFeedId] = marketPrices
+		exchangeIdToPrices[exchangeId] = marketPrices
 	}
 
-	return exchangeFeedIdToPrices
+	return exchangeIdToPrices
 }

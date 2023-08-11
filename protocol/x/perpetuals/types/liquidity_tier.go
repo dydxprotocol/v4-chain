@@ -24,6 +24,10 @@ func (liquidityTier LiquidityTier) Validate() error {
 		return sdkerrors.Wrap(ErrBasePositionNotionalIsZero, lib.Uint32ToString(0))
 	}
 
+	if liquidityTier.ImpactNotional == 0 {
+		return sdkerrors.Wrap(ErrImpactNotionalIsZero, lib.Uint32ToString(0))
+	}
+
 	return nil
 }
 

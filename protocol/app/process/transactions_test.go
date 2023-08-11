@@ -198,7 +198,6 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 
 	// Operations tx.
 	validOperationsTx := constants.ValidEmptyMsgProposedOperationsTxBytes
-	invalidOperationsTx := constants.InvalidProposedOperationsTxBytes
 
 	// Add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
@@ -218,12 +217,6 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		txsBytes    [][]byte
 		expectedErr error
 	}{
-		"Operations tx validation fails": {
-			txsBytes: [][]byte{invalidOperationsTx, validAddFundingTx, validUpdatePriceTx},
-			expectedErr: sdkerrors.Wrap(
-				process.ErrMsgValidateBasic,
-				"Order was not previously placed in operations queue: MsgProposedOperations is invalid"),
-		},
 		"AddFunding tx validation fails": {
 			txsBytes: [][]byte{validOperationsTx, invalidAddFundingTx, validUpdatePriceTx},
 			expectedErr: sdkerrors.Wrap(
@@ -264,7 +257,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
@@ -330,7 +323,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 

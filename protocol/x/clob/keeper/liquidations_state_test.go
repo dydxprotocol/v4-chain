@@ -199,22 +199,15 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			bankMock := &mocks.BankKeeper{}
-			ctx,
-				clobKeeper,
-				_,
-				_,
-				_,
-				_,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, bankMock, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
 
 			if tc.setupState != nil {
-				tc.setupState(ctx, clobKeeper)
+				tc.setupState(ks.Ctx, ks.ClobKeeper)
 			}
 
 			// Run the test and verify expectations.
-			subaccountLiquidationInfo := clobKeeper.GetSubaccountLiquidationInfo(
-				ctx,
+			subaccountLiquidationInfo := ks.ClobKeeper.GetSubaccountLiquidationInfo(
+				ks.Ctx,
 				tc.subaccountId,
 			)
 			require.Equal(
@@ -229,14 +222,7 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 func TestUpdateSubaccountLiquidationInfo_NotionalLiquidatedOverflowPanics(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	bankMock := &mocks.BankKeeper{}
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(
+	ks := keepertest.NewClobKeepersTestContext(
 		t,
 		memClob,
 		bankMock,
@@ -244,13 +230,13 @@ func TestUpdateSubaccountLiquidationInfo_NotionalLiquidatedOverflowPanics(t *tes
 	)
 
 	subaccountId := constants.Alice_Num0
-	clobKeeper.MustUpdateSubaccountPerpetualLiquidated(
-		ctx,
+	ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(
+		ks.Ctx,
 		subaccountId,
 		0,
 	)
-	clobKeeper.UpdateSubaccountLiquidationInfo(
-		ctx,
+	ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
+		ks.Ctx,
 		subaccountId,
 		new(big.Int).SetUint64(math.MaxUint64),
 		big.NewInt(50),
@@ -264,13 +250,13 @@ func TestUpdateSubaccountLiquidationInfo_NotionalLiquidatedOverflowPanics(t *tes
 		),
 		func() {
 			// Run the test and verify expectations.
-			clobKeeper.MustUpdateSubaccountPerpetualLiquidated(
-				ctx,
+			ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(
+				ks.Ctx,
 				subaccountId,
 				1,
 			)
-			clobKeeper.UpdateSubaccountLiquidationInfo(
-				ctx,
+			ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
+				ks.Ctx,
 				subaccountId,
 				big.NewInt(1),
 				big.NewInt(50),
@@ -282,23 +268,16 @@ func TestUpdateSubaccountLiquidationInfo_NotionalLiquidatedOverflowPanics(t *tes
 func TestUpdateSubaccountLiquidationInfo_QuantumInsuranceLostOverflowPanics(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	bankMock := &mocks.BankKeeper{}
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, bankMock, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
 
 	subaccountId := constants.Alice_Num0
-	clobKeeper.MustUpdateSubaccountPerpetualLiquidated(
-		ctx,
+	ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(
+		ks.Ctx,
 		subaccountId,
 		0,
 	)
-	clobKeeper.UpdateSubaccountLiquidationInfo(
-		ctx,
+	ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
+		ks.Ctx,
 		subaccountId,
 		big.NewInt(50),
 		constants.BigNegMaxUint64(),
@@ -311,13 +290,13 @@ func TestUpdateSubaccountLiquidationInfo_QuantumInsuranceLostOverflowPanics(t *t
 			subaccountId,
 		),
 		func() {
-			clobKeeper.MustUpdateSubaccountPerpetualLiquidated(
-				ctx,
+			ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(
+				ks.Ctx,
 				subaccountId,
 				1,
 			)
-			clobKeeper.UpdateSubaccountLiquidationInfo(
-				ctx,
+			ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
+				ks.Ctx,
 				subaccountId,
 				big.NewInt(50),
 				big.NewInt(-1),
@@ -329,25 +308,18 @@ func TestUpdateSubaccountLiquidationInfo_QuantumInsuranceLostOverflowPanics(t *t
 func TestUpdateSubaccountLiquidationInfo_MultipleLiquidationsOfSubaccountAndPerpetualPanics(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	bankMock := &mocks.BankKeeper{}
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, bankMock, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
 
 	subaccountId := constants.Alice_Num0
 	perpetualId := uint32(0)
-	clobKeeper.MustUpdateSubaccountPerpetualLiquidated(
-		ctx,
+	ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(
+		ks.Ctx,
 		subaccountId,
 		perpetualId,
 	)
 
-	clobKeeper.UpdateSubaccountLiquidationInfo(
-		ctx,
+	ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
+		ks.Ctx,
 		subaccountId,
 		big.NewInt(50),
 		big.NewInt(20),
@@ -362,13 +334,13 @@ func TestUpdateSubaccountLiquidationInfo_MultipleLiquidationsOfSubaccountAndPerp
 			perpetualId,
 		),
 		func() {
-			clobKeeper.MustUpdateSubaccountPerpetualLiquidated(
-				ctx,
+			ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(
+				ks.Ctx,
 				subaccountId,
 				perpetualId,
 			)
-			clobKeeper.UpdateSubaccountLiquidationInfo(
-				ctx,
+			ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
+				ks.Ctx,
 				subaccountId,
 				big.NewInt(20),
 				big.NewInt(-1),

@@ -629,8 +629,8 @@ func TestPlaceOrder_ReduceOnly(t *testing.T) {
 				0: {},
 			},
 			expectedCancelledReduceOnlyOrders: []types.OrderId{
-				constants.Order_Alice_Num1_Id2_Clob0_Buy20_Price30_GTB20_RO.OrderId,
 				constants.Order_Bob_Num0_Id1_Clob0_Sell15_Price50_GTB20_RO.OrderId,
+				constants.Order_Alice_Num1_Id2_Clob0_Buy20_Price30_GTB20_RO.OrderId,
 			},
 		},
 		`Can place a regular taker order that matches with multiple maker orders and the maker
@@ -691,8 +691,8 @@ func TestPlaceOrder_ReduceOnly(t *testing.T) {
 				0: {},
 			},
 			expectedCancelledReduceOnlyOrders: []types.OrderId{
-				constants.Order_Bob_Num0_Id2_Clob0_Sell10_Price35_GTB20_RO.OrderId,
 				constants.Order_Bob_Num0_Id1_Clob0_Sell15_Price50_GTB20_RO.OrderId,
+				constants.Order_Bob_Num0_Id2_Clob0_Sell10_Price35_GTB20_RO.OrderId,
 			},
 		},
 		`Can place a reduce-only taker order that matches and sets the taker's position size to zero,
@@ -1350,7 +1350,6 @@ func TestPlaceOrder_ReduceOnly(t *testing.T) {
 				tc.expectedRemainingBids,
 				tc.expectedRemainingAsks,
 				append(tc.expectedExistingMatches, tc.expectedNewMatches...),
-				[]types.Order{}, // expectedPendingLongTermOrders is empty since no Long-Term orders were placed.
 				fakeMemClobKeeper,
 			)
 
@@ -1383,6 +1382,290 @@ func TestPlaceOrder_ReduceOnly(t *testing.T) {
 				tc.expectedExistingMatches,
 				tc.expectedNewMatches,
 				tc.expectedCancelledReduceOnlyOrders,
+				// TODO(IND-261): Add tests for replaced reduce-only orders.
+				false,
+			)
+		})
+	}
+}
+
+// These tests aim to test two different scenarios regarding stateful reduce-only order removals:
+//  1. A stateful reduce-only maker order is encountered during matching which would result in increasing position size.
+//     This should result in the maker order being removed and an OrderRemoval operation being added to the ops queue.
+//     This happens DURING the matching loop, in `mustPerformTakerOrderMatching`.
+//  2. A taker order matches with a a maker order that changes the maker subaccount's position side.
+//     The maker subaccount's resting stateful reduce-only orders should be removed and an OrderRemoval operation
+//     should be added to the ops queue for each resting order.
+//     This happens AFTER the matching loop, in `maybeCancelReduceOnlyOrders`.
+func TestPlaceOrder_LongTermReduceOnlyRemovals(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+	tests := map[string]struct {
+		// State.
+		placedMatchableOrders          []types.MatchableOrder
+		collateralizationCheckFailures map[int]map[satypes.SubaccountId]satypes.UpdateResult
+		statePositionSizes             map[types.ClobPairId]map[satypes.SubaccountId]*big.Int
+
+		// Parameters.
+		order types.Order
+
+		// Expectations.
+		expectedOrderStatus                    types.OrderStatus
+		expectedFilledSize                     satypes.BaseQuantums
+		expectedErr                            error
+		expectedPendingMatches                 []expectedMatch
+		expectedExistingMatches                []expectedMatch
+		expectedNewMatches                     []expectedMatch
+		expectedRemainingBids                  []OrderWithRemainingSize
+		expectedRemainingAsks                  []OrderWithRemainingSize
+		expectedSubaccountOpenReduceOnlyOrders map[types.ClobPairId]map[satypes.SubaccountId]map[types.OrderId]bool
+		expectedCancelledReduceOnlyOrders      []types.OrderId
+		expectedInternalOperations             []types.InternalOperation
+	}{
+		`Can place a regular taker order that partially matches with a regular order which changes the
+			maker order's position side. The maker's resting stateful reduce-only order is canceled and an
+			OrderRemoval operation is added while attempting to match remaining taker size against it`: {
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22,
+				&constants.LongTermOrder_Bob_Num0_Id2_Clob0_Sell10_Price35_GTB20_RO,
+			},
+			collateralizationCheckFailures: map[int]map[satypes.SubaccountId]satypes.UpdateResult{},
+			statePositionSizes: map[types.ClobPairId]map[satypes.SubaccountId]*big.Int{
+				0: {
+					constants.Alice_Num1: big.NewInt(0),
+					constants.Bob_Num0:   big.NewInt(15),
+				},
+			},
+
+			order: constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+
+			expectedOrderStatus: types.Success,
+			expectedFilledSize:  20,
+			expectedRemainingBids: []OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+					RemainingSize: 10,
+				},
+			},
+			expectedRemainingAsks: []OrderWithRemainingSize{},
+			expectedPendingMatches: []expectedMatch{
+				{
+					makerOrder:      &constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22,
+					takerOrder:      &constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+					matchedQuantums: 20,
+				},
+			},
+			expectedExistingMatches: []expectedMatch{},
+			expectedNewMatches: []expectedMatch{
+				{
+					makerOrder:      &constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22,
+					takerOrder:      &constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+					matchedQuantums: 20,
+				},
+			},
+			expectedSubaccountOpenReduceOnlyOrders: map[types.ClobPairId]map[satypes.SubaccountId]map[types.OrderId]bool{
+				0: {},
+			},
+			expectedCancelledReduceOnlyOrders: []types.OrderId{
+				constants.LongTermOrder_Bob_Num0_Id2_Clob0_Sell10_Price35_GTB20_RO.OrderId,
+			},
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewOrderRemovalInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id2_Clob0_Sell10_Price35_GTB20_RO.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22.OrderId,
+							FillAmount:   20,
+						},
+					},
+				),
+			},
+		},
+		`Can place a regular taker order that fully-matches with a regular order which changes the
+			maker order's position side. The maker's resting stateful reduce-only order is canceled by 
+			maybeCancelReduceOnlyOrders after matching finishes. An Order Removal operation is added
+			to the operations queue`: {
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
+				&constants.LongTermOrder_Bob_Num0_Id2_Clob0_Sell10_Price35_GTB20_RO,
+			},
+			collateralizationCheckFailures: map[int]map[satypes.SubaccountId]satypes.UpdateResult{},
+			statePositionSizes: map[types.ClobPairId]map[satypes.SubaccountId]*big.Int{
+				0: {
+					constants.Alice_Num1: big.NewInt(0),
+					constants.Bob_Num0:   big.NewInt(15),
+				},
+			},
+
+			order: constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+
+			expectedOrderStatus:   types.Success,
+			expectedFilledSize:    30,
+			expectedRemainingBids: []OrderWithRemainingSize{},
+			expectedRemainingAsks: []OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
+					RemainingSize: 5,
+				},
+			},
+			expectedPendingMatches: []expectedMatch{
+				{
+					makerOrder:      &constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
+					takerOrder:      &constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+					matchedQuantums: 30,
+				},
+			},
+			expectedExistingMatches: []expectedMatch{},
+			expectedNewMatches: []expectedMatch{
+				{
+					makerOrder:      &constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
+					takerOrder:      &constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+					matchedQuantums: 30,
+				},
+			},
+			expectedSubaccountOpenReduceOnlyOrders: map[types.ClobPairId]map[satypes.SubaccountId]map[types.OrderId]bool{
+				0: {},
+			},
+			expectedCancelledReduceOnlyOrders: []types.OrderId{
+				constants.LongTermOrder_Bob_Num0_Id2_Clob0_Sell10_Price35_GTB20_RO.OrderId,
+			},
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30.OrderId,
+							FillAmount:   30,
+						},
+					},
+				),
+				types.NewOrderRemovalInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id2_Clob0_Sell10_Price35_GTB20_RO.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+				),
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup memclob state and test expectations.
+			require.NotNil(t, tc.expectedSubaccountOpenReduceOnlyOrders)
+			order := tc.order
+			addOrderToOrderbookSize := satypes.BaseQuantums(0)
+			expectedFilledSize := tc.expectedFilledSize
+			if tc.expectedErr == nil && tc.expectedOrderStatus.IsSuccess() {
+				addOrderToOrderbookSize = order.GetBaseQuantums() - expectedFilledSize
+			}
+
+			getStatePosition := func(
+				subaccountId satypes.SubaccountId,
+				clobPairId types.ClobPairId,
+			) (
+				statePositionSize *big.Int,
+			) {
+				clobStatePositionSizes, exists := tc.statePositionSizes[clobPairId]
+				require.True(
+					t,
+					exists,
+					"Expected CLOB pair ID %d to exist in statePositionSizes",
+					clobPairId,
+				)
+
+				statePositionSize, exists = clobStatePositionSizes[subaccountId]
+				require.True(
+					t,
+					exists,
+					"Expected subaccount ID %v to exist in statePositionSizes",
+					subaccountId,
+				)
+
+				return statePositionSize
+			}
+
+			memclob, fakeMemClobKeeper, expectedNumCollateralizationChecks, numCollateralChecks := placeOrderTestSetup(
+				t,
+				ctx,
+				tc.placedMatchableOrders,
+				&order,
+				tc.expectedPendingMatches,
+				tc.expectedOrderStatus,
+				addOrderToOrderbookSize,
+				tc.expectedErr,
+				tc.collateralizationCheckFailures,
+				getStatePosition,
+			)
+
+			// Run the test case and verify expectations.
+			offchainUpdates := placeOrderAndVerifyExpectations(
+				t,
+				ctx,
+				memclob,
+				order,
+				numCollateralChecks,
+				expectedFilledSize,
+				expectedFilledSize,
+				tc.expectedOrderStatus,
+				tc.expectedErr,
+				expectedNumCollateralizationChecks,
+				tc.expectedRemainingBids,
+				tc.expectedRemainingAsks,
+				append(tc.expectedExistingMatches, tc.expectedNewMatches...),
+				fakeMemClobKeeper,
+			)
+
+			require.Equal( // asserting internal operations to ensure OrderRemovals are included
+				t,
+				tc.expectedInternalOperations,
+				memclob.operationsToPropose.OperationsQueue,
+			)
+
+			// Verify that the expected reduce-only orders remain on each orderbook.
+			for clobPairId, expectedOpenReduceOnlyOrders := range tc.expectedSubaccountOpenReduceOnlyOrders {
+				orderbook, exists := memclob.openOrders.orderbooksMap[clobPairId]
+				require.True(
+					t,
+					exists,
+					"Expected orderbook with CLOB pair ID %d to exist in memclob",
+					clobPairId,
+				)
+				require.Equal(
+					t,
+					expectedOpenReduceOnlyOrders,
+					orderbook.SubaccountOpenReduceOnlyOrders,
+				)
+			}
+
+			// Verify the correct offchain update messages were returned.
+			assertPlaceOrderOffchainMessages(
+				t,
+				offchainUpdates,
+				order,
+				tc.placedMatchableOrders,
+				tc.collateralizationCheckFailures,
+				tc.expectedErr,
+				expectedFilledSize,
+				tc.expectedOrderStatus,
+				tc.expectedExistingMatches,
+				tc.expectedNewMatches,
+				tc.expectedCancelledReduceOnlyOrders,
+				false,
 			)
 		})
 	}

@@ -66,7 +66,7 @@ func TestGenesisState_Validate(t *testing.T) {
 func TestDefaultGenesis_DefaultValue(t *testing.T) {
 	defaultGenesis := types.DefaultGenesis()
 	require.Equal(t,
-		2,
+		3,
 		len(defaultGenesis.EpochInfoList),
 	)
 
@@ -101,6 +101,19 @@ func TestDefaultGenesis_DefaultValue(t *testing.T) {
 			)
 			require.Equal(t,
 				uint32(30),
+				epochInfo.NextTick,
+			)
+		case "stats-epoch":
+			require.Equal(t,
+				uint32(3600),
+				epochInfo.Duration,
+			)
+			require.Equal(t,
+				false,
+				epochInfo.IsInitialized,
+			)
+			require.Equal(t,
+				uint32(0),
 				epochInfo.NextTick,
 			)
 		default:

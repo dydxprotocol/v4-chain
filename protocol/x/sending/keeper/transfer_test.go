@@ -8,7 +8,7 @@ import (
 
 	"github.com/dydxprotocol/v4/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
-	indexer_manager "github.com/dydxprotocol/v4/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4/mocks"
 	"github.com/dydxprotocol/v4/x/sending/keeper"
 
@@ -44,14 +44,14 @@ func assertTransferEventInIndexerBlock(
 ) {
 	block := k.GetIndexerEventManager().ProduceBlock(ctx)
 	expectedEvent := k.GenerateTransferEvent(transfer)
-	var transfers []*indexerevents.TransferEvent
+	var transfers []*indexerevents.TransferEventV1
 	for _, event := range block.Events {
 		if event.Subtype != indexerevents.SubtypeTransfer {
 			continue
 		}
 		bytes := indexer_manager.GetBytesFromEventData(event.Data)
 		unmarshaler := common.UnmarshalerImpl{}
-		var transfer indexerevents.TransferEvent
+		var transfer indexerevents.TransferEventV1
 		err := unmarshaler.Unmarshal(bytes, &transfer)
 		if err != nil {
 			panic(err)
@@ -64,7 +64,7 @@ func assertTransferEventInIndexerBlock(
 func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	ctx, keeper, accountKeeper, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
 	ctx = ctx.WithBlockHeight(5)
-	keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+	keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
 
 	perpetuals := []perptypes.Perpetual{
@@ -187,7 +187,7 @@ func TestProcessTransfer(t *testing.T) {
 func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 	ctx, keeper, accountKeeper, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
 	ctx = ctx.WithBlockHeight(5)
-	keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+	keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
 
 	perpetuals := []perptypes.Perpetual{
@@ -239,49 +239,65 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 	testError := errors.New("error")
 
 	tests := map[string]struct {
-		expectedErr error
-		shouldPanic bool
-		setUpMocks  func(mckCall *mock.Call)
+		msg                 types.MsgDepositToSubaccount
+		expectedErr         error
+		expectedErrContains string
+		shouldPanic         bool
+		setUpMocks          func(mckCall *mock.Call)
 	}{
 		"Success": {
+			msg:         constants.MsgDepositToSubaccount_Alice_To_Carl_Num0_750,
 			expectedErr: nil,
 			setUpMocks: func(mckCall *mock.Call) {
 				mckCall.Return(nil)
 			},
 		},
 		"Propagate error": {
+			msg:         constants.MsgDepositToSubaccount_Alice_To_Carl_Num0_750,
 			expectedErr: testError,
 			setUpMocks: func(mckCall *mock.Call) {
 				mckCall.Return(testError)
 			},
 		},
 		"Propagate panic": {
+			msg:         constants.MsgDepositToSubaccount_Alice_To_Carl_Num0_750,
 			expectedErr: testError,
 			shouldPanic: true,
 			setUpMocks: func(mckCall *mock.Call) {
 				mckCall.Panic(testError.Error())
 			},
 		},
+		"Bad sender address string": {
+			msg: types.MsgDepositToSubaccount{
+				Sender:    "1234567", // bad address string
+				Recipient: constants.Alice_Num0,
+				AssetId:   lib.UsdcAssetId,
+				Quantums:  750_000_000,
+			},
+			expectedErrContains: "decoding bech32 failed",
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			msg := constants.MsgDepositToSubaccount_Alice_To_Carl_Num0_750
+			msg := tc.msg
 			// Create mock subaccounts keeper.
 			mockSubaccountsKeeper := &mocks.SubaccountsKeeper{}
 			// Create sending keeper with mock subaccounts keeper.
 			ctx, keeper, _, _, _, _, _, _ :=
 				keepertest.SendingKeepersWithSubaccountsKeeper(t, mockSubaccountsKeeper)
 			// Set up mock calls.
-			mockCall := mockSubaccountsKeeper.On(
-				"DepositFundsFromAccountToSubaccount",
-				ctx,
-				sdk.AccAddress(msg.Sender),
-				msg.Recipient,
-				msg.AssetId,
-				new(big.Int).SetUint64(msg.Quantums),
-			)
-			tc.setUpMocks(mockCall)
+			if tc.setUpMocks != nil {
+				mockCall := mockSubaccountsKeeper.On(
+					"DepositFundsFromAccountToSubaccount",
+					ctx,
+					sdk.MustAccAddressFromBech32(msg.Sender),
+					msg.Recipient,
+					msg.AssetId,
+					new(big.Int).SetUint64(msg.Quantums),
+				)
+				tc.setUpMocks(mockCall)
+			}
 
 			if tc.shouldPanic {
 				require.PanicsWithValue(t, tc.expectedErr.Error(), func() {
@@ -292,6 +308,8 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 				err := keeper.ProcessDepositToSubaccount(ctx, &msg)
 				if tc.expectedErr != nil {
 					require.ErrorIs(t, err, tc.expectedErr)
+				} else if tc.expectedErrContains != "" {
+					require.Contains(t, err.Error(), tc.expectedErrContains)
 				} else {
 					require.NoError(t, err)
 				}
@@ -304,49 +322,65 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 	testError := errors.New("error")
 
 	tests := map[string]struct {
-		expectedErr error
-		shouldPanic bool
-		setUpMocks  func(mckCall *mock.Call)
+		msg                 types.MsgWithdrawFromSubaccount
+		expectedErr         error
+		expectedErrContains string
+		shouldPanic         bool
+		setUpMocks          func(mckCall *mock.Call)
 	}{
 		"Success": {
+			msg:         constants.MsgWithdrawFromSubaccount_Carl_Num0_To_Alice_750,
 			expectedErr: nil,
 			setUpMocks: func(mckCall *mock.Call) {
 				mckCall.Return(nil)
 			},
 		},
 		"Propagate error": {
+			msg:         constants.MsgWithdrawFromSubaccount_Carl_Num0_To_Alice_750,
 			expectedErr: testError,
 			setUpMocks: func(mckCall *mock.Call) {
 				mckCall.Return(testError)
 			},
 		},
 		"Propagate panic": {
+			msg:         constants.MsgWithdrawFromSubaccount_Carl_Num0_To_Alice_750,
 			expectedErr: testError,
 			shouldPanic: true,
 			setUpMocks: func(mckCall *mock.Call) {
 				mckCall.Panic(testError.Error())
 			},
 		},
+		"Bad recipient address string": {
+			msg: types.MsgWithdrawFromSubaccount{
+				Sender:    constants.Alice_Num0,
+				Recipient: "1234567", // bad address string
+				AssetId:   lib.UsdcAssetId,
+				Quantums:  750_000_000,
+			},
+			expectedErrContains: "decoding bech32 failed",
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			msg := constants.MsgWithdrawFromSubaccount_Carl_Num0_To_Alice_750
+			msg := tc.msg
 			// Create mock subaccounts keeper.
 			mockSubaccountsKeeper := &mocks.SubaccountsKeeper{}
 			// Create sending keeper with mock subaccounts keeper.
 			ctx, keeper, _, _, _, _, _, _ :=
 				keepertest.SendingKeepersWithSubaccountsKeeper(t, mockSubaccountsKeeper)
 			// Set up mock calls.
-			mockCall := mockSubaccountsKeeper.On(
-				"WithdrawFundsFromSubaccountToAccount",
-				ctx,
-				msg.Sender,
-				sdk.AccAddress(msg.Recipient),
-				msg.AssetId,
-				new(big.Int).SetUint64(msg.Quantums),
-			)
-			tc.setUpMocks(mockCall)
+			if tc.setUpMocks != nil {
+				mockCall := mockSubaccountsKeeper.On(
+					"WithdrawFundsFromSubaccountToAccount",
+					ctx,
+					msg.Sender,
+					sdk.MustAccAddressFromBech32(msg.Recipient),
+					msg.AssetId,
+					new(big.Int).SetUint64(msg.Quantums),
+				)
+				tc.setUpMocks(mockCall)
+			}
 
 			if tc.shouldPanic {
 				require.PanicsWithValue(t, tc.expectedErr.Error(), func() {
@@ -357,6 +391,8 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 				err := keeper.ProcessWithdrawFromSubaccount(ctx, &msg)
 				if tc.expectedErr != nil {
 					require.ErrorIs(t, err, tc.expectedErr)
+				} else if tc.expectedErrContains != "" {
+					require.Contains(t, err.Error(), tc.expectedErrContains)
 				} else {
 					require.NoError(t, err)
 				}

@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"1INCHUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"1INCHUSD\""
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"1INCH-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"1INCH_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"1inchusdt"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"1INCH-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"1INCH-USDT"
+    }
+  ]
+}

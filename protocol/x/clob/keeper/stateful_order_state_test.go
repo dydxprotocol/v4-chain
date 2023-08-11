@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(jonfung) make ticket and remove all conditional orderes
 func createPartiallyFilledStatefulOrderInState(
 	ctx sdk.Context,
 	k keeper.Keeper,
@@ -32,13 +33,13 @@ func createPartiallyFilledStatefulOrderInState(
 		order.OrderId,
 	)
 	k.SetOrderFillAmount(ctx, order.OrderId, satypes.BaseQuantums(10), uint32(20))
-	k.SetStatefulOrderPlacement(ctx, order, uint32(30))
+	k.SetLongTermOrderPlacement(ctx, order, uint32(30))
 }
 
-func TestStatefulOrderInitMemStore_Success(t *testing.T) {
+func TestLongTermOrderInitMemStore_Success(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepersWithUninitializedMemStore(
+	ks := keepertest.NewClobKeepersTestContextWithUninitializedMemStore(
 		t,
 		memClob,
 		&mocks.BankKeeper{},
@@ -46,48 +47,41 @@ func TestStatefulOrderInitMemStore_Success(t *testing.T) {
 	)
 
 	// Set some stateful orders.
-	keeper.SetStatefulOrderPlacement(
-		ctx,
+	ks.ClobKeeper.SetLongTermOrderPlacement(
+		ks.Ctx,
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 		0,
 	)
 
-	keeper.SetStatefulOrderPlacement(
-		ctx,
+	ks.ClobKeeper.SetLongTermOrderPlacement(
+		ks.Ctx,
 		constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
 		0,
 	)
 
 	// Init the memstore.
-	keeper.InitMemStore(ctx)
+	ks.ClobKeeper.InitMemStore(ks.Ctx)
 
 	// Assert that the values can be read after memStore has been warmed.
-	order, exists := keeper.GetStatefulOrderPlacement(
-		ctx, constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId)
+	order, exists := ks.ClobKeeper.GetLongTermOrderPlacement(
+		ks.Ctx, constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId)
 	require.True(t, exists)
 	require.Equal(t, constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20, order.Order)
 
-	order, exists = keeper.GetStatefulOrderPlacement(
-		ctx, constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId)
+	order, exists = ks.ClobKeeper.GetLongTermOrderPlacement(
+		ks.Ctx, constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId)
 	require.True(t, exists)
 	require.Equal(t, constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25, order.Order)
 
-	order, exists = keeper.GetStatefulOrderPlacement(
-		ctx, constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.OrderId)
+	order, exists = ks.ClobKeeper.GetLongTermOrderPlacement(
+		ks.Ctx, constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.OrderId)
 	require.False(t, exists)
 }
 
-func TestGetSetDeleteStatefulOrderState(t *testing.T) {
+func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	orders := []types.Order{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
@@ -103,31 +97,33 @@ func TestGetSetDeleteStatefulOrderState(t *testing.T) {
 
 	// Set the tracer on the multistore to verify the performed writes are correct.
 	traceDecoder := &tracer.TraceDecoder{}
-	ctx.MultiStore().SetTracer(traceDecoder)
+	ks.Ctx.MultiStore().SetTracer(traceDecoder)
 
 	// Create each stateful order.
 	for i, order := range orders {
 		orderId := order.OrderId
 
 		// Verify you cannot get an order that does not exist.
-		_, found := clobKeeper.GetStatefulOrderPlacement(ctx, orderId)
+		_, found := ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, orderId)
 		require.False(t, found)
 
 		// Verify deleting a stateful order that does not exist succeeds.
-		clobKeeper.DeleteStatefulOrderPlacement(ctx, orderId)
+		ks.ClobKeeper.DeleteLongTermOrderPlacement(ks.Ctx, orderId)
 
 		// Verify you can create a stateful order that did not previously exist.
-		clobKeeper.SetStatefulOrderPlacement(ctx, order, blockHeights[i])
+		ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, blockHeights[i])
 
 		// Verify you can get each stateful order.
-		foundOrderPlacement, found := clobKeeper.GetStatefulOrderPlacement(ctx, order.OrderId)
+		foundOrderPlacement, found := ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, order.OrderId)
 		require.True(t, found)
 		require.Equal(
 			t,
-			types.StatefulOrderPlacement{
-				Order:            order,
-				BlockHeight:      blockHeights[i],
-				TransactionIndex: nextExpectedTransactionIndex,
+			types.LongTermOrderPlacement{
+				Order: order,
+				PlacementIndex: types.TransactionOrdering{
+					BlockHeight:      blockHeights[i],
+					TransactionIndex: nextExpectedTransactionIndex,
+				},
 			},
 			foundOrderPlacement,
 		)
@@ -139,25 +135,27 @@ func TestGetSetDeleteStatefulOrderState(t *testing.T) {
 
 	// Delete each stateful order and verify it cannot be found.
 	for _, order := range orders {
-		clobKeeper.DeleteStatefulOrderPlacement(ctx, order.OrderId)
+		ks.ClobKeeper.DeleteLongTermOrderPlacement(ks.Ctx, order.OrderId)
 
-		_, found := clobKeeper.GetStatefulOrderPlacement(ctx, order.OrderId)
+		_, found := ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, order.OrderId)
 		require.False(t, found)
 	}
 
 	// Re-create each stateful order with a different block height and transaction index, and
 	// verify it can be found.
 	for i, order := range orders {
-		clobKeeper.SetStatefulOrderPlacement(ctx, order, blockHeights[i]+1)
+		ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, blockHeights[i]+1)
 
-		foundOrderPlacement, found := clobKeeper.GetStatefulOrderPlacement(ctx, order.OrderId)
+		foundOrderPlacement, found := ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, order.OrderId)
 		require.True(t, found)
 		require.Equal(
 			t,
-			types.StatefulOrderPlacement{
-				Order:            order,
-				BlockHeight:      blockHeights[i] + 1,
-				TransactionIndex: nextExpectedTransactionIndex,
+			types.LongTermOrderPlacement{
+				Order: order,
+				PlacementIndex: types.TransactionOrdering{
+					BlockHeight:      blockHeights[i] + 1,
+					TransactionIndex: nextExpectedTransactionIndex,
+				},
 			},
 			foundOrderPlacement,
 		)
@@ -334,17 +332,10 @@ func TestGetSetDeleteStatefulOrderState(t *testing.T) {
 	)
 }
 
-func TestGetSetDeleteStatefulOrderState_Replacements(t *testing.T) {
+func TestGetSetDeleteLongTermOrderState_Replacements(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	orders := []types.Order{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -359,29 +350,31 @@ func TestGetSetDeleteStatefulOrderState_Replacements(t *testing.T) {
 
 	// Set the tracer on the multistore to verify the performed writes are correct.
 	traceDecoder := &tracer.TraceDecoder{}
-	ctx.MultiStore().SetTracer(traceDecoder)
+	ks.Ctx.MultiStore().SetTracer(traceDecoder)
 
 	// Create both stateful orders.
 	for i, order := range orders {
-		clobKeeper.SetStatefulOrderPlacement(ctx, order, blockHeights[i])
+		ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, blockHeights[i])
 	}
 
 	// Verify the last created order exists.
-	foundOrderPlacement, found := clobKeeper.GetStatefulOrderPlacement(ctx, orders[1].OrderId)
+	foundOrderPlacement, found := ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, orders[1].OrderId)
 	require.True(t, found)
 	require.Equal(
 		t,
-		types.StatefulOrderPlacement{
-			Order:            orders[1],
-			BlockHeight:      blockHeights[1],
-			TransactionIndex: 1,
+		types.LongTermOrderPlacement{
+			Order: orders[1],
+			PlacementIndex: types.TransactionOrdering{
+				BlockHeight:      blockHeights[1],
+				TransactionIndex: 1,
+			},
 		},
 		foundOrderPlacement,
 	)
 
 	// Verify the order can be deleted.
-	clobKeeper.DeleteStatefulOrderPlacement(ctx, orders[1].OrderId)
-	_, found = clobKeeper.GetStatefulOrderPlacement(ctx, orders[1].OrderId)
+	ks.ClobKeeper.DeleteLongTermOrderPlacement(ks.Ctx, orders[1].OrderId)
+	_, found = ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, orders[1].OrderId)
 	require.False(t, found)
 
 	// Verify the multistore writes are correct.
@@ -421,17 +414,10 @@ func TestGetSetDeleteStatefulOrderState_Replacements(t *testing.T) {
 	)
 }
 
-func TestStatefulOrderState_ShortTermOrderPanics(t *testing.T) {
+func TestLongTermOrderState_ShortTermOrderPanics(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 	shortTermOrder := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20
 	errorString := fmt.Sprintf(
 		"MustBeStatefulOrder: called with non-stateful order ID (%+v)",
@@ -442,8 +428,8 @@ func TestStatefulOrderState_ShortTermOrderPanics(t *testing.T) {
 		t,
 		errorString,
 		func() {
-			clobKeeper.SetStatefulOrderPlacement(
-				ctx,
+			ks.ClobKeeper.SetLongTermOrderPlacement(
+				ks.Ctx,
 				shortTermOrder,
 				0,
 			)
@@ -454,8 +440,8 @@ func TestStatefulOrderState_ShortTermOrderPanics(t *testing.T) {
 		t,
 		errorString,
 		func() {
-			clobKeeper.GetStatefulOrderPlacement(
-				ctx,
+			ks.ClobKeeper.GetLongTermOrderPlacement(
+				ks.Ctx,
 				shortTermOrder.OrderId,
 			)
 		},
@@ -465,8 +451,8 @@ func TestStatefulOrderState_ShortTermOrderPanics(t *testing.T) {
 		t,
 		errorString,
 		func() {
-			clobKeeper.DeleteStatefulOrderPlacement(
-				ctx,
+			ks.ClobKeeper.DeleteLongTermOrderPlacement(
+				ks.Ctx,
 				shortTermOrder.OrderId,
 			)
 		},
@@ -476,8 +462,8 @@ func TestStatefulOrderState_ShortTermOrderPanics(t *testing.T) {
 		t,
 		errorString,
 		func() {
-			clobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
-				ctx,
+			ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.Ctx,
 				constants.Time_21st_Feb_2021,
 				shortTermOrder.OrderId,
 			)
@@ -488,9 +474,8 @@ func TestStatefulOrderState_ShortTermOrderPanics(t *testing.T) {
 		t,
 		errorString,
 		func() {
-			clobKeeper.MustRemoveStatefulOrder(
-				ctx,
-				constants.Time_21st_Feb_2021,
+			ks.ClobKeeper.MustRemoveStatefulOrder(
+				ks.Ctx,
 				shortTermOrder.OrderId,
 			)
 		},
@@ -500,8 +485,8 @@ func TestStatefulOrderState_ShortTermOrderPanics(t *testing.T) {
 		t,
 		errorString,
 		func() {
-			clobKeeper.DoesStatefulOrderExistInState(
-				ctx,
+			ks.ClobKeeper.DoesLongTermOrderExistInState(
+				ks.Ctx,
 				shortTermOrder,
 			)
 		},
@@ -651,35 +636,33 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					ctx,
 					k,
 					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15,
-					constants.Time_21st_Feb_2021,
+					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 				)
 				createPartiallyFilledStatefulOrderInState(
 					ctx,
 					k,
 					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30,
-					constants.Time_21st_Feb_2021,
+					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30.MustGetUnixGoodTilBlockTime(),
 				)
 				createPartiallyFilledStatefulOrderInState(
 					ctx,
 					k,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-					constants.Time_21st_Feb_2021,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 				)
 				k.MustRemoveStatefulOrder(
 					ctx,
-					constants.Time_21st_Feb_2021,
 					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30.OrderId,
 				)
 				k.MustRemoveStatefulOrder(
 					ctx,
-					constants.Time_21st_Feb_2021,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 				)
 			},
 
 			expectedMultiStoreWrites: []string{
 				// Add first order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				// Set first stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -708,7 +691,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add second order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:30.000000000",
 				// Set second stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -737,7 +720,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add third order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				// Set third stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -767,7 +750,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Remove first order from stateful order slice, which removes the fill amount and stateful
 				// order placement from state and memStore as well.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:30.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(
@@ -794,7 +777,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				// Remove second order from stateful order slice, which removes the fill amount and stateful
 				// order placement from state and memStore as well.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(
@@ -821,66 +804,13 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 			},
 			expectedTimeSlices: map[time.Time][]types.OrderId{
-				constants.Time_21st_Feb_2021: {
+				constants.TimeFifteen: {
 					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
 				},
 			},
 			expectedRemovedOrders: []types.OrderId{
 				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-			},
-		},
-		`Can create and delete an order ID that doesn't have a fill amount or stateful order
-		placement in state`: {
-			setup: func(ctx sdk.Context, k keeper.Keeper) {
-				k.MustAddOrderToStatefulOrdersTimeSlice(
-					ctx,
-					constants.Time_21st_Feb_2021,
-					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
-				)
-				k.MustRemoveStatefulOrder(
-					ctx,
-					constants.Time_21st_Feb_2021,
-					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
-				)
-			},
-
-			expectedMultiStoreWrites: []string{
-				// Add order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
-				// Remove order from stateful order slice, which removes the fill amount and stateful
-				// order placement from state and memStore as well.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(
-						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId.Marshal(),
-					)),
-				),
-			},
-			expectedTimeSlices: map[time.Time][]types.OrderId{
-				constants.Time_21st_Feb_2021: {},
-			},
-			expectedRemovedOrders: []types.OrderId{
-				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
 			},
 		},
 		"Can create order IDs in non-sorted order and they're sorted in state": {
@@ -900,7 +830,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				createPartiallyFilledStatefulOrderInState(
 					ctx,
 					k,
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 					constants.Time_21st_Feb_2021,
 				)
 				createPartiallyFilledStatefulOrderInState(
@@ -976,20 +906,36 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				// Place the third stateful order in state and memStore.
 				fmt.Sprintf(
 					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				fmt.Sprintf(
 					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add fourth order to stateful order slice.
@@ -1079,7 +1025,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 			},
 			expectedTimeSlices: map[time.Time][]types.OrderId{
 				constants.Time_21st_Feb_2021: {
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
 					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
 					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
@@ -1092,7 +1038,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 		"Can delete all order IDs that were created": {
 			setup: func(ctx sdk.Context, k keeper.Keeper) {
 				orders := []types.Order{
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 					constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 				}
@@ -1101,41 +1047,56 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						ctx,
 						k,
 						order,
-						constants.Time_21st_Feb_2021,
+						order.MustGetUnixGoodTilBlockTime(),
 					)
 				}
 				for _, order := range orders {
 					k.MustRemoveStatefulOrder(
 						ctx,
-						constants.Time_21st_Feb_2021,
 						order.OrderId,
 					)
 				}
 			},
 			expectedMultiStoreWrites: []string{
 				// Add first order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				// Set first stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				// Place the first stateful order in state and memStore.
 				fmt.Sprintf(
 					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				fmt.Sprintf(
 					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add second order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
 				// Set second stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1156,7 +1117,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add third order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				// Set third stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1178,26 +1139,42 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Remove first order from stateful order slice, which removes the fill amount and stateful
 				// order placement from state and memStore as well.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				fmt.Sprintf(
 					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				fmt.Sprintf(
 					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				// Remove second order from stateful order slice, which removes the fill amount and stateful
 				// order placement from state and memStore as well.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.Marshal())),
@@ -1216,7 +1193,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				// Remove third order from stateful order slice, which removes the fill amount and stateful
 				// order placement from state and memStore as well.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
@@ -1235,23 +1212,19 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 			},
 			expectedTimeSlices: map[time.Time][]types.OrderId{
-				constants.Time_21st_Feb_2021: {},
+				constants.TimeTen:     {},
+				constants.TimeFifteen: {},
 			},
 			expectedRemovedOrders: []types.OrderId{
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 				constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 			},
 		},
 		"Can add and remove order IDs from multiple time slices": {
 			setup: func(ctx sdk.Context, k keeper.Keeper) {
-				timestamps := []time.Time{
-					constants.Time_21st_Feb_2021,
-					constants.Time_21st_Feb_2021.Add(1),
-					constants.Time_21st_Feb_2021.Add(77),
-				}
 				orders := []types.Order{
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
 					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15,
@@ -1259,53 +1232,65 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				}
-
-				for i, order := range orders {
+				for _, order := range orders {
 					createPartiallyFilledStatefulOrderInState(
 						ctx,
 						k,
 						order,
-						timestamps[i%3],
+						order.MustGetUnixGoodTilBlockTime(),
 					)
 				}
-
 				// Remove an order from two of the timestamps.
 				k.MustRemoveStatefulOrder(
 					ctx,
-					timestamps[0],
 					orders[6].OrderId,
 				)
 				k.MustRemoveStatefulOrder(
 					ctx,
-					timestamps[2],
 					orders[2].OrderId,
 				)
 			},
 
 			expectedMultiStoreWrites: []string{
 				// Add first order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				// Set first stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				// Place the first stateful order in state and memStore.
 				fmt.Sprintf(
 					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				fmt.Sprintf(
 					"StatefulOrderPlacement/value/%v",
-					string(proto.MustFirst(constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+					string(
+						proto.MustFirst(
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
+						),
+					),
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add second order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000001",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:20.000000000",
 				// Set second stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1326,7 +1311,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add third order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000077",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:25.000000000",
 				// Set third stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1347,7 +1332,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add fourth order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				// Set fourth stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1368,7 +1353,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add fifth order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000001",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:30.000000000",
 				// Set fifth stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1389,7 +1374,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add sixth order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000077",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.Marshal())),
@@ -1409,7 +1394,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Add seventh order to stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
 				// Set seventh stateful order fill amount to a non-zero value in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1430,7 +1415,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 				"NextStatefulOrderBlockTransactionIndex/value",
 				// Remove seventh order from stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
 				// Remove seventh stateful order fill amount in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1450,7 +1435,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					string(proto.MustFirst(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.Marshal())),
 				),
 				// Remove third order from stateful order slice.
-				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000077",
+				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:25.000000000",
 				// Remove third stateful order fill amount in state.
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1471,15 +1456,17 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				),
 			},
 			expectedTimeSlices: map[time.Time][]types.OrderId{
-				constants.Time_21st_Feb_2021: {
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+				constants.TimeFifteen: {
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
 				},
-				constants.Time_21st_Feb_2021.Add(1): {
+				constants.TimeTwenty: {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+				},
+				constants.TimeThirty: {
 					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30.OrderId,
 				},
-				constants.Time_21st_Feb_2021.Add(77): {
+				constants.TimeTen: {
 					constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
 				},
 			},
@@ -1490,27 +1477,20 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state and test parameters.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				_,
-				_,
-				_,
-				_,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Set the tracer on the multistore to verify the performed writes are correct.
 			traceDecoder := &tracer.TraceDecoder{}
-			ctx.MultiStore().SetTracer(traceDecoder)
+			ks.Ctx.MultiStore().SetTracer(traceDecoder)
 
-			tc.setup(ctx, *clobKeeper)
+			tc.setup(ks.Ctx, *ks.ClobKeeper)
 
 			// Verify the writes were done in the expected order.
 			traceDecoder.RequireKeyPrefixWrittenInSequence(t, tc.expectedMultiStoreWrites)
 
 			// Verify the state is correct.
 			for goodTilTime, expectedOrderIds := range tc.expectedTimeSlices {
-				orderIds := clobKeeper.GetStatefulOrdersTimeSlice(ctx, goodTilTime)
+				orderIds := ks.ClobKeeper.GetStatefulOrdersTimeSlice(ks.Ctx, goodTilTime)
 				sort.Sort(types.SortedOrders(expectedOrderIds))
 				require.Equal(
 					t,
@@ -1520,17 +1500,17 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					goodTilTime.String(),
 				)
 				for _, orderId := range orderIds {
-					exists, _, _ := clobKeeper.GetOrderFillAmount(ctx, orderId)
+					exists, _, _ := ks.ClobKeeper.GetOrderFillAmount(ks.Ctx, orderId)
 					require.True(t, exists)
-					_, exists = clobKeeper.GetStatefulOrderPlacement(ctx, orderId)
+					_, exists = ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, orderId)
 					require.True(t, exists)
 				}
 			}
 
 			for _, orderId := range tc.expectedRemovedOrders {
-				exists, _, _ := clobKeeper.GetOrderFillAmount(ctx, orderId)
+				exists, _, _ := ks.ClobKeeper.GetOrderFillAmount(ks.Ctx, orderId)
 				require.False(t, exists)
-				_, exists = clobKeeper.GetStatefulOrderPlacement(ctx, orderId)
+				_, exists = ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, orderId)
 				require.False(t, exists)
 			}
 		})
@@ -1566,7 +1546,7 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 		"Deletes all time slices before blockTime": {
 			timeSlicesToOrderIds: map[time.Time][]types.OrderId{
 				constants.Time_21st_Feb_2021: {
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
 				},
 				constants.Time_21st_Feb_2021.Add(1): {
@@ -1589,7 +1569,7 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 				constants.Time_21st_Feb_2021: {},
 			},
 			expectedExpiredOrderIds: []types.OrderId{
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
 				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTB30.OrderId,
@@ -1599,7 +1579,7 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 		"Deletes all time slices before blockTime inclusive": {
 			timeSlicesToOrderIds: map[time.Time][]types.OrderId{
 				constants.Time_21st_Feb_2021: {
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
 				},
 				constants.Time_21st_Feb_2021.Add(1): {
@@ -1622,7 +1602,7 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 				constants.Time_21st_Feb_2021: {},
 			},
 			expectedExpiredOrderIds: []types.OrderId{
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
 				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTB30.OrderId,
@@ -1632,7 +1612,7 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 		"Does not delete time slices after blockTime": {
 			timeSlicesToOrderIds: map[time.Time][]types.OrderId{
 				constants.Time_21st_Feb_2021: {
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
 				},
 				constants.Time_21st_Feb_2021.Add(1): {
@@ -1656,7 +1636,7 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 				},
 			},
 			expectedExpiredOrderIds: []types.OrderId{
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
 				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTB30.OrderId,
@@ -1668,28 +1648,21 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state and test parameters.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				_,
-				_,
-				_,
-				_,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Create all order IDs in state.
 			for timestamp, orderIds := range tc.timeSlicesToOrderIds {
 				for _, orderId := range orderIds {
-					clobKeeper.MustAddOrderToStatefulOrdersTimeSlice(ctx, timestamp, orderId)
+					ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(ks.Ctx, timestamp, orderId)
 				}
 			}
 
 			// Set the tracer on the multistore to verify the performed writes are correct.
 			traceDecoder := &tracer.TraceDecoder{}
-			ctx.MultiStore().SetTracer(traceDecoder)
+			ks.Ctx.MultiStore().SetTracer(traceDecoder)
 
 			// Run the test.
-			expiredOrderIds := clobKeeper.RemoveExpiredStatefulOrdersTimeSlices(ctx, tc.blockTime)
+			expiredOrderIds := ks.ClobKeeper.RemoveExpiredStatefulOrdersTimeSlices(ks.Ctx, tc.blockTime)
 
 			// Verify the correct orders were expired.
 			require.Equal(t, tc.expectedExpiredOrderIds, expiredOrderIds)
@@ -1699,7 +1672,7 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 
 			// Verify the state is correct.
 			for goodTilTime, expectedOrderIds := range tc.expectedTimeSlices {
-				orderIds := clobKeeper.GetStatefulOrdersTimeSlice(ctx, goodTilTime)
+				orderIds := ks.ClobKeeper.GetStatefulOrdersTimeSlice(ks.Ctx, goodTilTime)
 				require.Equal(
 					t,
 					expectedOrderIds,
@@ -1715,18 +1688,11 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 func TestAddOrderToStatefulOrdersTimeSlice_PanicsIfAlreadyExists(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
 	goodTilTime := constants.Time_21st_Feb_2021
-	createPartiallyFilledStatefulOrderInState(ctx, *clobKeeper, order, goodTilTime)
+	createPartiallyFilledStatefulOrderInState(ks.Ctx, *ks.ClobKeeper, order, goodTilTime)
 	require.PanicsWithValue(
 		t,
 		fmt.Sprintf(
@@ -1735,8 +1701,8 @@ func TestAddOrderToStatefulOrdersTimeSlice_PanicsIfAlreadyExists(t *testing.T) {
 			goodTilTime,
 		),
 		func() {
-			clobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
-				ctx,
+			ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.Ctx,
 				goodTilTime,
 				order.OrderId,
 			)
@@ -1744,31 +1710,21 @@ func TestAddOrderToStatefulOrdersTimeSlice_PanicsIfAlreadyExists(t *testing.T) {
 	)
 }
 
-func TestRemoveStatefulOrder_PanicsIfNotFound(t *testing.T) {
+func TestRemoveLongTermOrder_PanicsIfNotFound(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	orderId := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId
-	goodTilTime := constants.Time_21st_Feb_2021
 	require.PanicsWithValue(
 		t,
 		fmt.Sprintf(
-			"MustRemoveStatefulOrder: order ID %v is not in state for time %v",
+			"MustRemoveStatefulOrder: order %v does not exist",
 			orderId,
-			goodTilTime,
 		),
 		func() {
-			clobKeeper.MustRemoveStatefulOrder(
-				ctx,
-				goodTilTime,
+			ks.ClobKeeper.MustRemoveStatefulOrder(
+				ks.Ctx,
 				orderId,
 			)
 		},
@@ -1778,35 +1734,28 @@ func TestRemoveStatefulOrder_PanicsIfNotFound(t *testing.T) {
 func TestGetSetBlockTimeForLastCommittedBlock(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	// Set the tracer on the multistore to verify the performed writes are correct.
 	traceDecoder := &tracer.TraceDecoder{}
-	ctx.MultiStore().SetTracer(traceDecoder)
+	ks.Ctx.MultiStore().SetTracer(traceDecoder)
 
-	ctx = ctx.WithBlockTime(constants.TimeT)
-	clobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+	ctx := ks.Ctx.WithBlockTime(constants.TimeT)
+	ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
 	require.True(
 		t,
 		constants.TimeT.Equal(
-			clobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx),
+			ks.ClobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx),
 		),
 	)
 
 	// Test overwrite.
 	ctx = ctx.WithBlockTime(constants.TimeTPlus1)
-	clobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+	ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
 	require.True(
 		t,
 		constants.TimeTPlus1.Equal(
-			clobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx),
+			ks.ClobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx),
 		),
 	)
 
@@ -1840,120 +1789,129 @@ func TestGetSetBlockTimeForLastCommittedBlock(t *testing.T) {
 func TestMustGetBlockTimeForLastCommittedBlock_Panics(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	require.PanicsWithValue(
 		t,
 		"Failed to get the block time of the previously committed block",
 		func() {
-			clobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx)
+			ks.ClobKeeper.MustGetBlockTimeForLastCommittedBlock(ks.Ctx)
 		},
 	)
 
-	ctx = ctx.WithBlockTime(constants.TimeZero)
+	ctx := ks.Ctx.WithBlockTime(constants.TimeZero)
 	require.PanicsWithValue(
 		t,
 		"Block-time is zero",
 		func() {
-			clobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
 		},
 	)
 }
 
-func TestGetAllStatefulOrders(t *testing.T) {
+func TestGetAllLongTermOrders(t *testing.T) {
 	tests := map[string]struct {
 		// State.
-		statefulOrderPlacements []types.StatefulOrderPlacement
+		statefulOrderPlacements []types.LongTermOrderPlacement
 
 		// Setup.
-		setup func(ctx sdk.Context, k keeper.Keeper, statefulOrderPlacements []types.StatefulOrderPlacement)
+		setup func(ctx sdk.Context, k keeper.Keeper, statefulOrderPlacements []types.LongTermOrderPlacement)
 
 		// Expectations.
 		expectedStatefulOrders []types.Order
 	}{
 		"Can read an empty state": {
-			setup: func(ctx sdk.Context, k keeper.Keeper, statefulOrderPlacements []types.StatefulOrderPlacement) {
+			setup: func(ctx sdk.Context, k keeper.Keeper, statefulOrderPlacements []types.LongTermOrderPlacement) {
 			},
 
 			expectedStatefulOrders: []types.Order{},
 		},
 		"Can read stateful orders from state with same block height sorted in ascending order": {
-			statefulOrderPlacements: []types.StatefulOrderPlacement{
+			statefulOrderPlacements: []types.LongTermOrderPlacement{
 				{
-					Order:       constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-					BlockHeight: 4,
+					Order: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 4,
+					},
 				},
 				{
-					Order:       constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
-					BlockHeight: 8,
+					Order: constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 8,
+					},
 				},
 				{
-					Order:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
-					BlockHeight: 4,
+					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 4,
+					},
 				},
 				{
-					Order:       constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
-					BlockHeight: 8,
+					Order: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 8,
+					},
 				},
 			},
 
-			setup: func(ctx sdk.Context, k keeper.Keeper, statefulOrderPlacements []types.StatefulOrderPlacement) {
+			setup: func(ctx sdk.Context, k keeper.Keeper, statefulOrderPlacements []types.LongTermOrderPlacement) {
 				for _, statefulOrderPlacement := range statefulOrderPlacements {
-					k.SetStatefulOrderPlacement(
+					k.SetLongTermOrderPlacement(
 						ctx,
 						statefulOrderPlacement.Order,
-						statefulOrderPlacement.BlockHeight,
+						statefulOrderPlacement.PlacementIndex.BlockHeight,
 					)
 				}
 			},
 
 			expectedStatefulOrders: []types.Order{
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
 				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
 			},
 		},
 		"Can read stateful orders from state with same transaction index sorted in ascending order": {
-			statefulOrderPlacements: []types.StatefulOrderPlacement{
+			statefulOrderPlacements: []types.LongTermOrderPlacement{
 				{
-					Order:       constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-					BlockHeight: 3,
+					Order: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 3,
+					},
 				},
 				{
-					Order:       constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
-					BlockHeight: 2,
+					Order: constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 2,
+					},
 				},
 				{
-					Order:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
-					BlockHeight: 7,
+					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 7,
+					},
 				},
 				{
-					Order:       constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
-					BlockHeight: 8,
+					Order: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 8,
+					},
 				},
 			},
 
-			setup: func(ctx sdk.Context, k keeper.Keeper, statefulOrderPlacements []types.StatefulOrderPlacement) {
+			setup: func(ctx sdk.Context, k keeper.Keeper, statefulOrderPlacements []types.LongTermOrderPlacement) {
 				for _, statefulOrderPlacement := range statefulOrderPlacements {
-					k.SetStatefulOrderPlacement(
+					k.SetLongTermOrderPlacement(
 						ctx,
 						statefulOrderPlacement.Order,
-						statefulOrderPlacement.BlockHeight,
+						statefulOrderPlacement.PlacementIndex.BlockHeight,
 					)
 				}
 			},
 
 			expectedStatefulOrders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
 			},
@@ -1964,25 +1922,18 @@ func TestGetAllStatefulOrders(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state and test parameters.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				_,
-				_,
-				_,
-				_,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
-			tc.setup(ctx, *clobKeeper, tc.statefulOrderPlacements)
+			tc.setup(ks.Ctx, *ks.ClobKeeper, tc.statefulOrderPlacements)
 
 			// Verify the stateful order placements are correct.
-			statefulOrders := clobKeeper.GetAllStatefulOrders(ctx)
+			statefulOrders := ks.ClobKeeper.GetAllLongTermOrders(ks.Ctx)
 			require.Equal(t, tc.expectedStatefulOrders, statefulOrders)
 		})
 	}
 }
 
-func TestDoesStatefulOrderExistInState(t *testing.T) {
+func TestDoesLongTermOrderExistInState(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
 		setup func(ctx sdk.Context, k keeper.Keeper)
@@ -2007,7 +1958,7 @@ func TestDoesStatefulOrderExistInState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				} {
-					k.SetStatefulOrderPlacement(
+					k.SetLongTermOrderPlacement(
 						ctx,
 						statefulOrder,
 						0,
@@ -2025,7 +1976,7 @@ func TestDoesStatefulOrderExistInState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				} {
-					k.SetStatefulOrderPlacement(
+					k.SetLongTermOrderPlacement(
 						ctx,
 						statefulOrder,
 						0,
@@ -2043,7 +1994,7 @@ func TestDoesStatefulOrderExistInState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 				} {
-					k.SetStatefulOrderPlacement(
+					k.SetLongTermOrderPlacement(
 						ctx,
 						statefulOrder,
 						0,
@@ -2061,7 +2012,7 @@ func TestDoesStatefulOrderExistInState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 				} {
-					k.SetStatefulOrderPlacement(
+					k.SetLongTermOrderPlacement(
 						ctx,
 						statefulOrder,
 						0,
@@ -2079,14 +2030,14 @@ func TestDoesStatefulOrderExistInState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 				} {
-					k.SetStatefulOrderPlacement(
+					k.SetLongTermOrderPlacement(
 						ctx,
 						statefulOrder,
 						0,
 					)
 				}
 
-				k.DeleteStatefulOrderPlacement(
+				k.DeleteLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 				)
@@ -2102,19 +2053,19 @@ func TestDoesStatefulOrderExistInState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 				} {
-					k.SetStatefulOrderPlacement(
+					k.SetLongTermOrderPlacement(
 						ctx,
 						statefulOrder,
 						0,
 					)
 				}
 
-				k.DeleteStatefulOrderPlacement(
+				k.DeleteLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 				)
 
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					0,
@@ -2131,19 +2082,12 @@ func TestDoesStatefulOrderExistInState(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state and test parameters.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				_,
-				_,
-				_,
-				_,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
-			tc.setup(ctx, *clobKeeper)
+			tc.setup(ks.Ctx, *ks.ClobKeeper)
 
 			// Run the test and verify expectations.
-			exists := clobKeeper.DoesStatefulOrderExistInState(ctx, tc.order)
+			exists := ks.ClobKeeper.DoesLongTermOrderExistInState(ks.Ctx, tc.order)
 			require.Equal(t, tc.expectedExists, exists)
 		})
 	}

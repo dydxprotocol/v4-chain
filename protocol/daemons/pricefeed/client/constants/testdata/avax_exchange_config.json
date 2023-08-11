@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"AVAXUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"AVAXUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tAVAX:USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"AVAX_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"avaxusdt"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"AVAX-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"AVAX-USDT"
+    }
+  ]
+}

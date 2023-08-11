@@ -3,6 +3,7 @@ package memclob
 import (
 	"testing"
 
+	clobtest "github.com/dydxprotocol/v4/testutil/clob"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	sdktest "github.com/dydxprotocol/v4/testutil/sdk"
 	"github.com/dydxprotocol/v4/x/clob/types"
@@ -20,14 +21,14 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 		order types.LiquidationOrder
 
 		// Expectations.
-		expectedFilledSize       satypes.BaseQuantums
-		expectedOrderStatus      types.OrderStatus
-		expectedCollatCheck      []expectedMatch
-		expectedRemainingBids    []OrderWithRemainingSize
-		expectedRemainingAsks    []OrderWithRemainingSize
-		expectedMatches          []expectedMatch
-		expectedOperations       []types.Operation
-		expectedOperationToNonce map[types.Operation]types.Nonce
+		expectedFilledSize         satypes.BaseQuantums
+		expectedOrderStatus        types.OrderStatus
+		expectedCollatCheck        []expectedMatch
+		expectedRemainingBids      []OrderWithRemainingSize
+		expectedRemainingAsks      []OrderWithRemainingSize
+		expectedMatches            []expectedMatch
+		expectedOperations         []types.Operation
+		expectedInternalOperations []types.InternalOperation
 	}{
 		`Matches a liquidation buy order when it overlaps the orderbook`: {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -53,8 +54,8 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 			expectedRemainingBids: []OrderWithRemainingSize{},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15),
-				types.NewMatchOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15),
+				clobtest.NewMatchOperation(
 					&constants.LiquidationOrder_Bob_Num0_Clob0_Buy100_Price20_BTC,
 					[]types.MakerFill{
 						{
@@ -64,9 +65,9 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15): 0,
-				types.NewMatchOperation(
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15),
+				types.NewMatchPerpetualLiquidationInternalOperation(
 					&constants.LiquidationOrder_Bob_Num0_Clob0_Buy100_Price20_BTC,
 					[]types.MakerFill{
 						{
@@ -74,7 +75,7 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 							FillAmount:   10,
 						},
 					},
-				): 1,
+				),
 			},
 		},
 		`Matches a liquidation sell order when it overlaps the orderbook`: {
@@ -101,8 +102,8 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 			expectedRemainingBids: []OrderWithRemainingSize{},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20),
-				types.NewMatchOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20),
+				clobtest.NewMatchOperation(
 					&constants.LiquidationOrder_Bob_Num0_Clob1_Sell70_Price10_ETH,
 					[]types.MakerFill{
 						{
@@ -112,9 +113,9 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20): 0,
-				types.NewMatchOperation(
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20),
+				types.NewMatchPerpetualLiquidationInternalOperation(
 					&constants.LiquidationOrder_Bob_Num0_Clob1_Sell70_Price10_ETH,
 					[]types.MakerFill{
 						{
@@ -122,7 +123,7 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 							FillAmount:   10,
 						},
 					},
-				): 1,
+				),
 			},
 		},
 		`Matches a liquidation buy order multiple times when it overlaps the orderbook`: {
@@ -166,9 +167,9 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 				},
 			},
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price15_GTB20),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id7_Clob0_Sell25_Price15_GTB20),
-				types.NewMatchOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price15_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id7_Clob0_Sell25_Price15_GTB20),
+				clobtest.NewMatchOperation(
 					&constants.LiquidationOrder_Bob_Num0_Clob0_Buy100_Price20_BTC,
 					[]types.MakerFill{
 						{
@@ -182,11 +183,10 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price15_GTB20): 0,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id7_Clob0_Sell25_Price15_GTB20): 1,
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id9_Clob0_Sell20_Price1000):       2,
-				types.NewMatchOperation(
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price15_GTB20),
+				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Alice_Num0_Id7_Clob0_Sell25_Price15_GTB20),
+				types.NewMatchPerpetualLiquidationInternalOperation(
 					&constants.LiquidationOrder_Bob_Num0_Clob0_Buy100_Price20_BTC,
 					[]types.MakerFill{
 						{
@@ -198,7 +198,7 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 							FillAmount:   25,
 						},
 					},
-				): 3,
+				),
 			},
 		},
 		`Matches a liquidation sell order multiple times when it overlaps the orderbook`: {
@@ -246,9 +246,9 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id8_Clob0_Buy15_Price25_GTB31),
-				types.NewMatchOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id8_Clob0_Buy15_Price25_GTB31),
+				clobtest.NewMatchOperation(
 					&constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
 					[]types.MakerFill{
 						{
@@ -262,11 +262,10 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20): 0,
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id5_Clob0_Buy20_Price10_GTB22):   1,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id8_Clob0_Buy15_Price25_GTB31): 2,
-				types.NewMatchOperation(
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20),
+				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Alice_Num1_Id8_Clob0_Buy15_Price25_GTB31),
+				types.NewMatchPerpetualLiquidationInternalOperation(
 					&constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
 					[]types.MakerFill{
 						{
@@ -278,7 +277,7 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 							FillAmount:   10,
 						},
 					},
-				): 3,
+				),
 			},
 		},
 		`Cancels resting maker orders from same subaccount when liquidation order overlaps the orderbook`: {
@@ -313,8 +312,8 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20),
-				types.NewMatchOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20),
+				clobtest.NewMatchOperation(
 					&constants.LiquidationOrder_Bob_Num0_Clob1_Sell70_Price10_ETH,
 					[]types.MakerFill{
 						{
@@ -324,10 +323,9 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20): 2,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id2_Clob1_Buy67_Price5_GTB20):   3,
-				types.NewMatchOperation(
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20),
+				types.NewMatchPerpetualLiquidationInternalOperation(
 					&constants.LiquidationOrder_Bob_Num0_Clob1_Sell70_Price10_ETH,
 					[]types.MakerFill{
 						{
@@ -335,11 +333,11 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 							FillAmount:   10,
 						},
 					},
-				): 4,
+				),
 			},
 		},
 		`Cancels partially-filled maker orders from same subaccount when liquidation order overlaps
-			the orderbook and doesn't match, and liquidation placement is added to operations queue`: {
+			the orderbook and doesn't match`: {
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Bob_Num0_Id3_Clob1_Buy10_Price10_GTB20,
 				&constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
@@ -357,9 +355,9 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 			expectedRemainingBids: []OrderWithRemainingSize{},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id3_Clob1_Buy10_Price10_GTB20),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15),
-				types.NewMatchOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id3_Clob1_Buy10_Price10_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15),
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
 					[]types.MakerFill{
 						{
@@ -368,27 +366,23 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 						},
 					},
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.LiquidationOrder_Bob_Num0_Clob1_Sell70_Price10_ETH,
 					[]types.MakerFill{},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id3_Clob1_Buy10_Price10_GTB20):   0,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15): 1,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Bob_Num0_Id3_Clob1_Buy10_Price10_GTB20),
+				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Bob_Num0_Id3_Clob1_Buy10_Price10_GTB20.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 2,
-				types.NewMatchOperation(
-					&constants.LiquidationOrder_Bob_Num0_Clob1_Sell70_Price10_ETH,
-					[]types.MakerFill{},
-				): 3,
+				),
 			},
 		},
 	}
@@ -423,7 +417,7 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 				tc.expectedRemainingBids,
 				tc.expectedRemainingAsks,
 				tc.expectedOperations,
-				tc.expectedOperationToNonce,
+				tc.expectedInternalOperations,
 			)
 
 			// Verify the correct offchain update messages were returned.

@@ -7,8 +7,9 @@ import (
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		ClobPairs:          []ClobPair{},
-		LiquidationsConfig: LiquidationsConfig_Default,
+		BlockRateLimitConfig: BlockRateLimitConfiguration{},
+		ClobPairs:            []ClobPair{},
+		LiquidationsConfig:   LiquidationsConfig_Default,
 	}
 }
 
@@ -29,6 +30,10 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("found gap in clobPair id")
 		}
 		expectedId = expectedId + 1
+	}
+
+	if err := gs.BlockRateLimitConfig.Validate(); err != nil {
+		return err
 	}
 
 	if err := gs.LiquidationsConfig.Validate(); err != nil {

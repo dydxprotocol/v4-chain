@@ -10,40 +10,47 @@ type IndexerEventManager interface {
 	Enabled() bool
 	AddTxnEvent(ctx sdk.Context, subType string, data string)
 	SendOffchainData(message msgsender.Message)
+	SendOnchainData(block *IndexerTendermintBlock)
 	ProduceBlock(ctx sdk.Context) *IndexerTendermintBlock
 	AddBlockEvent(ctx sdk.Context, subType string, data string, blockEvent IndexerTendermintEvent_BlockEvent)
 }
 
-type IndexerEventManagerImpl struct {
+// Ensure the `IndexerEventManager` interface is implemented at compile time.
+var _ IndexerEventManager = (*indexerEventManagerImpl)(nil)
+
+type indexerEventManagerImpl struct {
 	indexerMessageSender           msgsender.IndexerMessageSender
 	indexerEventsTransientStoreKey storetypes.StoreKey
+	sendOffchainData               bool
 }
 
 func NewIndexerEventManager(
 	indexerMessageSender msgsender.IndexerMessageSender,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
-) *IndexerEventManagerImpl {
-	return &IndexerEventManagerImpl{
+	sendOffchainData bool,
+) IndexerEventManager {
+	return &indexerEventManagerImpl{
 		indexerMessageSender:           indexerMessageSender,
 		indexerEventsTransientStoreKey: indexerEventsTransientStoreKey,
+		sendOffchainData:               sendOffchainData,
 	}
 }
 
-func (i *IndexerEventManagerImpl) Enabled() bool {
+func (i *indexerEventManagerImpl) Enabled() bool {
 	return i.indexerMessageSender.Enabled()
 }
 
-func (i *IndexerEventManagerImpl) GetIndexerEventsTransientStoreKey() storetypes.StoreKey {
+func (i *indexerEventManagerImpl) GetIndexerEventsTransientStoreKey() storetypes.StoreKey {
 	return i.indexerEventsTransientStoreKey
 }
 
-func (i *IndexerEventManagerImpl) SendOffchainData(message msgsender.Message) {
-	if i.indexerMessageSender.Enabled() {
+func (i *indexerEventManagerImpl) SendOffchainData(message msgsender.Message) {
+	if i.indexerMessageSender.Enabled() && i.sendOffchainData {
 		i.indexerMessageSender.SendOffchainData(message)
 	}
 }
 
-func (i *IndexerEventManagerImpl) SendOnchainData(block *IndexerTendermintBlock) {
+func (i *indexerEventManagerImpl) SendOnchainData(block *IndexerTendermintBlock) {
 	if i.indexerMessageSender.Enabled() {
 		message := CreateIndexerBlockEventMessage(block)
 		i.indexerMessageSender.SendOnchainData(message)
@@ -51,7 +58,7 @@ func (i *IndexerEventManagerImpl) SendOnchainData(block *IndexerTendermintBlock)
 }
 
 // AddTxnEvent adds a transaction event to the context's transient store of indexer events.
-func (i *IndexerEventManagerImpl) AddTxnEvent(
+func (i *indexerEventManagerImpl) AddTxnEvent(
 	ctx sdk.Context,
 	subType string,
 	data string,
@@ -62,7 +69,7 @@ func (i *IndexerEventManagerImpl) AddTxnEvent(
 }
 
 // AddBlockEvent adds a block event to the context's transient store of indexer events.
-func (i *IndexerEventManagerImpl) AddBlockEvent(
+func (i *indexerEventManagerImpl) AddBlockEvent(
 	ctx sdk.Context,
 	subType string,
 	data string,
@@ -76,7 +83,7 @@ func (i *IndexerEventManagerImpl) AddBlockEvent(
 // ProduceBlock returns an `IndexerTendermintBlock` containing all the indexer events in the block.
 // It should only be called in EndBlocker when the transient store contains all onchain events from
 // a ready-to-be-committed block.
-func (i *IndexerEventManagerImpl) ProduceBlock(
+func (i *indexerEventManagerImpl) ProduceBlock(
 	ctx sdk.Context,
 ) *IndexerTendermintBlock {
 	if i.indexerMessageSender.Enabled() {

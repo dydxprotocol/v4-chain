@@ -1,4 +1,4 @@
-//go:build integration_test
+//go:build all || integration_test
 
 package cli_test
 
@@ -49,8 +49,10 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 
 	for i := 0; i < n; i++ {
 		clobPair := types.ClobPair{
-			Id:                   uint32(i),
-			Metadata:             &types.ClobPair_PerpetualClobMetadata{PerpetualClobMetadata: &types.PerpetualClobMetadata{PerpetualId: 0}},
+			Id: uint32(i),
+			Metadata: &types.ClobPair_PerpetualClobMetadata{
+				PerpetualClobMetadata: &types.PerpetualClobMetadata{PerpetualId: 0},
+			},
 			SubticksPerTick:      5,
 			StepBaseQuantums:     5,
 			MinOrderBaseQuantums: 10,

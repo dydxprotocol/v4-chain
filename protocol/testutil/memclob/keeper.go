@@ -20,8 +20,8 @@ type FakeMemClobKeeper struct {
 	dirtyFillAmounts                     map[types.OrderId]satypes.BaseQuantums
 	positionSizes                        map[satypes.SubaccountId]map[types.ClobPairId]*big.Int
 	dirtyPositionSizes                   map[satypes.SubaccountId]map[types.ClobPairId]*big.Int
-	orderIdToStatefulOrderPlacement      map[types.OrderId]types.StatefulOrderPlacement
-	dirtyOrderIdToStatefulOrderPlacement map[types.OrderId]types.StatefulOrderPlacement
+	orderIdToLongTermOrderPlacement      map[types.OrderId]types.LongTermOrderPlacement
+	dirtyOrderIdToLongTermOrderPlacement map[types.OrderId]types.LongTermOrderPlacement
 	timeToStatefulOrdersExpiring         map[time.Time][]types.OrderId
 	dirtyTimeToStatefulOrdersExpiring    map[time.Time][]types.OrderId
 	nextTransactionIndex                 uint32
@@ -39,8 +39,8 @@ func NewFakeMemClobKeeper() *FakeMemClobKeeper {
 		useCollatCheckFnForSingleMatch:       false,
 		positionSizes:                        make(map[satypes.SubaccountId]map[types.ClobPairId]*big.Int),
 		dirtyPositionSizes:                   make(map[satypes.SubaccountId]map[types.ClobPairId]*big.Int),
-		orderIdToStatefulOrderPlacement:      make(map[types.OrderId]types.StatefulOrderPlacement),
-		dirtyOrderIdToStatefulOrderPlacement: make(map[types.OrderId]types.StatefulOrderPlacement),
+		orderIdToLongTermOrderPlacement:      make(map[types.OrderId]types.LongTermOrderPlacement),
+		dirtyOrderIdToLongTermOrderPlacement: make(map[types.OrderId]types.LongTermOrderPlacement),
 		timeToStatefulOrdersExpiring:         make(map[time.Time][]types.OrderId),
 		dirtyTimeToStatefulOrdersExpiring:    make(map[time.Time][]types.OrderId),
 		nextTransactionIndex:                 0,
@@ -63,7 +63,7 @@ func (f *FakeMemClobKeeper) WithIndexerEventManager(
 func (f *FakeMemClobKeeper) ResetState() {
 	f.dirtyPositionSizes = make(map[satypes.SubaccountId]map[types.ClobPairId]*big.Int)
 	f.dirtyFillAmounts = make(map[types.OrderId]satypes.BaseQuantums)
-	f.dirtyOrderIdToStatefulOrderPlacement = make(map[types.OrderId]types.StatefulOrderPlacement)
+	f.dirtyOrderIdToLongTermOrderPlacement = make(map[types.OrderId]types.LongTermOrderPlacement)
 	f.dirtyTimeToStatefulOrdersExpiring = make(map[time.Time][]types.OrderId)
 	f.nextTransactionIndex = 0
 }
@@ -81,10 +81,10 @@ func (f *FakeMemClobKeeper) ReplayPlaceOrder(
 	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
-	panic("CheckTxPlaceOrder not currently implemented on FakeMemClobKeeper")
+	panic("PlaceShortTermOrder not currently implemented on FakeMemClobKeeper")
 }
 
-func (f *FakeMemClobKeeper) CheckTxPlaceOrder(
+func (f *FakeMemClobKeeper) PlaceShortTermOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
 ) (
@@ -92,14 +92,14 @@ func (f *FakeMemClobKeeper) CheckTxPlaceOrder(
 	orderStatus types.OrderStatus,
 	err error,
 ) {
-	panic("CheckTxPlaceOrder not currently implemented on FakeMemClobKeeper")
+	panic("PlaceShortTermOrder not currently implemented on FakeMemClobKeeper")
 }
 
-func (f *FakeMemClobKeeper) CheckTxCancelOrder(
+func (f *FakeMemClobKeeper) CancelShortTermOrder(
 	ctx sdk.Context,
 	msgCancelOrder *types.MsgCancelOrder,
 ) error {
-	panic("CheckTxCancelOrder not currently implemented on FakeMemClobKeeper")
+	panic("CancelShortTermOrder not currently implemented on FakeMemClobKeeper")
 }
 
 // Commit simulates `checkState.Commit()`.
@@ -137,8 +137,8 @@ func (f *FakeMemClobKeeper) CommitState() {
 
 	f.dirtyPositionSizes = make(map[satypes.SubaccountId]map[types.ClobPairId]*big.Int)
 	f.dirtyFillAmounts = make(map[types.OrderId]satypes.BaseQuantums)
-	for orderId, orderPlacement := range f.dirtyOrderIdToStatefulOrderPlacement {
-		f.orderIdToStatefulOrderPlacement[orderId] = orderPlacement
+	for orderId, orderPlacement := range f.dirtyOrderIdToLongTermOrderPlacement {
+		f.orderIdToLongTermOrderPlacement[orderId] = orderPlacement
 	}
 
 	for time, orderIds := range f.dirtyTimeToStatefulOrdersExpiring {
@@ -188,17 +188,19 @@ func (f *FakeMemClobKeeper) GetOrderFillAmount(
 	return true, fillAmount, uint32(0)
 }
 
-func (f *FakeMemClobKeeper) SetStatefulOrderPlacement(
+func (f *FakeMemClobKeeper) SetLongTermOrderPlacement(
 	ctx sdk.Context,
 	order types.Order,
 	blockHeight uint32,
 ) {
 	order.MustBeStatefulOrder()
 
-	f.dirtyOrderIdToStatefulOrderPlacement[order.OrderId] = types.StatefulOrderPlacement{
-		Order:            order,
-		BlockHeight:      blockHeight,
-		TransactionIndex: f.nextTransactionIndex,
+	f.dirtyOrderIdToLongTermOrderPlacement[order.OrderId] = types.LongTermOrderPlacement{
+		Order: order,
+		PlacementIndex: types.TransactionOrdering{
+			BlockHeight:      blockHeight,
+			TransactionIndex: f.nextTransactionIndex,
+		},
 	}
 
 	f.nextTransactionIndex += 1
@@ -217,32 +219,32 @@ func (f *FakeMemClobKeeper) MustAddOrderToStatefulOrdersTimeSlice(
 	f.dirtyTimeToStatefulOrdersExpiring[goodTilBlockTime] = append(ordersExpiringAtTime, orderId)
 }
 
-func (f *FakeMemClobKeeper) DoesStatefulOrderExistInState(
+func (f *FakeMemClobKeeper) DoesLongTermOrderExistInState(
 	ctx sdk.Context,
 	order types.Order,
 ) bool {
 	order.MustBeStatefulOrder()
 
-	if orderPlacementInDirtyState, exists := f.dirtyOrderIdToStatefulOrderPlacement[order.OrderId]; exists {
+	if orderPlacementInDirtyState, exists := f.dirtyOrderIdToLongTermOrderPlacement[order.OrderId]; exists {
 		return order.GetOrderHash() == orderPlacementInDirtyState.Order.GetOrderHash()
 	}
 
-	if orderPlacementInState, exists := f.orderIdToStatefulOrderPlacement[order.OrderId]; exists {
+	if orderPlacementInState, exists := f.orderIdToLongTermOrderPlacement[order.OrderId]; exists {
 		return order.GetOrderHash() == orderPlacementInState.Order.GetOrderHash()
 	}
 
 	return false
 }
 
-func (f *FakeMemClobKeeper) GetStatefulOrderPlacement(
+func (f *FakeMemClobKeeper) GetLongTermOrderPlacement(
 	ctx sdk.Context,
 	orderId types.OrderId,
-) (val types.StatefulOrderPlacement, found bool) {
-	if orderPlacementInDirtyState, exists := f.dirtyOrderIdToStatefulOrderPlacement[orderId]; exists {
+) (val types.LongTermOrderPlacement, found bool) {
+	if orderPlacementInDirtyState, exists := f.dirtyOrderIdToLongTermOrderPlacement[orderId]; exists {
 		return orderPlacementInDirtyState, true
 	}
 
-	if orderPlacementInState, exists := f.orderIdToStatefulOrderPlacement[orderId]; exists {
+	if orderPlacementInState, exists := f.orderIdToLongTermOrderPlacement[orderId]; exists {
 		return orderPlacementInState, true
 	}
 
@@ -320,7 +322,7 @@ func (f *FakeMemClobKeeper) addFakeFillAmount(
 
 func (f *FakeMemClobKeeper) ProcessSingleMatch(
 	ctx sdk.Context,
-	matchWithOrders types.MatchWithOrders,
+	matchWithOrders *types.MatchWithOrders,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,
@@ -443,4 +445,26 @@ func (f *FakeMemClobKeeper) GetStatePosition(
 	testStateFillAmount = testStateFillAmount.Add(testStateFillAmount, dirtyPositionSize)
 
 	return testStateFillAmount
+}
+
+func (f *FakeMemClobKeeper) OffsetSubaccountPerpetualPosition(
+	ctx sdk.Context,
+	liquidatedSubaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	deltaQuantumsTotal *big.Int,
+) (
+	fills []types.MatchPerpetualDeleveraging_Fill,
+	deltaQuantumsRemaining *big.Int,
+) {
+	panic("This function should not be implemented as FakeMemClobKeeper is getting deprecated (CLOB-175)")
+}
+
+func (f *FakeMemClobKeeper) IsLiquidatable(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+) (
+	isLiquidatable bool,
+	err error,
+) {
+	panic("This function should not be implemented as FakeMemClobKeeper is getting deprecated (CLOB-175)")
 }

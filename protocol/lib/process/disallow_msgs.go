@@ -8,11 +8,16 @@ import (
 // IsDisallowTopLevelMsgInOtherTxs returns true if the given msg type is not allowed
 // to be in a proposed block as part of OtherTxs. Otherwise, returns false.
 func IsDisallowTopLevelMsgInOtherTxs(targetMsg sdk.Msg) bool {
-	switch targetMsg.(type) {
-	case *clobtypes.MsgCancelOrder, *clobtypes.MsgPlaceOrder:
-		// We do not expect PlaceOrder/CancelOrder to be in OtherTxs as a top-level msg.
-		// These should be app-injected as part of order tx.
-		return true
+	switch msg := targetMsg.(type) {
+	// Non-stateful cancel and place orders are not allowed in the proposed blocks.
+	// These should be app-injected as part of MsgProposedOperation tx.
+	case *clobtypes.MsgCancelOrder:
+		orderId := msg.GetOrderId()
+		return !orderId.IsStatefulOrder()
+	case *clobtypes.MsgPlaceOrder:
+		order := msg.GetOrder()
+		orderId := order.GetOrderId()
+		return !orderId.IsStatefulOrder()
 	}
 	return false
 }

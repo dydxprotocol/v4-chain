@@ -4,14 +4,15 @@ DOCKER := $(shell which docker)
 HTTPS_GIT := https://github.com/dydxprotocol/v4.git
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 PROJECT_NAME := $(shell git remote get-url origin | xargs basename -s .git)
+CGO_ENABLED=1
 export GIT_COMMIT_HASH=$(shell git rev-parse --short HEAD)
 export COMMIT=$(shell git rev-parse HEAD)
 
 export GO111MODULE = on
 
 # process build tags
-
 build_tags = netgo
+
 ifeq ($(LEDGER_ENABLED),true)
   ifeq ($(OS),Windows_NT)
     GCCEXE = $(shell where gcc.exe 2> NUL)
@@ -34,6 +35,10 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
+# libsecp256k1_sdk is disabled by default as both ethereum/go-ethereum and cosmos/cosmos-sdk will define duplicate symbols
+ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += libsecp256k1_sdk # Requires CGO_ENABLED=1
+endif
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
 endif
@@ -101,7 +106,7 @@ include contrib/devtools/Makefile
 
 all: tools install lint test
 
-install: go.sum 
+install: go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/dydxprotocold
 
 aws-push-dev:
@@ -116,8 +121,29 @@ aws-push-dev3:
 aws-push-dev4:
 	./scripts/build-push-ecr.sh dev4
 
+aws-push-dev5:
+	./scripts/build-push-ecr.sh dev5
+
+aws-push-snapshot-dev:
+	./scripts/build-push-ecr.sh dev snapshot
+
+aws-push-snapshot-dev2:
+	./scripts/build-push-ecr.sh dev2 snapshot
+
+aws-push-snapshot-dev3:
+	./scripts/build-push-ecr.sh dev3 snapshot
+
+aws-push-snapshot-dev4:
+	./scripts/build-push-ecr.sh dev4 snapshot
+
+aws-push-snapshot-dev5:
+	./scripts/build-push-ecr.sh dev5 snapshot
+
 aws-push-staging:
 	./scripts/build-push-ecr.sh staging
+
+aws-push-snapshot-staging:
+	./scripts/build-push-ecr.sh staging snapshot
 
 ###############################################################################
 ###                                  Build                                  ###
@@ -133,12 +159,12 @@ else
 	go build -mod=readonly $(BUILD_FLAGS) -o build/dydxprotocold ./cmd/dydxprotocold
 endif
 
-# TODO(DEC-1743): `build-reproducible` is taken from Osmosis. This currently takes a long time, 
-# since cross-building arm64 from amd64 (or vice-versa) is slow due to QEMU virtualization. 
+# TODO(DEC-1743): `build-reproducible` is taken from Osmosis. This currently takes a long time,
+# since cross-building arm64 from amd64 (or vice-versa) is slow due to QEMU virtualization.
 # We should look into making this faster. Gaia and other Cosmos SDK chains use `rbuilder`,
-# which doesn't support go 1.19 yet. 
-build-reproducible: build-reproducible-amd64 build-reproducible-arm64
-build-reproducible-amd64: go.sum $(BUILDDIR)/
+# which doesn't support go 1.19 yet.
+build-reproducible: build-reproducible-linux-amd64 build-reproducible-linux-arm64
+build-reproducible-linux-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name dydxv4builder || true
 	$(DOCKER) buildx use dydxv4builder
 	$(DOCKER) buildx build \
@@ -147,14 +173,14 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 		--build-arg GIT_COMMIT=$(COMMIT) \
 		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/amd64 \
-		-t dydx:local-amd64 \
+		-t dydx:local-linux-amd64 \
 		--load \
 		-f Dockerfile .
 	$(DOCKER) rm -f dydxv4binary || true
-	$(DOCKER) create -ti --name dydxv4binary dydx:local-amd64
+	$(DOCKER) create -ti --name dydxv4binary dydx:local-linux-amd64
 	$(DOCKER) cp dydxv4binary:/bin/dydxprotocold $(BUILDDIR)/dydxprotocold:linux-amd64
 	$(DOCKER) rm -f dydxv4binary
-build-reproducible-arm64: go.sum $(BUILDDIR)/
+build-reproducible-linux-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name dydxv4builder || true
 	$(DOCKER) buildx use dydxv4builder
 	$(DOCKER) buildx build \
@@ -163,18 +189,16 @@ build-reproducible-arm64: go.sum $(BUILDDIR)/
 		--build-arg GIT_COMMIT=$(COMMIT) \
 		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/arm64 \
-		-t dydx:local-arm64 \
+		-t dydx:local-linux-arm64 \
 		--load \
 		-f Dockerfile .
 	$(DOCKER) rm -f dydxv4binary || true
-	$(DOCKER) create -ti --name dydxv4binary dydx:local-arm64
+	$(DOCKER) create -ti --name dydxv4binary dydx:local-linux-arm64
 	$(DOCKER) cp dydxv4binary:/bin/dydxprotocold $(BUILDDIR)/dydxprotocold:linux-arm64
 	$(DOCKER) rm -f dydxv4binary
 # TODO(DEC-1743): Make this also a reproducible build.
 build-darwin-arm64: go.sum
 	LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build -ldflags="${ldflags}"
-build-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 draw-deps:
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz
@@ -216,34 +240,46 @@ test-ci: test-unit-and-integration
 test-all: test-unit test-race test-cover test-integration
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' ./...
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='test_ledger_mock $(build_tags)' ./...
 
 test-cover:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4/... -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4/... -tags='test_ledger_mock $(build_tags)' ./...
 
 test-exchanges:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock exchange_tests' ./... -run "TestQueryingActualExchanges"
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='test_ledger_mock exchange_tests $(build_tags)' ./... -run "TestQueryingActualExchanges"
 
 test-unit-and-integration:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
 
 benchmark:
-	@VERSION=$(VERSION) go test -mod=readonly -bench=. ./...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='$(build_tags)' -bench=. ./...
 
-.PHONY: test test-all test-cover test-unit test-race
+test-container:
+	@VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./testing/containertest
+
+test-container-accept:
+	@VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./testing/containertest -args -accept
+
+test-container-build:
+	$(MAKE) localnet-build
+	@docker build . -t dydxprotocol-localnet -f testing/testnet-local/Dockerfile --no-cache
+	@docker build . -t dydxprotocol-container-test -f testing/containertest/Dockerfile --no-cache
+
+.PHONY: test test-all test-cover test-unit test-race test-container
+	\ container-test-build-base container-test-build-local
 
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
 
 lint:
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --build-tags='$(build_tags) all' --timeout=10m
 
 lint-fix:
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --fix --out-format=tab --issues-exit-code=0
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --build-tags='$(build_tags) all' --fix --out-format=tab --issues-exit-code=0
 .PHONY: lint lint-fix
 
 format:
@@ -260,8 +296,6 @@ format:
 protoVer=0.11.5
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
-
-proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
@@ -325,18 +359,7 @@ proto-download-deps:
 	mkdir -p "$(THIRD_PARTY_DIR)/cosmos/ics23/v1" && \
 	curl -sSL https://raw.githubusercontent.com/cosmos/ics23/master/proto/cosmos/ics23/v1/proofs.proto > "$(THIRD_PARTY_DIR)/cosmos/ics23/v1/proofs.proto"
 
-proto-format:
-	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
-
-proto-lint:
-	@$(protoImage) buf lint --error-format=json
-
-# Note this isn't working for now as our repository is private.
-# This will matter more once we care about breaking changes.
-proto-check-breaking:
-	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
-
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking
+.PHONY: proto-gen proto-swagger-gen
 
 
 ###############################################################################
@@ -377,8 +400,6 @@ localnet-start: localnet-init localnet-compose-up
 localnet-startd: localnet-init localnet-compose-upd
 
 # Continue the localnet with the same chain state.
-# Note that due to a known IAVL tree height issue, this does not currently work.
-# TODO(DEC-1248): Remove this comment after height == 0 bug is addressed.
 localnet-continue:
 	@docker-compose -f docker-compose.yml up $(ARGS)
 

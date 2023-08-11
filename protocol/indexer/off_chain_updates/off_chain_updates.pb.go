@@ -6,7 +6,7 @@ package off_chain_updates
 import (
 	fmt "fmt"
 	proto "github.com/cosmos/gogoproto/proto"
-	types "github.com/dydxprotocol/v4/x/clob/types"
+	v1 "github.com/dydxprotocol/v4/indexer/protocol/v1"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -25,11 +25,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // OrderPlacementStatus is an enum for the resulting status after an order is
 // placed.
-type OrderPlace_OrderPlacementStatus int32
+type OrderPlaceV1_OrderPlacementStatus int32
 
 const (
 	// Default value, this is invalid and unused.
-	OrderPlace_ORDER_PLACEMENT_STATUS_UNSPECIFIED OrderPlace_OrderPlacementStatus = 0
+	OrderPlaceV1_ORDER_PLACEMENT_STATUS_UNSPECIFIED OrderPlaceV1_OrderPlacementStatus = 0
 	// A best effort opened order is one that has only been confirmed to be
 	// placed on the V4 node sending the off-chain update message.
 	// The cases where this happens includes:
@@ -38,78 +38,80 @@ const (
 	// A best effort placed order may not have been placed on other V4
 	// nodes including other V4 validator nodes and may still be excluded in
 	// future order matches.
-	OrderPlace_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED OrderPlace_OrderPlacementStatus = 1
+	OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED OrderPlaceV1_OrderPlacementStatus = 1
 	// An opened order is one that is confirmed to be placed on all V4 nodes
 	// (discounting dishonest V4 nodes) and will be included in any future
 	// order matches.
 	// This status is used internally by the indexer and will not be sent
 	// out by protocol.
-	OrderPlace_ORDER_PLACEMENT_STATUS_OPENED OrderPlace_OrderPlacementStatus = 2
+	OrderPlaceV1_ORDER_PLACEMENT_STATUS_OPENED OrderPlaceV1_OrderPlacementStatus = 2
 )
 
-var OrderPlace_OrderPlacementStatus_name = map[int32]string{
+var OrderPlaceV1_OrderPlacementStatus_name = map[int32]string{
 	0: "ORDER_PLACEMENT_STATUS_UNSPECIFIED",
 	1: "ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED",
 	2: "ORDER_PLACEMENT_STATUS_OPENED",
 }
 
-var OrderPlace_OrderPlacementStatus_value = map[string]int32{
+var OrderPlaceV1_OrderPlacementStatus_value = map[string]int32{
 	"ORDER_PLACEMENT_STATUS_UNSPECIFIED":        0,
 	"ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED": 1,
 	"ORDER_PLACEMENT_STATUS_OPENED":             2,
 }
 
-func (x OrderPlace_OrderPlacementStatus) String() string {
-	return proto.EnumName(OrderPlace_OrderPlacementStatus_name, int32(x))
+func (x OrderPlaceV1_OrderPlacementStatus) String() string {
+	return proto.EnumName(OrderPlaceV1_OrderPlacementStatus_name, int32(x))
 }
 
-func (OrderPlace_OrderPlacementStatus) EnumDescriptor() ([]byte, []int) {
+func (OrderPlaceV1_OrderPlacementStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_a3058c1b66f59e98, []int{0, 0}
 }
 
 // OrderRemovalReason is an enum of all the reasons an order was removed.
-type OrderRemove_OrderRemovalReason int32
+type OrderRemoveV1_OrderRemovalReason int32
 
 const (
 	// Default value, this is invalid and unused.
-	OrderRemove_ORDER_REMOVAL_REASON_UNSPECIFIED OrderRemove_OrderRemovalReason = 0
+	OrderRemoveV1_ORDER_REMOVAL_REASON_UNSPECIFIED OrderRemoveV1_OrderRemovalReason = 0
 	// The order was removed due to being expired.
-	OrderRemove_ORDER_REMOVAL_REASON_EXPIRED OrderRemove_OrderRemovalReason = 1
+	OrderRemoveV1_ORDER_REMOVAL_REASON_EXPIRED OrderRemoveV1_OrderRemovalReason = 1
 	// The order was removed due to being canceled by a user.
-	OrderRemove_ORDER_REMOVAL_REASON_USER_CANCELED OrderRemove_OrderRemovalReason = 2
+	OrderRemoveV1_ORDER_REMOVAL_REASON_USER_CANCELED OrderRemoveV1_OrderRemovalReason = 2
 	// The order was removed due to being undercollateralized.
-	OrderRemove_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED OrderRemove_OrderRemovalReason = 3
+	OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED OrderRemoveV1_OrderRemovalReason = 3
 	// The order caused an internal error during order placement and was
 	// removed.
-	OrderRemove_ORDER_REMOVAL_REASON_INTERNAL_ERROR OrderRemove_OrderRemovalReason = 4
+	OrderRemoveV1_ORDER_REMOVAL_REASON_INTERNAL_ERROR OrderRemoveV1_OrderRemovalReason = 4
 	// The order would have matched against another order placed by the same
 	// subaccount and was removed.
-	OrderRemove_ORDER_REMOVAL_REASON_SELF_TRADE_ERROR OrderRemove_OrderRemovalReason = 5
+	OrderRemoveV1_ORDER_REMOVAL_REASON_SELF_TRADE_ERROR OrderRemoveV1_OrderRemovalReason = 5
 	// The order would have matched against maker orders on the orderbook
 	// despite being a post-only order and was removed.
-	OrderRemove_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER OrderRemove_OrderRemovalReason = 6
+	OrderRemoveV1_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER OrderRemoveV1_OrderRemovalReason = 6
 	// The order was an ICO order and would have been placed on the orderbook as
 	// resting liquidity and was removed.
-	OrderRemove_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK OrderRemove_OrderRemovalReason = 7
+	OrderRemoveV1_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK OrderRemoveV1_OrderRemovalReason = 7
 	// The order was a fill-or-kill order that could not be fully filled and was
 	// removed.
-	OrderRemove_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED OrderRemove_OrderRemovalReason = 8
+	OrderRemoveV1_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED OrderRemoveV1_OrderRemovalReason = 8
 	// The order was a reduce-only order that was removed due to either:
 	// - being a taker order and fully-filling the order would flip the side of
 	//    the subaccount's position, in this case the remaining size of the
 	//    order is removed
 	// - being a maker order resting on the book and being removed when either
 	//    the subaccount's position is closed or flipped sides
-	OrderRemove_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE OrderRemove_OrderRemovalReason = 9
+	OrderRemoveV1_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE OrderRemoveV1_OrderRemovalReason = 9
 	// The order should be expired, according to the Indexer's cached data, but
 	// the Indexer has yet to receive a message to remove the order. In order to
 	// keep the data cached by the Indexer up-to-date and accurate, clear out
 	// the data if it's expired by sending an order removal with this reason.
 	// Protocol should never send this reason to Indexer.
-	OrderRemove_ORDER_REMOVAL_REASON_INDEXER_EXPIRED OrderRemove_OrderRemovalReason = 10
+	OrderRemoveV1_ORDER_REMOVAL_REASON_INDEXER_EXPIRED OrderRemoveV1_OrderRemovalReason = 10
+	// The order has been replaced.
+	OrderRemoveV1_ORDER_REMOVAL_REASON_REPLACED OrderRemoveV1_OrderRemovalReason = 11
 )
 
-var OrderRemove_OrderRemovalReason_name = map[int32]string{
+var OrderRemoveV1_OrderRemovalReason_name = map[int32]string{
 	0:  "ORDER_REMOVAL_REASON_UNSPECIFIED",
 	1:  "ORDER_REMOVAL_REASON_EXPIRED",
 	2:  "ORDER_REMOVAL_REASON_USER_CANCELED",
@@ -121,9 +123,10 @@ var OrderRemove_OrderRemovalReason_name = map[int32]string{
 	8:  "ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED",
 	9:  "ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE",
 	10: "ORDER_REMOVAL_REASON_INDEXER_EXPIRED",
+	11: "ORDER_REMOVAL_REASON_REPLACED",
 }
 
-var OrderRemove_OrderRemovalReason_value = map[string]int32{
+var OrderRemoveV1_OrderRemovalReason_value = map[string]int32{
 	"ORDER_REMOVAL_REASON_UNSPECIFIED":                            0,
 	"ORDER_REMOVAL_REASON_EXPIRED":                                1,
 	"ORDER_REMOVAL_REASON_USER_CANCELED":                          2,
@@ -135,23 +138,24 @@ var OrderRemove_OrderRemovalReason_value = map[string]int32{
 	"ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED":    8,
 	"ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE":                     9,
 	"ORDER_REMOVAL_REASON_INDEXER_EXPIRED":                        10,
+	"ORDER_REMOVAL_REASON_REPLACED":                               11,
 }
 
-func (x OrderRemove_OrderRemovalReason) String() string {
-	return proto.EnumName(OrderRemove_OrderRemovalReason_name, int32(x))
+func (x OrderRemoveV1_OrderRemovalReason) String() string {
+	return proto.EnumName(OrderRemoveV1_OrderRemovalReason_name, int32(x))
 }
 
-func (OrderRemove_OrderRemovalReason) EnumDescriptor() ([]byte, []int) {
+func (OrderRemoveV1_OrderRemovalReason) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_a3058c1b66f59e98, []int{1, 0}
 }
 
 // OrderRemovalStatus is an enum for the resulting status after an order is
 // removed.
-type OrderRemove_OrderRemovalStatus int32
+type OrderRemoveV1_OrderRemovalStatus int32
 
 const (
 	// Default value, this is invalid and unused.
-	OrderRemove_ORDER_REMOVAL_STATUS_UNSPECIFIED OrderRemove_OrderRemovalStatus = 0
+	OrderRemoveV1_ORDER_REMOVAL_STATUS_UNSPECIFIED OrderRemoveV1_OrderRemovalStatus = 0
 	// A best effort canceled order is one that has only been confirmed to be
 	// removed on the V4 node sending the off-chain update message.
 	// The cases where this happens includes:
@@ -162,53 +166,53 @@ const (
 	// A best effort canceled order may not have been removed on other V4
 	// nodes including other V4 validator nodes and may still be included in
 	// future order matches.
-	OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED OrderRemove_OrderRemovalStatus = 1
+	OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED OrderRemoveV1_OrderRemovalStatus = 1
 	// A canceled order is one that is confirmed to be removed on all V4 nodes
 	// (discounting dishonest V4 nodes) and will not be included in any future
 	// order matches.
 	// The cases where this happens includes:
 	// - the order is expired.
-	OrderRemove_ORDER_REMOVAL_STATUS_CANCELED OrderRemove_OrderRemovalStatus = 2
+	OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED OrderRemoveV1_OrderRemovalStatus = 2
 )
 
-var OrderRemove_OrderRemovalStatus_name = map[int32]string{
+var OrderRemoveV1_OrderRemovalStatus_name = map[int32]string{
 	0: "ORDER_REMOVAL_STATUS_UNSPECIFIED",
 	1: "ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED",
 	2: "ORDER_REMOVAL_STATUS_CANCELED",
 }
 
-var OrderRemove_OrderRemovalStatus_value = map[string]int32{
+var OrderRemoveV1_OrderRemovalStatus_value = map[string]int32{
 	"ORDER_REMOVAL_STATUS_UNSPECIFIED":          0,
 	"ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED": 1,
 	"ORDER_REMOVAL_STATUS_CANCELED":             2,
 }
 
-func (x OrderRemove_OrderRemovalStatus) String() string {
-	return proto.EnumName(OrderRemove_OrderRemovalStatus_name, int32(x))
+func (x OrderRemoveV1_OrderRemovalStatus) String() string {
+	return proto.EnumName(OrderRemoveV1_OrderRemovalStatus_name, int32(x))
 }
 
-func (OrderRemove_OrderRemovalStatus) EnumDescriptor() ([]byte, []int) {
+func (OrderRemoveV1_OrderRemovalStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_a3058c1b66f59e98, []int{1, 1}
 }
 
 // OrderPlace messages contain the order placed/replaced.
-type OrderPlace struct {
-	Order           *types.Order                    `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
-	PlacementStatus OrderPlace_OrderPlacementStatus `protobuf:"varint,2,opt,name=placement_status,json=placementStatus,proto3,enum=dydxprotocol.indexer.off_chain_updates.OrderPlace_OrderPlacementStatus" json:"placement_status,omitempty"`
+type OrderPlaceV1 struct {
+	Order           *v1.IndexerOrder                  `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
+	PlacementStatus OrderPlaceV1_OrderPlacementStatus `protobuf:"varint,2,opt,name=placement_status,json=placementStatus,proto3,enum=dydxprotocol.indexer.off_chain_updates.OrderPlaceV1_OrderPlacementStatus" json:"placement_status,omitempty"`
 }
 
-func (m *OrderPlace) Reset()         { *m = OrderPlace{} }
-func (m *OrderPlace) String() string { return proto.CompactTextString(m) }
-func (*OrderPlace) ProtoMessage()    {}
-func (*OrderPlace) Descriptor() ([]byte, []int) {
+func (m *OrderPlaceV1) Reset()         { *m = OrderPlaceV1{} }
+func (m *OrderPlaceV1) String() string { return proto.CompactTextString(m) }
+func (*OrderPlaceV1) ProtoMessage()    {}
+func (*OrderPlaceV1) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a3058c1b66f59e98, []int{0}
 }
-func (m *OrderPlace) XXX_Unmarshal(b []byte) error {
+func (m *OrderPlaceV1) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *OrderPlace) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *OrderPlaceV1) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_OrderPlace.Marshal(b, m, deterministic)
+		return xxx_messageInfo_OrderPlaceV1.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -218,52 +222,52 @@ func (m *OrderPlace) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *OrderPlace) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OrderPlace.Merge(m, src)
+func (m *OrderPlaceV1) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OrderPlaceV1.Merge(m, src)
 }
-func (m *OrderPlace) XXX_Size() int {
+func (m *OrderPlaceV1) XXX_Size() int {
 	return m.Size()
 }
-func (m *OrderPlace) XXX_DiscardUnknown() {
-	xxx_messageInfo_OrderPlace.DiscardUnknown(m)
+func (m *OrderPlaceV1) XXX_DiscardUnknown() {
+	xxx_messageInfo_OrderPlaceV1.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_OrderPlace proto.InternalMessageInfo
+var xxx_messageInfo_OrderPlaceV1 proto.InternalMessageInfo
 
-func (m *OrderPlace) GetOrder() *types.Order {
+func (m *OrderPlaceV1) GetOrder() *v1.IndexerOrder {
 	if m != nil {
 		return m.Order
 	}
 	return nil
 }
 
-func (m *OrderPlace) GetPlacementStatus() OrderPlace_OrderPlacementStatus {
+func (m *OrderPlaceV1) GetPlacementStatus() OrderPlaceV1_OrderPlacementStatus {
 	if m != nil {
 		return m.PlacementStatus
 	}
-	return OrderPlace_ORDER_PLACEMENT_STATUS_UNSPECIFIED
+	return OrderPlaceV1_ORDER_PLACEMENT_STATUS_UNSPECIFIED
 }
 
 // OrderRemove messages contain the id of the order removed, the reason for the
 // removal and the resulting status from the removal.
-type OrderRemove struct {
-	RemovedOrderId *types.OrderId                 `protobuf:"bytes,1,opt,name=removed_order_id,json=removedOrderId,proto3" json:"removed_order_id,omitempty"`
-	Reason         OrderRemove_OrderRemovalReason `protobuf:"varint,2,opt,name=reason,proto3,enum=dydxprotocol.indexer.off_chain_updates.OrderRemove_OrderRemovalReason" json:"reason,omitempty"`
-	RemovalStatus  OrderRemove_OrderRemovalStatus `protobuf:"varint,3,opt,name=removal_status,json=removalStatus,proto3,enum=dydxprotocol.indexer.off_chain_updates.OrderRemove_OrderRemovalStatus" json:"removal_status,omitempty"`
+type OrderRemoveV1 struct {
+	RemovedOrderId *v1.IndexerOrderId               `protobuf:"bytes,1,opt,name=removed_order_id,json=removedOrderId,proto3" json:"removed_order_id,omitempty"`
+	Reason         OrderRemoveV1_OrderRemovalReason `protobuf:"varint,2,opt,name=reason,proto3,enum=dydxprotocol.indexer.off_chain_updates.OrderRemoveV1_OrderRemovalReason" json:"reason,omitempty"`
+	RemovalStatus  OrderRemoveV1_OrderRemovalStatus `protobuf:"varint,3,opt,name=removal_status,json=removalStatus,proto3,enum=dydxprotocol.indexer.off_chain_updates.OrderRemoveV1_OrderRemovalStatus" json:"removal_status,omitempty"`
 }
 
-func (m *OrderRemove) Reset()         { *m = OrderRemove{} }
-func (m *OrderRemove) String() string { return proto.CompactTextString(m) }
-func (*OrderRemove) ProtoMessage()    {}
-func (*OrderRemove) Descriptor() ([]byte, []int) {
+func (m *OrderRemoveV1) Reset()         { *m = OrderRemoveV1{} }
+func (m *OrderRemoveV1) String() string { return proto.CompactTextString(m) }
+func (*OrderRemoveV1) ProtoMessage()    {}
+func (*OrderRemoveV1) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a3058c1b66f59e98, []int{1}
 }
-func (m *OrderRemove) XXX_Unmarshal(b []byte) error {
+func (m *OrderRemoveV1) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *OrderRemove) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *OrderRemoveV1) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_OrderRemove.Marshal(b, m, deterministic)
+		return xxx_messageInfo_OrderRemoveV1.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -273,58 +277,58 @@ func (m *OrderRemove) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *OrderRemove) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OrderRemove.Merge(m, src)
+func (m *OrderRemoveV1) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OrderRemoveV1.Merge(m, src)
 }
-func (m *OrderRemove) XXX_Size() int {
+func (m *OrderRemoveV1) XXX_Size() int {
 	return m.Size()
 }
-func (m *OrderRemove) XXX_DiscardUnknown() {
-	xxx_messageInfo_OrderRemove.DiscardUnknown(m)
+func (m *OrderRemoveV1) XXX_DiscardUnknown() {
+	xxx_messageInfo_OrderRemoveV1.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_OrderRemove proto.InternalMessageInfo
+var xxx_messageInfo_OrderRemoveV1 proto.InternalMessageInfo
 
-func (m *OrderRemove) GetRemovedOrderId() *types.OrderId {
+func (m *OrderRemoveV1) GetRemovedOrderId() *v1.IndexerOrderId {
 	if m != nil {
 		return m.RemovedOrderId
 	}
 	return nil
 }
 
-func (m *OrderRemove) GetReason() OrderRemove_OrderRemovalReason {
+func (m *OrderRemoveV1) GetReason() OrderRemoveV1_OrderRemovalReason {
 	if m != nil {
 		return m.Reason
 	}
-	return OrderRemove_ORDER_REMOVAL_REASON_UNSPECIFIED
+	return OrderRemoveV1_ORDER_REMOVAL_REASON_UNSPECIFIED
 }
 
-func (m *OrderRemove) GetRemovalStatus() OrderRemove_OrderRemovalStatus {
+func (m *OrderRemoveV1) GetRemovalStatus() OrderRemoveV1_OrderRemovalStatus {
 	if m != nil {
 		return m.RemovalStatus
 	}
-	return OrderRemove_ORDER_REMOVAL_STATUS_UNSPECIFIED
+	return OrderRemoveV1_ORDER_REMOVAL_STATUS_UNSPECIFIED
 }
 
 // OrderUpdate messages contain the id of the order being updated, and the
 // updated total filled quantums of the order.
-type OrderUpdate struct {
-	OrderId             *types.OrderId `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	TotalFilledQuantums uint64         `protobuf:"varint,2,opt,name=total_filled_quantums,json=totalFilledQuantums,proto3" json:"total_filled_quantums,omitempty"`
+type OrderUpdateV1 struct {
+	OrderId             *v1.IndexerOrderId `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	TotalFilledQuantums uint64             `protobuf:"varint,2,opt,name=total_filled_quantums,json=totalFilledQuantums,proto3" json:"total_filled_quantums,omitempty"`
 }
 
-func (m *OrderUpdate) Reset()         { *m = OrderUpdate{} }
-func (m *OrderUpdate) String() string { return proto.CompactTextString(m) }
-func (*OrderUpdate) ProtoMessage()    {}
-func (*OrderUpdate) Descriptor() ([]byte, []int) {
+func (m *OrderUpdateV1) Reset()         { *m = OrderUpdateV1{} }
+func (m *OrderUpdateV1) String() string { return proto.CompactTextString(m) }
+func (*OrderUpdateV1) ProtoMessage()    {}
+func (*OrderUpdateV1) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a3058c1b66f59e98, []int{2}
 }
-func (m *OrderUpdate) XXX_Unmarshal(b []byte) error {
+func (m *OrderUpdateV1) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *OrderUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *OrderUpdateV1) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_OrderUpdate.Marshal(b, m, deterministic)
+		return xxx_messageInfo_OrderUpdateV1.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -334,26 +338,26 @@ func (m *OrderUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *OrderUpdate) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OrderUpdate.Merge(m, src)
+func (m *OrderUpdateV1) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OrderUpdateV1.Merge(m, src)
 }
-func (m *OrderUpdate) XXX_Size() int {
+func (m *OrderUpdateV1) XXX_Size() int {
 	return m.Size()
 }
-func (m *OrderUpdate) XXX_DiscardUnknown() {
-	xxx_messageInfo_OrderUpdate.DiscardUnknown(m)
+func (m *OrderUpdateV1) XXX_DiscardUnknown() {
+	xxx_messageInfo_OrderUpdateV1.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_OrderUpdate proto.InternalMessageInfo
+var xxx_messageInfo_OrderUpdateV1 proto.InternalMessageInfo
 
-func (m *OrderUpdate) GetOrderId() *types.OrderId {
+func (m *OrderUpdateV1) GetOrderId() *v1.IndexerOrderId {
 	if m != nil {
 		return m.OrderId
 	}
 	return nil
 }
 
-func (m *OrderUpdate) GetTotalFilledQuantums() uint64 {
+func (m *OrderUpdateV1) GetTotalFilledQuantums() uint64 {
 	if m != nil {
 		return m.TotalFilledQuantums
 	}
@@ -362,28 +366,28 @@ func (m *OrderUpdate) GetTotalFilledQuantums() uint64 {
 
 // An OffChainUpdate message is the message type which will be sent on Kafka to
 // the Indexer.
-type OffChainUpdate struct {
-	// Contains one of an OrderPlace, OrderRemove, and OrderUpdate message.
+type OffChainUpdateV1 struct {
+	// Contains one of an OrderPlaceV1, OrderRemoveV1, and OrderUpdateV1 message.
 	//
 	// Types that are valid to be assigned to UpdateMessage:
-	//	*OffChainUpdate_OrderPlace
-	//	*OffChainUpdate_OrderRemove
-	//	*OffChainUpdate_OrderUpdate
-	UpdateMessage isOffChainUpdate_UpdateMessage `protobuf_oneof:"update_message"`
+	//	*OffChainUpdateV1_OrderPlace
+	//	*OffChainUpdateV1_OrderRemove
+	//	*OffChainUpdateV1_OrderUpdate
+	UpdateMessage isOffChainUpdateV1_UpdateMessage `protobuf_oneof:"update_message"`
 }
 
-func (m *OffChainUpdate) Reset()         { *m = OffChainUpdate{} }
-func (m *OffChainUpdate) String() string { return proto.CompactTextString(m) }
-func (*OffChainUpdate) ProtoMessage()    {}
-func (*OffChainUpdate) Descriptor() ([]byte, []int) {
+func (m *OffChainUpdateV1) Reset()         { *m = OffChainUpdateV1{} }
+func (m *OffChainUpdateV1) String() string { return proto.CompactTextString(m) }
+func (*OffChainUpdateV1) ProtoMessage()    {}
+func (*OffChainUpdateV1) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a3058c1b66f59e98, []int{3}
 }
-func (m *OffChainUpdate) XXX_Unmarshal(b []byte) error {
+func (m *OffChainUpdateV1) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *OffChainUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *OffChainUpdateV1) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_OffChainUpdate.Marshal(b, m, deterministic)
+		return xxx_messageInfo_OffChainUpdateV1.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -393,83 +397,83 @@ func (m *OffChainUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *OffChainUpdate) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OffChainUpdate.Merge(m, src)
+func (m *OffChainUpdateV1) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OffChainUpdateV1.Merge(m, src)
 }
-func (m *OffChainUpdate) XXX_Size() int {
+func (m *OffChainUpdateV1) XXX_Size() int {
 	return m.Size()
 }
-func (m *OffChainUpdate) XXX_DiscardUnknown() {
-	xxx_messageInfo_OffChainUpdate.DiscardUnknown(m)
+func (m *OffChainUpdateV1) XXX_DiscardUnknown() {
+	xxx_messageInfo_OffChainUpdateV1.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_OffChainUpdate proto.InternalMessageInfo
+var xxx_messageInfo_OffChainUpdateV1 proto.InternalMessageInfo
 
-type isOffChainUpdate_UpdateMessage interface {
-	isOffChainUpdate_UpdateMessage()
+type isOffChainUpdateV1_UpdateMessage interface {
+	isOffChainUpdateV1_UpdateMessage()
 	MarshalTo([]byte) (int, error)
 	Size() int
 }
 
-type OffChainUpdate_OrderPlace struct {
-	OrderPlace *OrderPlace `protobuf:"bytes,1,opt,name=order_place,json=orderPlace,proto3,oneof" json:"order_place,omitempty"`
+type OffChainUpdateV1_OrderPlace struct {
+	OrderPlace *OrderPlaceV1 `protobuf:"bytes,1,opt,name=order_place,json=orderPlace,proto3,oneof" json:"order_place,omitempty"`
 }
-type OffChainUpdate_OrderRemove struct {
-	OrderRemove *OrderRemove `protobuf:"bytes,2,opt,name=order_remove,json=orderRemove,proto3,oneof" json:"order_remove,omitempty"`
+type OffChainUpdateV1_OrderRemove struct {
+	OrderRemove *OrderRemoveV1 `protobuf:"bytes,2,opt,name=order_remove,json=orderRemove,proto3,oneof" json:"order_remove,omitempty"`
 }
-type OffChainUpdate_OrderUpdate struct {
-	OrderUpdate *OrderUpdate `protobuf:"bytes,3,opt,name=order_update,json=orderUpdate,proto3,oneof" json:"order_update,omitempty"`
+type OffChainUpdateV1_OrderUpdate struct {
+	OrderUpdate *OrderUpdateV1 `protobuf:"bytes,3,opt,name=order_update,json=orderUpdate,proto3,oneof" json:"order_update,omitempty"`
 }
 
-func (*OffChainUpdate_OrderPlace) isOffChainUpdate_UpdateMessage()  {}
-func (*OffChainUpdate_OrderRemove) isOffChainUpdate_UpdateMessage() {}
-func (*OffChainUpdate_OrderUpdate) isOffChainUpdate_UpdateMessage() {}
+func (*OffChainUpdateV1_OrderPlace) isOffChainUpdateV1_UpdateMessage()  {}
+func (*OffChainUpdateV1_OrderRemove) isOffChainUpdateV1_UpdateMessage() {}
+func (*OffChainUpdateV1_OrderUpdate) isOffChainUpdateV1_UpdateMessage() {}
 
-func (m *OffChainUpdate) GetUpdateMessage() isOffChainUpdate_UpdateMessage {
+func (m *OffChainUpdateV1) GetUpdateMessage() isOffChainUpdateV1_UpdateMessage {
 	if m != nil {
 		return m.UpdateMessage
 	}
 	return nil
 }
 
-func (m *OffChainUpdate) GetOrderPlace() *OrderPlace {
-	if x, ok := m.GetUpdateMessage().(*OffChainUpdate_OrderPlace); ok {
+func (m *OffChainUpdateV1) GetOrderPlace() *OrderPlaceV1 {
+	if x, ok := m.GetUpdateMessage().(*OffChainUpdateV1_OrderPlace); ok {
 		return x.OrderPlace
 	}
 	return nil
 }
 
-func (m *OffChainUpdate) GetOrderRemove() *OrderRemove {
-	if x, ok := m.GetUpdateMessage().(*OffChainUpdate_OrderRemove); ok {
+func (m *OffChainUpdateV1) GetOrderRemove() *OrderRemoveV1 {
+	if x, ok := m.GetUpdateMessage().(*OffChainUpdateV1_OrderRemove); ok {
 		return x.OrderRemove
 	}
 	return nil
 }
 
-func (m *OffChainUpdate) GetOrderUpdate() *OrderUpdate {
-	if x, ok := m.GetUpdateMessage().(*OffChainUpdate_OrderUpdate); ok {
+func (m *OffChainUpdateV1) GetOrderUpdate() *OrderUpdateV1 {
+	if x, ok := m.GetUpdateMessage().(*OffChainUpdateV1_OrderUpdate); ok {
 		return x.OrderUpdate
 	}
 	return nil
 }
 
 // XXX_OneofWrappers is for the internal use of the proto package.
-func (*OffChainUpdate) XXX_OneofWrappers() []interface{} {
+func (*OffChainUpdateV1) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
-		(*OffChainUpdate_OrderPlace)(nil),
-		(*OffChainUpdate_OrderRemove)(nil),
-		(*OffChainUpdate_OrderUpdate)(nil),
+		(*OffChainUpdateV1_OrderPlace)(nil),
+		(*OffChainUpdateV1_OrderRemove)(nil),
+		(*OffChainUpdateV1_OrderUpdate)(nil),
 	}
 }
 
 func init() {
-	proto.RegisterEnum("dydxprotocol.indexer.off_chain_updates.OrderPlace_OrderPlacementStatus", OrderPlace_OrderPlacementStatus_name, OrderPlace_OrderPlacementStatus_value)
-	proto.RegisterEnum("dydxprotocol.indexer.off_chain_updates.OrderRemove_OrderRemovalReason", OrderRemove_OrderRemovalReason_name, OrderRemove_OrderRemovalReason_value)
-	proto.RegisterEnum("dydxprotocol.indexer.off_chain_updates.OrderRemove_OrderRemovalStatus", OrderRemove_OrderRemovalStatus_name, OrderRemove_OrderRemovalStatus_value)
-	proto.RegisterType((*OrderPlace)(nil), "dydxprotocol.indexer.off_chain_updates.OrderPlace")
-	proto.RegisterType((*OrderRemove)(nil), "dydxprotocol.indexer.off_chain_updates.OrderRemove")
-	proto.RegisterType((*OrderUpdate)(nil), "dydxprotocol.indexer.off_chain_updates.OrderUpdate")
-	proto.RegisterType((*OffChainUpdate)(nil), "dydxprotocol.indexer.off_chain_updates.OffChainUpdate")
+	proto.RegisterEnum("dydxprotocol.indexer.off_chain_updates.OrderPlaceV1_OrderPlacementStatus", OrderPlaceV1_OrderPlacementStatus_name, OrderPlaceV1_OrderPlacementStatus_value)
+	proto.RegisterEnum("dydxprotocol.indexer.off_chain_updates.OrderRemoveV1_OrderRemovalReason", OrderRemoveV1_OrderRemovalReason_name, OrderRemoveV1_OrderRemovalReason_value)
+	proto.RegisterEnum("dydxprotocol.indexer.off_chain_updates.OrderRemoveV1_OrderRemovalStatus", OrderRemoveV1_OrderRemovalStatus_name, OrderRemoveV1_OrderRemovalStatus_value)
+	proto.RegisterType((*OrderPlaceV1)(nil), "dydxprotocol.indexer.off_chain_updates.OrderPlaceV1")
+	proto.RegisterType((*OrderRemoveV1)(nil), "dydxprotocol.indexer.off_chain_updates.OrderRemoveV1")
+	proto.RegisterType((*OrderUpdateV1)(nil), "dydxprotocol.indexer.off_chain_updates.OrderUpdateV1")
+	proto.RegisterType((*OffChainUpdateV1)(nil), "dydxprotocol.indexer.off_chain_updates.OffChainUpdateV1")
 }
 
 func init() {
@@ -477,60 +481,61 @@ func init() {
 }
 
 var fileDescriptor_a3058c1b66f59e98 = []byte{
-	// 788 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0x4f, 0x8f, 0xdb, 0x44,
-	0x14, 0x8f, 0xb7, 0xdb, 0xdd, 0xf2, 0x16, 0x16, 0x6b, 0x00, 0x69, 0x55, 0xd1, 0x68, 0x31, 0xa5,
-	0xdd, 0x0a, 0xf0, 0x4a, 0x69, 0x41, 0x08, 0x10, 0xc8, 0xb1, 0x9f, 0xa9, 0xb5, 0x8e, 0x27, 0x8c,
-	0x1d, 0xd8, 0xee, 0x81, 0x91, 0x37, 0x76, 0xda, 0x48, 0x4e, 0x1c, 0x1c, 0xa7, 0x5a, 0xbe, 0x03,
-	0x87, 0x1e, 0xf9, 0x12, 0x7c, 0x0a, 0x2e, 0x1c, 0x38, 0xf4, 0xc8, 0x11, 0xed, 0x7e, 0x11, 0x94,
-	0x99, 0x69, 0x36, 0x7f, 0x1c, 0x44, 0x10, 0x17, 0x6b, 0xc6, 0xf3, 0x7b, 0xbf, 0xdf, 0xf3, 0x7b,
-	0xf3, 0x7b, 0x86, 0xaf, 0x92, 0x9f, 0x92, 0x8b, 0x51, 0x91, 0x97, 0x79, 0x37, 0xcf, 0x8e, 0xfb,
-	0xc3, 0x24, 0xbd, 0x48, 0x8b, 0xe3, 0xbc, 0xd7, 0xe3, 0xdd, 0x67, 0x71, 0x7f, 0xc8, 0x27, 0xa3,
-	0x24, 0x2e, 0xd3, 0xf1, 0xea, 0x1b, 0x53, 0x04, 0x91, 0x7b, 0xf3, 0xf1, 0xa6, 0x8a, 0x37, 0x57,
-	0xd0, 0xb7, 0xef, 0x2c, 0xe8, 0x74, 0xb3, 0xfc, 0xfc, 0x38, 0x2f, 0x92, 0xb4, 0x90, 0x34, 0xc6,
-	0x6f, 0x5b, 0x00, 0x74, 0xba, 0x6f, 0x67, 0x71, 0x37, 0x25, 0x26, 0xdc, 0x14, 0xa7, 0x07, 0xda,
-	0xa1, 0x76, 0xb4, 0xd7, 0x38, 0x30, 0x17, 0x54, 0xa6, 0xd1, 0xa6, 0x40, 0x33, 0x09, 0x23, 0x05,
-	0xe8, 0xa3, 0x69, 0xe0, 0x20, 0x1d, 0x96, 0x7c, 0x5c, 0xc6, 0xe5, 0x64, 0x7c, 0xb0, 0x75, 0xa8,
-	0x1d, 0xed, 0x37, 0xbe, 0x31, 0xff, 0x5d, 0x82, 0xe6, 0xb5, 0xfa, 0xdc, 0x72, 0xca, 0x17, 0x0a,
-	0x3a, 0xf6, 0xe6, 0x68, 0xf1, 0x85, 0xf1, 0x42, 0x83, 0xb7, 0xab, 0x90, 0xe4, 0x1e, 0x18, 0x94,
-	0x39, 0xc8, 0x78, 0xdb, 0xb7, 0x6c, 0x6c, 0x61, 0x10, 0xf1, 0x30, 0xb2, 0xa2, 0x4e, 0xc8, 0x3b,
-	0x41, 0xd8, 0x46, 0xdb, 0x73, 0x3d, 0x74, 0xf4, 0x1a, 0xf9, 0x18, 0x1e, 0xac, 0xc1, 0x35, 0x31,
-	0x8c, 0x38, 0xba, 0x2e, 0x65, 0x11, 0xa7, 0x6d, 0x0c, 0xd0, 0xd1, 0x35, 0xf2, 0x1e, 0xdc, 0x59,
-	0x03, 0x57, 0x90, 0x2d, 0xe3, 0x8f, 0x5d, 0xd8, 0x93, 0x75, 0x49, 0x07, 0xf9, 0xf3, 0x94, 0x38,
-	0xa0, 0x17, 0x62, 0x95, 0x70, 0x51, 0x27, 0xde, 0x4f, 0x54, 0x45, 0x6f, 0xaf, 0xab, 0xa8, 0x97,
-	0xb0, 0x7d, 0x15, 0xa3, 0xf6, 0xe4, 0x07, 0xd8, 0x29, 0xd2, 0x78, 0x9c, 0x0f, 0x55, 0x49, 0xdd,
-	0x8d, 0x4a, 0x2a, 0x53, 0x99, 0x5b, 0xc7, 0x19, 0x13, 0x6c, 0x4c, 0xb1, 0x92, 0x01, 0x48, 0xc5,
-	0x38, 0x7b, 0xd5, 0xba, 0x1b, 0xff, 0x8f, 0x8e, 0xea, 0xdc, 0x1b, 0xc5, 0xfc, 0xd6, 0xf8, 0x65,
-	0x1b, 0xc8, 0x6a, 0x36, 0xe4, 0x2e, 0x1c, 0xca, 0xf2, 0x32, 0x6c, 0xd1, 0xef, 0x2c, 0x9f, 0x33,
-	0xb4, 0x42, 0x1a, 0x2c, 0xf5, 0xec, 0x10, 0xde, 0xad, 0x44, 0xe1, 0x69, 0xdb, 0x63, 0xa2, 0x4d,
-	0xb3, 0xee, 0x2f, 0xf3, 0x84, 0xc8, 0xb8, 0x6d, 0x05, 0x36, 0xfa, 0xd3, 0x5e, 0x91, 0x8f, 0xe0,
-	0x68, 0x8d, 0x9e, 0x83, 0xcc, 0xa6, 0xbe, 0x6f, 0x45, 0xc8, 0x2c, 0xdf, 0x3b, 0x43, 0x47, 0xbf,
-	0x41, 0xee, 0xc3, 0xfb, 0x95, 0x68, 0x2f, 0x88, 0x90, 0x05, 0x96, 0xcf, 0x91, 0x31, 0xca, 0xf4,
-	0x6d, 0xf2, 0x00, 0x3e, 0xa8, 0x04, 0x86, 0xe8, 0xbb, 0x3c, 0x62, 0x96, 0x83, 0x0a, 0x7a, 0x93,
-	0x7c, 0x0e, 0x9f, 0x56, 0x42, 0xdb, 0x34, 0x8c, 0x38, 0x0d, 0xfc, 0x27, 0xfc, 0x7b, 0xda, 0xf1,
-	0x1d, 0x6e, 0x33, 0x1a, 0x86, 0xbc, 0x65, 0x9d, 0x20, 0xe3, 0x22, 0x40, 0xdf, 0x21, 0x5f, 0xc3,
-	0x17, 0xd5, 0xf9, 0xb4, 0x5a, 0xe8, 0x78, 0x56, 0x84, 0x9c, 0xbe, 0xfa, 0x5a, 0xc5, 0xc2, 0x50,
-	0xb0, 0xf2, 0x26, 0xa5, 0x27, 0xfa, 0x2e, 0xf9, 0x12, 0x3e, 0xab, 0x24, 0x70, 0xe9, 0x89, 0x14,
-	0xe1, 0xb6, 0x08, 0x0b, 0x68, 0xc4, 0x9b, 0xc8, 0xdd, 0x8e, 0xef, 0x3f, 0x11, 0x4f, 0x74, 0xf4,
-	0x5b, 0xe4, 0x43, 0xb8, 0x5f, 0x19, 0xcd, 0xd0, 0xe9, 0xd8, 0x28, 0x93, 0x67, 0x18, 0x7a, 0x67,
-	0xa8, 0xbf, 0x46, 0x8e, 0xe0, 0xee, 0x9a, 0xda, 0x39, 0x78, 0x8a, 0x6c, 0xd6, 0x3b, 0x30, 0x7e,
-	0xd6, 0x16, 0xaf, 0x86, 0x32, 0xf4, 0xca, 0xd5, 0xf8, 0x67, 0x3b, 0x2f, 0xa1, 0xe6, 0xcd, 0x3c,
-	0xeb, 0xff, 0x9c, 0x9d, 0x97, 0xe0, 0xd7, 0x57, 0xc4, 0xb8, 0x50, 0x6e, 0xee, 0x88, 0x7b, 0x4e,
-	0x3e, 0x81, 0x5b, 0x1b, 0xb8, 0x78, 0x37, 0x57, 0xf6, 0x6d, 0xc0, 0x3b, 0x65, 0x5e, 0xc6, 0x19,
-	0xef, 0xf5, 0xb3, 0x2c, 0x4d, 0xf8, 0x8f, 0x93, 0x78, 0x58, 0x4e, 0x06, 0x72, 0x40, 0x6e, 0xb3,
-	0xb7, 0xc4, 0xa1, 0x2b, 0xce, 0xbe, 0x55, 0x47, 0xc6, 0xaf, 0x5b, 0xb0, 0x4f, 0x7b, 0x3d, 0x7b,
-	0x6a, 0x33, 0xa5, 0xde, 0x81, 0x3d, 0xa9, 0x2e, 0xe6, 0xa0, 0x4a, 0xa0, 0xb1, 0xf9, 0x74, 0x7d,
-	0x5c, 0x63, 0x90, 0x5f, 0x4f, 0xfa, 0x53, 0x78, 0x5d, 0xd2, 0xca, 0xa1, 0x23, 0x92, 0xda, 0x6b,
-	0x3c, 0xfc, 0x0f, 0xd6, 0x7f, 0x5c, 0x63, 0x32, 0x43, 0x35, 0xfc, 0x66, 0xcc, 0x12, 0x2b, 0x86,
-	0xca, 0xa6, 0xcc, 0xf2, 0xdb, 0x67, 0xcc, 0x72, 0xdb, 0xd4, 0x61, 0x5f, 0xa2, 0xf8, 0x20, 0x1d,
-	0x8f, 0xe3, 0xa7, 0x69, 0x33, 0xf8, 0xfd, 0xb2, 0xae, 0xbd, 0xbc, 0xac, 0x6b, 0x7f, 0x5d, 0xd6,
-	0xb5, 0x17, 0x57, 0xf5, 0xda, 0xcb, 0xab, 0x7a, 0xed, 0xcf, 0xab, 0x7a, 0xed, 0xec, 0xd1, 0xd3,
-	0x7e, 0xf9, 0x6c, 0x72, 0x6e, 0x76, 0xf3, 0xc1, 0xf1, 0xc2, 0x2f, 0xf0, 0xf9, 0xa3, 0xf5, 0x7f,
-	0xdb, 0xf3, 0x1d, 0x01, 0x7b, 0xf8, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0xae, 0xb1, 0xf3, 0x58,
-	0x9e, 0x07, 0x00, 0x00,
+	// 808 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xdd, 0x6e, 0xe3, 0x44,
+	0x14, 0x8e, 0xb3, 0xdd, 0x6e, 0x99, 0xec, 0x16, 0x6b, 0x00, 0x69, 0x85, 0x20, 0x0a, 0x61, 0xd9,
+	0xa6, 0x2a, 0x38, 0x24, 0x14, 0x84, 0x00, 0x81, 0x1c, 0xfb, 0x44, 0xb5, 0xe2, 0x78, 0xc2, 0xd8,
+	0xe9, 0x4f, 0x6e, 0x06, 0x37, 0x76, 0xda, 0x48, 0x4e, 0x1c, 0x12, 0x27, 0x2a, 0xcf, 0x00, 0x17,
+	0x7d, 0x19, 0xae, 0x78, 0x01, 0x2e, 0x7b, 0xc9, 0x0d, 0x12, 0x6a, 0x5f, 0x04, 0x65, 0xc6, 0x71,
+	0xd3, 0xc6, 0x41, 0xb4, 0x70, 0x13, 0xe5, 0x1c, 0x7f, 0xe7, 0x3b, 0x9f, 0xcf, 0x99, 0xf9, 0x8c,
+	0xbe, 0xf5, 0x7e, 0xf2, 0x2e, 0x46, 0xe3, 0x30, 0x0a, 0xbb, 0x61, 0x50, 0xee, 0x0f, 0x3d, 0xff,
+	0xc2, 0x1f, 0x97, 0xc3, 0x5e, 0x8f, 0x75, 0xcf, 0xdd, 0xfe, 0x90, 0x4d, 0x47, 0x9e, 0x1b, 0xf9,
+	0x93, 0xd5, 0x8c, 0xc2, 0x8b, 0xf0, 0xeb, 0xe5, 0x7a, 0x25, 0xae, 0x57, 0x56, 0xd0, 0xef, 0xee,
+	0xa5, 0xf6, 0x49, 0x12, 0xb3, 0x4a, 0xb9, 0x1b, 0x84, 0xa7, 0x82, 0xb4, 0xf8, 0x67, 0x16, 0x3d,
+	0x27, 0x63, 0xcf, 0x1f, 0xb7, 0x02, 0xb7, 0xeb, 0x1f, 0x56, 0xb0, 0x8e, 0x9e, 0x86, 0xf3, 0xf8,
+	0xa5, 0x54, 0x90, 0x4a, 0xb9, 0xaa, 0xa2, 0xa4, 0x76, 0x4d, 0x12, 0xb3, 0x8a, 0x62, 0x88, 0x1c,
+	0x67, 0xa1, 0xa2, 0x18, 0x47, 0x48, 0x1e, 0xcd, 0x09, 0x07, 0xfe, 0x30, 0x62, 0x93, 0xc8, 0x8d,
+	0xa6, 0x93, 0x97, 0xd9, 0x82, 0x54, 0xda, 0xae, 0x1a, 0xca, 0xbf, 0x7b, 0x0d, 0x65, 0x59, 0xd5,
+	0x52, 0x30, 0x67, 0xb4, 0x39, 0x21, 0x7d, 0x73, 0x74, 0x37, 0x51, 0xbc, 0x94, 0xd0, 0xdb, 0x69,
+	0x48, 0xfc, 0x1a, 0x15, 0x09, 0xd5, 0x81, 0xb2, 0x96, 0xa9, 0x6a, 0xd0, 0x04, 0xcb, 0x61, 0xb6,
+	0xa3, 0x3a, 0x6d, 0x9b, 0xb5, 0x2d, 0xbb, 0x05, 0x9a, 0x51, 0x37, 0x40, 0x97, 0x33, 0xf8, 0x13,
+	0xb4, 0xbb, 0x06, 0x57, 0x03, 0xdb, 0x61, 0x50, 0xaf, 0x13, 0xea, 0x30, 0xd2, 0x02, 0x0b, 0x74,
+	0x59, 0xc2, 0x1f, 0xa0, 0xf7, 0xd7, 0xc0, 0x63, 0x48, 0xb6, 0xf8, 0xf3, 0x16, 0x7a, 0x21, 0x26,
+	0xe3, 0x0f, 0xc2, 0xd9, 0x7c, 0xc0, 0x1d, 0x24, 0x8f, 0xf9, 0x7f, 0x8f, 0xf1, 0x59, 0xb1, 0xbe,
+	0x17, 0xcf, 0xfa, 0xd3, 0x87, 0xcd, 0xda, 0xf0, 0xe8, 0x76, 0xcc, 0x14, 0xc7, 0xf8, 0x07, 0xb4,
+	0x39, 0xf6, 0xdd, 0x49, 0x38, 0x8c, 0x87, 0x7d, 0xf0, 0xa0, 0x61, 0x2f, 0x24, 0x2e, 0x45, 0x6e,
+	0x40, 0x39, 0x1f, 0x8d, 0x79, 0x71, 0x88, 0x44, 0x4f, 0x37, 0x58, 0xac, 0xf5, 0xc9, 0xff, 0xd5,
+	0x29, 0xde, 0xea, 0x8b, 0xf1, 0x72, 0x58, 0xfc, 0x6d, 0x03, 0xe1, 0x55, 0x3d, 0xf8, 0x15, 0x2a,
+	0x88, 0xd1, 0x53, 0x68, 0x92, 0x43, 0xd5, 0x64, 0x14, 0x54, 0x9b, 0x58, 0xf7, 0xf6, 0x59, 0x40,
+	0xef, 0xa5, 0xa2, 0xe0, 0xb8, 0x65, 0x50, 0xbe, 0xc2, 0xe4, 0x64, 0xdc, 0xe7, 0xb1, 0x81, 0x32,
+	0x4d, 0xb5, 0x34, 0x30, 0xe7, 0x7b, 0xc4, 0x1f, 0xa3, 0xd2, 0x9a, 0x7e, 0x3a, 0x50, 0x8d, 0x98,
+	0xa6, 0xea, 0x00, 0x55, 0x4d, 0xa3, 0x03, 0xba, 0xfc, 0x04, 0xef, 0xa0, 0x0f, 0x53, 0xd1, 0x86,
+	0xe5, 0x00, 0xb5, 0x54, 0x93, 0x01, 0xa5, 0x84, 0xca, 0x1b, 0x78, 0x17, 0x7d, 0x94, 0x0a, 0xb4,
+	0xc1, 0xac, 0x33, 0x87, 0xaa, 0x3a, 0xc4, 0xd0, 0xa7, 0xf8, 0x2b, 0xf4, 0x45, 0x2a, 0xb4, 0x45,
+	0x6c, 0x87, 0x11, 0xcb, 0x3c, 0x61, 0x47, 0xa4, 0x6d, 0xea, 0x4c, 0xa3, 0xc4, 0xb6, 0x59, 0x53,
+	0x6d, 0x00, 0x65, 0xbc, 0x40, 0xde, 0xc4, 0xdf, 0xa1, 0xaf, 0xd3, 0xf5, 0x34, 0x9b, 0xa0, 0x1b,
+	0xaa, 0x03, 0x8c, 0x2c, 0xde, 0x36, 0x66, 0xa1, 0xc0, 0x59, 0x59, 0x8d, 0x90, 0x86, 0xfc, 0x0c,
+	0x7f, 0x83, 0xbe, 0x4c, 0x25, 0xa8, 0x93, 0x86, 0x68, 0xc2, 0x34, 0x5e, 0x66, 0x11, 0x87, 0xd5,
+	0x80, 0xd5, 0xdb, 0xa6, 0x79, 0xc2, 0x7f, 0x41, 0x97, 0xb7, 0xf0, 0x1e, 0xda, 0x49, 0xad, 0xa6,
+	0xa0, 0xb7, 0x35, 0x10, 0xe2, 0x29, 0xd8, 0x46, 0x07, 0xe4, 0x37, 0x70, 0x09, 0xbd, 0x5a, 0x33,
+	0x3b, 0x1d, 0x8e, 0x81, 0x26, 0xbb, 0x43, 0xb7, 0xd7, 0x6f, 0x85, 0x96, 0xdf, 0x47, 0x5d, 0xce,
+	0x15, 0x7f, 0x91, 0xee, 0x9e, 0x9e, 0xd8, 0x0f, 0x56, 0x4e, 0xcf, 0x3f, 0xbb, 0xc1, 0x3d, 0xd4,
+	0xb2, 0x17, 0x24, 0x47, 0x44, 0x5a, 0x95, 0x13, 0xc3, 0x6f, 0x4f, 0xd1, 0xdc, 0xa0, 0x84, 0x1b,
+	0xb4, 0xf9, 0x6d, 0x38, 0xac, 0xe0, 0x06, 0xda, 0xfa, 0xcf, 0x2e, 0xf0, 0x2c, 0x8c, 0xaf, 0x7f,
+	0x15, 0xbd, 0x13, 0x85, 0x91, 0x1b, 0xb0, 0x5e, 0x3f, 0x08, 0x7c, 0x8f, 0xfd, 0x38, 0x75, 0x87,
+	0xd1, 0x74, 0x20, 0xac, 0x77, 0x83, 0xbe, 0xc5, 0x1f, 0xd6, 0xf9, 0xb3, 0xef, 0xe3, 0x47, 0xc5,
+	0x5f, 0xb3, 0x48, 0x26, 0xbd, 0x9e, 0x36, 0xbf, 0xa4, 0x89, 0xaa, 0x23, 0x94, 0x13, 0xaa, 0xb8,
+	0xc3, 0xc6, 0xc2, 0xf6, 0x1f, 0xe3, 0xdc, 0x07, 0x19, 0x8a, 0xc2, 0x24, 0xc6, 0x1d, 0xf4, 0x5c,
+	0x10, 0x0b, 0xe3, 0xe2, 0xc2, 0x72, 0xd5, 0xcf, 0x1f, 0x65, 0x1e, 0x07, 0x19, 0x2a, 0x54, 0x8a,
+	0xc4, 0x2d, 0xb7, 0x40, 0x73, 0x63, 0x7a, 0x28, 0xf7, 0x62, 0x02, 0x09, 0xb7, 0x48, 0xd4, 0x64,
+	0xb4, 0x2d, 0x70, 0x6c, 0xe0, 0x4f, 0x26, 0xee, 0x99, 0x5f, 0xb3, 0x7e, 0xbf, 0xce, 0x4b, 0x57,
+	0xd7, 0x79, 0xe9, 0xaf, 0xeb, 0xbc, 0x74, 0x79, 0x93, 0xcf, 0x5c, 0xdd, 0xe4, 0x33, 0x7f, 0xdc,
+	0xe4, 0x33, 0x9d, 0xfd, 0xb3, 0x7e, 0x74, 0x3e, 0x3d, 0x55, 0xba, 0xe1, 0xa0, 0x7c, 0xe7, 0x53,
+	0x3c, 0xdb, 0x5f, 0xff, 0xd5, 0x3f, 0xdd, 0xe4, 0xb0, 0xcf, 0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff,
+	0x70, 0x7c, 0xfa, 0x99, 0x26, 0x08, 0x00, 0x00,
 }
 
-func (m *OrderPlace) Marshal() (dAtA []byte, err error) {
+func (m *OrderPlaceV1) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -540,12 +545,12 @@ func (m *OrderPlace) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *OrderPlace) MarshalTo(dAtA []byte) (int, error) {
+func (m *OrderPlaceV1) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OrderPlace) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OrderPlaceV1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -570,7 +575,7 @@ func (m *OrderPlace) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *OrderRemove) Marshal() (dAtA []byte, err error) {
+func (m *OrderRemoveV1) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -580,12 +585,12 @@ func (m *OrderRemove) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *OrderRemove) MarshalTo(dAtA []byte) (int, error) {
+func (m *OrderRemoveV1) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OrderRemove) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OrderRemoveV1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -615,7 +620,7 @@ func (m *OrderRemove) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *OrderUpdate) Marshal() (dAtA []byte, err error) {
+func (m *OrderUpdateV1) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -625,12 +630,12 @@ func (m *OrderUpdate) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *OrderUpdate) MarshalTo(dAtA []byte) (int, error) {
+func (m *OrderUpdateV1) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OrderUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OrderUpdateV1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -655,7 +660,7 @@ func (m *OrderUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *OffChainUpdate) Marshal() (dAtA []byte, err error) {
+func (m *OffChainUpdateV1) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -665,12 +670,12 @@ func (m *OffChainUpdate) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *OffChainUpdate) MarshalTo(dAtA []byte) (int, error) {
+func (m *OffChainUpdateV1) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OffChainUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OffChainUpdateV1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -687,12 +692,12 @@ func (m *OffChainUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *OffChainUpdate_OrderPlace) MarshalTo(dAtA []byte) (int, error) {
+func (m *OffChainUpdateV1_OrderPlace) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OffChainUpdate_OrderPlace) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OffChainUpdateV1_OrderPlace) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.OrderPlace != nil {
 		{
@@ -708,12 +713,12 @@ func (m *OffChainUpdate_OrderPlace) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	}
 	return len(dAtA) - i, nil
 }
-func (m *OffChainUpdate_OrderRemove) MarshalTo(dAtA []byte) (int, error) {
+func (m *OffChainUpdateV1_OrderRemove) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OffChainUpdate_OrderRemove) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OffChainUpdateV1_OrderRemove) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.OrderRemove != nil {
 		{
@@ -729,12 +734,12 @@ func (m *OffChainUpdate_OrderRemove) MarshalToSizedBuffer(dAtA []byte) (int, err
 	}
 	return len(dAtA) - i, nil
 }
-func (m *OffChainUpdate_OrderUpdate) MarshalTo(dAtA []byte) (int, error) {
+func (m *OffChainUpdateV1_OrderUpdate) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OffChainUpdate_OrderUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OffChainUpdateV1_OrderUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.OrderUpdate != nil {
 		{
@@ -761,7 +766,7 @@ func encodeVarintOffChainUpdates(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *OrderPlace) Size() (n int) {
+func (m *OrderPlaceV1) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -777,7 +782,7 @@ func (m *OrderPlace) Size() (n int) {
 	return n
 }
 
-func (m *OrderRemove) Size() (n int) {
+func (m *OrderRemoveV1) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -796,7 +801,7 @@ func (m *OrderRemove) Size() (n int) {
 	return n
 }
 
-func (m *OrderUpdate) Size() (n int) {
+func (m *OrderUpdateV1) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -812,7 +817,7 @@ func (m *OrderUpdate) Size() (n int) {
 	return n
 }
 
-func (m *OffChainUpdate) Size() (n int) {
+func (m *OffChainUpdateV1) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -824,7 +829,7 @@ func (m *OffChainUpdate) Size() (n int) {
 	return n
 }
 
-func (m *OffChainUpdate_OrderPlace) Size() (n int) {
+func (m *OffChainUpdateV1_OrderPlace) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -836,7 +841,7 @@ func (m *OffChainUpdate_OrderPlace) Size() (n int) {
 	}
 	return n
 }
-func (m *OffChainUpdate_OrderRemove) Size() (n int) {
+func (m *OffChainUpdateV1_OrderRemove) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -848,7 +853,7 @@ func (m *OffChainUpdate_OrderRemove) Size() (n int) {
 	}
 	return n
 }
-func (m *OffChainUpdate_OrderUpdate) Size() (n int) {
+func (m *OffChainUpdateV1_OrderUpdate) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -867,7 +872,7 @@ func sovOffChainUpdates(x uint64) (n int) {
 func sozOffChainUpdates(x uint64) (n int) {
 	return sovOffChainUpdates(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *OrderPlace) Unmarshal(dAtA []byte) error {
+func (m *OrderPlaceV1) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -890,10 +895,10 @@ func (m *OrderPlace) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: OrderPlace: wiretype end group for non-group")
+			return fmt.Errorf("proto: OrderPlaceV1: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OrderPlace: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: OrderPlaceV1: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -926,7 +931,7 @@ func (m *OrderPlace) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Order == nil {
-				m.Order = &types.Order{}
+				m.Order = &v1.IndexerOrder{}
 			}
 			if err := m.Order.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -946,7 +951,7 @@ func (m *OrderPlace) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PlacementStatus |= OrderPlace_OrderPlacementStatus(b&0x7F) << shift
+				m.PlacementStatus |= OrderPlaceV1_OrderPlacementStatus(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -972,7 +977,7 @@ func (m *OrderPlace) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *OrderRemove) Unmarshal(dAtA []byte) error {
+func (m *OrderRemoveV1) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -995,10 +1000,10 @@ func (m *OrderRemove) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: OrderRemove: wiretype end group for non-group")
+			return fmt.Errorf("proto: OrderRemoveV1: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OrderRemove: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: OrderRemoveV1: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1031,7 +1036,7 @@ func (m *OrderRemove) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.RemovedOrderId == nil {
-				m.RemovedOrderId = &types.OrderId{}
+				m.RemovedOrderId = &v1.IndexerOrderId{}
 			}
 			if err := m.RemovedOrderId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1051,7 +1056,7 @@ func (m *OrderRemove) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Reason |= OrderRemove_OrderRemovalReason(b&0x7F) << shift
+				m.Reason |= OrderRemoveV1_OrderRemovalReason(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1070,7 +1075,7 @@ func (m *OrderRemove) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.RemovalStatus |= OrderRemove_OrderRemovalStatus(b&0x7F) << shift
+				m.RemovalStatus |= OrderRemoveV1_OrderRemovalStatus(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1096,7 +1101,7 @@ func (m *OrderRemove) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *OrderUpdate) Unmarshal(dAtA []byte) error {
+func (m *OrderUpdateV1) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1119,10 +1124,10 @@ func (m *OrderUpdate) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: OrderUpdate: wiretype end group for non-group")
+			return fmt.Errorf("proto: OrderUpdateV1: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OrderUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: OrderUpdateV1: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1155,7 +1160,7 @@ func (m *OrderUpdate) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.OrderId == nil {
-				m.OrderId = &types.OrderId{}
+				m.OrderId = &v1.IndexerOrderId{}
 			}
 			if err := m.OrderId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1201,7 +1206,7 @@ func (m *OrderUpdate) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *OffChainUpdate) Unmarshal(dAtA []byte) error {
+func (m *OffChainUpdateV1) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1224,10 +1229,10 @@ func (m *OffChainUpdate) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: OffChainUpdate: wiretype end group for non-group")
+			return fmt.Errorf("proto: OffChainUpdateV1: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OffChainUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: OffChainUpdateV1: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1259,11 +1264,11 @@ func (m *OffChainUpdate) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &OrderPlace{}
+			v := &OrderPlaceV1{}
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.UpdateMessage = &OffChainUpdate_OrderPlace{v}
+			m.UpdateMessage = &OffChainUpdateV1_OrderPlace{v}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1294,11 +1299,11 @@ func (m *OffChainUpdate) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &OrderRemove{}
+			v := &OrderRemoveV1{}
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.UpdateMessage = &OffChainUpdate_OrderRemove{v}
+			m.UpdateMessage = &OffChainUpdateV1_OrderRemove{v}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1329,11 +1334,11 @@ func (m *OffChainUpdate) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &OrderUpdate{}
+			v := &OrderUpdateV1{}
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.UpdateMessage = &OffChainUpdate_OrderUpdate{v}
+			m.UpdateMessage = &OffChainUpdateV1_OrderUpdate{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

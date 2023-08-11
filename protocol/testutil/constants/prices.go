@@ -1,10 +1,15 @@
 package constants
 
 import (
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4/x/prices/types"
 )
 
 func init() {
+	_ = TestTxBuilder.SetMsgs(EmptyMsgUpdateMarketPrices)
+	EmptyMsgUpdateMarketPricesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
+
 	_ = TestTxBuilder.SetMsgs(ValidMsgUpdateMarketPrices)
 	ValidMsgUpdateMarketPricesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
 
@@ -16,76 +21,82 @@ func init() {
 }
 
 const (
-	BtcUsdPair = "BTC-USD"
-	EthUsdPair = "ETH-USD"
-	SolUsdPair = "SOL-USD"
+	BtcUsdPair   = "BTC-USD"
+	EthUsdPair   = "ETH-USD"
+	MaticUsdPair = "MATIC-USD"
+	SolUsdPair   = "SOL-USD"
+	LtcUsdPair   = "LTC-USD"
 
-	BtcUsdExponent = -5
-	EthUsdExponent = -6
-	SolUsdExponent = -8
+	BtcUsdExponent   = -5
+	EthUsdExponent   = -6
+	LinkUsdExponent  = -8
+	MaticUsdExponent = -9
+	CrvUsdExponent   = -10
+	SolUsdExponent   = -8
+	LtcUsdExponent   = -7
 
 	CoinbaseExchangeName  = "Coinbase"
 	BinanceExchangeName   = "Binance"
 	BinanceUSExchangeName = "BinanceUS"
 	BitfinexExchangeName  = "Bitfinex"
+	KrakenExchangeName    = "Kraken"
 
 	FiveBillion  = uint64(5_000_000_000)
 	ThreeBillion = uint64(3_000_000_000)
 	FiveMillion  = uint64(5_000_000)
 	OneMillion   = uint64(1_000_000)
+
+	// Market param validation errors.
+	ErrorMsgMarketPairCannotBeEmpty = "Pair cannot be empty"
+	ErrorMsgInvalidMinPriceChange   = "Min price change in parts-per-million must be greater than 0 and less than 10000"
 )
 
-var TestExchangeFeeds = []types.ExchangeFeed{
-	{
-		Id:   0,
-		Name: CoinbaseExchangeName,
-		Memo: "test memo 0",
-	},
-	{
-		Id:   1,
-		Name: BinanceExchangeName,
-		Memo: "test memo 1",
-	},
-	{
-		Id:   2,
-		Name: BitfinexExchangeName,
-		Memo: "test memo 2",
-	},
-}
-
-var TestMarkets = []types.Market{
+// The `MarketParam.ExchangeConfigJson` field is left unset as it is not used by the server.
+var TestMarketParams = []types.MarketParam{
 	{
 		Id:                0,
 		Pair:              BtcUsdPair,
 		Exponent:          BtcUsdExponent,
-		Exchanges:         []uint32{0, 1},
 		MinExchanges:      1,
 		MinPriceChangePpm: 50,
-		Price:             FiveBillion, // $50,000 == 1 BTC.
 	},
 	{
 		Id:                1,
 		Pair:              EthUsdPair,
 		Exponent:          EthUsdExponent,
-		Exchanges:         []uint32{1, 2},
 		MinExchanges:      1,
 		MinPriceChangePpm: 50,
-		Price:             ThreeBillion, // $3,000 == 1 ETH.
 	},
 	{
 		Id:                2,
 		Pair:              SolUsdPair,
 		Exponent:          SolUsdExponent,
-		Exchanges:         []uint32{0, 2},
 		MinExchanges:      1,
 		MinPriceChangePpm: 50,
-		Price:             FiveBillion, // $50 == 1 SOL.
+	},
+}
+
+var TestMarketPrices = []types.MarketPrice{
+	{
+		Id:       0,
+		Exponent: BtcUsdExponent,
+		Price:    FiveBillion, // $50,000 == 1 BTC
+	},
+	{
+		Id:       1,
+		Exponent: EthUsdExponent,
+		Price:    ThreeBillion, // $3,000 == 1 ETH
+	},
+	{
+		Id:       2,
+		Exponent: SolUsdExponent,
+		Price:    FiveBillion, // 50$ == 1 SOL
 	},
 }
 
 var TestPricesGenesisState = types.GenesisState{
-	ExchangeFeeds: TestExchangeFeeds,
-	Markets:       TestMarkets,
+	MarketParams: TestMarketParams,
+	MarketPrices: TestMarketPrices,
 }
 
 var (
@@ -96,6 +107,9 @@ var (
 	}
 
 	// `MsgUpdateMarketPrices`.
+	EmptyMsgUpdateMarketPrices        = &types.MsgUpdateMarketPrices{}
+	EmptyMsgUpdateMarketPricesTxBytes []byte
+
 	ValidMsgUpdateMarketPrices = &types.MsgUpdateMarketPrices{
 		MarketPriceUpdates: ValidMarketPriceUpdates,
 	}
@@ -117,62 +131,53 @@ var (
 	}
 	InvalidMsgUpdateMarketPricesStatefulTxBytes []byte
 
+	marketExchangeConfigs = constants.GenerateExchangeConfigJson(constants.StaticExchangeMarketConfig)
+
 	Prices_DefaultGenesisState = types.GenesisState{
-		ExchangeFeeds: []types.ExchangeFeed{
-			{
-				Id:   uint32(0),
-				Name: CoinbaseExchangeName,
-				Memo: "test memo 0",
-			},
-			{
-				Id:   uint32(1),
-				Name: BinanceExchangeName,
-				Memo: "test memo 1",
-			},
-		},
-		Markets: []types.Market{{
-			Pair:              BtcUsdPair,
-			Exchanges:         []uint32{0, 1},
-			Exponent:          BtcUsdExponent,
-			MinExchanges:      uint32(2),
-			MinPriceChangePpm: uint32(50),
+		// `ExchangeConfigJson` is left unset as it is not used by the server.
+		MarketParams: []types.MarketParam{{
+			Pair:               BtcUsdPair,
+			Exponent:           BtcUsdExponent,
+			MinExchanges:       uint32(2),
+			ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+			MinPriceChangePpm:  uint32(50),
+		}},
+		MarketPrices: []types.MarketPrice{{
+			Exponent: BtcUsdExponent,
+			Price:    FiveBillion, // $50,000 == 1 BTC
 		}},
 	}
 
 	Prices_MultiExchangeMarketGenesisState = types.GenesisState{
-		ExchangeFeeds: []types.ExchangeFeed{
-			{ // Binance
-				Id:   uint32(0),
-				Name: BinanceExchangeName,
-				Memo: "test memo 0",
-			},
-			{ // BinanceUS
-				Id:   uint32(1),
-				Name: BinanceUSExchangeName,
-				Memo: "test memo 1",
-			},
-			{ // Bitfinex
-				Id:   uint32(2),
-				Name: BitfinexExchangeName,
-				Memo: "test memo 2",
-			},
-		},
-		Markets: []types.Market{
+		// `ExchangeConfigJson` is left unset as it is unused by the server.
+		MarketParams: []types.MarketParam{
 			{ // BTC-USD
-				Id:                uint32(0),
-				Pair:              BtcUsdPair,
-				Exchanges:         []uint32{0, 1, 2},
-				Exponent:          BtcUsdExponent,
-				MinExchanges:      uint32(2),
-				MinPriceChangePpm: uint32(50),
+				Id:                 uint32(0),
+				Pair:               BtcUsdPair,
+				Exponent:           BtcUsdExponent,
+				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+				MinExchanges:       uint32(2),
+				MinPriceChangePpm:  uint32(50),
 			},
 			{ // ETH-USD
-				Id:                uint32(1),
-				Pair:              EthUsdPair,
-				Exchanges:         []uint32{0, 1, 2},
-				Exponent:          EthUsdExponent,
-				MinExchanges:      uint32(2),
-				MinPriceChangePpm: uint32(50),
+				Id:                 uint32(1),
+				Pair:               EthUsdPair,
+				Exponent:           EthUsdExponent,
+				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+				MinExchanges:       uint32(2),
+				MinPriceChangePpm:  uint32(50),
+			},
+		},
+		MarketPrices: []types.MarketPrice{
+			{ // BTC-USD
+				Id:       uint32(0),
+				Exponent: BtcUsdExponent,
+				Price:    FiveBillion, // $50,000 == 1 BTC
+			},
+			{ // ETH-USD
+				Id:       uint32(1),
+				Exponent: EthUsdExponent,
+				Price:    ThreeBillion, // $3,000 == 1 ETH
 			},
 		},
 	}

@@ -2,27 +2,116 @@ package types_test
 
 import (
 	"errors"
-	fmt "fmt"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	clobtestutils "github.com/dydxprotocol/v4/testutil/clob"
 	"github.com/dydxprotocol/v4/testutil/constants"
+	testtx "github.com/dydxprotocol/v4/testutil/tx"
 	"github.com/dydxprotocol/v4/x/clob/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
-// TestValidateBasic provides black box testing for the ValidateBasic method of the MsgProposedOperations msg.
 func TestValidateBasic(t *testing.T) {
 	tests := map[string]struct {
-		operations    []types.Operation
+		msg           types.MsgProposedOperations
+		expectedError error
+	}{
+		"valid message": {
+			msg: types.MsgProposedOperations{
+				OperationsQueue: []types.OperationRaw{
+					{
+						Operation: &types.OperationRaw_ShortTermOrderPlacement{
+							ShortTermOrderPlacement: []byte{1, 2, 3},
+						},
+					},
+					{
+						Operation: &types.OperationRaw_ShortTermOrderPlacement{
+							ShortTermOrderPlacement: []byte{4, 5, 6},
+						},
+					},
+					clobtestutils.NewMatchOperationRaw(
+						&constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16,
+						[]types.MakerFill{
+							{
+								FillAmount:   5,
+								MakerOrderId: constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22.OrderId,
+							},
+						},
+					),
+					{
+						Operation: &types.OperationRaw_OrderRemoval{
+							OrderRemoval: &types.OrderRemoval{
+								OrderId:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+								RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
+							},
+						},
+					},
+				},
+			},
+		},
+		"short term order removal returns error": {
+			msg: types.MsgProposedOperations{
+				OperationsQueue: []types.OperationRaw{
+					{
+						Operation: &types.OperationRaw_OrderRemoval{
+							OrderRemoval: &types.OrderRemoval{
+								OrderId:       constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16.OrderId,
+								RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
+							},
+						},
+					},
+				},
+			},
+			expectedError: errors.New("order removal is not allowed for short-term orders"),
+		},
+		"unspecified removal reason returns error": {
+			msg: types.MsgProposedOperations{
+				OperationsQueue: []types.OperationRaw{
+					{
+						Operation: &types.OperationRaw_OrderRemoval{
+							OrderRemoval: &types.OrderRemoval{
+								OrderId:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+								RemovalReason: types.OrderRemoval_REMOVAL_REASON_UNSPECIFIED,
+							},
+						},
+					},
+				},
+			},
+			expectedError: errors.New("order removal reason must be specified"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedError != nil {
+				require.ErrorContains(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+// TestValidateBasic provides black box testing for the ValidateBasic method of the MsgProposedOperations msg.
+func TestValidateAndTransformRawOperations(t *testing.T) {
+	tests := map[string]struct {
+		operations    []types.OperationRaw
 		expectedError error
 	}{
 		// Tests for functionality not related to one message type
 		"passes validation": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10),
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
-				types.NewMatchOperation(&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtestutils.NewMatchOperationRaw(
+					&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
 					[]types.MakerFill{
 						{
 							FillAmount:   100_000_000, // 1 BTC
@@ -30,109 +119,18 @@ func TestValidateBasic(t *testing.T) {
 						},
 					},
 				),
-				types.NewPreexistingStatefulOrderPlacementOperation(
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				clobtestutils.NewOrderRemovalOperationRaw(
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
 				),
 			},
 			expectedError: nil,
 		},
-		"fails when TakerOrderHash invalid length": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10),
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
-				{
-					Operation: &types.Operation_Match{
-						Match: &types.ClobMatch{
-							Match: &types.ClobMatch_MatchOrders{
-								MatchOrders: &types.MatchOrders{
-									TakerOrderId:   constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.GetOrderId(),
-									TakerOrderHash: make([]byte, 32+1),
-									Fills: []types.MakerFill{
-										{
-											FillAmount:   100_000_000, // 1 BTC
-											MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.GetOrderId(),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedError: types.ErrInvalidMatchOrder,
-		},
-		"fails when TakerOrderHash not specified": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10),
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
-				{
-					Operation: &types.Operation_Match{
-						Match: &types.ClobMatch{
-							Match: &types.ClobMatch_MatchOrders{
-								MatchOrders: &types.MatchOrders{
-									TakerOrderId: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.GetOrderId(),
-									Fills: []types.MakerFill{
-										{
-											FillAmount:   100_000_000, // 1 BTC
-											MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.GetOrderId(),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedError: types.ErrInvalidMatchOrder,
-		},
-
-		"a cancelled pre existing order cannot be re-referenced by stateful order id": {
-			operations: []types.Operation{
-				types.NewPreexistingStatefulOrderPlacementOperation(
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				),
-				types.NewOrderCancellationOperation(&types.MsgCancelOrder{
-					OrderId:      constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
-					GoodTilOneof: &types.MsgCancelOrder_GoodTilBlockTime{GoodTilBlockTime: 20},
-				}),
-				types.NewMatchOperation(
-					&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
-					[]types.MakerFill{
-						{
-							FillAmount:   5,
-							MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
-						},
-					},
-				),
-			},
-			expectedError: types.ErrOrderPlacementNotInOperationsQueue,
-		},
-		"a pre existing stateful order can be re-referenced by stateful order id": {
-			operations: []types.Operation{
-				types.NewPreexistingStatefulOrderPlacementOperation(
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				),
-				types.NewOrderCancellationOperation(&types.MsgCancelOrder{
-					OrderId:      constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
-					GoodTilOneof: &types.MsgCancelOrder_GoodTilBlockTime{GoodTilBlockTime: 20},
-				}),
-				types.NewMatchOperation(
-					&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
-					[]types.MakerFill{
-						{
-							FillAmount:   5,
-							MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
-						},
-					},
-				),
-			},
-			expectedError: types.ErrOrderPlacementNotInOperationsQueue,
-		},
 
 		// tests for invalid subaccount id
 		"Stateless order validation: Place Order has invalid SubaccountId": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(types.Order{
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(types.Order{
 					OrderId:      constants.InvalidSubaccountIdOwner_OrderId,
 					Side:         types.Order_SIDE_BUY,
 					Quantums:     100_000_000,
@@ -142,25 +140,15 @@ func TestValidateBasic(t *testing.T) {
 			},
 			expectedError: errors.New("invalid SubaccountId Owner address"),
 		},
-		"Stateless order validation: Cancel Order has invalid SubaccountId": {
-			operations: []types.Operation{
-				types.NewOrderCancellationOperation(&types.MsgCancelOrder{
-					OrderId:      constants.InvalidSubaccountIdNumber_OrderId,
-					GoodTilOneof: &types.MsgCancelOrder_GoodTilBlock{GoodTilBlock: 1},
-				}),
-			},
-			expectedError: satypes.ErrInvalidSubaccountIdNumber,
-		},
 		"Stateless order validation: matchOrders Taker order id invalid SubaccountId": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
 				{
-					Operation: &types.Operation_Match{
+					Operation: &types.OperationRaw_Match{
 						Match: &types.ClobMatch{
 							Match: &types.ClobMatch_MatchOrders{
 								MatchOrders: &types.MatchOrders{
-									TakerOrderHash: constants.OrderHash_Empty[:],
-									TakerOrderId:   constants.InvalidSubaccountIdNumber_OrderId,
+									TakerOrderId: constants.InvalidSubaccountIdNumber_OrderId,
 									Fills: []types.MakerFill{
 										{
 											FillAmount:   1,
@@ -176,15 +164,14 @@ func TestValidateBasic(t *testing.T) {
 			expectedError: satypes.ErrInvalidSubaccountIdNumber,
 		},
 		"Stateless order validation: matchOrders Maker order id invalid SubaccountId": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
 				{
-					Operation: &types.Operation_Match{
+					Operation: &types.OperationRaw_Match{
 						Match: &types.ClobMatch{
 							Match: &types.ClobMatch_MatchOrders{
 								MatchOrders: &types.MatchOrders{
-									TakerOrderHash: constants.OrderHash_Empty[:],
-									TakerOrderId:   constants.OrderId_Alice_Num0_ClientId0_Clob0,
+									TakerOrderId: constants.OrderId_Alice_Num0_ClientId0_Clob0,
 									Fills: []types.MakerFill{
 										{
 											FillAmount:   1,
@@ -204,10 +191,10 @@ func TestValidateBasic(t *testing.T) {
 			expectedError: errors.New("invalid SubaccountId Owner address"),
 		},
 		"Stateless order validation: perpLiquidation fill maker order id invalid SubaccountId": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
 				{
-					Operation: &types.Operation_Match{
+					Operation: &types.OperationRaw_Match{
 						Match: &types.ClobMatch{
 							Match: &types.ClobMatch_MatchPerpetualLiquidation{
 								MatchPerpetualLiquidation: &types.MatchPerpetualLiquidation{
@@ -231,112 +218,106 @@ func TestValidateBasic(t *testing.T) {
 			expectedError: errors.New("invalid SubaccountId Owner address"),
 		},
 
-		// tests for order cancellation
-		"cancel order validation: good till block cannot be 0": {
-			operations: []types.Operation{
-				types.NewOrderCancellationOperation(&types.MsgCancelOrder{
-					OrderId:      constants.OrderId_Alice_Num0_ClientId0_Clob0,
-					GoodTilOneof: &types.MsgCancelOrder_GoodTilBlock{GoodTilBlock: 0}, // invalid
-				}),
-			},
-			expectedError: errors.New("cancellation goodTilBlock cannot be 0"),
-		},
-		"cancel order validation: short term order cancellations must reference an order in the same block": {
-			operations: []types.Operation{
-				types.NewOrderCancellationOperation(&types.MsgCancelOrder{
-					OrderId:      constants.OrderId_Alice_Num0_ClientId0_Clob0,
-					GoodTilOneof: &types.MsgCancelOrder_GoodTilBlock{GoodTilBlock: 20},
-				}),
-			},
-			expectedError: types.ErrOrderPlacementNotInOperationsQueue,
-		},
-
 		// tests for Order Placement
 		"Stateless place order validation: replacement order higher priority": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20), // higher pri
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15),
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15),
 			},
 			expectedError: errors.New("Replacement order is not higher priority"),
 		},
 		"Stateless place order validation: placeOrder has invalid side": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(types.Order{
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(types.Order{
 					OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 					Side:         types.Order_Side(uint32(999)),
 					Quantums:     100_000_000,
 					Subticks:     50_000_000_000,
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 				}),
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
 			},
 			expectedError: errors.New("invalid order side"),
 		},
 		"Stateless place order validation: placeOrder has unspecified side": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(types.Order{
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(types.Order{
 					OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 					Quantums:     100_000_000,
 					Subticks:     50_000_000_000,
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 				}),
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
 			},
 			expectedError: errors.New("UNSPECIFIED is not a valid order side"),
 		},
 		"Stateless place order validation: no duplicate order placements": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
 			},
 			expectedError: errors.New("Duplicate Order"),
 		},
 		"Stateless place order validation: order quantums cannot be 0": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(types.Order{
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(types.Order{
 					OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 					Side:         types.Order_SIDE_BUY,
 					Quantums:     0,
 					Subticks:     50_000_000_000,
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 				}),
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
 			},
 			expectedError: errors.New("order size quantums cannot be 0"),
 		},
 		"Stateless place order validation: order goodTilBlock cannot be 0": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(types.Order{
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(types.Order{
 					OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 					Side:         types.Order_SIDE_BUY,
 					Quantums:     10,
 					Subticks:     50_000_000_000,
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 0},
 				}),
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
 			},
 			expectedError: errors.New("order goodTilBlock cannot be 0"),
 		},
 		"Stateless place order validation: order subticks cannot be 0": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(types.Order{
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(types.Order{
 					OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 					Side:         types.Order_SIDE_BUY,
 					Quantums:     10,
 					Subticks:     0,
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 				}),
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
 			},
 			expectedError: errors.New("order subticks cannot be 0"),
 		},
 
 		// tests for Match Orders
 		"Stateless match order validation: fill amount is zero": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
-				types.NewOrderPlacementOperation(constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000),
-				types.NewMatchOperation(
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000),
+				clobtestutils.NewMatchOperationRaw(
 					&constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000,
 					[]types.MakerFill{
 						{
@@ -349,10 +330,10 @@ func TestValidateBasic(t *testing.T) {
 			expectedError: types.ErrFillAmountIsZero,
 		},
 		"Stateless match order validation: Duplicate Maker OrderId in Fill List": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
-				types.NewOrderPlacementOperation(constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000),
-				types.NewMatchOperation(
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000),
+				clobtestutils.NewMatchOperationRaw(
 					&constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000,
 					[]types.MakerFill{
 						{
@@ -369,44 +350,17 @@ func TestValidateBasic(t *testing.T) {
 			expectedError: errors.New("duplicate Maker OrderId in a MatchOrder's fills"),
 		},
 
-		// tests for Pereptual Liquidations
-		"Stateless liquidation validation: total size of liquidation order is zero": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
-				{
-					Operation: &types.Operation_Match{
-						Match: &types.ClobMatch{
-							Match: &types.ClobMatch_MatchPerpetualLiquidation{
-								MatchPerpetualLiquidation: &types.MatchPerpetualLiquidation{
-									Liquidated:  constants.Carl_Num0,
-									ClobPairId:  0,
-									PerpetualId: 0,
-									TotalSize:   0, // size is zero
-									IsBuy:       true,
-									Fills: []types.MakerFill{
-										{
-											MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.GetOrderId(),
-											FillAmount:   1,
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedError: errors.New("Liquidation match total size is zero"),
-		},
+		// tests for Perpetual Liquidations
 		"Stateless liquidation validation: fails if total fill amount exceeds order size": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(types.Order{
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(types.Order{
 					OrderId:      constants.OrderId_Alice_Num0_ClientId0_Clob0,
 					Side:         types.Order_SIDE_SELL,
 					Quantums:     150_000_000,
 					Subticks:     50_000_000_000,
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 11},
 				}),
-				types.NewMatchOperationFromPerpetualLiquidation(types.MatchPerpetualLiquidation{
+				clobtestutils.NewMatchOperationRawFromPerpetualLiquidation(types.MatchPerpetualLiquidation{
 					Liquidated:  constants.Carl_Num0,
 					ClobPairId:  0,
 					PerpetualId: 0,
@@ -431,9 +385,9 @@ func TestValidateBasic(t *testing.T) {
 			expectedError: types.ErrTotalFillAmountExceedsOrderSize,
 		},
 		"Stateless liquidation validation: fails when total fill amount is zero": {
-			operations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
-				types.NewMatchOperationFromPerpetualLiquidation(types.MatchPerpetualLiquidation{
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
+				clobtestutils.NewMatchOperationRawFromPerpetualLiquidation(types.MatchPerpetualLiquidation{
 					Liquidated:  constants.Carl_Num0,
 					ClobPairId:  0,
 					PerpetualId: 0,
@@ -449,10 +403,11 @@ func TestValidateBasic(t *testing.T) {
 			},
 			expectedError: types.ErrFillAmountIsZero,
 		},
-		// tests for Match Perpetual Deleveraging
+
+		// Tests for Match Perpetual Deleveraging
 		"Stateless match perpetual deleveraging validation: forwards errors from validate": {
-			operations: []types.Operation{
-				types.NewMatchOperationFromPerpetualDeleveragingLiquidation(
+			operations: []types.OperationRaw{
+				clobtestutils.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
 					types.MatchPerpetualDeleveraging{
 						Liquidated:  constants.Alice_Num0,
 						PerpetualId: constants.ClobPair_Eth.MustGetPerpetualId(),
@@ -463,48 +418,52 @@ func TestValidateBasic(t *testing.T) {
 			expectedError: types.ErrEmptyDeleveragingFills,
 		},
 
-		// Tests for Pre Existing Stateful Validations
-		"Pre Existing Stateful Order validation: duplicate Pre Existing Stateful Orders": {
-			operations: []types.Operation{
-				types.NewPreexistingStatefulOrderPlacementOperation(
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				),
-				types.NewPreexistingStatefulOrderPlacementOperation(
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				),
-			},
-			expectedError: errors.New("Duplicate Pre Existing Order Operation"),
-		},
-		"Pre Existing Stateful Order validation: Non stateful order Id": {
-			operations: []types.Operation{
+		// Tests for byte functionality
+		"Short term order placement tx bytes fail to decode": {
+			operations: []types.OperationRaw{
 				{
-					Operation: &types.Operation_PreexistingStatefulOrder{
-						PreexistingStatefulOrder: &constants.OrderId_Alice_Num0_ClientId0_Clob0,
+					Operation: &types.OperationRaw_ShortTermOrderPlacement{
+						ShortTermOrderPlacement: []byte("invalid"),
 					},
 				},
 			},
-			expectedError: fmt.Errorf(
-				"Invalid Preexisting Order Operation: OrderId %+v is not stateful.",
-				constants.OrderId_Alice_Num0_ClientId0_Clob0,
-			),
+			expectedError: errors.New("tx parse error"),
 		},
-		"Pre Existing Stateful Order validation: Fails Order Id Validation": {
-			operations: []types.Operation{
+		"Short term order placement tx bytes contains too many messages": {
+			operations: []types.OperationRaw{
 				{
-					Operation: &types.Operation_PreexistingStatefulOrder{
-						PreexistingStatefulOrder: &constants.InvalidSubaccountIdOwner_OrderId,
+					Operation: &types.OperationRaw_ShortTermOrderPlacement{
+						ShortTermOrderPlacement: testtx.MustGetTxBytes(
+							constants.Msg_PlaceOrder,
+							constants.Msg_PlaceOrder,
+						),
 					},
 				},
 			},
-			expectedError: satypes.ErrInvalidSubaccountIdOwner,
+			expectedError: errors.New("expected 1 msg, got 2"),
+		},
+		"Short term order placement tx bytes contains a cancel instead of placement": {
+			operations: []types.OperationRaw{
+				{
+					Operation: &types.OperationRaw_ShortTermOrderPlacement{
+						ShortTermOrderPlacement: testtx.MustGetTxBytes(
+							constants.Msg_CancelOrder,
+						),
+					},
+				},
+			},
+			expectedError: errors.New("expected MsgPlaceOrder, got *types.MsgCancelOrder"),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			msg := types.MsgProposedOperations{
-				OperationsQueue: tc.operations,
-			}
-			err := msg.ValidateBasic()
+			var ctx sdk.Context
+			_, err := types.ValidateAndTransformRawOperations(
+				ctx,
+				tc.operations,
+				constants.TestEncodingCfg.TxConfig.TxDecoder(),
+				constants.EmptyAnteHandler,
+			)
 			if tc.expectedError != nil {
 				require.ErrorContains(t, err, tc.expectedError.Error())
 				return
@@ -512,136 +471,6 @@ func TestValidateBasic(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
-}
-
-func TestGetAddToOrderbookCollatCheckOrderHashesSet(t *testing.T) {
-	tests := map[string]struct {
-		addToOrderbookCollatCheckOrderHashes [][]byte
-
-		expected map[types.OrderHash]bool
-	}{
-		"Empty list": {
-			addToOrderbookCollatCheckOrderHashes: [][]byte{},
-
-			expected: map[types.OrderHash]bool{},
-		},
-		"List with one zero element": {
-			addToOrderbookCollatCheckOrderHashes: [][]byte{
-				{
-					0, 0, 0, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-				},
-			},
-
-			expected: map[types.OrderHash]bool{
-				{
-					0, 0, 0, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-				}: true,
-			},
-		},
-		"List with one non-zero element": {
-			addToOrderbookCollatCheckOrderHashes: [][]byte{
-				{
-					8, 0, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-				},
-			},
-
-			expected: map[types.OrderHash]bool{
-				{
-					8, 0, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-				}: true,
-			},
-		},
-		"List with multiple non-zero elements": {
-			addToOrderbookCollatCheckOrderHashes: [][]byte{
-				{
-					8, 0, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-				},
-				{
-					7, 0, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-				},
-				{
-					7, 6, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 2,
-				},
-				{
-					1, 2, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 2,
-				},
-			},
-
-			expected: map[types.OrderHash]bool{
-				{
-					8, 0, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-				}: true,
-				{
-					7, 0, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-				}: true,
-				{
-					7, 6, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 2,
-				}: true,
-				{
-					1, 2, 3, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 2, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 2,
-				}: true,
-			},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			msg := types.MsgProposedOperations{
-				AddToOrderbookCollatCheckOrderHashes: tc.addToOrderbookCollatCheckOrderHashes,
-			}
-
-			require.Equal(t, tc.expected, msg.GetAddToOrderbookCollatCheckOrderHashesSet())
-		})
-	}
-}
-
-func TestGetAddToOrderbookCollatCheckOrderHashesSet_PanicsOnDuplicate(t *testing.T) {
-	hashes := [][]byte{
-		{
-			1, 2, 3, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 2, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 2,
-		},
-		{
-			1, 2, 3, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 2, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 2,
-		},
-	}
-
-	msg := types.MsgProposedOperations{AddToOrderbookCollatCheckOrderHashes: hashes}
-
-	require.PanicsWithValue(
-		t,
-		fmt.Sprintf(
-			"GetAddToOrderbookCollatCheckOrderHashesSet: duplicate order hash in AddToOrderbookCollatCheckOrderHashes: %+v",
-			hashes,
-		),
-		func() { msg.GetAddToOrderbookCollatCheckOrderHashesSet() },
-	)
 }
 
 func TestGetSigners(t *testing.T) {

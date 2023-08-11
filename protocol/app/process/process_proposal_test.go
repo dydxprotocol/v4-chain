@@ -1,7 +1,6 @@
 package process_test
 
 import (
-	"github.com/dydxprotocol/v4/x/prices/types"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -144,15 +143,19 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			mockContextHelper := mocks.ContextHelper{}
-			mockContextHelper.On("Height", mock.Anything).Return(int64(2))
 			ctx, pricesKeeper, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
+
+			mockClobKeeper := &mocks.ProcessClobKeeper{}
+			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
 			handler := process.ProcessProposalHandler(
-				&mockContextHelper,
 				constants.TestEncodingCfg.TxConfig,
+				mockClobKeeper,
+				&mocks.ProcessStakingKeeper{},
+				&mocks.ProcessPerpetualKeeper{},
 				pricesKeeper,
 			)
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
@@ -164,8 +167,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			require.Equal(t, tc.expectedResponse, resp)
 			require.Equal(
 				t,
-				marketToSmoothedPrices,
-				types.MarketToSmoothedPrices(constants.AtTimeTSingleExchangeSmoothedPrices),
+				marketToSmoothedPrices.GetSmoothedPricesForTest(),
+				constants.AtTimeTSingleExchangeSmoothedPrices,
 			)
 		})
 	}

@@ -30,14 +30,10 @@ var (
 	TestTxHashBytes1    = tmhash.Sum(TestTxBytes1)
 	TestTxHashString1   = lib.TxHash(fmt.Sprintf("%X", TestTxHashBytes1))
 	TestOffchainUpdates = &clobtypes.OffchainUpdates{
-		PlaceMessages: map[clobtypes.OrderId]msgsender.Message{
-			testOrderId: testMessage,
-		},
-		UpdateMessages: map[clobtypes.OrderId]msgsender.Message{
-			testOrderId: testMessage,
-		},
-		RemoveMessages: map[clobtypes.OrderId]msgsender.Message{
-			testOrderId: testMessage,
+		Messages: []clobtypes.OffchainUpdateMessage{
+			{Type: clobtypes.PlaceMessageType, OrderId: testOrderId, Message: testMessage},
+			{Type: clobtypes.UpdateMessageType, OrderId: testOrderId, Message: testMessage},
+			{Type: clobtypes.RemoveMessageType, OrderId: testOrderId, Message: testMessage},
 		},
 	}
 	TestOffchainMessages = TestOffchainUpdates.GetMessages()

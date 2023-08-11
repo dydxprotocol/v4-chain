@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"SUSHIUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"SUSHIUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tSUSHI:USD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"SUSHI-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"SUSHI_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"sushiusdt"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"SUSHI-USDT"
+    }
+  ]
+}

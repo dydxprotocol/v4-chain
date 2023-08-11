@@ -4,13 +4,13 @@ package events
 func NewMarketPriceUpdateEvent(
 	marketId uint32,
 	priceWithExponent uint64,
-) *MarketEvent {
-	priceUpdateEventProto := MarketPriceUpdateEvent{
+) *MarketEventV1 {
+	priceUpdateEventProto := MarketPriceUpdateEventV1{
 		PriceWithExponent: priceWithExponent,
 	}
-	return &MarketEvent{
+	return &MarketEventV1{
 		MarketId: marketId,
-		Event: &MarketEvent_PriceUpdate{
+		Event: &MarketEventV1_PriceUpdate{
 			PriceUpdate: &priceUpdateEventProto,
 		},
 	}
@@ -21,16 +21,16 @@ func NewMarketModifyEvent(
 	marketId uint32,
 	pair string,
 	minPriceChangePpm uint32,
-) *MarketEvent {
-	marketModifyEventProto := MarketModifyEvent{
-		Base: &MarketBaseEvent{
+) *MarketEventV1 {
+	marketModifyEventProto := MarketModifyEventV1{
+		Base: &MarketBaseEventV1{
 			Pair:              pair,
 			MinPriceChangePpm: minPriceChangePpm,
 		},
 	}
-	marketEventProto := MarketEvent{
+	marketEventProto := MarketEventV1{
 		MarketId: marketId,
-		Event: &MarketEvent_MarketModify{
+		Event: &MarketEventV1_MarketModify{
 			MarketModify: &marketModifyEventProto,
 		},
 	}
@@ -43,17 +43,17 @@ func NewMarketCreateEvent(
 	pair string,
 	minPriceChangePpm uint32,
 	exponent int32,
-) *MarketEvent {
-	marketCreateEventProto := MarketCreateEvent{
-		Base: &MarketBaseEvent{
+) *MarketEventV1 {
+	marketCreateEventProto := MarketCreateEventV1{
+		Base: &MarketBaseEventV1{
 			Pair:              pair,
 			MinPriceChangePpm: minPriceChangePpm,
 		},
 		Exponent: exponent,
 	}
-	return &MarketEvent{
+	return &MarketEventV1{
 		MarketId: marketId,
-		Event: &MarketEvent_MarketCreate{
+		Event: &MarketEventV1_MarketCreate{
 			MarketCreate: &marketCreateEventProto,
 		},
 	}

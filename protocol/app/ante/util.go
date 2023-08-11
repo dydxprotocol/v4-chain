@@ -28,6 +28,10 @@ func ShouldSkipSequenceValidation(msgs []sdk.Msg) (shouldSkipValidation bool) {
 			continue
 		case
 			*clobtypes.MsgCancelOrder:
+			orderId := typedMsg.GetOrderId()
+			if orderId.IsStatefulOrder() {
+				return false
+			}
 			// This is a `GoodTilBlock` message, continue to check the next message.
 			continue
 		default:

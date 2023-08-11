@@ -12,6 +12,8 @@ const (
 	DefaultFundingRateClampFactorPpm = 6 * lib.OneMillion
 	// Clamp factor for premium vote is by default 6_000%.
 	DefaultPremiumVoteClampFactorPpm = 60 * lib.OneMillion
+	// Minimum number of votes per sample is by default 15.
+	DefaultMinNumVotesPerSample = 15
 
 	MaxDefaultFundingPpmAbs   = lib.OneMillion
 	MaxInitialMarginPpm       = lib.OneMillion
@@ -26,6 +28,7 @@ func DefaultGenesis() *GenesisState {
 		Params: Params{
 			FundingRateClampFactorPpm: DefaultFundingRateClampFactorPpm,
 			PremiumVoteClampFactorPpm: DefaultPremiumVoteClampFactorPpm,
+			MinNumVotesPerSample:      DefaultMinNumVotesPerSample,
 		},
 	}
 }

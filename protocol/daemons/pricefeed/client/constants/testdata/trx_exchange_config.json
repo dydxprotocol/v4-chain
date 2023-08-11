@@ -1,0 +1,24 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"TRXUSDT\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tTRXUSD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"TRX_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"trxusdt"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"TRX-USDT"
+    }
+  ]
+}

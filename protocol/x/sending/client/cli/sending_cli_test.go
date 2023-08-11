@@ -1,4 +1,4 @@
-//go:build integration_test
+//go:build all || integration_test
 
 package cli_test
 
@@ -11,7 +11,7 @@ import (
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4/app"
-	"github.com/dydxprotocol/v4/daemons/pricefeed"
+	daemonflags "github.com/dydxprotocol/v4/daemons/flags"
 	"github.com/dydxprotocol/v4/testutil/appoptions"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	"github.com/dydxprotocol/v4/testutil/network"
@@ -56,8 +56,8 @@ func (s *SendingIntegrationTestSuite) SetupTest() {
 	s.cfg = network.DefaultConfig(&network.NetworkConfigOptions{
 		AppOptions: appOptions,
 		OnNewApp: func(val networktestutil.ValidatorI) {
-			// Disable the PriceFeed daemon in the integration tests.
-			appOptions.Set(pricefeed.FlagPriceFeedEnabled, false)
+			// Disable the Price daemon in the integration tests.
+			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
 		},
 	})
 
@@ -129,8 +129,9 @@ func (s *SendingIntegrationTestSuite) TestCLISending_Success() {
 }
 
 // TestCLISending_InsufficientBalance attempts to send a transfer from one subaccount to
-// another (with the same owner and different numbers). The transfer amount is greater than the sender's current balance.
-// The transfer is expected to fail, and the subaccounts are expected to have the same QuoteBalance that they started with.
+// another (with the same owner and different numbers). The transfer amount is greater than the sender's current
+// balance. The transfer is expected to fail, and the subaccounts are expected to have the same QuoteBalance that
+// they started with.
 func (s *SendingIntegrationTestSuite) TestCLISending_InsufficientBalance() {
 	s.sendTransferAndVerifyBalance(
 		subaccountNumberZero,

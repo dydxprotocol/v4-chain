@@ -11,41 +11,13 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.InitializeForGenesis(ctx)
 
-	// Set all the feeds.
-	for _, elem := range genState.ExchangeFeeds {
-		if _, err := k.CreateExchangeFeed(
-			ctx,
-			elem.Name,
-			elem.Memo,
-		); err != nil {
-			panic(err)
-		}
+	if len(genState.MarketPrices) != len(genState.MarketParams) {
+		panic("Expected the same number of market prices and market params")
 	}
 
-	// Set all the markets
-	for i, elem := range genState.Markets {
-		if _, err := k.CreateMarket(
-			ctx,
-			elem.Pair,
-			elem.Exponent,
-			elem.Exchanges,
-			elem.MinExchanges,
-			elem.MinPriceChangePpm,
-		); err != nil {
-			panic(err)
-		}
-
-		if err := k.UpdateMarketPrices(
-			ctx,
-			[]*types.MsgUpdateMarketPrices_MarketPrice{
-				{
-					MarketId: uint32(i),
-					Price:    elem.Price,
-				},
-			},
-			// Do not emit market price update events during genesis, as these are arbitrarily set.
-			false,
-		); err != nil {
+	// Set all the market params and prices.
+	for i, elem := range genState.MarketParams {
+		if _, err := k.CreateMarket(ctx, elem, genState.MarketPrices[i]); err != nil {
 			panic(err)
 		}
 	}
@@ -55,8 +27,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
-	genesis.ExchangeFeeds = k.GetAllExchangeFeeds(ctx)
-	genesis.Markets = k.GetAllMarkets(ctx)
+	genesis.MarketParams = k.GetAllMarketParams(ctx)
+	genesis.MarketPrices = k.GetAllMarketPrices(ctx)
 
 	return genesis
 }

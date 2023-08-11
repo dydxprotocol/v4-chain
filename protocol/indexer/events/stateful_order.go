@@ -1,17 +1,19 @@
 package events
 
 import (
+	"github.com/dydxprotocol/v4/indexer/protocol/v1"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
 )
 
 func NewStatefulOrderPlacementEvent(
 	order clobtypes.Order,
-) *StatefulOrderEvent {
-	orderPlace := StatefulOrderEvent_StatefulOrderPlacement{
-		Order: &order,
+) *StatefulOrderEventV1 {
+	indexerOrder := v1.OrderToIndexerOrder(order)
+	orderPlace := StatefulOrderEventV1_StatefulOrderPlacementV1{
+		Order: &indexerOrder,
 	}
-	return &StatefulOrderEvent{
-		Event: &StatefulOrderEvent_OrderPlace{
+	return &StatefulOrderEventV1{
+		Event: &StatefulOrderEventV1_OrderPlace{
 			OrderPlace: &orderPlace,
 		},
 	}
@@ -19,12 +21,13 @@ func NewStatefulOrderPlacementEvent(
 
 func NewStatefulOrderCancelationEvent(
 	canceledOrderId clobtypes.OrderId,
-) *StatefulOrderEvent {
-	orderCancel := StatefulOrderEvent_StatefulOrderCancelation{
-		CanceledOrderId: &canceledOrderId,
+) *StatefulOrderEventV1 {
+	orderId := v1.OrderIdToIndexerOrderId(canceledOrderId)
+	orderCancel := StatefulOrderEventV1_StatefulOrderCancelationV1{
+		CanceledOrderId: &orderId,
 	}
-	return &StatefulOrderEvent{
-		Event: &StatefulOrderEvent_OrderCancel{
+	return &StatefulOrderEventV1{
+		Event: &StatefulOrderEventV1_OrderCancel{
 			OrderCancel: &orderCancel,
 		},
 	}
@@ -32,12 +35,13 @@ func NewStatefulOrderCancelationEvent(
 
 func NewStatefulOrderExpirationEvent(
 	expiredOrderId clobtypes.OrderId,
-) *StatefulOrderEvent {
-	orderExpire := StatefulOrderEvent_StatefulOrderExpiration{
-		ExpiredOrderId: &expiredOrderId,
+) *StatefulOrderEventV1 {
+	orderId := v1.OrderIdToIndexerOrderId(expiredOrderId)
+	orderExpire := StatefulOrderEventV1_StatefulOrderExpirationV1{
+		ExpiredOrderId: &orderId,
 	}
-	return &StatefulOrderEvent{
-		Event: &StatefulOrderEvent_OrderExpiration{
+	return &StatefulOrderEventV1{
+		Event: &StatefulOrderEventV1_OrderExpiration{
 			OrderExpiration: &orderExpire,
 		},
 	}

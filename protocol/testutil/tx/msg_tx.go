@@ -7,6 +7,7 @@ import (
 
 	"github.com/dydxprotocol/v4/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
+	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
 )
 
 // Returns the encoded msg as transaction. Will panic if encoding fails.
@@ -30,6 +31,10 @@ func MustGetSignerAddress(msg sdk.Msg) string {
 		return v.Order.OrderId.SubaccountId.Owner
 	case *clobtypes.MsgCancelOrder:
 		return v.OrderId.SubaccountId.Owner
+	case *sendingtypes.MsgDepositToSubaccount:
+		return v.Sender
+	case *sendingtypes.MsgWithdrawFromSubaccount:
+		return v.Sender.Owner
 	default:
 		panic(fmt.Errorf("Not a supported type %T", msg))
 	}

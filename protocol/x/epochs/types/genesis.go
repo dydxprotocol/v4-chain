@@ -5,33 +5,34 @@ import (
 	"sort"
 )
 
-// DefaultGenesis returns the default epochs genesis state.
-func DefaultGenesis() *GenesisState {
-	epochInfoList := []EpochInfo{}
-
-	for EpochInfoName, params := range GenesisEpochs {
-		epochInfoList = append(
-			epochInfoList,
-			EpochInfo{
-				Name:                   string(EpochInfoName),
-				Duration:               params.Duration,
-				NextTick:               params.NextTick,
-				CurrentEpoch:           0,
-				CurrentEpochStartBlock: 0,
-				FastForwardNextTick:    true,
-			},
-		)
-	}
+func createGenesis(epochs []EpochInfo) *GenesisState {
+	genesisState := &GenesisState{}
+	genesisState.EpochInfoList = append(genesisState.EpochInfoList, epochs...)
 
 	// Sort the list so the order is deterministic.
-	sort.SliceStable(epochInfoList, func(i, j int) bool {
-		return epochInfoList[i].Name < epochInfoList[j].Name
+	sort.SliceStable(genesisState.EpochInfoList, func(i, j int) bool {
+		return genesisState.EpochInfoList[i].Name < genesisState.EpochInfoList[j].Name
 	})
 
-	return &GenesisState{
-		EpochInfoList: epochInfoList,
-		// this line is used by starport scaffolding # genesis/types/default
+	return genesisState
+}
+
+// DefaultGenesis returns the default epochs genesis state.
+func DefaultGenesis() *GenesisState {
+	return createGenesis(GenesisEpochs)
+}
+
+// DefaultGenesisWithEpochs returns the default genesis state with input epochs added or overwritten.
+func DefaultGenesisWithEpochs(epochs ...EpochInfo) *GenesisState {
+	newEpochs := append([]EpochInfo(nil), GenesisEpochs...)
+	for _, epoch := range epochs {
+		for i := range newEpochs {
+			if newEpochs[i].Name == epoch.Name {
+				newEpochs[i] = epoch
+			}
+		}
 	}
+	return createGenesis(newEpochs)
 }
 
 // Validate performs basic genesis state validation returning an error upon any

@@ -4,35 +4,70 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// OffChainSingleMsgClobTxAnteWrapper is a wrapper for Antehandlers that need to be skipped for
-// off-chain single msg clob txs. These transactions should always have `0` Gas, and therefore
-// should never be charged a gas fee.
-type OffChainSingleMsgClobTxAnteWrapper struct {
+// SingleMsgClobTxAnteWrapper is a wrapper for Antehandlers that need to be skipped for
+// single msg clob txs `MsgPlaceOrder` and `MsgCancelOrder`. These transactions should always have `0` Gas,
+// and therefore should never be charged a gas fee.
+type SingleMsgClobTxAnteWrapper struct {
 	antehandler sdk.AnteDecorator
 }
 
-func NewOffChainSingleMsgClobTxAnteWrapper(handler sdk.AnteDecorator) OffChainSingleMsgClobTxAnteWrapper {
-	return OffChainSingleMsgClobTxAnteWrapper{
+func NewSingleMsgClobTxAnteWrapper(handler sdk.AnteDecorator) SingleMsgClobTxAnteWrapper {
+	return SingleMsgClobTxAnteWrapper{
 		antehandler: handler,
 	}
 }
 
-func (antWrapper OffChainSingleMsgClobTxAnteWrapper) GetAnteHandler() sdk.AnteDecorator {
+func (antWrapper SingleMsgClobTxAnteWrapper) GetAnteHandler() sdk.AnteDecorator {
 	return antWrapper.antehandler
 }
 
-func (anteWrapper OffChainSingleMsgClobTxAnteWrapper) AnteHandle(
+func (anteWrapper SingleMsgClobTxAnteWrapper) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
-	isOffChainSingleClobMsgTx, err := IsOffChainSingleClobMsgTx(ctx, tx)
+	isSingleClobMsgTx, err := IsSingleClobMsgTx(ctx, tx)
 	if err != nil {
 		return ctx, err
 	}
 
-	if isOffChainSingleClobMsgTx {
+	if isSingleClobMsgTx {
+		return next(ctx, tx, simulate)
+	}
+
+	return anteWrapper.antehandler.AnteHandle(ctx, tx, simulate, next)
+}
+
+// ShortTermSingleMsgClobTxAnteWrapper is a wrapper for Antehandlers that need to be skipped for
+// single msg clob txs `MsgPlaceOrder` and `MsgCancelOrder` which reference Short-Term orders.
+// For example, these transactions do not require sequence number validation.
+type ShortTermSingleMsgClobTxAnteWrapper struct {
+	antehandler sdk.AnteDecorator
+}
+
+func NewShortTermSingleMsgClobTxAnteWrapper(handler sdk.AnteDecorator) ShortTermSingleMsgClobTxAnteWrapper {
+	return ShortTermSingleMsgClobTxAnteWrapper{
+		antehandler: handler,
+	}
+}
+
+func (antWrapper ShortTermSingleMsgClobTxAnteWrapper) GetAnteHandler() sdk.AnteDecorator {
+	return antWrapper.antehandler
+}
+
+func (anteWrapper ShortTermSingleMsgClobTxAnteWrapper) AnteHandle(
+	ctx sdk.Context,
+	tx sdk.Tx,
+	simulate bool,
+	next sdk.AnteHandler,
+) (sdk.Context, error) {
+	isShortTermClobMsgTx, err := IsShortTermClobMsgTx(ctx, tx)
+	if err != nil {
+		return ctx, err
+	}
+
+	if isShortTermClobMsgTx {
 		return next(ctx, tx, simulate)
 	}
 

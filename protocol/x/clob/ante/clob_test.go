@@ -53,7 +53,7 @@ func runTestCase(t *testing.T, tc TestCase) {
 		tc.setupMocks(ctx, mockClobKeeper)
 	}
 
-	// Create Test Transcation.
+	// Create Test Transaction.
 	priv1, _, _ := testdata.KeyTestPubAddr()
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := txtest.CreateTestTx(privs, accNums, accSeqs, "dydx", tc.msgs)
@@ -76,10 +76,10 @@ func runTestCase(t *testing.T, tc TestCase) {
 
 func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 	tests := map[string]TestCase{
-		"Successfully places an order using a single message": {
+		"Successfully places a short term order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder},
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
-				mck.On("CheckTxPlaceOrder",
+				mck.On("PlaceShortTermOrder",
 					ctx,
 					constants.Msg_PlaceOrder,
 				).Return(
@@ -91,15 +91,13 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 			useWithIsCheckTxContext: true,
 			expectedErr:             nil,
 		},
-		"Successfully places a long term order using a single message": {
+		"Successfully places a stateful order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
-				mck.On("CheckTxPlaceOrder",
+				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_LongTerm,
 				).Return(
-					satypes.BaseQuantums(0),
-					clobtypes.Success,
 					nil,
 				)
 			},
@@ -109,40 +107,62 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		"Successfully places a conditional order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_Conditional},
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
-				mck.On("CheckTxPlaceOrder",
+				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_Conditional,
 				).Return(
-					satypes.BaseQuantums(0),
-					clobtypes.Success,
 					nil,
 				)
 			},
 			useWithIsCheckTxContext: true,
 			expectedErr:             nil,
 		},
-		"PlaceOrder is not called on keeper during deliver": {
+		"PlaceShortTermOrder is not called on keeper during deliver": {
 			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder},
 			useWithIsCheckTxContext: false,
 			expectedErr:             nil,
 		},
-		"PlaceOrder is not called on keeper during simulate": {
+		"PlaceShortTermOrder is not called on keeper during simulate": {
 			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder},
 			useWithIsCheckTxContext: false,
 			isSimulate:              true,
 			expectedErr:             nil,
 		},
-		"PlaceOrder is not called on keeper during re-check": {
+		"PlaceShortTermOrder is not called on keeper during re-check": {
 			msgs:                      []sdk.Msg{constants.Msg_PlaceOrder},
 			useWithIsCheckTxContext:   false,
 			useWithIsRecheckTxContext: true,
 			isSimulate:                false,
 			expectedErr:               nil,
 		},
-		"Fails if PlaceOrder returns an error": {
+		"PlaceStatefulOrder is not called on keeper during deliver": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
+			useWithIsCheckTxContext: false,
+			expectedErr:             nil,
+		},
+		"PlaceStatefulOrder is not called on keeper during simulate": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
+			useWithIsCheckTxContext: false,
+			isSimulate:              true,
+			expectedErr:             nil,
+		},
+		"PlaceStatefulOrder is called on keeper during re-check": {
+			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On("PlaceStatefulOrder",
+					ctx,
+					constants.Msg_PlaceOrder_LongTerm,
+				).Return(
+					nil,
+				)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+		},
+		"Fails if PlaceShortTermOrder returns an error": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder},
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
-				mck.On("CheckTxPlaceOrder",
+				mck.On("PlaceShortTermOrder",
 					ctx,
 					constants.Msg_PlaceOrder,
 				).Return(
@@ -154,13 +174,21 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 			useWithIsCheckTxContext: true,
 			expectedErr:             clobtypes.ErrHeightExceedsGoodTilBlock,
 		},
+		"Fails if PlaceStatefulOrder returns an error": {
+			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On("PlaceStatefulOrder",
+					ctx,
+					constants.Msg_PlaceOrder_LongTerm,
+				).Return(
+					clobtypes.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
+				)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             clobtypes.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
+		},
 		"Fails if there are multiple off-chain places": {
 			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_PlaceOrder},
-			useWithIsCheckTxContext: true,
-			expectedErr:             errors.ErrInvalidRequest,
-		},
-		"Fails if there are multiple long term and conditional orders": {
-			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder_Conditional},
 			useWithIsCheckTxContext: true,
 			expectedErr:             errors.ErrInvalidRequest,
 		},
@@ -189,7 +217,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 	}
 }
 
-func TestIsClobOffChainTransaction(t *testing.T) {
+func TestIsClobTransaction(t *testing.T) {
 	tests := map[string]struct {
 		msgs           []sdk.Msg
 		expectedResult bool
@@ -255,7 +283,102 @@ func TestIsClobOffChainTransaction(t *testing.T) {
 			ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 
 			// Invoke the function under test.
-			result, err := ante.IsOffChainSingleClobMsgTx(ctx, tx)
+			result, err := ante.IsSingleClobMsgTx(ctx, tx)
+
+			// Assert the results.
+			require.Equal(t, tc.expectedResult, result)
+			require.ErrorIs(t, tc.expectedErr, err)
+		})
+	}
+}
+
+func TestIsShortTermClobTransaction(t *testing.T) {
+	tests := map[string]struct {
+		msgs           []sdk.Msg
+		expectedResult bool
+		expectedErr    error
+	}{
+		"Returns false for MsgSend": {
+			msgs:           []sdk.Msg{constants.Msg_Send},
+			expectedResult: false,
+			expectedErr:    nil,
+		},
+		"Returns false for MsgTransfer": {
+			msgs:           []sdk.Msg{constants.Msg_Transfer},
+			expectedResult: false,
+			expectedErr:    nil,
+		},
+		"Returns false for no messages": {
+			msgs:           []sdk.Msg{},
+			expectedResult: false,
+			expectedErr:    nil,
+		},
+		"Returns false and error for multiple `PlaceOrder` message": {
+			msgs:           []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder},
+			expectedResult: false,
+			expectedErr:    errors.ErrInvalidRequest,
+		},
+		"Returns false and error for multiple `CancelOrder` messages": {
+			msgs:           []sdk.Msg{constants.Msg_CancelOrder_LongTerm, constants.Msg_CancelOrder},
+			expectedResult: false,
+			expectedErr:    errors.ErrInvalidRequest,
+		},
+		"Returns false and error for mix of `PlaceOrder` and `CancelOrder` messages": {
+			msgs:           []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_CancelOrder},
+			expectedResult: false,
+			expectedErr:    errors.ErrInvalidRequest,
+		},
+		"Returns false and error for mix of `MsgSend` and `PlaceOrder` messages": {
+			msgs:           []sdk.Msg{constants.Msg_Send, constants.Msg_PlaceOrder},
+			expectedResult: false,
+			expectedErr:    errors.ErrInvalidRequest,
+		},
+		"Returns true for a Short-Term `CancelOrder` message": {
+			msgs:           []sdk.Msg{constants.Msg_CancelOrder},
+			expectedResult: true,
+			expectedErr:    nil,
+		},
+		"Returns true for a Short-Term `PlaceOrder` message": {
+			msgs:           []sdk.Msg{constants.Msg_PlaceOrder},
+			expectedResult: true,
+			expectedErr:    nil,
+		},
+		"Returns false for a Stateful `PlaceOrder` message": {
+			msgs:           []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
+			expectedResult: false,
+			expectedErr:    nil,
+		},
+		"Returns false for a Stateful `CancelOrder` message": {
+			msgs:           []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
+			expectedResult: false,
+			expectedErr:    nil,
+		},
+		"Returns false for a Conditional `PlaceOrder` message": {
+			msgs:           []sdk.Msg{constants.Msg_PlaceOrder_Conditional},
+			expectedResult: false,
+			expectedErr:    nil,
+		},
+		"Returns false for a Conditional `CancelOrder` message": {
+			msgs:           []sdk.Msg{constants.Msg_CancelOrder_Conditional},
+			expectedResult: false,
+			expectedErr:    nil,
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Initialize some test setup which builds a test transaction from a slice of messages.
+			var reg codectypes.InterfaceRegistry
+			protoCfg := authtx.NewTxConfig(codec.NewProtoCodec(reg), authtx.DefaultSignModes)
+			builder := protoCfg.NewTxBuilder()
+			err := builder.SetMsgs(tc.msgs...)
+			require.NoError(t, err)
+			tx := builder.GetTx()
+			ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+
+			// Invoke the function under test.
+			result, err := ante.IsShortTermClobMsgTx(ctx, tx)
 
 			// Assert the results.
 			require.Equal(t, tc.expectedResult, result)
@@ -266,14 +389,42 @@ func TestIsClobOffChainTransaction(t *testing.T) {
 
 func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 	tests := map[string]TestCase{
-		"Successfully cancels an order using a single message": {
+		"Successfully cancels a short term order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_CancelOrder},
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
-				mck.On("CheckTxCancelOrder",
+				mck.On("CancelShortTermOrder",
 					ctx,
 					clobtypes.NewMsgCancelOrderShortTerm(
 						constants.Msg_CancelOrder.OrderId,
 						constants.Msg_CancelOrder.GetGoodTilBlock(),
+					),
+				).Return(nil)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+		},
+		"Successfully cancels a long term order using a single message": {
+			msgs: []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On("CancelStatefulOrder",
+					ctx,
+					clobtypes.NewMsgCancelOrderStateful(
+						constants.Msg_CancelOrder_LongTerm.OrderId,
+						constants.Msg_CancelOrder_LongTerm.GetGoodTilBlockTime(),
+					),
+				).Return(nil)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+		},
+		"Successfully cancels a conditional order using a single message": {
+			msgs: []sdk.Msg{constants.Msg_CancelOrder_Conditional},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On("CancelStatefulOrder",
+					ctx,
+					clobtypes.NewMsgCancelOrderStateful(
+						constants.Msg_CancelOrder_Conditional.OrderId,
+						constants.Msg_CancelOrder_Conditional.GetGoodTilBlockTime(),
 					),
 				).Return(nil)
 			},
@@ -285,28 +436,55 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 			useWithIsCheckTxContext: true,
 			expectedErr:             nil,
 		},
-		"CancelOrder is not called on keeper during deliver": {
+		"CancelShortTermOrder is not called on keeper during deliver": {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder},
 			useWithIsCheckTxContext: false,
 			expectedErr:             nil,
 		},
-		"CancelOrder is not called on keeper during simulate": {
+		"CancelShortTermOrder is not called on keeper during simulate": {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder},
 			useWithIsCheckTxContext: false,
 			isSimulate:              true,
 			expectedErr:             nil,
 		},
-		"CancelOrder is not called on keeper during re-check": {
+		"CancelShortTermOrder is not called on keeper during re-check": {
 			msgs:                      []sdk.Msg{constants.Msg_CancelOrder},
 			useWithIsCheckTxContext:   false,
 			useWithIsRecheckTxContext: true,
 			isSimulate:                false,
 			expectedErr:               nil,
 		},
-		"Fails if CancelOrder returns an error": {
+		"CancelStatefulOrder is not called on keeper during deliver": {
+			msgs:                    []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
+			useWithIsCheckTxContext: false,
+			expectedErr:             nil,
+		},
+		"CancelStatefulOrder is not called on keeper during simulate": {
+			msgs:                    []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
+			useWithIsCheckTxContext: false,
+			isSimulate:              true,
+			expectedErr:             nil,
+		},
+		"CancelStatefulOrder is called on keeper during re-check": {
+			msgs: []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On("CancelStatefulOrder",
+					ctx,
+					clobtypes.NewMsgCancelOrderStateful(
+						constants.Msg_CancelOrder_LongTerm.OrderId,
+						constants.Msg_CancelOrder_LongTerm.GetGoodTilBlockTime(),
+					),
+				).Return(nil)
+			},
+			useWithIsCheckTxContext:   false,
+			useWithIsRecheckTxContext: true,
+			isSimulate:                false,
+			expectedErr:               nil,
+		},
+		"Fails if CancelShortTermOrder returns an error": {
 			msgs: []sdk.Msg{constants.Msg_CancelOrder},
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
-				mck.On("CheckTxCancelOrder",
+				mck.On("CancelShortTermOrder",
 					ctx,
 					clobtypes.NewMsgCancelOrderShortTerm(
 						constants.Msg_CancelOrder.OrderId,
@@ -316,6 +494,20 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 			},
 			useWithIsCheckTxContext: true,
 			expectedErr:             clobtypes.ErrHeightExceedsGoodTilBlock,
+		},
+		"Fails if CancelStatefulOrder returns an error": {
+			msgs: []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On("CancelStatefulOrder",
+					ctx,
+					clobtypes.NewMsgCancelOrderStateful(
+						constants.Msg_CancelOrder_LongTerm.OrderId,
+						constants.Msg_CancelOrder_LongTerm.GetGoodTilBlockTime(),
+					),
+				).Return(clobtypes.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             clobtypes.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
 		},
 		"Fails if there are multiple off-chain cancels": {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder, constants.Msg_CancelOrder},

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"math/big"
+
 	"github.com/dydxprotocol/v4/lib"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
@@ -44,4 +46,13 @@ func (m *MatchPerpetualLiquidation) GetMakerSubaccountIds() []satypes.Subaccount
 			return fill.MakerOrderId.SubaccountId
 		},
 	)
+}
+
+// GetTotalFilledQuantums gets the total filled quantums from a MatchPerpetualDeleveraging match.
+func (m *MatchPerpetualDeleveraging) GetTotalFilledQuantums() *big.Int {
+	totalQuantums := big.NewInt(0)
+	for _, fill := range m.GetFills() {
+		totalQuantums.Add(totalQuantums, new(big.Int).SetUint64(fill.GetFillAmount()))
+	}
+	return totalQuantums
 }

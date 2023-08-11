@@ -65,7 +65,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgProposedOperations,
-		clobsimulation.SimulateMsgProposedOperations(am.accountKeeper, am.bankKeeper, am.keeper),
+		clobsimulation.SimulateMsgProposedOperations(am.accountKeeper, am.bankKeeper, *am.keeper),
 	))
 
 	var weightMsgPlaceOrder int
@@ -76,7 +76,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgPlaceOrder,
-		clobsimulation.SimulateMsgPlaceOrder(am.accountKeeper, am.bankKeeper, am.subaccountsKeeper, am.keeper, protoCdc),
+		clobsimulation.SimulateMsgPlaceOrder(am.accountKeeper, am.bankKeeper, am.subaccountsKeeper, *am.keeper, protoCdc),
 	))
 
 	var weightMsgCancelOrder int
@@ -91,7 +91,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 			am.accountKeeper,
 			am.bankKeeper,
 			am.subaccountsKeeper,
-			am.keeper,
+			*am.keeper,
 			am.memClob,
 			protoCdc,
 		),

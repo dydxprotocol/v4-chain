@@ -29,18 +29,10 @@ func TestGetLabelForMarketIdFailure(t *testing.T) {
 	)
 }
 
-func TestGetLabelForExchangeFeedIdSuccess(t *testing.T) {
+func TestGetLabelForExchangeId(t *testing.T) {
 	require.Equal(
 		t,
-		metrics.GetLabelForStringValue(metrics.ExchangeFeedId, exchange_common.EXCHANGE_NAME_BINANCEUS),
-		pricefeedmetrics.GetLabelForExchangeFeedId(exchange_common.EXCHANGE_FEED_BINANCE_US),
-	)
-}
-
-func TestGetLabelForExchangeFeedIdFailure(t *testing.T) {
-	require.Equal(
-		t,
-		metrics.GetLabelForStringValue(metrics.ExchangeFeedId, pricefeedmetrics.INVALID),
-		pricefeedmetrics.GetLabelForExchangeFeedId(INVALID_ID),
+		metrics.GetLabelForStringValue(metrics.ExchangeId, exchange_common.EXCHANGE_NAME_BINANCEUS),
+		pricefeedmetrics.GetLabelForExchangeId(exchange_common.EXCHANGE_ID_BINANCE_US),
 	)
 }

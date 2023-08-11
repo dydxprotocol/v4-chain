@@ -38,7 +38,7 @@ docker build . --progress=plain --no-cache -f ./testing/testnet-staging/Dockerfi
 
 Currently the `staging` container is pushed automatically to ECR when new changes are pushed to the `main` branch, however you can also manually deploy the container.
 
-Run the `./build-push-ecr.sh` script in this directory from this repository's root directory. You can specify either the "dev", "dev2", "dev3", "dev4", or "staging" environment.
+Run the `./build-push-ecr.sh` script in this directory from this repository's root directory. You can specify either the "dev", "dev2", "dev3", "dev4", "dev5", or "staging" environment.
 
 Ensure that your `AWS_PROFILE` is correct for the environment you want to deploy to (this can be found in ~/.aws/credentials), and can be selected using the `AWS_PROFILE` env var.
 

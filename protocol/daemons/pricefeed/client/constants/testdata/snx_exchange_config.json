@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"SNXUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"SNXUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tSNXUSD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"SNX-USD"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"snxusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"SNXUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"SNX-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"SNX-USDT"
+    }
+  ]
+}

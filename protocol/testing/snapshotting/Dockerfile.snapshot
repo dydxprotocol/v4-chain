@@ -1,0 +1,5 @@
+FROM dydxprotocol-base
+
+COPY ./testing/snapshotting/snapshot.sh /dydxprotocol/snapshot.sh
+
+ENTRYPOINT ["/dydxprotocol/snapshot.sh"]

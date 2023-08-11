@@ -121,72 +121,12 @@ func (k Keeper) validateMatchPerpetualLiquidationAgainstSubaccountBlockLimits(
 	return nil
 }
 
-// TODO(DEC-1653) deprecate this once MatchPerpetualLiquidationNew becomes MatchPerpetualLiquidation
 // ConstructTakerOrderFromMatchPerpetualLiquidation creates and returns the corresponding LiquidationOrder
 // for the given match.
 // An error is returned if:
 //   - The clob pair is invalid or does not match the provided perpetual id.
 //   - `GetFillablePrice` returns an error.
 func (k Keeper) ConstructTakerOrderFromMatchPerpetualLiquidation(
-	ctx sdk.Context,
-	match *types.MatchPerpetualLiquidation,
-) (
-	takerOrder *types.LiquidationOrder,
-	err error,
-) {
-	takerClobPair, found := k.GetClobPair(ctx, types.ClobPairId(match.ClobPairId))
-	if !found {
-		return nil, sdkerrors.Wrapf(
-			types.ErrInvalidClob,
-			"CLOB pair ID %d not found in state",
-			match.ClobPairId,
-		)
-	}
-
-	perpetualId, err := takerClobPair.GetPerpetualId()
-	if err != nil || perpetualId != match.PerpetualId {
-		return nil, sdkerrors.Wrapf(
-			types.ErrClobPairAndPerpetualDoNotMatch,
-			"Clob pair id: %v, perpetual id: %v",
-			match.ClobPairId,
-			perpetualId,
-		)
-	}
-
-	deltaQuantumsBig := new(big.Int).SetUint64(match.TotalSize)
-	if !match.IsBuy {
-		deltaQuantumsBig.Neg(deltaQuantumsBig)
-	}
-	fillablePrice, err := k.GetFillablePrice(
-		ctx,
-		match.Liquidated,
-		match.PerpetualId,
-		deltaQuantumsBig,
-	)
-	if err != nil {
-		return nil, err
-	}
-	fillablePriceSubticks := k.ConvertFillablePriceToSubticks(
-		ctx,
-		fillablePrice,
-		!match.IsBuy,
-		takerClobPair,
-	)
-	return types.NewLiquidationOrder(
-		match.Liquidated,
-		takerClobPair,
-		match.IsBuy,
-		satypes.BaseQuantums(match.TotalSize),
-		fillablePriceSubticks,
-	), nil
-}
-
-// ConstructTakerOrderFromMatchPerpetualLiquidationNew creates and returns the corresponding LiquidationOrder
-// for the given match.
-// An error is returned if:
-//   - The clob pair is invalid or does not match the provided perpetual id.
-//   - `GetFillablePrice` returns an error.
-func (k Keeper) ConstructTakerOrderFromMatchPerpetualLiquidationNew(
 	ctx sdk.Context,
 	match *types.MatchPerpetualLiquidation,
 ) (

@@ -96,7 +96,10 @@ func TestUpdateMarketPricesTx_Validate(t *testing.T) {
 		"Error: Stateful + Deterministic validation fails": {
 			txBytes:     invalidStatefulMsgTxBytes,
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			expectedErr: sdkerrors.Wrap(types.ErrInvalidMarketPriceUpdateDeterministic, "market (99) does not exist"),
+			expectedErr: sdkerrors.Wrap(
+				types.ErrInvalidMarketPriceUpdateDeterministic,
+				"market param price (99) does not exist",
+			),
 		},
 		"Error: Stateful + NonDeterministic validation fails": {
 			txBytes: validMsgTxBytes, // Msg is valid, but there's no corresponding index price.
@@ -121,7 +124,7 @@ func TestUpdateMarketPricesTx_Validate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
+			keepertest.CreateTestMarkets(t, ctx, k)
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			umpt, err := process.DecodeUpdateMarketPricesTx(ctx, k, constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)

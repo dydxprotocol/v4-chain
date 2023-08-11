@@ -1,30 +1,38 @@
-package client_test
+package client
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4/daemons/flags"
+	pricefeed_constants "github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_fetcher"
+	daemonserver "github.com/dydxprotocol/v4/daemons/server"
+	pricefeed_types "github.com/dydxprotocol/v4/daemons/server/types/pricefeed"
+	"github.com/dydxprotocol/v4/lib"
+	grpc_util "github.com/dydxprotocol/v4/testutil/grpc"
+	pricetypes "github.com/dydxprotocol/v4/x/prices/types"
+	"google.golang.org/grpc"
+	"net"
 	"sort"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/api"
-	pricefeedclient "github.com/dydxprotocol/v4/daemons/pricefeed/client"
-	pricefeedconstants "github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
 	pricefeedtypes "github.com/dydxprotocol/v4/daemons/pricefeed/types"
 	"github.com/dydxprotocol/v4/mocks"
 	"github.com/dydxprotocol/v4/testutil/client"
 	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/testutil/grpc"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	subTaskRunnerImpl = pricefeedclient.SubTaskRunnerImpl{}
+	subTaskRunnerImpl = SubTaskRunnerImpl{}
 )
 
 // FakeSubTaskRunner acts as a dummy struct replacing `SubTaskRunner` that simply advances the
@@ -33,17 +41,19 @@ var (
 type FakeSubTaskRunner struct {
 	sync.WaitGroup
 	sync.RWMutex
-	UpdaterCallCount int
-	EncoderCallCount int
-	FetcherCallCount int
+	UpdaterCallCount       int
+	EncoderCallCount       int
+	FetcherCallCount       int
+	MarketUpdaterCallCount int
 }
 
 // StartPriceUpdater replaces `client.StartPriceUpdater` and advances `UpdaterCallCount` by one.
 func (f *FakeSubTaskRunner) StartPriceUpdater(
 	ctx context.Context,
+	ticker *time.Ticker,
+	stop <-chan bool,
 	exchangeToMarketPrices *types.ExchangeToMarketPrices,
 	priceFeedServiceClient api.PriceFeedServiceClient,
-	loopDelayMs uint32,
 	logger log.Logger,
 ) {
 	// No need to lock/unlock since there is only one updater running and no risk of race-condition.
@@ -54,10 +64,10 @@ func (f *FakeSubTaskRunner) StartPriceUpdater(
 // advances `EncoderCallCount` by one. This function will be called from a go-routine and is
 // threadsafe.
 func (f *FakeSubTaskRunner) StartPriceEncoder(
-	exchangeFeedId types.ExchangeFeedId,
+	exchangeId types.ExchangeId,
 	exchangeToMarketPrices *types.ExchangeToMarketPrices,
 	logger log.Logger,
-	bCh chan *pricefeedclient.PriceFetcherSubtaskResponse,
+	bCh <-chan *price_fetcher.PriceFetcherSubtaskResponse,
 ) {
 	f.Lock()
 	defer f.Unlock()
@@ -70,10 +80,14 @@ func (f *FakeSubTaskRunner) StartPriceEncoder(
 // advances `FetcherCallCount` by one. This function will be called from a go-routine and is
 // threadsafe.
 func (f *FakeSubTaskRunner) StartPriceFetcher(
-	exchangeConfig types.ExchangeConfig,
+	ticker *time.Ticker,
+	stop <-chan bool,
+	configs types.PricefeedMutableMarketConfigs,
+	exchangeStartupConfig types.ExchangeStartupConfig,
+	exchangeDetails types.ExchangeQueryDetails,
 	queryHandler handler.ExchangeQueryHandler,
 	logger log.Logger,
-	bCh chan *pricefeedclient.PriceFetcherSubtaskResponse,
+	bCh chan<- *price_fetcher.PriceFetcherSubtaskResponse,
 ) {
 	f.Lock()
 	defer f.Unlock()
@@ -82,144 +96,160 @@ func (f *FakeSubTaskRunner) StartPriceFetcher(
 	f.Done()
 }
 
+func (f *FakeSubTaskRunner) StartMarketParamUpdater(
+	ctx context.Context,
+	ticker *time.Ticker,
+	stop <-chan bool,
+	configs types.PricefeedMutableMarketConfigs,
+	pricesQueryClient pricetypes.QueryClient,
+	logger log.Logger,
+) {
+	f.Lock()
+	defer f.Unlock()
+
+	f.MarketUpdaterCallCount += 1
+}
+
 const (
-	maxBufferedChannelLength             = 2
-	priceUpdaterLoopDelayMs              = 1000
-	connectionFailsErrorMsg              = "Failed to create connection"
-	closeConnectionFailsErrorMsg         = "Failed to close connection"
-	missingMarketsExchangeFeedId         = 1000
-	missingExchangeDetailsExchangeFeedId = 1001
-	fiveKilobytes                        = 5 * 1024
+	maxBufferedChannelLength     = 2
+	connectionFailsErrorMsg      = "Failed to create connection"
+	closeConnectionFailsErrorMsg = "Failed to close connection"
+	fiveKilobytes                = 5 * 1024
 )
 
 var (
-	staticExchangeStartupConfigLength = len(pricefeedconstants.StaticExchangeStartupConfig)
+	validExchangeId                 = constants.ExchangeId1
+	closeConnectionFailsError       = errors.New(closeConnectionFailsErrorMsg)
+	testExchangeStartupConfigLength = len(constants.TestExchangeStartupConfigs)
 )
 
 func TestFixedBufferSize(t *testing.T) {
-	require.Equal(t, fiveKilobytes, pricefeedclient.FixedBufferSize)
+	require.Equal(t, fiveKilobytes, pricefeed_constants.FixedBufferSize)
 }
 
-func TestStart(t *testing.T) {
+func TestStart_InvalidConfig(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		mockGrpcClient                  *mocks.GrpcClient
-		exchangeFeedIdToStartupConfig   map[types.ExchangeFeedId]*types.ExchangeStartupConfig
-		exchangeFeedIdToMarkets         map[types.ExchangeFeedId][]types.MarketId
-		exchangeFeedIdToExchangeDetails map[types.ExchangeFeedId]types.ExchangeQueryDetails
+		mockGrpcClient              *mocks.GrpcClient
+		initialMarketConfig         map[types.MarketId]*types.MutableMarketConfig
+		initialExchangeMarketConfig map[types.ExchangeId]*types.MutableExchangeMarketConfig
+		exchangeIdToStartupConfig   map[types.ExchangeId]*types.ExchangeStartupConfig
+		exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails
+
 		// expectations
-		expectedError         error
-		expectCloseConnection bool
-		// This should equal the length of the `exchangeFeedIdToStartupConfig` passed into
+		expectedError             error
+		expectGrpcConnection      bool
+		expectCloseTcpConnection  bool
+		expectCloseGrpcConnection bool
+		// This should equal the length of the `exchangeIdToStartupConfig` passed into
 		// `client.Start`.
 		expectedNumExchangeTasks int
 	}{
-		"Connection Fails": {
-			mockGrpcClient: grpc.GenerateMockGrpcClientWithReturns(
+		"Invalid: Tcp Connection Fails": {
+			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalTcpConnectionErrors(
 				errors.New(connectionFailsErrorMsg),
 				nil,
 				false,
 			),
 			expectedError: errors.New(connectionFailsErrorMsg),
 		},
-		"Connection Succeeds": {
-			mockGrpcClient:                grpc.GenerateMockGrpcClientWithReturns(nil, nil, true),
-			exchangeFeedIdToStartupConfig: pricefeedconstants.StaticExchangeStartupConfig,
-			expectCloseConnection:         true,
-			expectedNumExchangeTasks:      staticExchangeStartupConfigLength,
-		},
-		"Empty exchange startup config": {
-			mockGrpcClient:                grpc.GenerateMockGrpcClientWithReturns(nil, nil, true),
-			exchangeFeedIdToStartupConfig: map[types.ExchangeFeedId]*types.ExchangeStartupConfig{},
-			expectedError:                 errors.New("exchangeFeedIds must not be empty"),
-			expectCloseConnection:         true,
-		},
-		"Invalid: exchange feed id in startup config does not have corresponding markets": {
-			mockGrpcClient: grpc.GenerateMockGrpcClientWithReturns(nil, nil, true),
-			exchangeFeedIdToStartupConfig: map[types.ExchangeFeedId]*types.ExchangeStartupConfig{
-				missingMarketsExchangeFeedId: {},
-			},
-			expectedError: fmt.Errorf(
-				"no exchange information exists for exchangeFeedId: %v",
-				missingMarketsExchangeFeedId,
-			),
-			expectCloseConnection: true,
-		},
-		"Invalid: exchange feed id in startup config does not have corresponding exchange query details": {
-			mockGrpcClient: grpc.GenerateMockGrpcClientWithReturns(nil, nil, true),
-			exchangeFeedIdToStartupConfig: map[types.ExchangeFeedId]*types.ExchangeStartupConfig{
-				missingExchangeDetailsExchangeFeedId: {},
-			},
-			exchangeFeedIdToMarkets: map[types.ExchangeFeedId][]types.MarketId{
-				missingExchangeDetailsExchangeFeedId: {1},
-			},
-			expectedError: fmt.Errorf(
-				"no exchange details exists for exchangeFeedId: %v",
-				missingExchangeDetailsExchangeFeedId,
-			),
-			expectCloseConnection: true,
-		},
-		"Close connection fails": {
-			mockGrpcClient: grpc.GenerateMockGrpcClientWithReturns(
+		"Invalid: Grpc Connection Fails": {
+			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(
+				errors.New(connectionFailsErrorMsg),
 				nil,
-				errors.New(closeConnectionFailsErrorMsg),
+				false,
+			),
+			expectedError:            errors.New(connectionFailsErrorMsg),
+			expectGrpcConnection:     true,
+			expectCloseTcpConnection: true,
+		},
+		"Valid: 2 exchanges": {
+			mockGrpcClient:              grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
+			exchangeIdToStartupConfig:   constants.TestExchangeStartupConfigs,
+			exchangeIdToExchangeDetails: constants.TestExchangeIdToExchangeQueryDetails,
+			expectGrpcConnection:        true,
+			expectCloseTcpConnection:    true,
+			expectCloseGrpcConnection:   true,
+			expectedNumExchangeTasks:    testExchangeStartupConfigLength,
+		},
+		"Invalid: empty exchange startup config": {
+			mockGrpcClient:            grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
+			exchangeIdToStartupConfig: map[types.ExchangeId]*types.ExchangeStartupConfig{},
+			expectedError:             errors.New("exchangeIds must not be empty"),
+			expectGrpcConnection:      true,
+			expectCloseTcpConnection:  true,
+			expectCloseGrpcConnection: true,
+		},
+		"Invalid: missing exchange query details": {
+			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
+			exchangeIdToStartupConfig: map[string]*types.ExchangeStartupConfig{
+				validExchangeId: constants.TestExchangeStartupConfigs[validExchangeId],
+			},
+			expectedError:             fmt.Errorf("no exchange details exists for exchangeId: %v", validExchangeId),
+			expectGrpcConnection:      true,
+			expectCloseTcpConnection:  true,
+			expectCloseGrpcConnection: true,
+		},
+		"Invalid: tcp close connection fails with good inputs": {
+			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalTcpConnectionErrors(
+				nil,
+				closeConnectionFailsError,
 				true,
 			),
-			exchangeFeedIdToStartupConfig:   pricefeedconstants.StaticExchangeStartupConfig,
-			exchangeFeedIdToMarkets:         pricefeedconstants.StaticExchangeMarkets,
-			exchangeFeedIdToExchangeDetails: pricefeedconstants.StaticExchangeDetails,
-			expectedError:                   errors.New(closeConnectionFailsErrorMsg),
-			expectCloseConnection:           true,
-			expectedNumExchangeTasks:        staticExchangeStartupConfigLength,
+			exchangeIdToStartupConfig:   constants.TestExchangeStartupConfigs,
+			exchangeIdToExchangeDetails: constants.TestExchangeIdToExchangeQueryDetails,
+			expectedError:               closeConnectionFailsError,
+			expectGrpcConnection:        true,
+			expectCloseTcpConnection:    true,
+			expectCloseGrpcConnection:   true,
+			expectedNumExchangeTasks:    testExchangeStartupConfigLength,
+		},
+		"Invalid: grpc close connection fails with good inputs": {
+			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(
+				nil,
+				closeConnectionFailsError,
+				true,
+			),
+			exchangeIdToStartupConfig:   constants.TestExchangeStartupConfigs,
+			exchangeIdToExchangeDetails: constants.TestExchangeIdToExchangeQueryDetails,
+			expectedError:               closeConnectionFailsError,
+			expectGrpcConnection:        true,
+			expectCloseTcpConnection:    true,
+			expectCloseGrpcConnection:   true,
+			expectedNumExchangeTasks:    testExchangeStartupConfigLength,
 		},
 	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			faketaskRunner := FakeSubTaskRunner{
-				UpdaterCallCount: 0,
-				EncoderCallCount: 0,
-				FetcherCallCount: 0,
+				UpdaterCallCount:       0,
+				EncoderCallCount:       0,
+				FetcherCallCount:       0,
+				MarketUpdaterCallCount: 0,
 			}
 
 			// Wait for each encoder and fetcher call to complete.
 			faketaskRunner.WaitGroup.Add(tc.expectedNumExchangeTasks * 2)
 
 			// Run Start.
-			if tc.expectedError != nil {
-				require.EqualError(
-					t,
-					pricefeedclient.Start(
-						grpc.Ctx,
-						grpc.SocketPath,
-						log.NewNopLogger(),
-						tc.mockGrpcClient,
-						tc.exchangeFeedIdToStartupConfig,
-						tc.exchangeFeedIdToMarkets,
-						tc.exchangeFeedIdToExchangeDetails,
-						priceUpdaterLoopDelayMs,
-						&faketaskRunner,
-					),
-					tc.expectedError.Error(),
-				)
+			client := newClient()
+			err := client.start(
+				grpc_util.Ctx,
+				flags.GetDefaultDaemonFlags(),
+				log.NewNopLogger(),
+				tc.mockGrpcClient,
+				tc.exchangeIdToStartupConfig,
+				tc.exchangeIdToExchangeDetails,
+				&faketaskRunner,
+			)
+
+			if tc.expectedError == nil {
+				require.NoError(t, err)
 			} else {
-				require.NoError(
-					t,
-					pricefeedclient.Start(
-						grpc.Ctx,
-						grpc.SocketPath,
-						log.NewNopLogger(),
-						tc.mockGrpcClient,
-						pricefeedconstants.StaticExchangeStartupConfig,
-						pricefeedconstants.StaticExchangeMarkets,
-						pricefeedconstants.StaticExchangeDetails,
-						priceUpdaterLoopDelayMs,
-						&faketaskRunner,
-					),
-				)
+				require.EqualError(t, err, tc.expectedError.Error())
 			}
 
-			// Wait for encoder and fetcher go-routines to complete and thenv erify each subtask was
+			// Wait for encoder and fetcher go-routines to complete and then verify each subtask was
 			// called the expected amount.
 			faketaskRunner.Wait()
 			require.Equal(t, tc.expectedNumExchangeTasks, faketaskRunner.EncoderCallCount)
@@ -230,15 +260,81 @@ func TestStart(t *testing.T) {
 				require.Equal(t, 0, faketaskRunner.UpdaterCallCount)
 			}
 
-			// Verify new connection and close connection calls.
-			tc.mockGrpcClient.AssertCalled(t, "NewGrpcConnection", grpc.Ctx, grpc.SocketPath)
-			if tc.expectCloseConnection {
-				tc.mockGrpcClient.AssertCalled(t, "CloseConnection", grpc.ClientConn)
+			tc.mockGrpcClient.AssertCalled(t, "NewTcpConnection", grpc_util.Ctx, grpc_util.TcpEndpoint)
+			if tc.expectGrpcConnection {
+				tc.mockGrpcClient.AssertCalled(t, "NewGrpcConnection", grpc_util.Ctx, grpc_util.SocketPath)
 			} else {
-				tc.mockGrpcClient.AssertNotCalled(t, "CloseConnection", grpc.ClientConn)
+				tc.mockGrpcClient.AssertNotCalled(t, "NewGrpcConnection", grpc_util.Ctx, grpc_util.SocketPath)
+			}
+
+			if tc.expectCloseGrpcConnection {
+				tc.mockGrpcClient.AssertCalled(t, "CloseConnection", grpc_util.GrpcConn)
+			} else {
+				tc.mockGrpcClient.AssertNotCalled(t, "CloseConnection", grpc_util.GrpcConn)
+			}
+
+			if tc.expectCloseTcpConnection {
+				tc.mockGrpcClient.AssertCalled(t, "CloseConnection", grpc_util.TcpConn)
+			} else {
+				tc.mockGrpcClient.AssertNotCalled(t, "CloseConnection", grpc_util.TcpConn)
 			}
 		})
 	}
+}
+
+// TestStop tests that the Stop interface works as expected. It's difficult to ensure that each go-routine
+// is stopped, but this test ensures that the Stop executes successfully with no hangs.
+func TestStop(t *testing.T) {
+	// Setup daemon and grpc servers.
+	daemonFlags := flags.GetDefaultDaemonFlags()
+
+	// Configure and run daemon server.
+	daemonServer := daemonserver.NewServer(
+		log.NewNopLogger(),
+		grpc.NewServer(),
+		&lib.FileHandlerImpl{},
+		daemonFlags.Shared.SocketAddress,
+	)
+	daemonServer.WithPriceFeedMarketToExchangePrices(
+		pricefeed_types.NewMarketToExchangePrices(5 * time.Second),
+	)
+
+	defer daemonServer.Stop()
+	go daemonServer.Start()
+
+	// Configure and run gRPC server with mock prices query service attached.
+	// Mock prices query server response to AllMarketParams.
+	pricesQueryServer := mocks.QueryServer{}
+	pricesQueryServer.On("AllMarketParams", mock.Anything, mock.Anything).Return(
+		&pricetypes.QueryAllMarketParamsResponse{},
+		nil,
+	)
+
+	// Create a gRPC server running on the default port and attach the mock prices query response.
+	grpcServer := grpc.NewServer()
+	pricetypes.RegisterQueryServer(grpcServer, &pricesQueryServer)
+
+	// Start gRPC server with cleanup.
+	defer grpcServer.Stop()
+	go func() {
+		ls, err := net.Listen("tcp", daemonFlags.Shared.GrpcServerAddress)
+		require.NoError(t, err)
+		err = grpcServer.Serve(ls)
+		require.NoError(t, err)
+	}()
+
+	client := StartNewClient(
+		grpc_util.Ctx,
+		daemonFlags,
+		log.NewNopLogger(),
+		&lib.GrpcClientImpl{},
+		constants.TestExchangeStartupConfigs,
+		constants.TestExchangeIdToExchangeQueryDetails,
+		&SubTaskRunnerImpl{},
+	)
+
+	// Stop the daemon.
+	client.Stop()
 }
 
 func TestPriceEncoder_NoWrites(t *testing.T) {
@@ -246,32 +342,34 @@ func TestPriceEncoder_NoWrites(t *testing.T) {
 
 	runPriceEncoderSequentially(
 		t,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		etmp,
-		bChMap[constants.ExchangeFeedId1],
+		bChMap[constants.ExchangeId1],
 		[]*types.MarketPriceTimestamp{},
 	)
 
-	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp)
-	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp)
-	require.Empty(t, bChMap[constants.ExchangeFeedId1])
-	require.Empty(t, bChMap[constants.ExchangeFeedId2])
+	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp)
+	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp)
+	require.Empty(t, bChMap[constants.ExchangeId1])
+	require.Empty(t, bChMap[constants.ExchangeId2])
 }
 
 func TestPriceEncoder_DoNotWriteError(t *testing.T) {
 	etmp, bChMap := generateBufferedChannelAndExchangeToMarketPrices(t, constants.Exchange1Exchange2Array)
 
-	bCh := bChMap[constants.ExchangeFeedId1]
-
-	bCh <- &pricefeedclient.PriceFetcherSubtaskResponse{nil, errors.New("Failed to query")}
-
+	bCh := bChMap[constants.ExchangeId1]
+	bCh <- &price_fetcher.PriceFetcherSubtaskResponse{
+		Price: nil,
+		Err:   errors.New("Failed to query"),
+	}
 	close(bCh)
-	subTaskRunnerImpl.StartPriceEncoder(constants.ExchangeFeedId1, etmp, log.NewNopLogger(), bCh)
 
-	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp)
-	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp)
-	require.Empty(t, bChMap[constants.ExchangeFeedId1])
-	require.Empty(t, bChMap[constants.ExchangeFeedId2])
+	subTaskRunnerImpl.StartPriceEncoder(constants.ExchangeId1, etmp, log.NewNopLogger(), bCh)
+
+	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp)
+	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp)
+	require.Empty(t, bChMap[constants.ExchangeId1])
+	require.Empty(t, bChMap[constants.ExchangeId2])
 }
 
 func TestPriceEncoder_WriteToOneMarket(t *testing.T) {
@@ -279,16 +377,16 @@ func TestPriceEncoder_WriteToOneMarket(t *testing.T) {
 
 	runPriceEncoderSequentially(
 		t,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		etmp,
-		bChMap[constants.ExchangeFeedId1],
+		bChMap[constants.ExchangeId1],
 		[]*types.MarketPriceTimestamp{
 			constants.Market9_TimeT_Price1,
 		},
 	)
 
-	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp, 1)
-	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp)
+	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp, 1)
+	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp)
 
 	require.Equal(
 		t,
@@ -296,7 +394,7 @@ func TestPriceEncoder_WriteToOneMarket(t *testing.T) {
 			Price:          constants.Price1,
 			LastUpdateTime: constants.TimeT,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp[constants.MarketId9],
+		etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp[constants.MarketId9],
 	)
 }
 
@@ -305,17 +403,17 @@ func TestPriceEncoder_WriteToTwoMarkets(t *testing.T) {
 
 	runPriceEncoderSequentially(
 		t,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		etmp,
-		bChMap[constants.ExchangeFeedId1],
+		bChMap[constants.ExchangeId1],
 		[]*types.MarketPriceTimestamp{
 			constants.Market9_TimeT_Price1,
 			constants.Market8_TimeTMinusThreshold_Price2,
 		},
 	)
 
-	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp, 2)
-	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp)
+	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp, 2)
+	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp)
 
 	require.Equal(
 		t,
@@ -323,7 +421,7 @@ func TestPriceEncoder_WriteToTwoMarkets(t *testing.T) {
 			Price:          constants.Price1,
 			LastUpdateTime: constants.TimeT,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp[constants.MarketId9],
+		etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp[constants.MarketId9],
 	)
 	require.Equal(
 		t,
@@ -331,7 +429,7 @@ func TestPriceEncoder_WriteToTwoMarkets(t *testing.T) {
 			Price:          constants.Price2,
 			LastUpdateTime: constants.TimeTMinusThreshold,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp[constants.MarketId8],
+		etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp[constants.MarketId8],
 	)
 }
 
@@ -340,17 +438,17 @@ func TestPriceEncoder_WriteToOneMarketTwice(t *testing.T) {
 
 	runPriceEncoderSequentially(
 		t,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		etmp,
-		bChMap[constants.ExchangeFeedId1],
+		bChMap[constants.ExchangeId1],
 		[]*types.MarketPriceTimestamp{
 			constants.Market9_TimeTMinusThreshold_Price2,
 			constants.Market9_TimeT_Price1,
 		},
 	)
 
-	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp, 1)
-	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp)
+	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp, 1)
+	require.Empty(t, etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp)
 
 	require.Equal(
 		t,
@@ -358,7 +456,7 @@ func TestPriceEncoder_WriteToOneMarketTwice(t *testing.T) {
 			Price:          constants.Price1,
 			LastUpdateTime: constants.TimeT,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp[constants.MarketId9],
+		etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp[constants.MarketId9],
 	)
 }
 
@@ -367,9 +465,9 @@ func TestPriceEncoder_WriteToTwoExchanges(t *testing.T) {
 
 	runPriceEncoderSequentially(
 		t,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		etmp,
-		bChMap[constants.ExchangeFeedId1],
+		bChMap[constants.ExchangeId1],
 		[]*types.MarketPriceTimestamp{
 			constants.Market9_TimeT_Price1,
 		},
@@ -377,16 +475,16 @@ func TestPriceEncoder_WriteToTwoExchanges(t *testing.T) {
 
 	runPriceEncoderSequentially(
 		t,
-		constants.ExchangeFeedId2,
+		constants.ExchangeId2,
 		etmp,
-		bChMap[constants.ExchangeFeedId2],
+		bChMap[constants.ExchangeId2],
 		[]*types.MarketPriceTimestamp{
 			constants.Market8_TimeTMinusThreshold_Price2,
 		},
 	)
 
-	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp, 1)
-	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp, 1)
+	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp, 1)
+	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp, 1)
 
 	require.Equal(
 		t,
@@ -394,7 +492,7 @@ func TestPriceEncoder_WriteToTwoExchanges(t *testing.T) {
 			Price:          constants.Price1,
 			LastUpdateTime: constants.TimeT,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp[constants.MarketId9],
+		etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp[constants.MarketId9],
 	)
 	require.Equal(
 		t,
@@ -402,7 +500,7 @@ func TestPriceEncoder_WriteToTwoExchanges(t *testing.T) {
 			Price:          constants.Price2,
 			LastUpdateTime: constants.TimeTMinusThreshold,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp[constants.MarketId8],
+		etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp[constants.MarketId8],
 	)
 }
 
@@ -430,9 +528,9 @@ func TestPriceEncoder_WriteToTwoExchangesConcurrentlyWithManyUpdates(t *testing.
 		defer wg.Done()
 		runPriceEncoderConcurrently(
 			t,
-			constants.ExchangeFeedId1,
+			constants.ExchangeId1,
 			etmp,
-			bChMap[constants.ExchangeFeedId1],
+			bChMap[constants.ExchangeId1],
 			largeMarketWrite,
 		)
 	}()
@@ -442,17 +540,17 @@ func TestPriceEncoder_WriteToTwoExchangesConcurrentlyWithManyUpdates(t *testing.
 		defer wg.Done()
 		runPriceEncoderConcurrently(
 			t,
-			constants.ExchangeFeedId2,
+			constants.ExchangeId2,
 			etmp,
-			bChMap[constants.ExchangeFeedId2],
+			bChMap[constants.ExchangeId2],
 			largeMarketWrite,
 		)
 	}()
 
 	wg.Wait()
 
-	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp, 2)
-	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp, 2)
+	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp, 2)
+	require.Len(t, etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp, 2)
 
 	require.Equal(
 		t,
@@ -460,7 +558,7 @@ func TestPriceEncoder_WriteToTwoExchangesConcurrentlyWithManyUpdates(t *testing.
 			Price:          constants.Price1,
 			LastUpdateTime: constants.TimeTPlusThreshold,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp[constants.MarketId9],
+		etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp[constants.MarketId9],
 	)
 	require.Equal(
 		t,
@@ -468,7 +566,7 @@ func TestPriceEncoder_WriteToTwoExchangesConcurrentlyWithManyUpdates(t *testing.
 			Price:          constants.Price3,
 			LastUpdateTime: constants.TimeT,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp[constants.MarketId8],
+		etmp.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp[constants.MarketId8],
 	)
 
 	require.Equal(
@@ -477,7 +575,7 @@ func TestPriceEncoder_WriteToTwoExchangesConcurrentlyWithManyUpdates(t *testing.
 			Price:          constants.Price1,
 			LastUpdateTime: constants.TimeTPlusThreshold,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp[constants.MarketId9],
+		etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp[constants.MarketId9],
 	)
 	require.Equal(
 		t,
@@ -485,14 +583,14 @@ func TestPriceEncoder_WriteToTwoExchangesConcurrentlyWithManyUpdates(t *testing.
 			Price:          constants.Price3,
 			LastUpdateTime: constants.TimeT,
 		},
-		etmp.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp[constants.MarketId8],
+		etmp.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp[constants.MarketId8],
 	)
 }
 
 func TestPriceUpdater_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		exchangeAndMarketPrices []*client.ExchangeFeedIdMarketPriceTimestamp
+		exchangeAndMarketPrices []*client.ExchangeIdMarketPriceTimestamp
 		priceUpdateError        error
 
 		// expectations
@@ -500,22 +598,22 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 	}{
 		"Update throws": {
 			// Throws error due to mock so that we can simulate fail state.
-			exchangeAndMarketPrices: []*client.ExchangeFeedIdMarketPriceTimestamp{
+			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{
 				constants.ExchangeId1_Market9_TimeT_Price1,
 			},
 			priceUpdateError: errors.New("failed to send price update"),
 		},
 		"No exchange market prices, does not call `UpdateMarketPrices`": {
-			exchangeAndMarketPrices: []*client.ExchangeFeedIdMarketPriceTimestamp{},
+			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{},
 		},
 		"One market for one exchange": {
-			exchangeAndMarketPrices: []*client.ExchangeFeedIdMarketPriceTimestamp{
+			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{
 				constants.ExchangeId1_Market9_TimeT_Price1,
 			},
 			expectedMarketPriceUpdate: constants.Market9_SingleExchange_AtTimeUpdate,
 		},
 		"Three markets at timeT": {
-			exchangeAndMarketPrices: []*client.ExchangeFeedIdMarketPriceTimestamp{
+			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{
 				constants.ExchangeId1_Market9_TimeT_Price1,
 				constants.ExchangeId2_Market9_TimeT_Price2,
 				constants.ExchangeId2_Market8_TimeT_Price2,
@@ -526,7 +624,7 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 			expectedMarketPriceUpdate: constants.AtTimeTPriceUpdate,
 		},
 		"Three markets at mixed time": {
-			exchangeAndMarketPrices: []*client.ExchangeFeedIdMarketPriceTimestamp{
+			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{
 				constants.ExchangeId1_Market9_TimeT_Price1,
 				constants.ExchangeId2_Market9_TimeT_Price2,
 				constants.ExchangeId3_Market9_TimeT_Price3,
@@ -543,28 +641,28 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Create `ExchangeFeedIdMarketPriceTimestamp` and populate it with market-price updates.
+			// Create `ExchangeIdMarketPriceTimestamp` and populate it with market-price updates.
 			etmp, _ := types.NewExchangeToMarketPrices(
-				[]types.ExchangeFeedId{
-					constants.ExchangeFeedId1,
-					constants.ExchangeFeedId2,
-					constants.ExchangeFeedId3,
+				[]types.ExchangeId{
+					constants.ExchangeId1,
+					constants.ExchangeId2,
+					constants.ExchangeId3,
 				},
 			)
 			for _, exchangeAndMarketPrice := range tc.exchangeAndMarketPrices {
 				etmp.UpdatePrice(
-					exchangeAndMarketPrice.ExchangeFeedId,
+					exchangeAndMarketPrice.ExchangeId,
 					exchangeAndMarketPrice.MarketPriceTimestamp,
 				)
 			}
 
 			// Create a mock `PriceFeedServiceClient` and run `RunPriceUpdaterTaskLoop`.
-			mockPriceFeedClient := generateMockPriceFeedServiceClient()
-			mockPriceFeedClient.On("UpdateMarketPrices", grpc.Ctx, mock.Anything).
+			mockPriceFeedClient := generateMockQueryClient()
+			mockPriceFeedClient.On("UpdateMarketPrices", grpc_util.Ctx, mock.Anything).
 				Return(nil, tc.priceUpdateError)
 
-			err := pricefeedclient.RunPriceUpdaterTaskLoop(
-				grpc.Ctx,
+			err := RunPriceUpdaterTaskLoop(
+				grpc_util.Ctx,
 				etmp,
 				mockPriceFeedClient,
 				log.NewNopLogger(),
@@ -585,7 +683,7 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 				mockPriceFeedClient.AssertCalled(
 					t,
 					"UpdateMarketPrices",
-					grpc.Ctx,
+					grpc_util.Ctx,
 					mock.MatchedBy(func(i interface{}) bool {
 						param := i.(*api.UpdateMarketPricesRequest)
 						updates := param.MarketPriceUpdates
@@ -609,9 +707,53 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 	}
 }
 
+// TestMarketUpdater_Mixed tests the `RunMarketParamUpdaterTaskLoop` function invokes the grpc
+// query to the prices query client and that if the query succeeds, the config is updated.
+func TestMarketUpdater_Mixed(t *testing.T) {
+	tests := map[string]struct {
+		queryError error
+	}{
+		"Failure: query fails": {
+			queryError: fmt.Errorf("query failed"),
+		},
+		"Success: query succeeds": {},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Create a mock `PriceFeedServiceClient`, a mock `PricefeedMutableMarketConfigs`, and run
+			// `RunMarketParamUpdaterTaskLoop`.
+			params := []pricetypes.MarketParam{}
+			response := &pricetypes.QueryAllMarketParamsResponse{
+				MarketParams: params,
+			}
+			pricesQueryClient := generateMockQueryClient()
+			pricesQueryClient.On("AllMarketParams", grpc_util.Ctx, mock.Anything).
+				Return(response, tc.queryError)
+			configs := &mocks.PricefeedMutableMarketConfigs{}
+			configs.On("UpdateMarkets", params).Return(tc.queryError)
+
+			RunMarketParamUpdaterTaskLoop(
+				grpc_util.Ctx,
+				configs,
+				pricesQueryClient,
+				log.NewNopLogger(),
+			)
+			pricesQueryClient.AssertCalled(t, "AllMarketParams", grpc_util.Ctx, mock.Anything)
+			if tc.queryError == nil {
+				configs.AssertCalled(t, "UpdateMarkets", params)
+			} else {
+				configs.AssertNotCalled(t, "UpdateMarkets", params)
+			}
+		})
+	}
+}
+
 // ----------------- Generate Mock Instances ----------------- //
 
-func generateMockPriceFeedServiceClient() *mocks.QueryClient {
+// generateMockQueryClient generates a mock QueryClient that can be used to support any of the QueryClient
+// interfaces added to the mocks.QueryClient class, including the prices query client and the
+// pricefeed service client.
+func generateMockQueryClient() *mocks.QueryClient {
 	mockPriceFeedServiceClient := &mocks.QueryClient{}
 
 	return mockPriceFeedServiceClient
@@ -621,47 +763,50 @@ func generateMockPriceFeedServiceClient() *mocks.QueryClient {
 
 func generateBufferedChannelAndExchangeToMarketPrices(
 	t *testing.T,
-	exchangeFeedIds []types.ExchangeFeedId,
+	exchangeIds []types.ExchangeId,
 ) (
 	*types.ExchangeToMarketPrices,
-	map[types.ExchangeFeedId]chan *pricefeedclient.PriceFetcherSubtaskResponse,
+	map[types.ExchangeId]chan *price_fetcher.PriceFetcherSubtaskResponse,
 ) {
-	etmp, _ := types.NewExchangeToMarketPrices(exchangeFeedIds)
+	etmp, _ := types.NewExchangeToMarketPrices(exchangeIds)
 
 	exhangeIdToBufferedChannel :=
-		map[types.ExchangeFeedId]chan *pricefeedclient.PriceFetcherSubtaskResponse{}
-	for _, exchangeFeedId := range exchangeFeedIds {
-		bCh := make(chan *pricefeedclient.PriceFetcherSubtaskResponse, maxBufferedChannelLength)
-		exhangeIdToBufferedChannel[exchangeFeedId] = bCh
+		map[types.ExchangeId]chan *price_fetcher.PriceFetcherSubtaskResponse{}
+	for _, exchangeId := range exchangeIds {
+		bCh := make(chan *price_fetcher.PriceFetcherSubtaskResponse, maxBufferedChannelLength)
+		exhangeIdToBufferedChannel[exchangeId] = bCh
 	}
 
-	require.Len(t, etmp.ExchangeMarketPrices, len(exchangeFeedIds))
+	require.Len(t, etmp.ExchangeMarketPrices, len(exchangeIds))
 	return etmp, exhangeIdToBufferedChannel
 }
 
 func runPriceEncoderSequentially(
 	t *testing.T,
-	exchangeFeedId types.ExchangeFeedId,
+	exchangeId types.ExchangeId,
 	etmp *types.ExchangeToMarketPrices,
-	bCh chan *pricefeedclient.PriceFetcherSubtaskResponse,
+	bCh chan *price_fetcher.PriceFetcherSubtaskResponse,
 	writes []*types.MarketPriceTimestamp,
 ) {
 	// Make sure there are not more write than the `bufferedChannel` can hold.
 	require.True(t, len(writes) <= maxBufferedChannelLength)
 
 	for _, write := range writes {
-		bCh <- &pricefeedclient.PriceFetcherSubtaskResponse{write, nil}
+		bCh <- &price_fetcher.PriceFetcherSubtaskResponse{
+			Price: write,
+			Err:   nil,
+		}
 	}
 
 	close(bCh)
-	subTaskRunnerImpl.StartPriceEncoder(exchangeFeedId, etmp, log.NewNopLogger(), bCh)
+	subTaskRunnerImpl.StartPriceEncoder(exchangeId, etmp, log.NewNopLogger(), bCh)
 }
 
 func runPriceEncoderConcurrently(
 	t *testing.T,
-	exchangeFeedId types.ExchangeFeedId,
+	exchangeId types.ExchangeId,
 	etmp *types.ExchangeToMarketPrices,
-	bCh chan *pricefeedclient.PriceFetcherSubtaskResponse,
+	bCh chan *price_fetcher.PriceFetcherSubtaskResponse,
 	writes []*types.MarketPriceTimestamp,
 ) {
 	// Start a `waitGroup` for the `PriceEncoder` which will complete when the `bufferedChannel`
@@ -670,7 +815,7 @@ func runPriceEncoderConcurrently(
 	priceEncoderWg.Add(1)
 	go func() {
 		defer priceEncoderWg.Done()
-		subTaskRunnerImpl.StartPriceEncoder(exchangeFeedId, etmp, log.NewNopLogger(), bCh)
+		subTaskRunnerImpl.StartPriceEncoder(exchangeId, etmp, log.NewNopLogger(), bCh)
 	}()
 
 	// Start a `waitGroup` for threads that will write to the `bufferedChannel`.
@@ -679,7 +824,10 @@ func runPriceEncoderConcurrently(
 		writeWg.Add(1)
 		go func(write *types.MarketPriceTimestamp) {
 			defer writeWg.Done()
-			bCh <- &pricefeedclient.PriceFetcherSubtaskResponse{write, nil}
+			bCh <- &price_fetcher.PriceFetcherSubtaskResponse{
+				Price: write,
+				Err:   nil,
+			}
 		}(write)
 	}
 

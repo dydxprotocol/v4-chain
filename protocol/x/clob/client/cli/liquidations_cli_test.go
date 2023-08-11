@@ -1,4 +1,4 @@
-//go:build integration_test
+//go:build all || integration_test
 
 package cli_test
 
@@ -14,16 +14,17 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/dydxprotocol/v4/dtypes"
 	"github.com/dydxprotocol/v4/lib"
-	testutil "github.com/dydxprotocol/v4/x/clob/client/testutil"
+	"github.com/dydxprotocol/v4/x/clob/client/testutil"
 	"github.com/dydxprotocol/v4/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4/x/epochs/types"
+	feetierstypes "github.com/dydxprotocol/v4/x/feetiers/types"
 	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
 	sa_testutil "github.com/dydxprotocol/v4/x/subaccounts/client/testutil"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 
 	"github.com/dydxprotocol/v4/app"
-	"github.com/dydxprotocol/v4/daemons/pricefeed"
+	daemonflags "github.com/dydxprotocol/v4/daemons/flags"
 	"github.com/dydxprotocol/v4/testutil/appoptions"
 	testutil_bank "github.com/dydxprotocol/v4/testutil/bank"
 	"github.com/dydxprotocol/v4/testutil/constants"
@@ -67,12 +68,12 @@ func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
 				panic("incorrect validator type")
 			}
 
-			// Disable the PriceFeed daemon in the integration tests.
-			appOptions.Set(pricefeed.FlagPriceFeedEnabled, false)
+			// Disable the Price daemon in the integration tests.
+			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
 
 			// Enable the liquidations daemon in the integration tests.
-			appOptions.Set(pricefeed.GrpcAddress, testval.AppConfig.GRPC.Address)
-			appOptions.Set(pricefeed.FlagPriceFeedUnixSocketAddr, liqTestUnixSocketAddress)
+			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
+			appOptions.Set(daemonflags.FlagUnixSocketAddress, liqTestUnixSocketAddress)
 		},
 	})
 
@@ -107,7 +108,6 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 	perpstate.Perpetuals = append(perpstate.Perpetuals, perpetual)
 
 	pricesstate := constants.Prices_DefaultGenesisState
-	pricesstate.Markets[0].Price = constants.FiveBillion // override price $50,000 == 1 BTC.
 
 	buf, err := s.cfg.Codec.MarshalJSON(&state)
 	s.NoError(err)
@@ -154,6 +154,9 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 	// Ensure that no funding payments will occur during this test.
 	epstate := constants.GenerateEpochGenesisStateWithoutFunding()
 
+	feeTiersState := feetierstypes.GenesisState{}
+	feeTiersState.Params = constants.PerpetualFeeParams
+
 	epbuf, err := s.cfg.Codec.MarshalJSON(&epstate)
 	s.Require().NoError(err)
 	s.cfg.GenesisState[epochstypes.ModuleName] = epbuf
@@ -165,6 +168,10 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 	pricesbuf, err := s.cfg.Codec.MarshalJSON(&pricesstate)
 	s.Require().NoError(err)
 	s.cfg.GenesisState[pricestypes.ModuleName] = pricesbuf
+
+	feeTiersBuf, err := s.cfg.Codec.MarshalJSON(&feeTiersState)
+	s.Require().NoError(err)
+	s.cfg.GenesisState[feetierstypes.ModuleName] = feeTiersBuf
 
 	s.network = network.New(s.T(), s.cfg)
 

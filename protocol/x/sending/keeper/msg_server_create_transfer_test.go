@@ -3,8 +3,10 @@ package keeper_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4/mocks"
 	"github.com/dydxprotocol/v4/testutil/constants"
@@ -94,6 +96,37 @@ func TestCreateTransfer(t *testing.T) {
 				} else {
 					require.NoError(t, err)
 					require.NotNil(t, resp)
+
+					ctx := sdk.UnwrapSDKContext(goCtx)
+					require.Len(t, ctx.EventManager().Events(), 1)
+					event := ctx.EventManager().Events()[0]
+					require.Equal(t, event.Type, types.EventTypeCreateTransfer)
+					require.Equal(t, event.Attributes, []abci.EventAttribute{
+						{
+							Key:   types.AttributeKeySender,
+							Value: msg.Transfer.Sender.Owner,
+						},
+						{
+							Key:   types.AttributeKeySenderNumber,
+							Value: fmt.Sprintf("%d", msg.Transfer.Sender.Number),
+						},
+						{
+							Key:   types.AttributeKeyRecipient,
+							Value: msg.Transfer.Recipient.Owner,
+						},
+						{
+							Key:   types.AttributeKeyRecipientNumber,
+							Value: fmt.Sprintf("%d", msg.Transfer.Recipient.Number),
+						},
+						{
+							Key:   types.AttributeKeyAssetId,
+							Value: fmt.Sprintf("%d", msg.Transfer.AssetId),
+						},
+						{
+							Key:   types.AttributeKeyQuantums,
+							Value: fmt.Sprintf("%d", msg.Transfer.Amount),
+						},
+					})
 				}
 			}
 
@@ -127,6 +160,33 @@ func TestDepositToSubaccount(t *testing.T) {
 				} else {
 					require.NoError(t, err)
 					require.NotNil(t, resp)
+
+					ctx := sdk.UnwrapSDKContext(goCtx)
+					require.Len(t, ctx.EventManager().Events(), 1)
+					event := ctx.EventManager().Events()[0]
+					require.Equal(t, event.Type, types.EventTypeDepositToSubaccount)
+					require.Equal(t, event.Attributes, []abci.EventAttribute{
+						{
+							Key:   types.AttributeKeySender,
+							Value: msg.Sender,
+						},
+						{
+							Key:   types.AttributeKeyRecipient,
+							Value: msg.Recipient.Owner,
+						},
+						{
+							Key:   types.AttributeKeyRecipientNumber,
+							Value: fmt.Sprintf("%d", msg.Recipient.Number),
+						},
+						{
+							Key:   types.AttributeKeyAssetId,
+							Value: fmt.Sprintf("%d", msg.AssetId),
+						},
+						{
+							Key:   types.AttributeKeyQuantums,
+							Value: fmt.Sprintf("%d", msg.Quantums),
+						},
+					})
 				}
 			}
 
@@ -160,6 +220,33 @@ func TestWithdrawFromSubaccount(t *testing.T) {
 				} else {
 					require.NoError(t, err)
 					require.NotNil(t, resp)
+
+					ctx := sdk.UnwrapSDKContext(goCtx)
+					require.Len(t, ctx.EventManager().Events(), 1)
+					event := ctx.EventManager().Events()[0]
+					require.Equal(t, event.Type, types.EventTypeWithdrawFromSubaccount)
+					require.Equal(t, event.Attributes, []abci.EventAttribute{
+						{
+							Key:   types.AttributeKeySender,
+							Value: msg.Sender.Owner,
+						},
+						{
+							Key:   types.AttributeKeySenderNumber,
+							Value: fmt.Sprintf("%d", msg.Sender.Number),
+						},
+						{
+							Key:   types.AttributeKeyRecipient,
+							Value: msg.Recipient,
+						},
+						{
+							Key:   types.AttributeKeyAssetId,
+							Value: fmt.Sprintf("%d", msg.AssetId),
+						},
+						{
+							Key:   types.AttributeKeyQuantums,
+							Value: fmt.Sprintf("%d", msg.Quantums),
+						},
+					})
 				}
 			}
 

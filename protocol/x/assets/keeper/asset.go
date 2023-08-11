@@ -41,7 +41,7 @@ func (k Keeper) CreateAsset(
 
 	// Validate market
 	if hasMarket {
-		if _, err := k.pricesKeeper.GetMarket(ctx, marketId); err != nil {
+		if _, err := k.pricesKeeper.GetMarketPrice(ctx, marketId); err != nil {
 			return asset, err
 		}
 	} else if marketId > 0 {
@@ -77,7 +77,7 @@ func (k Keeper) ModifyAsset(
 	}
 
 	// Validate market
-	if _, err = k.pricesKeeper.GetMarket(ctx, marketId); err != nil {
+	if _, err = k.pricesKeeper.GetMarketPrice(ctx, marketId); err != nil {
 		return asset, err
 	}
 

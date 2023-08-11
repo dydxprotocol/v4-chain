@@ -1,6 +1,8 @@
 package events
 
 import (
+	"github.com/dydxprotocol/v4/dtypes"
+	"github.com/dydxprotocol/v4/indexer/protocol/v1"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
@@ -10,10 +12,15 @@ func NewSubaccountUpdateEvent(
 	subaccountId *satypes.SubaccountId,
 	updatedPerpetualPositions []*satypes.PerpetualPosition,
 	updatedAssetPositions []*satypes.AssetPosition,
-) *SubaccountUpdateEvent {
-	return &SubaccountUpdateEvent{
-		SubaccountId:              subaccountId,
-		UpdatedPerpetualPositions: updatedPerpetualPositions,
-		UpdatedAssetPositions:     updatedAssetPositions,
+	fundingPayments map[uint32]dtypes.SerializableInt,
+) *SubaccountUpdateEventV1 {
+	indexerSubaccountId := v1.SubaccountIdToIndexerSubaccountId(*subaccountId)
+	return &SubaccountUpdateEventV1{
+		SubaccountId: &indexerSubaccountId,
+		UpdatedPerpetualPositions: v1.PerpetualPositionsToIndexerPerpetualPositions(
+			updatedPerpetualPositions,
+			fundingPayments,
+		),
+		UpdatedAssetPositions: v1.AssetPositionsToIndexerAssetPositions(updatedAssetPositions),
 	}
 }

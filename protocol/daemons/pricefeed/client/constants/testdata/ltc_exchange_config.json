@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"LTCUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"LTCUSD\""
+    },
+    {
+      "exchangeName":"Bybit",
+      "ticker":"LTCUSDT"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"LTC-USD"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"ltcusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"XLTCZUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"LTC-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"LTC-USDT"
+    }
+  ]
+}

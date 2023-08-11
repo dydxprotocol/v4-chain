@@ -5,12 +5,21 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
 type ClobKeeper interface {
-	DeliverTxCancelOrder(ctx sdk.Context, msgCancelOrder *MsgCancelOrder, memclob MemClob) error
-	CheckTxCancelOrder(ctx sdk.Context, msgCancelOrder *MsgCancelOrder) error
+	AddOrderToOrderbookCollatCheck(
+		ctx sdk.Context,
+		clobPairId ClobPairId,
+		subaccountOpenOrders map[satypes.SubaccountId][]PendingOpenOrder,
+	) (
+		success bool,
+		successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
+	)
+	CancelShortTermOrder(ctx sdk.Context, msg *MsgCancelOrder) error
+	CancelStatefulOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CreatePerpetualClobPair(
 		ctx sdk.Context,
 		perpetualId uint32,
@@ -27,45 +36,23 @@ type ClobKeeper interface {
 	)
 	GetAllClobPair(ctx sdk.Context) (list []ClobPair)
 	GetClobPair(ctx sdk.Context, id ClobPairId) (val ClobPair, found bool)
-	DeliverTxPlaceOrder(
-		ctx sdk.Context,
-		msg *MsgPlaceOrder,
-		performAddToOrderbookCollatCheck bool,
-		memclob MemClob,
-	) (
+	PlaceShortTermOrder(ctx sdk.Context, msg *MsgPlaceOrder) (
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 		orderStatus OrderStatus,
 		err error,
 	)
-	CheckTxPlaceOrder(ctx sdk.Context, msg *MsgPlaceOrder) (
-		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
-		orderStatus OrderStatus,
-		err error,
-	)
+	PlaceStatefulOrder(ctx sdk.Context, msg *MsgPlaceOrder) error
 	PruneStateFillAmountsForShortTermOrders(
 		ctx sdk.Context,
-	)
-	PruneExpiredSeenPlaceOrders(
-		ctx sdk.Context,
-		goodTilBlockHeightToPrune uint32,
 	)
 
 	RemoveClobPair(ctx sdk.Context, id ClobPairId)
 	ProcessProposerOperations(
 		ctx sdk.Context,
-		operations []Operation,
-		addToOrderbookCollatCheckOrderHashesSet map[OrderHash]bool,
+		operations []OperationRaw,
 	) error
 	LiquidationsKeeper
 	LiquidationsConfigKeeper
-	AddOrderToOrderbookCollatCheck(
-		ctx sdk.Context,
-		clobPairId ClobPairId,
-		subaccountOpenOrders map[satypes.SubaccountId][]PendingOpenOrder,
-	) (
-		success bool,
-		successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
-	)
 	GetStatePosition(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
@@ -75,7 +62,7 @@ type ClobKeeper interface {
 	)
 	ProcessSingleMatch(
 		ctx sdk.Context,
-		matchWithOrders MatchWithOrders,
+		matchWithOrders *MatchWithOrders,
 	) (
 		success bool,
 		takerUpdateResult satypes.UpdateResult,
@@ -83,20 +70,20 @@ type ClobKeeper interface {
 		offchainUpdates *OffchainUpdates,
 		err error,
 	)
-	SetStatefulOrderPlacement(
+	SetLongTermOrderPlacement(
 		ctx sdk.Context,
 		order Order,
 		blockHeight uint32,
 	)
-	GetStatefulOrderPlacement(
+	GetLongTermOrderPlacement(
 		ctx sdk.Context,
 		orderId OrderId,
-	) (val StatefulOrderPlacement, found bool)
-	DeleteStatefulOrderPlacement(
+	) (val LongTermOrderPlacement, found bool)
+	DeleteLongTermOrderPlacement(
 		ctx sdk.Context,
 		orderId OrderId,
 	)
-	DoesStatefulOrderExistInState(
+	DoesLongTermOrderExistInState(
 		ctx sdk.Context,
 		order Order,
 	) bool
@@ -111,7 +98,6 @@ type ClobKeeper interface {
 	)
 	MustRemoveStatefulOrder(
 		ctx sdk.Context,
-		goodTilBlockTime time.Time,
 		orderId OrderId,
 	)
 	RemoveExpiredStatefulOrdersTimeSlices(ctx sdk.Context, blockTime time.Time) (
@@ -125,4 +111,18 @@ type ClobKeeper interface {
 	SetBlockTimeForLastCommittedBlock(ctx sdk.Context)
 	MustGetBlockTimeForLastCommittedBlock(ctx sdk.Context) (blockTime time.Time)
 	GetNumClobPairs(ctx sdk.Context) uint32
+	PerformOrderCancellationStatefulValidation(
+		ctx sdk.Context,
+		msgCancelOrder *MsgCancelOrder,
+		blockHeight uint32,
+	) error
+	PerformStatefulOrderValidation(
+		ctx sdk.Context,
+		order *Order,
+		blockHeight uint32,
+		isPreexistingStatefulOrder bool,
+	) error
+	GetIndexerEventManager() indexer_manager.IndexerEventManager
+	RateLimitCancelOrder(ctx sdk.Context, order *MsgCancelOrder) error
+	RateLimitPlaceOrder(ctx sdk.Context, order *MsgPlaceOrder) error
 }

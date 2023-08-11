@@ -3,8 +3,10 @@
 package mocks
 
 import (
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	log "github.com/cometbft/cometbft/libs/log"
 	mock "github.com/stretchr/testify/mock"
+
+	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )
@@ -14,20 +16,20 @@ type PricesKeeper struct {
 	mock.Mock
 }
 
-// CreateExchangeFeed provides a mock function with given fields: ctx, name, memo
-func (_m *PricesKeeper) CreateExchangeFeed(ctx types.Context, name string, memo string) (pricestypes.ExchangeFeed, error) {
-	ret := _m.Called(ctx, name, memo)
+// CreateMarket provides a mock function with given fields: ctx, param, price
+func (_m *PricesKeeper) CreateMarket(ctx types.Context, param pricestypes.MarketParam, price pricestypes.MarketPrice) (pricestypes.MarketParam, error) {
+	ret := _m.Called(ctx, param, price)
 
-	var r0 pricestypes.ExchangeFeed
-	if rf, ok := ret.Get(0).(func(types.Context, string, string) pricestypes.ExchangeFeed); ok {
-		r0 = rf(ctx, name, memo)
+	var r0 pricestypes.MarketParam
+	if rf, ok := ret.Get(0).(func(types.Context, pricestypes.MarketParam, pricestypes.MarketPrice) pricestypes.MarketParam); ok {
+		r0 = rf(ctx, param, price)
 	} else {
-		r0 = ret.Get(0).(pricestypes.ExchangeFeed)
+		r0 = ret.Get(0).(pricestypes.MarketParam)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(types.Context, string, string) error); ok {
-		r1 = rf(ctx, name, memo)
+	if rf, ok := ret.Get(1).(func(types.Context, pricestypes.MarketParam, pricestypes.MarketPrice) error); ok {
+		r1 = rf(ctx, param, price)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -35,20 +37,22 @@ func (_m *PricesKeeper) CreateExchangeFeed(ctx types.Context, name string, memo 
 	return r0, r1
 }
 
-// CreateMarket provides a mock function with given fields: ctx, pair, exponent, exchanges, minExchanges, minPriceChangePpm
-func (_m *PricesKeeper) CreateMarket(ctx types.Context, pair string, exponent int32, exchanges []uint32, minExchanges uint32, minPriceChangePpm uint32) (pricestypes.Market, error) {
-	ret := _m.Called(ctx, pair, exponent, exchanges, minExchanges, minPriceChangePpm)
+// GetAllMarketParamPrices provides a mock function with given fields: ctx
+func (_m *PricesKeeper) GetAllMarketParamPrices(ctx types.Context) ([]pricestypes.MarketParamPrice, error) {
+	ret := _m.Called(ctx)
 
-	var r0 pricestypes.Market
-	if rf, ok := ret.Get(0).(func(types.Context, string, int32, []uint32, uint32, uint32) pricestypes.Market); ok {
-		r0 = rf(ctx, pair, exponent, exchanges, minExchanges, minPriceChangePpm)
+	var r0 []pricestypes.MarketParamPrice
+	if rf, ok := ret.Get(0).(func(types.Context) []pricestypes.MarketParamPrice); ok {
+		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(pricestypes.Market)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]pricestypes.MarketParamPrice)
+		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(types.Context, string, int32, []uint32, uint32, uint32) error); ok {
-		r1 = rf(ctx, pair, exponent, exchanges, minExchanges, minPriceChangePpm)
+	if rf, ok := ret.Get(1).(func(types.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -56,47 +60,47 @@ func (_m *PricesKeeper) CreateMarket(ctx types.Context, pair string, exponent in
 	return r0, r1
 }
 
-// GetAllExchangeFeeds provides a mock function with given fields: ctx
-func (_m *PricesKeeper) GetAllExchangeFeeds(ctx types.Context) []pricestypes.ExchangeFeed {
+// GetAllMarketParams provides a mock function with given fields: ctx
+func (_m *PricesKeeper) GetAllMarketParams(ctx types.Context) []pricestypes.MarketParam {
 	ret := _m.Called(ctx)
 
-	var r0 []pricestypes.ExchangeFeed
-	if rf, ok := ret.Get(0).(func(types.Context) []pricestypes.ExchangeFeed); ok {
+	var r0 []pricestypes.MarketParam
+	if rf, ok := ret.Get(0).(func(types.Context) []pricestypes.MarketParam); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]pricestypes.ExchangeFeed)
+			r0 = ret.Get(0).([]pricestypes.MarketParam)
 		}
 	}
 
 	return r0
 }
 
-// GetAllMarkets provides a mock function with given fields: ctx
-func (_m *PricesKeeper) GetAllMarkets(ctx types.Context) []pricestypes.Market {
+// GetAllMarketPrices provides a mock function with given fields: ctx
+func (_m *PricesKeeper) GetAllMarketPrices(ctx types.Context) []pricestypes.MarketPrice {
 	ret := _m.Called(ctx)
 
-	var r0 []pricestypes.Market
-	if rf, ok := ret.Get(0).(func(types.Context) []pricestypes.Market); ok {
+	var r0 []pricestypes.MarketPrice
+	if rf, ok := ret.Get(0).(func(types.Context) []pricestypes.MarketPrice); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]pricestypes.Market)
+			r0 = ret.Get(0).([]pricestypes.MarketPrice)
 		}
 	}
 
 	return r0
 }
 
-// GetExchangeFeed provides a mock function with given fields: ctx, id
-func (_m *PricesKeeper) GetExchangeFeed(ctx types.Context, id uint32) (pricestypes.ExchangeFeed, error) {
+// GetMarketParam provides a mock function with given fields: ctx, id
+func (_m *PricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestypes.MarketParam, error) {
 	ret := _m.Called(ctx, id)
 
-	var r0 pricestypes.ExchangeFeed
-	if rf, ok := ret.Get(0).(func(types.Context, uint32) pricestypes.ExchangeFeed); ok {
+	var r0 pricestypes.MarketParam
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) pricestypes.MarketParam); ok {
 		r0 = rf(ctx, id)
 	} else {
-		r0 = ret.Get(0).(pricestypes.ExchangeFeed)
+		r0 = ret.Get(0).(pricestypes.MarketParam)
 	}
 
 	var r1 error
@@ -109,15 +113,15 @@ func (_m *PricesKeeper) GetExchangeFeed(ctx types.Context, id uint32) (pricestyp
 	return r0, r1
 }
 
-// GetMarket provides a mock function with given fields: ctx, id
-func (_m *PricesKeeper) GetMarket(ctx types.Context, id uint32) (pricestypes.Market, error) {
+// GetMarketPrice provides a mock function with given fields: ctx, id
+func (_m *PricesKeeper) GetMarketPrice(ctx types.Context, id uint32) (pricestypes.MarketPrice, error) {
 	ret := _m.Called(ctx, id)
 
-	var r0 pricestypes.Market
-	if rf, ok := ret.Get(0).(func(types.Context, uint32) pricestypes.Market); ok {
+	var r0 pricestypes.MarketPrice
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) pricestypes.MarketPrice); ok {
 		r0 = rf(ctx, id)
 	} else {
-		r0 = ret.Get(0).(pricestypes.Market)
+		r0 = ret.Get(0).(pricestypes.MarketPrice)
 	}
 
 	var r1 error
@@ -128,20 +132,6 @@ func (_m *PricesKeeper) GetMarket(ctx types.Context, id uint32) (pricestypes.Mar
 	}
 
 	return r0, r1
-}
-
-// GetNumExchangeFeeds provides a mock function with given fields: ctx
-func (_m *PricesKeeper) GetNumExchangeFeeds(ctx types.Context) uint32 {
-	ret := _m.Called(ctx)
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func(types.Context) uint32); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	return r0
 }
 
 // GetNumMarkets provides a mock function with given fields: ctx
@@ -158,41 +148,36 @@ func (_m *PricesKeeper) GetNumMarkets(ctx types.Context) uint32 {
 	return r0
 }
 
-// ModifyExchangeFeed provides a mock function with given fields: ctx, id, memo
-func (_m *PricesKeeper) ModifyExchangeFeed(ctx types.Context, id uint32, memo string) (pricestypes.ExchangeFeed, error) {
-	ret := _m.Called(ctx, id, memo)
+// Logger provides a mock function with given fields: ctx
+func (_m *PricesKeeper) Logger(ctx types.Context) log.Logger {
+	ret := _m.Called(ctx)
 
-	var r0 pricestypes.ExchangeFeed
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, string) pricestypes.ExchangeFeed); ok {
-		r0 = rf(ctx, id, memo)
+	var r0 log.Logger
+	if rf, ok := ret.Get(0).(func(types.Context) log.Logger); ok {
+		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(pricestypes.ExchangeFeed)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(log.Logger)
+		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, string) error); ok {
-		r1 = rf(ctx, id, memo)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
-// ModifyMarket provides a mock function with given fields: ctx, id, pair, exchanges, minExchanges, minPriceChangePpm
-func (_m *PricesKeeper) ModifyMarket(ctx types.Context, id uint32, pair string, exchanges []uint32, minExchanges uint32, minPriceChangePpm uint32) (pricestypes.Market, error) {
-	ret := _m.Called(ctx, id, pair, exchanges, minExchanges, minPriceChangePpm)
+// ModifyMarketParam provides a mock function with given fields: ctx, param
+func (_m *PricesKeeper) ModifyMarketParam(ctx types.Context, param pricestypes.MarketParam) (pricestypes.MarketParam, error) {
+	ret := _m.Called(ctx, param)
 
-	var r0 pricestypes.Market
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, []uint32, uint32, uint32) pricestypes.Market); ok {
-		r0 = rf(ctx, id, pair, exchanges, minExchanges, minPriceChangePpm)
+	var r0 pricestypes.MarketParam
+	if rf, ok := ret.Get(0).(func(types.Context, pricestypes.MarketParam) pricestypes.MarketParam); ok {
+		r0 = rf(ctx, param)
 	} else {
-		r0 = ret.Get(0).(pricestypes.Market)
+		r0 = ret.Get(0).(pricestypes.MarketParam)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, []uint32, uint32, uint32) error); ok {
-		r1 = rf(ctx, id, pair, exchanges, minExchanges, minPriceChangePpm)
+	if rf, ok := ret.Get(1).(func(types.Context, pricestypes.MarketParam) error); ok {
+		r1 = rf(ctx, param)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -214,13 +199,13 @@ func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, 
 	return r0
 }
 
-// UpdateMarketPrices provides a mock function with given fields: ctx, updates, sendIndexerPriceUpdates
-func (_m *PricesKeeper) UpdateMarketPrices(ctx types.Context, updates []*pricestypes.MsgUpdateMarketPrices_MarketPrice, sendIndexerPriceUpdates bool) error {
-	ret := _m.Called(ctx, updates, sendIndexerPriceUpdates)
+// UpdateMarketPrices provides a mock function with given fields: ctx, updates
+func (_m *PricesKeeper) UpdateMarketPrices(ctx types.Context, updates []*pricestypes.MsgUpdateMarketPrices_MarketPrice) error {
+	ret := _m.Called(ctx, updates)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, []*pricestypes.MsgUpdateMarketPrices_MarketPrice, bool) error); ok {
-		r0 = rf(ctx, updates, sendIndexerPriceUpdates)
+	if rf, ok := ret.Get(0).(func(types.Context, []*pricestypes.MsgUpdateMarketPrices_MarketPrice) error); ok {
+		r0 = rf(ctx, updates)
 	} else {
 		r0 = ret.Error(0)
 	}

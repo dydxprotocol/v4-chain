@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,10 +19,21 @@ import (
 	"github.com/dydxprotocol/v4/testutil/keeper"
 	"github.com/dydxprotocol/v4/x/prices"
 	prices_keeper "github.com/dydxprotocol/v4/x/prices/keeper"
+	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	// Exchange config json is left empty as it is not validated by the server.
+	// This genesis state is formatted to export back to itself. It explicitly defines all fields using valid defaults.
+	validGenesisState = `{` +
+		`"market_params":[{"id":0,"pair":"DENT-USD","exponent":0,"min_exchanges":1,"min_price_change_ppm":1,` +
+		`"exchange_config_json":""}],` +
+		`"market_prices":[{"id":0,"exponent":0,"price":"1"}]` +
+		`}`
 )
 
 func createAppModule(t *testing.T) prices.AppModule {
@@ -108,31 +120,60 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	result := am.DefaultGenesis(cdc)
 	json, err := result.MarshalJSON()
 	require.NoError(t, err)
-	require.Equal(t, `{"exchange_feeds":[],"markets":[]}`, string(json))
+	require.Equal(t, `{"market_params":[],"market_prices":[]}`, string(json))
 }
 
-func TestAppModuleBasic_ValidateGenesisErrInvalidJSON(t *testing.T) {
-	am := createAppModuleBasic(t)
+func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
+	tests := map[string]struct {
+		genesisJson string
+		expectedErr string
+	}{
+		"Invalid Json": {
+			genesisJson: `{"missingClosingQuote: true}`,
+			expectedErr: "failed to unmarshal prices genesis state: unexpected EOF",
+		},
+		"Bad state: duplicate market param id": {
+			genesisJson: `{"market_params": [` +
+				`{"id":0,"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1},` +
+				`{"id":0,"pair": "LINK-USD","minExchanges":1,"minPriceChangePpm":1}` +
+				`]}`,
+			expectedErr: "duplicated market param id",
+		},
+		"Bad state: gap in market param id": {
+			genesisJson: `{"market_params": [` +
+				`{"id":0,"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1},` +
+				`{"id":2,"pair": "LINK-USD","minExchanges":1,"minPriceChangePpm":1}` +
+				`]}`,
+			expectedErr: "found gap in market param id",
+		},
+		"Bad state: Invalid param": {
+			genesisJson: `{"market_params": [{ "pair": "" }]}`,
+			expectedErr: sdkerrors.Wrap(pricestypes.ErrInvalidInput, "Pair cannot be empty").Error(),
+		},
+		"Bad state: Mismatch between params and prices": {
+			genesisJson: `{"market_params": [{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1}]}`,
+			expectedErr: "expected the same number of market prices and market params",
+		},
+		"Bad state: Invalid price": {
+			genesisJson: `{"market_params":[{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1}],` +
+				`"market_prices": [{"exponent":1,"price": "0"}]}`,
+			expectedErr: sdkerrors.Wrap(
+				pricestypes.ErrInvalidInput,
+				"market param 0 exponent 0 does not match market price 0 exponent 1",
+			).Error(),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			am := createAppModuleBasic(t)
 
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+			interfaceRegistry := types.NewInterfaceRegistry()
+			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	h := json.RawMessage(`{"missingClosingQuote: true}`)
-
-	err := am.ValidateGenesis(cdc, nil, h)
-	require.EqualError(t, err, "failed to unmarshal prices genesis state: unexpected EOF")
-}
-
-func TestAppModuleBasic_ValidateGenesisErrBadState(t *testing.T) {
-	am := createAppModuleBasic(t)
-
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
-
-	h := json.RawMessage(`{"markets": [{ "pair": "" }]}`)
-
-	err := am.ValidateGenesis(cdc, nil, h)
-	require.EqualError(t, err, "Pair must be non-empty string")
+			err := am.ValidateGenesis(cdc, nil, json.RawMessage(tc.genesisJson))
+			require.EqualError(t, err, tc.expectedErr)
+		})
+	}
 }
 
 func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
@@ -141,7 +182,7 @@ func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	h := json.RawMessage(`{"exchange_feeds":[{ "name": "Coinbase"}],"markets": [{ "pair": "DENT-USD", "exchanges":[0] }]}`)
+	h := json.RawMessage(validGenesisState)
 
 	err := am.ValidateGenesis(cdc, nil, h)
 	require.NoError(t, err)
@@ -203,9 +244,11 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "prices", cmd.Use)
-	require.Equal(t, 2, len(cmd.Commands()))
-	require.Equal(t, "list-market", cmd.Commands()[0].Name())
-	require.Equal(t, "show-market", cmd.Commands()[1].Name())
+	require.Equal(t, 4, len(cmd.Commands()))
+	require.Equal(t, "list-market-param", cmd.Commands()[0].Name())
+	require.Equal(t, "list-market-price", cmd.Commands()[1].Name())
+	require.Equal(t, "show-market-param", cmd.Commands()[2].Name())
+	require.Equal(t, "show-market-price", cmd.Commands()[3].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
@@ -240,24 +283,19 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	msg := `{"exchange_feeds": [{ "id": 0, "name": "Coinfake", "memo": "test memo" }], `
-	msg += `"markets": [{ "id": 0, "pair": "DENT-USD", "exchanges":[0],"min_exchanges":1, "min_price_change_ppm": 50 }]}`
-	gs := json.RawMessage(msg)
+	gs := json.RawMessage(validGenesisState)
 
 	result := am.InitGenesis(ctx, cdc, gs)
 	require.Equal(t, 0, len(result))
 
-	markets := keeper.GetAllMarkets(ctx)
-	require.Equal(t, 1, len(markets))
+	marketParams := keeper.GetAllMarketParams(ctx)
+	require.Equal(t, 1, len(marketParams))
 
-	require.Equal(t, "DENT-USD", markets[0].Pair)
-	require.Equal(t, uint32(0), markets[0].Id)
+	require.Equal(t, "DENT-USD", marketParams[0].Pair)
+	require.Equal(t, uint32(0), marketParams[0].Id)
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
-	expected := `{"exchange_feeds":[{"id":0,"name":"Coinfake","memo":"test memo"}],`
-	expected += `"markets":[{"id":0,"pair":"DENT-USD","exponent":0,"exchanges":[0],"min_exchanges":1,`
-	expected += `"min_price_change_ppm":50,"price":"0"}]}`
-	require.Equal(t, expected, string(genesisJson))
+	require.Equal(t, validGenesisState, string(genesisJson))
 }
 
 func TestAppModule_InitGenesisPanic(t *testing.T) {

@@ -1,0 +1,23 @@
+{
+    "symbol":"ETHUSDT",
+    "priceChange":"49.66000000",
+    "priceChangePercent":"2.869",
+    "weightedAvgPrice":"1749.46550291",
+    "prevClosePrice":"1730.64000000",
+    "lastPrice":"1780.29000000",
+    "lastQty":"9.09650000",
+    "bidPrice":"1780.24000000",
+    "bidQty":"3.50680000",
+    "askPrice":"1780.25000000",
+    "askQty":"48.71310000",
+    "openPrice":"1730.63000000",
+    "highPrice":"1791.88000000",
+    "lowPrice":"1714.72000000",
+    "volume":"298334.98780000",
+    "quoteVolume":"521926769.46721000",
+    "openTime":1687206042697,
+    "closeTime":1687292442697,
+    "firstId":1167040729,
+    "lastId":1167470154,
+    "count":429426
+}

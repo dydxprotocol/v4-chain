@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4/x/clob/rate_limit"
 	"sync/atomic"
 
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
@@ -23,18 +24,30 @@ type (
 		memKey            storetypes.StoreKey
 		transientStoreKey storetypes.StoreKey
 
-		MemClob             types.MemClob
+		MemClob                      types.MemClob
+		untriggeredConditionalOrders map[types.ClobPairId]UntriggeredConditionalOrders
+
 		subaccountsKeeper   types.SubaccountsKeeper
 		assetsKeeper        types.AssetsKeeper
 		bankKeeper          types.BankKeeper
+		feeTiersKeeper      types.FeeTiersKeeper
 		perpetualsKeeper    types.PerpetualsKeeper
+		statsKeeper         types.StatsKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
 
-		// in-memory stores
-		seenPlaceOrderIds map[types.OrderId]types.Order_GoodTilBlock
-		seenGoodTilBlocks map[types.Order_GoodTilBlock]map[types.OrderId]bool
-
 		memStoreInitialized *atomic.Bool
+
+		// mev telemetry config
+		mevTelemetryHost       string
+		mevTelemetryIdentifier string
+
+		// txValidation decoder and antehandler
+		txDecoder sdk.TxDecoder
+		// Note that the antehandler is not set until after the BaseApp antehandler is also set.
+		antehandler sdk.AnteHandler
+
+		placeOrderRateLimiter  rate_limit.RateLimiter[*types.MsgPlaceOrder]
+		cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder]
 	}
 )
 
@@ -47,26 +60,40 @@ func NewKeeper(
 	memKey storetypes.StoreKey,
 	liquidationsStoreKey storetypes.StoreKey,
 	memClob types.MemClob,
+	untriggeredConditionalOrders map[types.ClobPairId]UntriggeredConditionalOrders,
 	subaccountsKeeper types.SubaccountsKeeper,
 	assetsKeeper types.AssetsKeeper,
 	bankKeeper types.BankKeeper,
+	feeTiersKeeper types.FeeTiersKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
+	statsKeeper types.StatsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	txDecoder sdk.TxDecoder,
+	mevTelemetryHost string,
+	mevTelemetryIdentifier string,
+	placeOrderRateLimiter rate_limit.RateLimiter[*types.MsgPlaceOrder],
+	cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder],
 ) *Keeper {
 	keeper := &Keeper{
-		cdc:                 cdc,
-		storeKey:            storeKey,
-		memKey:              memKey,
-		transientStoreKey:   liquidationsStoreKey,
-		MemClob:             memClob,
-		subaccountsKeeper:   subaccountsKeeper,
-		assetsKeeper:        assetsKeeper,
-		bankKeeper:          bankKeeper,
-		perpetualsKeeper:    perpetualsKeeper,
-		indexerEventManager: indexerEventManager,
-		seenPlaceOrderIds:   make(map[types.OrderId]types.Order_GoodTilBlock),
-		seenGoodTilBlocks:   make(map[types.Order_GoodTilBlock]map[types.OrderId]bool),
-		memStoreInitialized: &atomic.Bool{},
+		cdc:                          cdc,
+		storeKey:                     storeKey,
+		memKey:                       memKey,
+		transientStoreKey:            liquidationsStoreKey,
+		MemClob:                      memClob,
+		untriggeredConditionalOrders: untriggeredConditionalOrders,
+		subaccountsKeeper:            subaccountsKeeper,
+		assetsKeeper:                 assetsKeeper,
+		bankKeeper:                   bankKeeper,
+		feeTiersKeeper:               feeTiersKeeper,
+		perpetualsKeeper:             perpetualsKeeper,
+		statsKeeper:                  statsKeeper,
+		indexerEventManager:          indexerEventManager,
+		memStoreInitialized:          &atomic.Bool{},
+		txDecoder:                    txDecoder,
+		mevTelemetryHost:             mevTelemetryHost,
+		mevTelemetryIdentifier:       mevTelemetryIdentifier,
+		placeOrderRateLimiter:        placeOrderRateLimiter,
+		cancelOrderRateLimiter:       cancelOrderRateLimiter,
 	}
 
 	// Provide the keeper to the MemClob.
@@ -81,7 +108,7 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/clob")
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
@@ -132,4 +159,10 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 			memPrefixStore.Set(iterator.Key(), iterator.Value())
 		}
 	}
+}
+
+// Sets the ante handler after it has been constructed. This breaks a cycle between
+// when the ante handler is constructed and when the clob keeper is constructed.
+func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
+	k.antehandler = anteHandler
 }

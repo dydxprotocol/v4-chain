@@ -5,6 +5,7 @@ import (
 	"syscall"
 
 	"github.com/cometbft/cometbft/libs/log"
+	bridgeapi "github.com/dydxprotocol/v4/daemons/bridge/api"
 	"github.com/dydxprotocol/v4/daemons/constants"
 	liquidationapi "github.com/dydxprotocol/v4/daemons/liquidation/api"
 	pricefeedapi "github.com/dydxprotocol/v4/daemons/pricefeed/api"
@@ -21,6 +22,7 @@ type Server struct {
 	fileHandler   lib.FileHandler
 	socketAddress string
 
+	BridgeServer
 	PriceFeedServer
 	LiquidationServer
 }
@@ -39,6 +41,11 @@ func NewServer(
 		socketAddress: socketAddress,
 	}
 	return srv
+}
+
+// Stop stops the daemon server's gRPC service.
+func (server *Server) Stop() {
+	server.gsrv.Stop()
 }
 
 // Start clears the current socket and establishes a new socket connection
@@ -67,6 +74,9 @@ func (server *Server) Start() {
 
 	// Register gRPC services needed by the daemons. This is required before invoking `Serve`.
 	// https://pkg.go.dev/google.golang.org/grpc#Server.RegisterService
+
+	// Register Server to ingest gRPC requests from bridge daemon.
+	bridgeapi.RegisterBridgeServiceServer(server.gsrv, server)
 
 	// Register Server to ingest gRPC requests from price feed daemon and update market prices.
 	pricefeedapi.RegisterPriceFeedServiceServer(server.gsrv, server)

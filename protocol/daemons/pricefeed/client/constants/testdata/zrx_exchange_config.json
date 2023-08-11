@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"ZRXUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"ZRXUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tZRXUSD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"ZRX-USD"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"zrxusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"ZRXUSD"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"ZRX-USDT"
+    }
+  ]
+}

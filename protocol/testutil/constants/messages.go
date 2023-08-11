@@ -39,7 +39,15 @@ var (
 		},
 		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlock{GoodTilBlock: 10},
 	}
-	Msg_CancelOrder_TxBtyes []byte
+	Msg_CancelOrder_TxBtyes  []byte
+	Msg_CancelOrder_LongTerm = &clobtypes.MsgCancelOrder{
+		OrderId:      LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
+		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlockTime{GoodTilBlockTime: 20},
+	}
+	Msg_CancelOrder_Conditional = &clobtypes.MsgCancelOrder{
+		OrderId:      ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlockTime{GoodTilBlockTime: 20},
+	}
 
 	Msg_PlaceOrder = &clobtypes.MsgPlaceOrder{
 		Order: Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
@@ -50,7 +58,7 @@ var (
 		Order: LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 	}
 	Msg_PlaceOrder_Conditional = &clobtypes.MsgPlaceOrder{
-		Order: ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+		Order: ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 	}
 	Msg_Transfer = &sendingtypes.MsgCreateTransfer{
 		Transfer: &sendingtypes.Transfer{

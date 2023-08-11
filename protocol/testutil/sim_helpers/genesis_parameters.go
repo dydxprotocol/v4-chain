@@ -104,12 +104,12 @@ var (
 		Valid:      1000,
 	}
 
-	MinExchangeFeeds = GenesisParameters[int]{
-		Reasonable: 5,
+	MinMinExchangesPerMarket = GenesisParameters[int]{
+		Reasonable: 3,
 		Valid:      1,
 	}
-	MaxExchangeFeeds = GenesisParameters[int]{
-		Reasonable: 15,
+	MaxMinExchangesPerMarket = GenesisParameters[int]{
+		Reasonable: 5,
 		Valid:      100,
 	}
 
@@ -121,8 +121,16 @@ var (
 		Reasonable: 0,
 		Valid:      10,
 	}
+	MinMarketPrice = GenesisParameters[int]{
+		Reasonable: 10_000,
+		Valid:      1,
+	}
+	MaxMarketPrice = GenesisParameters[int]{
+		Reasonable: 500_000_000_000,
+		Valid:      math.MaxInt,
+	}
 
-	MinExchangeFeedsPerMarket = 1
+	MinExchangesPerMarket = 1
 )
 
 // Perpetuals genesis parameters.
@@ -170,6 +178,15 @@ var (
 	MaxPremiumVoteClampFactorPpm = GenesisParameters[int]{
 		Reasonable: 80_000_000,  // 8_000%
 		Valid:      120_000_000, // 12_000%
+	}
+
+	MinMinNumVotesPerSample = GenesisParameters[int]{
+		Reasonable: 10,
+		Valid:      0,
+	}
+	MaxMinNumVotesPerSample = GenesisParameters[int]{
+		Reasonable: 25,
+		Valid:      80,
 	}
 
 	MinAtomicResolution = GenesisParameters[int]{

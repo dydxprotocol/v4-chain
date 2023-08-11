@@ -21,23 +21,23 @@ func (match *MatchPerpetualDeleveraging) Validate() error {
 	if len(fills) == 0 {
 		return ErrEmptyDeleveragingFills
 	}
-	seenDeleveragedSubacountIds := map[satypes.SubaccountId]struct{}{}
+	seenOffsettingSubacountIds := map[satypes.SubaccountId]struct{}{}
 	for _, fill := range fills {
-		deleveragedSubaccountId := fill.GetDeleveraged()
-		if err := deleveragedSubaccountId.Validate(); err != nil {
+		offsettingSubaccountId := fill.GetOffsettingSubaccountId()
+		if err := offsettingSubaccountId.Validate(); err != nil {
 			return err
 		}
 
-		if deleveragedSubaccountId == liquidatedSubaccountId {
+		if offsettingSubaccountId == liquidatedSubaccountId {
 			return ErrDeleveragingAgainstSelf
 		}
-		if _, exists := seenDeleveragedSubacountIds[deleveragedSubaccountId]; exists {
+		if _, exists := seenOffsettingSubacountIds[offsettingSubaccountId]; exists {
 			return ErrDuplicateDeleveragingFillSubaccounts
 		}
 		if fill.GetFillAmount() == 0 {
 			return ErrZeroDeleveragingFillAmount
 		}
-		seenDeleveragedSubacountIds[deleveragedSubaccountId] = struct{}{}
+		seenOffsettingSubacountIds[offsettingSubaccountId] = struct{}{}
 	}
 	return nil
 }

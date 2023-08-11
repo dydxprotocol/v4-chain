@@ -46,6 +46,12 @@ func TestSkipSequenceValidation(t *testing.T) {
 			},
 			shouldSkipValidation: false,
 		},
+		"single long term cancel": {
+			msgs: []sdk.Msg{
+				constants.Msg_CancelOrder_LongTerm,
+			},
+			shouldSkipValidation: false,
+		},
 		"single conditional order": {
 			msgs: []sdk.Msg{
 				constants.Msg_PlaceOrder_Conditional,

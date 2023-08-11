@@ -8,11 +8,8 @@ var AssetUsdc Asset = Asset{
 	Id:            0,
 	Symbol:        "USDC",
 	DenomExponent: -6,
-	// Default placeholder for USDC.
-	// In a production environment, this value in the `Asset` state will be updated
-	// with the actual IBC USDC denom. The exact approach to update will be determined
-	// in CORE-92.
-	Denom:            "ibc/usdc-placeholder",
+	// Precomputed IBC USDC denom.
+	Denom:            "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
 	HasMarket:        false,
 	AtomicResolution: lib.QuoteCurrencyAtomicResolution,
 }

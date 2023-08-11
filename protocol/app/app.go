@@ -8,9 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4/indexer"
-	"github.com/dydxprotocol/v4/indexer/msgsender"
+	"github.com/dydxprotocol/v4/x/clob/rate_limit"
+
+	pricefeed_types "github.com/dydxprotocol/v4/daemons/pricefeed/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -81,53 +81,78 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/dydxprotocol/v4/app/basic_manager"
-	"github.com/dydxprotocol/v4/app/middleware"
-	"github.com/dydxprotocol/v4/app/prepare"
-	"github.com/dydxprotocol/v4/app/process"
-	"github.com/dydxprotocol/v4/lib/encoding"
-	"github.com/dydxprotocol/v4/mempool"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 
-	"github.com/dydxprotocol/v4/daemons/configs"
-	"github.com/dydxprotocol/v4/lib"
+	// App
+	"github.com/dydxprotocol/v4/app/basic_manager"
+	"github.com/dydxprotocol/v4/app/flags"
+	"github.com/dydxprotocol/v4/app/middleware"
+	"github.com/dydxprotocol/v4/app/prepare"
+	"github.com/dydxprotocol/v4/app/process"
+	"github.com/dydxprotocol/v4/app/upgrades"
 
+	// Lib
+	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4/lib/encoding"
+
+	// Mempool
+	"github.com/dydxprotocol/v4/mempool"
+
+	// Daemons
+	"github.com/dydxprotocol/v4/daemons/configs"
+	daemonflags "github.com/dydxprotocol/v4/daemons/flags"
 	liquidationclient "github.com/dydxprotocol/v4/daemons/liquidation/client"
+	pricefeedclient "github.com/dydxprotocol/v4/daemons/pricefeed/client"
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
+	daemonserver "github.com/dydxprotocol/v4/daemons/server"
+	bridgedaemontypes "github.com/dydxprotocol/v4/daemons/server/types/bridge"
 	liquidationtypes "github.com/dydxprotocol/v4/daemons/server/types/liquidations"
 	pricefeedtypes "github.com/dydxprotocol/v4/daemons/server/types/pricefeed"
 
-	"github.com/dydxprotocol/v4/app/flags"
-
-	"github.com/dydxprotocol/v4/daemons/pricefeed"
-	pricefeedclient "github.com/dydxprotocol/v4/daemons/pricefeed/client"
-	daemonserver "github.com/dydxprotocol/v4/daemons/server"
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	// Modules
 	assetsmodule "github.com/dydxprotocol/v4/x/assets"
 	assetsmodulekeeper "github.com/dydxprotocol/v4/x/assets/keeper"
 	assetsmoduletypes "github.com/dydxprotocol/v4/x/assets/types"
+	blocktimemodule "github.com/dydxprotocol/v4/x/blocktime"
+	blocktimemodulekeeper "github.com/dydxprotocol/v4/x/blocktime/keeper"
+	blocktimemoduletypes "github.com/dydxprotocol/v4/x/blocktime/types"
+	bridgemodule "github.com/dydxprotocol/v4/x/bridge"
+	bridgemodulekeeper "github.com/dydxprotocol/v4/x/bridge/keeper"
+	bridgemoduletypes "github.com/dydxprotocol/v4/x/bridge/types"
 	clobmodule "github.com/dydxprotocol/v4/x/clob"
+	clobflags "github.com/dydxprotocol/v4/x/clob/flags"
 	clobmodulekeeper "github.com/dydxprotocol/v4/x/clob/keeper"
 	clobmodulememclob "github.com/dydxprotocol/v4/x/clob/memclob"
 	clobmoduletypes "github.com/dydxprotocol/v4/x/clob/types"
 	epochsmodule "github.com/dydxprotocol/v4/x/epochs"
 	epochsmodulekeeper "github.com/dydxprotocol/v4/x/epochs/keeper"
 	epochsmoduletypes "github.com/dydxprotocol/v4/x/epochs/types"
+	feetiersmodule "github.com/dydxprotocol/v4/x/feetiers"
+	feetiersmodulekeeper "github.com/dydxprotocol/v4/x/feetiers/keeper"
+	feetiersmoduletypes "github.com/dydxprotocol/v4/x/feetiers/types"
 	perpetualsmodule "github.com/dydxprotocol/v4/x/perpetuals"
 	perpetualsmodulekeeper "github.com/dydxprotocol/v4/x/perpetuals/keeper"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricesmodule "github.com/dydxprotocol/v4/x/prices"
 	pricesmodulekeeper "github.com/dydxprotocol/v4/x/prices/keeper"
 	pricesmoduletypes "github.com/dydxprotocol/v4/x/prices/types"
+	rewardsmodule "github.com/dydxprotocol/v4/x/rewards"
+	rewardsmodulekeeper "github.com/dydxprotocol/v4/x/rewards/keeper"
+	rewardsmoduletypes "github.com/dydxprotocol/v4/x/rewards/types"
 	sendingmodule "github.com/dydxprotocol/v4/x/sending"
 	sendingmodulekeeper "github.com/dydxprotocol/v4/x/sending/keeper"
 	sendingmoduletypes "github.com/dydxprotocol/v4/x/sending/types"
+	statsmodule "github.com/dydxprotocol/v4/x/stats"
+	statsmodulekeeper "github.com/dydxprotocol/v4/x/stats/keeper"
+	statsmoduletypes "github.com/dydxprotocol/v4/x/stats/types"
 	subaccountsmodule "github.com/dydxprotocol/v4/x/subaccounts"
 	subaccountsmodulekeeper "github.com/dydxprotocol/v4/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 
+	// IBC
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
@@ -136,8 +161,10 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
-	// Upgrades
-	"github.com/dydxprotocol/v4/app/upgrades"
+	// Indexer
+	"github.com/dydxprotocol/v4/indexer"
+	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4/indexer/msgsender"
 )
 
 var (
@@ -154,6 +181,7 @@ var (
 		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
 		satypes.ModuleName:                nil,
 		clobmoduletypes.InsuranceFundName: nil,
+		// TODO(CORE-399): Decide whether to add rewards.TreasuryAccountName here.
 	}
 
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
@@ -217,11 +245,21 @@ type App struct {
 
 	AssetsKeeper assetsmodulekeeper.Keeper
 
+	BlockTimeKeeper blocktimemodulekeeper.Keeper
+
+	BridgeKeeper bridgemodulekeeper.Keeper
+
+	FeeTiersKeeper feetiersmodulekeeper.Keeper
+
 	PerpetualsKeeper perpetualsmodulekeeper.Keeper
+
+	RewardsKeeper rewardsmodulekeeper.Keeper
+
+	StatsKeeper statsmodulekeeper.Keeper
 
 	SubaccountsKeeper subaccountsmodulekeeper.Keeper
 
-	ClobKeeper clobmodulekeeper.Keeper
+	ClobKeeper *clobmodulekeeper.Keeper
 
 	SendingKeeper sendingmodulekeeper.Keeper
 
@@ -233,7 +271,7 @@ type App struct {
 	// module configurator
 	configurator module.Configurator
 
-	IndexerEventManager *indexer_manager.IndexerEventManagerImpl
+	IndexerEventManager indexer_manager.IndexerEventManager
 	Server              *daemonserver.Server
 }
 
@@ -273,8 +311,13 @@ func New(
 		capabilitytypes.StoreKey,
 		pricesmoduletypes.StoreKey,
 		assetsmoduletypes.StoreKey,
+		blocktimemoduletypes.StoreKey,
+		bridgemoduletypes.StoreKey,
+		feetiersmoduletypes.StoreKey,
 		perpetualsmoduletypes.StoreKey,
 		satypes.StoreKey,
+		statsmoduletypes.StoreKey,
+		rewardsmoduletypes.StoreKey,
 		clobmoduletypes.StoreKey,
 		sendingmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
@@ -282,6 +325,8 @@ func New(
 	tkeys := sdk.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
 		clobmoduletypes.TransientStoreKey,
+		statsmoduletypes.TransientStoreKey,
+		rewardsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
 	)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
@@ -439,16 +484,13 @@ func New(
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	/****  dYdX specific modules/setup ****/
+	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)
 	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
-		getIndexerFromOptions(appOpts, logger),
+		msgSender,
 		tkeys[indexer_manager.TransientStoreKey],
+		indexerFlags.SendOffchainData,
 	)
 	timeProvider := &lib.TimeProviderImpl{}
-	// Create in-memory data structure shared by Prices module and PriceFeed daemon.
-	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices()
-
-	// Create in-memory data structure shared by CLOB module and liquidations daemon.
-	liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
 		appCodec,
@@ -456,8 +498,9 @@ func New(
 	)
 	epochsModule := epochsmodule.NewAppModule(appCodec, app.EpochsKeeper)
 
-	// TODO(DEC-883): have generic daemon flags.
-	priceFeedEnabled, unixSocketAddress := pricefeed.GetServerPricefeedFlagValuesFromOptions(appOpts)
+	// Get Daemon Flags.
+	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
+
 	// Create server that will ingest gRPC messages from daemon clients.
 	// Note that gRPC clients will block on new gRPC connection until the gRPC server is ready to
 	// accept new connections.
@@ -465,71 +508,70 @@ func New(
 		logger,
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
-		unixSocketAddress,
+		daemonFlags.Shared.SocketAddress,
 	)
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
+	// The in-memory data structure is shared by the x/prices module and PriceFeed daemon.
+	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 	app.Server.WithPriceFeedMarketToExchangePrices(indexPriceCache)
 
 	// Setup server for liquidation messages. The server will wait for gRPC messages containing
 	// potentially liquidatable subaccounts and then encode them into an in-memory slice shared by
 	// the liquidations module.
+	// The in-memory data structure is shared by the x/clob module and liquidations daemon.
+	liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
 	app.Server.WithLiquidatableSubaccountIds(liquidatableSubaccountIds)
+
+	// Setup server for bridge messages.
+	// The in-memory data structure is shared by the x/bridge module and bridge daemon.
+	bridgeEventManager := bridgedaemontypes.NewBridgeEventManager(timeProvider)
+	app.Server.WithBridgeEventManager(bridgeEventManager)
 
 	// Start server for handling gRPC messages from daemons.
 	go app.Server.Start()
 
 	// Start liquidations client for sending potentially liquidatable subaccounts to the application.
-	// TODO(DEC-883): have generic daemon flags.
-	grpcServerHost := pricefeed.GetGrpcServerAddress(appOpts)
-	go func() {
-		if err := liquidationclient.Start(
-			// The client will use `context.Background` so that it can have a different context from
-			// the main application.
-			context.Background(),
-			grpcServerHost,
-			unixSocketAddress,
-			logger,
-			&lib.GrpcClientImpl{},
-		); err != nil {
-			panic(err)
-		}
-	}()
+	if daemonFlags.Liquidation.Enabled {
+		go func() {
+			if err := liquidationclient.Start(
+				// The client will use `context.Background` so that it can have a different context from
+				// the main application.
+				context.Background(),
+				daemonFlags,
+				logger,
+				&lib.GrpcClientImpl{},
+			); err != nil {
+				panic(err)
+			}
+		}()
+	}
 
 	// Non-validating full-nodes have no need to run the price daemon.
-	if !appFlags.NonValidatingFullNode && priceFeedEnabled {
-		_, _, priceUpdaterLoopDelayMs := pricefeed.GetClientPricefeedFlagValuesFromOptions(appOpts)
+	if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
 		exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
 
 		// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 		// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 		// periodically sent via gRPC to a shared socket with the server.
-		go func() {
-			err := pricefeedclient.Start(
-				// The client will use `context.Background` so that it can have a different context from
-				// the main application.
-				context.Background(),
-				unixSocketAddress,
-				logger,
-				&lib.GrpcClientImpl{},
-				exchangeStartupConfig,
-				constants.StaticExchangeMarkets,
-				constants.StaticExchangeDetails,
-				priceUpdaterLoopDelayMs,
-				&pricefeedclient.SubTaskRunnerImpl{},
-			)
-
-			if err != nil {
-				panic(err)
-			}
-		}()
+		pricefeedclient.StartNewClient(
+			// The client will use `context.Background` so that it can have a different context from
+			// the main application.
+			context.Background(),
+			daemonFlags,
+			logger,
+			&lib.GrpcClientImpl{},
+			exchangeStartupConfig,
+			constants.StaticExchangeDetails,
+			&pricefeedclient.SubTaskRunnerImpl{},
+		)
 	}
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
 		indexPriceCache,
-		pricesmoduletypes.NewMarketToSmoothedPrices(),
+		pricesmoduletypes.NewMarketToSmoothedPrices(pricesmoduletypes.SmoothedPriceTrackingBlockHistoryLength),
 		timeProvider,
 		app.IndexerEventManager,
 	)
@@ -542,6 +584,19 @@ func New(
 	)
 	assetsModule := assetsmodule.NewAppModule(appCodec, app.AssetsKeeper)
 
+	app.BlockTimeKeeper = *blocktimemodulekeeper.NewKeeper(
+		appCodec,
+		keys[blocktimemoduletypes.StoreKey],
+	)
+	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
+
+	app.BridgeKeeper = *bridgemodulekeeper.NewKeeper(
+		appCodec,
+		keys[bridgemoduletypes.StoreKey],
+		bridgeEventManager,
+	)
+	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
+
 	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[perpetualsmoduletypes.StoreKey],
@@ -550,6 +605,31 @@ func New(
 		app.IndexerEventManager,
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper, app.AccountKeeper, app.BankKeeper)
+
+	app.StatsKeeper = *statsmodulekeeper.NewKeeper(
+		appCodec,
+		app.EpochsKeeper,
+		keys[statsmoduletypes.StoreKey],
+		tkeys[statsmoduletypes.TransientStoreKey],
+	)
+	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
+
+	app.FeeTiersKeeper = *feetiersmodulekeeper.NewKeeper(
+		appCodec,
+		app.StatsKeeper,
+		keys[feetiersmoduletypes.StoreKey],
+	)
+	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
+
+	app.RewardsKeeper = *rewardsmodulekeeper.NewKeeper(
+		appCodec,
+		keys[rewardsmoduletypes.StoreKey],
+		tkeys[rewardsmoduletypes.TransientStoreKey],
+		app.FeeTiersKeeper,
+		// set the governance module account as the authority for conducting upgrades
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	rewardsModule := rewardsmodule.NewAppModule(appCodec, app.RewardsKeeper)
 
 	app.SubaccountsKeeper = *subaccountsmodulekeeper.NewKeeper(
 		appCodec,
@@ -564,18 +644,29 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
+	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
+
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
-	app.ClobKeeper = *clobmodulekeeper.NewKeeper(
+	untriggeredConditionalOrders := make(map[clobmoduletypes.ClobPairId]clobmodulekeeper.UntriggeredConditionalOrders)
+	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
 		keys[clobmoduletypes.StoreKey],
 		memKeys[clobmoduletypes.MemStoreKey],
 		tkeys[clobmoduletypes.TransientStoreKey],
 		memClob,
+		untriggeredConditionalOrders,
 		app.SubaccountsKeeper,
 		app.AssetsKeeper,
 		app.BankKeeper,
+		app.FeeTiersKeeper,
 		app.PerpetualsKeeper,
+		app.StatsKeeper,
 		app.IndexerEventManager,
+		txConfig.TxDecoder(),
+		clobFlags.MevTelemetryHost,
+		clobFlags.MevTelemetryIdentifier,
+		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
+		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgCancelOrder](),
 	)
 	clobModule := clobmodule.NewAppModule(
 		appCodec,
@@ -652,7 +743,12 @@ func New(
 		transferModule,
 		pricesModule,
 		assetsModule,
+		blockTimeModule,
+		bridgeModule,
+		feeTiersModule,
 		perpetualsModule,
+		statsModule,
+		rewardsModule,
 		subaccountsModule,
 		clobModule,
 		sendingModule,
@@ -664,6 +760,7 @@ func New(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.ModuleManager.SetOrderBeginBlockers(
+		blocktimemoduletypes.ModuleName, // Must be first
 		upgradetypes.ModuleName,
 		epochsmoduletypes.ModuleName,
 		capabilitytypes.ModuleName,
@@ -682,9 +779,13 @@ func New(
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
+		feetiersmoduletypes.ModuleName,
 		perpetualsmoduletypes.ModuleName,
+		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
+		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 	)
 
@@ -710,11 +811,16 @@ func New(
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
+		feetiersmoduletypes.ModuleName,
 		perpetualsmoduletypes.ModuleName,
+		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		rewardsmoduletypes.ModuleName,
 		epochsmoduletypes.ModuleName,
+		blocktimemoduletypes.ModuleName, // Must be last
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -741,9 +847,14 @@ func New(
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
+		blocktimemoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
+		feetiersmoduletypes.ModuleName,
 		perpetualsmoduletypes.ModuleName,
+		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
+		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 	)
 
@@ -768,9 +879,14 @@ func New(
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
+		blocktimemoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
+		feetiersmoduletypes.ModuleName,
 		perpetualsmoduletypes.ModuleName,
+		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
+		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 
 		// Auth must be migrated after staking.
@@ -809,7 +925,6 @@ func New(
 		app.SetPrepareProposal(
 			prepare.PrepareProposalHandler(
 				txConfig,
-				&prepare.ContextHelperImpl{},
 				app.ClobKeeper,
 				app.PricesKeeper,
 				app.PerpetualsKeeper,
@@ -823,13 +938,21 @@ func New(
 		// an implementation of `ProcessProposal` which always returns `abci.ResponseProcessProposal_ACCEPT`.
 		// Full-nodes do not participate in consensus, and therefore should not participate in voting / `ProcessProposal`.
 		app.SetProcessProposal(
-			process.FullNodeProcessProposalHandler(),
+			process.FullNodeProcessProposalHandler(
+				txConfig,
+				app.ClobKeeper,
+				app.StakingKeeper,
+				app.PerpetualsKeeper,
+				app.PricesKeeper,
+			),
 		)
 	} else {
 		app.SetProcessProposal(
 			process.ProcessProposalHandler(
-				&prepare.ContextHelperImpl{},
 				txConfig,
+				app.ClobKeeper,
+				app.StakingKeeper,
+				app.PerpetualsKeeper,
 				app.PricesKeeper,
 			),
 		)
@@ -839,7 +962,11 @@ func New(
 	// so error will get handled by that middleware and subsequent middlewares won't get executed.
 	// Also note that `AddRunTxRecoveryHandler` adds the handler in reverse order, meaning that handlers that appear
 	// earlier in the list will get executed later in the chain.
-	app.AddRunTxRecoveryHandler(middleware.NewRunTxPanicLoggingMiddleware(logger))
+	// The chain of middlewares is shared between `DeliverTx` and `CheckTx`; in order to provide additional metadata
+	// based on execution context such as the block proposer, the logger used by the logging middleware is
+	// stored in a global variable and can be overwritten as necessary.
+	middleware.Logger = logger
+	app.AddRunTxRecoveryHandler(middleware.NewRunTxPanicLoggingMiddleware())
 
 	// Set handlers and store loaders for upgrades.
 	app.setupUpgradeHandlers()
@@ -861,6 +988,7 @@ func New(
 		// and hydrate the next `checkState` as well as the `memclob` with stateful orders.
 		app.hydrateMemclobWithOrderbooksAndStatefulOrders()
 	}
+	app.initializeRateLimiters()
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
@@ -875,6 +1003,15 @@ func (app *App) hydrateMemStores() {
 	uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	// Initialize memstore in clobKeeper with order fill amounts.
 	app.ClobKeeper.InitMemStore(uncachedCtx)
+}
+
+// initializeRateLimiters initializes the rate limiters from state if the application is
+// not started from genesis.
+func (app *App) initializeRateLimiters() {
+	// Create an `uncachedCtx` where the underlying MultiStore is the `rootMultiStore`.
+	// We use this to hydrate the `orderRateLimiter` with values from the underlying `rootMultiStore`.
+	uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+	app.ClobKeeper.InitalizeBlockRateLimitFromStateIfExists(uncachedCtx)
 }
 
 // hydrateMemclobWithOrderbooksAndStatefulOrders hydrates the memclob with orderbooks and stateful orders
@@ -897,12 +1034,21 @@ func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	// Update the proposer address in the logger for the panic logging middleware.
+	proposerAddr := sdk.ConsAddress(req.Header.ProposerAddress)
+	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
+
 	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	// Reset the logger for middleware.
+	// Note that the middleware is only used by `CheckTx` and `DeliverTx`, and not `EndBlocker`.
+	// Panics from `EndBlocker` will not be logged by the middleware and will lead to consensus failures.
+	middleware.Logger = app.Logger()
+
 	response := app.ModuleManager.EndBlock(ctx, req)
 	block := app.IndexerEventManager.ProduceBlock(ctx)
 	app.IndexerEventManager.SendOnchainData(block)
@@ -1026,8 +1172,8 @@ func (app *App) SimulationManager() *module.SimulationManager {
 	return nil
 }
 
-// setAnteHandler creates a new AnteHandler and sets it on the base app.
-func (app *App) setAnteHandler(txConfig client.TxConfig) {
+// buildAnteHandler builds an AnteHandler object configured for the app.
+func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			HandlerOptions: ante.HandlerOptions{
@@ -1044,6 +1190,14 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 		panic(err)
 	}
 
+	return anteHandler
+}
+
+// setAnteHandler creates a new AnteHandler and sets it on the base app and clob keeper.
+func (app *App) setAnteHandler(txConfig client.TxConfig) {
+	anteHandler := app.buildAnteHandler(txConfig)
+	// Prevent a cycle between when we create the clob keeper and the ante handler.
+	app.ClobKeeper.SetAnteHandler(anteHandler)
 	app.SetAnteHandler(anteHandler)
 }
 
@@ -1107,10 +1261,12 @@ func initParamsKeeper(
 func getIndexerFromOptions(
 	appOpts servertypes.AppOptions,
 	logger log.Logger,
-) msgsender.IndexerMessageSender {
+) (msgsender.IndexerMessageSender, indexer.IndexerFlags) {
 	v, ok := appOpts.Get(indexer.MsgSenderInstanceForTest).(msgsender.IndexerMessageSender)
 	if ok {
-		return v
+		return v, indexer.IndexerFlags{
+			SendOffchainData: true,
+		}
 	}
 
 	indexerFlags := indexer.GetIndexerFlagValuesFromOptions(appOpts)
@@ -1128,5 +1284,5 @@ func getIndexerFromOptions(
 			panic(err)
 		}
 	}
-	return indexerMessageSender
+	return indexerMessageSender, indexerFlags
 }

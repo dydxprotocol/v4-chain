@@ -2,74 +2,98 @@ package testutil
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
 	"strings"
 
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/binance"
-	clienttypes "github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
 	"github.com/h2non/gock"
 )
 
-// BinanceResponse represents response returned by Binance for testing purposes.
-type BinanceResponse struct {
+// BinanceTicker represents ticker returned by Binance for testing purposes.
+type BinanceTicker struct {
+	Symbol    string
 	AskPrice  string
 	BidPrice  string
 	LastPrice string
 }
 
-// NewBinanceResponse returns a new BinanceResponse.
-func NewBinanceResponse(askPrice, bidPrice, lastPrice string) BinanceResponse {
-	return BinanceResponse{
+// NewBinanceTicker returns a new BinanceTicker.
+func NewBinanceTicker(symbol, askPrice, bidPrice, lastPrice string) BinanceTicker {
+	return BinanceTicker{
+		Symbol:    symbol,
 		AskPrice:  askPrice,
 		BidPrice:  bidPrice,
 		LastPrice: lastPrice,
 	}
 }
 
-// toJson returns a JSON representation of a valid Binance response.
-func (r BinanceResponse) toJson() interface{} {
+// toJson returns a JSON representation of a valid ticker in Binance response.
+func (t BinanceTicker) toJson() interface{} {
 	return map[string]string{
-		"askPrice":  r.AskPrice,
-		"bidPrice":  r.BidPrice,
-		"lastPrice": r.LastPrice,
+		"symbol":    t.Symbol,
+		"askPrice":  t.AskPrice,
+		"bidPrice":  t.BidPrice,
+		"lastPrice": t.LastPrice,
 	}
 }
 
 // NewGockBinanceResponse creates and registers a new HTTP mock using `gock` for Binance.
 func NewGockBinanceResponse(
-	marketId clienttypes.MarketId,
 	responseCode int,
-	response BinanceResponse,
+	tickers []JsonResponse,
 ) *gock.Response {
 	rootUrl := binance.BinanceDetails.Url
-	rootUrl = rootUrl[:strings.Index(rootUrl, "?")]
-	symbol, exists := binance.BinanceDetails.MarketSymbols[marketId]
-	if !exists {
-		panic(fmt.Sprintf("Binance: market (%d) does not exist!", marketId))
+	rootUrl = rootUrl[:strings.Index(rootUrl, "[")]
+
+	// Construct `symbols` parameter in Binance API request.
+	sortedTickers := GetTickersSortedByMarketId(
+		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BINANCE].MarketToTicker,
+	)
+	symbolsParam := fmt.Sprintf(
+		"[%s]",
+		strings.Join(sortedTickers, ","),
+	)
+
+	// Construct Binance API response as a list of tickers.
+	jsonResponse := []interface{}{}
+	for _, ticker := range tickers {
+		jsonResponse = append(jsonResponse, ticker.(BinanceTicker).toJson())
 	}
 
 	return gock.New(rootUrl).
 		Persist().
-		MatchParam("symbol", symbol).
+		MatchParam("symbols", symbolsParam).
 		Reply(responseCode).
-		JSON(response.toJson())
+		JSON(jsonResponse)
 }
 
 // NewGockBinanceResponse creates and registers a new HTTP mock using `gock` for BinanceUS.
 func NewGockBinanceUSResponse(
-	marketId clienttypes.MarketId,
 	responseCode int,
-	response BinanceResponse,
+	tickers []JsonResponse,
 ) *gock.Response {
 	rootUrl := binance.BinanceUSDetails.Url
-	rootUrl = rootUrl[:strings.Index(rootUrl, "?")]
-	symbol, exists := binance.BinanceUSDetails.MarketSymbols[marketId]
-	if !exists {
-		panic(fmt.Sprintf("BinanceUS:arket (%d) does not exist!", marketId))
+	rootUrl = rootUrl[:strings.Index(rootUrl, "[")]
+
+	// Construct `symbols` parameter in BinanceUS API request.
+	sortedTickers := GetTickersSortedByMarketId(
+		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BINANCE_US].MarketToTicker,
+	)
+	symbolsParam := fmt.Sprintf(
+		"[%s]",
+		strings.Join(sortedTickers, ","),
+	)
+
+	// Construct BinanceUS API response as a list of tickers.
+	jsonResponse := []interface{}{}
+	for _, ticker := range tickers {
+		jsonResponse = append(jsonResponse, ticker.(BinanceTicker).toJson())
 	}
 
 	return gock.New(rootUrl).
 		Persist().
-		MatchParam("symbol", symbol).
+		MatchParam("symbols", symbolsParam).
 		Reply(responseCode).
-		JSON(response.toJson())
+		JSON(jsonResponse)
 }

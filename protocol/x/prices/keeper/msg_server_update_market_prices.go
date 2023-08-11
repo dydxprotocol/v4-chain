@@ -21,15 +21,15 @@ func (k msgServer) UpdateMarketPrices(
 	// valid w/r/t index prices in `ProcessProposal` in order for the msg to reach this step.
 	if err := k.Keeper.PerformStatefulPriceUpdateValidation(ctx, msg, false); err != nil {
 		errMsg := fmt.Sprintf("PerformStatefulPriceUpdateValidation failed, err = %v", err)
-		ctx.Logger().Error(errMsg)
+		k.Keeper.Logger(ctx).Error(errMsg)
 		panic(err)
 	}
 
 	// Update state.
-	if err := k.Keeper.UpdateMarketPrices(ctx, msg.MarketPriceUpdates, true); err != nil {
+	if err := k.Keeper.UpdateMarketPrices(ctx, msg.MarketPriceUpdates); err != nil {
 		// This should never happen, because the updates were validated above.
 		errMsg := fmt.Sprintf("UpdateMarketPrices failed, err = %v", err)
-		ctx.Logger().Error(errMsg)
+		k.Keeper.Logger(ctx).Error(errMsg)
 		panic(err)
 	}
 

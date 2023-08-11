@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	socketPath      = "path.txt"
+	socketPath      = "/tmp/daemons.sock"
 	defaultEndpoint = "localhost:9090"
 )
 

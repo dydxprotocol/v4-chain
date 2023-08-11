@@ -12,10 +12,12 @@ import (
 
 func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 	logger := &mocks.Logger{}
+	middleware.Logger = logger
+
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
-				handler := middleware.NewRunTxPanicLoggingMiddleware(logger)
+				handler := middleware.NewRunTxPanicLoggingMiddleware()
 				err := handler(r)
 				require.Nil(t, err)
 			}
@@ -34,7 +36,7 @@ func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
-				handler := middleware.NewRunTxPanicLoggingMiddleware(logger)
+				handler := middleware.NewRunTxPanicLoggingMiddleware()
 				err := handler(r)
 				require.Nil(t, err)
 			}
@@ -54,7 +56,7 @@ func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
-				handler := middleware.NewRunTxPanicLoggingMiddleware(logger)
+				handler := middleware.NewRunTxPanicLoggingMiddleware()
 				err := handler(r)
 				require.Nil(t, err)
 			}

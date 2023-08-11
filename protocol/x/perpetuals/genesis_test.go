@@ -38,8 +38,10 @@ func TestGenesis_Failure(t *testing.T) {
 		initialMarginPpm          uint32
 		maintenanceFractionPpm    uint32
 		basePositionNotional      uint64
+		impactNotional            uint64
 		fundingRateClampFactorPpm uint32
 		premiumVoteClampFactorPpm uint32
+		minNumVotesPerSample      uint32
 	}{
 		"MarketId doesn't reference a valid Market": {
 			marketId:                  999,
@@ -47,8 +49,10 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    0,
 			basePositionNotional:      1,
+			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
+			minNumVotesPerSample:      0,
 		},
 		"Ticker is empty": {
 			marketId:                  0,
@@ -56,8 +60,10 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    0,
 			basePositionNotional:      1,
+			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
+			minNumVotesPerSample:      0,
 		},
 		"Initial Margin Ppm exceeds maximum": {
 			marketId:                  0,
@@ -65,8 +71,10 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          lib.OneMillion + 1,
 			maintenanceFractionPpm:    0,
 			basePositionNotional:      1,
+			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
+			minNumVotesPerSample:      0,
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
 			marketId:                  0,
@@ -74,8 +82,10 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion + 1,
 			basePositionNotional:      1,
+			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
+			minNumVotesPerSample:      0,
 		},
 		"Base Position Notional is zero": {
 			marketId:                  0,
@@ -83,8 +93,20 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion + 1,
 			basePositionNotional:      0,
+			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
+		},
+		"Impact Notional is zero": {
+			marketId:                  0,
+			ticker:                    "genesis_ticker",
+			initialMarginPpm:          0,
+			maintenanceFractionPpm:    lib.OneMillion + 1,
+			basePositionNotional:      1,
+			impactNotional:            0,
+			fundingRateClampFactorPpm: 1,
+			premiumVoteClampFactorPpm: 1,
+			minNumVotesPerSample:      0,
 		},
 		"Funding Rate Clamp Factor Ppm is zero": {
 			marketId:                  0,
@@ -92,8 +114,10 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion,
 			basePositionNotional:      1,
+			impactNotional:            1,
 			fundingRateClampFactorPpm: 0,
 			premiumVoteClampFactorPpm: 1,
+			minNumVotesPerSample:      0,
 		},
 		"Premium Vote Clamp Factor Ppm is zero": {
 			marketId:                  0,
@@ -101,8 +125,10 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion,
 			basePositionNotional:      1,
+			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 0,
+			minNumVotesPerSample:      0,
 		},
 	}
 
@@ -122,6 +148,7 @@ func TestGenesis_Failure(t *testing.T) {
 						InitialMarginPpm:       tc.initialMarginPpm,
 						MaintenanceFractionPpm: tc.maintenanceFractionPpm,
 						BasePositionNotional:   tc.basePositionNotional,
+						ImpactNotional:         tc.impactNotional,
 					},
 				},
 				Params: types.Params{

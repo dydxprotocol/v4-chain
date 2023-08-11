@@ -1,4 +1,4 @@
-//go:build integration_test
+//go:build all || integration_test
 
 package msgsender
 
@@ -62,11 +62,13 @@ func TestMain(m *testing.M) {
 		}
 	})
 
-	// Tell docker to hard kill the container in 10 minutes.
-	resource.Expire(600)
-
 	if err != nil {
 		log.Fatalf("could not start kafka: %s", err)
+	}
+
+	// Tell docker to hard kill the container in 10 minutes.
+	if err := resource.Expire(600); err != nil {
+		log.Fatalf("could not set kafka to expire: %s", err)
 	}
 
 	// Function to check if Kafka has been stood up fully, returns an error until all conditions for

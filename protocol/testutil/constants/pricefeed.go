@@ -2,6 +2,7 @@ package constants
 
 import (
 	"github.com/dydxprotocol/v4/daemons/pricefeed/api"
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
 	daemonClientTypes "github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4/testutil/client"
 	"github.com/dydxprotocol/v4/x/prices/types"
@@ -20,15 +21,15 @@ var (
 	MarketId11 = uint32(11)
 
 	// Exchanges
-	ExchangeFeedId0 = uint32(0)
-	ExchangeFeedId1 = uint32(1)
-	ExchangeFeedId2 = uint32(2)
-	ExchangeFeedId3 = uint32(3)
+	ExchangeId0 = "Exchange0"
+	ExchangeId1 = "Exchange1"
+	ExchangeId2 = "Exchange2"
+	ExchangeId3 = "Exchange3"
 
 	// ExchangeArray
-	Exchange1Exchange2Array = []uint32{
-		ExchangeFeedId1,
-		ExchangeFeedId2,
+	Exchange1Exchange2Array = []string{
+		ExchangeId1,
+		ExchangeId2,
 	}
 
 	// MarketPriceTimestamps
@@ -148,17 +149,6 @@ var (
 		Price:         Price3,
 	}
 
-	// Valid Exchanges
-	ValidExchanges1   = map[uint32]bool{ExchangeFeedId1: true}
-	ValidExchangesAll = map[uint32]bool{
-		ExchangeFeedId1: true,
-		ExchangeFeedId2: true,
-		ExchangeFeedId3: true,
-	}
-
-	// Price module's Valid Exchanges
-	PriceModuleValidExchanges = []uint32{ExchangeFeedId1, ExchangeFeedId2, ExchangeFeedId3}
-
 	// Prices
 	InvalidPrice uint64 = 0
 	Price1       uint64 = 1001
@@ -171,53 +161,53 @@ var (
 
 	// Exchange 0 prices
 	Exchange0_Price4_TimeT = &api.ExchangePrice{
-		ExchangeFeedId: ExchangeFeedId0,
+		ExchangeId:     ExchangeId1,
 		Price:          Price4,
 		LastUpdateTime: &TimeT,
 	}
 
 	// Exchange 1 prices
 	Exchange1_Price1_TimeT = &api.ExchangePrice{
-		ExchangeFeedId: ExchangeFeedId1,
+		ExchangeId:     ExchangeId1,
 		Price:          Price1,
 		LastUpdateTime: &TimeT,
 	}
 	Exchange1_Price2_AfterTimeT = &api.ExchangePrice{
-		ExchangeFeedId: ExchangeFeedId1,
+		ExchangeId:     ExchangeId1,
 		Price:          Price2,
 		LastUpdateTime: &TimeTPlusThreshold,
 	}
 	Exchange1_Price3_BeforeTimeT = &api.ExchangePrice{
-		ExchangeFeedId: ExchangeFeedId1,
+		ExchangeId:     ExchangeId1,
 		Price:          Price3,
 		LastUpdateTime: &TimeTMinusThreshold,
 	}
 
 	// Exchange 2 prices
 	Exchange2_Price2_TimeT = &api.ExchangePrice{
-		ExchangeFeedId: ExchangeFeedId2,
+		ExchangeId:     ExchangeId2,
 		Price:          Price2,
 		LastUpdateTime: &TimeT,
 	}
 	Exchange2_Price3_AfterTimeT = &api.ExchangePrice{
-		ExchangeFeedId: ExchangeFeedId2,
+		ExchangeId:     ExchangeId2,
 		Price:          Price3,
 		LastUpdateTime: &TimeTPlusThreshold,
 	}
 	Exchange2_Price1_BeforeTimeT = &api.ExchangePrice{
-		ExchangeFeedId: ExchangeFeedId2,
+		ExchangeId:     ExchangeId2,
 		Price:          Price1,
 		LastUpdateTime: &TimeTMinusThreshold,
 	}
 
 	// Exchange 3 prices
 	Exchange3_Price3_TimeT = &api.ExchangePrice{
-		ExchangeFeedId: ExchangeFeedId3,
+		ExchangeId:     ExchangeId3,
 		Price:          Price3,
 		LastUpdateTime: &TimeT,
 	}
 	Exchange3_Price4_AfterTimeT = &api.ExchangePrice{
-		ExchangeFeedId: ExchangeFeedId3,
+		ExchangeId:     ExchangeId3,
 		Price:          Price4,
 		LastUpdateTime: &TimeTPlusThreshold,
 	}
@@ -321,136 +311,109 @@ var (
 	}
 
 	// Markets
-	AllMarketsMinExchanges2 = []types.Market{
+	AllMarketParamsMinExchanges2 = []types.MarketParam{
 		{
 			Id:           MarketId9,
-			Exchanges:    PriceModuleValidExchanges,
 			MinExchanges: 2,
 		},
 		{
 			Id:           MarketId8,
-			Exchanges:    PriceModuleValidExchanges,
 			MinExchanges: 2,
 		},
 		{
 			Id:           MarketId7,
-			Exchanges:    PriceModuleValidExchanges,
 			MinExchanges: 2,
 		},
 	}
-	AllMarketsMinExchanges3 = []types.Market{
+	AllMarketParamsMinExchanges3 = []types.MarketParam{
 		{
 			Id:           MarketId9,
-			Exchanges:    PriceModuleValidExchanges,
 			MinExchanges: 3,
 		},
 		{
 			Id:           MarketId8,
-			Exchanges:    PriceModuleValidExchanges,
 			MinExchanges: 3,
 		},
 		{
 			Id:           MarketId7,
-			Exchanges:    PriceModuleValidExchanges,
 			MinExchanges: 3,
 		},
 	}
 
-	// ExchangeConfig
-	Exchange1_NoMarkets_0MaxQueries_Config = daemonClientTypes.ExchangeConfig{
-		Markets: []uint32{},
-		ExchangeStartupConfig: daemonClientTypes.ExchangeStartupConfig{
-			ExchangeFeedId: ExchangeFeedId1,
-			IntervalMs:     100,
-			TimeoutMs:      3_000,
-			MaxQueries:     0,
-		},
-	}
-	Exchange1_1Markets_1MaxQueries_Config = daemonClientTypes.ExchangeConfig{
-		Markets: []uint32{
-			MarketId7,
-		},
-		ExchangeStartupConfig: daemonClientTypes.ExchangeStartupConfig{
-			ExchangeFeedId: ExchangeFeedId1,
-			IntervalMs:     100,
-			TimeoutMs:      3_000,
-			MaxQueries:     1,
-		},
-	}
-	Exchange1_1Markets_2MaxQueries_Config = daemonClientTypes.ExchangeConfig{
-		Markets: []uint32{
-			MarketId7,
-		},
-		ExchangeStartupConfig: daemonClientTypes.ExchangeStartupConfig{
-			ExchangeFeedId: ExchangeFeedId1,
-			IntervalMs:     100,
-			TimeoutMs:      3_000,
-			MaxQueries:     2,
-		},
-	}
-	Exchange1_2Markets_2MaxQueries_Config = daemonClientTypes.ExchangeConfig{
-		Markets: []uint32{
-			MarketId7,
-			MarketId8,
-		},
-		ExchangeStartupConfig: daemonClientTypes.ExchangeStartupConfig{
-			ExchangeFeedId: ExchangeFeedId1,
-			IntervalMs:     100,
-			TimeoutMs:      3_000,
-			MaxQueries:     2,
-		},
-	}
-	Exchange1_2Markets_Multimarket_Config = daemonClientTypes.ExchangeConfig{
-		Markets: []uint32{
-			MarketId7,
-			MarketId8,
-		},
-		ExchangeStartupConfig: daemonClientTypes.ExchangeStartupConfig{
-			ExchangeFeedId: ExchangeFeedId1,
-			IntervalMs:     100,
-			TimeoutMs:      3_000,
-			MaxQueries:     1,
-		},
-		IsMultiMarket: true,
+	// ExchangeConfig, MutableExchangeMarketConfig for various tests are defined below.
+
+	SingleMarketExchangeQueryDetails = daemonClientTypes.ExchangeQueryDetails{IsMultiMarket: false}
+	MultiMarketExchangeQueryDetails  = daemonClientTypes.ExchangeQueryDetails{IsMultiMarket: true}
+
+	// ExchangeStartupConfigs.
+	Exchange1_0MaxQueries_StartupConfig = daemonClientTypes.ExchangeStartupConfig{
+		ExchangeId: ExchangeId1,
+		IntervalMs: 100,
+		TimeoutMs:  3_000,
+		MaxQueries: 0,
 	}
 
-	Exchange1_3Markets_2MaxQueries_Config = daemonClientTypes.ExchangeConfig{
-		Markets: []uint32{
-			MarketId7,
-			MarketId8,
-			MarketId9,
-		},
-		ExchangeStartupConfig: daemonClientTypes.ExchangeStartupConfig{
-			ExchangeFeedId: ExchangeFeedId1,
-			IntervalMs:     100,
-			TimeoutMs:      3_000,
-			MaxQueries:     2,
+	Exchange1_1MaxQueries_StartupConfig = daemonClientTypes.ExchangeStartupConfig{
+		ExchangeId: ExchangeId1,
+		IntervalMs: 100,
+		TimeoutMs:  3_000,
+		MaxQueries: 1,
+	}
+
+	Exchange1_2MaxQueries_StartupConfig = daemonClientTypes.ExchangeStartupConfig{
+		ExchangeId: ExchangeId1,
+		IntervalMs: 100,
+		TimeoutMs:  3_000,
+		MaxQueries: 2,
+	}
+
+	// MutableExchangeMarketConfigs for 0, 1, 2, 3, and 5 markets.
+	Exchange1_NoMarkets_MutableExchangeMarketConfig = daemonClientTypes.MutableExchangeMarketConfig{
+		Id:             ExchangeId1,
+		MarketToTicker: map[daemonClientTypes.MarketId]string{},
+	}
+
+	Exchange1_1Markets_MutableExchangeMarketConfig = daemonClientTypes.MutableExchangeMarketConfig{
+		Id: ExchangeId1,
+		MarketToTicker: map[daemonClientTypes.MarketId]string{
+			MarketId7: "BTC-USD",
 		},
 	}
 
-	Exchange1_5Markets_Multimarket_Config = daemonClientTypes.ExchangeConfig{
-		Markets: []uint32{
-			MarketId7,
-			MarketId8,
-			MarketId9,
-			MarketId10,
-			MarketId11,
+	Exchange1_2Markets_MutableExchangeMarketConfig = daemonClientTypes.MutableExchangeMarketConfig{
+		Id: ExchangeId1,
+		MarketToTicker: map[daemonClientTypes.MarketId]string{
+			MarketId7: "BTC-USD",
+			MarketId8: "ETH-USD",
 		},
-		ExchangeStartupConfig: daemonClientTypes.ExchangeStartupConfig{
-			ExchangeFeedId: ExchangeFeedId1,
-			IntervalMs:     100,
-			TimeoutMs:      3_000,
-			MaxQueries:     2,
-		},
-		IsMultiMarket: true,
 	}
 
-	// ExchangeStartupConfig
-	Exchange1 = daemonClientTypes.ExchangeStartupConfig{
-		ExchangeFeedId: 1,
-		IntervalMs:     3000,
-		TimeoutMs:      3_000,
-		MaxQueries:     3,
+	Exchange1_3Markets_MutableExchangeMarketConfig = daemonClientTypes.MutableExchangeMarketConfig{
+		Id: ExchangeId1,
+		MarketToTicker: map[daemonClientTypes.MarketId]string{
+			MarketId7: "BTC-USD",
+			MarketId8: "ETH-USD",
+			MarketId9: "LTC-USD",
+		},
+	}
+
+	Exchange1_5Markets_MutableExchangeMarketConfig = daemonClientTypes.MutableExchangeMarketConfig{
+		Id: ExchangeId1,
+		MarketToTicker: map[daemonClientTypes.MarketId]string{
+			MarketId7:  "BTC-USD",
+			MarketId8:  "ETH-USD",
+			MarketId9:  "LTC-USD",
+			MarketId10: "XRP-USD",
+			MarketId11: "BCH-USD",
+		},
+	}
+
+	CanonicalMarketExponents = map[daemonClientTypes.MarketId]daemonClientTypes.Exponent{
+		MarketId7:  MutableMarketConfigs_5Markets[0].Exponent,
+		MarketId8:  MutableMarketConfigs_5Markets[1].Exponent,
+		MarketId9:  MutableMarketConfigs_5Markets[2].Exponent,
+		MarketId10: MutableMarketConfigs_5Markets[3].Exponent,
+		MarketId11: MutableMarketConfigs_5Markets[4].Exponent,
 	}
 
 	CanonicalMarketPriceTimestampResponses = map[uint32]*daemonClientTypes.MarketPriceTimestamp{
@@ -461,45 +424,206 @@ var (
 		MarketId11: Market11_TimeT_Price5,
 	}
 
-	// ExchangeFeedIdMarketPriceTimestamps
-	ExchangeId1_Market9_TimeT_Price1 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId1,
+	// ExchangeIdMarketPriceTimestamps
+	ExchangeId1_Market9_TimeT_Price1 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId1,
 		MarketPriceTimestamp: Market9_TimeT_Price1,
 	}
-	ExchangeId2_Market9_TimeT_Price2 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId2,
+	ExchangeId2_Market9_TimeT_Price2 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId2,
 		MarketPriceTimestamp: Market9_TimeT_Price2,
 	}
-	ExchangeId3_Market9_TimeT_Price3 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId3,
+	ExchangeId3_Market9_TimeT_Price3 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId3,
 		MarketPriceTimestamp: Market9_TimeT_Price3,
 	}
-	ExchangeId1_Market8_BeforeTimeT_Price3 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId1,
+	ExchangeId1_Market8_BeforeTimeT_Price3 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId1,
 		MarketPriceTimestamp: Market8_TimeTMinusThreshold_Price3,
 	}
-	ExchangeId2_Market8_TimeT_Price2 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId2,
+	ExchangeId2_Market8_TimeT_Price2 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId2,
 		MarketPriceTimestamp: Market8_TimeT_Price2,
 	}
-	ExchangeId3_Market8_TimeT_Price3 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId3,
+	ExchangeId3_Market8_TimeT_Price3 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId3,
 		MarketPriceTimestamp: Market8_TimeT_Price3,
 	}
-	ExchangeId1_Market7_BeforeTimeT_Price3 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId1,
+	ExchangeId1_Market7_BeforeTimeT_Price3 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId1,
 		MarketPriceTimestamp: Market7_BeforeTimeT_Price3,
 	}
-	ExchangeId2_Market7_BeforeTimeT_Price1 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId2,
+	ExchangeId2_Market7_BeforeTimeT_Price1 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId2,
 		MarketPriceTimestamp: Market7_BeforeTimeT_Price1,
 	}
-	ExchangeId1_Market7_TimeT_Price1 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId1,
+	ExchangeId1_Market7_TimeT_Price1 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId1,
 		MarketPriceTimestamp: Market7_TimeT_Price1,
 	}
-	ExchangeId3_Market7_TimeT_Price3 = &client.ExchangeFeedIdMarketPriceTimestamp{
-		ExchangeFeedId:       ExchangeFeedId3,
+	ExchangeId3_Market7_TimeT_Price3 = &client.ExchangeIdMarketPriceTimestamp{
+		ExchangeId:           ExchangeId3,
 		MarketPriceTimestamp: Market7_TimeT_Price3,
+	}
+
+	CoinbaseMutableMarketConfig = &daemonClientTypes.MutableExchangeMarketConfig{
+		Id: CoinbaseExchangeName,
+		MarketToTicker: map[uint32]string{
+			MarketId7: "BTC-USD",
+			MarketId8: "ETH-USD",
+		},
+	}
+	BinanceMutableMarketConfig = &daemonClientTypes.MutableExchangeMarketConfig{
+		Id: BinanceExchangeName,
+		MarketToTicker: map[uint32]string{
+			MarketId7: "BTCUSDT",
+			MarketId8: "ETHUSDT",
+		},
+	}
+
+	TestCanonicalExchangeIds = []string{ExchangeId1, ExchangeId2}
+
+	// Test constants for starting the daemon client.
+	TestMutableExchangeMarketConfigs = map[string]*daemonClientTypes.MutableExchangeMarketConfig{
+		CoinbaseExchangeName: CoinbaseMutableMarketConfig,
+		BinanceExchangeName:  BinanceMutableMarketConfig,
+	}
+
+	TestMarket7And8Params = []types.MarketParam{
+		{
+			Id:       7,
+			Pair:     BtcUsdPair,
+			Exponent: BtcUsdExponent,
+			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"},` +
+				`{"exchangeName":"Coinbase","ticker":"BTC-USD"}]}`,
+			MinExchanges:      1,
+			MinPriceChangePpm: 50,
+		},
+		{
+			Id:           8,
+			Pair:         EthUsdPair,
+			Exponent:     EthUsdExponent,
+			MinExchanges: 1,
+			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Binance","ticker":"ETHUSDT"},` +
+				`{"exchangeName":"Coinbase","ticker":"ETH-USD"}]}`,
+			MinPriceChangePpm: 50,
+		},
+	}
+
+	TestMutableMarketConfigs = map[daemonClientTypes.MarketId]*daemonClientTypes.MutableMarketConfig{
+		MarketId7: {
+			Id:       MarketId7,
+			Pair:     BtcUsdPair,
+			Exponent: BtcUsdExponent,
+		},
+		MarketId8: {
+			Id:       MarketId8,
+			Pair:     EthUsdPair,
+			Exponent: EthUsdExponent,
+		},
+	}
+
+	// Pricefetcher MutableMarketConfigs for 0, 1, 2, 3 and 5 markets.
+	MutableMarketConfigs_0Markets = []*daemonClientTypes.MutableMarketConfig{}
+
+	MutableMarketConfigs_1Markets = []*daemonClientTypes.MutableMarketConfig{
+		{
+			Id:       MarketId7,
+			Pair:     BtcUsdPair,
+			Exponent: BtcUsdExponent,
+		},
+	}
+
+	MutableMarketConfigs_2Markets = []*daemonClientTypes.MutableMarketConfig{
+		{
+			Id:       MarketId7,
+			Pair:     BtcUsdPair,
+			Exponent: BtcUsdExponent,
+		},
+		{
+			Id:       MarketId8,
+			Pair:     EthUsdPair,
+			Exponent: EthUsdExponent,
+		},
+	}
+
+	MutableMarketConfigs_3Markets = []*daemonClientTypes.MutableMarketConfig{
+		{
+			Id:       MarketId7,
+			Pair:     BtcUsdPair,
+			Exponent: BtcUsdExponent,
+		},
+		{
+			Id:       MarketId8,
+			Pair:     EthUsdPair,
+			Exponent: EthUsdExponent,
+		},
+		{
+			Id:       MarketId9,
+			Pair:     LtcUsdPair,
+			Exponent: LtcUsdExponent,
+		},
+	}
+
+	MutableMarketConfigs_5Markets = []*daemonClientTypes.MutableMarketConfig{
+		{
+			Id:       MarketId7,
+			Pair:     BtcUsdPair,
+			Exponent: BtcUsdExponent,
+		},
+		{
+			Id:       MarketId8,
+			Pair:     EthUsdPair,
+			Exponent: EthUsdExponent,
+		},
+		{
+			Id:       MarketId9,
+			Pair:     LtcUsdPair,
+			Exponent: LtcUsdExponent,
+		},
+		{
+			Id:       MarketId10,
+			Pair:     SolUsdPair,
+			Exponent: SolUsdExponent,
+		},
+		{
+			Id:       MarketId11,
+			Pair:     MaticUsdPair,
+			Exponent: MaticUsdExponent,
+		},
+	}
+
+	// Expected exponents for above configs.
+	MutableMarketConfigs_3Markets_ExpectedExponents = map[daemonClientTypes.MarketId]daemonClientTypes.Exponent{
+		MarketId7: BtcUsdExponent,
+		MarketId8: EthUsdExponent,
+		MarketId9: LtcUsdExponent,
+	}
+
+	MutableMarketConfigs_5Markets_ExpectedExponents = map[daemonClientTypes.MarketId]daemonClientTypes.Exponent{
+		MarketId7:  BtcUsdExponent,
+		MarketId8:  EthUsdExponent,
+		MarketId9:  LtcUsdExponent,
+		MarketId10: SolUsdExponent,
+		MarketId11: MaticUsdExponent,
+	}
+
+	TestExchangeStartupConfigs = map[string]*daemonClientTypes.ExchangeStartupConfig{
+		ExchangeId1: {
+			ExchangeId: ExchangeId1,
+			IntervalMs: 100,
+			TimeoutMs:  3_000,
+			MaxQueries: 2,
+		},
+		ExchangeId2: {
+			ExchangeId: ExchangeId2,
+			IntervalMs: 100,
+			TimeoutMs:  3_000,
+			MaxQueries: 2,
+		},
+	}
+	TestExchangeIdToExchangeQueryDetails = map[string]daemonClientTypes.ExchangeQueryDetails{
+		ExchangeId1: constants.StaticExchangeDetails[ExchangeId1],
+		ExchangeId2: constants.StaticExchangeDetails[ExchangeId2],
 	}
 )

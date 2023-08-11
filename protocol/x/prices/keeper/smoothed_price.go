@@ -11,11 +11,11 @@ import (
 // https://en.wikipedia.org/wiki/Exponential_smoothing
 // If there is no valid index price for a market at this time, the smoothed price does not change.
 func (k Keeper) UpdateSmoothedPrices(ctx sdk.Context) error {
-	allMarkets := k.GetAllMarkets(ctx)
-	indexPrices := k.indexPriceCache.GetValidMedianPrices(allMarkets, k.timeProvider.Now())
+	allMarketParams := k.GetAllMarketParams(ctx)
+	indexPrices := k.indexPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
 
 	for market, indexPrice := range indexPrices {
-		smoothed, ok := k.marketToSmoothedPrices[market]
+		smoothed, ok := k.marketToSmoothedPrices.GetSmoothedPrice(market)
 		if !ok {
 			smoothed = indexPrice
 		}
@@ -27,7 +27,7 @@ func (k Keeper) UpdateSmoothedPrices(ctx sdk.Context) error {
 		if err != nil {
 			return err
 		}
-		k.marketToSmoothedPrices[market] = update
+		k.marketToSmoothedPrices.PushSmoothedPrice(market, update)
 	}
 	return nil
 }

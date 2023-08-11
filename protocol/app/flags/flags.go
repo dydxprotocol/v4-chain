@@ -30,27 +30,23 @@ const (
 // These flags should be applied to the `start` command of the V4 Cosmos application.
 // E.g. `dydxprotocold start --non-validating-full-node true`.
 func AddFlagsToCmd(cmd *cobra.Command) {
-	cmd.
-		Flags().
-		Bool(
-			NonValidatingFullNodeFlag,
-			DefaultNonValidatingFullNode,
-			"Whether to run in non-validating full-node mode. "+
-				"This disables the pricing daemon and enables the full-node ProcessProposal logic. "+
-				"Validators should _never_ use this mode.",
-		)
-	cmd.Flags().
-		String(
-			DdAgentHost,
-			DefaultDdAgentHost,
-			"Sets the address to connect to for the Datadog Agent.",
-		)
-	cmd.Flags().
-		Uint16(
-			DdTraceAgentPort,
-			DefaultDdTraceAgentPort,
-			"Sets the Datadog Agent port.",
-		)
+	cmd.Flags().Bool(
+		NonValidatingFullNodeFlag,
+		DefaultNonValidatingFullNode,
+		"Whether to run in non-validating full-node mode. "+
+			"This disables the pricing daemon and enables the full-node ProcessProposal logic. "+
+			"Validators should _never_ use this mode.",
+	)
+	cmd.Flags().String(
+		DdAgentHost,
+		DefaultDdAgentHost,
+		"Sets the address to connect to for the Datadog Agent.",
+	)
+	cmd.Flags().Uint16(
+		DdTraceAgentPort,
+		DefaultDdTraceAgentPort,
+		"Sets the Datadog Agent port.",
+	)
 }
 
 // GetFlagValuesFromOptions gets values from the `AppOptions` struct which contains values

@@ -1,6 +1,7 @@
 package types
 
 import (
+	math "math"
 	"math/big"
 
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
@@ -37,23 +38,6 @@ type ClobPairId uint32
 
 func (cp ClobPairId) ToUint32() uint32 {
 	return uint32(cp)
-}
-
-// PendingFill is used to represent a pending matched order in the match queue.
-type PendingFill struct {
-	// The SHA256 hash of the raw bytes of the maker order.
-	MakerOrderHash OrderHash
-	// The SHA256 hash of the raw bytes of the taker order.
-	TakerOrderHash OrderHash
-	// Indicates the side of the aggressor. Equal to the side of the taker order.
-	TakerSide Order_Side
-	// Indicates the fill price. Equal to the subticks of the maker order.
-	Subticks Subticks
-	// Indicates the fill size, in base quantums. Equal to the minimum of the
-	// remaining quantums of the two orders.
-	Quantums satypes.BaseQuantums
-	// The type of this fill.
-	Type FillType
 }
 
 // ClobOrder represents an order that is resting on the CLOB.
@@ -93,7 +77,7 @@ type Orderbook struct {
 	Asks map[Subticks]*Level
 	// The highest bid on this orderbook, in subticks. 0 if no bids exist.
 	BestBid Subticks
-	// The lowest ask on this orderbook, in subticks. 0 if no asks exist.
+	// The lowest ask on this orderbook, in subticks. math.MaxUint64 if no asks exist.
 	BestAsk Subticks
 	// Contains all open orders on this CLOB for a given subaccount and side.
 	// Used for fetching open orders for the add to orderbook collateralization
@@ -104,6 +88,8 @@ type Orderbook struct {
 	// Contains all open reduce-only orders on this CLOB from each subaccount. Used for tracking
 	// which open reduce-only orders should be canceled when a position changes sides.
 	SubaccountOpenReduceOnlyOrders map[satypes.SubaccountId]map[OrderId]bool
+	// TotalOpenOrders tracks the total number of open orders in an orderbook for observability purposes.
+	TotalOpenOrders uint
 }
 
 // GetSide returns the Bid-side levels if `isBuy == true` otherwise, returns the Ask-side levels.
@@ -112,6 +98,14 @@ func (ob *Orderbook) GetSide(isBuy bool) map[Subticks]*Level {
 		return ob.Bids
 	}
 	return ob.Asks
+}
+
+// GetMidPrice returns the mid price of the orderbook and whether or not it exists.
+func (ob *Orderbook) GetMidPrice() (Subticks, bool) {
+	if ob.BestBid == 0 || ob.BestAsk == math.MaxUint64 {
+		return 0, false
+	}
+	return ob.BestBid + (ob.BestAsk-ob.BestBid)/2, true
 }
 
 // PendingOpenOrder is a utility struct used for representing an order a subaccount will open. This is
@@ -186,6 +180,12 @@ const (
 	// because the insurance fund did not have enough funds to cover the losses from performing
 	// the liquidation.
 	LiquidationRequiresDeleveraging
+	// LiquidationExceededSubaccountMaxNotionalLiquidated indicates that the liquidation order
+	// could not be matched because it exceeded the max notional liquidated in this block.
+	LiquidationExceededSubaccountMaxNotionalLiquidated
+	// LiquidationExceededSubaccountMaxInsuranceLost indicates that the liquidation order could not
+	// be matched because it exceeded the maximum funds lost for the insurance fund in this block.
+	LiquidationExceededSubaccountMaxInsuranceLost
 )
 
 // String returns a string representation of this `OrderStatus` enum.
@@ -201,6 +201,12 @@ func (os OrderStatus) String() string {
 		return "ImmediateOrCancelWouldRestOnBook"
 	case ReduceOnlyResized:
 		return "ReduceOnlyResized"
+	case LiquidationRequiresDeleveraging:
+		return "LiquidationRequiresDeleveraging"
+	case LiquidationExceededSubaccountMaxNotionalLiquidated:
+		return "LiquidationExceededSubaccountMaxNotionalLiquidated"
+	case LiquidationExceededSubaccountMaxInsuranceLost:
+		return "LiquidationExceededSubaccountMaxInsuranceLost"
 	default:
 		return "Unknown"
 	}

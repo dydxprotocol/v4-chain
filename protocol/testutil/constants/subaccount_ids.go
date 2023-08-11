@@ -29,6 +29,10 @@ var (
 		Owner:  types.MustBech32ifyAddressBytes(config.Bech32PrefixAccAddr, BobAccAddress),
 		Number: 1,
 	}
+	Bob_Num2 = satypes.SubaccountId{
+		Owner:  types.MustBech32ifyAddressBytes(config.Bech32PrefixAccAddr, BobAccAddress),
+		Number: 2,
+	}
 	Carl_Num0 = satypes.SubaccountId{
 		Owner:  types.MustBech32ifyAddressBytes(config.Bech32PrefixAccAddr, CarlAccAddress),
 		Number: 0,

@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	pricefeed_types "github.com/dydxprotocol/v4/daemons/pricefeed/types"
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	pricefeedconstants "github.com/dydxprotocol/v4/daemons/constants"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4/daemons/server"
-	pricefeedtypes "github.com/dydxprotocol/v4/daemons/server/types/pricefeed"
+	pricefeedserver_types "github.com/dydxprotocol/v4/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4/daemons/types"
 	"github.com/dydxprotocol/v4/mocks"
 	"github.com/dydxprotocol/v4/testutil/constants"
@@ -25,7 +26,7 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 		mockGrpcServer,
 		mockFileHandler,
 	).WithPriceFeedMarketToExchangePrices(
-		pricefeedtypes.NewMarketToExchangePrices(),
+		pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge),
 	)
 
 	sendAndCheckPriceUpdate(
@@ -71,7 +72,7 @@ func TestUpdateMarketPrices_InvalidEmptyRequest(t *testing.T) {
 		mockGrpcServer,
 		mockFileHandler,
 	).WithPriceFeedMarketToExchangePrices(
-		pricefeedtypes.NewMarketToExchangePrices(),
+		pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge),
 	)
 
 	sendAndCheckPriceUpdate(
@@ -93,7 +94,7 @@ func TestUpdateMarketPrices_InvalidExchangePrices(t *testing.T) {
 					MarketId: constants.MarketId9,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId1,
+							ExchangeId:     constants.ExchangeId1,
 							Price:          constants.InvalidPrice,
 							LastUpdateTime: &constants.TimeT,
 						},
@@ -111,7 +112,7 @@ func TestUpdateMarketPrices_InvalidExchangePrices(t *testing.T) {
 					MarketId: constants.MarketId9,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId1,
+							ExchangeId:     constants.ExchangeId1,
 							LastUpdateTime: &constants.TimeT,
 						},
 					},
@@ -128,8 +129,8 @@ func TestUpdateMarketPrices_InvalidExchangePrices(t *testing.T) {
 					MarketId: constants.MarketId9,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId1,
-							Price:          constants.Price1,
+							ExchangeId: constants.ExchangeId1,
+							Price:      constants.Price1,
 						},
 					},
 				},
@@ -147,7 +148,7 @@ func TestUpdateMarketPrices_InvalidExchangePrices(t *testing.T) {
 				mockGrpcServer,
 				mockFileHandler,
 			).WithPriceFeedMarketToExchangePrices(
-				pricefeedtypes.NewMarketToExchangePrices(),
+				pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge),
 			)
 			expectedErr := sdkerrors.Wrapf(
 				tc.expectedError,

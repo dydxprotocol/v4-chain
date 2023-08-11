@@ -3,10 +3,13 @@ package keeper
 import (
 	"fmt"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4/lib/metrics"
 	"github.com/dydxprotocol/v4/x/epochs/types"
 )
 
@@ -82,13 +85,23 @@ func (k Keeper) MaybeStartNextEpoch(ctx sdk.Context, id types.EpochInfoName) (ne
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeNewEpoch,
-			sdk.NewAttribute(types.AttributeEpochInfoName, epoch.Name),
-			sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprint(epoch.CurrentEpoch)),
-			sdk.NewAttribute(types.AttributeEpochStartTickTime, fmt.Sprint(currentTick)),
-			sdk.NewAttribute(types.AttributeEpochStartBlockTime, fmt.Sprint(ctx.BlockTime().Unix())),
-			sdk.NewAttribute(types.AttributeEpochStartBlock, fmt.Sprint(epoch.CurrentEpochStartBlock)),
+			metrics.EventTypeNewEpoch,
+			sdk.NewAttribute(metrics.EpochInfoName, epoch.Name),
+			sdk.NewAttribute(metrics.EpochNumber, fmt.Sprint(epoch.CurrentEpoch)),
+			sdk.NewAttribute(metrics.EpochStartTickTime, fmt.Sprint(currentTick)),
+			sdk.NewAttribute(metrics.EpochStartBlockTime, fmt.Sprint(ctx.BlockTime().Unix())),
+			sdk.NewAttribute(metrics.EpochStartBlock, fmt.Sprint(epoch.CurrentEpochStartBlock)),
 		),
+	)
+
+	// Stat latest epoch number.
+	telemetry.SetGaugeWithLabels(
+		[]string{types.ModuleName, metrics.EpochNumber},
+		float32(epoch.CurrentEpoch),
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.EpochInfoName, epoch.Name),
+			metrics.GetLabelForIntValue(metrics.BlockHeight, int(epoch.CurrentEpochStartBlock)),
+		},
 	)
 
 	return true, nil
@@ -109,7 +122,7 @@ func (k Keeper) CreateEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) erro
 	}
 
 	k.setEpochInfo(ctx, epochInfo)
-	ctx.Logger().Info(fmt.Sprintf(
+	k.Logger(ctx).Info(fmt.Sprintf(
 		"Created new epoch info (current block time = %v): %+v",
 		ctx.BlockTime().Unix(),
 		epochInfo),
@@ -179,6 +192,12 @@ func (k Keeper) MustGetFundingSampleEpochInfo(
 	ctx sdk.Context,
 ) types.EpochInfo {
 	return k.mustGetEpochInfo(ctx, types.FundingSampleEpochInfoName)
+}
+
+func (k Keeper) MustGetStatsEpochInfo(
+	ctx sdk.Context,
+) types.EpochInfo {
+	return k.mustGetEpochInfo(ctx, types.StatsEpochInfoName)
 }
 
 func (k Keeper) mustGetEpochInfo(

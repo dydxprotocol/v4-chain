@@ -1,6 +1,7 @@
 package maps_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/dydxprotocol/v4/lib/maps"
@@ -109,6 +110,50 @@ func TestGetSortedKeys(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actualResult := maps.GetSortedKeys(tc.inputMap)
 			require.Equal(t, tc.expectedResult, actualResult)
+		})
+	}
+}
+
+func TestInvertMustHaveDistinctValues(t *testing.T) {
+	tests := map[string]struct {
+		inputMap       map[string]string
+		expectedResult map[string]string
+		expectedErr    error
+	}{
+		"Nil input": {
+			inputMap:       nil,
+			expectedResult: map[string]string{},
+		},
+		"Empty map": {
+			inputMap:       map[string]string{},
+			expectedResult: map[string]string{},
+		},
+		"Non-empty map": {
+			inputMap: map[string]string{
+				"a": "1", "b": "2", "c": "3", "d": "4",
+			},
+			expectedResult: map[string]string{
+				"1": "a", "2": "b", "3": "c", "4": "d",
+			},
+		},
+		"Error: duplicate values": {
+			inputMap: map[string]string{
+				"a": "1", "b": "2", "c": "3", "d": "3",
+			},
+			expectedErr: errors.New("duplicate map value: 3"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if tc.expectedErr != nil {
+				require.PanicsWithValue(
+					t,
+					tc.expectedErr.Error(),
+					func() { maps.InvertMustHaveDistinctValues(tc.inputMap) })
+			} else {
+				inverted := maps.InvertMustHaveDistinctValues(tc.inputMap)
+				require.Equal(t, tc.expectedResult, inverted)
+			}
 		})
 	}
 }

@@ -4,7 +4,7 @@ This directory houses custom [cobra](https://github.com/spf13/cobra) commands wh
 
 Conventionally, each package in this directory should define a public `Command()` method which returns a `*cobra.Command`.
 
-These commands can be added as a subcommand to the `dydxprotcold` root command defined in `main.go` in the following way:
+These commands can be added as a subcommand to the `dydxprotocold` root command defined in `main.go` in the following way:
 
 ```go
 rootCmd, _ := NewRootCmd(...)

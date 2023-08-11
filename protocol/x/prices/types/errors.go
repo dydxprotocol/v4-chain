@@ -11,17 +11,20 @@ var (
 	ErrInvalidInput = sdkerrors.Register(ModuleName, 1, "Invalid input")
 
 	// 100 - 199: Exchange related errors.
-	ErrExchangeFeedDoesNotExist = sdkerrors.Register(ModuleName, 100, "ExchangeFeed does not exist")
-	ErrZeroMinExchanges         = sdkerrors.Register(ModuleName, 101, "Min exchanges must be greater than zero")
-	ErrTooFewExchanges          = sdkerrors.Register(ModuleName, 102, "Exchanges is fewer than minExchanges")
-	ErrDuplicateExchanges       = sdkerrors.Register(
+	ErrExchangeDoesNotExist = sdkerrors.Register(ModuleName, 100, "Exchange does not exist")
+	ErrZeroMinExchanges     = sdkerrors.Register(ModuleName, 101, "Min exchanges must be greater than zero")
+	ErrTooFewExchanges      = sdkerrors.Register(ModuleName, 102, "Exchanges is fewer than minExchanges")
+	ErrDuplicateExchanges   = sdkerrors.Register(
 		ModuleName,
 		103,
 		"Exchanges must not contain duplicates and must be provided in ascending order",
 	)
 
 	// 200 - 299: Market related errors.
-	ErrMarketDoesNotExist = sdkerrors.Register(ModuleName, 200, "Market does not exist")
+	ErrMarketParamDoesNotExist        = sdkerrors.Register(ModuleName, 200, "Market param does not exist")
+	ErrMarketPriceDoesNotExist        = sdkerrors.Register(ModuleName, 201, "Market price does not exist")
+	ErrMarketExponentCannotBeUpdated  = sdkerrors.Register(ModuleName, 202, "Market exponent cannot be updated")
+	ErrMarketPricesAndParamsDontMatch = sdkerrors.Register(ModuleName, 203, "Market prices and params don't match")
 
 	// 300 - 399: Price related errors.
 	ErrIndexPriceNotAvailable = sdkerrors.Register(ModuleName, 300, "Index price is not available")

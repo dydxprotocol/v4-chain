@@ -33,11 +33,16 @@ import (
 	custommodule "github.com/dydxprotocol/v4/app/module"
 	testapp "github.com/dydxprotocol/v4/testutil/app"
 	assetsmodule "github.com/dydxprotocol/v4/x/assets"
+	blocktimemodule "github.com/dydxprotocol/v4/x/blocktime"
+	bridgemodule "github.com/dydxprotocol/v4/x/bridge"
 	clobmodule "github.com/dydxprotocol/v4/x/clob"
 	epochsmodule "github.com/dydxprotocol/v4/x/epochs"
+	feetiersmodule "github.com/dydxprotocol/v4/x/feetiers"
 	perpetualsmodule "github.com/dydxprotocol/v4/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4/x/prices"
+	rewardsmodule "github.com/dydxprotocol/v4/x/rewards"
 	sendingmodule "github.com/dydxprotocol/v4/x/sending"
+	statsmodule "github.com/dydxprotocol/v4/x/stats"
 	subaccountsmodule "github.com/dydxprotocol/v4/x/subaccounts"
 
 	"github.com/stretchr/testify/require"
@@ -208,9 +213,14 @@ func TestModuleBasics(t *testing.T) {
 		// Custom modules
 		pricesmodule.AppModuleBasic{},
 		assetsmodule.AppModuleBasic{},
+		blocktimemodule.AppModuleBasic{},
+		bridgemodule.AppModuleBasic{},
+		feetiersmodule.AppModuleBasic{},
 		perpetualsmodule.AppModuleBasic{},
+		statsmodule.AppModuleBasic{},
 		subaccountsmodule.AppModuleBasic{},
 		clobmodule.AppModuleBasic{},
+		rewardsmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
 	)

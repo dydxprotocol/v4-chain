@@ -1,4 +1,4 @@
-//go:build exchange_tests
+//go:build all || exchange_tests
 
 package handler
 
@@ -21,10 +21,10 @@ func TestQueryingActualExchanges(t *testing.T) {
 		url string
 	}{
 		"Binance": {
-			url: CreateRequestUrl(binance.BinanceDetails.Url, []string{"ETHUSDC"}),
+			url: CreateRequestUrl(binance.BinanceDetails.Url, []string{`"ETHUSDT"`}),
 		},
 		"BinanceUS": {
-			url: CreateRequestUrl(binance.BinanceUSDetails.Url, []string{"BTCUSDC"}),
+			url: CreateRequestUrl(binance.BinanceUSDetails.Url, []string{`"BTCUSD"`}),
 		},
 		"Bitfinex": {
 			url: CreateRequestUrl(bitfinex.BitfinexDetails.Url, []string{"tBTCUSD"}),

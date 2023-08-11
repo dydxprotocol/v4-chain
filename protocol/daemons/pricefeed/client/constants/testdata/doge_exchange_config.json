@@ -1,0 +1,28 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"DOGEUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"DOGEUSD\""
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"DOGE_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"dogeusdt"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"DOGE-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"DOGE-USDT"
+    }
+  ]
+}

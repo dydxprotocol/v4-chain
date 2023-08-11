@@ -58,6 +58,7 @@ The following commands can be used to locally build and push containers to ECR.
 * `make aws-push-dev2` locally build and push a container image to the "dev2" environment.
 * `make aws-push-dev3` locally build and push a container image to the "dev3" environment.
 * `make aws-push-dev4` locally build and push a container image to the "dev4" environment.
+* `make aws-push-dev5` locally build and push a container image to the "dev5" environment.
 * `make aws-push-staging` locally build and push a container image to the "staging" environment.
 
 #### Linting
@@ -72,9 +73,11 @@ We currently lint the following YAML files in the [`Lint` CI job](https://github
 - `.golangci.yml`.
 - `.github/workflows/*.yml`.
   - Note this includes all files that end in the `yml` file extension in the `.github/workflows` directory.
-- `proto/buf.yaml`.
-- `proto/buf.gen.gogo.yaml`.
 - `buf.work.yaml`.
+
+#### Protos
+
+Our protos live in [v4-proto](https://github.com/dydxprotocol/v4-proto) which is included as a submodule of this repo. When running `git checkout`, we recommend using the `--recurse-submodules` flag to initialize and checkout the submodule. You can also consider setting `git config --global submodule.recurse` to make this a default for all git commands. Additional help for using submodules can be found on [notion](https://www.notion.so/dydx/Git-Submodules-9a158282ac2145c9a3dde66dffa60f8f).
 
 #### Genesis
 
@@ -202,11 +205,15 @@ Our current implementation contains a light fork of CometBFT. The fork can be fo
 
 Our current implementation contains a light fork of CosmosSDK. The fork can be found [here](https://github.com/dydxprotocol/cosmos-sdk). Instructions to update the fork are included there.
 
-## Pricefeed Daemon
+## Daemons
+
+Daemons are background processes that run in go-routines to do asyncronous work. Daemons can be configured with their respective flags, e.g. `price-daemon-enabled` or `price-daemon-delay-loop-ms`.
+
+### Pricefeed Daemon
 
 The Pricefeed Daemon is responsible for ingesting prices from 3rd party exchanges like Binance and sending these prices to the application where they are then used by the Prices module. The Pricefeed daemon is started by default when the application starts.
 
-The daemon can be enabled or disabled with the flag `pricefeed-enabled`. Additionally, the path to the configuration file used for querying exchanges is dictated by the flag `pricefeed-exchange-config-file`. The default configuration file is located within `v4` at the path `daemons/configs/default_pricefeed_exchange_config.go`. The file utilizes a template that is populated from `daemons/pricefeed/client/constants/static_exchange_startup_config.go`. The first exchange within the default configuration file additionally has inline comments explaining what each field is for.
+The path to the configuration file used for querying exchanges is dictated by the flag `pricefeed-exchange-config-file`. The default configuration file is located within `v4` at the path `daemons/configs/default_pricefeed_exchange_config.go`. The file utilizes a template that is populated from `daemons/pricefeed/client/constants/static_exchange_startup_config.go`. The first exchange within the default configuration file additionally has inline comments explaining what each field is for.
 
 ## Learn more
 

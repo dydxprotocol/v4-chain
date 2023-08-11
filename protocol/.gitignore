@@ -38,3 +38,4 @@ localnet
 # IDE
 .idea/
 *.iml
+__debug_bin

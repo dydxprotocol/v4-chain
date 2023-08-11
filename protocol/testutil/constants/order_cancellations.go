@@ -5,16 +5,7 @@ import (
 )
 
 var (
-	CancelOrder_User1_Num0_Id10_Clob0_GTB20 = clobtypes.MsgCancelOrder{
-		OrderId: clobtypes.OrderId{
-			SubaccountId: Alice_Num0,
-			ClientId:     10,
-			OrderFlags:   clobtypes.OrderIdFlags_ShortTerm,
-			ClobPairId:   0,
-		},
-		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlock{GoodTilBlock: 20},
-	}
-	CancelOrder_User1_Num0_Id12_Clob0_GTB5 = clobtypes.MsgCancelOrder{
+	CancelOrder_Alice_Num0_Id12_Clob0_GTB5 = clobtypes.MsgCancelOrder{
 		OrderId: clobtypes.OrderId{
 			SubaccountId: Alice_Num0,
 			ClientId:     12,
@@ -22,15 +13,6 @@ var (
 			ClobPairId:   0,
 		},
 		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlock{GoodTilBlock: 5},
-	}
-	CancelOrder_User1_Num1_Id11_Clob1_GTB20 = clobtypes.MsgCancelOrder{
-		OrderId: clobtypes.OrderId{
-			SubaccountId: Alice_Num1,
-			ClientId:     11,
-			OrderFlags:   clobtypes.OrderIdFlags_ShortTerm,
-			ClobPairId:   1,
-		},
-		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlock{GoodTilBlock: 20},
 	}
 	CancelOrder_Alice_Num1_Id13_Clob0_GTB25 = clobtypes.MsgCancelOrder{
 		OrderId: clobtypes.OrderId{
@@ -59,7 +41,7 @@ var (
 		},
 		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlock{GoodTilBlock: 35},
 	}
-	CancelOrder_User2_Num0_Id2_Clob1_GTB5 = clobtypes.MsgCancelOrder{
+	CancelOrder_Bob_Num0_Id2_Clob1_GTB5 = clobtypes.MsgCancelOrder{
 		OrderId: clobtypes.OrderId{
 			SubaccountId: Bob_Num0,
 			ClientId:     2,

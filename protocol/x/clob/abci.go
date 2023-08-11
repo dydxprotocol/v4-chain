@@ -2,6 +2,7 @@ package clob
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,17 +37,22 @@ func EndBlocker(
 	keeper keeper.Keeper,
 ) {
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
-	previousBlockStatefulOrderCancellations := lib.SliceToSet(
-		processProposerMatchesEvents.GetPreviousBlockStatefulOrderCancellations(),
-	)
+	previousBlockStatefulOrderCancellations := processProposerMatchesEvents.GetPlacedStatefulCancellations()
+
+	// Create a set of placed stateful cancellations by `OrderId`.
+	placedStatefulCancellationOrderIds := lib.SliceToSet(previousBlockStatefulOrderCancellations)
+	// Create a set of removed stateful orders by `OrderId`.
+	removedStatefulOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 
 	// Retrieve the fill amounts for all orders which were filled in the last block, and populate
 	// the `offchainUpdates` with updates for the fill amounts.
 	offchainUpdates := types.NewOffchainUpdates()
 	for _, orderId := range processProposerMatchesEvents.OrdersIdsFilledInLastBlock {
-		// Skip sending order updates for orders that have been cancelled since they have been
+		// Skip sending order updates for orders that have been cancelled / removed since they have been
 		// already removed from state.
-		if _, cancelled := previousBlockStatefulOrderCancellations[orderId]; cancelled {
+		_, cancelled := placedStatefulCancellationOrderIds[orderId]
+		_, removed := removedStatefulOrderIds[orderId]
+		if cancelled || removed {
 			continue
 		}
 
@@ -54,7 +60,7 @@ func EndBlocker(
 		if !exists {
 			ctx.Logger().Error(
 				fmt.Sprintf(
-					"PrepareCheckState: order fill amount does not exist in state for Indexer event for orderId %v",
+					"EndBlocker: order fill amount does not exist in state for Indexer event for orderId %v",
 					orderId,
 				),
 			)
@@ -73,9 +79,6 @@ func EndBlocker(
 	// Prune any fill amounts from state which are now past their `pruneableBlockHeight`.
 	keeper.PruneStateFillAmountsForShortTermOrders(ctx)
 
-	// Prune expired seen place orders from the in-memory map.
-	keeper.PruneExpiredSeenPlaceOrders(ctx, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
-
 	// Update the block time of the previously committed block.
 	keeper.SetBlockTimeForLastCommittedBlock(ctx)
 
@@ -86,7 +89,7 @@ func EndBlocker(
 		keeper.RemoveOrderFillAmount(ctx, orderId)
 
 		// Delete the stateful order placement from state.
-		keeper.DeleteStatefulOrderPlacement(ctx, orderId)
+		keeper.DeleteLongTermOrderPlacement(ctx, orderId)
 
 		// Emit an on-chain indexer event for Stateful Order Expiration.
 		keeper.GetIndexerEventManager().AddTxnEvent(
@@ -98,6 +101,7 @@ func EndBlocker(
 				),
 			),
 		)
+		telemetry.IncrCounter(1, types.ModuleName, metrics.Expired, metrics.StatefulOrderRemoved, metrics.Count)
 	}
 
 	// Update the memstore with expired order ids.
@@ -110,6 +114,9 @@ func EndBlocker(
 
 	// Send all off-chain Indexer updates with these new fill amounts.
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
+
+	// Prune any rate limiting information that is no longer relevant.
+	keeper.PruneRateLimits(ctx)
 }
 
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
@@ -132,11 +139,11 @@ func PrepareCheckState(
 	}
 
 	// 1. Remove all operations in the local validators operations queue from the memclob.
-	localValidatorOperationsQueue := memClob.GetOperations(ctx)
-	ctx.Logger().Info(
+	localValidatorOperationsQueue, shortTermOrderTxBytes := memClob.GetOperationsToReplay(ctx)
+	ctx.Logger().Debug(
 		"Clearing local operations queue",
 		"localValidatorOperationsQueue",
-		types.GetOperationsQueueTextString(localValidatorOperationsQueue),
+		types.GetInternalOperationsQueueTextString(localValidatorOperationsQueue),
 		"block",
 		ctx.BlockHeight(),
 	)
@@ -145,12 +152,12 @@ func PrepareCheckState(
 
 	// 2. Purge invalid state from the memclob.
 	offchainUpdates := types.NewOffchainUpdates()
-	previousBlockStatefulOrderCancellations := processProposerMatchesEvents.GetPreviousBlockStatefulOrderCancellations()
 	offchainUpdates = memClob.PurgeInvalidMemclobState(
 		ctx,
 		processProposerMatchesEvents.OrdersIdsFilledInLastBlock,
 		processProposerMatchesEvents.ExpiredStatefulOrderIds,
-		previousBlockStatefulOrderCancellations,
+		processProposerMatchesEvents.PlacedStatefulCancellations,
+		processProposerMatchesEvents.RemovedStatefulOrderIds,
 		offchainUpdates,
 	)
 
@@ -165,8 +172,8 @@ func PrepareCheckState(
 	replayUpdates := memClob.ReplayOperations(
 		ctx,
 		localValidatorOperationsQueue,
+		shortTermOrderTxBytes,
 		offchainUpdates,
-		previousBlockStatefulOrderCancellations,
 	)
 
 	// TODO(CLOB-275): Do not gracefully handle panics in `PrepareCheckState`.
@@ -185,9 +192,33 @@ func PrepareCheckState(
 		metrics.Count,
 	)
 
+	// Get the liquidation order for each subaccount.
+	liquidationOrders := make([]types.LiquidationOrder, 0)
 	for _, subaccountId := range subaccountIds {
 		// If attempting to liquidate a subaccount returns an error, panic.
-		if err := keeper.MaybeLiquidateSubaccount(ctx, subaccountId); err != nil {
+		liquidationOrder, err := keeper.MaybeGetLiquidationOrder(ctx, subaccountId)
+		if err != nil {
+			panic(err)
+		}
+
+		if liquidationOrder != nil {
+			liquidationOrders = append(liquidationOrders, *liquidationOrder)
+		}
+	}
+
+	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
+	sort.Sort(types.SortedLiquidationOrders(liquidationOrders))
+
+	// Attempt to place each liquidation order and perform deleveraging if necessary.
+	for _, liquidationOrder := range liquidationOrders {
+		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
+			ctx.Logger().Error(
+				fmt.Sprintf(
+					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
+					liquidationOrder,
+					err,
+				),
+			)
 			panic(err)
 		}
 	}
@@ -195,12 +226,15 @@ func PrepareCheckState(
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
-	newLocalValidatorOperationsQueue := memClob.GetOperations(ctx)
-	ctx.Logger().Info(
+	newLocalValidatorOperationsQueue, _ := memClob.GetOperationsToReplay(ctx)
+	ctx.Logger().Debug(
 		"Local operations queue after PrepareCheckState",
 		"newLocalValidatorOperationsQueue",
-		types.GetOperationsQueueTextString(newLocalValidatorOperationsQueue),
+		types.GetInternalOperationsQueueTextString(newLocalValidatorOperationsQueue),
 		"block",
 		ctx.BlockHeight(),
 	)
+
+	// Set per-orderbook gauges.
+	memClob.SetMemclobGauges(ctx)
 }

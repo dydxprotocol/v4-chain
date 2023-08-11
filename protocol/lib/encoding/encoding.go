@@ -26,5 +26,8 @@ func MakeEncodingConfig(moduleBasics module.BasicManager) params.EncodingConfig 
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	moduleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
+	// This is currently required in order to support various CLI commands such as the `dydxprotocold status` command.
+	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
+
 	return encodingConfig
 }

@@ -1,4 +1,4 @@
-//go:build integration_test
+//go:build all || integration_test
 
 package cli_test
 
@@ -12,7 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/dydxprotocol/v4/app"
-	"github.com/dydxprotocol/v4/daemons/pricefeed"
+	daemonflags "github.com/dydxprotocol/v4/daemons/flags"
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/testutil/appoptions"
 	testutil_bank "github.com/dydxprotocol/v4/testutil/bank"
@@ -22,6 +22,7 @@ import (
 	cli_testutil "github.com/dydxprotocol/v4/x/clob/client/testutil"
 	"github.com/dydxprotocol/v4/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4/x/epochs/types"
+	feetierstypes "github.com/dydxprotocol/v4/x/feetiers/types"
 	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
 	sa_testutil "github.com/dydxprotocol/v4/x/subaccounts/client/testutil"
@@ -62,11 +63,11 @@ func TestPlaceOrderIntegrationTestSuite(t *testing.T) {
 				panic("incorrect validator type")
 			}
 
-			// Disable the PriceFeed daemon in the integration tests.
-			appOptions.Set(pricefeed.FlagPriceFeedEnabled, false)
+			// Disable the Price daemon in the integration tests.
+			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
 
 			// Enable the liquidations daemon in the integration tests.
-			appOptions.Set(pricefeed.GrpcAddress, testval.AppConfig.GRPC.Address)
+			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
 		},
 	})
 
@@ -101,7 +102,6 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 	perpstate.Perpetuals = append(perpstate.Perpetuals, perpetual)
 
 	pricesstate := constants.Prices_DefaultGenesisState
-	pricesstate.Markets[0].Price = constants.FiveBillion // override price $50,000 == 1 BTC.
 
 	buf, err := s.cfg.Codec.MarshalJSON(&state)
 	s.NoError(err)
@@ -132,6 +132,9 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 	// Ensure that no funding payments will occur during this test.
 	epstate := constants.GenerateEpochGenesisStateWithoutFunding()
 
+	feeTiersState := feetierstypes.GenesisState{}
+	feeTiersState.Params = constants.PerpetualFeeParamsMakerRebate
+
 	epbuf, err := s.cfg.Codec.MarshalJSON(&epstate)
 	s.Require().NoError(err)
 	s.cfg.GenesisState[epochstypes.ModuleName] = epbuf
@@ -147,6 +150,10 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 	pricesbuf, err := s.cfg.Codec.MarshalJSON(&pricesstate)
 	s.Require().NoError(err)
 	s.cfg.GenesisState[pricestypes.ModuleName] = pricesbuf
+
+	feeTiersBuf, err := s.cfg.Codec.MarshalJSON(&feeTiersState)
+	s.Require().NoError(err)
+	s.cfg.GenesisState[feetierstypes.ModuleName] = feeTiersBuf
 
 	s.network = network.New(s.T(), s.cfg)
 
@@ -228,8 +235,10 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 
 	// Assert that both Subaccounts have the appropriate state.
 	// Order could be maker or taker after Uncross, so assert that account could have been either.
-	takerFee := fillSizeQuoteQuantums * int64(constants.TakerFeePpm) / int64(lib.OneMillion)
-	makerFee := fillSizeQuoteQuantums * int64(constants.MakerFeePpm) / int64(lib.OneMillion)
+	takerFee := fillSizeQuoteQuantums *
+		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].TakerFeePpm) / int64(lib.OneMillion)
+	makerFee := fillSizeQuoteQuantums *
+		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].MakerFeePpm) / int64(lib.OneMillion)
 
 	s.Require().Contains(
 		[]*big.Int{

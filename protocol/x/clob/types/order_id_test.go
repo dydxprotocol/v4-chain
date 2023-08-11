@@ -102,12 +102,12 @@ func TestSortOrders(t *testing.T) {
 		"sorts with same subaccount owner, number and client id, different order flags": {
 			orders: []types.OrderId{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
 			},
 			expectedOrders: []types.OrderId{
 				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 			},
 		},

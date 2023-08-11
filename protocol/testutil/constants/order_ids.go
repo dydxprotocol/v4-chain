@@ -15,6 +15,12 @@ var (
 		ClobPairId:   0,
 		OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 	}
+	LongTermOrderId_Alice_Num1_ClientId3_Clob1 = clobtypes.OrderId{
+		SubaccountId: Alice_Num1,
+		ClientId:     3,
+		ClobPairId:   1,
+		OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+	}
 
 	// Invalid clobPairId
 	InvalidClobPairId_Long_Term_Order = clobtypes.OrderId{

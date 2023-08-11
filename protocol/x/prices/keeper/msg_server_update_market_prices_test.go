@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/api"
@@ -29,7 +30,7 @@ const (
 	price_4_995_000_000 = constants.FiveBillion - constants.FiveMillion
 )
 
-// Note: the current market prices (i.e. 5 billion) are set in `CreateTestMarketsAndExchangeFeeds`.
+// Note: the current market prices (i.e. 5 billion) are set in `CreateTestMarketsAndExchanges`.
 func TestUpdateMarketPrices_Valid(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
@@ -66,7 +67,7 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId0,
+							ExchangeId:     constants.BinanceExchangeName,
 							Price:          price_5_010_000_000,
 							LastUpdateTime: &constants.TimeT,
 						},
@@ -88,7 +89,7 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId0,
+							ExchangeId:     constants.BinanceExchangeName,
 							Price:          price_5_004_999_999,
 							LastUpdateTime: &constants.TimeT,
 						},
@@ -110,7 +111,7 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId0,
+							ExchangeId:     constants.ExchangeId0,
 							Price:          price_4_995_000_001,
 							LastUpdateTime: &constants.TimeT,
 						},
@@ -132,7 +133,7 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId0,
+							ExchangeId:     constants.ExchangeId0,
 							Price:          price_5_000_250_000,
 							LastUpdateTime: &constants.TimeT,
 						},
@@ -154,7 +155,7 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId0,
+							ExchangeId:     constants.ExchangeId0,
 							Price:          price_4_999_750_000,
 							LastUpdateTime: &constants.TimeT,
 						},
@@ -174,7 +175,7 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
+			keepertest.CreateTestMarkets(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -185,15 +186,15 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 				&types.MsgUpdateMarketPrices{
 					MarketPriceUpdates: tc.msgUpdateMarketPrices,
 				})
-			allMarketsAfterUpdate := k.GetAllMarkets(ctx)
+			allMarketPricesAfterUpdate := k.GetAllMarketPrices(ctx)
 
 			// Validate.
 			require.NoError(t, err)
-			require.Len(t, tc.expectedMarketToPriceInState, len(allMarketsAfterUpdate))
-			for _, market := range allMarketsAfterUpdate {
-				expectedPrice, exists := tc.expectedMarketToPriceInState[market.Id]
+			require.Len(t, tc.expectedMarketToPriceInState, len(allMarketPricesAfterUpdate))
+			for _, marketPrice := range allMarketPricesAfterUpdate {
+				expectedPrice, exists := tc.expectedMarketToPriceInState[marketPrice.Id]
 				require.True(t, exists)
-				require.Equal(t, expectedPrice, market.Price)
+				require.Equal(t, expectedPrice, marketPrice.Price)
 			}
 		})
 	}
@@ -228,7 +229,7 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId0,
+							ExchangeId:     constants.ExchangeId0,
 							Price:          price_5_010_000_000,
 							LastUpdateTime: &constants.TimeT,
 						},
@@ -250,7 +251,7 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId0,
+							ExchangeId:     constants.ExchangeId0,
 							Price:          price_5_010_000_000,
 							LastUpdateTime: &constants.TimeT,
 						},
@@ -272,7 +273,7 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
 						{
-							ExchangeFeedId: constants.ExchangeFeedId0,
+							ExchangeId:     constants.ExchangeId0,
 							Price:          price_5_000_250_000,
 							LastUpdateTime: &constants.TimeT,
 						},
@@ -292,7 +293,7 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
+			keepertest.CreateTestMarkets(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -303,15 +304,15 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 				&types.MsgUpdateMarketPrices{
 					MarketPriceUpdates: tc.msgUpdateMarketPrices,
 				})
-			allMarketsAfterUpdate := k.GetAllMarkets(ctx)
+			allMarketPricesAfterUpdate := k.GetAllMarketPrices(ctx)
 
 			// Validate.
 			require.NoError(t, err)
-			require.Len(t, tc.expectedMarketToPriceInState, len(allMarketsAfterUpdate))
-			for _, market := range allMarketsAfterUpdate {
-				expectedPrice, exists := tc.expectedMarketToPriceInState[market.Id]
+			require.Len(t, tc.expectedMarketToPriceInState, len(allMarketPricesAfterUpdate))
+			for _, marketPrice := range allMarketPricesAfterUpdate {
+				expectedPrice, exists := tc.expectedMarketToPriceInState[marketPrice.Id]
 				require.True(t, exists)
-				require.Equal(t, expectedPrice, market.Price)
+				require.Equal(t, expectedPrice, marketPrice.Price)
 			}
 		})
 	}
@@ -329,7 +330,10 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
 				types.NewMarketPriceUpdate(99, 11), // Market with id 99 does not exist.
 			},
-			expectedErr: sdkerrors.Wrapf(types.ErrInvalidMarketPriceUpdateDeterministic, "market (99) does not exist"),
+			expectedErr: sdkerrors.Wrapf(
+				types.ErrInvalidMarketPriceUpdateDeterministic,
+				"market param price (99) does not exist",
+			),
 		},
 		"Price does not meet min price change": {
 			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
@@ -353,7 +357,7 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 			ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
+			keepertest.CreateTestMarkets(t, ctx, k)
 
 			// Run and Validate.
 			require.PanicsWithError(
@@ -385,8 +389,9 @@ func TestUpdateMarketPrices_Panic(t *testing.T) {
 	}
 
 	// Setup.
+	mockKeeper.On("Logger", ctx).Return(log.NewNopLogger())
 	mockKeeper.On("PerformStatefulPriceUpdateValidation", ctx, testMsg, false).Return(nil)
-	mockKeeper.On("UpdateMarketPrices", ctx, testUpdates, true).Return(testError)
+	mockKeeper.On("UpdateMarketPrices", ctx, testUpdates).Return(testError)
 
 	// Run and Validate.
 	require.PanicsWithError(

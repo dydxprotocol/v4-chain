@@ -20,7 +20,7 @@ type MemClobKeeper interface {
 	)
 	ProcessSingleMatch(
 		ctx sdk.Context,
-		matchWithOrders MatchWithOrders,
+		matchWithOrders *MatchWithOrders,
 	) (
 		success bool,
 		takerUpdateResult satypes.UpdateResult,
@@ -52,19 +52,19 @@ type MemClobKeeper interface {
 		offchainUpdates *OffchainUpdates,
 		err error,
 	)
-	CheckTxCancelOrder(
+	CancelShortTermOrder(
 		ctx sdk.Context,
 		msgCancelOrder *MsgCancelOrder,
 	) error
-	DoesStatefulOrderExistInState(
+	DoesLongTermOrderExistInState(
 		ctx sdk.Context,
 		order Order,
 	) bool
-	GetStatefulOrderPlacement(
+	GetLongTermOrderPlacement(
 		ctx sdk.Context,
 		orderId OrderId,
-	) (val StatefulOrderPlacement, found bool)
-	SetStatefulOrderPlacement(
+	) (val LongTermOrderPlacement, found bool)
+	SetLongTermOrderPlacement(
 		ctx sdk.Context,
 		order Order,
 		blockHeight uint32,
@@ -74,5 +74,21 @@ type MemClobKeeper interface {
 		goodTilBlockTime time.Time,
 		orderId OrderId,
 	)
+	OffsetSubaccountPerpetualPosition(
+		ctx sdk.Context,
+		liquidatedSubaccountId satypes.SubaccountId,
+		perpetualId uint32,
+		deltaQuantumsTotal *big.Int,
+	) (
+		fills []MatchPerpetualDeleveraging_Fill,
+		deltaQuantumsRemaining *big.Int,
+	)
 	GetIndexerEventManager() indexer_manager.IndexerEventManager
+	IsLiquidatable(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+	) (
+		bool,
+		error,
+	)
 }

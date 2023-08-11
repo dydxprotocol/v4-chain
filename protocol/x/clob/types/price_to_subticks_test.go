@@ -10,14 +10,14 @@ import (
 
 func TestPriceToSubticks(t *testing.T) {
 	tests := map[string]struct {
-		market                pricestypes.Market
+		marketPrice           pricestypes.MarketPrice
 		clobPair              types.ClobPair
 		baseAtomicResolution  int32
 		quoteAtomicResolution int32
 		bigExpectedSubticks   *big.Rat
 	}{
 		"typical BTC configuration, at $10_000": {
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000
 				Exponent: -5,
 			},
@@ -29,7 +29,7 @@ func TestPriceToSubticks(t *testing.T) {
 			bigExpectedSubticks:   big.NewRat(100_000_000, 1),
 		},
 		"typical ETH configuration, at $1_200": {
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_200_000_000, // $1_200
 				Exponent: -6,
 			},
@@ -41,7 +41,7 @@ func TestPriceToSubticks(t *testing.T) {
 			bigExpectedSubticks:   big.NewRat(1_200_000_000, 1),
 		},
 		"retains digits if not divisible": {
-			market: pricestypes.Market{
+			marketPrice: pricestypes.MarketPrice{
 				Price:    1_200_000_000, // $1_200
 				Exponent: -6,
 			},
@@ -56,7 +56,7 @@ func TestPriceToSubticks(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			subticks := types.PriceToSubticks(
-				tc.market,
+				tc.marketPrice,
 				tc.clobPair,
 				tc.baseAtomicResolution,
 				tc.quoteAtomicResolution,

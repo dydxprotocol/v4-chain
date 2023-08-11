@@ -61,6 +61,11 @@ func (_m *IndexerEventManager) SendOffchainData(message msgsender.Message) {
 	_m.Called(message)
 }
 
+// SendOnchainData provides a mock function with given fields: block
+func (_m *IndexerEventManager) SendOnchainData(block *indexer_manager.IndexerTendermintBlock) {
+	_m.Called(block)
+}
+
 type mockConstructorTestingTNewIndexerEventManager interface {
 	mock.TestingT
 	Cleanup(func())

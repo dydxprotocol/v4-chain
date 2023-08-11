@@ -424,6 +424,9 @@ func (m *memclobOpenOrders) mustAddOrderToOrderbook(
 	// Add the order to the subaccount's currently open orders.
 	m.mustAddOrderToSubaccountOrders(ctx, newOrder)
 
+	// Increment the total number of open orders for this orderbook.
+	orderbook.TotalOpenOrders++
+
 	// If the order is a Short-Term order, add the order to the order block expirations map.
 	if newOrder.IsShortTermOrder() {
 		m.mustAddShortTermOrderToBlockExpirationsForOrders(ctx, newOrder)
@@ -514,6 +517,9 @@ func (m *memclobOpenOrders) mustRemoveOrder(
 
 	// Remove the order from the level.
 	level.LevelOrders.Remove(levelOrder)
+
+	// Decrement the total number of orders for this orderbook.
+	orderbook.TotalOpenOrders--
 
 	// Edge case: If this removed order was the last order in its
 	// level, we need to remove the level altogether.

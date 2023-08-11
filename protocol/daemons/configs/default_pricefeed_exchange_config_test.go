@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	binanceId = exchange_common.EXCHANGE_FEED_BINANCE
+	binanceId = exchange_common.EXCHANGE_ID_BINANCE
 	filePath  = fmt.Sprintf("config/%v", constants.PricefeedExchangeConfigFileName)
 )
 
@@ -28,7 +28,7 @@ const (
 	# StaticExchangeStartupConfig represents the mapping of exchanges to the parameters for
 	# querying from them.
 	#
-	# ExchangeFeedId - Unique uint32 identifying an exchange.
+	# ExchangeId - Unique string identifying an exchange.
 	#
 	# IntervalMs - Delays between sending API requests to get exchange market prices - cannot be 0.
 	#
@@ -37,22 +37,67 @@ const (
 	# MaxQueries - Max api calls to get market prices for an exchange to make in a task-loop -
 	# cannot be 0. For multi-market API exchanges, the behavior will default to 1.
 	[[exchanges]]
-	ExchangeFeedId = 0
+	ExchangeId = "Binance"
+	IntervalMs = 4250
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "BinanceUS"
+	IntervalMs = 4250
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Bitfinex"
+	IntervalMs = 2500
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Bitstamp"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Bybit"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "CoinbasePro"
 	IntervalMs = 2000
 	TimeoutMs = 3000
 	MaxQueries = 3
 	[[exchanges]]
-	ExchangeFeedId = 1
+	ExchangeId = "CryptoCom"
 	IntervalMs = 2000
 	TimeoutMs = 3000
-	MaxQueries = 3
+	MaxQueries = 1
 	[[exchanges]]
-	ExchangeFeedId = 2
+	ExchangeId = "Gate"
 	IntervalMs = 2000
 	TimeoutMs = 3000
-	MaxQueries = 2
+	MaxQueries = 1
 	[[exchanges]]
-	ExchangeFeedId = 3
+	ExchangeId = "Huobi"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Kraken"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Kucoin"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Mexc"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Okx"
 	IntervalMs = 2000
 	TimeoutMs = 3000
 	MaxQueries = 1
@@ -105,7 +150,7 @@ func TestReadExchangeStartupConfigFile(t *testing.T) {
 		doNotWriteFile           bool
 
 		// expectations
-		expectedExchangeFeedId     uint32
+		expectedExchangeId         types.ExchangeId
 		expectedIntervalMsExchange uint32
 		expectedTimeoutMsExchange  uint32
 		expectedMaxQueries         uint32
@@ -113,7 +158,7 @@ func TestReadExchangeStartupConfigFile(t *testing.T) {
 	}{
 		"valid": {
 			exchangeConfigSourcePath:   "test_data/valid_test.toml",
-			expectedExchangeFeedId:     0,
+			expectedExchangeId:         binanceId,
 			expectedIntervalMsExchange: pfconstants.StaticExchangeStartupConfig[binanceId].IntervalMs,
 			expectedTimeoutMsExchange:  pfconstants.StaticExchangeStartupConfig[binanceId].TimeoutMs,
 			expectedMaxQueries:         pfconstants.StaticExchangeStartupConfig[binanceId].MaxQueries,
@@ -134,7 +179,7 @@ func TestReadExchangeStartupConfigFile(t *testing.T) {
 		"config file has malformed values": {
 			exchangeConfigSourcePath: "test_data/missingvals_test.toml",
 			expectedPanic: errors.New(
-				"One or more startup config values are unset or are set to zero for exchange with id: 1",
+				"One or more startup config values are unset or are set to zero for exchange with id: 'BinanceUS'",
 			),
 		},
 		"config file has incorrect values": {
@@ -176,11 +221,12 @@ func TestReadExchangeStartupConfigFile(t *testing.T) {
 			require.Equal(
 				t,
 				&types.ExchangeStartupConfig{
+					ExchangeId: tc.expectedExchangeId,
 					IntervalMs: tc.expectedIntervalMsExchange,
 					TimeoutMs:  tc.expectedTimeoutMsExchange,
 					MaxQueries: tc.expectedMaxQueries,
 				},
-				exchangeStartupConfigMap[tc.expectedExchangeFeedId],
+				exchangeStartupConfigMap[tc.expectedExchangeId],
 			)
 
 			os.RemoveAll("config")

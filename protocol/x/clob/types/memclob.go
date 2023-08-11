@@ -36,20 +36,22 @@ type MemClob interface {
 	)
 	GetClobPairForPerpetual(
 		ctx sdk.Context,
-		perptualId uint32,
+		perpetualId uint32,
 	) (
 		clobPairId ClobPairId,
 		err error,
 	)
-	GetOperations(
+	GetOperationsToReplay(
 		ctx sdk.Context,
 	) (
-		operationsQueue []Operation,
+		[]InternalOperation,
+		map[OrderHash][]byte,
 	)
-	GetOrdersWithAddToOrderbookCollatCheck(
+
+	GetOperationsRaw(
 		ctx sdk.Context,
 	) (
-		ordersWithAddToOrderbookCollatCheck []OrderHash,
+		operationsQueue []OperationRaw,
 	)
 	GetOrder(
 		ctx sdk.Context,
@@ -97,19 +99,30 @@ type MemClob interface {
 	)
 	RemoveAndClearOperationsQueue(
 		ctx sdk.Context,
-		localValidatorOperationsQueue []Operation,
+		localValidatorOperationsQueue []InternalOperation,
 	)
 	PurgeInvalidMemclobState(
 		ctx sdk.Context,
 		fullyFilledOrderIds []OrderId,
 		expiredStatefulOrderIds []OrderId,
 		canceledStatefulOrderIds []OrderId,
+		removedStatefulOrderIds []OrderId,
 		existingOffchainUpdates *OffchainUpdates,
 	) (offchainUpdates *OffchainUpdates)
 	ReplayOperations(
 		ctx sdk.Context,
-		localOperationsQueue []Operation,
+		localOperations []InternalOperation,
+		shortTermOrderTxBytes map[OrderHash][]byte,
 		existingOffchainUpdates *OffchainUpdates,
-		canceledStatefulOrderIds []OrderId,
 	) (offchainUpdates *OffchainUpdates)
+	SetMemclobGauges(
+		ctx sdk.Context,
+	)
+	GetMidPrice(
+		ctx sdk.Context,
+		clobPairId ClobPairId,
+	) (
+		subticks Subticks,
+		exists bool,
+	)
 }

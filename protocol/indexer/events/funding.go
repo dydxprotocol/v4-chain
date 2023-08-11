@@ -3,11 +3,11 @@ package events
 // NewPremiumSamplesEvent creates a FundingEvent representing a list of new funding premium
 // samples generated at the end of each `funding-sample` epoch.
 func NewPremiumSamplesEvent(
-	newSamplesForEvent []FundingUpdate,
-) *FundingEvent {
+	newSamplesForEvent []FundingUpdateV1,
+) *FundingEventV1 {
 	return newFundingEvent(
 		newSamplesForEvent,
-		FundingEvent_TYPE_PREMIUM_SAMPLE,
+		FundingEventV1_TYPE_PREMIUM_SAMPLE,
 	)
 }
 
@@ -15,19 +15,19 @@ func NewPremiumSamplesEvent(
 // funding rates generated at the end of each `funding-tick` epoch and funding indices
 // accordingly updated with `funding rate * price`.
 func NewFundingRatesAndIndicesEvent(
-	newFundingRatesAndIndicesForEvent []FundingUpdate,
-) *FundingEvent {
+	newFundingRatesAndIndicesForEvent []FundingUpdateV1,
+) *FundingEventV1 {
 	return newFundingEvent(
 		newFundingRatesAndIndicesForEvent,
-		FundingEvent_TYPE_FUNDING_RATE_AND_INDEX,
+		FundingEventV1_TYPE_FUNDING_RATE_AND_INDEX,
 	)
 }
 
 func newFundingEvent(
-	newUpdatesForEvent []FundingUpdate,
-	updateType FundingEvent_Type,
-) *FundingEvent {
-	return &FundingEvent{
+	newUpdatesForEvent []FundingUpdateV1,
+	updateType FundingEventV1_Type,
+) *FundingEventV1 {
+	return &FundingEventV1{
 		Updates: newUpdatesForEvent,
 		Type:    updateType,
 	}

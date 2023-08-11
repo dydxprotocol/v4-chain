@@ -20,7 +20,7 @@ type (
 		indexPriceCache        *pricefeedtypes.MarketToExchangePrices
 		marketToSmoothedPrices types.MarketToSmoothedPrices
 		timeProvider           lib.TimeProvider
-		indexerEventManager    *indexer_manager.IndexerEventManagerImpl
+		indexerEventManager    indexer_manager.IndexerEventManager
 	}
 )
 
@@ -32,7 +32,7 @@ func NewKeeper(
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	marketToSmoothedPrices types.MarketToSmoothedPrices,
 	timeProvider lib.TimeProvider,
-	indexerEventManager *indexer_manager.IndexerEventManagerImpl,
+	indexerEventManager indexer_manager.IndexerEventManager,
 ) *Keeper {
 	return &Keeper{
 		cdc:                    cdc,
@@ -44,13 +44,12 @@ func NewKeeper(
 	}
 }
 
-func (k Keeper) GetIndexerEventManager() *indexer_manager.IndexerEventManagerImpl {
+func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 	k.setNumMarkets(ctx, uint32(0))
-	k.setNumExchangeFeeds(ctx, uint32(0))
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

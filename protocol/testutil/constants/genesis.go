@@ -2,8 +2,11 @@ package constants
 
 // This is a copy of the localnet genesis.json. This can be retrieved from the localnet docker container path:
 // /dydxprotocol/chain/.alice/config/genesis.json
+// Disable linter for exchange config.
+//
+//nolint:all
 const GenesisState = `{
-  "genesis_time": "2023-04-10T16:16:14.085693715Z",
+  "genesis_time": "2023-07-10T19:23:15.891430637Z",
   "chain_id": "localdydxprotocol",
   "initial_height": "1",
   "consensus_params": {
@@ -31,12 +34,13 @@ const GenesisState = `{
       "assets": [
         {
           "atomic_resolution": -6,
-          "symbol": "USDC",
-          "denom": "ibc/usdc-placeholder",
+          "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+          "denom_exponent": "-6",
           "has_market": false,
           "id": 0,
           "long_interest": 0,
-          "market_id": 0
+          "market_id": 0,
+          "symbol": "USDC"
         }
       ]
     },
@@ -96,12 +100,12 @@ const GenesisState = `{
           "address": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
           "coins": [
             {
-              "denom": "ibc/usdc-placeholder",
-              "amount": "100000000000000000"
+              "denom": "dv4tnt",
+              "amount": "100000000000"
             },
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "amount": "100000000000000000"
             }
           ]
         },
@@ -109,12 +113,12 @@ const GenesisState = `{
           "address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
           "coins": [
             {
-              "denom": "ibc/usdc-placeholder",
-              "amount": "100000000000000000"
+              "denom": "dv4tnt",
+              "amount": "100000000000"
             },
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "amount": "100000000000000000"
             }
           ]
         },
@@ -122,7 +126,7 @@ const GenesisState = `{
           "address": "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
           "coins": [
             {
-              "denom": "ibc/usdc-placeholder",
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
               "amount": "1300000000000000000"
             }
           ]
@@ -131,12 +135,12 @@ const GenesisState = `{
           "address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
           "coins": [
             {
-              "denom": "ibc/usdc-placeholder",
-              "amount": "100000000000000000"
+              "denom": "dv4tnt",
+              "amount": "100000000000"
             },
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "amount": "100000000000000000"
             }
           ]
         },
@@ -144,12 +148,12 @@ const GenesisState = `{
           "address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
           "coins": [
             {
-              "denom": "ibc/usdc-placeholder",
-              "amount": "100000000000000000"
+              "denom": "dv4tnt",
+              "amount": "100000000000"
             },
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "amount": "100000000000000000"
             }
           ]
         },
@@ -157,12 +161,12 @@ const GenesisState = `{
           "address": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m",
           "coins": [
             {
-              "denom": "ibc/usdc-placeholder",
-              "amount": "900000000000000000"
+              "denom": "dv4tnt",
+              "amount": "100000000000"
             },
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "amount": "900000000000000000"
             }
           ]
         }
@@ -171,11 +175,62 @@ const GenesisState = `{
       "denom_metadata": [],
       "send_enabled": []
     },
+    "blocktime": {
+      "params": {
+        "durations": [
+          "300s",
+          "1800s"
+        ],
+        "clock_drift_grace_period_duration": "5s"
+      }
+    },
+    "bridge": {
+      "event_params": {
+        "denom": "bridge-token",
+        "eth_chain_id": "0",
+        "eth_address": "0x0000000000000000000000000000000000000000"
+      },
+      "propose_params": {
+        "max_bridges_per_block": 10,
+        "propose_delay_duration": "60s",
+        "skip_rate_ppm": 800000,
+        "skip_if_block_delayed_by_duration": "5s"
+      },
+      "safety_params": {
+        "is_disabled": false,
+        "delay_blocks": 86400
+      },
+      "next_acknowledged_event_id": 0
+    },
     "capability": {
       "index": "1",
       "owners": []
     },
     "clob": {
+      "block_rate_limit_config": {
+        "max_short_term_orders_per_market_per_n_blocks": [
+          {
+            "num_blocks": 1,
+            "limit": 50
+          }
+        ],
+        "max_stateful_orders_per_n_blocks": [
+          {
+            "num_blocks": 1,
+            "limit": 2
+          },
+          {
+            "num_blocks": 100,
+            "limit": 20
+          }
+        ],
+        "max_short_term_order_cancellations_per_market_per_n_blocks": [
+          {
+            "num_blocks": 1,
+            "limit": 50
+          }
+        ]
+      },
       "clob_pairs": [
         {
           "id": 0,
@@ -221,11 +276,10 @@ const GenesisState = `{
         }
       }
     },
-    "consensus": null,
     "crisis": {
       "constant_fee": {
         "amount": "1000",
-        "denom": "stake"
+        "denom": "dv4tnt"
       }
     },
     "distribution": {
@@ -266,11 +320,34 @@ const GenesisState = `{
           "is_initialized": false,
           "name": "funding-tick",
           "next_tick": 0
+        },
+        {
+          "current_epoch": 0,
+          "current_epoch_start_block": 0,
+          "duration": 3600,
+          "fast_forward_next_tick": true,
+          "is_initialized": false,
+          "name": "stats-epoch",
+          "next_tick": 0
         }
       ]
     },
     "feegrant": {
       "allowances": []
+    },
+    "feetiers": {
+      "params": {
+        "tiers": [
+          {
+            "name": "1",
+            "absolute_volume_requirement": "0",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": 0,
+            "taker_fee_ppm": 0
+          }
+        ]
+      }
     },
     "genutil": {
       "gen_txs": [
@@ -299,7 +376,7 @@ const GenesisState = `{
                   "key": "YiARx8259Z+fGFUxQLrz/5FU2RYRT6f5yzvt7D7CrQM="
                 },
                 "value": {
-                  "denom": "stake",
+                  "denom": "dv4tnt",
                   "amount": "500000000"
                 }
               }
@@ -333,7 +410,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "rv0jVVNS7qgjbnUIxlIcdPju3UF4zOUt9iU91a0WotdGuFgJW1t5sYf7SvpKHPrNRik8T1eDKCcemW/Hn5d5Ew=="
+            "3V6nzjGGCFz0r4pda+DpHli5q39pVvyb/hDyRWtOVZlxzpWgkhv9uz0nUUsW3/XnG8z3TGZ7suHWfUEa4j1E6Q=="
           ]
         },
         {
@@ -361,7 +438,7 @@ const GenesisState = `{
                   "key": "ytLfs1W6E2I41iteKC/YwjyZ/51+CAYCHYxmRHiBeY4="
                 },
                 "value": {
-                  "denom": "stake",
+                  "denom": "dv4tnt",
                   "amount": "500000000"
                 }
               }
@@ -395,7 +472,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "rLDe97moyt85AVWhGu4+5YfMFkvH2mnL91DxZNDEXD8WFEHGaWMs9mGWzfXVAQ0iie5L6g2gzbhA8V7lewC96A=="
+            "KnRKXI/PUX1y4WCPtVEGp01PUmAxG0dTNeSzRcpQf8VbjcLHLYGiLaRi3rXnlGYDLJpkRTmVfYrC+H4senlqrg=="
           ]
         },
         {
@@ -423,7 +500,7 @@ const GenesisState = `{
                   "key": "yG29kRfZ/hgAE1I7uWjbKQJJL4/gX/05XBnfB+m196A="
                 },
                 "value": {
-                  "denom": "stake",
+                  "denom": "dv4tnt",
                   "amount": "500000000"
                 }
               }
@@ -457,7 +534,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "sRlNM8tust6bdyh2JiFMzmR3Vx+zojNHnvrDgxHDO/Ugb20FR93TB/bIxJbwLg8tbChhhV5VcD+mpcM/3DC77Q=="
+            "9Tq6iFxAvaCwPqnHxIk/AJsLyd8mS7A00TcF/K1pL1BiG9zoljkVfmTCw3WJpFDQrCtvv+Gzg9IyDPTzdLv7rw=="
           ]
         },
         {
@@ -485,7 +562,7 @@ const GenesisState = `{
                   "key": "+P8YiogqqQY+iD96yEa9OJx6EgieU95u9eR3pzxfDp0="
                 },
                 "value": {
-                  "denom": "stake",
+                  "denom": "dv4tnt",
                   "amount": "500000000"
                 }
               }
@@ -519,20 +596,22 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "27/BwrOjpvLUfvwBagcPmwjFci+eG2uavM1kVWsZQ5xgyF4BGfrQJlywNYE7sUh7Bvfu3sPNaNXaLmJCFWy4Jw=="
+            "HscCXF4oNaGnJbQkh0ixDa65Re79v4gYgaBNm7zUpmMkeXPmKmEsHAu+7AHvqrKuoVeAU+NupUEVFwFzamy8jA=="
           ]
         }
       ]
     },
     "gov": {
-      "deposit_params": null,
       "deposits": [],
       "params": {
+        "burn_proposal_deposit_prevote": false,
+        "burn_vote_quorum": false,
+        "burn_vote_veto": true,
         "max_deposit_period": "172800s",
         "min_deposit": [
           {
             "amount": "10000000",
-            "denom": "stake"
+            "denom": "dv4tnt"
           }
         ],
         "min_initial_deposit_ratio": "0.000000000000000000",
@@ -543,9 +622,7 @@ const GenesisState = `{
       },
       "proposals": [],
       "starting_proposal_id": "1",
-      "tally_params": null,
-      "votes": [],
-      "voting_params": null
+      "votes": []
     },
     "ibc": {
       "channel_genesis": {
@@ -580,19 +657,20 @@ const GenesisState = `{
         }
       }
     },
-    "params": null,
     "perpetuals": {
       "liquidity_tiers": [
         {
+          "base_position_notional": 1000000000000,
           "id": 0,
-          "name": "Large-Cap",
+          "impact_notional": 10000000000,
           "initial_margin_ppm": 50000,
           "maintenance_fraction_ppm": 600000,
-          "base_position_notional": 1000000000000
+          "name": "Large-Cap"
         }
       ],
       "params": {
         "funding_rate_clamp_factor_ppm": 6000000,
+        "min_num_votes_per_sample": 15,
         "premium_vote_clamp_factor_ppm": 60000000
       },
       "perpetuals": [
@@ -615,63 +693,448 @@ const GenesisState = `{
       ]
     },
     "prices": {
-      "exchange_feeds": [
+      "market_params": [
         {
-          "id": 0,
-          "memo": "Memo for Binance",
-          "name": "Binance"
-        },
-        {
-          "id": 1,
-          "memo": "Memo for Binance US",
-          "name": "BinanceUS"
-        },
-        {
-          "id": 2,
-          "memo": "Memo for Bitfinex",
-          "name": "Bitfinex"
-        }
-      ],
-      "markets": [
-        {
-          "exchanges": [
-            0,
-            1,
-            2
-          ],
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"BTCUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tBTCUSD\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"BTC/USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"BTCUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BTC-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"BTC_USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXBTZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BTC-USDT\"}]}",
           "exponent": -5,
           "id": 0,
-          "min_exchanges": 2,
+          "min_exchanges": 1,
           "min_price_change_ppm": 1000,
-          "pair": "BTC-USD",
-          "price": 2000000000
+          "pair": "BTC-USD"
         },
         {
-          "exchanges": [
-            0,
-            1,
-            2
-          ],
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ETHUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ETHUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tETHUSD\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"ETH/USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ETHUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ETH-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"ETH_USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XETHZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ETH-USDT\"}]}",
           "exponent": -6,
           "id": 1,
-          "min_exchanges": 2,
+          "min_exchanges": 1,
           "min_price_change_ppm": 1000,
-          "pair": "ETH-USD",
-          "price": 1500000000
+          "pair": "ETH-USD"
         },
         {
-          "exchanges": [
-            0,
-            1
-          ],
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"LINKUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"LINKUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LINK-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"LINK_USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"linkusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LINKUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LINK-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LINK-USDT\"}]}",
           "exponent": -8,
           "id": 2,
           "min_exchanges": 1,
-          "min_price_change_ppm": 1000,
-          "pair": "LINK-USD",
-          "price": 1000000000
+          "min_price_change_ppm": 2000,
+          "pair": "LINK-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"MATICUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"MATICUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MATIC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MATIC_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"maticusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MATIC-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MATIC-USDT\"}]}",
+          "exponent": -10,
+          "id": 3,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "MATIC-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"CRVUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"CRVUSD\\\"\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"CRVUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"CRV-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"CRV_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"crvusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"CRVUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"CRV-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"CRV-USDT\"}]}",
+          "exponent": -10,
+          "id": 4,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "CRV-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"SOLUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"SOLUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tSOLUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SOL-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"solusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"SOLUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SOL-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"SOL-USDT\"}]}",
+          "exponent": -8,
+          "id": 5,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "SOL-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ADAUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ADAUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tADAUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ADA-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ADA_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"adausdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"ADAUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ADA-USDT\"}]}",
+          "exponent": -10,
+          "id": 6,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "ADA-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"AVAXUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"AVAXUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tAVAX:USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"AVAX_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"avaxusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"AVAX-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"AVAX-USDT\"}]}",
+          "exponent": -8,
+          "id": 7,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "AVAX-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"FILUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"FILUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"FIL-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"filusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"FILUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"FIL-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"FIL-USDT\"}]}",
+          "exponent": -9,
+          "id": 8,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "FIL-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"AAVEUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"AAVEUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"AAVE-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"aaveusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"AAVEUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"AAVE-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"AAVE-USDT\"}]}",
+          "exponent": -8,
+          "id": 9,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "AAVE-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"LTCUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"LTCUSD\\\"\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"LTCUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LTC-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"ltcusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XLTCZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LTC-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LTC-USDT\"}]}",
+          "exponent": -8,
+          "id": 10,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "LTC-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"DOGEUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"DOGEUSD\\\"\"},{\"exchangeName\":\"Gate\",\"ticker\":\"DOGE_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"dogeusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"DOGE-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"DOGE-USDT\"}]}",
+          "exponent": -11,
+          "id": 11,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "DOGE-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ICPUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ICPUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ICP-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ICP_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"icpusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ICP-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ICP-USDT\"}]}",
+          "exponent": -9,
+          "id": 12,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "ICP-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ATOMUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ATOMUSD\\\"\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ATOMUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ATOM-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"atomusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"ATOMUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ATOM-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ATOM-USDT\"}]}",
+          "exponent": -9,
+          "id": 13,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "ATOM-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"DOTUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"DOTUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tDOTUSD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"DOT_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"dotusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"DOTUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"DOT-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"DOT-USDT\"}]}",
+          "exponent": -9,
+          "id": 14,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "DOT-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"XTZUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"XTZUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tXTZUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"XTZ-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"XTZ_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"xtzusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XTZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"XTZ-USDT\"}]}",
+          "exponent": -10,
+          "id": 15,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "XTZ-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"UNIUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"UNIUSD\\\"\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"UNIUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"UNI-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"UNI_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"uniusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"UNIUSD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"UNI_USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"UNI-USDT\"}]}",
+          "exponent": -9,
+          "id": 16,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "UNI-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BCHUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"BCHUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BCH-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"BCH_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"bchusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"BCHUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BCH-USDT\"}]}",
+          "exponent": -7,
+          "id": 17,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "BCH-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"EOSUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"EOSUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tEOSUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"EOS-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"eosusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"EOSUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"EOS-USDT\"}]}",
+          "exponent": -10,
+          "id": 18,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "EOS-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"EOSUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"EOSUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tEOSUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"EOS-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"eosusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"EOSUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"EOS-USDT\"}]}",
+          "exponent": -11,
+          "id": 19,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "TRX-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ALGOUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ALGOUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ALGO-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"algousdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"ALGOUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ALGO-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ALGO-USDT\"}]}",
+          "exponent": -10,
+          "id": 20,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "ALGO-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"NEARUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"NEARUSD\\\"\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"NEARUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"NEAR-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"NEAR_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"nearusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"NEAR-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"NEAR-USDT\"}]}",
+          "exponent": -9,
+          "id": 21,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "NEAR-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"SNXUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"SNXUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tSNXUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SNX-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"snxusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"SNXUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SNX-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"SNX-USDT\"}]}",
+          "exponent": -9,
+          "id": 22,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "SNX-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"MKRUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"MKRUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tMKRUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MKR-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MKR_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"mkrusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MKR-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MKR-USDT\"}]}",
+          "exponent": -7,
+          "id": 23,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "MKR-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"SUSHIUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"SUSHIUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tSUSHI:USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SUSHI-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"SUSHI_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"sushiusdt\"},{\"exchangeName\":\"Okx\",\"ticker\":\"SUSHI-USDT\"}]}",
+          "exponent": -10,
+          "id": 24,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "SUSHI-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"XLMUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"XLMUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tXLMUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"XLM-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"XLM_USDT\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXLMZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"XLM-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"XLM-USDT\"}]}",
+          "exponent": -11,
+          "id": 25,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "XLM-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"XMRUSDT\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tXMRUSD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"XMR_USDT\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXMRZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"XMR-USDT\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"XMR_USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"XMR-USDT\"}]}",
+          "exponent": -7,
+          "id": 26,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "XMR-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ETCUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ETCUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ETC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ETC_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"etcusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XETCZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ETC-USDT\"}]}",
+          "exponent": -8,
+          "id": 27,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "ETC-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"1INCHUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"1INCHUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"1INCH-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"1INCH_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"1inchusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"1INCH-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"1INCH-USDT\"}]}",
+          "exponent": -10,
+          "id": 28,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "1INCH-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"COMPUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"COMPUSD\\\"\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"COMPUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"COMP-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"compusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"COMPUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"COMP-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"COMP-USDT\"}]}",
+          "exponent": -8,
+          "id": 29,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "COMP-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ZECUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ZECUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tZECUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ZEC-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XZECZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ZEC-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ZEC-USDT\"}]}",
+          "exponent": -8,
+          "id": 30,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "ZEC-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ZRXUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ZRXUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tZRXUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ZRX-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"zrxusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"ZRXUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ZRX-USDT\"}]}",
+          "exponent": -10,
+          "id": 31,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "ZRX-USD"
+        },
+        {
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"YFIUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"YFIUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tYFIUSD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"YFIUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"YFI-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"yfiusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"YFIUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"YFI-USDT\"}]}",
+          "exponent": -6,
+          "id": 32,
+          "min_exchanges": 1,
+          "min_price_change_ppm": 2000,
+          "pair": "YFI-USD"
+        }
+      ],
+      "market_prices": [
+        {
+          "exponent": -5,
+          "id": 0,
+          "price": 2000000000
+        },
+        {
+          "exponent": -6,
+          "id": 1,
+          "price": 1500000000
+        },
+        {
+          "exponent": -8,
+          "id": 2,
+          "price": 700000000
+        },
+        {
+          "exponent": -10,
+          "id": 3,
+          "price": 7000000000
+        },
+        {
+          "exponent": -10,
+          "id": 4,
+          "price": 7000000000
+        },
+        {
+          "exponent": -8,
+          "id": 5,
+          "price": 1700000000
+        },
+        {
+          "exponent": -10,
+          "id": 6,
+          "price": 3000000000
+        },
+        {
+          "exponent": -8,
+          "id": 7,
+          "price": 1400000000
+        },
+        {
+          "exponent": -9,
+          "id": 8,
+          "price": 4000000000
+        },
+        {
+          "exponent": -8,
+          "id": 9,
+          "price": 7000000000
+        },
+        {
+          "exponent": -8,
+          "id": 10,
+          "price": 8800000000
+        },
+        {
+          "exponent": -11,
+          "id": 11,
+          "price": 7000000000
+        },
+        {
+          "exponent": -9,
+          "id": 12,
+          "price": 4000000000
+        },
+        {
+          "exponent": -9,
+          "id": 13,
+          "price": 10000000000
+        },
+        {
+          "exponent": -9,
+          "id": 14,
+          "price": 5000000000
+        },
+        {
+          "exponent": -10,
+          "id": 15,
+          "price": 8000000000
+        },
+        {
+          "exponent": -9,
+          "id": 16,
+          "price": 5000000000
+        },
+        {
+          "exponent": -7,
+          "id": 17,
+          "price": 2000000000
+        },
+        {
+          "exponent": -10,
+          "id": 18,
+          "price": 7000000000
+        },
+        {
+          "exponent": -11,
+          "id": 19,
+          "price": 7000000000
+        },
+        {
+          "exponent": -10,
+          "id": 20,
+          "price": 1400000000
+        },
+        {
+          "exponent": -9,
+          "id": 21,
+          "price": 1400000000
+        },
+        {
+          "exponent": -9,
+          "id": 22,
+          "price": 2200000000
+        },
+        {
+          "exponent": -7,
+          "id": 23,
+          "price": 7100000000
+        },
+        {
+          "exponent": -10,
+          "id": 24,
+          "price": 7000000000
+        },
+        {
+          "exponent": -11,
+          "id": 25,
+          "price": 10000000000
+        },
+        {
+          "exponent": -7,
+          "id": 26,
+          "price": 1650000000
+        },
+        {
+          "exponent": -8,
+          "id": 27,
+          "price": 1800000000
+        },
+        {
+          "exponent": -10,
+          "id": 28,
+          "price": 3000000000
+        },
+        {
+          "exponent": -8,
+          "id": 29,
+          "price": 4000000000
+        },
+        {
+          "exponent": -8,
+          "id": 30,
+          "price": 3000000000
+        },
+        {
+          "exponent": -10,
+          "id": 31,
+          "price": 2000000000
+        },
+        {
+          "exponent": -6,
+          "id": 32,
+          "price": 6500000000
         }
       ]
+    },
+    "rewards": {
+      "params": {
+        "treasury_account":"rewards_treasury",
+        "denom":"eth_rewards_denom",
+        "denom_exponent":-6,
+        "market_id":1,
+        "fee_multiplier_ppm":990000
+      }
     },
     "sending": {},
     "slashing": {
@@ -691,16 +1154,21 @@ const GenesisState = `{
       "last_total_power": "0",
       "last_validator_powers": [],
       "params": {
-        "bond_denom": "stake",
+        "bond_denom": "dv4tnt",
         "historical_entries": 10000,
         "max_entries": 7,
         "max_validators": 100,
         "min_commission_rate": "0.000000000000000000",
-        "unbonding_time": "7200s"
+        "unbonding_time": "1814400s"
       },
       "redelegations": [],
       "unbonding_delegations": [],
       "validators": []
+    },
+    "stats": {
+      "params": {
+        "window_duration": "2592000s"
+      }
     },
     "subaccounts": {
       "subaccounts": [
@@ -776,7 +1244,6 @@ const GenesisState = `{
         }
       ]
     },
-    "tendermint-client": null,
     "transfer": {
       "denom_traces": [],
       "params": {

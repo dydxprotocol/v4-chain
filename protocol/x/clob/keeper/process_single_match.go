@@ -13,68 +13,6 @@ import (
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
-// PerformOrderPreprocessing performs stateful validation on the provided placed orders.
-// This method also persists all new stateful orders in state so that stateful validation of
-// subsequent orders are performed using the latest state.
-//
-// The following validation occurs in this method:
-//   - Orders in `placeOrders` can pass `PerformStatefulOrderValidation` validation.
-//   - For stateful orders, validate that the order does not already exist in state,
-//     or if it does, the new order has a higher GoodTilBlockTime than the existing order.
-//
-// TODO(DEC-1238): Support stateful order replacements.
-// Useful context: https://github.com/dydxprotocol/v4/pull/710#discussion_r1060660002
-func (k Keeper) PerformOrderPreprocessing(
-	ctx sdk.Context,
-	placeOrders []*types.MsgPlaceOrder,
-) error {
-	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
-	placedStatefulOrders := make([]types.Order, 0)
-
-	// Perform initial stateful order validation.
-	for _, msg := range placeOrders {
-		newOrder := msg.GetOrder()
-
-		if err := k.PerformStatefulOrderValidation(ctx, &newOrder, blockHeight, false); err != nil {
-			return err
-		}
-
-		if newOrder.IsShortTermOrder() {
-			continue
-		}
-
-		// Persist the new stateful order in state so that subsequent orders
-		// can be validated using the updated state.
-		k.SetStatefulOrderPlacement(
-			ctx,
-			newOrder,
-			blockHeight,
-		)
-		// TODO(DEC-1238): Support stateful order replacements.
-		k.MustAddOrderToStatefulOrdersTimeSlice(
-			ctx,
-			newOrder.MustGetUnixGoodTilBlockTime(),
-			newOrder.GetOrderId(),
-		)
-
-		// TODO(DEC-1239): Add consensus validation for conditional orders.
-		placedStatefulOrders = append(placedStatefulOrders, newOrder)
-	}
-
-	// Update the memstore with stateful orders placed in this block.
-	// Placed stateful orders set as `ProcessProposerMatchesEvents` will update the `memclob` during `Commit`.
-	k.MustSetProcessProposerMatchesEvents(
-		ctx,
-		types.ProcessProposerMatchesEvents{
-			PlacedStatefulOrders:    placedStatefulOrders,
-			ExpiredStatefulOrderIds: []types.OrderId{}, // ExpiredOrderId to be populated in the EndBlocker.
-			BlockHeight:             blockHeight,
-		},
-	)
-
-	return nil
-}
-
 // ProcessSingleMatch accepts a single match and its associated orders matched in the block,
 // persists the resulting subaccount updates and state fill amounts.
 // This function assumes that the provided match with orders has undergone stateless validations.
@@ -94,9 +32,10 @@ func (k Keeper) PerformOrderPreprocessing(
 // and/or taker failed collateralization checks. This information is particularly pertinent for the `memclob` which
 // calls this method during matching.
 // TODO(DEC-1282): Remove redundant checks from `ProcessSingleMatch` for matching.
+// This method mutates matchWithOrders by setting the fee fields.
 func (k Keeper) ProcessSingleMatch(
 	ctx sdk.Context,
-	matchWithOrders types.MatchWithOrders,
+	matchWithOrders *types.MatchWithOrders,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,
@@ -104,6 +43,15 @@ func (k Keeper) ProcessSingleMatch(
 	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
+	// Perform stateless validation on the match.
+	if err := matchWithOrders.Validate(); err != nil {
+		return false, takerUpdateResult, makerUpdateResult, nil, sdkerrors.Wrapf(
+			err,
+			"ProcessSingleMatch: Invalid MatchWithOrders: %+v",
+			matchWithOrders,
+		)
+	}
+
 	offchainUpdates = types.NewOffchainUpdates()
 	makerMatchableOrder := matchWithOrders.MakerOrder
 	takerMatchableOrder := matchWithOrders.TakerOrder
@@ -141,8 +89,10 @@ func (k Keeper) ProcessSingleMatch(
 	}
 
 	// Calculate taker and maker fee ppms.
-	takerFeePpm := clobPair.GetFeePpm(true)
-	makerFeePpm := clobPair.GetFeePpm(false)
+	takerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
+		ctx, matchWithOrders.TakerOrder.GetSubaccountId().Owner, true)
+	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
+		ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false)
 
 	takerInsuranceFundDelta := new(big.Int)
 	if takerMatchableOrder.IsLiquidation() {
@@ -254,7 +204,7 @@ func (k Keeper) ProcessSingleMatch(
 			newTakerTotalFillAmount,
 			curTakerPruneableBlockHeight,
 		)
-		offchainUpdates.BulkUpdate(takerOffchainUpdates)
+		offchainUpdates.Append(takerOffchainUpdates)
 	}
 
 	makerOffchainUpdates := k.setOrderFillAmountsAndPruning(
@@ -263,7 +213,7 @@ func (k Keeper) ProcessSingleMatch(
 		newMakerTotalFillAmount,
 		curMakerPruneableBlockHeight,
 	)
-	offchainUpdates.BulkUpdate(makerOffchainUpdates)
+	offchainUpdates.Append(makerOffchainUpdates)
 
 	return true, takerUpdateResult, makerUpdateResult, offchainUpdates, nil
 }
@@ -273,12 +223,13 @@ func (k Keeper) ProcessSingleMatch(
 // affected subaccounts.
 // This method also transfers fees to the fee collector module, and
 // transfers insurance fund payments to the insurance fund.
+// This method mutates matchWithOrders by setting the fee fields.
 func (k Keeper) persistMatchedOrders(
 	ctx sdk.Context,
-	matchWithOrders types.MatchWithOrders,
+	matchWithOrders *types.MatchWithOrders,
 	perpetualId uint32,
-	takerFeePpm uint32,
-	makerFeePpm uint32,
+	takerFeePpm int32,
+	makerFeePpm int32,
 	bigFillQuoteQuantums *big.Int,
 	insuranceFundDelta *big.Int,
 ) (
@@ -288,8 +239,15 @@ func (k Keeper) persistMatchedOrders(
 	err error,
 ) {
 	isTakerLiquidation := matchWithOrders.TakerOrder.IsLiquidation()
-	bigTakerFeeQuoteQuantums := lib.BigIntMulPpm(bigFillQuoteQuantums, takerFeePpm)
-	bigMakerFeeQuoteQuantums := lib.BigIntMulPpm(bigFillQuoteQuantums, makerFeePpm)
+	bigTakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, takerFeePpm)
+	bigMakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, makerFeePpm)
+	matchWithOrders.MakerFee = bigMakerFeeQuoteQuantums.Int64()
+	// Liquidation orders pay the liquidation fee instead of the standard taker fee
+	if matchWithOrders.TakerOrder.IsLiquidation() {
+		matchWithOrders.TakerFee = insuranceFundDelta.Int64()
+	} else {
+		matchWithOrders.TakerFee = bigTakerFeeQuoteQuantums.Int64()
+	}
 
 	// If the taker is a liquidation order, it should never pay fees.
 	if isTakerLiquidation && bigTakerFeeQuoteQuantums.Sign() != 0 {
@@ -370,35 +328,18 @@ func (k Keeper) persistMatchedOrders(
 		return false, satypes.UpdateCausedError, satypes.UpdateCausedError, err
 	}
 
+	// Record stats
+	if success {
+		k.statsKeeper.RecordFill(
+			ctx,
+			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+			matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+			bigFillQuoteQuantums,
+		)
+	}
+
 	takerUpdateResult = successPerUpdate[0]
 	makerUpdateResult = successPerUpdate[1]
-
-	ctx.Logger().Info("Performed collateralization check in ProcessSingleMatch",
-		"matchWithOrders",
-		matchWithOrders,
-		"perpetualId",
-		perpetualId,
-		"takerFeePpm",
-		takerFeePpm,
-		"makerFeePpm",
-		makerFeePpm,
-		"bigTakerQuoteBalanceDelta",
-		bigTakerQuoteBalanceDelta.String(),
-		"bigMakerQuoteBalanceDelta",
-		bigMakerQuoteBalanceDelta.String(),
-		"bigTakerPerpetualQuantumsDelta",
-		bigTakerPerpetualQuantumsDelta.String(),
-		"bigMakerPerpetualQuantumsDelta",
-		bigMakerPerpetualQuantumsDelta.String(),
-		"insuranceFundDelta",
-		insuranceFundDelta.String(),
-		"takerUpdateResult",
-		takerUpdateResult.String(),
-		"makerUpdateResult",
-		makerUpdateResult.String(),
-		"block",
-		ctx.BlockHeight(),
-	)
 
 	// If not successful, return error indicating why.
 	if err := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); err != nil {
@@ -410,7 +351,7 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	// Transfer the fee amount from subacounts module to fee collector module account.
-	bigTotalFeeQuoteQuantums := bigTakerFeeQuoteQuantums.Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
+	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
 	if err := k.subaccountsKeeper.TransferFeesToFeeCollectorModule(
 		ctx,
 		lib.UsdcAssetId,

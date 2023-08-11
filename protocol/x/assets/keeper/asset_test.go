@@ -26,9 +26,7 @@ func createNAssets(
 ) ([]types.Asset, error) {
 	items := make([]types.Asset, n)
 
-	if perr := keepertest.CreateNMarketsWithExchangeFeeds(t, ctx, pricesKeeper, n); perr != nil {
-		return items, perr
-	}
+	keepertest.CreateNMarkets(t, ctx, pricesKeeper, n)
 
 	for i := range items {
 		hasMarket := i%2 == 0
@@ -68,7 +66,7 @@ func TestCreateAsset_MarketNotFound(t *testing.T) {
 		uint32(999),
 		int32(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(pricestypes.ErrMarketDoesNotExist, "999").Error())
+	require.EqualError(t, err, sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, "999").Error())
 
 	// Does not create an asset.
 	numAssets := keeper.GetNumAssets(ctx)
@@ -98,10 +96,9 @@ func TestCreateAsset_MarketIdInvalid(t *testing.T) {
 func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
 
-	err := keepertest.CreateNMarketsWithExchangeFeeds(t, ctx, pricesKeeper, 1)
-	require.NoError(t, err)
+	keepertest.CreateNMarkets(t, ctx, pricesKeeper, 1)
 
-	_, err = keeper.CreateAsset(
+	_, err := keeper.CreateAsset(
 		ctx,
 		"BTC",       // symbol
 		"btc-denom", // denom
@@ -206,7 +203,7 @@ func TestModifyAsset_MarketNotFound(t *testing.T) {
 		true,
 		uint32(999),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(pricestypes.ErrMarketDoesNotExist, "999").Error())
+	require.EqualError(t, err, sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, "999").Error())
 }
 
 func TestGetDenomById_Success(t *testing.T) {

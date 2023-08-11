@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"errors"
-	"github.com/dydxprotocol/v4/testutil/constants"
 	"math/big"
 
 	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4/testutil/constants"
 	"github.com/dydxprotocol/v4/x/prices/types"
 )
 
@@ -20,18 +20,18 @@ func getProposalPrice(smoothedPrice uint64, indexPrice uint64, marketPrice uint6
 
 // isAboveRequiredMinPriceChange returns true if the new price meets the required min price change
 // for the market. Otherwise, returns false.
-func isAboveRequiredMinPriceChange(market types.Market, newPrice uint64) bool {
-	minChangeAmt := getMinPriceChangeAmountForMarket(market)
-	return lib.AbsDiffUint64(market.Price, newPrice) >= minChangeAmt
+func isAboveRequiredMinPriceChange(marketParamPrice types.MarketParamPrice, newPrice uint64) bool {
+	minChangeAmt := getMinPriceChangeAmountForMarket(marketParamPrice)
+	return lib.AbsDiffUint64(marketParamPrice.Price.Price, newPrice) >= minChangeAmt
 }
 
 // getMinPriceChangeAmountForMarket returns the amount of price change that is needed to trigger
 // a price update in accordance with the min price change parts-per-million value.
-func getMinPriceChangeAmountForMarket(market types.Market) uint64 {
-	bigPrice := new(big.Int).SetUint64(market.Price)
+func getMinPriceChangeAmountForMarket(marketParamPrice types.MarketParamPrice) uint64 {
+	bigPrice := new(big.Int).SetUint64(marketParamPrice.Price.Price)
 	// There's no need to multiply this by the market's exponent, because `Price` comparisons are
 	// done without the market's exponent.
-	bigMinChangeAmt := lib.BigIntMulPpm(bigPrice, market.MinPriceChangePpm)
+	bigMinChangeAmt := lib.BigIntMulPpm(bigPrice, marketParamPrice.Param.MinPriceChangePpm)
 
 	if !bigMinChangeAmt.IsUint64() {
 		// This means that the min change amount is greater than the max uint64. This can only

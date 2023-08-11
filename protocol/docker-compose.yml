@@ -13,7 +13,9 @@ services:
       - dydxprotocold
       - start
       - --log_level
-      - info # change to `debug` for more verbose log-level
+      # Note that only this validator has a log-level of `info`; other validators use `error` by default.
+      # Change to `debug` for more verbose log-level.
+      - info 
       - --home
       - /dydxprotocol/chain/.alice
       - --p2p.persistent_peers 
@@ -33,7 +35,7 @@ services:
        - dydxprotocold
        - start
        - --log_level
-       - info
+       - error
        - --home
        - /dydxprotocol/chain/.bob
        - --p2p.persistent_peers 
@@ -53,7 +55,7 @@ services:
        - dydxprotocold
        - start
        - --log_level
-       - info
+       - error
        - --home
        - /dydxprotocol/chain/.carl
        - --p2p.persistent_peers 
@@ -71,7 +73,7 @@ services:
        - dydxprotocold
        - start
        - --log_level
-       - info
+       - error
        - --home
        - /dydxprotocol/chain/.dave
        - --p2p.persistent_peers 

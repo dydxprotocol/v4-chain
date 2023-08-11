@@ -2,10 +2,12 @@ package memclob
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	clobtest "github.com/dydxprotocol/v4/testutil/clob"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	testutil_memclob "github.com/dydxprotocol/v4/testutil/memclob"
 	sdktest "github.com/dydxprotocol/v4/testutil/sdk"
@@ -85,6 +87,22 @@ func TestShortTermCancelOrder_OrdersTilBlockExceedsCancels(t *testing.T) {
 	gottenOrder, found := memclob.GetOrder(ctx, orderId)
 	require.True(t, found)
 	require.Equal(t, order, gottenOrder)
+}
+
+func TestCancelOrder_PanicsOnStatefulOrder(t *testing.T) {
+	memclob := NewMemClobPriceTimePriority(true)
+	orderId := constants.LongTermOrderId_Alice_Num0_ClientId0_Clob0
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+
+	expectedError := fmt.Sprintf(
+		"MustBeShortTermOrder: called with stateful order ID (%+v)",
+		orderId,
+	)
+
+	require.PanicsWithValue(t, expectedError, func() {
+		//nolint:errcheck
+		memclob.CancelOrder(ctx, types.NewMsgCancelOrderStateful(orderId, 100))
+	})
 }
 
 func TestCancelOrder(t *testing.T) {
@@ -365,7 +383,7 @@ func TestCancelOrder_Telemetry(t *testing.T) {
 	counters := jsonMetrics["Counters"].([]any)
 	require.Condition(t, func() bool {
 		for _, counter := range counters {
-			if counter.(map[string]any)["Name"].(string) == "test.clob.cancel_order.removed_from_orderbook" &&
+			if counter.(map[string]any)["Name"].(string) == "test.clob.cancel_short_term_order.removed_from_orderbook" &&
 				counter.(map[string]any)["Count"].(float64) == 2.0 {
 				return true
 			}
@@ -385,7 +403,7 @@ func TestCancelOrder_Telemetry(t *testing.T) {
 	})
 }
 
-func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
+func TestCancelOrder_OperationsQueue(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 	ctx = ctx.WithIsCheckTx(true)
 	tests := map[string]struct {
@@ -394,71 +412,13 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 		collateralizationCheck map[int]testutil_memclob.CollateralizationCheck
 
 		// Expectations.
-		expectedOperations       []types.Operation
-		expectedOperationToNonce map[types.Operation]types.Nonce
-		expectedErr              error
+		expectedOperations         []types.Operation
+		expectedInternalOperations []types.InternalOperation
+		expectedErr                error
 	}{
-		`Stateful order cancellation added to operations queue if order has not been seen`: {
-			placedOperations: []types.Operation{
-				types.NewOrderCancellationOperation(
-					&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT5,
-				),
-			},
-			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{},
-
-			expectedOperations: []types.Operation{
-				types.NewOrderCancellationOperation(
-					&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT5,
-				),
-			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderCancellationOperation(&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT5): 0,
-			},
-		},
-		`Stateful order cancellation added to operations queue if order has been seen`: {
-			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
-				),
-				types.NewOrderCancellationOperation(
-					&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT5,
-				),
-			},
-			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{
-				0: {
-					CollatCheck: map[satypes.SubaccountId][]types.PendingOpenOrder{
-						constants.Alice_Num0: {
-							{
-								RemainingQuantums: 5,
-								IsBuy:             true,
-								IsTaker:           false,
-								Subticks:          10,
-								ClobPairId:        0,
-							},
-						},
-					},
-					Result: map[satypes.SubaccountId]satypes.UpdateResult{
-						constants.Alice_Num1: satypes.Success,
-					},
-				},
-			},
-
-			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
-				),
-				types.NewOrderCancellationOperation(
-					&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT5,
-				),
-			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5): 0,
-				types.NewOrderCancellationOperation(&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT5):    1,
-			},
-		},
 		`Can cancel a non-existent order`: {
 			placedOperations: []types.Operation{
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num0_Id10_Clob0_GTB20.OrderId,
 						constants.CancelOrder_Alice_Num0_Id10_Clob0_GTB20.GetGoodTilBlock(),
@@ -467,14 +427,14 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 			},
 			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{},
 
-			expectedOperations:       []types.Operation{},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{},
+			expectedOperations:         []types.Operation{},
+			expectedInternalOperations: []types.InternalOperation{},
 		},
-		`Can cancel a partially-matched order and the cancellation is added to the operations queue`: {
+		`Can cancel a partially-matched order`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
@@ -527,13 +487,13 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 			},
 
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
@@ -542,51 +502,48 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 						},
 					},
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25): 0,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20):  1,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 2,
-				types.NewOrderCancellationOperation(
-					types.NewMsgCancelOrderShortTerm(
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
-					),
-				): 3,
+				),
 			},
 		},
-		`Can cancel a partially-matched order multiple times and only the first cancellation is
-					added to the operations queue`: {
+		`Can cancel a partially-matched order multiple times`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB35.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB35.GetGoodTilBlock(),
@@ -639,13 +596,13 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 			},
 
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
@@ -654,49 +611,47 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 						},
 					},
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25): 0,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20):  1,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 2,
-				types.NewOrderCancellationOperation(
-					types.NewMsgCancelOrderShortTerm(
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
-					),
-				): 3,
+				),
 			},
 		},
-		`Canceling an unmatched order multiple times does not add a cancel to the operations queue`: {
+		`Canceling an unmatched order multiple times`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB35.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB35.GetGoodTilBlock(),
@@ -722,20 +677,20 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 				},
 			},
 
-			expectedOperations:       []types.Operation{},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{},
+			expectedOperations:         []types.Operation{},
+			expectedInternalOperations: []types.InternalOperation{},
 		},
-		`Canceling a fully-matched order multiple times does not add a cancel to the operations queue`: {
+		`Canceling a fully-matched order multiple times`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30),
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.GetGoodTilBlock(),
@@ -804,13 +759,13 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 			},
 
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
 					[]types.MakerFill{
 						{
@@ -820,47 +775,51 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 					},
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25): 0,
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30):  1,
-				types.NewMatchOperation(
-					&constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25.OrderId,
 							FillAmount:   30,
 						},
 					},
-				): 2,
+				),
 			},
 		},
-		`Canceling multiple partially matched orders adds multiple cancels to the operations queue`: {
+		`Can cancel multiple partially matched orders`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
 				// #1 partially-matched order.
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
 				// Cancel partially-matched order #1.
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
 				// #2 partially-matched order.
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id10_Clob0_Buy5_Price30_GTB34),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id10_Clob0_Buy5_Price30_GTB34),
 				// #3 partially-matched order.
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15),
 				// Cancel partially-matched order #3.
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id11_Clob1_GTB20.OrderId,
 						constants.CancelOrder_Alice_Num1_Id11_Clob1_GTB20.GetGoodTilBlock(),
 					),
 				),
 				// Cancel partially-matched order #2.
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num0_Id10_Clob0_GTB20.OrderId,
 						constants.CancelOrder_Alice_Num0_Id10_Clob0_GTB20.GetGoodTilBlock(),
@@ -1013,13 +972,13 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 			},
 
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
 					[]types.MakerFill{
 						{
@@ -1028,19 +987,19 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 						},
 					},
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id10_Clob0_Buy5_Price30_GTB34,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num1_Id10_Clob0_Buy5_Price30_GTB34,
 					[]types.MakerFill{
 						{
@@ -1049,13 +1008,13 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 						},
 					},
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
 					[]types.MakerFill{
 						{
@@ -1064,92 +1023,85 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 						},
 					},
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id11_Clob1_GTB20.OrderId,
 						constants.CancelOrder_Alice_Num1_Id11_Clob1_GTB20.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num0_Id10_Clob0_GTB20.OrderId,
 						constants.CancelOrder_Alice_Num0_Id10_Clob0_GTB20.GetGoodTilBlock(),
 					),
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20):  0,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25): 1,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 2,
-				types.NewOrderCancellationOperation(
-					types.NewMsgCancelOrderShortTerm(
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
-					),
-				): 3,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20): 4,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id10_Clob0_Buy5_Price30_GTB34):   5,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num1_Id10_Clob0_Buy5_Price30_GTB34,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id10_Clob0_Buy5_Price30_GTB34,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num1_Id10_Clob0_Buy5_Price30_GTB34,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 6,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20): 7,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15):  8,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num1_Id11_Clob1_Buy10_Price45_GTB20.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 9,
-				types.NewOrderCancellationOperation(
-					types.NewMsgCancelOrderShortTerm(
-						constants.CancelOrder_User1_Num1_Id11_Clob1_GTB20.OrderId,
-						constants.CancelOrder_User1_Num1_Id11_Clob1_GTB20.GetGoodTilBlock(),
-					),
-				): 10,
-				types.NewOrderCancellationOperation(
-					types.NewMsgCancelOrderShortTerm(
-						constants.CancelOrder_User1_Num0_Id10_Clob0_GTB20.OrderId,
-						constants.CancelOrder_User1_Num0_Id10_Clob0_GTB20.GetGoodTilBlock(),
-					),
-				): 11,
+				),
 			},
 		},
-		`Can cancel a partially-matched order, replace it, then re-cancel the order multiple times
-					and only the first cancellation is added to the operations queue`: {
+		`Can cancel a partially-matched order, replace it, then re-cancel the order multiple times`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30),
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB35.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB35.GetGoodTilBlock(),
@@ -1218,13 +1170,13 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 			},
 
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
@@ -1233,54 +1185,51 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 						},
 					},
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25): 0,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20):  1,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 2,
-				types.NewOrderCancellationOperation(
-					types.NewMsgCancelOrderShortTerm(
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
-					),
-				): 3,
+				),
 			},
 		},
 		`Can cancel a partially-matched order, replace it and it's partially-matched again, then
-					re-cancel the order multiple times and only two cancellations are added to the
-					operations queue`: {
+					re-cancel the order multiple times`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30),
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB35.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB35.GetGoodTilBlock(),
@@ -1395,13 +1344,13 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 			},
 
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
@@ -1410,19 +1359,19 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 						},
 					},
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
 					),
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30,
 					[]types.MakerFill{
 						{
@@ -1431,56 +1380,51 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 						},
 					},
 				),
-				types.NewOrderCancellationOperation(
+				clobtest.NewOrderCancellationOperation(
 					types.NewMsgCancelOrderShortTerm(
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.OrderId,
 						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.GetGoodTilBlock(),
 					),
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25): 0,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20):  1,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 2,
-				types.NewOrderCancellationOperation(
-					types.NewMsgCancelOrderShortTerm(
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.OrderId,
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB25.GetGoodTilBlock(),
-					),
-				): 3,
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22):   4,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30): 5,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22.OrderId,
 							FillAmount:   20,
 						},
 					},
-				): 6,
-				types.NewOrderCancellationOperation(
-					types.NewMsgCancelOrderShortTerm(
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.OrderId,
-						constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30.GetGoodTilBlock(),
-					),
-				): 7,
+				),
 			},
 		},
-		`Can replace a partially-matched order then cancel it, and no cancellation is added to the
-					operations queue`: {
+		`Can replace a partially-matched order then cancel it`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30),
 			},
 			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{
 				0: {
@@ -1544,13 +1488,13 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 			},
 
 			expectedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 				),
-				types.NewMatchOperation(
+				clobtest.NewMatchOperation(
 					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
@@ -1559,23 +1503,26 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 						},
 					},
 				),
-				types.NewOrderPlacementOperation(
+				clobtest.NewOrderPlacementOperation(
 					constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30,
 				),
 			},
-			expectedOperationToNonce: map[types.Operation]types.Nonce{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25): 0,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20):  1,
-				types.NewMatchOperation(
-					&constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.Order_Alice_Num1_Id13_Clob0_Buy30_Price50_GTB25.OrderId,
 							FillAmount:   5,
 						},
 					},
-				): 2,
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30): 3,
+				),
 			},
 		},
 	}
@@ -1589,7 +1536,7 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 				tc.placedOperations,
 				tc.collateralizationCheck,
 				constants.GetStatePosition_ZeroPositionSize,
-				[]types.StatefulOrderPlacement{},
+				[]types.LongTermOrderPlacement{},
 			)
 
 			assertMemclobHasOperations(
@@ -1597,7 +1544,7 @@ func TestCancelOrder_AddToOperationsQueue(t *testing.T) {
 				ctx,
 				memclob,
 				tc.expectedOperations,
-				tc.expectedOperationToNonce,
+				tc.expectedInternalOperations,
 			)
 
 			// TODO(DEC-1587): Verify the correct offchain update messages

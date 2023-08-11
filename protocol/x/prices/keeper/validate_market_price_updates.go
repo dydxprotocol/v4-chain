@@ -40,8 +40,18 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 		metrics.Latency,
 	)
 
-	markets := k.GetAllMarkets(ctx)
-	if err := k.performDeterministicStatefulValidation(ctx, marketPriceUpdates, markets); err != nil {
+	marketParamPrices, err := k.GetAllMarketParamPrices(ctx)
+	if err != nil {
+		telemetry.IncrCounter(
+			1,
+			types.ModuleName,
+			metrics.StatefulPriceUpdateValidation,
+			metrics.Error,
+		)
+		return sdkerrors.Wrap(err, "failed to get all market param prices")
+	}
+
+	if err := k.performDeterministicStatefulValidation(ctx, marketPriceUpdates, marketParamPrices); err != nil {
 		telemetry.IncrCounter(
 			1,
 			types.ModuleName,
@@ -53,7 +63,7 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 	}
 
 	if performNonDeterministicValidation {
-		err := k.performNonDeterministicStatefulValidation(ctx, marketPriceUpdates, markets)
+		err := k.performNonDeterministicStatefulValidation(ctx, marketPriceUpdates, marketParamPrices)
 		if err != nil {
 			telemetry.IncrCounter(
 				1,
@@ -79,14 +89,19 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 func (k Keeper) performNonDeterministicStatefulValidation(
 	ctx sdk.Context,
 	marketPriceUpdates *types.MsgUpdateMarketPrices,
-	allMarkets []types.Market,
+	allMarketParamPrices []types.MarketParamPrice,
 ) error {
-	idToMarket := getIdToMarket(allMarkets)
-	idToIndexPrice := k.indexPriceCache.GetValidMedianPrices(allMarkets, k.timeProvider.Now())
+	idToMarket := getIdToMarketParamPrice(allMarketParamPrices)
+	allMarketParams := make([]types.MarketParam, len(allMarketParamPrices))
+	for i, marketParamPrice := range allMarketParamPrices {
+		allMarketParams[i] = marketParamPrice.Param
+	}
+
+	idToIndexPrice := k.indexPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
 
 	for _, priceUpdate := range marketPriceUpdates.GetMarketPriceUpdates() {
 		// Check market exists.
-		market, err := getMarket(priceUpdate.MarketId, idToMarket)
+		marketParamPrice, err := getMarketParamPrice(priceUpdate.MarketId, idToMarket)
 		if err != nil {
 			return err
 		}
@@ -99,7 +114,7 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 				[]string{types.ModuleName, metrics.IndexPriceNotAvailForAccuracyCheck, metrics.Count},
 				1,
 				[]gometrics.Label{ // To track per market, include the id as a label.
-					pricefeedmetrics.GetLabelForMarketId(market.Id),
+					pricefeedmetrics.GetLabelForMarketId(marketParamPrice.Param.Id),
 				},
 			)
 			return sdkerrors.Wrapf(
@@ -110,12 +125,12 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 		}
 
 		// Check price is "accurate".
-		if err := k.validatePriceAccuracy(market, priceUpdate, indexPrice); err != nil {
+		if err := k.validatePriceAccuracy(marketParamPrice, priceUpdate, indexPrice); err != nil {
 			telemetry.IncrCounterWithLabels(
 				[]string{types.ModuleName, metrics.IndexPriceNotAccurate, metrics.Count},
 				1,
 				[]gometrics.Label{ // To track per market, include the id as a label.
-					pricefeedmetrics.GetLabelForMarketId(market.Id),
+					pricefeedmetrics.GetLabelForMarketId(marketParamPrice.Param.Id),
 				},
 			)
 			return err
@@ -131,7 +146,7 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 			metrics.MissingPriceUpdates,
 			metrics.Count,
 		)
-		ctx.Logger().Info(fmt.Sprintf("markets were not included in the price updates: %+v", missingMarketIds))
+		k.Logger(ctx).Info(fmt.Sprintf("markets were not included in the price updates: %+v", missingMarketIds))
 	}
 
 	return nil
@@ -145,27 +160,27 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 func (k Keeper) performDeterministicStatefulValidation(
 	ctx sdk.Context,
 	marketPriceUpdates *types.MsgUpdateMarketPrices,
-	allMarkets []types.Market,
+	allMarketParamPrices []types.MarketParamPrice,
 ) error {
-	idToMarket := getIdToMarket(allMarkets)
+	idToMarketParamPrice := getIdToMarketParamPrice(allMarketParamPrices)
 
 	for _, priceUpdate := range marketPriceUpdates.GetMarketPriceUpdates() {
 		// Check market exists.
-		market, err := getMarket(priceUpdate.MarketId, idToMarket)
+		marketParamPrice, err := getMarketParamPrice(priceUpdate.MarketId, idToMarketParamPrice)
 		if err != nil {
 			return err
 		}
 
 		// Check price respects min price change.
-		if !isAboveRequiredMinPriceChange(market, priceUpdate.Price) {
+		if !isAboveRequiredMinPriceChange(marketParamPrice, priceUpdate.Price) {
 			return sdkerrors.Wrapf(
 				types.ErrInvalidMarketPriceUpdateDeterministic,
 				"update price (%d) for market (%d) does not meet min price change requirement"+
 					" (%d ppm) based on the current market price (%d)",
 				priceUpdate.Price,
 				priceUpdate.MarketId,
-				market.MinPriceChangePpm,
-				market.Price,
+				marketParamPrice.Param.MinPriceChangePpm,
+				marketParamPrice.Price.Price,
 			)
 		}
 	}
@@ -187,12 +202,12 @@ func (k Keeper) performDeterministicStatefulValidation(
 //
 //     Note that ticks are defined as the minimum price change of the currency at the current price
 func (k Keeper) validatePriceAccuracy(
-	currMarket types.Market,
+	currMarketParamPrice types.MarketParamPrice,
 	priceUpdate *types.MsgUpdateMarketPrices_MarketPrice,
 	indexPrice uint64,
 ) error {
 	if isTowardsIndexPrice(PriceTuple{
-		OldPrice:   currMarket.Price,
+		OldPrice:   currMarketParamPrice.Price.Price,
 		IndexPrice: indexPrice,
 		NewPrice:   priceUpdate.Price,
 	}) {
@@ -200,7 +215,7 @@ func (k Keeper) validatePriceAccuracy(
 	}
 
 	if !isCrossingIndexPrice(PriceTuple{
-		OldPrice:   currMarket.Price,
+		OldPrice:   currMarketParamPrice.Price.Price,
 		IndexPrice: indexPrice,
 		NewPrice:   priceUpdate.Price,
 	}) {
@@ -211,13 +226,13 @@ func (k Keeper) validatePriceAccuracy(
 			priceUpdate.Price,
 			priceUpdate.MarketId,
 			indexPrice,
-			currMarket.Price,
+			currMarketParamPrice.Price.Price,
 		)
 	}
 
-	tickSizePpm := computeTickSizePpm(currMarket.Price, currMarket.MinPriceChangePpm)
+	tickSizePpm := computeTickSizePpm(currMarketParamPrice.Price.Price, currMarketParamPrice.Param.MinPriceChangePpm)
 
-	oldDelta := new(big.Int).SetUint64(lib.AbsDiffUint64(currMarket.Price, indexPrice))
+	oldDelta := new(big.Int).SetUint64(lib.AbsDiffUint64(currMarketParamPrice.Price.Price, indexPrice))
 	newDelta := new(big.Int).SetUint64(lib.AbsDiffUint64(indexPrice, priceUpdate.Price))
 
 	// If the index price is <= 1 tick from the old price, we want to compare absolute values of old_delta
@@ -231,7 +246,7 @@ func (k Keeper) validatePriceAccuracy(
 				priceUpdate.Price,
 				priceUpdate.MarketId,
 				indexPrice,
-				currMarket.Price,
+				currMarketParamPrice.Price.Price,
 				newDelta.Uint64(),
 				oldDelta.Uint64(),
 			)
@@ -248,7 +263,7 @@ func (k Keeper) validatePriceAccuracy(
 			priceUpdate.Price,
 			priceUpdate.MarketId,
 			indexPrice,
-			currMarket.Price,
+			currMarketParamPrice.Price.Price,
 			newDelta.Uint64(),
 			maximumAllowedPriceDelta(oldDelta, tickSizePpm),
 		)
@@ -285,24 +300,31 @@ func (k Keeper) GetMarketsMissingFromPriceUpdates(
 	return missingMarkets
 }
 
-// getIdToMarket returns a map of market id to market given a slice of markets.
-func getIdToMarket(markets []types.Market) map[uint32]types.Market {
-	idToMarket := make(map[uint32]types.Market, len(markets))
-	for _, market := range markets {
-		idToMarket[market.Id] = market
+// getIdToMarketParamPrice returns a map of market id to market param price given a slice of market param prices.
+func getIdToMarketParamPrice(marketParamPrices []types.MarketParamPrice) map[uint32]types.MarketParamPrice {
+	idToMarketParamPrice := make(map[uint32]types.MarketParamPrice, len(marketParamPrices))
+	for _, marketParamPrice := range marketParamPrices {
+		idToMarketParamPrice[marketParamPrice.Param.Id] = marketParamPrice
 	}
-	return idToMarket
+	return idToMarketParamPrice
 }
 
-// getMarket returns a market given a market id. Returns an error if a market does not exist.
-func getMarket(marketId uint32, idToMarket map[uint32]types.Market) (types.Market, error) {
-	market, marketExists := idToMarket[marketId]
-	if !marketExists {
-		return market, sdkerrors.Wrapf(
+// getMarketParamPrice returns a market param price given a market id. Returns an error if a market
+// param price does not exist.
+func getMarketParamPrice(
+	marketId uint32,
+	idToMarketParamPrice map[uint32]types.MarketParamPrice,
+) (
+	types.MarketParamPrice,
+	error,
+) {
+	marketParamPrice, marketParamPriceExists := idToMarketParamPrice[marketId]
+	if !marketParamPriceExists {
+		return marketParamPrice, sdkerrors.Wrapf(
 			types.ErrInvalidMarketPriceUpdateDeterministic,
-			"market (%d) does not exist",
+			"market param price (%d) does not exist",
 			marketId,
 		)
 	}
-	return market, nil
+	return marketParamPrice, nil
 }

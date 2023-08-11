@@ -10,16 +10,7 @@ import (
 // LiquidationsKeeper is an interface that encapsulates all reads and writes to the
 // in-memory data structures that store liquidation information.
 type LiquidationsKeeper interface {
-	DeliverTxPlacePerpetualLiquidation(
-		ctx sdk.Context,
-		liquidationOrder LiquidationOrder,
-		memclob MemClob,
-	) (
-		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
-		orderStatus OrderStatus,
-		err error,
-	)
-	CheckTxPlacePerpetualLiquidation(
+	PlacePerpetualLiquidation(
 		ctx sdk.Context,
 		liquidationOrder LiquidationOrder,
 	) (
@@ -101,10 +92,11 @@ type LiquidationsKeeper interface {
 		bigMaxNotionalLiquidatable *big.Int,
 		err error,
 	)
-	MaybeLiquidateSubaccount(
+	MaybeGetLiquidationOrder(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 	) (
+		liquidationOrder *LiquidationOrder,
 		err error,
 	)
 	GetSubaccountLiquidationInfo(

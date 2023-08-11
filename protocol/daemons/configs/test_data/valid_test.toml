@@ -1,5 +1,5 @@
 [[exchanges]]
-ExchangeFeedId = 0
-IntervalMs = 2_000
+ExchangeId = "Binance"
+IntervalMs = 4_250
 TimeoutMs = 3_000
-MaxQueries = 3
+MaxQueries = 1

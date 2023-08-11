@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"ICPUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"ICPUSD\""
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"ICP-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"ICP_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"icpusdt"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"ICP-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"ICP-USDT"
+    }
+  ]
+}

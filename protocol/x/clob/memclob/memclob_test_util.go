@@ -8,11 +8,14 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/dydxprotocol/v4/indexer/msgsender"
 	"github.com/dydxprotocol/v4/indexer/off_chain_updates"
+	"github.com/dydxprotocol/v4/lib"
 	testutil_memclob "github.com/dydxprotocol/v4/testutil/memclob"
 	"github.com/dydxprotocol/v4/x/clob/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -129,69 +132,20 @@ func createCollatCheckExpectationsFromPendingMatches(
 func createMatchExpectationsFromMatches(
 	expectedMatches []expectedMatch,
 ) (
-	expectedFills []types.PendingFill,
-	expectedSubaccountMatchMap map[satypes.SubaccountId][]uint32,
-	expectedMatchedOrdersSet map[types.OrderHash]types.MatchableOrder,
 	expectedOrderIdToFilledAmount map[types.OrderId]satypes.BaseQuantums,
 ) {
-	expectedFills = make([]types.PendingFill, 0)
-	expectedSubaccountMatchMap = make(map[satypes.SubaccountId][]uint32)
-	expectedMatchedOrdersSet = make(map[types.OrderHash]types.MatchableOrder)
 	expectedOrderIdToFilledAmount = make(map[types.OrderId]satypes.BaseQuantums)
 
-	for i, em := range expectedMatches {
-		makerOrderHash := em.makerOrder.GetOrderHash()
-		takerOrderHash := em.takerOrder.GetOrderHash()
-
-		// Update the list of expected matches.
-		takerSide := types.Order_SIDE_BUY
-		if !em.takerOrder.IsBuy() {
-			takerSide = types.Order_SIDE_SELL
-		}
-		fillType := types.Trade
-		if em.takerOrder.IsLiquidation() {
-			fillType = types.PerpetualLiquidate
-		}
-		expectedFills = append(expectedFills, types.PendingFill{
-			MakerOrderHash: makerOrderHash,
-			TakerOrderHash: takerOrderHash,
-			TakerSide:      takerSide,
-			Subticks:       em.makerOrder.GetOrderSubticks(),
-			Quantums:       em.matchedQuantums,
-			Type:           fillType,
-		})
-
+	for _, em := range expectedMatches {
 		// Update the filled size of the maker order.
 		expectedOrderIdToFilledAmount[em.makerOrder.MustGetOrder().OrderId] += em.matchedQuantums
 		// If it's not a liquidation order, update the filled size of the taker order.
 		if !em.takerOrder.IsLiquidation() {
 			expectedOrderIdToFilledAmount[em.takerOrder.MustGetOrder().OrderId] += em.matchedQuantums
 		}
-
-		// Update the list match indexes for both taker and maker subaccount IDs.
-		makerMatches, ok := expectedSubaccountMatchMap[em.makerOrder.GetSubaccountId()]
-		if !ok {
-			makerMatches = make([]uint32, 0)
-		}
-		makerMatches = append(makerMatches, uint32(i))
-		expectedSubaccountMatchMap[em.makerOrder.GetSubaccountId()] = makerMatches
-
-		takerMatches, ok := expectedSubaccountMatchMap[em.takerOrder.GetSubaccountId()]
-		if !ok {
-			takerMatches = make([]uint32, 0)
-		}
-		takerMatches = append(takerMatches, uint32(i))
-		expectedSubaccountMatchMap[em.takerOrder.GetSubaccountId()] = takerMatches
-
-		// Add the taker and maker order hash to the expected matched orders set.
-		expectedMatchedOrdersSet[makerOrderHash] = em.makerOrder
-		expectedMatchedOrdersSet[takerOrderHash] = em.takerOrder
 	}
 
-	return expectedFills,
-		expectedSubaccountMatchMap,
-		expectedMatchedOrdersSet,
-		expectedOrderIdToFilledAmount
+	return expectedOrderIdToFilledAmount
 }
 
 // createMatchExpectationsFromOperations is a testing utility function for calculating the expected
@@ -207,8 +161,8 @@ func createMatchExpectationsFromOperations(
 
 	for _, op := range expectedOperations {
 		switch operation := op.Operation.(type) {
-		case *types.Operation_OrderPlacement:
-			order := operation.OrderPlacement.Order
+		case *types.Operation_ShortTermOrderPlacement:
+			order := operation.ShortTermOrderPlacement.Order
 			orderHashToOperationsQueueOrder[order.GetOrderHash()] = order
 		case *types.Operation_Match:
 			switch match := operation.Match.Match.(type) {
@@ -232,7 +186,7 @@ func createMatchExpectationsFromOperations(
 					),
 				)
 			}
-		case *types.Operation_OrderCancellation:
+		case *types.Operation_ShortTermOrderCancellation:
 			// Do nothing since cancels are not tracked in any operations queue data structures.
 		default:
 			panic(
@@ -256,13 +210,7 @@ func assertMemclobHasMatches(
 	memclob *MemClobPriceTimePriority,
 	expectedMatches []expectedMatch,
 ) {
-	expectedFills,
-		_,
-		expectedMatchedOrdersSet,
-		expectedOrderIdToFilledAmount := createMatchExpectationsFromMatches(expectedMatches)
-
-	require.Equal(t, expectedFills, memclob.pendingFills.fills)
-	require.Equal(t, expectedMatchedOrdersSet, memclob.pendingFills.orderHashToMatchableOrder)
+	expectedOrderIdToFilledAmount := createMatchExpectationsFromMatches(expectedMatches)
 
 	for orderId, amount := range expectedOrderIdToFilledAmount {
 		require.Equal(
@@ -281,11 +229,9 @@ func assertMemclobHasOperations(
 	ctx sdk.Context,
 	memclob *MemClobPriceTimePriority,
 	expectedOperations []types.Operation,
-	expectedOperationToNonce map[types.Operation]types.Nonce,
+	expectedInternalOperations []types.InternalOperation,
 ) {
 	expectedOrderIdToFilledAmount, _ := createMatchExpectationsFromOperations(expectedOperations)
-
-	require.Equal(t, expectedOperations, memclob.pendingFills.operationsToPropose.GetOperationsQueue())
 
 	for orderId, amount := range expectedOrderIdToFilledAmount {
 		require.Equal(
@@ -295,24 +241,50 @@ func assertMemclobHasOperations(
 		)
 	}
 
-	expectedOperationHashToNonce := make(map[types.OperationHash]types.Nonce)
-	for operation, nonce := range expectedOperationToNonce {
-		hash := operation.GetOperationHash()
-		if _, exists := expectedOperationHashToNonce[hash]; exists {
-			panic(
-				fmt.Sprintf(
-					"assertMemclobHasOperations: operation hash already exists for operation %+v",
-					operation,
-				),
-			)
-		}
-		expectedOperationHashToNonce[hash] = nonce
-	}
-
 	require.Equal(
 		t,
-		expectedOperationHashToNonce,
-		memclob.pendingFills.operationsToPropose.OperationHashToNonce,
+		expectedInternalOperations,
+		memclob.operationsToPropose.OperationsQueue,
+	)
+}
+
+// AssertMemclobHasShortTermTxBytes asserts that the memclob contains a TX bytes entry for each
+// Short-Term order on the orderbook and in the operations queue.
+func AssertMemclobHasShortTermTxBytes(
+	t *testing.T,
+	ctx sdk.Context,
+	memclob *MemClobPriceTimePriority,
+	expectedInternalOperations []types.InternalOperation,
+	expectedRemainingBids []OrderWithRemainingSize,
+	expectedRemainingAsks []OrderWithRemainingSize,
+) {
+	expectedShortTermOrderHashes := make(map[types.OrderHash]bool)
+	for _, operation := range expectedInternalOperations {
+		if shortTermOrder := operation.GetShortTermOrderPlacement(); shortTermOrder != nil {
+			expectedShortTermOrderHashes[shortTermOrder.Order.GetOrderHash()] = true
+		}
+	}
+
+	for _, orders := range [][]OrderWithRemainingSize{expectedRemainingBids, expectedRemainingAsks} {
+		for _, order := range orders {
+			if order.Order.IsShortTermOrder() {
+				expectedShortTermOrderHashes[order.Order.GetOrderHash()] = true
+			}
+		}
+	}
+
+	expectedShortTermOrdersWithTxBytes := lib.ConvertMapToSliceOfKeys(
+		expectedShortTermOrderHashes,
+	)
+	shortTermOrdersWithTxBytes := lib.ConvertMapToSliceOfKeys(
+		memclob.operationsToPropose.ShortTermOrderHashToTxBytes,
+	)
+
+	// TODO(CLOB-631): Add test coverage to verify values of `ShortTermOrderHashToTxBytes`.
+	require.ElementsMatch(
+		t,
+		expectedShortTermOrdersWithTxBytes,
+		shortTermOrdersWithTxBytes,
 	)
 }
 
@@ -477,6 +449,7 @@ func AssertMemclobHasOrders(
 
 		// Verify each order has the correct remaining size and an assigned nonce.
 		expectedRestingOrders := append(expectedAsks, expectedBids...)
+		require.Equal(t, len(expectedRestingOrders), int(orderbook.TotalOpenOrders))
 		for _, order := range expectedRestingOrders {
 			orderId := order.Order.OrderId
 
@@ -492,21 +465,6 @@ func AssertMemclobHasOrders(
 			)
 			require.True(t, hasRemainingAmount)
 			require.Equal(t, order.RemainingSize, remainingAmount)
-
-			// Verify the order has a nonce assigned to either a pre-existing stateful order placement
-			// or an order placement operation.
-			placePreexistingStatefulOrderOpHasNonce := order.Order.IsStatefulOrder() &&
-				memclob.pendingFills.operationsToPropose.DoesOperationHaveNonce(
-					types.NewPreexistingStatefulOrderPlacementOperation(order.Order),
-				)
-			placeOrderOpHasNonce := memclob.pendingFills.operationsToPropose.DoesOperationHaveNonce(
-				types.NewOrderPlacementOperation(order.Order),
-			)
-
-			require.True(
-				t,
-				placePreexistingStatefulOrderOpHasNonce || placeOrderOpHasNonce,
-			)
 
 			// Mark the order as seen.
 			delete(unseenOrdersOnMemclob, orderId)
@@ -575,6 +533,7 @@ func assertOrderbookStateExpectations(
 	require.Equal(t, expectedBestBid, orderbook.BestBid)
 	// Verify the `BestBid` for this orderbook associated with the passed in order matches expectedBestAsk.
 	require.Equal(t, expectedBestAsk, orderbook.BestAsk)
+
 	isBuy := order.IsBuy()
 
 	// Verify the price level's total number of quantums was updated properly.
@@ -681,22 +640,22 @@ func applyOperationsToMemclob(
 	// Perform all existing operations on the memclob.
 	for _, op := range operations {
 		switch op.Operation.(type) {
-		case *types.Operation_OrderPlacement:
-			orderPlacement := op.GetOrderPlacement()
+		case *types.Operation_ShortTermOrderPlacement:
+			orderPlacement := op.GetShortTermOrderPlacement()
 			_, _, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order, true)
 			require.NoError(t, err)
-		case *types.Operation_OrderCancellation:
-			orderCancellation := op.GetOrderCancellation()
+		case *types.Operation_ShortTermOrderCancellation:
+			orderCancellation := op.GetShortTermOrderCancellation()
 			_, err := memclob.CancelOrder(ctx, orderCancellation)
 			require.NoError(t, err)
 		case *types.Operation_PreexistingStatefulOrder:
 			preexistingStatefulOrderId := op.GetPreexistingStatefulOrder()
-			orderPlacement, found := memClobKeeper.GetStatefulOrderPlacement(
+			orderPlacement, found := memClobKeeper.GetLongTermOrderPlacement(
 				ctx,
 				*preexistingStatefulOrderId,
 			)
 			require.True(t, found)
-			_, _, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order, true)
+			_, _, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order, false)
 			require.NoError(t, err)
 		default:
 			panic(
@@ -1046,7 +1005,7 @@ func memclobOperationsTestSetupWithCustomCollatCheck(
 	placedOperations []types.Operation,
 	collatCheckFn types.AddOrderToOrderbookCollateralizationCheckFn,
 	getStatePosition types.GetStatePositionFn,
-	preexistingStatefulOrders []types.StatefulOrderPlacement,
+	preexistingStatefulOrders []types.LongTermOrderPlacement,
 ) (
 	memclob *MemClobPriceTimePriority,
 	fakeMemClobKeeper *testutil_memclob.FakeMemClobKeeper,
@@ -1069,11 +1028,11 @@ func memclobOperationsTestSetupWithCustomCollatCheck(
 	// Create all pre-existing stateful orders, verify the specified transaction index
 	// is correct, and then commit the state.
 	for i, statefulOrderPlacement := range preexistingStatefulOrders {
-		require.Equal(t, uint32(i), statefulOrderPlacement.TransactionIndex)
-		memClobKeeper.SetStatefulOrderPlacement(
+		require.Equal(t, uint32(i), statefulOrderPlacement.PlacementIndex.TransactionIndex)
+		memClobKeeper.SetLongTermOrderPlacement(
 			ctx,
 			statefulOrderPlacement.Order,
-			statefulOrderPlacement.BlockHeight,
+			statefulOrderPlacement.PlacementIndex.BlockHeight,
 		)
 		memClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
 			ctx,
@@ -1105,7 +1064,7 @@ func memclobOperationsTestSetup(
 	placedOperations []types.Operation,
 	collateralizationChecks map[int]testutil_memclob.CollateralizationCheck,
 	getStatePosition types.GetStatePositionFn,
-	preexistingStatefulOrders []types.StatefulOrderPlacement,
+	preexistingStatefulOrders []types.LongTermOrderPlacement,
 ) (
 	memclob *MemClobPriceTimePriority,
 	fakeMemClobKeeper *testutil_memclob.FakeMemClobKeeper,
@@ -1155,7 +1114,6 @@ func placeOrderAndVerifyExpectations(
 	expectedRemainingBids []OrderWithRemainingSize,
 	expectedRemainingAsks []OrderWithRemainingSize,
 	expectedMatches []expectedMatch,
-	expectedPendingStatefulOrders []types.Order,
 	fakeMemClobKeeper *testutil_memclob.FakeMemClobKeeper,
 ) *types.OffchainUpdates {
 	filledSize,
@@ -1252,8 +1210,7 @@ func placeOrderAndVerifyExpectationsOperations(
 	expectedRemainingBids []OrderWithRemainingSize,
 	expectedRemainingAsks []OrderWithRemainingSize,
 	expectedOperations []types.Operation,
-	expectedOperationToNonce map[types.Operation]types.Nonce,
-	expectedPendingStatefulOrders []types.Order,
+	expectedInternalOperations []types.InternalOperation,
 	fakeMemClobKeeper *testutil_memclob.FakeMemClobKeeper,
 ) *types.OffchainUpdates {
 	filledSize,
@@ -1323,7 +1280,16 @@ func placeOrderAndVerifyExpectationsOperations(
 		ctx,
 		memclob,
 		expectedOperations,
-		expectedOperationToNonce,
+		expectedInternalOperations,
+	)
+
+	AssertMemclobHasShortTermTxBytes(
+		t,
+		ctx,
+		memclob,
+		expectedInternalOperations,
+		expectedRemainingBids,
+		expectedRemainingAsks,
 	)
 
 	return offchainUpdates
@@ -1351,13 +1317,29 @@ func assertPlaceOrderOffchainMessages(
 	expectedExistingMatches []expectedMatch,
 	expectedNewMatches []expectedMatch,
 	expectedCancelledReduceOnlyOrders []types.OrderId,
+	expectedToReplaceOrder bool,
 ) {
 	noopLogger := log.NewNopLogger()
 	actualOffchainMessages := offchainUpdates.GetMessages()
-	expectedOffchainMessages := []msgsender.Message(nil)
+	expectedOffchainMessages := []msgsender.Message{}
+	seenCancelledReduceOnlyOrders := mapset.NewSet[types.OrderId]()
 
 	// If there are no errors expected, an order place message should be sent.
 	if expectedErr == nil || doesErrorProduceOffchainMessages(expectedErr) {
+		if expectedToReplaceOrder {
+			updateMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+				noopLogger,
+				order.OrderId,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_REPLACED,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			)
+			expectedOffchainMessages = append(
+				expectedOffchainMessages,
+				updateMessage,
+			)
+			require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
+		}
+
 		updateMessage := off_chain_updates.MustCreateOrderPlaceMessage(
 			noopLogger,
 			order,
@@ -1366,27 +1348,55 @@ func assertPlaceOrderOffchainMessages(
 			expectedOffchainMessages,
 			updateMessage,
 		)
-		require.Contains(t, actualOffchainMessages, updateMessage)
+		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 	}
 
-	// For each order that were already placed on the book, if the order will fail collateralization
+	// Reduce-only order removals are sent before updates if the maker orders are removed during
+	// matching.
+	// Reduce-only order removals are also sent after matching, for orders from the same subaccount
+	// as the taker order.
+	for _, orderId := range expectedCancelledReduceOnlyOrders {
+		cancelMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+			noopLogger,
+			orderId,
+			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		)
+		// If the reduce-only order was seen before updates, add it to the set so we don't try to check
+		// for it later.
+		if cmp.Equal(actualOffchainMessages[len(expectedOffchainMessages)], cancelMessage) {
+			seenCancelledReduceOnlyOrders.Add(orderId)
+			expectedOffchainMessages = append(
+				expectedOffchainMessages,
+				cancelMessage,
+			)
+			require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
+		}
+	}
+
+	// For each order that was already placed on the book, if the order will fail collateralization
 	// checks during matching with the placed order, an order removal message should be sent.
 	for i, matchableOrder := range placedMatchableOrders {
-		order := matchableOrder.MustGetOrder()
+		matchOrder := matchableOrder.MustGetOrder()
+		// If the OrderIds match, this is a replacement order. Messages for replacements are tested
+		// separately by the expectedToReplaceOrder argument passed in.
+		if matchOrder.OrderId == order.OrderId {
+			continue
+		}
 		if subaccountFailures, exists := collatCheckFailures[i]; exists {
-			if _, exists = subaccountFailures[order.OrderId.SubaccountId]; exists {
+			if _, exists = subaccountFailures[matchOrder.OrderId.SubaccountId]; exists {
 				updateMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 					noopLogger,
-					order.OrderId,
-					off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
-					off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+					matchOrder.OrderId,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				)
 
 				expectedOffchainMessages = append(
 					expectedOffchainMessages,
 					updateMessage,
 				)
-				require.Contains(t, actualOffchainMessages, updateMessage)
+				require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 			}
 		}
 	}
@@ -1421,7 +1431,29 @@ func assertPlaceOrderOffchainMessages(
 			expectedOffchainMessages,
 			updateMessage,
 		)
-		require.Contains(t, actualOffchainMessages, updateMessage)
+		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
+	}
+
+	// Reduce-only order removals are sent before updates if the maker orders are removed during
+	// matching.
+	// Reduce-only order removals are also sent after matching, for orders from the same subaccount
+	// as the taker order.
+	for _, orderId := range expectedCancelledReduceOnlyOrders {
+		// Any reduce-only order removals that happened during matching don't need to be checked here.
+		if seenCancelledReduceOnlyOrders.Contains(orderId) {
+			continue
+		}
+		cancelMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+			noopLogger,
+			orderId,
+			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		)
+		expectedOffchainMessages = append(
+			expectedOffchainMessages,
+			cancelMessage,
+		)
+		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 	}
 
 	// If there is no error and the order status is success, the placed order should have an update
@@ -1436,7 +1468,7 @@ func assertPlaceOrderOffchainMessages(
 			expectedOffchainMessages,
 			updateMessage,
 		)
-		require.Contains(t, actualOffchainMessages, updateMessage)
+		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 	}
 
 	// If the order status after placing is not a success/resize but no error was returned, or an error
@@ -1448,30 +1480,16 @@ func assertPlaceOrderOffchainMessages(
 			order.OrderId,
 			expectedOrderStatus,
 			expectedErr,
-			off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		)
 		expectedOffchainMessages = append(
 			expectedOffchainMessages,
 			updateMessage,
 		)
-		require.Contains(t, actualOffchainMessages, updateMessage)
+		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 	}
 
-	// For each reduce-only order that was cancelled, an order removal message should be sent.
-	for _, orderId := range expectedCancelledReduceOnlyOrders {
-		cancelMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
-			noopLogger,
-			orderId,
-			off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
-			off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-		)
-		expectedOffchainMessages = append(
-			expectedOffchainMessages,
-			cancelMessage,
-		)
-	}
-
-	require.ElementsMatch(t, expectedOffchainMessages, actualOffchainMessages)
+	require.Equal(t, expectedOffchainMessages, actualOffchainMessages)
 }
 
 // assertPlacePerpetualLiquidationOffchainMessages checks that the correct off-chain update messages
@@ -1525,8 +1543,8 @@ func getExpectedPlacePerpetualLiquidationOffchainMessages(
 			updateMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 				noopLogger,
 				order.OrderId,
-				off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_SELF_TRADE_ERROR,
-				off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_SELF_TRADE_ERROR,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			)
 
 			expectedOffchainMessages = append(
@@ -1540,8 +1558,8 @@ func getExpectedPlacePerpetualLiquidationOffchainMessages(
 				updateMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 					noopLogger,
 					order.OrderId,
-					off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
-					off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				)
 
 				expectedOffchainMessages = append(
@@ -1664,7 +1682,7 @@ func placePerpetualLiquidationAndVerifyExpectationsOperations(
 	expectedRemainingBids []OrderWithRemainingSize,
 	expectedRemainingAsks []OrderWithRemainingSize,
 	expectedOperations []types.Operation,
-	expectedOperationToNonce map[types.Operation]types.Nonce,
+	expectedInternalOperations []types.InternalOperation,
 ) *types.OffchainUpdates {
 	// Run the test case.
 	_, _, offchainUpdates, err := memclob.PlacePerpetualLiquidation(
@@ -1684,7 +1702,22 @@ func placePerpetualLiquidationAndVerifyExpectationsOperations(
 		expectedRemainingAsks,
 	)
 
-	assertMemclobHasOperations(t, ctx, memclob, expectedOperations, expectedOperationToNonce)
+	assertMemclobHasOperations(
+		t,
+		ctx,
+		memclob,
+		expectedOperations,
+		expectedInternalOperations,
+	)
+
+	AssertMemclobHasShortTermTxBytes(
+		t,
+		ctx,
+		memclob,
+		expectedInternalOperations,
+		expectedRemainingBids,
+		expectedRemainingAsks,
+	)
 
 	return offchainUpdates
 }

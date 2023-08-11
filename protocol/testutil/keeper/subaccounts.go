@@ -84,7 +84,7 @@ func createSubaccountsKeeper(
 
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(msgSenderEnabled)
-	mockIndexerEventsManager := indexer_manager.NewIndexerEventManager(mockMsgSender, transientStoreKey)
+	mockIndexerEventsManager := indexer_manager.NewIndexerEventManager(mockMsgSender, transientStoreKey, true)
 
 	k := keeper.NewKeeper(
 		cdc,

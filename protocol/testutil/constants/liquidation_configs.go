@@ -13,6 +13,10 @@ var (
 		BankruptcyAdjustmentPpm:           lib.OneMillion,
 		SpreadToMaintenanceMarginRatioPpm: 100_000,
 	}
+	FillablePriceConfig_Max_Smmr = clobtypes.FillablePriceConfig{
+		BankruptcyAdjustmentPpm:           lib.OneMillion,
+		SpreadToMaintenanceMarginRatioPpm: lib.OneMillion,
+	}
 	PositionBlockLimits_Default = clobtypes.PositionBlockLimits{
 		MinPositionNotionalLiquidated:   1_000,
 		MaxPositionPortionLiquidatedPpm: 1_000_000,
@@ -33,6 +37,12 @@ var (
 	LiquidationsConfig_No_Limit = clobtypes.LiquidationsConfig{
 		MaxLiquidationFeePpm:  5_000,
 		FillablePriceConfig:   FillablePriceConfig_Default,
+		PositionBlockLimits:   PositionBlockLimits_No_Limit,
+		SubaccountBlockLimits: SubaccountBlockLimits_No_Limit,
+	}
+	LiquidationsConfig_FillablePrice_Max_Smmr = clobtypes.LiquidationsConfig{
+		MaxLiquidationFeePpm:  5_000,
+		FillablePriceConfig:   FillablePriceConfig_Max_Smmr,
 		PositionBlockLimits:   PositionBlockLimits_No_Limit,
 		SubaccountBlockLimits: SubaccountBlockLimits_No_Limit,
 	}

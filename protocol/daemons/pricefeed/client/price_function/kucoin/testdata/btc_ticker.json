@@ -1,0 +1,18 @@
+{
+    "symbol":"BTC-USDT",
+    "symbolName":"BTC-USDT",
+    "buy":"25008.4",
+    "sell":"25008.5",
+    "changeRate":"-0.0354",
+    "changePrice":"-918.7",
+    "high":"26096.2",
+    "low":"24821",
+    "vol":"5319.95816412",
+    "volValue":"135578356.948495567",
+    "last":"25008.5",
+    "averagePrice":"25932.02298664",
+    "takerFeeRate":"0.001",
+    "makerFeeRate":"0.001",
+    "takerCoefficient":"1",
+    "makerCoefficient":"1"
+}

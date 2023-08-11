@@ -13,14 +13,14 @@ import (
 
 func TestNewFundingEvent(t *testing.T) {
 	tests := map[string]struct {
-		updateType   events.FundingEvent_Type
-		updates      []events.FundingUpdate
+		updateType   events.FundingEventV1_Type
+		updates      []events.FundingUpdateV1
 		txnHash      lib.TxHash
-		newEventFunc func(updates []events.FundingUpdate) *events.FundingEvent
+		newEventFunc func(updates []events.FundingUpdateV1) *events.FundingEventV1
 	}{
 		"premium samples": {
-			updateType: events.FundingEvent_TYPE_PREMIUM_SAMPLE,
-			updates: []events.FundingUpdate{
+			updateType: events.FundingEventV1_TYPE_PREMIUM_SAMPLE,
+			updates: []events.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: 1000,
@@ -34,8 +34,8 @@ func TestNewFundingEvent(t *testing.T) {
 			newEventFunc: events.NewPremiumSamplesEvent,
 		},
 		"funding rates and indices": {
-			updateType: events.FundingEvent_TYPE_FUNDING_RATE_AND_INDEX,
-			updates: []events.FundingUpdate{
+			updateType: events.FundingEventV1_TYPE_FUNDING_RATE_AND_INDEX,
+			updates: []events.FundingUpdateV1{
 				{
 					PerpetualId:     0,
 					FundingValuePpm: -1000,
@@ -60,7 +60,7 @@ func TestNewFundingEvent(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			FundingEvent := tc.newEventFunc(tc.updates)
-			expectedFundingEventProto := &events.FundingEvent{
+			expectedFundingEventProto := &events.FundingEventV1{
 				Type:    tc.updateType,
 				Updates: tc.updates,
 			}

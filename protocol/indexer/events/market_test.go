@@ -18,10 +18,10 @@ var (
 
 func TestNewMarketPriceUpdateEvent_Success(t *testing.T) {
 	priceUpdateEvent := events.NewMarketPriceUpdateEvent(marketId, priceWithExponent)
-	expectedMarketEventProto := &events.MarketEvent{
+	expectedMarketEventProto := &events.MarketEventV1{
 		MarketId: marketId,
-		Event: &events.MarketEvent_PriceUpdate{
-			PriceUpdate: &events.MarketPriceUpdateEvent{
+		Event: &events.MarketEventV1_PriceUpdate{
+			PriceUpdate: &events.MarketPriceUpdateEventV1{
 				PriceWithExponent: priceWithExponent,
 			},
 		},
@@ -31,11 +31,11 @@ func TestNewMarketPriceUpdateEvent_Success(t *testing.T) {
 
 func TestNewMarketModifyEvent_Success(t *testing.T) {
 	marketModifyEvent := events.NewMarketModifyEvent(marketId, pair, minPriceChangePpm)
-	expectedMarketEventProto := &events.MarketEvent{
+	expectedMarketEventProto := &events.MarketEventV1{
 		MarketId: marketId,
-		Event: &events.MarketEvent_MarketModify{
-			MarketModify: &events.MarketModifyEvent{
-				Base: &events.MarketBaseEvent{
+		Event: &events.MarketEventV1_MarketModify{
+			MarketModify: &events.MarketModifyEventV1{
+				Base: &events.MarketBaseEventV1{
 					Pair:              pair,
 					MinPriceChangePpm: minPriceChangePpm,
 				},
@@ -52,11 +52,11 @@ func TestNewMarketCreateEvent_Success(t *testing.T) {
 		minPriceChangePpm,
 		int32(exponent),
 	)
-	expectedMarketEventProto := &events.MarketEvent{
+	expectedMarketEventProto := &events.MarketEventV1{
 		MarketId: marketId,
-		Event: &events.MarketEvent_MarketCreate{
-			MarketCreate: &events.MarketCreateEvent{
-				Base: &events.MarketBaseEvent{
+		Event: &events.MarketEventV1_MarketCreate{
+			MarketCreate: &events.MarketCreateEventV1{
+				Base: &events.MarketBaseEventV1{
 					Pair:              pair,
 					MinPriceChangePpm: minPriceChangePpm,
 				},

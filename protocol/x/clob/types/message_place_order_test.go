@@ -161,7 +161,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 					TimeInForce: Order_TIME_IN_FORCE_IOC,
 				},
 			},
-			err: ErrLongTermOrdersCannotRequireImmediateExecution,
+			err: ErrStatefulOrdersCannotRequireImmediateExecution,
 		},
 		"long-term: cannot be FOK": {
 			msg: MsgPlaceOrder{
@@ -181,7 +181,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 					TimeInForce: Order_TIME_IN_FORCE_FILL_OR_KILL,
 				},
 			},
-			err: ErrLongTermOrdersCannotRequireImmediateExecution,
+			err: ErrStatefulOrdersCannotRequireImmediateExecution,
 		},
 		"zero subticks": {
 			msg: MsgPlaceOrder{

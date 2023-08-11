@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"NEARUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"NEARUSD\""
+    },
+    {
+      "exchangeName":"Bybit",
+      "ticker":"NEARUSDT"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"NEAR-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"NEAR_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"nearusdt"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"NEAR-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"NEAR-USDT"
+    }
+  ]
+}

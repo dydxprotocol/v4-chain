@@ -3,9 +3,10 @@ package pricefeed
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 // ErrorMapsEqual is a testing method that takes any two maps of keys to errors and asserts that they have the same
@@ -15,7 +16,7 @@ func ErrorMapsEqual[K comparable](t *testing.T, expected map[K]error, actual map
 	for key, expectedError := range expected {
 		error, ok := actual[key]
 		require.True(t, ok)
-		require.EqualError(t, expectedError, error.Error())
+		require.EqualError(t, error, expectedError.Error())
 	}
 }
 

@@ -94,7 +94,6 @@ func configureDatadogProfilerOptions(
 func initDatadogProfiler(logger log.Logger, ddAgentHost string, ddAgentPort uint16) {
 	ddService, ddVersion, ddAgentHostPort, err := configureDatadogProfilerOptions(logger, ddAgentHost, ddAgentPort)
 	if err != nil {
-		logger.Info("Failed to initialize datadog profiler", err)
 		return
 	}
 	err = profiler.Start(
@@ -104,6 +103,7 @@ func initDatadogProfiler(logger log.Logger, ddAgentHost string, ddAgentPort uint
 		profiler.WithProfileTypes(
 			profiler.CPUProfile,
 			profiler.HeapProfile,
+			profiler.MutexProfile,
 		),
 	)
 	if err != nil {

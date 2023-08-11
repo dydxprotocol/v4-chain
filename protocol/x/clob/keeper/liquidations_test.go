@@ -148,29 +148,24 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				mock.Anything,
 			).Return(nil)
 
-			ctx,
-				clobKeeper,
-				pricesKeeper,
-				assetsKeeper,
-				perpetualsKeeper,
-				subaccountsKeeper,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
 
-			ctx = ctx.WithIsCheckTx(true)
+			ctx := ks.Ctx.WithIsCheckTx(true)
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
 
 			// Set up USDC asset in assets module.
-			err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
-				_, err := perpetualsKeeper.CreatePerpetual(
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
 					p.Ticker,
 					p.MarketId,
@@ -183,12 +178,12 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
-				subaccountsKeeper.SetSubaccount(ctx, subaccount)
+				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
 			}
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobs {
-				_, err = clobKeeper.CreatePerpetualClobPair(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
@@ -205,17 +200,17 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			// Initialize the liquidations config.
 			require.NoError(
 				t,
-				clobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default),
+				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default),
 			)
 
 			// Create all existing orders.
 			for _, order := range tc.existingOrders {
-				_, _, err := clobKeeper.CheckTxPlaceOrder(ctx, &types.MsgPlaceOrder{Order: order})
+				_, _, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, &types.MsgPlaceOrder{Order: order})
 				require.NoError(t, err)
 			}
 
 			// Run the test.
-			_, _, err = clobKeeper.CheckTxPlacePerpetualLiquidation(ctx, tc.order)
+			_, _, err = ks.ClobKeeper.PlacePerpetualLiquidation(ctx, tc.order)
 			require.NoError(t, err)
 
 			// Verify test expectations.
@@ -372,7 +367,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50000,
 
 			// Only matches one order since matching both orders would exceed `MaxNotionalLiquidated`.
-			expectedOrderStatus: types.Success,
+			expectedOrderStatus: types.LiquidationExceededSubaccountMaxNotionalLiquidated,
 			expectedPlacedOrders: []*types.MsgPlaceOrder{
 				{
 					Order: constants.Order_Dave_Num0_Id3_Clob1_Sell1ETH_Price3000,
@@ -426,7 +421,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50000,
 
 			// Only matches one order since matching both orders would exceed `MaxNotionalLiquidated`.
-			expectedOrderStatus: types.Success,
+			expectedOrderStatus: types.LiquidationExceededSubaccountMaxNotionalLiquidated,
 			expectedPlacedOrders: []*types.MsgPlaceOrder{
 				{
 					Order: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
@@ -500,7 +495,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
 
 			// Only matches one order since matching both orders would exceed `MaxQuantumsInsuranceLost`.
-			expectedOrderStatus: types.Success,
+			expectedOrderStatus: types.LiquidationExceededSubaccountMaxInsuranceLost,
 			expectedPlacedOrders: []*types.MsgPlaceOrder{
 				{
 					Order: constants.Order_Dave_Num0_Id4_Clob1_Sell1ETH_Price3030,
@@ -555,7 +550,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
 
 			// Only matches one order since matching both orders would exceed `MaxQuantumsInsuranceLost`.
-			expectedOrderStatus: types.Success,
+			expectedOrderStatus: types.LiquidationExceededSubaccountMaxInsuranceLost,
 			expectedPlacedOrders: []*types.MsgPlaceOrder{
 				{
 					Order: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
@@ -835,7 +830,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				},
 			},
 		},
-		`PlacePerpetualLiquidation panics when trying to liquidate the same perpeptual in a block`: {
+		`PlacePerpetualLiquidation panics when trying to liquidate the same perpetual in a block`: {
 			subaccounts: []satypes.Subaccount{
 				{
 					Id: &constants.Carl_Num0,
@@ -902,31 +897,26 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			mockIndexerEventManager.On("Enabled").Return(false)
-			ctx,
-				keeper,
-				pricesKeeper,
-				assetsKeeper,
-				perpKeeper,
-				saKeeper,
-				_,
-				_ := keepertest.ClobKeepers(t, memclob, bankKeeper, mockIndexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memclob, bankKeeper, mockIndexerEventManager)
 
-			ctx = ctx.WithIsCheckTx(true)
+			ctx := ks.Ctx.WithIsCheckTx(true)
 
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
 
 			// Set up USDC asset in assets module.
-			err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			for _, perpetual := range []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 				constants.EthUsd_100PercentMarginRequirement,
 			} {
-				_, err = perpKeeper.CreatePerpetual(
+				_, err = ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
 					perpetual.Ticker,
 					perpetual.MarketId,
@@ -938,10 +928,10 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			}
 
 			for _, s := range tc.subaccounts {
-				saKeeper.SetSubaccount(ctx, s)
+				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
 
-			_, err = keeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
@@ -953,7 +943,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				constants.ClobPair_Btc.TakerFeePpm,
 			)
 			require.NoError(t, err)
-			_, err = keeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
 				satypes.BaseQuantums(constants.ClobPair_Eth.StepBaseQuantums),
@@ -968,7 +958,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 
 			require.NoError(
 				t,
-				keeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig),
+				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig),
 			)
 
 			// Place all existing orders on the orderbook.
@@ -976,14 +966,14 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				// If the order is a liquidation order, place the liquidation.
 				// Else, assume it's a regular order and place it.
 				if liquidationOrder, ok := matchableOrder.(*types.LiquidationOrder); ok {
-					_, _, err := keeper.CheckTxPlacePerpetualLiquidation(
+					_, _, err := ks.ClobKeeper.PlacePerpetualLiquidation(
 						ctx,
 						*liquidationOrder,
 					)
 					require.NoError(t, err)
 				} else {
 					order := matchableOrder.MustGetOrder()
-					_, _, err := keeper.CheckTxPlaceOrder(ctx, &types.MsgPlaceOrder{Order: order.MustGetOrder()})
+					_, _, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, &types.MsgPlaceOrder{Order: order.MustGetOrder()})
 					require.NoError(t, err)
 				}
 			}
@@ -994,11 +984,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					t,
 					tc.expectedError.Error(),
 					func() {
-						_, _, _ = keeper.CheckTxPlacePerpetualLiquidation(ctx, tc.order)
+						_, _, _ = ks.ClobKeeper.PlacePerpetualLiquidation(ctx, tc.order)
 					},
 				)
 			} else {
-				_, orderStatus, err := keeper.CheckTxPlacePerpetualLiquidation(ctx, tc.order)
+				_, orderStatus, err := ks.ClobKeeper.PlacePerpetualLiquidation(ctx, tc.order)
 				require.NoError(t, err)
 				require.Equal(t, tc.expectedOrderStatus, orderStatus)
 
@@ -1006,7 +996,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					require.Equal(
 						t,
 						liquidationInfo,
-						keeper.GetSubaccountLiquidationInfo(ctx, subaccountId),
+						ks.ClobKeeper.GetSubaccountLiquidationInfo(ctx, subaccountId),
 					)
 				}
 
@@ -1021,6 +1011,828 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 	}
 }
 
+func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
+	tests := map[string]struct {
+		// State.
+		subaccounts          []satypes.Subaccount
+		insuranceFundBalance uint64
+
+		// Parameters.
+		liquidationConfig     types.LiquidationsConfig
+		placedMatchableOrders []types.MatchableOrder
+		order                 types.LiquidationOrder
+
+		// Expectations.
+		expectedFilledSize                satypes.BaseQuantums
+		expectedOrderStatus               types.OrderStatus
+		expectedSubaccountLiquidationInfo map[satypes.SubaccountId]types.SubaccountLiquidationInfo
+		expectedSubaccounts               []satypes.Subaccount
+		expectedOperationsQueue           []types.OperationRaw
+	}{
+		`Can place a liquidation order that is fully filled and does not require deleveraging`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 0,
+
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10, // Order at $50,000
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(100_000_000),
+			expectedOrderStatus: types.Success,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    50_000_000_000, // $50,000
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_499_000_000 - 50_000_000_000 - 250_000_000),
+						},
+					},
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(100_000_000_000), // $100,000
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
+				clobtest.NewMatchOperationRaw(
+					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.GetOrderId(),
+							FillAmount:   100_000_000,
+						},
+					},
+				),
+			},
+		},
+		`Can place a liquidation order that is partially filled and does not require deleveraging`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 0,
+
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
+			placedMatchableOrders: []types.MatchableOrder{
+				// First order at $50,000
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+				// Second order at $60,000, which does not cross the liquidation order
+				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price60000_GTB10,
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(25_000_000),
+			expectedOrderStatus: types.Success,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    12_500_000_000, // $12,500
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_499_000_000 - 12_500_000_000 - 62_500_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 12_500_000_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(75_000_000), // 0.75 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.GetOrderId(),
+							FillAmount:   25_000_000,
+						},
+					},
+				),
+			},
+		},
+		`Can place a liquidation order that is unfilled and full position size is deleveraged`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 0,
+
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
+			placedMatchableOrders: []types.MatchableOrder{
+				// Carl's bankruptcy price to close 1 BTC short is $50,499, and closing at $50,500
+				// would require $1 from the insurance fund. Since the insurance fund is empty,
+				// deleveraging is required to close this position.
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11,
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(0),
+			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    0, // $0
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000),
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             100_000_000,
+							},
+						},
+					},
+				),
+			},
+		},
+		`Can place a liquidation order that is partially-filled and remaining size is deleveraged`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 0,
+
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
+			placedMatchableOrders: []types.MatchableOrder{
+				// First order at $50,498, Carl pays $0.25 to the insurance fund.
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
+				// Carl's bankruptcy price to close 0.75 BTC short is $50,499, and closing at $50,500
+				// would require $0.75 from the insurance fund. Since the insurance fund is empty,
+				// deleveraging is required to close this position.
+				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(25_000_000),
+			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    50_498_000_000 / 4,
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000 - 250_000),
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11.GetOrderId(),
+							FillAmount:   25_000_000,
+						},
+					},
+				),
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             75_000_000,
+							},
+						},
+					},
+				),
+			},
+		},
+		`Can place a liquidation order that is unfilled and cannot be deleveraged due to
+			non-overlapping bankruptcy prices`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_49999USD,
+				constants.Dave_Num0_1BTC_Long_50000USD_Short,
+			},
+			insuranceFundBalance: 0,
+
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
+			placedMatchableOrders: []types.MatchableOrder{
+				// Carl's bankruptcy price to close 1 BTC short is $49,999, and closing at $50,000
+				// would require $1 from the insurance fund. Since the insurance fund is empty,
+				// deleveraging is required to close this position.
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(0),
+			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    0,
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				// Deleveraging fails.
+				// Dave's bankruptcy price to close 1 BTC long is $50,000, and deleveraging can not be
+				// performed due to non overlapping bankruptcy prices.
+				constants.Carl_Num0_1BTC_Short_49999USD,
+				constants.Dave_Num0_1BTC_Long_50000USD_Short,
+			},
+			expectedOperationsQueue: []types.OperationRaw{},
+		},
+		`Can place a liquidation order that is partially-filled and cannot be deleveraged due to
+			non-overlapping bankruptcy prices`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_49999USD,
+				constants.Dave_Num0_1BTC_Long_50000USD_Short,
+				constants.Dave_Num1_025BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 0,
+
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.Order_Dave_Num1_Id0_Clob0_Sell025BTC_Price49999_GTB10,
+				// Carl's bankruptcy price to close 1 BTC short is $49,999, and closing 0.75 BTC at $50,000
+				// would require $0.75 from the insurance fund. Since the insurance fund is empty,
+				// deleveraging is required to close this position.
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(25_000_000),
+			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    12_499_750_000,
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				// Deleveraging fails for remaining amount.
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(49_999_000_000 - 12_499_750_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				// Dave's bankruptcy price to close 1 BTC long is $50,000, and deleveraging can not be
+				// performed due to non overlapping bankruptcy prices.
+				// Dave_Num0 does not change since deleveraging against this subaccount failed.
+				constants.Dave_Num0_1BTC_Long_50000USD_Short,
+				{
+					Id: &constants.Dave_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 12_499_750_000),
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num1_Id0_Clob0_Sell025BTC_Price49999_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num1_Id0_Clob0_Sell025BTC_Price49999_GTB10.GetOrderId(),
+							FillAmount:   25_000_000,
+						},
+					},
+				),
+			},
+		},
+		`Can place a liquidation order that is unfilled, then only a portion of the remaining size can
+			deleveraged due to non-overlapping bankruptcy prices with some subaccounts`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_49999USD,
+				constants.Dave_Num0_1BTC_Long_50000USD_Short,
+				constants.Dave_Num1_05BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 0,
+
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
+			placedMatchableOrders: []types.MatchableOrder{
+				// Carl's bankruptcy price to close 1 BTC short is $49,999, and closing 0.75 BTC at $50,000
+				// would require $0.75 from the insurance fund. Since the insurance fund is empty,
+				// deleveraging is required to close this position.
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(0),
+			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    0,
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(49_999_000_000 - 24_999_500_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							// Deleveraging fails for remaining amount.
+							Quantums:     dtypes.NewInt(-50_000_000), // -0.5 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				// Dave_Num0 does not change since deleveraging against this subaccount failed.
+				constants.Dave_Num0_1BTC_Long_50000USD_Short,
+				{
+					Id: &constants.Dave_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 24_999_500_000),
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num1,
+								FillAmount:             50_000_000,
+							},
+						},
+					},
+				),
+			},
+		},
+		`Can place a liquidation order that is partially-filled, then deleveraged for only a
+			portion of the remaining size due to non-overlapping bankruptcy prices with some subaccounts`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_49999USD,
+				constants.Dave_Num0_1BTC_Long_50000USD_Short,
+				constants.Dave_Num1_05BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 0,
+
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.Order_Dave_Num1_Id0_Clob0_Sell025BTC_Price49999_GTB10,
+				// Carl's bankruptcy price to close 1 BTC short is $49,999, and closing 0.75 BTC at $50,000
+				// would require $0.75 from the insurance fund. Since the insurance fund is empty,
+				// deleveraging is required to close this position.
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(25_000_000),
+			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    12_499_750_000,
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				// Deleveraging fails for remaining amount.
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							// 0.25 BTC closed by liquidation order, 0.25 BTC closed by deleveraging.
+							Quantums: dtypes.NewInt(49_999_000_000 - 12_499_750_000 - 12_499_750_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(-50_000_000), // -0.5 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				// Dave_Num0 does not change since deleveraging against this subaccount failed.
+				constants.Dave_Num0_1BTC_Long_50000USD_Short,
+				{
+					Id: &constants.Dave_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							// 0.25 BTC closed by liquidation order, 0.25 BTC closed by deleveraging.
+							Quantums: dtypes.NewInt(50_000_000_000 + 12_499_750_000 + 12_499_750_000),
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num1_Id0_Clob0_Sell025BTC_Price49999_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num1_Id0_Clob0_Sell025BTC_Price49999_GTB10.GetOrderId(),
+							FillAmount:   25_000_000,
+						},
+					},
+				),
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num1,
+								FillAmount:             25_000_000,
+							},
+						},
+					},
+				),
+			},
+		},
+		`Partially matched and remaining size deleveraged -
+			positive insurance fund balance and positive MaxInsuranceFundQuantumsForDeleveraging`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 9_999_000_000, // $9,999
+
+			liquidationConfig: constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			placedMatchableOrders: []types.MatchableOrder{
+				// First order at $50,498, Carl pays $0.25 to the insurance fund.
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
+				// Carl's bankruptcy price to close 0.75 BTC short is $50,499, and closing at $50,500
+				// would require $0.75 from the insurance fund. Since the insurance fund is empty,
+				// deleveraging is required to close this position.
+				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(25_000_000),
+			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    50_498_000_000 / 4,
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000 - 250_000),
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11.GetOrderId(),
+							FillAmount:   25_000_000,
+						},
+					},
+				),
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             75_000_000,
+							},
+						},
+					},
+				),
+			},
+		},
+		`Can place a liquidation order that is partially-filled and subaccount becomes non-liquidatable -
+		 	deleveraging is skipped`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_54999USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 0,
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
+			placedMatchableOrders: []types.MatchableOrder{
+				// First order at $50,000, matching against this order will make Carl's TNC >= MMR.
+				// Insurance fund fee will be maxed out. DeltaQuoteQuantums = .25 BTC * $50k/BTC = $12,500.
+				// Current maxLiquidationFeePpm = 5000.
+				// Fee = $12,500 * 5000 / 1,000,000 = $62.5.
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+				// Carl's account has now become well-collateralized, however the liquidation order
+				// is for the full position size and will try to match against this high price order.
+				// Because of the high price, the insurance fund will be needed to cover the loss but the insurance
+				// fund is empty so we must deleverage. Our deleveraging algorithm will verify that the account is
+				// still liquidatable before actually doing any deleveraging. For this test, we expect that the
+				// account is no longer liquidatable and so deleveraging will be skipped.
+				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price60000_GTB10,
+			},
+			// Liquidation order at $60,000, setting high fill price to allow the order to
+			// attempt to fill against the high price order above.
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price60000,
+
+			expectedFilledSize:  satypes.BaseQuantums(25_000_000),
+			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    50_000_000_000 / 4,
+					QuantumsInsuranceLost: 0,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							Quantums: dtypes.NewInt(
+								54_999_000_000 - 50_000_000_000/4 -
+									lib.BigIntMulPpm(
+										big.NewInt(50_000_000_000/4),
+										constants.LiquidationsConfig_No_Limit.MaxLiquidationFeePpm,
+									).Int64(),
+							),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 50_000_000_000/4),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(75_000_000), // 0.75 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price60000,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.GetOrderId(),
+							FillAmount:   25_000_000,
+						},
+					},
+				),
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup memclob state and test expectations.
+			memclob := memclob.NewMemClobPriceTimePriority(false)
+
+			bankKeeper := &mocks.BankKeeper{}
+			bankKeeper.On(
+				"SendCoinsFromModuleToModule",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
+			bankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(tc.insuranceFundBalance)))
+
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			mockIndexerEventManager.On("Enabled").Return(false)
+			ks := keepertest.NewClobKeepersTestContext(t, memclob, bankKeeper, mockIndexerEventManager)
+
+			ctx := ks.Ctx.WithIsCheckTx(true)
+
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParamsNoFee))
+
+			// Set up USDC asset in assets module.
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			for _, perpetual := range []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			} {
+				_, err = ks.PerpetualsKeeper.CreatePerpetual(
+					ctx,
+					perpetual.Ticker,
+					perpetual.MarketId,
+					perpetual.AtomicResolution,
+					perpetual.DefaultFundingPpm,
+					perpetual.LiquidityTier,
+				)
+				require.NoError(t, err)
+			}
+
+			for _, s := range tc.subaccounts {
+				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
+			}
+
+			for _, clobPair := range []types.ClobPair{
+				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Eth_No_Fee,
+			} {
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+					ctx,
+					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
+					clobPair.MakerFeePpm,
+					clobPair.TakerFeePpm,
+				)
+				require.NoError(t, err)
+			}
+
+			require.NoError(
+				t,
+				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig),
+			)
+
+			// Place all existing orders on the orderbook.
+			for _, matchableOrder := range tc.placedMatchableOrders {
+				require.False(t, matchableOrder.IsLiquidation())
+
+				order := matchableOrder.MustGetOrder()
+
+				// Get raw tx bytes for this short term order placement and set on context
+				// so bytes are properly stored in OperationsToPropose
+				shortTermOrderPlacement := clobtest.NewShortTermOrderPlacementOperationRaw(order)
+				bytes := shortTermOrderPlacement.GetShortTermOrderPlacement()
+				tempCtx := ctx.WithTxBytes(bytes)
+				_, orderStatus, err := ks.ClobKeeper.PlaceShortTermOrder(tempCtx, &types.MsgPlaceOrder{Order: order.MustGetOrder()})
+				require.NoError(t, err)
+				require.Equal(t, types.Success, orderStatus)
+			}
+
+			// Run the test case and verify expectations.
+			actualFillAmount, orderStatus, err := ks.ClobKeeper.PlacePerpetualLiquidation(ctx, tc.order)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectedOrderStatus, orderStatus)
+			require.Equal(t, tc.expectedFilledSize, actualFillAmount)
+
+			for subaccountId, liquidationInfo := range tc.expectedSubaccountLiquidationInfo {
+				require.Equal(
+					t,
+					liquidationInfo,
+					ks.ClobKeeper.GetSubaccountLiquidationInfo(ctx, subaccountId),
+				)
+			}
+
+			for _, expectedSubaccount := range tc.expectedSubaccounts {
+				require.Equal(t, expectedSubaccount, ks.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.GetId()))
+			}
+
+			require.Equal(
+				t,
+				tc.expectedOperationsQueue,
+				ks.ClobKeeper.GetOperations(ctx).GetOperationsQueue(),
+			)
+		})
+	}
+}
+
 func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	indexerEventManager := &mocks.IndexerEventManager{}
 	for _, message := range constants.TestOffchainMessages {
@@ -1030,16 +1842,15 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
-	ctx, keeper, pricesKeeper, _, perpetualsKeeper, _, _, _ :=
-		keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
-	ctx = ctx.WithTxBytes(constants.TestTxBytes)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
 	// CheckTx mode set correctly
 	ctx = ctx.WithIsCheckTx(true)
-	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
-	perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+	prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
-	_, err := keeper.CreatePerpetualClobPair(
+	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ctx,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
 		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
@@ -1060,7 +1871,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 		nil,
 	)
 
-	_, _, err = keeper.CheckTxPlacePerpetualLiquidation(ctx, order)
+	_, _, err = ks.ClobKeeper.PlacePerpetualLiquidation(ctx, order)
 	require.NoError(t, err)
 
 	indexerEventManager.AssertNumberOfCalls(t, "SendOffchainData", len(constants.TestOffchainMessages))
@@ -1146,25 +1957,18 @@ func TestIsLiquidatable(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				pricesKeeper,
-				_,
-				perpetualsKeeper,
-				subaccountsKeeper,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
-				_, err := perpetualsKeeper.CreatePerpetual(
-					ctx,
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -1183,8 +1987,8 @@ func TestIsLiquidatable(t *testing.T) {
 				AssetPositions:     tc.assetPositions,
 				PerpetualPositions: tc.perpetualPositions,
 			}
-			subaccountsKeeper.SetSubaccount(ctx, subaccount)
-			isLiquidatable, err := clobKeeper.IsLiquidatable(ctx, *subaccount.Id)
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
+			isLiquidatable, err := ks.ClobKeeper.IsLiquidatable(ks.Ctx, *subaccount.Id)
 
 			// Note that there should never be errors when passing the empty update.
 			require.NoError(t, err)
@@ -1569,25 +2373,18 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				pricesKeeper,
-				_,
-				perpetualsKeeper,
-				subaccountsKeeper,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
-				_, err := perpetualsKeeper.CreatePerpetual(
-					ctx,
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -1607,10 +2404,10 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				AssetPositions:     tc.assetPositions,
 				PerpetualPositions: tc.perpetualPositions,
 			}
-			subaccountsKeeper.SetSubaccount(ctx, subaccount)
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 
-			bankruptcyPriceInQuoteQuantums, err := clobKeeper.GetBankruptcyPriceInQuoteQuantums(
-				ctx,
+			bankruptcyPriceInQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
+				ks.Ctx,
 				*subaccount.Id,
 				tc.perpetualId,
 				big.NewInt(tc.deltaQuantums),
@@ -1623,8 +2420,8 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				require.Equal(t, tc.expectedBankruptcyPriceQuoteQuantums, bankruptcyPriceInQuoteQuantums)
 
 				// Verify that the returned delta quote quantums can pass `CanUpdateSubaccounts` function.
-				success, _, err := subaccountsKeeper.CanUpdateSubaccounts(
-					ctx,
+				success, _, err := ks.SubaccountsKeeper.CanUpdateSubaccounts(
+					ks.Ctx,
 					[]satypes.Update{
 						{
 							SubaccountId: subaccountId,
@@ -2094,36 +2891,29 @@ func TestGetFillablePrice(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				pricesKeeper,
-				_,
-				perpetualsKeeper,
-				subaccountsKeeper,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Initialize the liquidations config.
 			if tc.liquidationConfig != nil {
 				require.NoError(t,
-					clobKeeper.InitializeLiquidationsConfig(ctx, *tc.liquidationConfig),
+					ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, *tc.liquidationConfig),
 				)
 			} else {
 				require.NoError(t,
-					clobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default),
+					ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, types.LiquidationsConfig_Default),
 				)
 			}
 
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
-				_, err := perpetualsKeeper.CreatePerpetual(
-					ctx,
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -2142,10 +2932,10 @@ func TestGetFillablePrice(t *testing.T) {
 				AssetPositions:     tc.assetPositions,
 				PerpetualPositions: tc.perpetualPositions,
 			}
-			subaccountsKeeper.SetSubaccount(ctx, subaccount)
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 
-			fillablePrice, err := clobKeeper.GetFillablePrice(
-				ctx,
+			fillablePrice, err := ks.ClobKeeper.GetFillablePrice(
+				ks.Ctx,
 				*subaccount.Id,
 				tc.perpetualId,
 				big.NewInt(tc.deltaQuantums),
@@ -2534,25 +3324,18 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				pricesKeeper,
-				_,
-				perpetualsKeeper,
-				subaccountsKeeper,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
-				_, err := perpetualsKeeper.CreatePerpetual(
-					ctx,
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -2563,8 +3346,8 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			}
 
 			// Create clob pair.
-			_, err := clobKeeper.CreatePerpetualClobPair(
-				ctx,
+			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
@@ -2585,24 +3368,24 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				AssetPositions:     tc.assetPositions,
 				PerpetualPositions: tc.perpetualPositions,
 			}
-			subaccountsKeeper.SetSubaccount(ctx, subaccount)
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 
 			// Initialize the liquidations config.
 			if tc.liquidationConfig != nil {
 				require.NoError(
 					t,
-					clobKeeper.InitializeLiquidationsConfig(ctx, *tc.liquidationConfig),
+					ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, *tc.liquidationConfig),
 				)
 			} else {
 				require.NoError(
 					t,
-					clobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default),
+					ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, types.LiquidationsConfig_Default),
 				)
 			}
 
 			// Run the test and verify expectations.
-			liquidationInsuranceFundDeltaBig, err := clobKeeper.GetLiquidationInsuranceFundDelta(
-				ctx,
+			liquidationInsuranceFundDeltaBig, err := ks.ClobKeeper.GetLiquidationInsuranceFundDelta(
+				ks.Ctx,
 				*subaccount.Id,
 				tc.perpetualId,
 				tc.isBuy,
@@ -2727,18 +3510,11 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				_,
-				_,
-				_,
-				_,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Run the test.
-			subticks := clobKeeper.ConvertFillablePriceToSubticks(
-				ctx,
+			subticks := ks.ClobKeeper.ConvertFillablePriceToSubticks(
+				ks.Ctx,
 				tc.fillablePrice,
 				tc.isLiquidatingLong,
 				tc.clobPair,
@@ -2755,19 +3531,12 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 func TestConvertFillablePriceToSubticks_PanicsOnNegativeFillablePrice(t *testing.T) {
 	// Setup keeper state.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		_,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	// Run the test.
 	require.Panics(t, func() {
-		clobKeeper.ConvertFillablePriceToSubticks(
-			ctx,
+		ks.ClobKeeper.ConvertFillablePriceToSubticks(
+			ks.Ctx,
 			big.NewRat(-1, 1),
 			false,
 			constants.ClobPair_Btc,
@@ -3260,25 +4029,18 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				pricesKeeper,
-				_,
-				perpetualsKeeper,
-				subaccountsKeeper,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
-				_, err := perpetualsKeeper.CreatePerpetual(
-					ctx,
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -3296,12 +4058,12 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				},
 				PerpetualPositions: tc.perpetualPositions,
 			}
-			subaccountsKeeper.SetSubaccount(ctx, subaccount)
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 
 			// Create the CLOB pairs and store the expected CLOB pair.
 			for _, clobPair := range tc.clobPairs {
-				_, err := clobKeeper.CreatePerpetualClobPair(
-					ctx,
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
@@ -3314,11 +4076,11 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				require.NoError(t, err)
 			}
 			// Initialize the liquidations config.
-			err := clobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig)
+			err := ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, tc.liquidationConfig)
 			require.NoError(t, err)
 
-			clobPair, positionSize, err := clobKeeper.GetPerpetualPositionToLiquidate(
-				ctx,
+			clobPair, positionSize, err := ks.ClobKeeper.GetPerpetualPositionToLiquidate(
+				ks.Ctx,
 				*subaccount.Id,
 			)
 			require.ErrorIs(t, err, tc.expectedError)
@@ -3339,14 +4101,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 func TestGetPerpetualPositionToLiquidate_PanicsClobDoesNotExist(t *testing.T) {
 	// Setup keeper state.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		subaccountsKeeper,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	// Create the subaccount.
 	subaccount := satypes.Subaccount{
@@ -3359,7 +4114,7 @@ func TestGetPerpetualPositionToLiquidate_PanicsClobDoesNotExist(t *testing.T) {
 			&constants.PerpetualPosition_OneTenthBTCLong,
 		},
 	}
-	subaccountsKeeper.SetSubaccount(ctx, subaccount)
+	ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 
 	require.PanicsWithError(
 		t,
@@ -3367,8 +4122,8 @@ func TestGetPerpetualPositionToLiquidate_PanicsClobDoesNotExist(t *testing.T) {
 			"any associated CLOB pairs",
 		func() {
 			//nolint: errcheck
-			clobKeeper.GetPerpetualPositionToLiquidate(
-				ctx,
+			ks.ClobKeeper.GetPerpetualPositionToLiquidate(
+				ks.Ctx,
 				*subaccount.Id,
 			)
 		},
@@ -3378,14 +4133,7 @@ func TestGetPerpetualPositionToLiquidate_PanicsClobDoesNotExist(t *testing.T) {
 func TestGetPerpetualPositionToLiquidate_PanicsClobPairNotInState(t *testing.T) {
 	// Setup keeper state.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx,
-		clobKeeper,
-		_,
-		_,
-		_,
-		subaccountsKeeper,
-		_,
-		_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	// Create the subaccount.
 	subaccount := satypes.Subaccount{
@@ -3398,25 +4146,25 @@ func TestGetPerpetualPositionToLiquidate_PanicsClobPairNotInState(t *testing.T) 
 			&constants.PerpetualPosition_OneTenthEthLong,
 		},
 	}
-	subaccountsKeeper.SetSubaccount(ctx, subaccount)
+	ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 
 	// Create the orderbook in the memclob.
-	memClob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memClob.CreateOrderbook(ks.Ctx, constants.ClobPair_Btc)
 
 	require.PanicsWithError(
 		t,
 		"CLOB pair ID 0 not found in state",
 		func() {
 			//nolint: errcheck
-			clobKeeper.GetPerpetualPositionToLiquidate(
-				ctx,
+			ks.ClobKeeper.GetPerpetualPositionToLiquidate(
+				ks.Ctx,
 				*subaccount.Id,
 			)
 		},
 	)
 }
 
-func TestMaybeLiquidateSubaccount(t *testing.T) {
+func TestMaybeGetLiquidationOrder(t *testing.T) {
 	tests := map[string]struct {
 		// Perpetuals state.
 		perpetuals []perptypes.Perpetual
@@ -3543,28 +4291,23 @@ func TestMaybeLiquidateSubaccount(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(nil)
-			ctx,
-				clobKeeper,
-				pricesKeeper,
-				assetsKeeper,
-				perpetualsKeeper,
-				subaccountsKeeper,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
-			ctx = ctx.WithIsCheckTx(true)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
 
-			err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
+
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
-				_, err := perpetualsKeeper.CreatePerpetual(
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
 					p.Ticker,
 					p.MarketId,
@@ -3577,12 +4320,12 @@ func TestMaybeLiquidateSubaccount(t *testing.T) {
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
-				subaccountsKeeper.SetSubaccount(ctx, subaccount)
+				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
 			}
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobs {
-				_, err = clobKeeper.CreatePerpetualClobPair(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
@@ -3597,20 +4340,26 @@ func TestMaybeLiquidateSubaccount(t *testing.T) {
 			}
 
 			// Initialize the liquidations config.
-			err = clobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default)
+			err = ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default)
 			require.NoError(t, err)
 
 			// Create all existing orders.
 			for _, order := range tc.existingOrders {
-				_, _, err := clobKeeper.CheckTxPlaceOrder(ctx, &types.MsgPlaceOrder{Order: order})
+				_, _, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, &types.MsgPlaceOrder{Order: order})
 				require.NoError(t, err)
 			}
 
 			// Run the test.
-			err = clobKeeper.MaybeLiquidateSubaccount(ctx, tc.liquidatableSubaccount)
+			liquidationOrder, err := ks.ClobKeeper.MaybeGetLiquidationOrder(ctx, tc.liquidatableSubaccount)
 
 			// Verify test expectations.
 			require.NoError(t, err)
+
+			if liquidationOrder != nil {
+				_, _, err := ks.ClobKeeper.PlacePerpetualLiquidation(ctx, *liquidationOrder)
+				require.NoError(t, err)
+			}
+
 			// TODO(DEC-1979): Refactor these tests to support the operations queue refactor.
 			// placedOrders, matchedOrders := memClob.GetPendingFills(ctx)
 			// require.Equal(t, tc.expectedPlacedOrders, placedOrders, "Placed orders lists are not equal")
@@ -3697,27 +4446,20 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			bankMock := &mocks.BankKeeper{}
-			ctx,
-				clobKeeper,
-				_,
-				_,
-				_,
-				_,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, bankMock, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
 
-			err := clobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig)
+			err := ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, tc.liquidationConfig)
 			require.NoError(t, err)
 
 			subaccountId := constants.Alice_Num0
 			perpetualId := uint32(0)
-			clobKeeper.MustUpdateSubaccountPerpetualLiquidated(
-				ctx,
+			ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(
+				ks.Ctx,
 				subaccountId,
 				tc.previouslyLiquidatedPerpetualId,
 			)
-			clobKeeper.UpdateSubaccountLiquidationInfo(
-				ctx,
+			ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
+				ks.Ctx,
 				subaccountId,
 				tc.previousNotionalLiquidated,
 				tc.previousInsuranceFundLost,
@@ -3729,8 +4471,8 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 					tc.expectedErr.Error(),
 					func() {
 						//nolint: errcheck
-						clobKeeper.GetMaxLiquidatableNotionalAndInsuranceLost(
-							ctx,
+						ks.ClobKeeper.GetMaxLiquidatableNotionalAndInsuranceLost(
+							ks.Ctx,
 							subaccountId,
 							perpetualId,
 						)
@@ -3739,8 +4481,8 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 			} else {
 				actualMaxNotionalLiquidatable,
 					actualMaxInsuranceLost,
-					err := clobKeeper.GetMaxLiquidatableNotionalAndInsuranceLost(
-					ctx,
+					err := ks.ClobKeeper.GetMaxLiquidatableNotionalAndInsuranceLost(
+					ks.Ctx,
 					subaccountId,
 					perpetualId,
 				)
@@ -3832,24 +4574,17 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				pricesKeeper,
-				_,
-				perpetualsKeeper,
-				_,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
 			// Create perpetual.
-			_, err := perpetualsKeeper.CreatePerpetual(
-				ctx,
+			_, err := ks.PerpetualsKeeper.CreatePerpetual(
+				ks.Ctx,
 				constants.BtcUsd_100PercentMarginRequirement.Ticker,
 				constants.BtcUsd_100PercentMarginRequirement.MarketId,
 				constants.BtcUsd_100PercentMarginRequirement.AtomicResolution,
@@ -3859,8 +4594,8 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create all CLOBs.
-			_, err = clobKeeper.CreatePerpetualClobPair(
-				ctx,
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
@@ -3872,13 +4607,13 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			err = clobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig)
+			err = ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, tc.liquidationConfig)
 			require.NoError(t, err)
 
 			actualMinPosNotionalLiquidatable,
 				actualMaxPosNotionalLiquidatable,
-				err := clobKeeper.GetMaxAndMinPositionNotionalLiquidatable(
-				ctx,
+				err := ks.ClobKeeper.GetMaxAndMinPositionNotionalLiquidatable(
+				ks.Ctx,
 				tc.positionToLiquidate,
 			)
 			if tc.expectedErr != nil {

@@ -3,6 +3,10 @@ package app_test
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"os"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -23,11 +27,9 @@ import (
 	epochstypes "github.com/dydxprotocol/v4/x/epochs/types"
 	perpetualstypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	rewardsmodule "github.com/dydxprotocol/v4/x/rewards/types"
 	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
-	"math/rand"
-	"os"
-	"testing"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
@@ -42,7 +44,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	"github.com/dydxprotocol/v4/app"
-	"github.com/dydxprotocol/v4/daemons/pricefeed"
+	daemonflags "github.com/dydxprotocol/v4/daemons/flags"
 	"github.com/stretchr/testify/require"
 )
 
@@ -100,6 +102,7 @@ var genesisModuleOrder = []string{
 	satypes.ModuleName,
 	clobtypes.ModuleName,
 	sendingtypes.ModuleName,
+	rewardsmodule.ModuleName,
 	epochstypes.ModuleName,
 }
 
@@ -378,6 +381,6 @@ func defaultAppOptionsForSimulation() simtestutil.AppOptionsMap {
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = app.DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
-	appOptions[pricefeed.FlagPriceFeedEnabled] = false
+	appOptions[daemonflags.FlagPriceDaemonEnabled] = false
 	return appOptions
 }

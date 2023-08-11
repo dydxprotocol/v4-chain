@@ -12,5 +12,6 @@ var _ GrpcServer = (*grpc.Server)(nil)
 // GrpcServer is an interface that encapsulates a `Grpc.Server` object.
 type GrpcServer interface {
 	Serve(lis net.Listener) error
+	Stop()
 	RegisterService(sd *grpc.ServiceDesc, ss interface{})
 }

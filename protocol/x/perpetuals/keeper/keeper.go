@@ -19,7 +19,7 @@ type (
 		pricesKeeper        types.PricesKeeper
 		epochsKeeper        types.EpochsKeeper
 		pricePremiumGetter  types.PricePremiumGetter
-		indexerEventManager *indexer_manager.IndexerEventManagerImpl
+		indexerEventManager indexer_manager.IndexerEventManager
 	}
 )
 
@@ -28,7 +28,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	pricesKeeper types.PricesKeeper,
 	epochsKeeper types.EpochsKeeper,
-	indexerEventsManager *indexer_manager.IndexerEventManagerImpl,
+	indexerEventsManager indexer_manager.IndexerEventManager,
 ) *Keeper {
 	return &Keeper{
 		cdc:                 cdc,
@@ -39,7 +39,7 @@ func NewKeeper(
 	}
 }
 
-func (k Keeper) GetIndexerEventManager() *indexer_manager.IndexerEventManagerImpl {
+func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 

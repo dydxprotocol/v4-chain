@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"os"
 	"runtime/debug"
 	"strings"
 
@@ -10,7 +11,11 @@ import (
 	"github.com/dydxprotocol/v4/app/basic_manager"
 )
 
-func NewRunTxPanicLoggingMiddleware(logger log.Logger) baseapp.RecoveryHandler {
+var (
+	Logger log.Logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+)
+
+func NewRunTxPanicLoggingMiddleware() baseapp.RecoveryHandler {
 	return func(recoveryObj interface{}) error {
 		stack := string(debug.Stack())
 
@@ -25,7 +30,7 @@ func NewRunTxPanicLoggingMiddleware(logger log.Logger) baseapp.RecoveryHandler {
 
 		keyvals = append(keyvals, "stack trace", stack)
 
-		logger.Error(
+		Logger.Error(
 			fmt.Sprintf(
 				"runTx panic'ed with %v",
 				recoveryObj,

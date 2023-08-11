@@ -5,21 +5,9 @@ import (
 	"errors"
 	"io"
 	"net/http"
-
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
-)
-
-const (
-	ETHUSDC = "ETHUSDC"
-	BTCUSDC = "BTCUSDC"
 )
 
 var (
-	ExponentSymbolMap = map[string]int32{
-		ETHUSDC: constants.StaticMarketPriceExponent[exchange_common.MARKET_ETH_USD],
-	}
-
 	MedianizationError = errors.New("Failed to get median")
 )
 

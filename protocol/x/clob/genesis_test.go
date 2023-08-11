@@ -27,6 +27,24 @@ func TestGenesis(t *testing.T) {
 	}{
 		"Genesis state is valid": {
 			genesis: types.GenesisState{
+				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
+					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+						{
+							Limit:     50,
+							NumBlocks: 1,
+						},
+					},
+					MaxStatefulOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
+						{
+							Limit:     2,
+							NumBlocks: 1,
+						},
+						{
+							Limit:     20,
+							NumBlocks: 100,
+						},
+					},
+				},
 				ClobPairs: []types.ClobPair{
 					{
 						Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -298,17 +316,40 @@ func TestGenesis(t *testing.T) {
 			expectedErr:     "0 is not a valid MaxQuantumsInsuranceLost",
 			expectedErrType: types.ErrInvalidLiquidationsConfig,
 		},
+		"Genesis state is invalid when BlockRateLimitConfiguration is invalid": {
+			genesis: types.GenesisState{
+				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
+					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+						{
+							Limit:     1,
+							NumBlocks: 0,
+						},
+					},
+				},
+				LiquidationsConfig: types.LiquidationsConfig{
+					MaxLiquidationFeePpm: 5_000,
+					FillablePriceConfig: types.FillablePriceConfig{
+						BankruptcyAdjustmentPpm:           lib.OneMillion,
+						SpreadToMaintenanceMarginRatioPpm: 100_000,
+					},
+					PositionBlockLimits:   constants.PositionBlockLimits_Default,
+					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+				},
+			},
+			expectedErr: "0 is not a valid NumBlocks for MaxShortTermOrdersPerMarketPerNBlocks rate limit " +
+				"{NumBlocks:0 Limit:1}",
+			expectedErrType: types.ErrInvalidBlockRateLimitConfig,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx, k, priceKeeper, _, perpetualsKeeper, _, _, _ :=
-				keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-			ctx = ctx.WithBlockTime(constants.TimeT)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ctx := ks.Ctx.WithBlockTime(constants.TimeT)
 
-			prices.InitGenesis(ctx, *priceKeeper, constants.Prices_DefaultGenesisState)
-			perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+			prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			// If we expect a panic, verify that initializing the genesis state causes a panic and
 			// end the test.
@@ -319,29 +360,30 @@ func TestGenesis(t *testing.T) {
 						tc.expectedErrType,
 						tc.expectedErr,
 					).Error(),
-					func() { clob.InitGenesis(ctx, *k, tc.genesis) },
+					func() { clob.InitGenesis(ctx, ks.ClobKeeper, tc.genesis) },
 				)
 				return
 			}
 
 			// Initialize the CLOB genesis state.
-			clob.InitGenesis(ctx, *k, tc.genesis)
+			clob.InitGenesis(ctx, ks.ClobKeeper, tc.genesis)
 
 			require.True(
 				t,
 				constants.TimeT.Equal(
-					k.MustGetBlockTimeForLastCommittedBlock(ctx),
+					ks.ClobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx),
 				),
 			)
 
 			// Export the CLOB genesis state and verify expectations.
-			got := clob.ExportGenesis(ctx, *k)
+			got := clob.ExportGenesis(ctx, *ks.ClobKeeper)
 			require.NotNil(t, got)
 			require.Equal(t, tc.genesis.ClobPairs, got.ClobPairs)
 			require.Equal(t, tc.genesis.LiquidationsConfig, got.LiquidationsConfig)
+			require.Equal(t, tc.genesis.BlockRateLimitConfig, got.BlockRateLimitConfig)
 
 			// The number of CLOB pairs in the store should match the amount created thus far.
-			numClobPairs := k.GetNumClobPairs(ctx)
+			numClobPairs := ks.ClobKeeper.GetNumClobPairs(ctx)
 			require.Equal(t, uint32(len(got.ClobPairs)), numClobPairs)
 		})
 	}

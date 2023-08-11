@@ -22,6 +22,11 @@ func (o *Order) MustBeValidOrderSide() {
 	}
 }
 
+// MustBeConditionalOrder panics if the order is not a conditional order.
+func (o *Order) MustBeConditionalOrder() {
+	o.OrderId.MustBeConditionalOrder()
+}
+
 // IsBuy returns true if this is a buy order, false if not.
 // This function is necessary for the `Order` type to implement the `MatchableOrder` interface.
 func (o *Order) IsBuy() bool {
@@ -138,6 +143,16 @@ func (o *Order) IsReduceOnly() bool {
 	return o.ReduceOnly
 }
 
+// IsTakeProfitOrder returns whether this is order is a conditional take profit order.
+func (o *Order) IsTakeProfitOrder() bool {
+	return o.IsConditionalOrder() && o.ConditionType == Order_CONDITION_TYPE_TAKE_PROFIT
+}
+
+// IsStopLossOrder returns whether this is order is a conditional stop loss order.
+func (o *Order) IsStopLossOrder() bool {
+	return o.IsConditionalOrder() && o.ConditionType == Order_CONDITION_TYPE_STOP_LOSS
+}
+
 // RequiresImmediateExecution returns whether this order has to be executed immediately.
 func (o *Order) RequiresImmediateExecution() bool {
 	return o.GetTimeInForce() == Order_TIME_IN_FORCE_IOC || o.GetTimeInForce() == Order_TIME_IN_FORCE_FILL_OR_KILL
@@ -152,6 +167,28 @@ func (o *Order) IsShortTermOrder() bool {
 // and conditional orders and false for Short-Term orders.
 func (o *Order) IsStatefulOrder() bool {
 	return o.OrderId.IsStatefulOrder()
+}
+
+// IsConditionalOrder returns whether this order is a conditional order.
+func (o *Order) IsConditionalOrder() bool {
+	return o.OrderId.IsConditionalOrder()
+}
+
+// CanTrigger returns if a condition order is eligible to be triggered based on a given
+// subticks value. Function will panic if order is not a conditional order.
+func (o *Order) CanTrigger(subticks Subticks) bool {
+	o.MustBeConditionalOrder()
+	orderTriggerSubticks := Subticks(o.ConditionalOrderTriggerSubticks)
+
+	// Take profit buys and stop loss sells trigger when when oracle price goes lower
+	// than or equal to the trigger price.
+	if o.ConditionType == Order_CONDITION_TYPE_TAKE_PROFIT && o.IsBuy() ||
+		o.ConditionType == Order_CONDITION_TYPE_STOP_LOSS && !o.IsBuy() {
+		return orderTriggerSubticks >= subticks
+	}
+	// Take profit sells and stop loss buys trigger when when oracle price goes higher
+	// than or equal to the trigger price.
+	return orderTriggerSubticks <= subticks
 }
 
 // MustGetUnixGoodTilBlockTime returns an instance of `Time` that represents the order's

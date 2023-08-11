@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"ETCUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"ETCUSD\""
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"ETC-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"ETC_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"etcusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"XETCZUSD"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"ETC-USDT"
+    }
+  ]
+}

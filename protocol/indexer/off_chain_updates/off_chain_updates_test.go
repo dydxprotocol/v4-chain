@@ -8,6 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4/indexer/msgsender"
+	"github.com/dydxprotocol/v4/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4/mocks"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
@@ -19,41 +20,42 @@ var (
 	noopLogger                     = log.NewNopLogger()
 	orderIdHash                    = constants.OrderIdHash_Alice_Number0_Id0
 	order                          = constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
+	indexerOrder                   = v1.OrderToIndexerOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15)
 	totalFilledAmount              = satypes.BaseQuantums(5)
 	orderStatus                    = clobtypes.Undercollateralized
 	orderError               error = nil
-	reason                         = OrderRemove_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
-	status                         = OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED
-	defaultRemovalReason           = OrderRemove_ORDER_REMOVAL_REASON_INTERNAL_ERROR
-	offchainUpdateOrderPlace       = OffChainUpdate{
-		UpdateMessage: &OffChainUpdate_OrderPlace{
-			&OrderPlace{
-				Order:           &order,
-				PlacementStatus: OrderPlace_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+	reason                         = OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
+	status                         = OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED
+	defaultRemovalReason           = OrderRemoveV1_ORDER_REMOVAL_REASON_INTERNAL_ERROR
+	offchainUpdateOrderPlace       = OffChainUpdateV1{
+		UpdateMessage: &OffChainUpdateV1_OrderPlace{
+			&OrderPlaceV1{
+				Order:           &indexerOrder,
+				PlacementStatus: OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
 			},
 		},
 	}
-	offchainUpdateOrderUpdate = OffChainUpdate{
-		UpdateMessage: &OffChainUpdate_OrderUpdate{
-			&OrderUpdate{
-				OrderId:             &order.OrderId,
+	offchainUpdateOrderUpdate = OffChainUpdateV1{
+		UpdateMessage: &OffChainUpdateV1_OrderUpdate{
+			&OrderUpdateV1{
+				OrderId:             &indexerOrder.OrderId,
 				TotalFilledQuantums: totalFilledAmount.ToUint64(),
 			},
 		},
 	}
-	offchainUpdateOrderRemove = OffChainUpdate{
-		UpdateMessage: &OffChainUpdate_OrderRemove{
-			&OrderRemove{
-				RemovedOrderId: &order.OrderId,
+	offchainUpdateOrderRemove = OffChainUpdateV1{
+		UpdateMessage: &OffChainUpdateV1_OrderRemove{
+			&OrderRemoveV1{
+				RemovedOrderId: &indexerOrder.OrderId,
 				Reason:         reason,
 				RemovalStatus:  status,
 			},
 		},
 	}
-	offchainUpdateOrderRemoveWithDefaultRemovalReason = OffChainUpdate{
-		UpdateMessage: &OffChainUpdate_OrderRemove{
-			&OrderRemove{
-				RemovedOrderId: &order.OrderId,
+	offchainUpdateOrderRemoveWithDefaultRemovalReason = OffChainUpdateV1{
+		UpdateMessage: &OffChainUpdateV1_OrderRemove{
+			&OrderRemoveV1{
+				RemovedOrderId: &indexerOrder.OrderId,
 				Reason:         defaultRemovalReason,
 				RemovalStatus:  status,
 			},
@@ -166,7 +168,7 @@ func TestCreateOrderRemoveMessageWithDefaultReason_InvalidDefault(t *testing.T) 
 				clobtypes.Success,
 				orderError,
 				status,
-				OrderRemove_ORDER_REMOVAL_REASON_UNSPECIFIED,
+				OrderRemoveV1_ORDER_REMOVAL_REASON_UNSPECIFIED,
 			)
 		},
 	)
@@ -192,47 +194,47 @@ func TestCreateOrderRemoveWithReasonMessage(t *testing.T) {
 
 func TestNewOrderPlaceMessage(t *testing.T) {
 	actualUpdateBytes, err := newOrderPlaceMessage(
-		&order,
+		order,
 	)
 	require.NoError(
 		t,
 		err,
-		"Encoding OffchainUpdate proto into bytes should not result in an error.",
+		"Encoding OffchainUpdateV1 proto into bytes should not result in an error.",
 	)
-	actualUpdate := &OffChainUpdate{}
+	actualUpdate := &OffChainUpdateV1{}
 	err = proto.Unmarshal(actualUpdateBytes, actualUpdate)
 	require.NoError(
 		t,
 		err,
-		"Decoding OffchainUpdate proto bytes should not result in an error.",
+		"Decoding OffchainUpdateV1 proto bytes should not result in an error.",
 	)
 	require.Equal(
 		t,
 		offchainUpdateOrderPlace,
 		*actualUpdate,
-		"Decoded OffchainUpdate value should be equal to the expected OffchainUpdate proto message",
+		"Decoded OffchainUpdateV1 value should be equal to the expected OffchainUpdate proto message",
 	)
 }
 
 func TestNewOrderUpdateMessage(t *testing.T) {
-	actualUpdateBytes, err := newOrderUpdateMessage(&order.OrderId, totalFilledAmount)
+	actualUpdateBytes, err := newOrderUpdateMessage(order.OrderId, totalFilledAmount)
 	require.NoError(
 		t,
 		err,
-		"Encoding OffchainUpdate proto into bytes should not result in an error.",
+		"Encoding OffchainUpdateV1 proto into bytes should not result in an error.",
 	)
-	actualUpdate := &OffChainUpdate{}
+	actualUpdate := &OffChainUpdateV1{}
 	err = proto.Unmarshal(actualUpdateBytes, actualUpdate)
 	require.NoError(
 		t,
 		err,
-		"Decoding OffchainUpdate proto bytes should not result in an error.",
+		"Decoding OffchainUpdateV1 proto bytes should not result in an error.",
 	)
 	require.Equal(
 		t,
 		offchainUpdateOrderUpdate,
 		*actualUpdate,
-		"Decoded OffchainUpdate value should be equal to the expected OffchainUpdate proto message",
+		"Decoded OffchainUpdateV1 value should be equal to the expected OffchainUpdate proto message",
 	)
 }
 
@@ -241,20 +243,20 @@ func TestNewOrderRemoveMessage(t *testing.T) {
 	require.NoError(
 		t,
 		err,
-		"Encoding OffchainUpdate proto into bytes should not result in an error.",
+		"Encoding OffchainUpdateV1 proto into bytes should not result in an error.",
 	)
-	actualUpdate := &OffChainUpdate{}
+	actualUpdate := &OffChainUpdateV1{}
 	err = proto.Unmarshal(actualUpdateBytes, actualUpdate)
 	require.NoError(
 		t,
 		err,
-		"Decoding OffchainUpdate proto bytes should not result in an error.",
+		"Decoding OffchainUpdateV1 proto bytes should not result in an error.",
 	)
 	require.Equal(
 		t,
 		offchainUpdateOrderRemove,
 		*actualUpdate,
-		"Decoded OffchainUpdate value should be equal to the expected OffchainUpdate proto message",
+		"Decoded OffchainUpdateV1 value should be equal to the expected OffchainUpdate proto message",
 	)
 }
 
@@ -303,32 +305,32 @@ func TestGetOrderRemovalReason_Success(t *testing.T) {
 		orderError  error
 
 		// Expectations
-		expectedReason OrderRemove_OrderRemovalReason
+		expectedReason OrderRemoveV1_OrderRemovalReason
 		expectedErr    error
 	}{
 		"Gets order removal reason for order status Undercollateralized": {
 			orderStatus:    clobtypes.Undercollateralized,
-			expectedReason: OrderRemove_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
+			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order status InternalError": {
 			orderStatus:    clobtypes.InternalError,
-			expectedReason: OrderRemove_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order status ImmediateOrCancelWouldRestOnBook": {
 			orderStatus:    clobtypes.ImmediateOrCancelWouldRestOnBook,
-			expectedReason: OrderRemove_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK,
+			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order error ErrFokOrderCouldNotBeFullyFilled": {
 			orderError:     clobtypes.ErrFokOrderCouldNotBeFullyFilled,
-			expectedReason: OrderRemove_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED,
+			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order error ErrPostOnlyWouldCrossMakerOrder": {
 			orderError:     clobtypes.ErrPostOnlyWouldCrossMakerOrder,
-			expectedReason: OrderRemove_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
+			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
 			expectedErr:    nil,
 		},
 		"Returns error for order status Success": {
@@ -381,6 +383,14 @@ func TestShouldSendOrderRemovalOnReplay(t *testing.T) {
 			orderError: clobtypes.ErrStatefulOrderAlreadyExists,
 			expected:   false,
 		},
+		"Returns false for ErrHeightExceedsGoodTilBlock": {
+			orderError: clobtypes.ErrHeightExceedsGoodTilBlock,
+			expected:   false,
+		},
+		"Returns false for ErrTimeExceedsGoodTilBlockTime": {
+			orderError: clobtypes.ErrTimeExceedsGoodTilBlockTime,
+			expected:   false,
+		},
 		"Returns false for wrapped ErrOrderReprocessed": {
 			orderError: sdkerrors.Wrapf(clobtypes.ErrOrderReprocessed, "wrapped error"),
 			expected:   false,
@@ -399,6 +409,14 @@ func TestShouldSendOrderRemovalOnReplay(t *testing.T) {
 		},
 		"Returns false for wrapped ErrStatefulOrderAlreadyExists": {
 			orderError: sdkerrors.Wrapf(clobtypes.ErrStatefulOrderAlreadyExists, "wrapped error"),
+			expected:   false,
+		},
+		"Returns false for wrapped ErrHeightExceedsGoodTilBlock": {
+			orderError: sdkerrors.Wrapf(clobtypes.ErrHeightExceedsGoodTilBlock, "wrapped error"),
+			expected:   false,
+		},
+		"Returns false for wrapped ErrTimeExceedsGoodTilBlockTime": {
+			orderError: sdkerrors.Wrapf(clobtypes.ErrTimeExceedsGoodTilBlockTime, "wrapped error"),
 			expected:   false,
 		},
 		"Returns false for other error": {

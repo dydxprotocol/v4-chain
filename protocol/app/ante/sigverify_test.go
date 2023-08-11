@@ -20,7 +20,6 @@ import (
 	customante "github.com/dydxprotocol/v4/app/ante"
 	testante "github.com/dydxprotocol/v4/testutil/ante"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
-	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 
 	"github.com/stretchr/testify/require"
@@ -440,100 +439,6 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	return after - before, err
 }
 
-func TestIncrementSequenceDecorator(t *testing.T) {
-	suite := testante.SetupTestSuite(t, true)
-	suite.TxBuilder = suite.ClientCtx.TxConfig.NewTxBuilder()
-
-	priv, _, addr := testdata.KeyTestPubAddr()
-	acc := suite.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr)
-	require.NoError(t, acc.SetAccountNumber(uint64(50)))
-	suite.AccountKeeper.SetAccount(suite.Ctx, acc)
-
-	privs := []cryptotypes.PrivKey{priv}
-	accNums := []uint64{suite.AccountKeeper.GetAccount(suite.Ctx, addr).GetAccountNumber()}
-	accSeqs := []uint64{suite.AccountKeeper.GetAccount(suite.Ctx, addr).GetSequence()}
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-	suite.TxBuilder.SetFeeAmount(feeAmount)
-	suite.TxBuilder.SetGasLimit(gasLimit)
-
-	isd := customante.NewIncrementSequenceDecorator(suite.AccountKeeper)
-	antehandler := sdk.ChainAnteDecorators(isd)
-
-	testMsgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	testCases := []struct {
-		msgs        []sdk.Msg
-		ctx         sdk.Context
-		simulate    bool
-		expectedSeq uint64
-	}{
-		{
-			testMsgs,
-			suite.Ctx.WithIsReCheckTx(true),
-			false,
-			1,
-		},
-		{
-			testMsgs,
-			suite.Ctx.WithIsCheckTx(true).WithIsReCheckTx(false),
-			false,
-			2,
-		},
-		{
-			testMsgs,
-			suite.Ctx.WithIsReCheckTx(true),
-			false,
-			3,
-		},
-		{
-			testMsgs,
-			suite.Ctx.WithIsReCheckTx(true),
-			false,
-			4,
-		},
-		{
-			testMsgs,
-			suite.Ctx.WithIsReCheckTx(true),
-			true,
-			5,
-		},
-		{
-			[]sdk.Msg{newPlaceOrderMessageForAddr(addr)},
-			suite.Ctx.WithIsCheckTx(true).WithIsReCheckTx(false),
-			false,
-			5,
-		},
-		{
-			[]sdk.Msg{newCancelOrderMessageForAddr(addr)},
-			suite.Ctx.WithIsCheckTx(true).WithIsReCheckTx(false),
-			false,
-			5,
-		},
-		{
-			[]sdk.Msg{newTransferMessageForAddr(addr)},
-			suite.Ctx.WithIsCheckTx(true).WithIsReCheckTx(false),
-			false,
-			6,
-		},
-		{
-			[]sdk.Msg{newTransferMessageForAddr(addr), testdata.NewTestMsg(addr)},
-			suite.Ctx.WithIsCheckTx(true).WithIsReCheckTx(false),
-			false,
-			7,
-		},
-	}
-
-	for i, tc := range testCases {
-		require.NoError(t, suite.TxBuilder.SetMsgs(tc.msgs...))
-		tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.Ctx.ChainID())
-		require.NoError(t, err)
-
-		_, err = antehandler(tc.ctx, tx, tc.simulate)
-		require.NoError(t, err, "unexpected error; tc #%d, %v", i, tc)
-		require.Equal(t, tc.expectedSeq, suite.AccountKeeper.GetAccount(suite.Ctx, addr).GetSequence())
-	}
-}
-
 func newPlaceOrderMessageForAddr(addr sdk.AccAddress) sdk.Msg {
 	return &clobtypes.MsgPlaceOrder{
 		Order: clobtypes.Order{
@@ -541,26 +446,6 @@ func newPlaceOrderMessageForAddr(addr sdk.AccAddress) sdk.Msg {
 				SubaccountId: satypes.SubaccountId{
 					Owner: addr.String(),
 				},
-			},
-		},
-	}
-}
-
-func newCancelOrderMessageForAddr(addr sdk.AccAddress) sdk.Msg {
-	return &clobtypes.MsgCancelOrder{
-		OrderId: clobtypes.OrderId{
-			SubaccountId: satypes.SubaccountId{
-				Owner: addr.String(),
-			},
-		},
-	}
-}
-
-func newTransferMessageForAddr(addr sdk.AccAddress) sdk.Msg {
-	return &sendingtypes.MsgCreateTransfer{
-		Transfer: &sendingtypes.Transfer{
-			Sender: satypes.SubaccountId{
-				Owner: addr.String(),
 			},
 		},
 	}

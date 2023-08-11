@@ -16,7 +16,8 @@ done
 cd ..
 
 # move proto files to the right places
-cp -r github.com/dydxprotocol/v4/* ./
-rm -rf github.com
+find . -name "*.pb.go" -o -name "*.pb.gw.go" -type f -not -path "./proto/*" -delete
+cp -r proto/.gen/github.com/dydxprotocol/v4/* ./
+rm -rf proto/.gen/github.com/
 
 go mod tidy

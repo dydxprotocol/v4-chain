@@ -4,21 +4,24 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4/indexer/events"
+	"github.com/dydxprotocol/v4/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	order   = constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
-	orderId = constants.OrderId_Alice_Num0_ClientId0_Clob0
+	order          = constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
+	indexerOrder   = v1.OrderToIndexerOrder(order)
+	orderId        = constants.OrderId_Alice_Num0_ClientId0_Clob0
+	indexerOrderId = v1.OrderIdToIndexerOrderId(orderId)
 )
 
 func TestStatefulOrderPlacementEvent_Success(t *testing.T) {
 	statefulOrderPlacementEvent := events.NewStatefulOrderPlacementEvent(order)
-	expectedStatefulOrderEventProto := &events.StatefulOrderEvent{
-		Event: &events.StatefulOrderEvent_OrderPlace{
-			OrderPlace: &events.StatefulOrderEvent_StatefulOrderPlacement{
-				Order: &order,
+	expectedStatefulOrderEventProto := &events.StatefulOrderEventV1{
+		Event: &events.StatefulOrderEventV1_OrderPlace{
+			OrderPlace: &events.StatefulOrderEventV1_StatefulOrderPlacementV1{
+				Order: &indexerOrder,
 			},
 		},
 	}
@@ -27,10 +30,10 @@ func TestStatefulOrderPlacementEvent_Success(t *testing.T) {
 
 func TestStatefulOrderCancelationEvent_Success(t *testing.T) {
 	statefulOrderCancelationEvent := events.NewStatefulOrderCancelationEvent(orderId)
-	expectedStatefulOrderEventProto := &events.StatefulOrderEvent{
-		Event: &events.StatefulOrderEvent_OrderCancel{
-			OrderCancel: &events.StatefulOrderEvent_StatefulOrderCancelation{
-				CanceledOrderId: &orderId,
+	expectedStatefulOrderEventProto := &events.StatefulOrderEventV1{
+		Event: &events.StatefulOrderEventV1_OrderCancel{
+			OrderCancel: &events.StatefulOrderEventV1_StatefulOrderCancelationV1{
+				CanceledOrderId: &indexerOrderId,
 			},
 		},
 	}
@@ -39,10 +42,10 @@ func TestStatefulOrderCancelationEvent_Success(t *testing.T) {
 
 func TestStatefulOrderExpirationEvent_Success(t *testing.T) {
 	statefulOrderExpirationEvent := events.NewStatefulOrderExpirationEvent(orderId)
-	expectedStatefulOrderEventProto := &events.StatefulOrderEvent{
-		Event: &events.StatefulOrderEvent_OrderExpiration{
-			OrderExpiration: &events.StatefulOrderEvent_StatefulOrderExpiration{
-				ExpiredOrderId: &orderId,
+	expectedStatefulOrderEventProto := &events.StatefulOrderEventV1{
+		Event: &events.StatefulOrderEventV1_OrderExpiration{
+			OrderExpiration: &events.StatefulOrderEventV1_StatefulOrderExpirationV1{
+				ExpiredOrderId: &indexerOrderId,
 			},
 		},
 	}

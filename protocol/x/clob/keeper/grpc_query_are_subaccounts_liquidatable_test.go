@@ -123,25 +123,18 @@ func TestAreSubaccountsLiquidatable(t *testing.T) {
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx,
-				clobKeeper,
-				pricesKeeper,
-				_,
-				perpetualsKeeper,
-				subaccountsKeeper,
-				_,
-				_ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Create the default markets.
-			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
-				_, err := perpetualsKeeper.CreatePerpetual(
-					ctx,
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -152,11 +145,11 @@ func TestAreSubaccountsLiquidatable(t *testing.T) {
 			}
 
 			for _, subaccount := range tc.subaccounts {
-				subaccountsKeeper.SetSubaccount(ctx, subaccount)
+				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 			}
 
-			wctx := sdk.WrapSDKContext(ctx)
-			response, err := clobKeeper.AreSubaccountsLiquidatable(wctx, tc.request)
+			wctx := sdk.WrapSDKContext(ks.Ctx)
+			response, err := ks.ClobKeeper.AreSubaccountsLiquidatable(wctx, tc.request)
 
 			if tc.err != nil {
 				require.ErrorContains(t, err, tc.err.Error())

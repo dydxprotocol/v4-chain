@@ -89,7 +89,7 @@ func createPerpetualsKeeperWithPricePremiumGetter(
 
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
-	mockIndexerEventsManager := indexer_manager.NewIndexerEventManager(mockMsgSender, transientStoreKey)
+	mockIndexerEventsManager := indexer_manager.NewIndexerEventManager(mockMsgSender, transientStoreKey, true)
 
 	k := keeper.NewKeeper(
 		cdc,
@@ -152,6 +152,7 @@ func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			l.InitialMarginPpm,
 			l.MaintenanceFractionPpm,
 			l.BasePositionNotional,
+			l.ImpactNotional,
 		)
 
 		require.NoError(t, err)

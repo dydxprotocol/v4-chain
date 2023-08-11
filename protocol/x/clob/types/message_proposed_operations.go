@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/lib"
 )
 
 const TypeMsgProposedOperations = "proposed_operations"
@@ -18,119 +17,109 @@ func (msg *MsgProposedOperations) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{}
 }
 
-// GetAddToOrderbookCollatCheckOrderHashesSet returns a set of order hashes from the
-// list of order hashes in the `MsgProposedOperations` message. Note this function will
-// panic if there are any duplicates.
-func (msg *MsgProposedOperations) GetAddToOrderbookCollatCheckOrderHashesSet() map[OrderHash]bool {
-	bytesSlice := lib.MapSlice(
-		msg.AddToOrderbookCollatCheckOrderHashes,
-		lib.BytesSliceToBytes32,
-	)
+// Stateless validation for MsgProposedOperations is located in ValidateAndTransformRawOperations.
+func (msg *MsgProposedOperations) ValidateBasic() error {
+	// Go through the operations one by one to validate them, updating state as necessary.
+	for _, rawOperation := range msg.GetOperationsQueue() {
+		switch operation := rawOperation.Operation.(type) {
+		case
+			*OperationRaw_Match,
+			*OperationRaw_ShortTermOrderPlacement:
+			// no-op, stateless validation is done in ValidateAndTransformRawOperations
+		case *OperationRaw_OrderRemoval:
+			orderId := operation.OrderRemoval.GetOrderId()
+			if orderId.IsShortTermOrder() {
+				return sdkerrors.Wrapf(
+					ErrInvalidMsgProposedOperations,
+					"order removal is not allowed for short-term orders: %v",
+					orderId,
+				)
+			}
 
-	addToOrderbookCollatCheckOrderHashesSet := make(
-		map[OrderHash]bool,
-		len(bytesSlice),
-	)
-	for _, b := range bytesSlice {
-		orderHash := OrderHash(b)
-		if _, exists := addToOrderbookCollatCheckOrderHashesSet[orderHash]; exists {
-			panic(
-				fmt.Sprintf(
-					"GetAddToOrderbookCollatCheckOrderHashesSet: duplicate order hash in AddToOrderbookCollatCheckOrderHashes: %+v",
-					msg.AddToOrderbookCollatCheckOrderHashes,
-				),
+			if operation.OrderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
+				return sdkerrors.Wrapf(
+					ErrInvalidMsgProposedOperations,
+					"order removal reason must be specified: %v",
+					orderId,
+				)
+			}
+		default:
+			return sdkerrors.Wrapf(
+				ErrInvalidMsgProposedOperations,
+				"operation queue type not implemented yet for raw operation %v",
+				rawOperation,
 			)
 		}
-		addToOrderbookCollatCheckOrderHashesSet[orderHash] = true
+	}
+	return nil
+}
+
+// ValidateAndTransformRawOperations performs stateless validation on the proposed operation queue
+// and transforms the input []OperationRaw into []InternalOperation.
+// Validations differ based on operation types. We are able to supply a TxDecoder and AnteHandler
+// to this function. These are needed to decode OperationRaw tx bytes and to validate that
+// the operations' transactions were signed correctly.
+func ValidateAndTransformRawOperations(
+	ctx sdk.Context,
+	rawOperations []OperationRaw,
+	decoder sdk.TxDecoder,
+	anteHandler sdk.AnteHandler,
+) ([]InternalOperation, error) {
+	operations := make([]InternalOperation, 0, len(rawOperations))
+
+	validator := operationsQueueValidator{
+		ordersPlacedInBlock: make(map[OrderId]Order, 0),
 	}
 
-	return addToOrderbookCollatCheckOrderHashesSet
+	// Go through the operations one by one to validate them, updating state as necessary.
+	for _, rawOperation := range rawOperations {
+		var err error
+		operation := &InternalOperation{}
+		switch rawOperation.Operation.(type) {
+		case *OperationRaw_Match:
+			match := rawOperation.GetMatch()
+			if err = validator.validateMatchOperation(match); err != nil {
+				return nil, err
+			}
+			operation.Operation = &InternalOperation_Match{
+				Match: match,
+			}
+		case *OperationRaw_ShortTermOrderPlacement:
+			operation, err = decodeOperationRawShortTermOrderPlacementBytes(
+				ctx,
+				rawOperation.GetShortTermOrderPlacement(),
+				decoder,
+				anteHandler,
+			)
+			if err != nil {
+				return nil, err
+			}
+			if err = validator.validateShortTermOrderPlacementOperation(
+				operation.GetShortTermOrderPlacement(),
+			); err != nil {
+				return nil, err
+			}
+		case *OperationRaw_OrderRemoval:
+			operation.Operation = &InternalOperation_OrderRemoval{
+				OrderRemoval: rawOperation.GetOrderRemoval(),
+			}
+		default:
+			return nil, fmt.Errorf("operation queue type not implemented yet for raw operation %v", rawOperation)
+		}
+
+		operations = append(operations, *operation)
+	}
+	return operations, nil
 }
 
 // operationsQueueValidator encapsulates all the previous context we need to validate sequential
 // operations in the operations queue since the order of operations matters.
 type operationsQueueValidator struct {
-
 	// All the previous orders placed in this block (short and long term).
 	// This field is used when ensuring short term OrderIds references an order in the last block.
 	// ordersPlacedInBlock stores the most recently placed order.
 	// It tracks orders placed via `OrderPlacement` operations.
 	ordersPlacedInBlock map[OrderId]Order
-	// preExistingStatefulOrders is a set of pre-existing stateful orders placed in a previous block.
-	// It records orders placed via `PreExistingStatefulOrder` operations.
-	preExistingStatefulOrders map[OrderId]struct{}
-}
-
-// ValidateBasic performs stateless validation on the proposed operation queue.
-// Validations differ based on operation types.
-// TODO(CLOB-510): Validate the `add_to_orderbook_collat_check_order_hashes` field.
-func (msg *MsgProposedOperations) ValidateBasic() error {
-	operations := msg.GetOperationsQueue()
-
-	validator := operationsQueueValidator{
-		ordersPlacedInBlock:       make(map[OrderId]Order, 0),
-		preExistingStatefulOrders: make(map[OrderId]struct{}, 0),
-	}
-
-	// Go through the operations one by one to validate them, updating state as necessary.
-	for _, operation := range operations {
-		var err error
-		switch operation.Operation.(type) {
-		case *Operation_Match:
-			match := operation.GetMatch()
-			err = validator.validateMatchOperation(match)
-		case *Operation_OrderPlacement:
-			orderPlacement := operation.GetOrderPlacement()
-			err = validator.validateOrderPlacementOperation(orderPlacement)
-		case *Operation_OrderCancellation:
-			orderCancellation := operation.GetOrderCancellation()
-			err = validator.validateOrderCancellationOperation(orderCancellation)
-		case *Operation_PreexistingStatefulOrder:
-			preExistingStatefulOrder := operation.GetPreexistingStatefulOrder()
-			err = validator.validatePreExistingOrderOperation(preExistingStatefulOrder)
-		default:
-			err = fmt.Errorf("operation Queue type not implemented yet for operation %v", operation)
-		}
-		if err != nil {
-			return sdkerrors.Wrapf(ErrInvalidMsgProposedOperations, "Error: %+v", err)
-		}
-	}
-	return nil
-}
-
-// validatePreExistingOrderOperation performs stateless validation on a PreExisting Stateful Order operation.
-// It also populates the validator object with the order.
-// This validation does not perform any state reads, or memclob reads.
-//
-// The following validation occurs in this method:
-//
-//   - Validate for Order Id
-//   - Validate that the OrderId is stateful.
-//   - Validate that there are no duplicate PreExisting Stateful Order OrderIds.
-func (validator *operationsQueueValidator) validatePreExistingOrderOperation(orderId *OrderId) error {
-	if err := orderId.Validate(); err != nil {
-		return err
-	}
-	if !orderId.IsStatefulOrder() {
-		return sdkerrors.Wrapf(
-			ErrInvalidOrderFlag,
-			"Invalid Preexisting Order Operation: OrderId %+v is not stateful.",
-			*orderId,
-		)
-	}
-
-	if _, exists := validator.preExistingStatefulOrders[*orderId]; exists {
-		return sdkerrors.Wrapf(
-			ErrInvalidMsgProposedOperations,
-			"Duplicate Pre Existing Order Operation: OrderId %+v",
-			*orderId,
-		)
-	}
-
-	// Record the pre existing order in validator.
-	validator.preExistingStatefulOrders[*orderId] = struct{}{}
-
-	return nil
 }
 
 // validateMatchOperation unwraps the match message and performs validation for each match type.
@@ -161,41 +150,7 @@ func (validator *operationsQueueValidator) validateMatchOperation(match *ClobMat
 	return nil
 }
 
-// validateOrderCancellationOperation performs stateless validation on an order cancellation.
-// It also removes the order from the validator object.
-// This validation does not perform any state reads, or memclob reads.
-//
-// The following validation occurs in this method:
-//
-//   - ValidateBasic for OrderCancellation message
-//   - Short term order cancellations must reference an OrderId that was previously placed.
-func (validator *operationsQueueValidator) validateOrderCancellationOperation(
-	orderCancellation *MsgCancelOrder,
-) error {
-	// Order cancellation msg has to pass its own validation.
-	if err := orderCancellation.ValidateBasic(); err != nil {
-		return err
-	}
-	orderCancellationOrderId := orderCancellation.GetOrderId()
-
-	// A short-term order cancellation must reference an OrderId that was previously placed.
-	if orderCancellationOrderId.IsShortTermOrder() {
-		err := validator.verifyOrderPlacementInOperationsQueue(
-			orderCancellationOrderId,
-		)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Delete the order Id from the validator order maps.
-	delete(validator.ordersPlacedInBlock, orderCancellationOrderId)
-	delete(validator.preExistingStatefulOrders, orderCancellationOrderId)
-
-	return nil
-}
-
-// validateOrderPlacementOperation performs stateless validation on an order placement.
+// validateShortTermOrderPlacementOperation performs stateless validation on an order placement.
 // It also populates the validator object with the order.
 // This validation does not perform any state reads, or memclob reads.
 //
@@ -203,7 +158,7 @@ func (validator *operationsQueueValidator) validateOrderCancellationOperation(
 //
 //   - ValidateBasic for OrderPlacement message
 //   - Orders placed in the same block with same OrderId must not be the same.
-func (validator *operationsQueueValidator) validateOrderPlacementOperation(
+func (validator *operationsQueueValidator) validateShortTermOrderPlacementOperation(
 	orderPlacement *MsgPlaceOrder,
 ) error {
 	// Order placement msg has to pass its own validation.
@@ -220,8 +175,8 @@ func (validator *operationsQueueValidator) validateOrderPlacementOperation(
 		if prevOrder.MustCmpReplacementOrder(&order) == 0 {
 			return sdkerrors.Wrapf(
 				ErrInvalidPlaceOrder,
-				"Duplicate Order %+v",
-				order,
+				"Duplicate Order %s",
+				order.GetOrderTextString(),
 			)
 		}
 		// Replacement Orders have a higher priority than the previously placed order that it replaces.
@@ -230,9 +185,9 @@ func (validator *operationsQueueValidator) validateOrderPlacementOperation(
 		if prevOrder.MustCmpReplacementOrder(&order) != -1 {
 			return sdkerrors.Wrapf(
 				ErrInvalidReplacement,
-				"Replacement order is not higher priority. order: %+v, prevOrder: %+v",
-				order,
-				prevOrder,
+				"Replacement order is not higher priority. order: %s, prevOrder: %s",
+				order.GetOrderTextString(),
+				prevOrder.GetOrderTextString(),
 			)
 		}
 	}
@@ -257,16 +212,6 @@ func (validator *operationsQueueValidator) validateMatchOrdersOperation(
 	fills := matchOrders.GetFills()
 	makerOrderIdSet := make(map[OrderId]struct{}, len(fills))
 	takerOrderId := matchOrders.GetTakerOrderId()
-	takerOrderHash := matchOrders.GetTakerOrderHash()
-
-	if len(takerOrderHash) != 32 {
-		return sdkerrors.Wrapf(
-			ErrInvalidMatchOrder,
-			"taker order %+v has invalid order hash of length %d, expected 32",
-			takerOrderId,
-			len(takerOrderHash),
-		)
-	}
 
 	for _, fill := range fills {
 		// Fill amount must be greater than zero.
@@ -325,13 +270,14 @@ func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOper
 	totalSize := liquidationMatch.GetTotalSize()
 
 	// Make sure the total size greater than zero.
-	if liquidationMatch.GetTotalSize() == 0 {
-		return sdkerrors.Wrapf(
-			ErrInvalidLiquidationOrderTotalSize,
-			"Liquidation match total size is zero. match: %+v",
-			liquidationMatch,
-		)
-	}
+	// TODO(CLOB-599): Disallow liquidation matches with zero size.
+	// if liquidationMatch.GetTotalSize() == 0 {
+	// 	return sdkerrors.Wrapf(
+	// 		ErrInvalidLiquidationOrderTotalSize,
+	// 		"Liquidation match total size is zero. match: %+v",
+	// 		liquidationMatch,
+	// 	)
+	// }
 
 	// Make sure the sum of all fill_amount entries in the list of fills does not exceed the total size.
 	// Get the total quantums filled for this liquidation order.
@@ -371,23 +317,15 @@ func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOper
 }
 
 // verifyOrderPlacementInOperationsQueue is a pure function. For the referenced order, it checks:
-//   - If the order is a stateful or short-term order included in the operations queue for this block.
-//   - If the order is a pre-existing stateful order.
+//   - If the order is a short-term order, that it is included in the operations queue for this block.
 //
-// If neither of these conditions are met, an `ErrOrderPlacementNotInOperationsQueue` is returned.
+// If this condition isn't met, an `ErrOrderPlacementNotInOperationsQueue` is returned.
 func (validator *operationsQueueValidator) verifyOrderPlacementInOperationsQueue(orderId OrderId) error {
-	// First, check if the order is placed in `ordersPlacedInBlock`.
-	if _, prevPlaced := validator.ordersPlacedInBlock[orderId]; prevPlaced {
-		return nil
-	}
-	// If it is a short term order, we can return early because short term orders
-	// cannot exist in `preExistingStatefulOrders`.
 	if orderId.IsShortTermOrder() {
-		return sdkerrors.Wrapf(ErrOrderPlacementNotInOperationsQueue, "short term orderId: %v", orderId)
+		if _, prevPlaced := validator.ordersPlacedInBlock[orderId]; !prevPlaced {
+			return sdkerrors.Wrapf(ErrOrderPlacementNotInOperationsQueue, "short term orderId: %v", orderId)
+		}
 	}
-	// Second, check if the stateful order exists in `preExistingStatefulOrders`.
-	if _, prevPlaced := validator.preExistingStatefulOrders[orderId]; prevPlaced {
-		return nil
-	}
-	return sdkerrors.Wrapf(ErrOrderPlacementNotInOperationsQueue, "stateful orderId: %v", orderId)
+
+	return nil
 }

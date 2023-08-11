@@ -2,12 +2,16 @@ name: Price Daemon Exchange Integration Tests
 on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
-      - 'v[0-9]+.x'  # e.g. v11.x
+      - 'release/v[0-9]+.x'  # e.g. release/v1.x
+      - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/ibctestnet/v1.x
+      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
   push:
     branches:
       - main
       - master
-      - 'v[0-9]+.x'  # e.g. v11.x
+      - 'release/v[0-9]+.x'  # e.g. release/v1.x
+      - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/ibctestnet/v1.x
+      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

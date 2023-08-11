@@ -34,6 +34,11 @@ func (_m *GrpcServer) Serve(lis net.Listener) error {
 	return r0
 }
 
+// Stop provides a mock function with given fields:
+func (_m *GrpcServer) Stop() {
+	_m.Called()
+}
+
 type mockConstructorTestingTNewGrpcServer interface {
 	mock.TestingT
 	Cleanup(func())

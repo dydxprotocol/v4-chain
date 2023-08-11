@@ -2,10 +2,11 @@ package appoptions
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/dydxprotocol/v4/daemons/pricefeed"
-	"os"
+	daemonflags "github.com/dydxprotocol/v4/daemons/flags"
 )
 
 // FakeAppOptions is a helper struct used for creating `servertypes.AppOptions` for simulator and end-to-end testing.
@@ -44,8 +45,8 @@ func GetDefaultTestAppOptions(homePath string, customFlags map[string]interface{
 
 	fao.Set(flags.FlagHome, homePath)
 
-	// Disable the PriceFeed Daemon for all end-to-end and integration tests by default.
-	fao.Set(pricefeed.FlagPriceFeedEnabled, false)
+	// Disable the Price Daemon for all end-to-end and integration tests by default.
+	fao.Set(daemonflags.FlagPriceDaemonEnabled, false)
 	for flag, value := range customFlags {
 		fao.Set(flag, value)
 	}

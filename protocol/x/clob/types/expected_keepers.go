@@ -75,6 +75,10 @@ type AssetsKeeper interface {
 	GetAsset(ctx sdk.Context, id uint32) (val assettypes.Asset, err error)
 }
 
+type FeeTiersKeeper interface {
+	GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool) int32
+}
+
 type PerpetualsKeeper interface {
 	GetNetNotional(
 		ctx sdk.Context,
@@ -113,10 +117,14 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		id uint32,
 	) (val perpetualsmoduletypes.Perpetual, err error)
-	GetPerpetualAndMarket(
+	GetPerpetualAndMarketPrice(
 		ctx sdk.Context,
 		perpetualId uint32,
-	) (perpetualsmoduletypes.Perpetual, pricestypes.Market, error)
+	) (perpetualsmoduletypes.Perpetual, pricestypes.MarketPrice, error)
+}
+
+type StatsKeeper interface {
+	RecordFill(ctx sdk.Context, takerAddress string, makerAddress string, notional *big.Int)
 }
 
 // AccountKeeper defines the expected account keeper used for simulations.

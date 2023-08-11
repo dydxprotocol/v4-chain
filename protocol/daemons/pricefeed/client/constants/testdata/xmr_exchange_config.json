@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"XMRUSDT\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tXMRUSD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"XMR_USDT"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"XXMRZUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"XMR-USDT"
+    },
+    {
+      "exchangeName":"Mexc",
+      "ticker":"XMR_USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"XMR-USDT"
+    }
+  ]
+}

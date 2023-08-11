@@ -1,57 +1,64 @@
 package testutil
 
 import (
-	"fmt"
-
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/bitfinex"
-	clienttypes "github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
 	"github.com/h2non/gock"
 )
 
-// BitfinexResponse represents response returned by Bitfinex for testing purposes.
-type BitfinexResponse struct {
-	BidPrice  float64 // index 0
-	AskPrice  float64 // index 2
-	LastPrice float64 // index 6
+// BitfinexTicker represents ticker in Bitfinex response for testing purposes.
+type BitfinexTicker struct {
+	Symbol    string  // index 0
+	BidPrice  float64 // index 1
+	AskPrice  float64 // index 3
+	LastPrice float64 // index 7
 }
 
-// NewBitfinexResponse returns a new BitfinexResponse.
-func NewBitfinexResponse(askPrice, bidPrice, lastPrice float64) BitfinexResponse {
-	return BitfinexResponse{
+// NewBitfinexTicker returns a new BitfinexTicker.
+func NewBitfinexTicker(symbol string, askPrice, bidPrice, lastPrice float64) BitfinexTicker {
+	return BitfinexTicker{
+		Symbol:    symbol,
 		AskPrice:  askPrice,
 		BidPrice:  bidPrice,
 		LastPrice: lastPrice,
 	}
 }
 
-// toJson returns a JSON representation of a valid Bitfinex response.
-func (r BitfinexResponse) toJson() interface{} {
-	return []float64{
-		r.BidPrice,  // idx = 0
-		0.0,         // idx = 1
-		r.AskPrice,  // idx = 2
-		0.0,         // idx = 3
+// toJson returns a JSON representation of a valid ticker in Bitfinex response.
+func (t BitfinexTicker) toJson() interface{} {
+	return []interface{}{
+		t.Symbol,    // idx = 0
+		t.BidPrice,  // idx = 1
+		0.0,         // idx = 2
+		t.AskPrice,  // idx = 3
 		0.0,         // idx = 4
 		0.0,         // idx = 5
-		r.LastPrice, // idx = 6
-		0.0,         // idx = 7
+		0.0,         // idx = 6
+		t.LastPrice, // idx = 7
 		0.0,         // idx = 8
 		0.0,         // idx = 9
+		0.0,         // idx = 10
 	}
 }
 
 // NewGockBitfinexResponse creates and registers a new HTTP mock using `gock` for Bitfinex.
 func NewGockBitfinexResponse(
-	marketId clienttypes.MarketId,
 	responseCode int,
-	response BitfinexResponse,
+	tickers []JsonResponse,
 ) *gock.Response {
-	symbol, exists := bitfinex.BitfinexDetails.MarketSymbols[marketId]
-	if !exists {
-		panic(fmt.Sprintf("Bitfinex: market (%d) does not exist!", marketId))
+	// Construct Bitfinex request URL.
+	sortedSymbols := GetTickersSortedByMarketId(
+		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BITFINEX].MarketToTicker,
+	)
+	url := handler.CreateRequestUrl(bitfinex.BitfinexDetails.Url, sortedSymbols)
+
+	// Construct Bitfinex response as a list of tickers.
+	jsonResponse := []interface{}{}
+	for _, ticker := range tickers {
+		jsonResponse = append(jsonResponse, ticker.(BitfinexTicker).toJson())
 	}
 
-	url := handler.CreateRequestUrl(bitfinex.BitfinexDetails.Url, []string{symbol})
-	return gock.New(url).Persist().Get("/").Reply(responseCode).JSON(response.toJson())
+	return gock.New(url).Persist().Get("/").Reply(responseCode).JSON(jsonResponse)
 }

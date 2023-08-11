@@ -1,19 +1,55 @@
 package process
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/dydxprotocol/v4/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
 )
 
 // ProcessPricesKeeper defines the expected Prices keeper used for `ProcessProposal`.
 type ProcessPricesKeeper interface {
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
-		marketPriceUpdates *types.MsgUpdateMarketPrices,
+		marketPriceUpdates *pricestypes.MsgUpdateMarketPrices,
 		performNonDeterministicValidation bool,
 	) error
 
 	UpdateSmoothedPrices(
 		ctx sdk.Context,
 	) error
+}
+
+// ProcessClobKeeper defines the expected clob keeper used for `ProcessProposal`.
+type ProcessClobKeeper interface {
+	RecordMevMetrics(
+		ctx sdk.Context,
+		stakingKeeper ProcessStakingKeeper,
+		perpetualKeeper ProcessPerpetualKeeper,
+		msgProposedOperations *types.MsgProposedOperations,
+	)
+}
+
+// ProcessStakingKeeper defines the expected staking keeper used for `ProcessProposal`.
+type ProcessStakingKeeper interface {
+	GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator stakingtypes.Validator, found bool)
+}
+
+// ProcessPerpetualKeeper defines the expected perpetual keeper used for `ProcessProposal`.
+type ProcessPerpetualKeeper interface {
+	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)
+	GetSettlement(
+		ctx sdk.Context,
+		perpetualId uint32,
+		quantums *big.Int,
+		index *big.Int,
+	) (
+		bigNetSettlement *big.Int,
+		newFundingIndex *big.Int,
+		err error,
+	)
+	GetPerpetual(ctx sdk.Context, id uint32) (val perptypes.Perpetual, err error)
 }

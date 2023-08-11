@@ -20,36 +20,36 @@ func TestNewExchangeToMarketPrices_IsEmpty(t *testing.T) {
 
 	require.Empty(
 		t,
-		exchangeToMarketPrices.ExchangeMarketPrices[constants.ExchangeFeedId1].MarketToPriceTimestamp,
+		exchangeToMarketPrices.ExchangeMarketPrices[constants.ExchangeId1].MarketToPriceTimestamp,
 	)
 	require.Empty(
 		t,
-		exchangeToMarketPrices.ExchangeMarketPrices[constants.ExchangeFeedId2].MarketToPriceTimestamp,
+		exchangeToMarketPrices.ExchangeMarketPrices[constants.ExchangeId2].MarketToPriceTimestamp,
 	)
 
 	exchangePrices := exchangeToMarketPrices.GetAllPrices()
 	require.Len(t, exchangePrices, 2)
-	require.Empty(t, exchangePrices[constants.ExchangeFeedId1])
-	require.Empty(t, exchangePrices[constants.ExchangeFeedId2])
+	require.Empty(t, exchangePrices[constants.ExchangeId1])
+	require.Empty(t, exchangePrices[constants.ExchangeId2])
 }
 
-func TestNewExchangeToMarketPrices_InvalidWithNoExchangeFeedIds(t *testing.T) {
+func TestNewExchangeToMarketPrices_InvalidWithNoExchangeIds(t *testing.T) {
 	getNewExchangeToMarketPricesAndCheckForError(
 		t,
-		[]types.ExchangeFeedId{},
-		errors.New("exchangeFeedIds must not be empty"),
+		[]types.ExchangeId{},
+		errors.New("exchangeIds must not be empty"),
 	)
 }
 
-func TestNewExchangeToMarketPrices_InvalidWithDuplicateExchangeFeedIds(t *testing.T) {
+func TestNewExchangeToMarketPrices_InvalidWithDuplicateExchangeIds(t *testing.T) {
 	getNewExchangeToMarketPricesAndCheckForError(
 		t,
-		[]types.ExchangeFeedId{
-			constants.ExchangeFeedId1,
-			constants.ExchangeFeedId2,
-			constants.ExchangeFeedId1,
+		[]types.ExchangeId{
+			constants.ExchangeId1,
+			constants.ExchangeId2,
+			constants.ExchangeId1,
 		},
-		fmt.Errorf("exchangeFeedId: %d appears twice in request", constants.ExchangeFeedId1),
+		fmt.Errorf("exchangeId: '%v' appears twice in request", constants.ExchangeId1),
 	)
 }
 
@@ -63,16 +63,16 @@ func TestUpdatePrice_IsValid(t *testing.T) {
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
 		false,
 	)
 
 	mtpMap := exchangeToMarketPrices.GetAllPrices()
-	require.Len(t, mtpMap[constants.ExchangeFeedId1], 1)
-	require.Empty(t, mtpMap[constants.ExchangeFeedId2])
+	require.Len(t, mtpMap[constants.ExchangeId1], 1)
+	require.Empty(t, mtpMap[constants.ExchangeId2])
 
-	marketPriceTimestamp := mtpMap[constants.ExchangeFeedId1][0]
+	marketPriceTimestamp := mtpMap[constants.ExchangeId1][0]
 	require.Equal(t, constants.MarketId9, marketPriceTimestamp.MarketId)
 	require.Equal(t, constants.Price1, marketPriceTimestamp.Price)
 	require.Equal(t, constants.TimeT, marketPriceTimestamp.LastUpdatedAt)
@@ -88,23 +88,23 @@ func TestUpdatePrice_UpdateIsValid(t *testing.T) {
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		(*types.MarketPriceTimestamp)(constants.Market9_TimeTMinusThreshold_Price2),
 		false,
 	)
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
 		false,
 	)
 
 	mtpMap := exchangeToMarketPrices.GetAllPrices()
 
-	require.Len(t, mtpMap[constants.ExchangeFeedId1], 1)
+	require.Len(t, mtpMap[constants.ExchangeId1], 1)
 
-	marketPriceTimestamp := mtpMap[constants.ExchangeFeedId1][0]
+	marketPriceTimestamp := mtpMap[constants.ExchangeId1][0]
 	require.Equal(t, constants.MarketId9, marketPriceTimestamp.MarketId)
 	require.Equal(t, constants.Price1, marketPriceTimestamp.Price)
 	require.Equal(t, constants.TimeT, marketPriceTimestamp.LastUpdatedAt)
@@ -120,23 +120,23 @@ func TestUpdatePrice_UpdateIsInvalid(t *testing.T) {
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
 		false,
 	)
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		(*types.MarketPriceTimestamp)(constants.Market9_TimeTMinusThreshold_Price2),
 		false,
 	)
 
 	mtpMap := exchangeToMarketPrices.GetAllPrices()
 
-	require.Len(t, mtpMap[constants.ExchangeFeedId1], 1)
+	require.Len(t, mtpMap[constants.ExchangeId1], 1)
 
-	marketPriceTimestamp := mtpMap[constants.ExchangeFeedId1][0]
+	marketPriceTimestamp := mtpMap[constants.ExchangeId1][0]
 	require.Equal(t, constants.MarketId9, marketPriceTimestamp.MarketId)
 	require.Equal(t, constants.Price1, marketPriceTimestamp.Price)
 	require.Equal(t, constants.TimeT, marketPriceTimestamp.LastUpdatedAt)
@@ -152,21 +152,21 @@ func TestUpdatePrice_IsValidForTwoMarkets(t *testing.T) {
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
 		false,
 	)
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		(*types.MarketPriceTimestamp)(constants.Market8_TimeTMinusThreshold_Price2),
 		false,
 	)
 
 	mtpMap := exchangeToMarketPrices.GetAllPrices()
 
-	require.Len(t, mtpMap[constants.ExchangeFeedId1], 2)
+	require.Len(t, mtpMap[constants.ExchangeId1], 2)
 	assert.ElementsMatch(
 		t,
 		[]types.MarketPriceTimestamp{
@@ -181,7 +181,7 @@ func TestUpdatePrice_IsValidForTwoMarkets(t *testing.T) {
 				LastUpdatedAt: constants.TimeTMinusThreshold,
 			},
 		},
-		mtpMap[constants.ExchangeFeedId1],
+		mtpMap[constants.ExchangeId1],
 	)
 }
 
@@ -195,28 +195,28 @@ func TestUpdatePrice_IsValidForTwoExchanges(t *testing.T) {
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId1,
+		constants.ExchangeId1,
 		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
 		false,
 	)
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId2,
+		constants.ExchangeId2,
 		(*types.MarketPriceTimestamp)(constants.Market8_TimeTMinusThreshold_Price2),
 		false,
 	)
 
 	mtpMap := exchangeToMarketPrices.GetAllPrices()
 
-	require.Len(t, mtpMap[constants.ExchangeFeedId1], 1)
-	require.Len(t, mtpMap[constants.ExchangeFeedId2], 1)
+	require.Len(t, mtpMap[constants.ExchangeId1], 1)
+	require.Len(t, mtpMap[constants.ExchangeId2], 1)
 
-	marketPriceTimestamp := mtpMap[constants.ExchangeFeedId1][0]
+	marketPriceTimestamp := mtpMap[constants.ExchangeId1][0]
 	require.Equal(t, constants.Price1, marketPriceTimestamp.Price)
 	require.Equal(t, constants.TimeT, marketPriceTimestamp.LastUpdatedAt)
 
-	marketPriceTimestamp2 := mtpMap[constants.ExchangeFeedId2][0]
+	marketPriceTimestamp2 := mtpMap[constants.ExchangeId2][0]
 	require.Equal(t, constants.Price2, marketPriceTimestamp2.Price)
 	require.Equal(t, constants.TimeTMinusThreshold, marketPriceTimestamp2.LastUpdatedAt)
 }
@@ -231,7 +231,7 @@ func TestNewExchangeToMarketPrices_UpdateIsInvalidForInvalidExchange(t *testing.
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
-		constants.ExchangeFeedId3,
+		constants.ExchangeId3,
 		(*types.MarketPriceTimestamp)(constants.Market8_TimeTMinusThreshold_Price2),
 		true,
 	)
@@ -240,7 +240,7 @@ func TestNewExchangeToMarketPrices_UpdateIsInvalidForInvalidExchange(t *testing.
 func updatePriceAndCheckForPanic(
 	t *testing.T,
 	exchangeToMarketPrices *types.ExchangeToMarketPrices,
-	exchangeFeedId types.ExchangeFeedId,
+	exchangeId types.ExchangeId,
 	marketPriceTimestamp *types.MarketPriceTimestamp,
 	panics bool,
 ) {
@@ -249,7 +249,7 @@ func updatePriceAndCheckForPanic(
 			t,
 			func() {
 				exchangeToMarketPrices.UpdatePrice(
-					exchangeFeedId,
+					exchangeId,
 					marketPriceTimestamp,
 				)
 			},
@@ -259,7 +259,7 @@ func updatePriceAndCheckForPanic(
 			t,
 			func() {
 				exchangeToMarketPrices.UpdatePrice(
-					exchangeFeedId,
+					exchangeId,
 					marketPriceTimestamp,
 				)
 			},
@@ -269,10 +269,10 @@ func updatePriceAndCheckForPanic(
 
 func getNewExchangeToMarketPricesAndCheckForError(
 	t *testing.T,
-	exchangeFeedIds []types.ExchangeFeedId,
+	exchangeIds []types.ExchangeId,
 	expectedErr error,
 ) *types.ExchangeToMarketPrices {
-	exchangeToMarketPrices, err := types.NewExchangeToMarketPrices(exchangeFeedIds)
+	exchangeToMarketPrices, err := types.NewExchangeToMarketPrices(exchangeIds)
 
 	if expectedErr != nil {
 		require.EqualError(t, err, expectedErr.Error())

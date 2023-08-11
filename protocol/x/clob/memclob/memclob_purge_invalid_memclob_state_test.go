@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/mocks"
+	clobtest "github.com/dydxprotocol/v4/testutil/clob"
 	"github.com/dydxprotocol/v4/testutil/constants"
+	memclobtest "github.com/dydxprotocol/v4/testutil/memclob"
 	sdktest "github.com/dydxprotocol/v4/testutil/sdk"
 	"github.com/dydxprotocol/v4/x/clob/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
@@ -25,6 +26,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		fullyFilledOrderIds      []types.OrderId
 		expiredStatefulOrderIds  []types.OrderId
 		canceledStatefulOrderIds []types.OrderId
+		removedStatefulOrderIds  []types.OrderId
 
 		// Expectations.
 		expectedRemainingBids          []OrderWithRemainingSize
@@ -44,15 +46,15 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		},
 		`Memclob has expired Short-Term orders and Short-Term order cancellations and they're removed`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB15),
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
-				types.NewOrderPlacementOperation(constants.Order_User2_Num0_Id2_Clob0_Sell25_Price95_GTB10),
-				types.NewOrderPlacementOperation(constants.Order_User2_Num1_Id1_Clob1_Sell25_Price85_GTB10),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB15),
+				clobtest.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id2_Clob0_Sell25_Price95_GTB10),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num1_Id1_Clob1_Sell25_Price85_GTB10),
 			},
 			newOrderFillAmounts: map[types.OrderId]satypes.BaseQuantums{},
 			existingCancels: []*types.MsgCancelOrder{
-				&constants.CancelOrder_User1_Num0_Id12_Clob0_GTB5,
-				&constants.CancelOrder_User2_Num0_Id2_Clob1_GTB5,
+				&constants.CancelOrder_Alice_Num0_Id12_Clob0_GTB5,
+				&constants.CancelOrder_Bob_Num0_Id2_Clob1_GTB5,
 				&constants.CancelOrder_Alice_Num1_Id11_Clob1_GTB20,
 				&constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30,
 			},
@@ -64,8 +66,8 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				&constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30,
 			},
 			expectedRemovedExpiredOrderIds: []types.OrderId{
-				constants.Order_User2_Num0_Id2_Clob0_Sell25_Price95_GTB10.OrderId,
-				constants.Order_User2_Num1_Id1_Clob1_Sell25_Price85_GTB10.OrderId,
+				constants.Order_Bob_Num0_Id2_Clob0_Sell25_Price95_GTB10.OrderId,
+				constants.Order_Bob_Num1_Id1_Clob1_Sell25_Price85_GTB10.OrderId,
 			},
 			expectedRemainingBids: []OrderWithRemainingSize{
 				{
@@ -100,9 +102,9 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		},
 		`There are fully-filled and expired orders but none exist on the memclob`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB15),
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB15),
+				clobtest.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
 			},
 			newOrderFillAmounts: map[types.OrderId]satypes.BaseQuantums{},
 
@@ -137,10 +139,10 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		},
 		`There are fully-filled and expired orders and they're removed from the memclob`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32),
-				types.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB15),
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB15),
+				clobtest.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
+				clobtest.NewOrderPlacementOperation(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15),
 			},
 			newOrderFillAmounts: map[types.OrderId]satypes.BaseQuantums{
 				constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32.OrderId:           35,
@@ -173,7 +175,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		`An order is specified as fully-filled in the last block but it's not removed since it's
 			only partially-filled on the validator's local memclob`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32),
+				clobtest.NewOrderPlacementOperation(constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32),
 			},
 			newOrderFillAmounts: map[types.OrderId]satypes.BaseQuantums{
 				constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32.OrderId: 30,
@@ -195,7 +197,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		},
 		`An order is canceled and removed from the memclob`: {
 			placedOperations: []types.Operation{
-				types.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
+				clobtest.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
 			},
 			newOrderFillAmounts: map[types.OrderId]satypes.BaseQuantums{},
 			canceledStatefulOrderIds: []types.OrderId{
@@ -223,6 +225,22 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 			expectedRemainingBids:          []OrderWithRemainingSize{},
 			expectedRemainingAsks:          []OrderWithRemainingSize{},
 		},
+		"An order in RemovedStatefulOrderIds is removed from the memclob": {
+			placedOperations: []types.Operation{
+				clobtest.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
+			},
+			newOrderFillAmounts: map[types.OrderId]satypes.BaseQuantums{},
+			removedStatefulOrderIds: []types.OrderId{
+				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+			},
+
+			fullyFilledOrderIds: []types.OrderId{},
+
+			expectedRemovedExpiredOrderIds: []types.OrderId{},
+			expiredStatefulOrderIds:        []types.OrderId{},
+			expectedRemainingBids:          []OrderWithRemainingSize{},
+			expectedRemainingAsks:          []OrderWithRemainingSize{},
+		},
 	}
 
 	for name, tc := range tests {
@@ -235,8 +253,8 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 
 			for _, operation := range tc.placedOperations {
 				switch operation.Operation.(type) {
-				case *types.Operation_OrderPlacement:
-					order := operation.GetOrderPlacement().Order
+				case *types.Operation_ShortTermOrderPlacement:
+					order := operation.GetShortTermOrderPlacement().Order
 					orderId := order.OrderId
 					// Mock out the first 4 calls to GetOrderFillAmount, which is called during test setup.
 					mockMemClobKeeper.On("GetOrderFillAmount", mock.Anything, orderId).Return(
@@ -247,29 +265,10 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 					mockMemClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
 						Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult)).Once()
 
-					if orderId.IsStatefulOrder() {
-						mockMemClobKeeper.On("DoesStatefulOrderExistInState", mock.Anything, order).
-							Return(true).Times(2)
-
-						// If this stateful order is fully-filled and will be placed on the memclob,
-						// Mock out subsequent call to `DoesStatefulOrderExistInState` since it will
-						// be called when purging the stateful order from the memclob.
-						if lib.ContainsValue(tc.fullyFilledOrderIds, orderId) {
-							mockMemClobKeeper.On("DoesStatefulOrderExistInState", mock.Anything, order).
-								Return(true).Once()
-						}
-					}
-
 					// Mock out all remaining calls to GetOrderFillAmount, which is called in
 					// `memclob.PurgeInvalidMemclobState` and during test assertions.
 					fillAmount, exists := tc.newOrderFillAmounts[orderId]
 					mockMemClobKeeper.On("GetOrderFillAmount", mock.Anything, orderId).Return(exists, fillAmount, uint32(5))
-				case *types.Operation_PreexistingStatefulOrder:
-					orderId := operation.GetPreexistingStatefulOrder()
-					mockMemClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
-						Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
-					mockMemClobKeeper.On("DoesStatefulOrderExistInState", mock.Anything, orderId).
-						Return(true)
 				}
 			}
 
@@ -298,15 +297,22 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				tc.fullyFilledOrderIds,
 				tc.expiredStatefulOrderIds,
 				tc.canceledStatefulOrderIds,
+				tc.removedStatefulOrderIds,
 				offchainUpdates,
 			)
 
 			// Verify that all removed orders have an associated off-chain removal.
-			require.Equal(t, len(offchainUpdates.RemoveMessages), len(tc.expectedRemovedExpiredOrderIds))
+			require.Equal(
+				t,
+				memclobtest.MessageCountOfType(offchainUpdates, types.RemoveMessageType),
+				len(tc.expectedRemovedExpiredOrderIds),
+			)
 
 			for _, orderId := range tc.expectedRemovedExpiredOrderIds {
-				_, exists := offchainUpdates.RemoveMessages[orderId]
-				require.True(t, exists)
+				require.True(
+					t,
+					memclobtest.HasMessage(offchainUpdates, orderId, types.RemoveMessageType),
+				)
 			}
 
 			// Verify expecatations.
@@ -346,6 +352,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateCanceledStatefulO
 				[]types.OrderId{},
 				[]types.OrderId{},
 				canceledStatefulOrderIds,
+				[]types.OrderId{},
 				types.NewOffchainUpdates(),
 			)
 		},
@@ -370,6 +377,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testin
 				[]types.OrderId{},
 				[]types.OrderId{},
 				[]types.OrderId{shortTermOrderId},
+				[]types.OrderId{},
 				types.NewOffchainUpdates(),
 			)
 		},
@@ -397,6 +405,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateExpiredStatefulOr
 				[]types.OrderId{},
 				expiredStatefulOrderIds,
 				[]types.OrderId{},
+				[]types.OrderId{},
 				types.NewOffchainUpdates(),
 			)
 		},
@@ -420,6 +429,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithShortTermExpiredStatefulOr
 				ctx,
 				[]types.OrderId{},
 				[]types.OrderId{shortTermOrderId},
+				[]types.OrderId{},
 				[]types.OrderId{},
 				types.NewOffchainUpdates(),
 			)

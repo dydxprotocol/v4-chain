@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"DOTUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"DOTUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tDOTUSD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"DOT_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"dotusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"DOTUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"DOT-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"DOT-USDT"
+    }
+  ]
+}

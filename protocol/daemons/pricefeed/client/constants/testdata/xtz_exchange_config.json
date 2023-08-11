@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"XTZUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"XTZUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tXTZUSD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"XTZ-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"XTZ_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"xtzusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"XTZUSD"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"XTZ-USDT"
+    }
+  ]
+}

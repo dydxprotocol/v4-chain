@@ -1,10 +1,14 @@
 name: Protobuf
-# Protobuf runs buf (https://buf.build/) lint and check-breakage
-# This workflow is only run when a .proto file has been changed
+# Protobuf ensures our generated go files match the protos
 on:  # yamllint disable-line rule:truthy
   pull_request:
-    paths:
-      - "**.proto"
+  push:
+    branches:
+      - main
+      - master
+      - 'release/v[0-9]+.x'  # e.g. release/v1.x
+      - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/ibctestnet/v1.x
+      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
 jobs:
   # Verify protos were generated with `make proto-gen`
   verify-proto-gen:
@@ -15,21 +19,22 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_REPO_READ_TOKEN }}
       - run: git config --global --add safe.directory /__w/v4/v4
       - run: make proto-gen-without-container && git diff --exit-code
-  lint:
+  # The submodule commit is an ancestor of the main branch, not some random commit
+  submodule-commit-is-ancestor-of-main:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v3
-      - name: lint
-        run: make proto-lint
-
-# Note this isn't working for now as our repository is private.
-# This will matter more once we care about breaking changes.
-#  breakage:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: check-breakage
-#        run: make proto-check-breaking
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_REPO_READ_TOKEN }}
+      - name: Submodule commit is ancestor of main
+        run: |
+          git config --global --add safe.directory /__w/v4/v4
+          cd proto
+          git fetch --unshallow origin main
+          git merge-base --is-ancestor HEAD origin/main

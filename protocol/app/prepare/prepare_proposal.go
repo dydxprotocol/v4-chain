@@ -33,8 +33,9 @@ type FundingTxResponse struct {
 
 // OperationTxResponse represents a response for creating 'ProposedOperations' tx
 type OperationsTxResponse struct {
-	Tx  []byte
-	Err error
+	Tx            []byte
+	Err           error
+	NumOperations int
 }
 
 // PrepareProposalHandler is responsible for preparing a block proposal that's returned to Tendermint via ABCI++.
@@ -46,7 +47,6 @@ type OperationsTxResponse struct {
 //   - If there are extra available bytes and there are more txs in "Other" group, add more txs from this group.
 func PrepareProposalHandler(
 	txConfig client.TxConfig,
-	ctxHelper ContextHelper,
 	clobKeeper PrepareClobKeeper,
 	pricesKeeper PreparePricesKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
@@ -59,11 +59,6 @@ func PrepareProposalHandler(
 			metrics.Handler,
 			metrics.Latency,
 		)
-
-		// TODO(DEC-1248): figure out why ctx returns weird store key error when block height == 0
-		if ctxHelper.Height(ctx) < 1 {
-			return EmptyResponse // return empty txs.
-		}
 
 		txs, err := NewPrepareProposalTxs(req)
 		if err != nil {
@@ -241,7 +236,7 @@ func GetProposedOperationsTx(
 		return OperationsTxResponse{Err: fmt.Errorf("Invalid tx: %v", tx)}
 	}
 
-	return OperationsTxResponse{Tx: tx}
+	return OperationsTxResponse{Tx: tx, NumOperations: len(msgOperations.GetOperationsQueue())}
 }
 
 // EncodeMsgsIntoTxBytes encodes the given msgs into a single transaction.

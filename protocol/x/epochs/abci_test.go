@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4/lib/metrics"
 	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
 	"github.com/dydxprotocol/v4/x/epochs"
 	"github.com/dydxprotocol/v4/x/epochs/types"
@@ -108,12 +109,12 @@ func TestBeginBlocker(t *testing.T) {
 			},
 			expectedEvents: []sdk.Event{
 				sdk.NewEvent(
-					types.EventTypeNewEpoch,
-					sdk.NewAttribute(types.AttributeEpochInfoName, "name"),
-					sdk.NewAttribute(types.AttributeEpochNumber, "1"),
-					sdk.NewAttribute(types.AttributeEpochStartTickTime, "1800000060"),
-					sdk.NewAttribute(types.AttributeEpochStartBlockTime, "1800000075"),
-					sdk.NewAttribute(types.AttributeEpochStartBlock, "65"),
+					metrics.EventTypeNewEpoch,
+					sdk.NewAttribute(metrics.EpochInfoName, "name"),
+					sdk.NewAttribute(metrics.EpochNumber, "1"),
+					sdk.NewAttribute(metrics.EpochStartTickTime, "1800000060"),
+					sdk.NewAttribute(metrics.EpochStartBlockTime, "1800000075"),
+					sdk.NewAttribute(metrics.EpochStartBlock, "65"),
 				),
 			},
 		},
@@ -154,20 +155,20 @@ func TestBeginBlocker(t *testing.T) {
 			},
 			expectedEvents: []sdk.Event{
 				sdk.NewEvent(
-					types.EventTypeNewEpoch,
-					sdk.NewAttribute(types.AttributeEpochInfoName, "name"),
-					sdk.NewAttribute(types.AttributeEpochNumber, "1"),
-					sdk.NewAttribute(types.AttributeEpochStartTickTime, "1800000060"),
-					sdk.NewAttribute(types.AttributeEpochStartBlockTime, "1800000075"),
-					sdk.NewAttribute(types.AttributeEpochStartBlock, "65"),
+					metrics.EventTypeNewEpoch,
+					sdk.NewAttribute(metrics.EpochInfoName, "name"),
+					sdk.NewAttribute(metrics.EpochNumber, "1"),
+					sdk.NewAttribute(metrics.EpochStartTickTime, "1800000060"),
+					sdk.NewAttribute(metrics.EpochStartBlockTime, "1800000075"),
+					sdk.NewAttribute(metrics.EpochStartBlock, "65"),
 				),
 				sdk.NewEvent(
-					types.EventTypeNewEpoch,
-					sdk.NewAttribute(types.AttributeEpochInfoName, "name2"),
-					sdk.NewAttribute(types.AttributeEpochNumber, "1"),
-					sdk.NewAttribute(types.AttributeEpochStartTickTime, "1800000000"),
-					sdk.NewAttribute(types.AttributeEpochStartBlockTime, "1800000075"),
-					sdk.NewAttribute(types.AttributeEpochStartBlock, "65"),
+					metrics.EventTypeNewEpoch,
+					sdk.NewAttribute(metrics.EpochInfoName, "name2"),
+					sdk.NewAttribute(metrics.EpochNumber, "1"),
+					sdk.NewAttribute(metrics.EpochStartTickTime, "1800000000"),
+					sdk.NewAttribute(metrics.EpochStartBlockTime, "1800000075"),
+					sdk.NewAttribute(metrics.EpochStartBlock, "65"),
 				),
 			},
 		},
@@ -194,12 +195,12 @@ func TestBeginBlocker(t *testing.T) {
 			},
 			expectedEvents: []sdk.Event{
 				sdk.NewEvent(
-					types.EventTypeNewEpoch,
-					sdk.NewAttribute(types.AttributeEpochInfoName, "name"),
-					sdk.NewAttribute(types.AttributeEpochNumber, "1"),
-					sdk.NewAttribute(types.AttributeEpochStartTickTime, "1800000060"),
-					sdk.NewAttribute(types.AttributeEpochStartBlockTime, "1800000601"),
-					sdk.NewAttribute(types.AttributeEpochStartBlock, "65"),
+					metrics.EventTypeNewEpoch,
+					sdk.NewAttribute(metrics.EpochInfoName, "name"),
+					sdk.NewAttribute(metrics.EpochNumber, "1"),
+					sdk.NewAttribute(metrics.EpochStartTickTime, "1800000060"),
+					sdk.NewAttribute(metrics.EpochStartBlockTime, "1800000601"),
+					sdk.NewAttribute(metrics.EpochStartBlock, "65"),
 				),
 			},
 		},

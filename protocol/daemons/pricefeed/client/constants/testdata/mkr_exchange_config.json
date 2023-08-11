@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"MKRUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"MKRUSD\""
+    },
+    {
+      "exchangeName":"Bitfinex",
+      "ticker":"tMKRUSD"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"MKR-USD"
+    },
+    {
+      "exchangeName":"Gate",
+      "ticker":"MKR_USDT"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"mkrusdt"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"MKR-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"MKR-USDT"
+    }
+  ]
+}

@@ -18,6 +18,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3.3.0
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_REPO_READ_TOKEN }}
       - name: set tag env
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: install go
@@ -29,21 +32,16 @@ jobs:
         run: mkdir ./build
       - name: Build Reproducible Linux Binaries
         run: make distclean build-reproducible
-      - name: Build darwin/arm64 Binary
-        run: make build-darwin-arm64
       - name: Rename Binaries
         run: |
           mv ./build/dydxprotocold:linux-arm64 ./build/dydxprotocold-${{ env.VERSION }}-linux-arm64
           mv ./build/dydxprotocold:linux-amd64 ./build/dydxprotocold-${{ env.VERSION }}-linux-amd64
-          mv ./build/dydxprotocold ./build/dydxprotocold-${{ env.VERSION }}-darwin-arm64
       - name: Compress binaries
         run: |
           tar -cvzf dydxprotocold-${{ env.VERSION }}-linux-arm64.tar.gz \
             ./build/dydxprotocold-${{ env.VERSION }}-linux-arm64
           tar -cvzf dydxprotocold-${{ env.VERSION }}-linux-amd64.tar.gz \
             ./build/dydxprotocold-${{ env.VERSION }}-linux-amd64
-          tar -cvzf dydxprotocold-${{ env.VERSION }}-darwin-arm64.tar.gz \
-            ./build/dydxprotocold-${{ env.VERSION }}-darwin-arm64
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -54,17 +52,8 @@ jobs:
           release_name: Release ${{ github.ref }}
           # TODO(DEC-1743): add more helpful release notes and change logs
           body: Release ${{ env.VERSION }}
-          draft: false
+          draft: true
           prerelease: false
-      - name: Upload darwin-arm64 tar.gz
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dydxprotocold-${{ env.VERSION }}-darwin-arm64.tar.gz
-          asset_name: dydxprotocold-${{ env.VERSION }}-darwin-arm64.tar.gz
-          asset_content_type: application/gzip
       - name: Upload linux-amd64 tar.gz
         uses: actions/upload-release-asset@v1
         env:

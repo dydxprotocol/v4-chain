@@ -16,32 +16,26 @@ var (
 	ValidEmptyMsgProposedOperations        = &types.MsgProposedOperations{}
 	ValidEmptyMsgProposedOperationsTxBytes []byte
 	// InvalidProposedOperations is invalid because the maker order for the match operation
-	// has not been previously placed or placed in the set of operations preceeding the match.
+	// does not have a corresponding order placement operation before it in the operations queue.
 	InvalidProposedOperations = &types.MsgProposedOperations{
-		OperationsQueue: []types.Operation{
+		OperationsQueue: []types.OperationRaw{
 			{
-				Operation: &types.Operation_OrderPlacement{
-					OrderPlacement: &types.MsgPlaceOrder{
-						Order: Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-					},
-				},
-			},
-			{Operation: &types.Operation_Match{
-				Match: &types.ClobMatch{
-					Match: &types.ClobMatch_MatchOrders{
-						MatchOrders: &types.MatchOrders{
-							TakerOrderId: Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-							Fills: []types.MakerFill{
-								{
-									MakerOrderId: OrderId_Alice_Num0_ClientId0_Clob0,
-									FillAmount:   100_000_000,
+				Operation: &types.OperationRaw_Match{
+					Match: &types.ClobMatch{
+						Match: &types.ClobMatch_MatchOrders{
+							MatchOrders: &types.MatchOrders{
+								TakerOrderId: Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+								Fills: []types.MakerFill{
+									{
+										MakerOrderId: OrderId_Alice_Num0_ClientId0_Clob0,
+										FillAmount:   100_000_000,
+									},
 								},
 							},
-							TakerOrderHash: Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.GetOrderHash().ToBytes(),
 						},
 					},
 				},
-			}},
+			},
 		},
 	}
 	InvalidProposedOperationsTxBytes []byte

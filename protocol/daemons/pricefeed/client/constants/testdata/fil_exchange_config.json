@@ -1,0 +1,32 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"FILUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"FILUSD\""
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"FIL-USD"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"filusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"FILUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"FIL-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"FIL-USDT"
+    }
+  ]
+}

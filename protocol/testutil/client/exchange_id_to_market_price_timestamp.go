@@ -4,10 +4,10 @@ import (
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
 )
 
-// ExchangeFeedIdMarketPriceTimestamp contains an `ExchangeFeedId` and an associated
+// ExchangeIdMarketPriceTimestamp contains an `ExchangeId` and an associated
 // `types.MarketPriceTimestamp`. This type exists for convenience and clarity in testing the
 // pricefeed client.
-type ExchangeFeedIdMarketPriceTimestamp struct {
-	ExchangeFeedId       types.ExchangeFeedId
+type ExchangeIdMarketPriceTimestamp struct {
+	ExchangeId           types.ExchangeId
 	MarketPriceTimestamp *types.MarketPriceTimestamp
 }

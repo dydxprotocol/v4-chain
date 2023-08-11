@@ -126,6 +126,24 @@ var (
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse":    {},
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":       {},
 
+		// blocktime
+		"/dydxprotocol.blocktime.MsgIsDelayedBlock":               {},
+		"/dydxprotocol.blocktime.MsgIsDelayedBlockResponse":       {},
+		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         {},
+		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},
+
+		// bridge
+		"/dydxprotocol.bridge.MsgAcknowledgeBridge":           {},
+		"/dydxprotocol.bridge.MsgAcknowledgeBridgeResponse":   {},
+		"/dydxprotocol.bridge.MsgCompleteBridge":              {},
+		"/dydxprotocol.bridge.MsgCompleteBridgeResponse":      {},
+		"/dydxprotocol.bridge.MsgUpdateEventParams":           {},
+		"/dydxprotocol.bridge.MsgUpdateEventParamsResponse":   {},
+		"/dydxprotocol.bridge.MsgUpdateProposeParams":         {},
+		"/dydxprotocol.bridge.MsgUpdateProposeParamsResponse": {},
+		"/dydxprotocol.bridge.MsgUpdateSafetyParams":          {},
+		"/dydxprotocol.bridge.MsgUpdateSafetyParamsResponse":  {},
+
 		// clob
 		"/dydxprotocol.clob.MsgCancelOrder":                {},
 		"/dydxprotocol.clob.MsgCancelOrderResponse":        {},
@@ -133,6 +151,10 @@ var (
 		"/dydxprotocol.clob.MsgPlaceOrderResponse":         {},
 		"/dydxprotocol.clob.MsgProposedOperations":         {},
 		"/dydxprotocol.clob.MsgProposedOperationsResponse": {},
+
+		// feetiers
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         {},
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":         {},
@@ -149,6 +171,14 @@ var (
 		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    {},
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         {},
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": {},
+
+		// stats
+		"/dydxprotocol.stats.MsgUpdateParams":         {},
+		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
+
+		// rewards
+		"/dydxprotocol.rewards.MsgUpdateParams":         {},
+		"/dydxprotocol.rewards.MsgUpdateParamsResponse": {},
 
 		// ibc.applications
 		"/ibc.applications.transfer.v1.MsgTransfer":           {},

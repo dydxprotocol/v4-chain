@@ -27,6 +27,9 @@ const (
 	// that represents existing premium samples during the current
 	// `funding-tick` epoch.
 	PremiumSamplesKey = "Perpetual/premium_samples"
+	// MinNumVotesPerSampleKey is the key to retrieve `min_num_votes_per_sample`,
+	// the minimum number of votes needed to calculate a premium sample.
+	MinNumVotesPerSampleKey = "Perpetual/min_num_votes_per_sample"
 	// LiquidityTierKeyPrefix is the prefix to retrieve all `LiquidityTier`s.
 	LiquidityTierKeyPrefix = "Perpetual/liquidity_tier/"
 	// NumLiquidityTiersKey is the prefix to retrieve the cardinality of `LiquidityTier`s.

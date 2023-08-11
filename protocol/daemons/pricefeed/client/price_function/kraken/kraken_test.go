@@ -2,12 +2,11 @@ package kraken_test
 
 import (
 	"errors"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/kraken"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/testutil"
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/mocks"
+	"github.com/dydxprotocol/v4/testutil/constants"
 	"github.com/dydxprotocol/v4/testutil/daemons/pricefeed"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -15,17 +14,17 @@ import (
 )
 
 const (
-	ETHUSDC_SYMBOL = "XETHZUSD"
-	BTCUSDC_SYMBOL = "XXBTZUSD"
+	ETHUSDC_TICKER = "XETHZUSD"
+	BTCUSDC_TICKER = "XXBTZUSD"
 )
 
 var (
-	ValidSymbolMap = map[string]int32{
-		ETHUSDC_SYMBOL: constants.StaticMarketPriceExponent[exchange_common.MARKET_ETH_USD],
-		BTCUSDC_SYMBOL: constants.StaticMarketPriceExponent[exchange_common.MARKET_BTC_USD],
+	EthExponentMap = map[string]int32{
+		ETHUSDC_TICKER: constants.EthUsdExponent,
 	}
-	EthSymbolMap = map[string]int32{
-		ETHUSDC_SYMBOL: constants.StaticMarketPriceExponent[exchange_common.MARKET_ETH_USD],
+	BtcAndEthExponentMap = map[string]int32{
+		BTCUSDC_TICKER: constants.BtcUsdExponent,
+		ETHUSDC_TICKER: constants.EthUsdExponent,
 	}
 )
 
@@ -45,7 +44,7 @@ func TestKrakenPriceFunction_Mixed(t *testing.T) {
 		"Failure - invalid response, not JSON": {
 			// Invalid due to trailing comma in JSON.
 			responseJsonString: `{,}`,
-			exponentMap:        testutil.ExponentSymbolMap,
+			exponentMap:        EthExponentMap,
 			expectedError: errors.New(
 				"kraken API response JSON parse error (invalid character ',' looking for beginning of object " +
 					"key string)",
@@ -54,7 +53,7 @@ func TestKrakenPriceFunction_Mixed(t *testing.T) {
 		"Failure - invalid response, float instead of string data type, missing": {
 			// Invalid due to trailing comma in JSON.
 			responseJsonString: `{"result":{"XETHZUSD":{"a":[2105.8]}}}`,
-			exponentMap:        ValidSymbolMap,
+			exponentMap:        BtcAndEthExponentMap,
 			expectedError: errors.New(
 				"kraken API response JSON parse error (json: cannot unmarshal number into Go struct field " +
 					"KrakenTickerResult.result.a of type string)",
@@ -63,40 +62,40 @@ func TestKrakenPriceFunction_Mixed(t *testing.T) {
 		"Unavailable - overflow due to negative exponent": {
 			// Invalid due to trailing comma in JSON.
 			responseJsonString: krakenValidResponseString,
-			exponentMap:        map[string]int32{ETHUSDC_SYMBOL: -3000},
+			exponentMap:        map[string]int32{ETHUSDC_TICKER: -3000},
 			expectedPriceMap:   map[string]uint64{},
 			expectedUnavailableMap: map[string]error{
-				ETHUSDC_SYMBOL: errors.New("value overflows uint64"),
+				ETHUSDC_TICKER: errors.New("value overflows uint64"),
 			},
 		},
 		"Unavailable - fails on medianization error": {
 			responseJsonString:  krakenValidResponseString,
-			exponentMap:         ValidSymbolMap,
+			exponentMap:         BtcAndEthExponentMap,
 			medianFunctionFails: true,
 			expectedPriceMap:    map[string]uint64{},
 			expectedUnavailableMap: map[string]error{
-				ETHUSDC_SYMBOL: testutil.MedianizationError,
-				BTCUSDC_SYMBOL: testutil.MedianizationError,
+				ETHUSDC_TICKER: testutil.MedianizationError,
+				BTCUSDC_TICKER: testutil.MedianizationError,
 			},
 		},
 		"Failure - Kraken API Error response": {
 			responseJsonString: `{"error":["EQuery:Unknown asset pair"]}`,
-			exponentMap:        testutil.ExponentSymbolMap,
+			exponentMap:        EthExponentMap,
 			expectedError:      errors.New("kraken API call error: EQuery:Unknown asset pair"),
 		},
 		"Success - one market response": {
 			responseJsonString: krakenValidResponseString,
-			exponentMap:        EthSymbolMap,
+			exponentMap:        EthExponentMap,
 			expectedPriceMap: map[string]uint64{
-				ETHUSDC_SYMBOL: uint64(1_888_000_000),
+				ETHUSDC_TICKER: uint64(1_888_000_000),
 			},
 		},
 		"Success - two market response": {
 			responseJsonString: krakenValidResponseString,
-			exponentMap:        ValidSymbolMap,
+			exponentMap:        BtcAndEthExponentMap,
 			expectedPriceMap: map[string]uint64{
-				ETHUSDC_SYMBOL: uint64(1_888_000_000),
-				BTCUSDC_SYMBOL: uint64(2_920_750_000),
+				ETHUSDC_TICKER: uint64(1_888_000_000),
+				BTCUSDC_TICKER: uint64(2_920_750_000),
 			},
 		},
 	}

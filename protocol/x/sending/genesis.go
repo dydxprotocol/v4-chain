@@ -9,6 +9,7 @@ import (
 // InitGenesis initializes the sending module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	k.InitializeForGenesis(ctx)
 }
 
 // ExportGenesis returns the sending module's exported genesis.

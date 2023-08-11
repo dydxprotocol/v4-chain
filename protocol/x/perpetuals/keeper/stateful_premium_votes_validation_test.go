@@ -9,7 +9,7 @@ import (
 )
 
 func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
-	// In below test cases, perptual 0 is associated with liquidity tier 0,
+	// In below test cases, perpetual 0 is associated with liquidity tier 0,
 	// perpetual 1 is associated with liquidity tier 1, etc.
 	// `maxAbsPremiumVotePpm` for each liquidity tier is:
 	// liquidity tier 0: 60_000_000 * (100% - 100%) = 0

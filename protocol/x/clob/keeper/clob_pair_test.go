@@ -123,15 +123,14 @@ func TestCreateClobPair(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Boilerplate setup.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx, k, priceKeeper, _, perpetualsKeeper, _, _, _ :=
-				keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
-			prices.InitGenesis(ctx, *priceKeeper, constants.Prices_DefaultGenesisState)
-			perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			// Perform the method under test.
-			createdClobPair, actualErr := k.CreatePerpetualClobPair(
-				ctx,
+			createdClobPair, actualErr := ks.ClobKeeper.CreatePerpetualClobPair(
+				ks.Ctx,
 				clobtest.MustPerpetualId(tc.clobPair),
 				satypes.BaseQuantums(tc.clobPair.StepBaseQuantums),
 				satypes.BaseQuantums(tc.clobPair.MinOrderBaseQuantums),
@@ -141,8 +140,8 @@ func TestCreateClobPair(t *testing.T) {
 				tc.clobPair.MakerFeePpm,
 				tc.clobPair.TakerFeePpm,
 			)
-			storedClobPair, found := k.GetClobPair(ctx, types.ClobPairId(tc.clobPair.Id))
-			numClobPairs := k.GetNumClobPairs(ctx)
+			storedClobPair, found := ks.ClobKeeper.GetClobPair(ks.Ctx, types.ClobPairId(tc.clobPair.Id))
+			numClobPairs := ks.ClobKeeper.GetNumClobPairs(ks.Ctx)
 
 			if tc.expectedErr == "" {
 				// A valid CLOB pair should not raise any validation errors.
@@ -250,16 +249,15 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Boilerplate setup.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ctx, k, priceKeeper, _, perpetualsKeeper, _, _, _ :=
-				keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
-			prices.InitGenesis(ctx, *priceKeeper, constants.Prices_DefaultGenesisState)
-			perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			// Perform the method under test.
 			for _, make := range tc.clobPairs {
-				_, err := k.CreatePerpetualClobPair(
-					ctx,
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
 					clobtest.MustPerpetualId(make.clobPair),
 					satypes.BaseQuantums(make.clobPair.StepBaseQuantums),
 					satypes.BaseQuantums(make.clobPair.MinOrderBaseQuantums),
@@ -277,16 +275,16 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 				}
 			}
 
-			actualNumClobPairs := k.GetNumClobPairs(ctx)
+			actualNumClobPairs := ks.ClobKeeper.GetNumClobPairs(ks.Ctx)
 			require.Equal(t, tc.expectedNumClobPairs, actualNumClobPairs)
 
 			for key, expectedClobPair := range tc.expectedStoredClobPairs {
-				actual, found := k.GetClobPair(ctx, key)
+				actual, found := ks.ClobKeeper.GetClobPair(ks.Ctx, key)
 				require.True(t, found)
 				require.Equal(t, expectedClobPair, actual)
 			}
 
-			_, found := k.GetClobPair(ctx, types.ClobPairId(tc.expectedNumClobPairs))
+			_, found := ks.ClobKeeper.GetClobPair(ks.Ctx, types.ClobPairId(tc.expectedNumClobPairs))
 			require.False(t, found)
 		})
 	}
@@ -294,7 +292,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 
 func TestInitMemClobOrderbooks(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx, keeper, _, _, _, _, storeKey, _ := keepertest.ClobKeepers(
+	ks := keepertest.NewClobKeepersTestContext(
 		t,
 		memClob,
 		&mocks.BankKeeper{},
@@ -302,11 +300,11 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 	)
 
 	// Read a new `ClobPair` and make sure it does not exist.
-	_, err := memClob.GetClobPairForPerpetual(ctx, 1)
+	_, err := memClob.GetClobPairForPerpetual(ks.Ctx, 1)
 	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
 
 	// Write multiple `ClobPairs` to state, but don't call `MemClob.CreateOrderbook`.
-	store := prefix.NewStore(ctx.KVStore(storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
@@ -321,30 +319,28 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 	), b)
 
 	// Read the new `ClobPairs` and make sure they do not exist.
-	_, err = memClob.GetClobPairForPerpetual(ctx, 1)
+	_, err = memClob.GetClobPairForPerpetual(ks.Ctx, 1)
 	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
 
 	// Initialize the `ClobPairs` from Keeper state.
-	keeper.InitMemClobOrderbooks(ctx)
+	ks.ClobKeeper.InitMemClobOrderbooks(ks.Ctx)
 
 	// Read the new `ClobPairs` and make sure they exist.
-	_, err = memClob.GetClobPairForPerpetual(ctx, 0)
+	_, err = memClob.GetClobPairForPerpetual(ks.Ctx, 0)
 	require.NoError(t, err)
 
-	_, err = memClob.GetClobPairForPerpetual(ctx, 1)
+	_, err = memClob.GetClobPairForPerpetual(ks.Ctx, 1)
 	require.NoError(t, err)
 }
 
 func TestClobPairGet(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx, keeper,
-		pricesKeeper, _, perpetualsKeeper, _, _, _ :=
-		keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
-	perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-	items := createNClobPair(keeper, ctx, 10)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+	items := createNClobPair(ks.ClobKeeper, ks.Ctx, 10)
 	for _, item := range items {
-		rst, found := keeper.GetClobPair(ctx,
+		rst, found := ks.ClobKeeper.GetClobPair(ks.Ctx,
 			types.ClobPairId(item.Id),
 		)
 		require.True(t, found)
@@ -356,17 +352,15 @@ func TestClobPairGet(t *testing.T) {
 }
 func TestClobPairRemove(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx, keeper,
-		pricesKeeper, _, perpetualsKeeper, _, _, _ :=
-		keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
-	perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-	items := createNClobPair(keeper, ctx, 10)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+	items := createNClobPair(ks.ClobKeeper, ks.Ctx, 10)
 	for _, item := range items {
-		keeper.RemoveClobPair(ctx,
+		ks.ClobKeeper.RemoveClobPair(ks.Ctx,
 			types.ClobPairId(item.Id),
 		)
-		_, found := keeper.GetClobPair(ctx,
+		_, found := ks.ClobKeeper.GetClobPair(ks.Ctx,
 			types.ClobPairId(item.Id),
 		)
 		require.False(t, found)
@@ -375,14 +369,12 @@ func TestClobPairRemove(t *testing.T) {
 
 func TestClobPairGetAll(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ctx, keeper,
-		pricesKeeper, _, perpetualsKeeper, _, _, _ :=
-		keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
-	perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-	items := createNClobPair(keeper, ctx, 10)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+	items := createNClobPair(ks.ClobKeeper, ks.Ctx, 10)
 	require.ElementsMatch(t,
-		nullify.Fill(items),                      //nolint:staticcheck
-		nullify.Fill(keeper.GetAllClobPair(ctx)), //nolint:staticcheck
+		nullify.Fill(items), //nolint:staticcheck
+		nullify.Fill(ks.ClobKeeper.GetAllClobPair(ks.Ctx)), //nolint:staticcheck
 	)
 }

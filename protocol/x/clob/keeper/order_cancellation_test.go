@@ -4,18 +4,17 @@ import (
 	"testing"
 	"time"
 
+	cmt "github.com/cometbft/cometbft/types"
+	testapp "github.com/dydxprotocol/v4/testutil/app"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4/indexer/msgsender"
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/mocks"
-	clobtest "github.com/dydxprotocol/v4/testutil/clob"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
 	"github.com/dydxprotocol/v4/x/clob/keeper"
 	"github.com/dydxprotocol/v4/x/clob/types"
-	"github.com/dydxprotocol/v4/x/perpetuals"
-	"github.com/dydxprotocol/v4/x/prices"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -24,9 +23,9 @@ func TestShortTermCancelOrder_Success(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	indexerMessageSender := &mocks.IndexerEventManager{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, indexerMessageSender)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerMessageSender)
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
-	ctx = ctx.WithBlockHeight(14)
+	ctx := ks.Ctx.WithBlockHeight(14)
 	ctx = ctx.WithIsCheckTx(true)
 	nextBlock := uint32(15)
 	offchainUpdates := types.NewOffchainUpdates()
@@ -36,7 +35,7 @@ func TestShortTermCancelOrder_Success(t *testing.T) {
 		order.OrderId,
 		uint32(nextBlock),
 	)).Return(offchainUpdates, nil)
-	err := keeper.CheckTxCancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock))
+	err := ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock))
 	require.NoError(t, err)
 	indexerMessageSender.AssertExpectations(t)
 
@@ -45,7 +44,10 @@ func TestShortTermCancelOrder_Success(t *testing.T) {
 		order.OrderId,
 		nextBlock+types.ShortBlockWindow,
 	)).Return(offchainUpdates, nil)
-	err = keeper.CheckTxCancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock+types.ShortBlockWindow))
+	err = ks.ClobKeeper.CancelShortTermOrder(
+		ctx,
+		types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock+types.ShortBlockWindow),
+	)
 	require.NoError(t, err)
 	indexerMessageSender.AssertExpectations(t)
 	memClob.AssertExpectations(t)
@@ -55,9 +57,9 @@ func TestShortTermCancelOrder_SuccessfullySendsOffchainData(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	indexerMessageSender := &mocks.IndexerEventManager{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, indexerMessageSender)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerMessageSender)
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
-	ctx = ctx.WithBlockHeight(14).WithTxBytes(constants.TestTxBytes)
+	ctx := ks.Ctx.WithBlockHeight(14).WithTxBytes(constants.TestTxBytes)
 	ctx = ctx.WithIsCheckTx(true)
 	nextBlock := uint32(15)
 	offchainUpdates := types.NewOffchainUpdates()
@@ -75,7 +77,7 @@ func TestShortTermCancelOrder_SuccessfullySendsOffchainData(t *testing.T) {
 		"SendOffchainData",
 		message.AddHeader(constants.TestTxHashHeader),
 	).Return().Once()
-	err := keeper.CheckTxCancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock))
+	err := ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock))
 	require.NoError(t, err)
 	indexerMessageSender.AssertExpectations(t)
 	memClob.AssertExpectations(t)
@@ -84,19 +86,18 @@ func TestShortTermCancelOrder_SuccessfullySendsOffchainData(t *testing.T) {
 func TestShortTermCancelOrder_ErrGoodTilBlockExceedsHeight(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper,
-		_, _, _, _, _, _ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
-	ctx = ctx.WithIsCheckTx(true)
+	ctx := ks.Ctx.WithIsCheckTx(true)
 
 	// With a `GoodTilBlock` one less than the next height.
 	ctx = ctx.WithBlockHeight(15)
-	err := keeper.CheckTxCancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 15))
+	err := ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 15))
 	require.ErrorIs(t, err, types.ErrHeightExceedsGoodTilBlock)
 
 	// With a `GoodTilBlock` two less than the next height.
 	ctx = ctx.WithBlockHeight(16)
-	err = keeper.CheckTxCancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 15))
+	err = ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 15))
 	require.ErrorIs(t, err, types.ErrHeightExceedsGoodTilBlock)
 
 	memClob.AssertExpectations(t)
@@ -105,16 +106,15 @@ func TestShortTermCancelOrder_ErrGoodTilBlockExceedsHeight(t *testing.T) {
 func TestShortTermCancelOrder_ErrGoodTilBlockExceedsShortBlockWindow(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper,
-		_, _, _, _, _, _ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-	ctx = ctx.WithIsCheckTx(true)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ctx := ks.Ctx.WithIsCheckTx(true)
 
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	ctx = ctx.WithBlockHeight(14)
 	nextBlock := uint32(15)
 
 	// With a `GoodTilBlock` one more than ShortBlockWindow blocks in the future.
-	err := keeper.CheckTxCancelOrder(
+	err := ks.ClobKeeper.CancelShortTermOrder(
 		ctx,
 		types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock+types.ShortBlockWindow+1),
 	)
@@ -126,12 +126,11 @@ func TestShortTermCancelOrder_ErrGoodTilBlockExceedsShortBlockWindow(t *testing.
 func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper,
-		_, _, _, _, _, _ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-	ctx = ctx.WithIsCheckTx(true)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ctx := ks.Ctx.WithIsCheckTx(true)
 	previousBlockTime := 50
 	ctx = ctx.WithBlockTime(time.Unix(int64(previousBlockTime), 0))
-	keeper.SetBlockTimeForLastCommittedBlock(ctx)
+	ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
 
 	shortTermOrder := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	ctx = ctx.WithBlockHeight(14)
@@ -140,12 +139,12 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 		shortTermOrder.OrderId,
 		uint32(15),
 	)).Return(nil, types.ErrMemClobCancelAlreadyExists)
-	err := keeper.CheckTxCancelOrder(ctx, types.NewMsgCancelOrderShortTerm(shortTermOrder.OrderId, 15))
+	err := ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderShortTerm(shortTermOrder.OrderId, 15))
 	require.ErrorIs(t, err, types.ErrMemClobCancelAlreadyExists)
 
 	longTermOrder := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
-	keeper.SetStatefulOrderPlacement(ctx, longTermOrder, 15)
-	keeper.MustAddOrderToStatefulOrdersTimeSlice(
+	ks.ClobKeeper.SetLongTermOrderPlacement(ctx, longTermOrder, 15)
+	ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
 		ctx,
 		longTermOrder.MustGetUnixGoodTilBlockTime(),
 		longTermOrder.GetOrderId(),
@@ -154,111 +153,9 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 		longTermOrder.OrderId,
 		uint32(100),
 	)).Return(nil, types.ErrMemClobCancelAlreadyExists)
-	err = keeper.CheckTxCancelOrder(ctx, types.NewMsgCancelOrderStateful(longTermOrder.OrderId, 100))
+	err = ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderStateful(longTermOrder.OrderId, 100))
 	require.ErrorIs(t, err, types.ErrMemClobCancelAlreadyExists)
 
-	memClob.AssertExpectations(t)
-}
-
-func TestStatefulCancelOrder_Success(t *testing.T) {
-	memClob := &mocks.MemClob{}
-	indexerMessageSender := &mocks.IndexerEventManager{}
-	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, indexerMessageSender)
-	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
-	previousBlockTime := 15
-	ctx = ctx.WithBlockHeight(14)
-	ctx = ctx.WithIsCheckTx(true)
-	ctx = ctx.WithBlockTime(time.Unix(int64(previousBlockTime), 0))
-	keeper.SetBlockTimeForLastCommittedBlock(ctx)
-	offchainUpdates := types.NewOffchainUpdates()
-
-	// Cancel with a `GoodTilBlockTime` one more than order's GTBT in future
-	statefulOrderCancel := types.NewMsgCancelOrderStateful(
-		order.OrderId,
-		uint32(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetGoodTilBlockTime()+1),
-	)
-	memClob.On("CancelOrder", ctx, statefulOrderCancel).Return(offchainUpdates, nil)
-	// Simulate stateful order placement to state.
-	keeper.SetStatefulOrderPlacement(ctx, order, 10)
-	keeper.MustAddOrderToStatefulOrdersTimeSlice(
-		ctx,
-		order.MustGetUnixGoodTilBlockTime(),
-		order.GetOrderId(),
-	)
-	err := keeper.CheckTxCancelOrder(ctx, statefulOrderCancel)
-	require.NoError(t, err)
-	indexerMessageSender.AssertExpectations(t)
-
-	// Cancel wth a `GoodTilBlockTime` exactly StatefulOrderTimeWindow blocks in the future
-	statefulCancellationGoodTilBlockTime := uint32(
-		time.Unix(int64(previousBlockTime), 0).Add(types.StatefulOrderTimeWindow).Unix(),
-	)
-	// Simulate stateful order placement to state.
-	keeper.SetStatefulOrderPlacement(ctx, order, 10)
-	keeper.MustAddOrderToStatefulOrdersTimeSlice(
-		ctx,
-		order.MustGetUnixGoodTilBlockTime(),
-		order.GetOrderId(),
-	)
-	// Simulate some order fills being added to state.
-	keeper.SetOrderFillAmount(ctx, order.GetOrderId(), 1, 50)
-	// Cancel the beforementioned stateful order.
-	memClob.On("CancelOrder", ctx, types.NewMsgCancelOrderStateful(
-		order.OrderId,
-		uint32(time.Unix(int64(previousBlockTime), 0).Add(types.StatefulOrderTimeWindow).Unix()),
-	)).Return(offchainUpdates, nil)
-	err = keeper.CheckTxCancelOrder(
-		ctx,
-		types.NewMsgCancelOrderStateful(
-			order.OrderId,
-			statefulCancellationGoodTilBlockTime,
-		),
-	)
-
-	require.NoError(t, err)
-	// Verify that the stateful order placement was removed.
-	_, found := keeper.GetStatefulOrderPlacement(
-		ctx,
-		order.OrderId,
-	)
-	require.False(t, found)
-	// Verify that the stateful order placement was removed from time slice.
-	orderIds := keeper.GetStatefulOrdersTimeSlice(
-		ctx,
-		time.Unix(int64(statefulCancellationGoodTilBlockTime), 0),
-	)
-	require.NotContains(t, orderIds, order.OrderId)
-	// Verify that order fills were removed from fills.
-	exists, _, _ := keeper.GetOrderFillAmount(
-		ctx,
-		order.OrderId,
-	)
-	require.False(t, exists)
-
-	indexerMessageSender.AssertExpectations(t)
-	memClob.AssertExpectations(t)
-}
-
-func TestStatefulCancelOrder_ErrStatefulOrderDoesNotExist(t *testing.T) {
-	memClob := &mocks.MemClob{}
-	indexerEventManager := &mocks.IndexerEventManager{}
-	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ctx, keeper, _, _, _, _, _, _ := keepertest.ClobKeepers(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
-	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
-	previousBlockTime := 15
-	ctx = ctx.WithBlockHeight(14)
-	ctx = ctx.WithIsCheckTx(true)
-	ctx = ctx.WithBlockTime(time.Unix(int64(previousBlockTime), 0))
-	keeper.SetBlockTimeForLastCommittedBlock(ctx)
-
-	statefulOrderCancel := types.NewMsgCancelOrderStateful(
-		order.OrderId,
-		uint32(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetGoodTilBlockTime()+1),
-	)
-	err := keeper.CheckTxCancelOrder(ctx, statefulOrderCancel)
-	require.ErrorContains(t, err, types.ErrStatefulOrderDoesNotExist.Error())
-	indexerEventManager.AssertExpectations(t)
 	memClob.AssertExpectations(t)
 }
 
@@ -290,7 +187,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 					OrderFlags:   types.OrderIdFlags_ShortTerm,
 					ClobPairId:   uint32(0),
 				},
-				GoodTilOneof: &types.MsgCancelOrder_GoodTilBlock{GoodTilBlock: 0},
+				GoodTilOneof: &types.MsgCancelOrder_GoodTilBlock{GoodTilBlock: blockHeight - 1},
 			},
 			expectedErr: types.ErrHeightExceedsGoodTilBlock.Error(),
 		},
@@ -307,12 +204,6 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			expectedErr: types.ErrGoodTilBlockExceedsShortBlockWindow.Error(),
 		},
 		"stateful cancellation fails when stateful cancel GoodTilBlockTime less than previous block blockTime": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
-					ctx,
-				)
-			},
 			msgCancelOrder: &types.MsgCancelOrder{
 				OrderId: types.OrderId{
 					ClientId:     0,
@@ -327,12 +218,6 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			expectedErr: types.ErrTimeExceedsGoodTilBlockTime.Error(),
 		},
 		"stateful cancellation fails when stateful cancel GoodTilBlockTime equal to previous block blockTime": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
-					ctx,
-				)
-			},
 			msgCancelOrder: &types.MsgCancelOrder{
 				OrderId: types.OrderId{
 					ClientId:     0,
@@ -348,12 +233,6 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 		},
 		`stateful cancellation fails when GoodTilBlockTime is over StatefulOrderTimeWindow greater
 		than previous block blockTime`: {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
-					ctx,
-				)
-			},
 			msgCancelOrder: &types.MsgCancelOrder{
 				OrderId: types.OrderId{
 					ClientId:     0,
@@ -371,11 +250,16 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 		`stateful cancellation succeeds when GoodTilBlockTime equal to StatefulOrderTimeWindow greater
 		than previous block blockTime`: {
 			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
+				k.SetLongTermOrderPlacement(
 					ctx,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+					5,
 				)
-				k.SetStatefulOrderPlacement(ctx, constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15, 15)
+				k.MustAddOrderToStatefulOrdersTimeSlice(
+					ctx,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
+				)
 			},
 			msgCancelOrder: &types.MsgCancelOrder{
 				OrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
@@ -385,12 +269,6 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			},
 		},
 		"stateful cancellation fails if order to cancel does not exist": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
-					ctx,
-				)
-			},
 			msgCancelOrder: &types.MsgCancelOrder{
 				OrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				GoodTilOneof: &types.MsgCancelOrder_GoodTilBlockTime{
@@ -401,14 +279,15 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 		},
 		"stateful cancellation succeeds if existing order GTBT is less than cancel order GTBT.": {
 			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
-					ctx,
-				)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
+				)
+				k.MustAddOrderToStatefulOrdersTimeSlice(
+					ctx,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				)
 			},
 			msgCancelOrder: &types.MsgCancelOrder{
@@ -421,14 +300,15 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 		},
 		"stateful cancellation succeeds if existing order GTBT is equal to cancel order GTBT.": {
 			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
-					ctx,
-				)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
+				)
+				k.MustAddOrderToStatefulOrdersTimeSlice(
+					ctx,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				)
 			},
 			msgCancelOrder: &types.MsgCancelOrder{
@@ -440,11 +320,16 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 		},
 		"stateful cancellation fails if existing order GTBT is greater than cancel order GTBT.": {
 			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
+				k.SetLongTermOrderPlacement(
 					ctx,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+					5,
 				)
-				k.SetStatefulOrderPlacement(ctx, constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15, 15)
+				k.MustAddOrderToStatefulOrdersTimeSlice(
+					ctx,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
+				)
 			},
 			msgCancelOrder: &types.MsgCancelOrder{
 				OrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
@@ -456,14 +341,15 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 		},
 		"stateful cancellation success if existing cancellation with lower GTBT": {
 			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
-					ctx,
-				)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
+				)
+				k.MustAddOrderToStatefulOrdersTimeSlice(
+					ctx,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				)
 			},
 			msgCancelOrder: &types.MsgCancelOrder{
@@ -475,14 +361,15 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 		},
 		"stateful cancellation success if existing cancellation with higher GTBT": {
 			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
-					ctx,
-				)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
+				)
+				k.MustAddOrderToStatefulOrdersTimeSlice(
+					ctx,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				)
 			},
 			msgCancelOrder: &types.MsgCancelOrder{
@@ -494,14 +381,15 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 		},
 		"stateful cancellation success if existing cancellation with equal GTBT": {
 			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				// Sets to be 10 unix time.
-				k.SetBlockTimeForLastCommittedBlock(
-					ctx,
-				)
-				k.SetStatefulOrderPlacement(
+				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
+				)
+				k.MustAddOrderToStatefulOrdersTimeSlice(
+					ctx,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				)
 			},
 			msgCancelOrder: &types.MsgCancelOrder{
@@ -515,55 +403,47 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			memClob := &mocks.MemClob{}
-			memClob.On("CreateOrderbook", mock.Anything, mock.Anything, mock.Anything)
-			memClob.On("SetClobKeeper", mock.Anything).Return()
+			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() cmt.GenesisDoc {
+				genesis := testapp.DefaultGenesis()
+				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *types.GenesisState) {
+					state.ClobPairs = []types.ClobPair{
+						{
+							Metadata: &types.ClobPair_PerpetualClobMetadata{
+								PerpetualClobMetadata: &types.PerpetualClobMetadata{
+									PerpetualId: 0,
+								},
+							},
+							Status:               types.ClobPair_STATUS_ACTIVE,
+							StepBaseQuantums:     12,
+							SubticksPerTick:      39,
+							MinOrderBaseQuantums: 204,
+						},
+					}
+				})
+				return genesis
+			}).Build()
 
-			ctx, keeper, pricesKeeper, _, perpetualsKeeper, _, _, _ := keepertest.ClobKeepers(
-				t,
-				memClob,
-				&mocks.BankKeeper{},
-				&mocks.IndexerEventManager{},
+			ctx := tApp.AdvanceToBlock(
+				// Stateful validation happens at blockHeight+1 for short term order cancelations.
+				blockHeight-1,
+				testapp.AdvanceToBlockOptions{BlockTime: blockTime},
 			)
-			ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(int64(blockHeight))
-			prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
-			perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-
-			clobPair := types.ClobPair{
-				Metadata: &types.ClobPair_PerpetualClobMetadata{
-					PerpetualClobMetadata: &types.PerpetualClobMetadata{
-						PerpetualId: 0,
-					},
-				},
-				Status:               types.ClobPair_STATUS_ACTIVE,
-				StepBaseQuantums:     12,
-				SubticksPerTick:      39,
-				MinOrderBaseQuantums: 204,
-			}
-
-			_, err := keeper.CreatePerpetualClobPair(
-				ctx,
-				clobtest.MustPerpetualId(clobPair),
-				satypes.BaseQuantums(clobPair.StepBaseQuantums),
-				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
-				clobPair.QuantumConversionExponent,
-				clobPair.SubticksPerTick,
-				clobPair.Status,
-				clobPair.MakerFeePpm,
-				clobPair.TakerFeePpm,
-			)
-			require.NoError(t, err)
-			keeper.SetBlockTimeForLastCommittedBlock(ctx)
 
 			if tc.setupState != nil {
-				tc.setupState(ctx, keeper)
+				tc.setupState(ctx, tApp.App.ClobKeeper)
 			}
 
-			err = keeper.PerformOrderCancellationStatefulValidation(ctx, tc.msgCancelOrder, blockHeight)
+			resp := tApp.CheckTx(testapp.MustMakeCheckTxsWithClobMsg(
+				ctx,
+				tApp.App,
+				*tc.msgCancelOrder)[0],
+			)
+
 			if tc.expectedErr != "" {
-				require.ErrorContains(t, err, tc.expectedErr)
+				require.True(t, resp.IsErr())
+				require.Contains(t, resp.Log, tc.expectedErr)
 			} else {
-				require.NoError(t, err)
+				require.True(t, resp.IsOK())
 			}
 		})
 	}

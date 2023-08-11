@@ -12,54 +12,144 @@ import (
 func TestStaticExchangeStartupConfigCache(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		exchangeId types.ExchangeFeedId
+		exchangeId types.ExchangeId
 
 		// expectations
 		expectedValue *types.ExchangeStartupConfig
 		expectedFound bool
 	}{
 		"Get BINANCE exchangeDetails": {
-			exchangeId: exchange_common.EXCHANGE_FEED_BINANCE,
+			exchangeId: exchange_common.EXCHANGE_ID_BINANCE,
 			expectedValue: &types.ExchangeStartupConfig{
-				ExchangeFeedId: exchange_common.EXCHANGE_FEED_BINANCE,
-				IntervalMs:     2_000,
-				TimeoutMs:      3_000,
-				MaxQueries:     3,
+				ExchangeId: exchange_common.EXCHANGE_ID_BINANCE,
+				IntervalMs: 4_250,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
 			},
 			expectedFound: true,
 		},
 		"Get BINANCEUS exchangeDetails": {
-			exchangeId: exchange_common.EXCHANGE_FEED_BINANCE_US,
+			exchangeId: exchange_common.EXCHANGE_ID_BINANCE_US,
 			expectedValue: &types.ExchangeStartupConfig{
-				ExchangeFeedId: exchange_common.EXCHANGE_FEED_BINANCE_US,
-				IntervalMs:     2_000,
-				TimeoutMs:      3_000,
-				MaxQueries:     3,
+				ExchangeId: exchange_common.EXCHANGE_ID_BINANCE_US,
+				IntervalMs: 4_250,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
 			},
 			expectedFound: true,
 		},
 		"Get BITFINEX exchangeDetails": {
-			exchangeId: exchange_common.EXCHANGE_FEED_BITFINEX,
+			exchangeId: exchange_common.EXCHANGE_ID_BITFINEX,
 			expectedValue: &types.ExchangeStartupConfig{
-				ExchangeFeedId: exchange_common.EXCHANGE_FEED_BITFINEX,
-				IntervalMs:     2_000,
-				TimeoutMs:      3_000,
-				MaxQueries:     2,
+				ExchangeId: exchange_common.EXCHANGE_ID_BITFINEX,
+				IntervalMs: 2_500,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
 			},
 			expectedFound: true,
 		},
 		"Get Kraken exchangeDetails": {
-			exchangeId: exchange_common.EXCHANGE_FEED_KRAKEN,
+			exchangeId: exchange_common.EXCHANGE_ID_KRAKEN,
 			expectedValue: &types.ExchangeStartupConfig{
-				ExchangeFeedId: exchange_common.EXCHANGE_FEED_KRAKEN,
-				IntervalMs:     2_000,
-				TimeoutMs:      3_000,
-				MaxQueries:     1,
+				ExchangeId: exchange_common.EXCHANGE_ID_KRAKEN,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
+			},
+			expectedFound: true,
+		},
+		"Get GATE exchangeDetails": {
+			exchangeId: exchange_common.EXCHANGE_ID_GATE,
+			expectedValue: &types.ExchangeStartupConfig{
+				ExchangeId: exchange_common.EXCHANGE_ID_GATE,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
+			},
+			expectedFound: true,
+		},
+		"Get Bitstamp exchangeDetails": {
+			exchangeId: exchange_common.EXCHANGE_ID_BITSTAMP,
+			expectedValue: &types.ExchangeStartupConfig{
+				ExchangeId: exchange_common.EXCHANGE_ID_BITSTAMP,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
+			},
+			expectedFound: true,
+		},
+		"Get Bybit exchangeDetails": {
+			exchangeId: exchange_common.EXCHANGE_ID_BYBIT,
+			expectedValue: &types.ExchangeStartupConfig{
+				ExchangeId: exchange_common.EXCHANGE_ID_BYBIT,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
+			},
+			expectedFound: true,
+		},
+		"Get CryptoCom exchangeDetails": {
+			exchangeId: exchange_common.EXCHANGE_ID_CRYPTO_COM,
+			expectedValue: &types.ExchangeStartupConfig{
+				ExchangeId: exchange_common.EXCHANGE_ID_CRYPTO_COM,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
+			},
+			expectedFound: true,
+		},
+		"Get Huobi exchangeDetails": {
+			exchangeId: exchange_common.EXCHANGE_ID_HUOBI,
+			expectedValue: &types.ExchangeStartupConfig{
+				ExchangeId: exchange_common.EXCHANGE_ID_HUOBI,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
+			},
+			expectedFound: true,
+		},
+		"Get Kucoin exchangeDetails": {
+			exchangeId: exchange_common.EXCHANGE_ID_KUCOIN,
+			expectedValue: &types.ExchangeStartupConfig{
+				ExchangeId: exchange_common.EXCHANGE_ID_KUCOIN,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
+			},
+			expectedFound: true,
+		},
+		"Get Okx exchangeDetails": {
+			exchangeId: exchange_common.EXCHANGE_ID_OKX,
+			expectedValue: &types.ExchangeStartupConfig{
+				ExchangeId: exchange_common.EXCHANGE_ID_OKX,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
+			},
+			expectedFound: true,
+		},
+		"Get Mexc exchangeDetails": {
+			exchangeId: exchange_common.EXCHANGE_ID_MEXC,
+			expectedValue: &types.ExchangeStartupConfig{
+				ExchangeId: exchange_common.EXCHANGE_ID_MEXC,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 1,
+			},
+			expectedFound: true,
+		},
+		"Get CoinbasePro exchangeDetails": {
+			exchangeId: exchange_common.EXCHANGE_ID_COINBASE_PRO,
+			expectedValue: &types.ExchangeStartupConfig{
+				ExchangeId: exchange_common.EXCHANGE_ID_COINBASE_PRO,
+				IntervalMs: 2_000,
+				TimeoutMs:  3_000,
+				MaxQueries: 3,
 			},
 			expectedFound: true,
 		},
 		"Get unknown exchangeDetails": {
-			exchangeId:    99999999,
+			exchangeId:    "unknown",
 			expectedFound: false,
 		},
 	}
@@ -74,5 +164,5 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 }
 
 func TestStaticExchangeStartupConfigCacheLength(t *testing.T) {
-	require.Len(t, constants.StaticExchangeStartupConfig, 4)
+	require.Len(t, constants.StaticExchangeStartupConfig, 13)
 }

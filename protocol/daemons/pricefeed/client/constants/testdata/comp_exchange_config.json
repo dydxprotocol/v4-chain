@@ -1,0 +1,36 @@
+{
+  "exchanges":[
+    {
+      "exchangeName":"Binance",
+      "ticker":"\"COMPUSDT\""
+    },
+    {
+      "exchangeName":"BinanceUS",
+      "ticker":"\"COMPUSD\""
+    },
+    {
+      "exchangeName":"Bybit",
+      "ticker":"COMPUSDT"
+    },
+    {
+      "exchangeName":"CoinbasePro",
+      "ticker":"COMP-USD"
+    },
+    {
+      "exchangeName":"Huobi",
+      "ticker":"compusdt"
+    },
+    {
+      "exchangeName":"Kraken",
+      "ticker":"COMPUSD"
+    },
+    {
+      "exchangeName":"Kucoin",
+      "ticker":"COMP-USDT"
+    },
+    {
+      "exchangeName":"Okx",
+      "ticker":"COMP-USDT"
+    }
+  ]
+}

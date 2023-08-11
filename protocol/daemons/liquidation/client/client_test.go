@@ -8,6 +8,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	d_constants "github.com/dydxprotocol/v4/daemons/constants"
+	"github.com/dydxprotocol/v4/daemons/flags"
 	"github.com/dydxprotocol/v4/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4/daemons/liquidation/client"
 	"github.com/dydxprotocol/v4/mocks"
@@ -29,8 +30,7 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 		t,
 		client.Start(
 			grpc.Ctx,
-			d_constants.DefaultGrpcEndpoint,
-			grpc.SocketPath,
+			flags.GetDefaultDaemonFlags(),
 			log.NewNopLogger(),
 			mockGrpcClient,
 		),
@@ -38,23 +38,22 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 	)
 	mockGrpcClient.AssertCalled(t, "NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint)
 	mockGrpcClient.AssertNotCalled(t, "NewGrpcConnection", grpc.Ctx, grpc.SocketPath)
-	mockGrpcClient.AssertNotCalled(t, "CloseConnection", grpc.ClientConn)
+	mockGrpcClient.AssertNotCalled(t, "CloseConnection", grpc.GrpcConn)
 }
 
 func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	errorMsg := "Failed to create connection"
 
 	mockGrpcClient := &mocks.GrpcClient{}
-	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(grpc.ClientConn, nil)
+	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(grpc.GrpcConn, nil)
 	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(nil, errors.New(errorMsg))
-	mockGrpcClient.On("CloseConnection", grpc.ClientConn).Return(nil)
+	mockGrpcClient.On("CloseConnection", grpc.GrpcConn).Return(nil)
 
 	require.EqualError(
 		t,
 		client.Start(
 			grpc.Ctx,
-			d_constants.DefaultGrpcEndpoint,
-			grpc.SocketPath,
+			flags.GetDefaultDaemonFlags(),
 			log.NewNopLogger(),
 			mockGrpcClient,
 		),
@@ -66,6 +65,7 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 }
 
 func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
+	df := flags.GetDefaultDaemonFlags()
 	tests := map[string]struct {
 		// mocks
 		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
@@ -78,7 +78,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: d_constants.LiquidationGetSubaccountPageLimit,
+						Limit: df.Liquidation.SubaccountPageLimit,
 					},
 				}
 				response := &satypes.QuerySubaccountAllResponse{
@@ -122,7 +122,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: d_constants.LiquidationGetSubaccountPageLimit,
+						Limit: df.Liquidation.SubaccountPageLimit,
 					},
 				}
 				response := &satypes.QuerySubaccountAllResponse{
@@ -143,7 +143,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: d_constants.LiquidationGetSubaccountPageLimit,
+						Limit: df.Liquidation.SubaccountPageLimit,
 					},
 				}
 				response := &satypes.QuerySubaccountAllResponse{
@@ -222,6 +222,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 			err := client.RunLiquidationDaemonTaskLoop(
 				grpc.Ctx,
+				flags.GetDefaultDaemonFlags().Liquidation,
 				queryClientMock,
 				queryClientMock,
 				queryClientMock,
@@ -237,6 +238,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 }
 
 func TestGetAllSubaccounts(t *testing.T) {
+	df := flags.GetDefaultDaemonFlags()
 	tests := map[string]struct {
 		// mocks
 		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
@@ -249,7 +251,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: d_constants.LiquidationGetSubaccountPageLimit,
+						Limit: df.Liquidation.SubaccountPageLimit,
 					},
 				}
 				response := &satypes.QuerySubaccountAllResponse{
@@ -269,7 +271,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: d_constants.LiquidationGetSubaccountPageLimit,
+						Limit: df.Liquidation.SubaccountPageLimit,
 					},
 				}
 				nextKey := []byte("next key")
@@ -285,7 +287,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 				req2 := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
 						Key:   nextKey,
-						Limit: d_constants.LiquidationGetSubaccountPageLimit,
+						Limit: df.Liquidation.SubaccountPageLimit,
 					},
 				}
 				response2 := &satypes.QuerySubaccountAllResponse{
@@ -304,7 +306,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: d_constants.LiquidationGetSubaccountPageLimit,
+						Limit: df.Liquidation.SubaccountPageLimit,
 					},
 				}
 				mck.On("SubaccountAll", ctx, req).Return(nil, errors.New("test error"))
@@ -318,7 +320,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
 			tc.setupMocks(grpc.Ctx, queryClientMock)
 
-			actual, err := client.GetAllSubaccounts(grpc.Ctx, queryClientMock)
+			actual, err := client.GetAllSubaccounts(grpc.Ctx, queryClientMock, df.Liquidation.SubaccountPageLimit)
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
 			} else {

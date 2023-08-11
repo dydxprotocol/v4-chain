@@ -332,27 +332,28 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 		return nil
 	}
 
-	// TODO(DEC-1253): Allow negative fees in matched order.
-	if quantums.Sign() < 0 {
-		return sdkerrors.Wrap(
-			types.ErrAssetTransferQuantumsNotPositive,
-			fmt.Sprintf("assetId: %v, quantums: %v", assetId, quantums))
-	}
-
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assetId,
-		quantums,
+		new(big.Int).Abs(quantums),
 	)
 	if err != nil {
 		return err
 	}
 
-	// Send coins from `subaccounts` to the `toModule` module account.
+	// Send coins from `subaccounts` to the `auth` module fee collector account.
+	fromModule := types.ModuleName
+	toModule := authtypes.FeeCollectorName
+
+	if quantums.Sign() < 0 {
+		// In the case of a liquidation, net fees can be negative if the maker gets a rebate.
+		fromModule, toModule = toModule, fromModule
+	}
+
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(
 		ctx,
-		types.ModuleName,
-		authtypes.FeeCollectorName,
+		fromModule,
+		toModule,
 		[]sdk.Coin{coinToTransfer},
 	); err != nil {
 		return err

@@ -1,6 +1,7 @@
 package types
 
 import (
+	pricefeed_types "github.com/dydxprotocol/v4/daemons/pricefeed/types"
 	"testing"
 	"time"
 
@@ -11,13 +12,13 @@ import (
 )
 
 func TestNewMarketToExchangePrices_IsEmpty(t *testing.T) {
-	mte := NewMarketToExchangePrices()
+	mte := NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 
 	require.Empty(t, mte.marketToExchangePrices)
 }
 
 func TestUpdatePrices_SingleUpdateSinglePrice(t *testing.T) {
-	mte := NewMarketToExchangePrices()
+	mte := NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 
 	mte.UpdatePrices(
 		[]*api.MarketPriceUpdate{
@@ -35,7 +36,7 @@ func TestUpdatePrices_SingleUpdateSinglePrice(t *testing.T) {
 }
 
 func TestUpdatePrices_SingleUpdateMultiPrices(t *testing.T) {
-	mte := NewMarketToExchangePrices()
+	mte := NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 
 	mte.UpdatePrices(
 		[]*api.MarketPriceUpdate{
@@ -54,7 +55,7 @@ func TestUpdatePrices_SingleUpdateMultiPrices(t *testing.T) {
 }
 
 func TestUpdatePrices_MultiUpdatesMultiPrices(t *testing.T) {
-	mte := NewMarketToExchangePrices()
+	mte := NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 
 	mte.UpdatePrices(
 		[]*api.MarketPriceUpdate{
@@ -82,7 +83,7 @@ func TestUpdatePrices_MultiUpdatesMultiPrices(t *testing.T) {
 }
 
 func TestUpdatePrices_MultiUpdatesMultiPricesRepeated(t *testing.T) {
-	mte := NewMarketToExchangePrices()
+	mte := NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 
 	mte.UpdatePrices(
 		[]*api.MarketPriceUpdate{
@@ -125,54 +126,18 @@ func TestUpdatePrices_MultiUpdatesMultiPricesRepeated(t *testing.T) {
 
 func TestGetValidMedianPrices_EmptyResult(t *testing.T) {
 	tests := map[string]struct {
-		updatePriceInput      []*api.MarketPriceUpdate
-		getPricesInputMarkets []types.Market
-		getPricesInputTime    time.Time
+		updatePriceInput           []*api.MarketPriceUpdate
+		getPricesInputMarketParams []types.MarketParam
+		getPricesInputTime         time.Time
 	}{
 		"No market specified": {
-			updatePriceInput:      constants.AtTimeTPriceUpdate,
-			getPricesInputMarkets: []types.Market{}, // No market specified.
-			getPricesInputTime:    constants.TimeT,
-		},
-		"No exchange specified": {
-			updatePriceInput: constants.AtTimeTPriceUpdate,
-			getPricesInputMarkets: []types.Market{
-				{
-					Id:        constants.MarketId9,
-					Exchanges: []uint32{}, // No exchanges specified
-				},
-				{
-					Id:        constants.MarketId8,
-					Exchanges: []uint32{}, // No exchanges specified
-				},
-				{
-					Id:        constants.MarketId7,
-					Exchanges: []uint32{}, // No exchanges specified
-				},
-			},
-			getPricesInputTime: constants.TimeT,
-		},
-		"No valid exchange specified": {
-			updatePriceInput: constants.AtTimeTPriceUpdate,
-			getPricesInputMarkets: []types.Market{
-				{
-					Id:        constants.MarketId9,
-					Exchanges: []uint32{11, 12, 13}, // Exchanges are invalid
-				},
-				{
-					Id:        constants.MarketId8,
-					Exchanges: []uint32{14, 15, 16}, // Exchanges are invalid
-				},
-				{
-					Id:        constants.MarketId7,
-					Exchanges: []uint32{17, 18, 19}, // Exchanges are invalid
-				},
-			},
-			getPricesInputTime: constants.TimeT,
+			updatePriceInput:           constants.AtTimeTPriceUpdate,
+			getPricesInputMarketParams: []types.MarketParam{}, // No market specified.
+			getPricesInputTime:         constants.TimeT,
 		},
 		"No valid price timestamps": {
-			updatePriceInput:      constants.AtTimeTPriceUpdate,
-			getPricesInputMarkets: constants.AllMarketsMinExchanges2,
+			updatePriceInput:           constants.AtTimeTPriceUpdate,
+			getPricesInputMarketParams: constants.AllMarketParamsMinExchanges2,
 			// Updates @ timeT are invalid at this read time
 			getPricesInputTime: constants.TimeTPlusThreshold.Add(time.Duration(1)),
 		},
@@ -185,10 +150,9 @@ func TestGetValidMedianPrices_EmptyResult(t *testing.T) {
 					},
 				},
 			},
-			getPricesInputMarkets: []types.Market{
+			getPricesInputMarketParams: []types.MarketParam{
 				{
 					Id:           constants.MarketId9,
-					Exchanges:    []uint32{constants.ExchangeFeedId1},
 					MinExchanges: 0, // Set to 0 to trigger median calc error
 				},
 			},
@@ -197,17 +161,17 @@ func TestGetValidMedianPrices_EmptyResult(t *testing.T) {
 		"Does not meet min exchanges": {
 			updatePriceInput: constants.AtTimeTPriceUpdate,
 			// MinExchanges is 3 for all markets, but updates are from 2 exchanges
-			getPricesInputMarkets: constants.AllMarketsMinExchanges3,
-			getPricesInputTime:    constants.TimeT,
+			getPricesInputMarketParams: constants.AllMarketParamsMinExchanges3,
+			getPricesInputTime:         constants.TimeT,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mte := NewMarketToExchangePrices()
+			mte := NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 			mte.UpdatePrices(tc.updatePriceInput)
 			r := mte.GetValidMedianPrices(
-				tc.getPricesInputMarkets,
+				tc.getPricesInputMarketParams,
 				tc.getPricesInputTime,
 			)
 
@@ -217,11 +181,11 @@ func TestGetValidMedianPrices_EmptyResult(t *testing.T) {
 }
 
 func TestGetValidMedianPrices_MultiMarketSuccess(t *testing.T) {
-	mte := NewMarketToExchangePrices()
+	mte := NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 
 	mte.UpdatePrices(constants.MixedTimePriceUpdate)
 
-	r := mte.GetValidMedianPrices(constants.AllMarketsMinExchanges2, constants.TimeT)
+	r := mte.GetValidMedianPrices(constants.AllMarketParamsMinExchanges2, constants.TimeT)
 
 	require.Len(t, r, 2)
 	require.Equal(t, uint64(2002), r[constants.MarketId9]) // Median of 1001, 2002, 3003

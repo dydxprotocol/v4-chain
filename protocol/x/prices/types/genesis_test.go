@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"testing"
 
 	"github.com/dydxprotocol/v4/testutil/constants"
@@ -20,98 +21,166 @@ func TestGenesisState_Validate(t *testing.T) {
 		},
 		"valid": {
 			genState: &types.GenesisState{
-				ExchangeFeeds: []types.ExchangeFeed{
+				MarketParams: []types.MarketParam{
 					{
-						Id:   0,
-						Name: constants.CoinbaseExchangeName,
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
+					},
+					{
+						Id:                1,
+						Pair:              constants.EthUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
 					},
 				},
-				Markets: []types.Market{
+				MarketPrices: []types.MarketPrice{
 					{
-						Id:   0,
-						Pair: constants.BtcUsdPair,
+						Id:    0,
+						Price: constants.FiveBillion,
 					},
 					{
-						Id:   1,
-						Pair: constants.EthUsdPair,
+						Id:    1,
+						Price: constants.FiveBillion,
 					},
 				},
 			},
 			expectedError: nil,
 		},
-		"invalid: duplicate market ids": {
+		"invalid: duplicate market param ids": {
 			genState: &types.GenesisState{
-				Markets: []types.Market{
+				MarketParams: []types.MarketParam{
 					{
-						Id:   0,
-						Pair: constants.BtcUsdPair,
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
 					},
 					{
-						Id:   0, // duplicate
-						Pair: constants.EthUsdPair,
+						Id:                0,
+						Pair:              constants.EthUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
 					},
 				},
 			},
-			expectedError: errors.New("duplicated market id"),
+			expectedError: errors.New("duplicated market param id"),
 		},
-		"invalid: found gap in market id": {
+		"invalid: found gap in market param id": {
 			genState: &types.GenesisState{
-				Markets: []types.Market{
+				MarketParams: []types.MarketParam{
 					{
-						Id:   0,
-						Pair: constants.BtcUsdPair,
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
 					},
 					{
-						Id:   2, // gap
-						Pair: constants.EthUsdPair,
+						Id:                2, // nonconsecutive id
+						Pair:              constants.EthUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
 					},
 				},
 			},
-			expectedError: errors.New("found gap in market id"),
+			expectedError: errors.New("found gap in market param id"),
 		},
-		"invalid: pair not set": {
+		"invalid: market param invalid (pair unset)": {
 			genState: &types.GenesisState{
-				Markets: []types.Market{
+				MarketParams: []types.MarketParam{
 					{
 						Id:   0,
 						Pair: "",
 					},
 				},
 			},
-			expectedError: errors.New("Pair must be non-empty string"),
+			expectedError: sdkerrors.Wrap(types.ErrInvalidInput, "Pair cannot be empty"),
 		},
-		"invalid: duplicate exchange feed ids": {
+		"invalid: mismatched number of market params and prices": {
 			genState: &types.GenesisState{
-				ExchangeFeeds: []types.ExchangeFeed{
+				MarketParams: []types.MarketParam{
 					{
-						Id:   0,
-						Name: constants.CoinbaseExchangeName,
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
 					},
 					{
-						Id:   0, // duplicate
-						Name: constants.BinanceExchangeName,
+						Id:                1,
+						Pair:              constants.EthUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
+					},
+				},
+				MarketPrices: []types.MarketPrice{
+					{
+						Id:    0,
+						Price: constants.FiveBillion,
 					},
 				},
 			},
-			expectedError: errors.New("duplicated exchange feed id"),
+			expectedError: errors.New("expected the same number of market prices and market params"),
 		},
-		"invalid: found gap in exchange feed id": {
+		"invalid: market prices don't correspond to params": {
 			genState: &types.GenesisState{
-				ExchangeFeeds: []types.ExchangeFeed{
+				MarketParams: []types.MarketParam{
 					{
-						Id:   0,
-						Name: constants.CoinbaseExchangeName,
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
 					},
 					{
-						Id:   2, // gap
-						Name: constants.BinanceExchangeName,
+						Id:                1,
+						Pair:              constants.EthUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
+					},
+				},
+				MarketPrices: []types.MarketPrice{
+					{
+						Id:    0,
+						Price: constants.FiveBillion,
+					},
+					{
+						Id:    2, // nonconsecutive id
+						Price: constants.FiveBillion,
 					},
 				},
 			},
-			expectedError: errors.New("found gap in exchange feed id"),
+			expectedError: sdkerrors.Wrap(types.ErrInvalidInput, "market param id 1 does not match market price id 2"),
+		},
+		"invalid: invalid market price": {
+			genState: &types.GenesisState{
+				MarketParams: []types.MarketParam{
+					{
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
+					},
+					{
+						Id:                1,
+						Pair:              constants.EthUsdPair,
+						MinExchanges:      1,
+						MinPriceChangePpm: 1,
+					},
+				},
+				MarketPrices: []types.MarketPrice{
+					{
+						Id:    0,
+						Price: constants.FiveBillion,
+					},
+					{
+						Id:    1,
+						Price: 0, // invalid
+					},
+				},
+			},
+			expectedError: sdkerrors.Wrap(types.ErrInvalidInput, "market 1 price cannot be zero"),
 		},
 	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := tc.genState.Validate()

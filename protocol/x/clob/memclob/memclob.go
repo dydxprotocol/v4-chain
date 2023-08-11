@@ -4,9 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"runtime/debug"
 	"sort"
 	"time"
 
+	gometrics "github.com/armon/go-metrics"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -33,8 +36,8 @@ type MemClobPriceTimePriority struct {
 	// Struct for storing order cancelations (including their expiries).
 	cancels *memclobCancels
 
-	// ---- Fields for pending fills ----
-	pendingFills *memclobPendingFills
+	// OperationsToPropose struct for proposing operations in the next block.
+	operationsToPropose types.OperationsToPropose
 
 	// A reference to an expected clob keeper.
 	clobKeeper types.MemClobKeeper
@@ -46,9 +49,11 @@ type MemClobPriceTimePriority struct {
 
 	// ---- Fields for determining if off-chain update messages should be generated ----
 	generateOffchainUpdates bool
+}
 
-	// A reference to an interface that returns random bools.
-	randomBooler types.RandomBooler
+type OrderWithRemovalReason struct {
+	Order         types.Order
+	RemovalReason types.OrderRemoval_RemovalReason
 }
 
 func NewMemClobPriceTimePriority(
@@ -57,16 +62,10 @@ func NewMemClobPriceTimePriority(
 	return &MemClobPriceTimePriority{
 		openOrders:              newMemclobOpenOrders(),
 		cancels:                 newMemclobCancels(),
-		pendingFills:            newMemclobPendingFills(),
+		operationsToPropose:     *types.NewOperationsToPropose(),
 		perpetualIdToClobPairId: make(map[uint32][]types.ClobPairId),
 		generateOffchainUpdates: generateOffchainUpdates,
-		randomBooler:            &types.RealRandomBooler{},
 	}
-}
-
-// SetRandomBooler sets the RandomBooler implementation for the memclob.
-func (m *MemClobPriceTimePriority) SetRandomBooler(randomBooler types.RandomBooler) {
-	m.randomBooler = randomBooler
 }
 
 // SetClobKeeper sets the MemClobKeeper reference for this MemClob.
@@ -77,8 +76,10 @@ func (m *MemClobPriceTimePriority) SetClobKeeper(clobKeeper types.MemClobKeeper)
 	m.clobKeeper = clobKeeper
 }
 
-// CancelOrder removes an order by `OrderId` (if it exists) from all order-related data structures
-// in the memclob. Order cancellation can be stateful or short term.
+// CancelOrder removes a Short-Term order by `OrderId` (if it exists) from all order-related data structures
+// in the memclob. This method manages only Short-Term cancellations. For stateful cancellations, see
+// `msg_server_cancel_orders.go`.
+
 // For short-term orders, CancelOrder adds (or updates) a cancel to the desired `goodTilBlock` in the memclob.
 // If a cancel already exists for this order with a lower `goodTilBlock`, the cancel is updated to the
 // new `goodTilBlock`.
@@ -93,71 +94,44 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 ) (offchainUpdates *types.OffchainUpdates, err error) {
 	orderIdToCancel := msgCancelOrder.GetOrderId()
 
-	// TODO(DEC-1949): Don't store order cancelations in state, and return an error if the associated
-	// cancel does not exist.
-	if orderIdToCancel.IsStatefulOrder() {
-		// Always add the stateful order cancelation to the operations to propose.
-		m.pendingFills.operationsToPropose.AddOrderCancellationToOperationsQueue(*msgCancelOrder)
+	// Stateful orders are not expected here.
+	orderIdToCancel.MustBeShortTermOrder()
 
-		// Remove the stateful order from the book if it exists.
-		// TODO(DEC-1934): Replay/re-add stateful orders that were canceled during `PrepareCheckState`.
-		if levelOrder, exists := m.openOrders.orderIdToLevelOrder[orderIdToCancel]; exists {
-			m.mustRemoveOrder(ctx, orderIdToCancel)
+	// Retrieve the existing short-term cancel, if it exists.
+	oldCancellationGoodTilBlock, cancelAlreadyExists := m.cancels.get(orderIdToCancel)
+	goodTilBlock := msgCancelOrder.GetGoodTilBlock()
 
-			if m.pendingFills.operationsToPropose.IsMakerOrderPreexistingStatefulOrder(levelOrder.Value.Order) {
-				// If the cancelation is for a pre-existing stateful order that is not present in the operations to propose,
-				// we can remove the nonce for the pre-existing stateful order.
-				if !m.pendingFills.operationsToPropose.IsPreexistingStatefulOrderInOperationsQueue(levelOrder.Value.Order) {
-					m.pendingFills.operationsToPropose.RemovePreexistingStatefulOrderPlacementNonce(levelOrder.Value.Order)
-				}
-			}
-		}
-	} else {
-		// Retrieve the existing short-term cancel, if it exists.
-		oldCancellationGoodTilBlock, cancelAlreadyExists := m.cancels.get(orderIdToCancel)
-		goodTilBlock := msgCancelOrder.GetGoodTilBlock()
-
-		// If the existing short-term cancel has the same or greater `goodTilBlock`, then there is
-		// nothing for us to do. Return an error.
-		if cancelAlreadyExists && oldCancellationGoodTilBlock >= goodTilBlock {
-			return nil, types.ErrMemClobCancelAlreadyExists
-		}
-
-		// If there exists a resting order on the book with a `GoodTilBlock` not-greater-than that of
-		// the short-term cancel, remove the order and add the order cancellation to the operations queue if necessary.
-		// TODO(DEC-824): Perform correct cancellation validation of stateful orders.
-		if levelOrder, orderExists := m.openOrders.orderIdToLevelOrder[orderIdToCancel]; orderExists &&
-			goodTilBlock >= levelOrder.Value.Order.GetGoodTilBlock() {
-			// If the canceled order exists in the `operationsToPropose`, then we need to add the cancelation
-			// to the operations queue as well.
-			if m.pendingFills.operationsToPropose.IsOrderPlacementInOperationsQueue(levelOrder.Value.Order) {
-				m.pendingFills.operationsToPropose.AddOrderCancellationToOperationsQueue(*msgCancelOrder)
-			} else {
-				// If the cancelation is for an order that is not present in the operations to propose,
-				// we can remove the nonce for the order.
-				m.pendingFills.operationsToPropose.RemoveOrderPlacementNonce(levelOrder.Value.Order)
-			}
-
-			m.mustRemoveOrder(ctx, orderIdToCancel)
-			telemetry.IncrCounter(1, types.ModuleName, metrics.CancelOrder, metrics.RemovedFromOrderBook)
-		}
-
-		// Remove the existing cancel, if any.
-		if cancelAlreadyExists {
-			m.cancels.remove(orderIdToCancel)
-		}
-
-		// Add the new order cancelation.
-		m.cancels.addShortTermCancel(orderIdToCancel, goodTilBlock)
+	// If the existing short-term cancel has the same or greater `goodTilBlock`, then there is
+	// nothing for us to do. Return an error.
+	if cancelAlreadyExists && oldCancellationGoodTilBlock >= goodTilBlock {
+		return nil, types.ErrMemClobCancelAlreadyExists
 	}
+
+	// If there exists a resting order on the book with a `GoodTilBlock` not-greater-than that of
+	// the short-term cancel, remove the order and add the order cancellation to the operations queue if necessary.
+	// TODO(DEC-824): Perform correct cancellation validation of stateful orders.
+	if levelOrder, orderExists := m.openOrders.orderIdToLevelOrder[orderIdToCancel]; orderExists &&
+		goodTilBlock >= levelOrder.Value.Order.GetGoodTilBlock() {
+		m.mustRemoveOrder(ctx, orderIdToCancel)
+
+		telemetry.IncrCounter(1, types.ModuleName, metrics.CancelShortTermOrder, metrics.RemovedFromOrderBook)
+	}
+
+	// Remove the existing cancel, if any.
+	if cancelAlreadyExists {
+		m.cancels.remove(orderIdToCancel)
+	}
+
+	// Add the new order cancelation.
+	m.cancels.addShortTermCancel(orderIdToCancel, goodTilBlock)
 
 	offchainUpdates = types.NewOffchainUpdates()
 	if m.generateOffchainUpdates {
 		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 			ctx.Logger(),
 			orderIdToCancel,
-			off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_USER_CANCELED,
-			off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_USER_CANCELED,
+			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		); success {
 			offchainUpdates.AddRemoveMessage(orderIdToCancel, message)
 		}
@@ -241,17 +215,12 @@ func (m *MemClobPriceTimePriority) GetSubaccountOrders(
 
 // mustUpdateMemclobStateWithMatches updates the memclob state by applying matches to all bookkeeping data structures.
 // Namely, it will perform the following operations:
-//   - Update `orderHashToMatchableOrder` with all order hashes of newly matched orders, if they do not already exist.
-//   - Update `orderIdToOrder` with all order hashes of newly matched orders, if they do not already exist,
-//     excluding liquidation orders.
-//   - Starting with the first matched order, add each new match to back of the `fills` and to the
-//     `subaccountIdToFillIndexes`, for that respective subaccount.
+//   - Append all newly-matched orders to the operations queue, along with all new matches.
 //   - Update orderbook state by updating the filled amount of all matched maker orders, and removing them if fully
 //     filled.
 func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	ctx sdk.Context,
 	takerOrder types.MatchableOrder,
-	newPendingFills []types.PendingFill,
 	newMakerFills []types.MakerFill,
 	matchedOrderHashToOrder map[types.OrderHash]types.MatchableOrder,
 	matchedMakerOrderIdToOrder map[types.OrderId]types.Order,
@@ -259,26 +228,26 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	offchainUpdates = types.NewOffchainUpdates()
 
 	// For each order, update `orderHashToMatchableOrder` and `orderIdToOrder`.
-	// TODO(DEC-1924): Deprecate this below loop after CLOB refactor is completed.
-	for orderHash, matchedOrder := range matchedOrderHashToOrder {
-		// Update `orderHashToMatchableOrder`.
-		if _, exists := m.pendingFills.orderHashToMatchableOrder[orderHash]; !exists {
-			m.pendingFills.orderHashToMatchableOrder[orderHash] = matchedOrder
-		}
-
+	for _, matchedOrder := range matchedOrderHashToOrder {
 		// If this is not a liquidation, update `orderIdToOrder`.
 		if !matchedOrder.IsLiquidation() {
 			order := matchedOrder.MustGetOrder()
 			orderId := order.OrderId
-			other, exists := m.pendingFills.orderIdToOrder[orderId]
+			other, exists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
 			if exists && order.MustCmpReplacementOrder(&other) < 0 {
 				// Shouldn't happen as the order should have already been replaced or rejected.
-				panic("mustUpdateMemclobStateWithMatches: newly matched order is lesser than existing order")
+				panic(
+					"mustUpdateMemclobStateWithMatches: newly matched order is lesser than existing order " +
+						"Newly matched order %v, existing order %v",
+				)
 			}
-			m.pendingFills.orderIdToOrder[orderId] = order
+			m.operationsToPropose.MatchedOrderIdToOrder[orderId] = order
 		}
 	}
 
+	// Define a data-structure for storing the total number of matched quantums for each subaccount
+	// in the matching loop. This is used for reduce-only logic.
+	subaccountTotalMatchedQuantums := make(map[satypes.SubaccountId]*big.Int)
 	// Ensure each filled maker order has an order placement in `OperationsToPropose`.
 	makerFillWithOrders := make([]types.MakerFillWithOrder, 0, len(newMakerFills))
 	for _, newFill := range newMakerFills {
@@ -286,8 +255,8 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 		if !exists {
 			panic(
 				fmt.Sprintf(
-					"mustUpdateMemclobStateWithMatches: matched maker order %+v does not exist in `matchedMakerOrderIdToOrder`",
-					matchedMakerOrder,
+					"mustUpdateMemclobStateWithMatches: matched maker order %s does not exist in `matchedMakerOrderIdToOrder`",
+					matchedMakerOrder.GetOrderTextString(),
 				),
 			)
 		}
@@ -300,57 +269,24 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 			},
 		)
 
-		// Skip adding order placement in the operations to propose if it already exists.
-		isMakerPreexistingStatefulOrder := matchedMakerOrder.IsStatefulOrder() &&
-			m.pendingFills.operationsToPropose.IsMakerOrderPreexistingStatefulOrder(
-				matchedMakerOrder,
-			)
-		if m.pendingFills.isMakerOrderInOperationsToPropose(
-			ctx,
+		// Skip adding order placement in the operations queue if it already exists.
+		if !m.operationsToPropose.IsOrderPlacementInOperationsQueue(
 			matchedMakerOrder,
-			isMakerPreexistingStatefulOrder,
 		) {
-			continue
+			// Add the maker order placement to the operations queue.
+			if matchedMakerOrder.IsStatefulOrder() {
+				m.operationsToPropose.MustAddStatefulOrderPlacementToOperationsQueue(
+					matchedMakerOrder,
+				)
+			} else {
+				m.operationsToPropose.MustAddShortTermOrderPlacementToOperationsQueue(
+					matchedMakerOrder,
+				)
+			}
 		}
 
-		// Add the maker order placement to the operations to propose.
-		m.pendingFills.mustAddOrderToOperationsToPropose(
-			ctx,
-			matchedMakerOrder,
-			isMakerPreexistingStatefulOrder,
-		)
-	}
-
-	// If the taker order is not a liquidation, add the taker order placement to the operations queue.
-	if !takerOrder.IsLiquidation() {
-		taker := takerOrder.MustGetOrder()
-
-		// Assign the taker order a nonce and add it to the operations to propose.
-		isTakerPreexistingStatefulOrder := taker.IsStatefulOrder() &&
-			m.clobKeeper.DoesStatefulOrderExistInState(ctx, taker)
-		m.pendingFills.operationsToPropose.AssignNonceToOrder(taker, isTakerPreexistingStatefulOrder)
-		m.pendingFills.mustAddOrderToOperationsToPropose(
-			ctx,
-			taker,
-			isTakerPreexistingStatefulOrder,
-		)
-	}
-
-	// Add the new matches to the operations queue.
-	m.pendingFills.operationsToPropose.AddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
-
-	// Update the memclob fields for match bookkeeping with the new matches.
-
-	// Define a data-structure for storing the total number of matched quantums for each subaccount
-	// in the matching loop. This is used for reduce-only logic.
-	subaccountTotalMatchedQuantums := make(map[satypes.SubaccountId]*big.Int)
-
-	// TODO(DEC-1546): Refactor this to iterate over `newMakerFills`.
-	for _, newFill := range newPendingFills {
-		// Define shared variables.
-		matchedQuantums := newFill.Quantums
-		matchedMakerOrder := m.pendingFills.mustGetMatchedOrderByHash(ctx, newFill.MakerOrderHash)
-		matchedTakerOrder := m.pendingFills.mustGetMatchedOrderByHash(ctx, newFill.TakerOrderHash)
+		// Update the memclob fields for match bookkeeping with the new matches.
+		matchedQuantums := satypes.BaseQuantums(newFill.GetFillAmount())
 
 		// Sanity checks.
 		if matchedQuantums == 0 {
@@ -361,21 +297,17 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 			))
 		}
 
-		// Update `fills` with the new fill.
-		m.pendingFills.fills = append(m.pendingFills.fills, newFill)
-
 		// Update the orderbook state to reflect the maker order was matched.
-		makerOrder := matchedMakerOrder.MustGetOrder()
 		matchOffchainUpdates := m.mustUpdateOrderbookStateWithMatchedMakerOrder(
 			ctx,
-			makerOrder,
+			matchedMakerOrder,
 		)
-		offchainUpdates.BulkUpdate(matchOffchainUpdates)
+		offchainUpdates.Append(matchOffchainUpdates)
 
 		// Update the total matched quantums for this matching loop stored in `subaccountTotalMatchedQuantums`.
 		for _, order := range []types.MatchableOrder{
-			matchedTakerOrder,
-			matchedMakerOrder,
+			matchedOrderHashToOrder[matchedMakerOrder.GetOrderHash()],
+			takerOrder,
 		} {
 			bigTotalMatchedQuantums, exists := subaccountTotalMatchedQuantums[order.GetSubaccountId()]
 			if !exists {
@@ -393,6 +325,29 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 		}
 	}
 
+	// If the taker order is not a liquidation, add the taker order placement to the operations queue.
+	if !takerOrder.IsLiquidation() {
+		taker := takerOrder.MustGetOrder()
+
+		// Add the taker order placement to the operations queue.
+		if taker.IsStatefulOrder() {
+			m.operationsToPropose.MustAddStatefulOrderPlacementToOperationsQueue(
+				taker,
+			)
+		} else {
+			m.operationsToPropose.MustAddShortTermOrderTxBytes(
+				taker,
+				ctx.TxBytes(),
+			)
+			m.operationsToPropose.MustAddShortTermOrderPlacementToOperationsQueue(
+				taker,
+			)
+		}
+	}
+
+	// Add the new matches to the operations queue.
+	m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
+
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.
 	allSubaccounts := lib.ConvertMapToSliceOfKeys(subaccountTotalMatchedQuantums)
 	sort.Sort(satypes.SortedSubaccountIds(allSubaccounts))
@@ -408,25 +363,26 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 			subaccountTotalMatchedQuantums[subaccountId],
 		)
 
-		offchainUpdates.BulkUpdate(cancelledOffchainUpdates)
+		offchainUpdates.Append(cancelledOffchainUpdates)
 	}
 
 	return offchainUpdates
 }
 
-// GetOperations fetches the operations to propose in the next block.
-func (m *MemClobPriceTimePriority) GetOperations(ctx sdk.Context) (
-	operationsQueue []types.Operation,
+// GetOperationsRaw fetches the operations to propose in the next block in raw format
+// for placement into MsgProposedOperations.
+func (m *MemClobPriceTimePriority) GetOperationsRaw(ctx sdk.Context) (
+	operationsQueue []types.OperationRaw,
 ) {
-	return m.pendingFills.operationsToPropose.GetOperationsQueue()
+	return m.operationsToPropose.GetOperationsToPropose()
 }
 
-// GetOrdersWithAddToOrderbookCollatCheck fetches all order hashes that had
-// the add-to-orderbook collateralization check performed in the last block.
-func (m *MemClobPriceTimePriority) GetOrdersWithAddToOrderbookCollatCheck(ctx sdk.Context) (
-	ordersWithAddToOrderbookCollatCheck []types.OrderHash,
+// GetOperationsToReplay fetches the operations to replay in `PrepareCheckState`.
+func (m *MemClobPriceTimePriority) GetOperationsToReplay(ctx sdk.Context) (
+	[]types.InternalOperation,
+	map[types.OrderHash][]byte,
 ) {
-	return m.pendingFills.operationsToPropose.GetOrdersWithAddToOrderbookCollatCheck()
+	return m.operationsToPropose.GetOperationsToReplay()
 }
 
 // PlaceOrder will perform the following operations:
@@ -483,6 +439,20 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	if m.generateOffchainUpdates {
+		// If this is a replacement order, then ensure we send the appropriate removal message.
+		if !order.IsLiquidation() {
+			orderId := order.OrderId
+			if _, found := m.openOrders.getOrder(ctx, orderId); found {
+				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+					ctx.Logger(),
+					orderId,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_REPLACED,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				); success {
+					offchainUpdates.AddRemoveMessage(orderId, message)
+				}
+			}
+		}
 		if message, success := off_chain_updates.CreateOrderPlaceMessage(
 			ctx.Logger(),
 			order,
@@ -491,19 +461,34 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		}
 	}
 
-	// If we should perform the add-to-orderbook collateralization check for this order, mark that
-	// we should perform the add-to-orderbook collateralization check on this order in the next
-	// proposed block. Note this is necessary for the `DeliverTx` validation flow to know which
-	// orders should not skip the add-to-orderbook collateralization check.
-	if performAddToOrderbookCollatCheck {
-		m.pendingFills.operationsToPropose.MustAddToOrderbookCollatCheckOrders(order)
-	}
-
 	// Attempt to match the order against the orderbook.
 	takerOrderStatus, takerOffchainUpdates, err := m.matchOrder(ctx, &order)
-	offchainUpdates.BulkUpdate(takerOffchainUpdates)
+	offchainUpdates.Append(takerOffchainUpdates)
 
 	if err != nil {
+		if order.IsStatefulOrder() {
+			var removalReason types.OrderRemoval_RemovalReason
+
+			if errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled) {
+				if !order.IsConditionalOrder() {
+					panic(
+						fmt.Sprintf(
+							"PlaceOrder: stateful FOK order must be conditional. Order %+v",
+							order,
+						),
+					)
+				}
+				removalReason = types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED
+			} else if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
+				removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
+			}
+
+			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+				order.OrderId,
+				removalReason,
+			)
+		}
+
 		if m.generateOffchainUpdates {
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
@@ -512,7 +497,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				err,
-				off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
@@ -534,10 +519,18 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				nil,
-				off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
+		}
+		// If stateful taker order fails collateralization checks while matching, add Order Removal
+		// to operations queue to forcefully remove the order from state.
+		if takerOrderStatus.OrderStatus == types.Undercollateralized && order.IsStatefulOrder() {
+			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+				order.OrderId,
+				types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+			)
 		}
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, offchainUpdates, nil
 	}
@@ -561,7 +554,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	// If this is an IOC order, cancel the remaining size since IOC orders cannot be maker orders.
-	if order.RequiresImmediateExecution() {
+	if order.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
 		orderStatus := types.ImmediateOrCancelWouldRestOnBook
 		if m.generateOffchainUpdates {
 			// Send an off-chain update message indicating the order should be removed from the orderbook
@@ -571,10 +564,19 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				order.OrderId,
 				orderStatus,
 				nil,
-				off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
+		}
+
+		// long-term orders cannot use IOC, so we know this stateful order
+		// is conditional. Remove the conditional order.
+		if order.IsStatefulOrder() {
+			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+				order.OrderId,
+				types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
+			)
 		}
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, nil
 	}
@@ -600,41 +602,30 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				order.OrderId,
 				addOrderOrderStatus,
 				nil,
-				off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
 		}
+
+		// remove stateful orders which fail collateralization check while being added to orderbook
+		if order.IsStatefulOrder() {
+			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+				order.OrderId,
+				types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+			)
+		}
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, addOrderOrderStatus, offchainUpdates, nil
 	}
 
-	// If the order hasn't been assigned a nonce, then assign a nonce to the new maker
-	// order since it passed all validation.
-	// Note this order could have been assigned a nonce if it was partially matched or caused order
-	// removals of orders in the operations queue, meaning it was added to the operations to propose.
-	isMakerPreexistingStatefulOrder := order.IsStatefulOrder() &&
-		m.clobKeeper.DoesStatefulOrderExistInState(ctx, order)
-	var operation types.Operation
-	if isMakerPreexistingStatefulOrder {
-		operation = types.NewPreexistingStatefulOrderPlacementOperation(order)
-	} else {
-		operation = types.NewOrderPlacementOperation(order)
-	}
-
-	if !m.pendingFills.operationsToPropose.DoesOperationHaveNonce(operation) {
-		m.pendingFills.operationsToPropose.AssignNonceToOrder(
+	// If this is a Short-Term order and it's not in the operations queue, add the TX bytes to the
+	// operations to propose.
+	if order.IsShortTermOrder() &&
+		!m.operationsToPropose.IsOrderPlacementInOperationsQueue(order) {
+		m.operationsToPropose.MustAddShortTermOrderTxBytes(
 			order,
-			isMakerPreexistingStatefulOrder,
+			ctx.TxBytes(),
 		)
-	}
-
-	// Ensure newly-placed stateful orders are always added to the operations queue.
-	// Note it could already be present in the operations queue if it was partially matched or
-	// caused order removals of orders in the operations queue.
-	if order.IsStatefulOrder() &&
-		!isMakerPreexistingStatefulOrder &&
-		!m.pendingFills.operationsToPropose.IsOrderPlacementInOperationsQueue(order) {
-		m.pendingFills.mustAddOrderToOperationsToPropose(ctx, order, isMakerPreexistingStatefulOrder)
 	}
 
 	// Add the order to the orderbook and all other bookkeeping data structures.
@@ -682,6 +673,48 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 	// Attempt to match the liquidation order against the orderbook.
 	// TODO(DEC-1157): Update liquidations flow to send off-chain indexer messages.
 	liquidationOrderStatus, offchainUpdates, err := m.matchOrder(ctx, &order)
+
+	if liquidationOrderStatus.OrderStatus == types.LiquidationRequiresDeleveraging {
+		// Check if the subaccount is still liquidatable. This check is needed for the edge case
+		// where a partially matched liquidation order has resulted in making the subaccount well-collateralized,
+		// but while attempting to match the full size of the liquidation order we trigger a deleveraging attempt.
+		// This scenario is made possible due to the MaxLiquidationFeePpm parameter on the LiquidationsConfig which
+		// caps the maximum fee that can be charged for a liquidation to MaxLiquidationFeePpm * QuoteQuantums
+		// of the liquidation order. If not for this, the liquidated subaccount would pay the full difference between
+		// the fill price and the bankruptcy price, leaving the TNC/MMR ratio the same as it was. It is the cap on this
+		// fee which allows a subaccount's TNC/MMR ratio to be improved by a liquidation.
+		isLiquidatable, err := m.clobKeeper.IsLiquidatable(ctx, order.GetSubaccountId())
+		if err != nil {
+			panic(err)
+		}
+
+		if isLiquidatable {
+			// Deleverage the remaining amounts.
+			deltaQuantums := new(big.Int).Sub(
+				order.GetBaseQuantums().ToBigInt(),
+				liquidationOrderStatus.OrderOptimisticallyFilledQuantums.ToBigInt(),
+			)
+			if !order.IsBuy() {
+				deltaQuantums = deltaQuantums.Neg(deltaQuantums)
+			}
+
+			fills, _ := m.clobKeeper.OffsetSubaccountPerpetualPosition(
+				ctx,
+				order.GetSubaccountId(),
+				order.MustGetLiquidatedPerpetualId(),
+				deltaQuantums,
+			)
+
+			if len(fills) > 0 {
+				m.operationsToPropose.MustAddDeleveragingToOperationsQueue(
+					order.GetSubaccountId(),
+					order.MustGetLiquidatedPerpetualId(),
+					fills,
+				)
+			}
+		}
+	}
+
 	return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
 		liquidationOrderStatus.OrderStatus,
 		offchainUpdates,
@@ -701,8 +734,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	offchainUpdates = types.NewOffchainUpdates()
 
 	// Attempt to match the order against the orderbook.
-	newPendingFills,
-		newMakerFills,
+	newMakerFills,
 		matchedOrderHashToOrder,
 		matchedMakerOrderIdToOrder,
 		makerOrdersToRemove,
@@ -715,60 +747,40 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	if !order.IsLiquidation() {
 		orderId := order.MustGetOrder().OrderId
 		if orderToBeReplaced, found := m.openOrders.getOrder(ctx, orderId); found {
-			makerOrdersToRemove = append(makerOrdersToRemove, orderToBeReplaced)
+			makerOrdersToRemove = append(makerOrdersToRemove, OrderWithRemovalReason{Order: orderToBeReplaced})
 		}
 	}
 
-	// If there are any removed maker orders that were included in the operations to propose in the next block,
-	// the original taker order must be added to the operationsToPropose.
-	// TODO(DEC-1957) After pre-existing stateful order removals are implemented, if there are any
-	// pre-existing stateful orders that are removed, the taker order must be added to OTP.
-	makerOrderInOperationsToProposeRemoved := false
-
-	// For each maker order that should be removed, remove it from the orderbook and determine
-	// whether any maker orders in `operationsToPropose` were removed. This is necessary for determining
-	// whether order placements that didn't generate matches should be added to `operationsToPropose`.
-	for _, makerOrder := range makerOrdersToRemove {
+	// For each maker order that should be removed, remove it from the orderbook and emit off-chain
+	// updates for the indexer.
+	for _, makerOrderWithRemovalReason := range makerOrdersToRemove {
 		// TODO(DEC-847): Update logic to properly remove long-term orders.
-		makerOrderId := makerOrder.OrderId
-		if m.generateOffchainUpdates {
+		makerOrderId := makerOrderWithRemovalReason.Order.OrderId
+		// TODO(CLOB-669): Move logic outside of `memclob.go` by returning a slice of removed orders.
+		// If the order is a replacement order, a message was already added above the place message.
+		if m.generateOffchainUpdates && (order.IsLiquidation() || makerOrderId != order.MustGetOrder().OrderId) {
 			// If the taker order and the removed maker order are from the same subaccount, set
 			// the reason to SELF_TRADE error, otherwise set the reason to be UNDERCOLLATERALIZED.
 			// TODO(DEC-1409): Update this to support order replacements on indexer.
-			reason := off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
-			if order.GetSubaccountId() == makerOrderId.SubaccountId {
-				reason = off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_SELF_TRADE_ERROR
-			}
-
-			// Send an off-chain update message to the indexer to remove the maker orders that failed
-			// collateralization checks from the orderbook.
+			reason := off_chain_updates.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+				makerOrderWithRemovalReason.RemovalReason,
+			)
 			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 				ctx.Logger(),
 				makerOrderId,
 				reason,
-				off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(makerOrderId, message)
 			}
 		}
 
-		// TODO(DEC-1945) Remove nonces for removed orders that aren't in the operation queue.
 		m.mustRemoveOrder(ctx, makerOrderId)
-
-		// To determine if we need to include a taker order placement in the `operationToPropose` even if it
-		// doesn't match, check if any of the removed maker orders are in `operationsToPropose`. Note this is
-		// necessary for the `DeliverTx` flow validation to work properly.
-		isMakerPreexistingStatefulOrder := makerOrder.IsStatefulOrder() &&
-			m.pendingFills.operationsToPropose.IsMakerOrderPreexistingStatefulOrder(
-				makerOrder,
+		if makerOrderId.IsStatefulOrder() {
+			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+				makerOrderId,
+				makerOrderWithRemovalReason.RemovalReason,
 			)
-		if m.pendingFills.isMakerOrderInOperationsToPropose(ctx, makerOrder, isMakerPreexistingStatefulOrder) {
-			makerOrderInOperationsToProposeRemoved = true
-		} else if isMakerPreexistingStatefulOrder {
-			// TODO(CLOB-237): Handle stateful order removals properly here.
-			m.pendingFills.operationsToPropose.RemovePreexistingStatefulOrderPlacementNonce(makerOrder)
-		} else {
-			m.pendingFills.operationsToPropose.RemoveOrderPlacementNonce(makerOrder)
 		}
 	}
 
@@ -794,77 +806,23 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	// If the order is post only and it's not the rewind step, then it cannot be filled.
 	// Set the matching error so that the order is canceled.
 	// TODO(DEC-998): Determine if allowing post-only orders to match in rewind step is valid.
-	if len(newPendingFills) > 0 &&
+	if len(newMakerFills) > 0 &&
 		!order.IsLiquidation() &&
 		order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
 		matchingErr = types.ErrPostOnlyWouldCrossMakerOrder
 	}
 
-	takerGeneratedValidMatches := len(newMakerFills) > 0 && matchingErr == nil
-
 	// If the match is valid and placing the taker order generated valid matches, update memclob state.
+	takerGeneratedValidMatches := len(newMakerFills) > 0 && matchingErr == nil
 	if takerGeneratedValidMatches {
 		matchOffchainUpdates := m.mustUpdateMemclobStateWithMatches(
 			ctx,
 			order,
-			newPendingFills,
 			newMakerFills,
 			matchedOrderHashToOrder,
 			matchedMakerOrderIdToOrder,
 		)
-		offchainUpdates.BulkUpdate(matchOffchainUpdates)
-	}
-
-	// If there were maker orders in the operations to propose in the next block that were removed and
-	// the taker order was a post-only order that crossed the book and will be dropped, add the maker order
-	// which crossed the post-only order to the operations queue to ensure the post-only order is dropped when
-	// validating the block.
-	// TODO(DEC-1542): Research downsides of including order placements that don't match but cause
-	// order removals in the operations queue.
-	if makerOrderInOperationsToProposeRemoved && errors.Is(matchingErr, types.ErrPostOnlyWouldCrossMakerOrder) {
-		// Since the error is `ErrPostOnlyWouldCrossMakerOrder`, we know at least one element must
-		// exist in `newMakerFills`.
-		firstMatchedMakerOrderId := newMakerFills[0].MakerOrderId
-		matchedMakerOrder := matchedMakerOrderIdToOrder[firstMatchedMakerOrderId]
-
-		// Ensure the maker order is included in the operations to propose.
-		isPreexistingStatefulOrder := matchedMakerOrder.IsStatefulOrder() &&
-			m.pendingFills.operationsToPropose.IsMakerOrderPreexistingStatefulOrder(matchedMakerOrder)
-		isMakerOrderInOperationsToPropose := m.pendingFills.isMakerOrderInOperationsToPropose(
-			ctx,
-			matchedMakerOrder,
-			isPreexistingStatefulOrder,
-		)
-		if !isMakerOrderInOperationsToPropose {
-			m.pendingFills.mustAddOrderToOperationsToPropose(
-				ctx,
-				matchedMakerOrder,
-				isPreexistingStatefulOrder,
-			)
-		}
-	}
-
-	// If there were maker orders in the operations to propose in the next block that were removed and the
-	// taker order was not placed in the operations queue, add the taker order placement to the operations
-	// queue to ensure that the `DeliverTx` flow memclob validation works properly.
-	// TODO(DEC-1542): Research downsides of including order placements that don't match but cause
-	// order removals in the operations queue.
-	if makerOrderInOperationsToProposeRemoved && !takerGeneratedValidMatches {
-		if order.IsLiquidation() {
-			m.pendingFills.operationsToPropose.AddMatchToOperationsQueue(order, []types.MakerFillWithOrder{})
-		} else {
-			order := order.MustGetOrder()
-
-			// Assign the taker order a nonce and add it to the operations to propose.
-			isTakerPreexistingStatefulorder := order.IsStatefulOrder() &&
-				m.clobKeeper.DoesStatefulOrderExistInState(ctx, order)
-			m.pendingFills.operationsToPropose.AssignNonceToOrder(order, isTakerPreexistingStatefulorder)
-			m.pendingFills.mustAddOrderToOperationsToPropose(
-				ctx,
-				order,
-				isTakerPreexistingStatefulorder,
-			)
-		}
+		offchainUpdates.Append(matchOffchainUpdates)
 	}
 
 	return takerOrderStatus, offchainUpdates, matchingErr
@@ -905,9 +863,9 @@ func (m *MemClobPriceTimePriority) GetClobPairForPerpetual(
 // Note that match operations are no-op.
 func (m *MemClobPriceTimePriority) ReplayOperations(
 	ctx sdk.Context,
-	localOperationsQueue []types.Operation,
+	localOperations []types.InternalOperation,
+	shortTermOrderTxBytes map[types.OrderHash][]byte,
 	existingOffchainUpdates *types.OffchainUpdates,
-	canceledStatefulOrderIds []types.OrderId,
 ) *types.OffchainUpdates {
 	// Recover from any panics that occur during replay operations.
 	// This could happen in cases where i.e. A subaccount balance overflowed
@@ -915,27 +873,33 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	// TODO(CLOB-275): Do not gracefully handle panics in `PrepareCheckState`.
 	defer func() {
 		if r := recover(); r != nil {
-			ctx.Logger().Error("panic in replay operations", "panic", r)
+			stackTrace := string(debug.Stack())
+			ctx.Logger().Error("panic in replay operations", "panic", r, "stackTrace", stackTrace)
 		}
 	}()
 
 	// Iterate over all provided operations.
-	for _, operation := range localOperationsQueue {
+	for _, operation := range localOperations {
 		switch operation.Operation.(type) {
 		// Replay all short-term and stateful order placements.
-		case *types.Operation_OrderPlacement:
-			order := operation.GetOrderPlacement().Order
-
-			// TODO(CLOB-269): Do not replay orders that were canceled in the previous block.
-			// This should no longer be necessary once transaction validation is implemented,
-			// as the stateful order placement being rewound here should fail sequence number
-			// validation.
-			if lib.ContainsValue(canceledStatefulOrderIds, order.OrderId) {
-				continue
-			}
+		case *types.InternalOperation_ShortTermOrderPlacement:
+			order := operation.GetShortTermOrderPlacement().Order
 
 			// Branch the state to avoid writing to state on failed operations.
 			placeOrderCtx, writeCache := ctx.CacheContext()
+			// Set underlying tx bytes so OperationsToPropose may access it and
+			// store the tx bytes on OperationHashToTxBytes data structure
+			shortTermOrderTxBytes, exists := shortTermOrderTxBytes[order.GetOrderHash()]
+			if !exists || len(shortTermOrderTxBytes) == 0 {
+				panic(
+					fmt.Sprintf(
+						"ReplayOperations: Short-Term order TX bytes not found for order %s",
+						order.GetOrderTextString(),
+					),
+				)
+			}
+			// TODO(CLOB-730) - don't branch context
+			placeOrderCtx = placeOrderCtx.WithTxBytes(shortTermOrderTxBytes)
 
 			// Note we use `clobKeeper.PlaceOrder` here to ensure the proper stateful validation is performed and
 			// newly-placed stateful orders are written to state. In the future this will be important for sequence number
@@ -949,10 +913,10 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				msg,
 			)
 
-			ctx.Logger().Info(
+			ctx.Logger().Debug(
 				"Received new order",
 				"orderHash",
-				fmt.Sprintf("%X", order.GetOrderHash()),
+				log.NewLazySprintf("%X", order.GetOrderHash()),
 				"msg",
 				msg,
 				"status",
@@ -987,8 +951,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 						order.OrderId,
 						orderStatus,
 						err,
-						off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-						off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
 					); success {
 						existingOffchainUpdates.AddRemoveMessage(order.OrderId, message)
 					}
@@ -997,15 +961,12 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				writeCache()
 
 				if m.generateOffchainUpdates {
-					// None of the `PlaceMessages` should be needed as the indexer
-					// should have already learned about these orders.
-					placeOrderOffchainUpdates.ClearPlaceMessages()
-					existingOffchainUpdates.BulkUpdate(placeOrderOffchainUpdates)
+					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 				}
 			}
 
 		// Replay all pre-existing stateful order placements.
-		case *types.Operation_PreexistingStatefulOrder:
+		case *types.InternalOperation_PreexistingStatefulOrder:
 			orderId := operation.GetPreexistingStatefulOrder()
 
 			// TODO(DEC-1974): The `PreexistingStatefulOrder` operation
@@ -1014,13 +975,14 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			// For consistency we should fix this, but currently it is not an issue as
 			// replacements are not currently supported, and trying to place an older version
 			// of a stateful order should fail due to the `GoodTilBlockTime`.
-			statefulOrderPlacement, found := m.clobKeeper.GetStatefulOrderPlacement(ctx, *orderId)
+			statefulOrderPlacement, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, *orderId)
 			if !found {
 				// It's possible that this order was canceled or expired in the last committed block.
 				continue
 			}
 
 			// Branch the state to avoid writing to state on failed operations.
+			// TODO(CLOB-730) - don't branch context
 			placeOrderCtx, writeCache := ctx.CacheContext()
 
 			// Note that we use `memclob.PlaceOrder` here, this will skip writing the stateful order placement to state.
@@ -1052,8 +1014,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 						*orderId,
 						orderStatus,
 						err,
-						off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-						off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
 					); success {
 						existingOffchainUpdates.AddRemoveMessage(*orderId, message)
 					}
@@ -1062,51 +1024,70 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				writeCache()
 
 				if m.generateOffchainUpdates {
-					// None of the `PlaceMessages` should be needed as the indexer
-					// should have already learned about these orders.
-					placeOrderOffchainUpdates.ClearPlaceMessages()
-					existingOffchainUpdates.BulkUpdate(placeOrderOffchainUpdates)
+					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 				}
 			}
+		// Matches are a no-op.
+		case *types.InternalOperation_Match:
+		case *types.InternalOperation_OrderRemoval:
+			// Re-place orders which were not removed by the previous block proposer to give them a "second chance".
+			// It is possible that this placement or a subsequent match operation will
+			// cause the Order Removal to be generated once again.
+			orderId := operation.GetOrderRemoval().OrderId
+			statefulOrderPlacement, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, orderId)
 
-		// Replay stateful order cancelations.
-		case *types.Operation_OrderCancellation:
-			orderIdToCancel := operation.GetOrderCancellation().GetOrderId()
-			goodTilBlockTime := operation.GetOrderCancellation().GetGoodTilBlockTime()
-			if orderIdToCancel.IsShortTermOrder() {
-				// Skip replaying Short-Term cancellations since the
-				// latest cancellation information is already
-				// stored in the memclob.
+			// if not in state anymore, this means it was removed in the previous block. No-op.
+			if !found {
 				continue
 			}
 
-			// We don't need to fork the state for order cancelations as they do not leave the
-			// store in a dirty state upon failure, however doing so would not hurt so we could consider
-			// doing it for consistency in the future.
-			err := m.clobKeeper.CheckTxCancelOrder(
-				ctx,
-				types.NewMsgCancelOrderStateful(orderIdToCancel, goodTilBlockTime),
+			// Branch the state to avoid writing to state on failed operations.
+			// TODO(CLOB-730) - don't branch context
+			placeOrderCtx, writeCache := ctx.CacheContext()
+
+			_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(
+				placeOrderCtx,
+				statefulOrderPlacement.Order,
+				false,
 			)
 			if err != nil {
 				ctx.Logger().Debug(
-					"ReplayOperations: CancelOrder() returned an error.",
+					"ReplayOperations: PlaceOrder() returned an error for a removed stateful order which was re-placed.",
 					"error",
 					err,
 					"operation",
 					operation,
-					"orderIdToCancel",
-					orderIdToCancel,
-					"goodTilBlockTime",
-					goodTilBlockTime,
+					"statefulOrderPlacement",
+					statefulOrderPlacement,
 				)
+
+				// If the stateful order is dropped while adding it to the book, return an off-chain order remove
+				// message for the order.
+				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
+					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
+						ctx.Logger(),
+						orderId,
+						orderStatus,
+						err,
+						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+					); success {
+						existingOffchainUpdates.AddRemoveMessage(orderId, message)
+					}
+				}
+			} else {
+				writeCache()
+
+				if m.generateOffchainUpdates {
+					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
+				}
 			}
-		// Matches are no-op.
-		case *types.Operation_Match:
 		default:
 			panic(fmt.Sprintf("unknown operation type: %T", operation.Operation))
 		}
 	}
 
+	existingOffchainUpdates.CondenseMessagesForReplay()
 	return existingOffchainUpdates
 }
 
@@ -1118,25 +1099,39 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 // 3. For each order placement operation in the copy, remove the order from the book if it exists.
 func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 	ctx sdk.Context,
-	localValidatorOperationsQueue []types.Operation,
+	localValidatorOperationsQueue []types.InternalOperation,
 ) {
 	// Clear the OTP. This will also remove nonces for every operation in `operationsQueueCopy`.
-	m.pendingFills.operationsToPropose.ClearOperationsQueue()
+	m.operationsToPropose.ClearOperationsQueue()
 
 	// For each order placement operation in the copy, remove the order from the book
 	// if it exists.
 	for _, operation := range localValidatorOperationsQueue {
 		switch operation.Operation.(type) {
-		case *types.Operation_OrderPlacement:
-			otpOrderId := operation.GetOrderPlacement().Order.OrderId
-			otpOrderHash := operation.GetOrderPlacement().Order.GetOrderHash()
+		case *types.InternalOperation_ShortTermOrderPlacement:
+			otpOrderId := operation.GetShortTermOrderPlacement().Order.OrderId
+			otpOrderHash := operation.GetShortTermOrderPlacement().Order.GetOrderHash()
 
 			// If the order exists in the book, remove it.
+			// Else if the order is a Short-Term order, since it's no longer on the book or operations
+			// queue we should remove the order hash from `ShortTermOrderTxBytes`.
 			existingOrder, found := m.openOrders.getOrder(ctx, otpOrderId)
 			if found && existingOrder.GetOrderHash() == otpOrderHash {
 				m.mustRemoveOrder(ctx, otpOrderId)
+			} else if otpOrderId.IsShortTermOrder() {
+				order := operation.GetShortTermOrderPlacement().Order
+				if _, exists := m.operationsToPropose.
+					ShortTermOrderHashToTxBytes[order.GetOrderHash()]; !exists {
+					panic(
+						fmt.Sprintf(
+							"RemoveAndClearOperationsQueue: No TxBytes to remove for Short-Term order %+v",
+							order.GetOrderTextString(),
+						),
+					)
+				}
+				m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 			}
-		case *types.Operation_PreexistingStatefulOrder:
+		case *types.InternalOperation_PreexistingStatefulOrder:
 			otpOrderId := operation.GetPreexistingStatefulOrder()
 
 			// TODO(DEC-1974): The `PreexistingStatefulOrder` operation
@@ -1151,22 +1146,21 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 		}
 	}
 
-	// TODO(DEC-1545): Remove all match data structures after operations queue refactor.
-	m.pendingFills.fills = make([]types.PendingFill, 0)
-	m.pendingFills.orderHashToMatchableOrder = make(map[types.OrderHash]types.MatchableOrder)
-	m.pendingFills.orderIdToOrder = make(map[types.OrderId]types.Order)
+	m.operationsToPropose.MatchedOrderIdToOrder = make(map[types.OrderId]types.Order)
 }
 
 // PurgeInvalidMemclobState will purge the following invalid state from the memclob:
 // - Expired Short-Term order cancellations.
-// - Expired Short-Term and stateful orders from the orderbook and remove their nonces from `OperationsToPropose`.
-// - Fully-filled orders from the orderbook and remove their nonces from `OperationsToPropose`.
-// - Canceled stateful orders and remove their nonces from `OperationsToPropose`.
+// - Expired Short-Term and stateful orders.
+// - Fully-filled orders.
+// - Canceled stateful orders.
+// - Forcefully removed stateful orders.
 func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	ctx sdk.Context,
 	fullyFilledOrderIds []types.OrderId,
 	expiredStatefulOrderIds []types.OrderId,
 	canceledStatefulOrderIds []types.OrderId,
+	removedStatefulOrderIds []types.OrderId,
 	existingOffchainUpdates *types.OffchainUpdates,
 ) *types.OffchainUpdates {
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
@@ -1195,9 +1189,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		// check failures, self-trade errors, etc and will not be removed from state. Therefore it
 		// is possible that when they are canceled they will not exist on the orderbook.
 		if m.openOrders.hasOrder(ctx, statefulOrderId) {
-			statefulOrder, _ := m.GetOrder(ctx, statefulOrderId)
 			m.mustRemoveOrder(ctx, statefulOrderId)
-			m.pendingFills.operationsToPropose.RemovePreexistingStatefulOrderPlacementNonce(statefulOrder)
 		}
 	}
 
@@ -1221,9 +1213,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		// check failures, self-trade errors, etc and will not be removed from state. Therefore it
 		// is possible that when they expire they will not exist on the orderbook.
 		if m.openOrders.hasOrder(ctx, statefulOrderId) {
-			statefulOrder, _ := m.GetOrder(ctx, statefulOrderId)
 			m.mustRemoveOrder(ctx, statefulOrderId)
-			m.pendingFills.operationsToPropose.RemovePreexistingStatefulOrderPlacementNonce(statefulOrder)
 
 			if m.generateOffchainUpdates {
 				// Send an off-chain update message indicating the stateful order should be removed from the
@@ -1232,8 +1222,8 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 					ctx.Logger(),
 					statefulOrderId,
-					off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_EXPIRED,
-					off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_CANCELED,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_EXPIRED,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
 				); success {
 					existingOffchainUpdates.AddRemoveMessage(statefulOrderId, message)
 				}
@@ -1251,15 +1241,24 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 					ctx.Logger(),
 					shortTermOrderId,
-					off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_EXPIRED,
-					off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_CANCELED,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_EXPIRED,
+					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
 				); success {
 					existingOffchainUpdates.AddRemoveMessage(shortTermOrderId, message)
 				}
 			}
-			shortTermOrder, _ := m.GetOrder(ctx, shortTermOrderId)
+
 			m.mustRemoveOrder(ctx, shortTermOrderId)
-			m.pendingFills.operationsToPropose.RemoveOrderPlacementNonce(shortTermOrder)
+		}
+	}
+
+	// Remove all forcefully removed stateful order IDs from the memclob if they exist.
+	// Indexer events are sent during DeliverTx and therefore do not need to be sent here.
+	for _, statefulOrderId := range removedStatefulOrderIds {
+		statefulOrderId.MustBeStatefulOrder()
+
+		if m.openOrders.hasOrder(ctx, statefulOrderId) {
+			m.mustRemoveOrder(ctx, statefulOrderId)
 		}
 	}
 
@@ -1322,7 +1321,7 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	}
 
 	existingRestingOrder, restingOrderExists := m.openOrders.getOrder(ctx, orderId)
-	existingMatchedOrder, matchedOrderExists := m.pendingFills.orderIdToOrder[orderId]
+	existingMatchedOrder, matchedOrderExists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
 
 	// If an order with the same `OrderId` already exists on the orderbook (or was already matched),
 	// then we must validate that the new order's `GoodTilBlock` is greater-in-value than the old order.
@@ -1391,25 +1390,6 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 			remainingAmount,
 			order.GetOrderTextString(),
 		)
-	}
-
-	// Check if the order has already been seen by determining if the associated operation already has a nonce.
-	isPreexistingStatefulOrder := order.IsStatefulOrder() &&
-		m.clobKeeper.DoesStatefulOrderExistInState(ctx, order)
-
-	var existingOperation types.Operation
-	if isPreexistingStatefulOrder {
-		existingOperation = types.NewPreexistingStatefulOrderPlacementOperation(order)
-	} else {
-		existingOperation = types.NewOrderPlacementOperation(order)
-	}
-
-	// This order already has a nonce, which means we have already
-	// received it. This could happen during `ReplayOperations`, or if a transaction
-	// were to fall out of CometBFT's cache and re-submitted.
-	// TODO(CLOB-243): Write PlaceOrder test for this case.
-	if m.pendingFills.operationsToPropose.DoesOperationHaveNonce(existingOperation) {
-		return types.ErrOrderReprocessed
 	}
 
 	return nil
@@ -1507,8 +1487,6 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 	ctx sdk.Context,
 	newTakerOrder types.MatchableOrder,
 ) (
-	// A list of pending fills to apply to the memclob's orderbook.
-	newPendingFills []types.PendingFill,
 	// A slice of new maker fills created from matching this taker order.
 	newMakerFills []types.MakerFill,
 	// A map of matched order hashes to the order.
@@ -1517,7 +1495,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 	matchedMakerOrderIdToOrder map[types.OrderId]types.Order,
 	// A list of maker orders that failed collateralization checks during matching and should be removed from the
 	// orderbook.
-	makerOrdersToRemove []types.Order,
+	makerOrdersToRemove []OrderWithRemovalReason,
 	// The status of the taker order, specifically the remaining size, optimistically filled size, and the result of the
 	// last collateralization check.
 	// This is necessary for determining whether remaining taker order size can be added to the orderbook, and for
@@ -1525,12 +1503,11 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 	takerOrderStatus types.TakerOrderStatus,
 ) {
 	// Initialize return variables.
-	newPendingFills = make([]types.PendingFill, 0)
 	newMakerFills = make([]types.MakerFill, 0)
 	matchedOrderHashToOrder = make(map[types.OrderHash]types.MatchableOrder)
 	matchedMakerOrderIdToOrder = make(map[types.OrderId]types.Order)
 	takerOrderStatus.OrderStatus = types.Success
-	makerOrdersToRemove = make([]types.Order, 0)
+	makerOrdersToRemove = make([]OrderWithRemovalReason, 0)
 
 	// Initialize variables used for traversing the orderbook.
 	clobPairId := newTakerOrder.GetClobPairId()
@@ -1617,7 +1594,13 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		// as the taker order, then we cannot match the orders. Cancel the maker order and continue matching.
 		// TODO(DEC-1562): determine if we should handle self-trades differently.
 		if makerSubaccountId == takerSubaccountId {
-			makerOrdersToRemove = append(makerOrdersToRemove, makerOrder.Order)
+			makerOrdersToRemove = append(
+				makerOrdersToRemove,
+				OrderWithRemovalReason{
+					Order:         makerOrder.Order,
+					RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
+				},
+			)
 			continue
 		}
 
@@ -1638,7 +1621,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		// that the position side does not change or increase as a result of matching the order.
 		if makerOrder.Order.IsReduceOnly() {
 			currentPositionSize := m.clobKeeper.GetStatePosition(ctx, makerSubaccountId, clobPairId)
-			resizedMatchAmount := m.pendingFills.resizeReduceOnlyMatchIfNecessary(
+			resizedMatchAmount := m.resizeReduceOnlyMatchIfNecessary(
 				ctx,
 				makerSubaccountId,
 				clobPairId,
@@ -1653,7 +1636,13 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			// that changed their position side, meaning all their resting reduce-only orders are invalid.
 			if resizedMatchAmount == 0 {
 				// TODO(DEC-1415): Revert this reduce-only bug patch.
-				makerOrdersToRemove = append(makerOrdersToRemove, makerOrder.Order)
+				makerOrdersToRemove = append(
+					makerOrdersToRemove,
+					OrderWithRemovalReason{
+						Order:         makerOrder.Order,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+					},
+				)
 				continue
 			}
 
@@ -1662,7 +1651,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 
 		if newTakerOrder.IsReduceOnly() {
 			currentPositionSize := m.clobKeeper.GetStatePosition(ctx, takerSubaccountId, clobPairId)
-			resizedMatchAmount := m.pendingFills.resizeReduceOnlyMatchIfNecessary(
+			resizedMatchAmount := m.resizeReduceOnlyMatchIfNecessary(
 				ctx,
 				takerSubaccountId,
 				clobPairId,
@@ -1680,8 +1669,6 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			matchedAmount = resizedMatchAmount
 		}
 
-		subticks := makerOrder.Order.GetOrderSubticks()
-
 		// Perform collateralization checks to verify the orders can be filled.
 		matchWithOrders := types.MatchWithOrders{
 			TakerOrder: newTakerOrder,
@@ -1689,16 +1676,18 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			FillAmount: matchedAmount,
 		}
 
-		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(ctx, matchWithOrders)
-		if err != nil {
+		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(ctx, &matchWithOrders)
+		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {
 				// Subaccount has reached max insurance lost block limit. Stop matching.
 				telemetry.IncrCounter(1, types.ModuleName, metrics.SubaccountMaxInsuranceLost, metrics.Count)
+				takerOrderStatus.OrderStatus = types.LiquidationExceededSubaccountMaxInsuranceLost
 				break
 			}
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated) {
 				// Subaccount has reached max notional liquidated block limit. Stop matching.
 				telemetry.IncrCounter(1, types.ModuleName, metrics.SubaccountMaxNotionalLiquidated, metrics.Count)
+				takerOrderStatus.OrderStatus = types.LiquidationExceededSubaccountMaxNotionalLiquidated
 				break
 			}
 			if errors.Is(err, types.ErrInsuranceFundHasInsufficientFunds) {
@@ -1707,10 +1696,16 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 				takerOrderStatus.OrderStatus = types.LiquidationRequiresDeleveraging
 				break
 			}
-			if !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
-				ctx.Logger().Error("Unexpected error from `ProcessSingleMatch`", "error", err)
-				panic(err)
-			}
+
+			// Panic since this is an unknown error.
+			ctx.Logger().Error(
+				"Unexpected error from `ProcessSingleMatch`",
+				"error",
+				err,
+				"matchWithOrders",
+				matchWithOrders,
+			)
+			panic(err)
 		}
 
 		// If the collateralization check has failed, one or both of the taker or maker orders have failed the
@@ -1729,7 +1724,13 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			// If the maker order failed collateralization checks, add the maker order ID to the
 			// list of order IDs to be removed after matching has ended.
 			if !makerCollatOkay {
-				makerOrdersToRemove = append(makerOrdersToRemove, makerOrder.Order)
+				makerOrdersToRemove = append(
+					makerOrdersToRemove,
+					OrderWithRemovalReason{
+						Order:         makerOrder.Order,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+					},
+				)
 			}
 
 			// If this is not a liquidation order and the taker order failed collateralization checks,
@@ -1759,6 +1760,8 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 							matchWithOrders.MakerOrder.MustGetOrder(),
 							matchWithOrders.TakerOrder,
 							matchWithOrders.FillAmount,
+							matchWithOrders.MakerFee,
+							matchWithOrders.TakerFee,
 						),
 					),
 				)
@@ -1771,6 +1774,8 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 							matchWithOrders.MakerOrder.MustGetOrder(),
 							matchWithOrders.TakerOrder.MustGetOrder(),
 							matchWithOrders.FillAmount,
+							matchWithOrders.MakerFee,
+							matchWithOrders.TakerFee,
 						),
 					),
 				)
@@ -1810,23 +1815,6 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		}
 
 		// 3.
-		takerSide := types.Order_SIDE_BUY
-		if !takerIsBuy {
-			takerSide = types.Order_SIDE_SELL
-		}
-		fillType := types.Trade
-		if takerIsLiquidation {
-			fillType = types.PerpetualLiquidate
-		}
-		pendingFill := types.PendingFill{
-			MakerOrderHash: makerOrderHash,
-			TakerOrderHash: takerOrderHash,
-			TakerSide:      takerSide,
-			Subticks:       subticks,
-			Quantums:       matchedAmount,
-			Type:           fillType,
-		}
-		newPendingFills = append(newPendingFills, pendingFill)
 		newMakerFills = append(newMakerFills, types.MakerFill{
 			MakerOrderId: makerOrderId,
 			FillAmount:   matchedAmount.ToUint64(),
@@ -1836,7 +1824,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		if newTakerOrder.IsReduceOnly() && takerRemainingSize > 0 {
 			takerStatePositionSize := m.clobKeeper.GetStatePosition(ctx, takerSubaccountId, clobPairId)
 			if takerStatePositionSize.Sign() == 0 {
-				// TODO(DEC-847): Update logic to properly remove long-term taker reduce-only orders.
+				// TODO(DEC-847): Update logic to properly remove stateful taker reduce-only orders.
 				takerOrderStatus.OrderStatus = types.ReduceOnlyResized
 				break
 			}
@@ -1852,12 +1840,76 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 	takerOrderStatus.RemainingQuantums = takerRemainingSize
 	takerOrderStatus.OrderOptimisticallyFilledQuantums = takerRemainingSizeBeforeMatching - takerRemainingSize
 
-	return newPendingFills,
-		newMakerFills,
+	return newMakerFills,
 		matchedOrderHashToOrder,
 		matchedMakerOrderIdToOrder,
 		makerOrdersToRemove,
 		takerOrderStatus
+}
+
+// SetMemclobGauges sets gauges for each orderbook and the operations queue based on current memclob state.
+// This is used only for observability purposes.
+func (m *MemClobPriceTimePriority) SetMemclobGauges(
+	ctx sdk.Context,
+) {
+	// Set gauges for each orderbook.
+	for clobPairId, orderbook := range m.openOrders.orderbooksMap {
+		// Set gauge for total open orders on each orderbook.
+		telemetry.SetGaugeWithLabels(
+			[]string{
+				types.ModuleName,
+				metrics.TotalOrdersClobPair,
+			},
+			float32(orderbook.TotalOpenOrders),
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
+			},
+		)
+
+		// Set gauge for best bid on each orderbook.
+		telemetry.SetGaugeWithLabels(
+			[]string{
+				types.ModuleName,
+				metrics.BestBidClobPair,
+			},
+			float32(orderbook.BestBid),
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
+			},
+		)
+
+		// Set gauge for best ask on each orderbook.
+		telemetry.SetGaugeWithLabels(
+			[]string{
+				types.ModuleName,
+				metrics.BestAskClobPair,
+			},
+			float32(orderbook.BestAsk),
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
+			},
+		)
+	}
+
+	// Set gauges for the operations queue.
+
+	telemetry.SetGauge(
+		float32(len(m.operationsToPropose.OperationsQueue)),
+		types.ModuleName,
+		metrics.OperationsQueueLength,
+	)
+
+	telemetry.SetGauge(
+		float32(len(m.operationsToPropose.OrderHashesInOperationsQueue)),
+		types.ModuleName,
+		metrics.NumMatchedOrdersInOperationsQueue,
+	)
+
+	telemetry.SetGauge(
+		float32(len(m.operationsToPropose.ShortTermOrderHashToTxBytes)),
+		types.ModuleName,
+		metrics.NumShortTermOrderTxBytes,
+	)
 }
 
 // mustRemoveOrder completely removes an order from all data structures for tracking
@@ -1882,6 +1934,14 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 	}
 
 	m.openOrders.mustRemoveOrder(ctx, levelOrder)
+
+	// If this is a Short-Term order and it's not in the operations queue, then remove it from
+	// `ShortTermOrderTxBytes`.
+	order := levelOrder.Value.Order
+	if order.IsShortTermOrder() &&
+		!m.operationsToPropose.IsOrderPlacementInOperationsQueue(order) {
+		m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
+	}
 }
 
 // mustUpdateOrderbookStateWithMatchedMakerOrder updates the orderbook with a matched maker order.
@@ -1901,7 +1961,8 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 	}
 
 	// If the order is fully filled, remove it from the orderbook.
-	// Else, update the total level quantums of the level the order is in.
+	// Note we shouldn't remove Short-Term order hashes from `ShortTermOrderTxBytes` here since
+	// the order was matched.
 	if newTotalFilledAmount == makerOrderBaseQuantums {
 		makerOrderId := makerOrder.OrderId
 		m.mustRemoveOrder(ctx, makerOrderId)
@@ -1978,16 +2039,7 @@ func (m *MemClobPriceTimePriority) RemoveOrderIfFilled(
 	// Case: order is now completely filled and can be removed.
 	order := levelOrder.Value.Order
 	if orderStateFillAmount >= order.GetBaseQuantums() {
-		m.openOrders.mustRemoveOrder(ctx, levelOrder)
-
-		// Ensure the nonce is removed from this order.
-		isPreexistingStatefulOrder := order.OrderId.IsStatefulOrder() &&
-			m.clobKeeper.DoesStatefulOrderExistInState(ctx, order)
-		if isPreexistingStatefulOrder {
-			m.pendingFills.operationsToPropose.RemovePreexistingStatefulOrderPlacementNonce(order)
-		} else {
-			m.pendingFills.operationsToPropose.RemoveOrderPlacementNonce(order)
-		}
+		m.mustRemoveOrder(ctx, order.OrderId)
 	}
 }
 
@@ -2026,14 +2078,20 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 
 			// Remove each open reduce-only order from the memclob.
 			for _, orderId := range openReduceOnlyOrdersCopy {
-				// TODO(DEC-847): Update logic to properly remove long-term orders.
+				// TODO(DEC-847): Update logic to properly remove stateful orders.
 				m.mustRemoveOrder(ctx, orderId)
+				if orderId.IsStatefulOrder() {
+					m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+						orderId,
+						types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+					)
+				}
 				if m.generateOffchainUpdates {
 					if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 						ctx.Logger(),
 						orderId,
-						off_chain_updates.OrderRemove_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
-						off_chain_updates.OrderRemove_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 					); success {
 						offchainUpdates.AddRemoveMessage(orderId, message)
 					}
@@ -2043,6 +2101,31 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 	}
 
 	return offchainUpdates
+}
+
+// GetMidPrice returns the mid price of the orderbook for the given clob pair
+// and whether or not it exists.
+func (m *MemClobPriceTimePriority) GetMidPrice(
+	ctx sdk.Context,
+	clobPairId types.ClobPairId,
+) (
+	subticks types.Subticks,
+	exists bool,
+) {
+	subticks, exists = m.openOrders.orderbooksMap[clobPairId].GetMidPrice()
+	if !exists {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.MissingMidPrice, metrics.Count},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(
+					metrics.ClobPairId,
+					int(clobPairId.ToUint32()),
+				),
+			},
+		)
+	}
+	return subticks, exists
 }
 
 // getImpactPriceSubticks returns the impact ask or bid price (in subticks), given the clob pair
@@ -2169,7 +2252,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 
 	// Get index price represented in subticks.
 	indexPriceSubticks := types.PriceToSubticks(
-		params.Market,
+		params.MarketPrice,
 		clobPair,
 		params.BaseAtomicResolution,
 		params.QuoteAtomicResolution,
@@ -2180,7 +2263,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 		return 0, sdkerrors.Wrapf(
 			types.ErrZeroIndexPriceForPremiumCalculation,
 			"market = %+v, clobPair = %+v, baseAtomicResolution = %d, quoteAtomicResolution = %d",
-			params.Market,
+			params.MarketPrice,
 			clobPair,
 			params.BaseAtomicResolution,
 			params.QuoteAtomicResolution,
@@ -2322,4 +2405,35 @@ func (m *MemClobPriceTimePriority) getPricePremiumFromSide(
 		minPremiumPpm,
 		maxPremiumPpm,
 	)
+}
+
+// resizeReduceOnlyMatchIfNecessary resizes a reduce-only match if it would change or increase
+// the position side of the subaccount, and returns the resized match.
+func (m *MemClobPriceTimePriority) resizeReduceOnlyMatchIfNecessary(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	clobPairId types.ClobPairId,
+	currentPositionSize *big.Int,
+	newlyMatchedAmount satypes.BaseQuantums,
+	isBuy bool,
+) satypes.BaseQuantums {
+	// Get the signed size of the new match.
+	newMatchSize := newlyMatchedAmount.ToBigInt()
+	if !isBuy {
+		newMatchSize.Neg(newMatchSize)
+	}
+
+	// If the match is not on the opposite side of the position, then the match is invalid.
+	// Note that this can occur for reduce-only maker orders if the maker subaccount's position side
+	// changes during the matching loop, and this should never happen for taker orders.
+	if currentPositionSize.Sign()*newMatchSize.Sign() != -1 {
+		return satypes.BaseQuantums(0)
+	}
+
+	// The match is on the opposite side of the position. Return the minimum of the match size and
+	// position size to ensure the new match does not change the subaccount's position side.
+	absPositionSize := new(big.Int).Abs(currentPositionSize)
+	absNewMatchSize := new(big.Int).Abs(newMatchSize)
+	maxMatchSize := lib.BigMin(absPositionSize, absNewMatchSize)
+	return satypes.BaseQuantums(maxMatchSize.Uint64())
 }

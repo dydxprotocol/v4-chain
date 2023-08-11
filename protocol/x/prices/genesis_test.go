@@ -17,6 +17,5 @@ func TestGenesis(t *testing.T) {
 	got := prices.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
 
-	require.ElementsMatch(t, genesisState.Markets, got.Markets)
-	require.ElementsMatch(t, genesisState.ExchangeFeeds, got.ExchangeFeeds)
+	require.ElementsMatch(t, genesisState.MarketParams, got.MarketParams)
 }

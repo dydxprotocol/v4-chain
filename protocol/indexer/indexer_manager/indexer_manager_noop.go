@@ -2,9 +2,18 @@ package indexer_manager
 
 import "github.com/dydxprotocol/v4/indexer/msgsender"
 
-func NewIndexerEventManagerNoop() *IndexerEventManagerImpl {
+func NewIndexerEventManagerNoop() IndexerEventManager {
 	return NewIndexerEventManager(
 		msgsender.NewIndexerMessageSenderNoop(),
 		nil,
+		false,
+	)
+}
+
+func NewIndexerEventManagerNoopEnabled() IndexerEventManager {
+	return NewIndexerEventManager(
+		msgsender.NewIndexerMessageSenderNoopEnabled(),
+		nil,
+		false,
 	)
 }

@@ -120,8 +120,8 @@ func (k Keeper) GetRandomSubaccount(ctx sdk.Context, rand *rand.Rand) (types.Sub
 
 // getSettledUpdates takes in a list of updates and for each update, retrieves
 // the updated subaccount in its settled form, and returns a list of settledUpdate
-// structs and a map that indicates which perpetuals are updated for each subaccount.
-// If requireUniqueSubaccount is true, the SubaccountIds in the input updates
+// structs and a map that indicates for each subaccount which perpetuals had funding
+// updates. If requireUniqueSubaccount is true, the SubaccountIds in the input updates
 // must be unique.
 func (k Keeper) getSettledUpdates(
 	ctx sdk.Context,
@@ -129,17 +129,17 @@ func (k Keeper) getSettledUpdates(
 	requireUniqueSubaccount bool,
 ) (
 	settledUpdates []settledUpdate,
-	subaccoundIdToLastFundingPayments map[types.SubaccountId]map[uint32]*big.Int,
+	subaccoundIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
 	var idToSettledSubaccount = make(map[types.SubaccountId]types.Subaccount)
 	settledUpdates = make([]settledUpdate, len(updates))
-	subaccoundIdToLastFundingPayments = make(map[types.SubaccountId]map[uint32]*big.Int)
+	subaccoundIdToFundingPayments = make(map[types.SubaccountId]map[uint32]dtypes.SerializableInt)
 
 	// Iterate over all updates and query the relevant `Subaccounts`.
 	for i, u := range updates {
 		settledSubaccount, exists := idToSettledSubaccount[u.SubaccountId]
-		var lastFundingPayments map[uint32]*big.Int
+		var fundingPayments map[uint32]dtypes.SerializableInt
 
 		if exists && requireUniqueSubaccount {
 			return nil, nil, types.ErrNonUniqueUpdatesSubaccount
@@ -149,13 +149,13 @@ func (k Keeper) getSettledUpdates(
 		// idToSettledSubaccount map.
 		if !exists {
 			subaccount := k.GetSubaccount(ctx, u.SubaccountId)
-			settledSubaccount, lastFundingPayments, err = k.getSettledSubaccount(ctx, subaccount)
+			settledSubaccount, fundingPayments, err = k.getSettledSubaccount(ctx, subaccount)
 			if err != nil {
 				return nil, nil, err
 			}
 
 			idToSettledSubaccount[u.SubaccountId] = settledSubaccount
-			subaccoundIdToLastFundingPayments[u.SubaccountId] = lastFundingPayments
+			subaccoundIdToFundingPayments[u.SubaccountId] = fundingPayments
 		}
 
 		settledUpdate := settledUpdate{
@@ -167,7 +167,7 @@ func (k Keeper) getSettledUpdates(
 		settledUpdates[i] = settledUpdate
 	}
 
-	return settledUpdates, subaccoundIdToLastFundingPayments, nil
+	return settledUpdates, subaccoundIdToFundingPayments, nil
 }
 
 // UpdateSubaccounts validates and applies all `updates` to the relevant subaccounts as long as this is a
@@ -194,7 +194,7 @@ func (k Keeper) UpdateSubaccounts(
 		metrics.Latency,
 	)
 
-	settledUpdates, subaccoundIdToLastFundingPayments, err := k.getSettledUpdates(ctx, updates, true)
+	settledUpdates, subaccoundIdToFundingPayments, err := k.getSettledUpdates(ctx, updates, true)
 	if err != nil {
 		return false, nil, err
 	}
@@ -204,8 +204,18 @@ func (k Keeper) UpdateSubaccounts(
 		return success, successPerUpdate, err
 	}
 
+	// Get a mapping from perpetual Id to current perpetual funding index.
+	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+	perpIdToFundingIndex := make(map[uint32]dtypes.SerializableInt)
+	for _, perp := range allPerps {
+		perpIdToFundingIndex[perp.Id] = perp.FundingIndex
+	}
+
 	// Apply the updates to perpetual positions.
-	success, err = UpdatePerpetualPositions(settledUpdates)
+	success, err = UpdatePerpetualPositions(
+		settledUpdates,
+		perpIdToFundingIndex,
+	)
 	if !success || err != nil {
 		return success, successPerUpdate, err
 	}
@@ -220,6 +230,9 @@ func (k Keeper) UpdateSubaccounts(
 	// block message per update.
 	for _, u := range settledUpdates {
 		k.SetSubaccount(ctx, u.SettledSubaccount)
+		// Below access is safe because for all updated subaccounts' IDs, this map
+		// is populated as getSettledSubaccount() is called in getSettledUpdates().
+		fundingPayments := subaccoundIdToFundingPayments[*u.SettledSubaccount.Id]
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeSubaccountUpdate,
@@ -228,9 +241,10 @@ func (k Keeper) UpdateSubaccounts(
 					u.SettledSubaccount.Id,
 					getUpdatedPerpetualPositions(
 						u,
-						subaccoundIdToLastFundingPayments[*u.SettledSubaccount.Id],
+						fundingPayments,
 					),
 					getUpdatedAssetPositions(u),
+					fundingPayments,
 				),
 			),
 		)
@@ -281,13 +295,13 @@ func (k Keeper) getSettledSubaccount(
 	subaccount types.Subaccount,
 ) (
 	settledSubaccount types.Subaccount,
-	lastFundingPayments map[uint32]*big.Int,
+	fundingPayments map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
 	totalNetSettlement := big.NewInt(0)
 
 	newPerpetualPositions := []*types.PerpetualPosition{}
-	lastFundingPayments = make(map[uint32]*big.Int)
+	fundingPayments = make(map[uint32]dtypes.SerializableInt)
 
 	// Iterate through and settle all perpetual positions.
 	for _, p := range subaccount.PerpetualPositions {
@@ -301,8 +315,12 @@ func (k Keeper) getSettledSubaccount(
 			return types.Subaccount{}, nil, err
 		}
 		// Record non-zero funding payment (to be later emitted in SubaccountUpdateEvent to indexer).
+		// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
+		// to a negative funding payment (position received funding payment) and vice versa.
 		if bigNetSettlement.Cmp(lib.BigInt0()) != 0 {
-			lastFundingPayments[p.PerpetualId] = new(big.Int).Neg(bigNetSettlement)
+			fundingPayments[p.PerpetualId] = dtypes.NewIntFromBigInt(
+				new(big.Int).Neg(bigNetSettlement),
+			)
 		}
 
 		// Aggregate all net settlements.
@@ -315,10 +333,6 @@ func (k Keeper) getSettledSubaccount(
 			PerpetualId:  p.PerpetualId,
 			Quantums:     p.Quantums,
 			FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
-			// Funding payment is the negative of settlement because positive settlement
-			// is equivalent to a negative funding payment (position received funding payment)
-			// and vice versa.
-			LastFundingPayment: dtypes.NewIntFromBigInt(bigNetSettlement.Neg(bigNetSettlement)),
 		})
 	}
 
@@ -333,7 +347,7 @@ func (k Keeper) getSettledSubaccount(
 	if err != nil {
 		return types.Subaccount{}, nil, err
 	}
-	return newSubaccount, lastFundingPayments, nil
+	return newSubaccount, fundingPayments, nil
 }
 
 // internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts.

@@ -7,7 +7,6 @@ import (
 	context "context"
 	encoding_binary "encoding/binary"
 	fmt "fmt"
-	tx "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -30,71 +29,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// RemovalReason represent the reason why an order was removed.
-type RemoveOrder_RemovalReason int32
-
-const (
-	// REMOVAL_REASON_UNSPECIFIED represents an unspecified removal reason and
-	// is an invalid value.
-	RemoveOrder_REMOVAL_REASON_UNSPECIFIED RemoveOrder_RemovalReason = 0
-	// REMOVAL_REASON_UNDERCOLLATERALIZED represents a removal of an order which
-	// if filled in isolation with respect to the current state of the
-	// subaccount would leave the subaccount undercollateralized.
-	RemoveOrder_REMOVAL_REASON_UNDERCOLLATERALIZED RemoveOrder_RemovalReason = 1
-	// REMOVAL_REASON_REDUCE_ONLY_INVALID represents a removal of a reduce-only
-	// order which if filled in isolation with respect to the current state of
-	// the subaccount would cause the subaccount's existing position to increase
-	// or change sides.
-	RemoveOrder_REMOVAL_REASON_REDUCE_ONLY_INVALID RemoveOrder_RemovalReason = 2
-	// REMOVAL_REASON_INVALID_WHEN_TRIGGERED_POST_ONLY represents a removal of a
-	// triggered order that was deemed invalid upon being triggered because it
-	// crossed maker orders on the book of the proposer.
-	RemoveOrder_REMOVAL_REASON_INVALID_WHEN_TRIGGERED_POST_ONLY RemoveOrder_RemovalReason = 3
-	// REMOVAL_REASON_INVALID_WHEN_TRIGGERED_SELF_TRADE represents a removal of
-	// a triggered order that was deemed invalid upon being triggered because it
-	// constituted a self trade on the proposers orderbook.
-	RemoveOrder_REMOVAL_REASON_INVALID_WHEN_TRIGGERED_SELF_TRADE RemoveOrder_RemovalReason = 4
-	// REMOVAL_REASON_TRIGGERED_IOC represents a removal of a triggered IOC
-	// order. IOC orders should always be removed in the block after they are
-	// triggered.
-	RemoveOrder_REMOVAL_REASON_TRIGGERED_IOC RemoveOrder_RemovalReason = 5
-)
-
-var RemoveOrder_RemovalReason_name = map[int32]string{
-	0: "REMOVAL_REASON_UNSPECIFIED",
-	1: "REMOVAL_REASON_UNDERCOLLATERALIZED",
-	2: "REMOVAL_REASON_REDUCE_ONLY_INVALID",
-	3: "REMOVAL_REASON_INVALID_WHEN_TRIGGERED_POST_ONLY",
-	4: "REMOVAL_REASON_INVALID_WHEN_TRIGGERED_SELF_TRADE",
-	5: "REMOVAL_REASON_TRIGGERED_IOC",
-}
-
-var RemoveOrder_RemovalReason_value = map[string]int32{
-	"REMOVAL_REASON_UNSPECIFIED":                       0,
-	"REMOVAL_REASON_UNDERCOLLATERALIZED":               1,
-	"REMOVAL_REASON_REDUCE_ONLY_INVALID":               2,
-	"REMOVAL_REASON_INVALID_WHEN_TRIGGERED_POST_ONLY":  3,
-	"REMOVAL_REASON_INVALID_WHEN_TRIGGERED_SELF_TRADE": 4,
-	"REMOVAL_REASON_TRIGGERED_IOC":                     5,
-}
-
-func (x RemoveOrder_RemovalReason) String() string {
-	return proto.EnumName(RemoveOrder_RemovalReason_name, int32(x))
-}
-
-func (RemoveOrder_RemovalReason) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{8, 0}
-}
-
 // MsgProposedOperations is a message injected by block proposers to
 // specify the operations that occurred in a block.
 type MsgProposedOperations struct {
 	// The list of operations proposed by the block proposer.
-	OperationsQueue []Operation `protobuf:"bytes,1,rep,name=operations_queue,json=operationsQueue,proto3" json:"operations_queue"`
-	// A list of order hashes that should have the add-to-orderbook
-	// collateralization check performed when they are placed in the `DeliverTx`
-	// validation flow.
-	AddToOrderbookCollatCheckOrderHashes [][]byte `protobuf:"bytes,2,rep,name=add_to_orderbook_collat_check_order_hashes,json=addToOrderbookCollatCheckOrderHashes,proto3" json:"add_to_orderbook_collat_check_order_hashes,omitempty"`
+	OperationsQueue []OperationRaw `protobuf:"bytes,1,rep,name=operations_queue,json=operationsQueue,proto3" json:"operations_queue"`
 }
 
 func (m *MsgProposedOperations) Reset()         { *m = MsgProposedOperations{} }
@@ -130,16 +69,9 @@ func (m *MsgProposedOperations) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgProposedOperations proto.InternalMessageInfo
 
-func (m *MsgProposedOperations) GetOperationsQueue() []Operation {
+func (m *MsgProposedOperations) GetOperationsQueue() []OperationRaw {
 	if m != nil {
 		return m.OperationsQueue
-	}
-	return nil
-}
-
-func (m *MsgProposedOperations) GetAddToOrderbookCollatCheckOrderHashes() [][]byte {
-	if m != nil {
-		return m.AddToOrderbookCollatCheckOrderHashes
 	}
 	return nil
 }
@@ -397,133 +329,16 @@ func (m *MsgCancelOrderResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCancelOrderResponse proto.InternalMessageInfo
 
-// Operation represents an operation in the proposed operations.
-type Operation struct {
-	// operation represents the operation that occurred, which can be a match,
-	// order placement, order cancellation, or the placement of a pre-existing
-	// stateful order.
-	//
-	// Types that are valid to be assigned to Operation:
-	//	*Operation_Match
-	//	*Operation_OrderPlacement
-	//	*Operation_OrderCancellation
-	//	*Operation_PreexistingStatefulOrder
-	Operation isOperation_Operation `protobuf_oneof:"operation"`
-}
-
-func (m *Operation) Reset()         { *m = Operation{} }
-func (m *Operation) String() string { return proto.CompactTextString(m) }
-func (*Operation) ProtoMessage()    {}
-func (*Operation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{6}
-}
-func (m *Operation) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *Operation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Operation.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *Operation) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Operation.Merge(m, src)
-}
-func (m *Operation) XXX_Size() int {
-	return m.Size()
-}
-func (m *Operation) XXX_DiscardUnknown() {
-	xxx_messageInfo_Operation.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Operation proto.InternalMessageInfo
-
-type isOperation_Operation interface {
-	isOperation_Operation()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type Operation_Match struct {
-	Match *ClobMatch `protobuf:"bytes,1,opt,name=match,proto3,oneof" json:"match,omitempty"`
-}
-type Operation_OrderPlacement struct {
-	OrderPlacement *MsgPlaceOrder `protobuf:"bytes,2,opt,name=order_placement,json=orderPlacement,proto3,oneof" json:"order_placement,omitempty"`
-}
-type Operation_OrderCancellation struct {
-	OrderCancellation *MsgCancelOrder `protobuf:"bytes,3,opt,name=order_cancellation,json=orderCancellation,proto3,oneof" json:"order_cancellation,omitempty"`
-}
-type Operation_PreexistingStatefulOrder struct {
-	PreexistingStatefulOrder *OrderId `protobuf:"bytes,4,opt,name=preexisting_stateful_order,json=preexistingStatefulOrder,proto3,oneof" json:"preexisting_stateful_order,omitempty"`
-}
-
-func (*Operation_Match) isOperation_Operation()                    {}
-func (*Operation_OrderPlacement) isOperation_Operation()           {}
-func (*Operation_OrderCancellation) isOperation_Operation()        {}
-func (*Operation_PreexistingStatefulOrder) isOperation_Operation() {}
-
-func (m *Operation) GetOperation() isOperation_Operation {
-	if m != nil {
-		return m.Operation
-	}
-	return nil
-}
-
-func (m *Operation) GetMatch() *ClobMatch {
-	if x, ok := m.GetOperation().(*Operation_Match); ok {
-		return x.Match
-	}
-	return nil
-}
-
-func (m *Operation) GetOrderPlacement() *MsgPlaceOrder {
-	if x, ok := m.GetOperation().(*Operation_OrderPlacement); ok {
-		return x.OrderPlacement
-	}
-	return nil
-}
-
-func (m *Operation) GetOrderCancellation() *MsgCancelOrder {
-	if x, ok := m.GetOperation().(*Operation_OrderCancellation); ok {
-		return x.OrderCancellation
-	}
-	return nil
-}
-
-func (m *Operation) GetPreexistingStatefulOrder() *OrderId {
-	if x, ok := m.GetOperation().(*Operation_PreexistingStatefulOrder); ok {
-		return x.PreexistingStatefulOrder
-	}
-	return nil
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*Operation) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*Operation_Match)(nil),
-		(*Operation_OrderPlacement)(nil),
-		(*Operation_OrderCancellation)(nil),
-		(*Operation_PreexistingStatefulOrder)(nil),
-	}
-}
-
 // OperationRaw represents an operation in the proposed operations.
+// Note that the `order_placement` operation is a signed message.
 type OperationRaw struct {
 	// operationRaw represents an operation that occurred, which can be a match,
-	// order placement, order cancellation, or the placement of a pre-existing
-	// stateful order.
+	// a signed order placement, or an order removal.
 	//
 	// Types that are valid to be assigned to Operation:
 	//	*OperationRaw_Match
-	//	*OperationRaw_OrderPlacement
-	//	*OperationRaw_OrderCancellation
-	//	*OperationRaw_PreexistingStatefulOrder
+	//	*OperationRaw_ShortTermOrderPlacement
+	//	*OperationRaw_OrderRemoval
 	Operation isOperationRaw_Operation `protobuf_oneof:"operation"`
 }
 
@@ -531,7 +346,7 @@ func (m *OperationRaw) Reset()         { *m = OperationRaw{} }
 func (m *OperationRaw) String() string { return proto.CompactTextString(m) }
 func (*OperationRaw) ProtoMessage()    {}
 func (*OperationRaw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{7}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{6}
 }
 func (m *OperationRaw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -569,20 +384,16 @@ type isOperationRaw_Operation interface {
 type OperationRaw_Match struct {
 	Match *ClobMatch `protobuf:"bytes,1,opt,name=match,proto3,oneof" json:"match,omitempty"`
 }
-type OperationRaw_OrderPlacement struct {
-	OrderPlacement *tx.TxRaw `protobuf:"bytes,2,opt,name=order_placement,json=orderPlacement,proto3,oneof" json:"order_placement,omitempty"`
+type OperationRaw_ShortTermOrderPlacement struct {
+	ShortTermOrderPlacement []byte `protobuf:"bytes,2,opt,name=short_term_order_placement,json=shortTermOrderPlacement,proto3,oneof" json:"short_term_order_placement,omitempty"`
 }
-type OperationRaw_OrderCancellation struct {
-	OrderCancellation *tx.TxRaw `protobuf:"bytes,3,opt,name=order_cancellation,json=orderCancellation,proto3,oneof" json:"order_cancellation,omitempty"`
-}
-type OperationRaw_PreexistingStatefulOrder struct {
-	PreexistingStatefulOrder *OrderId `protobuf:"bytes,4,opt,name=preexisting_stateful_order,json=preexistingStatefulOrder,proto3,oneof" json:"preexisting_stateful_order,omitempty"`
+type OperationRaw_OrderRemoval struct {
+	OrderRemoval *OrderRemoval `protobuf:"bytes,3,opt,name=order_removal,json=orderRemoval,proto3,oneof" json:"order_removal,omitempty"`
 }
 
-func (*OperationRaw_Match) isOperationRaw_Operation()                    {}
-func (*OperationRaw_OrderPlacement) isOperationRaw_Operation()           {}
-func (*OperationRaw_OrderCancellation) isOperationRaw_Operation()        {}
-func (*OperationRaw_PreexistingStatefulOrder) isOperationRaw_Operation() {}
+func (*OperationRaw_Match) isOperationRaw_Operation()                   {}
+func (*OperationRaw_ShortTermOrderPlacement) isOperationRaw_Operation() {}
+func (*OperationRaw_OrderRemoval) isOperationRaw_Operation()            {}
 
 func (m *OperationRaw) GetOperation() isOperationRaw_Operation {
 	if m != nil {
@@ -598,23 +409,16 @@ func (m *OperationRaw) GetMatch() *ClobMatch {
 	return nil
 }
 
-func (m *OperationRaw) GetOrderPlacement() *tx.TxRaw {
-	if x, ok := m.GetOperation().(*OperationRaw_OrderPlacement); ok {
-		return x.OrderPlacement
+func (m *OperationRaw) GetShortTermOrderPlacement() []byte {
+	if x, ok := m.GetOperation().(*OperationRaw_ShortTermOrderPlacement); ok {
+		return x.ShortTermOrderPlacement
 	}
 	return nil
 }
 
-func (m *OperationRaw) GetOrderCancellation() *tx.TxRaw {
-	if x, ok := m.GetOperation().(*OperationRaw_OrderCancellation); ok {
-		return x.OrderCancellation
-	}
-	return nil
-}
-
-func (m *OperationRaw) GetPreexistingStatefulOrder() *OrderId {
-	if x, ok := m.GetOperation().(*OperationRaw_PreexistingStatefulOrder); ok {
-		return x.PreexistingStatefulOrder
+func (m *OperationRaw) GetOrderRemoval() *OrderRemoval {
+	if x, ok := m.GetOperation().(*OperationRaw_OrderRemoval); ok {
+		return x.OrderRemoval
 	}
 	return nil
 }
@@ -623,136 +427,60 @@ func (m *OperationRaw) GetPreexistingStatefulOrder() *OrderId {
 func (*OperationRaw) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
 		(*OperationRaw_Match)(nil),
-		(*OperationRaw_OrderPlacement)(nil),
-		(*OperationRaw_OrderCancellation)(nil),
-		(*OperationRaw_PreexistingStatefulOrder)(nil),
+		(*OperationRaw_ShortTermOrderPlacement)(nil),
+		(*OperationRaw_OrderRemoval)(nil),
 	}
-}
-
-// RemoveOrder is used for including order removals in the operations queue.
-type RemoveOrder struct {
-	OrderId       OrderId                   `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id"`
-	RemovalReason RemoveOrder_RemovalReason `protobuf:"varint,2,opt,name=removal_reason,json=removalReason,proto3,enum=dydxprotocol.clob.RemoveOrder_RemovalReason" json:"removal_reason,omitempty"`
-}
-
-func (m *RemoveOrder) Reset()         { *m = RemoveOrder{} }
-func (m *RemoveOrder) String() string { return proto.CompactTextString(m) }
-func (*RemoveOrder) ProtoMessage()    {}
-func (*RemoveOrder) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{8}
-}
-func (m *RemoveOrder) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *RemoveOrder) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_RemoveOrder.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *RemoveOrder) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RemoveOrder.Merge(m, src)
-}
-func (m *RemoveOrder) XXX_Size() int {
-	return m.Size()
-}
-func (m *RemoveOrder) XXX_DiscardUnknown() {
-	xxx_messageInfo_RemoveOrder.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_RemoveOrder proto.InternalMessageInfo
-
-func (m *RemoveOrder) GetOrderId() OrderId {
-	if m != nil {
-		return m.OrderId
-	}
-	return OrderId{}
-}
-
-func (m *RemoveOrder) GetRemovalReason() RemoveOrder_RemovalReason {
-	if m != nil {
-		return m.RemovalReason
-	}
-	return RemoveOrder_REMOVAL_REASON_UNSPECIFIED
 }
 
 func init() {
-	proto.RegisterEnum("dydxprotocol.clob.RemoveOrder_RemovalReason", RemoveOrder_RemovalReason_name, RemoveOrder_RemovalReason_value)
 	proto.RegisterType((*MsgProposedOperations)(nil), "dydxprotocol.clob.MsgProposedOperations")
 	proto.RegisterType((*MsgProposedOperationsResponse)(nil), "dydxprotocol.clob.MsgProposedOperationsResponse")
 	proto.RegisterType((*MsgPlaceOrder)(nil), "dydxprotocol.clob.MsgPlaceOrder")
 	proto.RegisterType((*MsgPlaceOrderResponse)(nil), "dydxprotocol.clob.MsgPlaceOrderResponse")
 	proto.RegisterType((*MsgCancelOrder)(nil), "dydxprotocol.clob.MsgCancelOrder")
 	proto.RegisterType((*MsgCancelOrderResponse)(nil), "dydxprotocol.clob.MsgCancelOrderResponse")
-	proto.RegisterType((*Operation)(nil), "dydxprotocol.clob.Operation")
 	proto.RegisterType((*OperationRaw)(nil), "dydxprotocol.clob.OperationRaw")
-	proto.RegisterType((*RemoveOrder)(nil), "dydxprotocol.clob.RemoveOrder")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/clob/tx.proto", fileDescriptor_19b9e2c0de4ab64a) }
 
 var fileDescriptor_19b9e2c0de4ab64a = []byte{
-	// 863 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xcf, 0x6f, 0xdb, 0x36,
-	0x14, 0x96, 0xec, 0x74, 0x5d, 0xe9, 0xc4, 0x55, 0xb9, 0x5f, 0x82, 0xd0, 0x3a, 0x9e, 0x31, 0x74,
-	0xde, 0x30, 0x48, 0xad, 0x9b, 0xdb, 0x4e, 0x8e, 0xac, 0xd6, 0xc2, 0xfc, 0x23, 0xa3, 0xdd, 0xae,
-	0xcb, 0x0e, 0x84, 0x2c, 0xb1, 0xb6, 0x10, 0xd9, 0xd4, 0x44, 0x26, 0x75, 0xff, 0x87, 0x1d, 0xf6,
-	0x97, 0xf4, 0xbc, 0xcb, 0x80, 0x1d, 0x0b, 0xec, 0xd2, 0xe3, 0x4e, 0xc3, 0x90, 0xfc, 0x23, 0x83,
-	0x28, 0x59, 0x95, 0x6b, 0xa5, 0x0e, 0x86, 0x01, 0xbd, 0x91, 0xef, 0x7d, 0xdf, 0xf7, 0xf8, 0x3e,
-	0x93, 0x4f, 0x06, 0x9a, 0xf7, 0xc2, 0x5b, 0x86, 0x11, 0xe5, 0xd4, 0xa5, 0x81, 0xe1, 0x06, 0x74,
-	0x62, 0xf0, 0xa5, 0x2e, 0x02, 0xf0, 0x56, 0x3e, 0xa7, 0xc7, 0x39, 0x4d, 0x73, 0x29, 0x9b, 0x53,
-	0x66, 0xf0, 0xa5, 0x71, 0x76, 0x7f, 0x42, 0xb8, 0x73, 0x3f, 0x83, 0x6b, 0x1f, 0x4f, 0xe9, 0x94,
-	0x8a, 0xa5, 0x11, 0xaf, 0xd2, 0xe8, 0x9d, 0xcd, 0x02, 0x34, 0xf2, 0x48, 0x94, 0xa6, 0xf7, 0x37,
-	0xd3, 0x73, 0x87, 0xbb, 0x33, 0xc2, 0x12, 0x40, 0xe3, 0x0f, 0x19, 0x7c, 0xd2, 0x67, 0xd3, 0xa3,
-	0x88, 0x86, 0x94, 0x11, 0x6f, 0x18, 0x92, 0xc8, 0xe1, 0x3e, 0x5d, 0x30, 0xd8, 0x07, 0x0a, 0xcd,
-	0x76, 0xf8, 0xe7, 0x53, 0x72, 0x4a, 0x54, 0xb9, 0x5e, 0x6e, 0x56, 0x5a, 0xb7, 0xf5, 0x8d, 0x93,
-	0xeb, 0x19, 0xf1, 0x70, 0xe7, 0xd5, 0xdf, 0xfb, 0x12, 0xba, 0xf9, 0x86, 0xfb, 0x7d, 0x4c, 0x85,
-	0x4f, 0xc1, 0xd7, 0x8e, 0xe7, 0x61, 0x4e, 0xb1, 0x38, 0xdf, 0x84, 0xd2, 0x13, 0xec, 0xd2, 0x20,
-	0x70, 0x38, 0x76, 0x67, 0xc4, 0x3d, 0x49, 0xc2, 0x78, 0xe6, 0xb0, 0x19, 0x61, 0x6a, 0xa9, 0x5e,
-	0x6e, 0xee, 0xa2, 0x2f, 0x1c, 0xcf, 0x1b, 0xd3, 0xe1, 0x0a, 0x6f, 0x0a, 0xb8, 0x19, 0xa3, 0x45,
-	0xac, 0x2b, 0xb0, 0x8d, 0x7d, 0x70, 0xa7, 0xb0, 0x03, 0x44, 0x58, 0x48, 0x17, 0x8c, 0x34, 0x2c,
-	0xb0, 0x17, 0x03, 0x02, 0xc7, 0x25, 0x82, 0x07, 0x0f, 0xc0, 0x35, 0x51, 0x4d, 0x95, 0xeb, 0x72,
-	0xb3, 0xd2, 0x52, 0x8b, 0xfa, 0x89, 0xf3, 0x69, 0x2f, 0x09, 0xb8, 0xf1, 0x59, 0xe2, 0x54, 0x26,
-	0x93, 0xe9, 0xff, 0x26, 0x83, 0x6a, 0x9f, 0x4d, 0x4d, 0x67, 0xe1, 0x92, 0x20, 0xa9, 0xf0, 0x2d,
-	0xf8, 0x30, 0xe9, 0xc7, 0xf7, 0xd2, 0x22, 0xda, 0x65, 0x45, 0x6c, 0x2f, 0x2d, 0x73, 0x9d, 0x26,
-	0x5b, 0x78, 0x17, 0x54, 0xa7, 0x94, 0x7a, 0x98, 0xfb, 0x01, 0x9e, 0x04, 0xd4, 0x3d, 0x51, 0x4b,
-	0x75, 0xb9, 0xb9, 0xd7, 0x95, 0xd0, 0x6e, 0x1c, 0x1f, 0xfb, 0xc1, 0x61, 0x1c, 0x85, 0x06, 0xf8,
-	0x68, 0x1d, 0x87, 0xb9, 0x3f, 0x27, 0x6a, 0xb9, 0x2e, 0x37, 0xaf, 0x77, 0x25, 0xa4, 0xe4, 0xc1,
-	0x63, 0x7f, 0x4e, 0x0e, 0x95, 0x9c, 0x30, 0x5d, 0x10, 0xfa, 0xac, 0xa1, 0x82, 0x4f, 0xd7, 0x4f,
-	0x9e, 0x35, 0xf5, 0x67, 0x09, 0xdc, 0xc8, 0xbc, 0x8c, 0x1d, 0x13, 0xf7, 0x26, 0x6d, 0xa6, 0xe8,
-	0x06, 0x98, 0x01, 0x9d, 0xf4, 0x63, 0x4c, 0x57, 0x42, 0x09, 0x18, 0x7e, 0x07, 0x6e, 0x26, 0x2e,
-	0x84, 0xb1, 0x69, 0x73, 0xb2, 0xe0, 0xa2, 0x93, 0x4a, 0xab, 0x5e, 0xc0, 0x5f, 0xf3, 0xb6, 0x2b,
-	0xa1, 0xaa, 0xa0, 0x1e, 0xad, 0x98, 0x10, 0x01, 0x98, 0x88, 0xb9, 0xe2, 0xb4, 0x81, 0x38, 0x98,
-	0x68, 0xb6, 0xd2, 0xfa, 0xbc, 0x58, 0x2f, 0xd7, 0x57, 0x57, 0x42, 0xb7, 0x04, 0xdd, 0xcc, 0xb1,
-	0xe1, 0x31, 0xd0, 0xc2, 0x88, 0x90, 0xa5, 0xcf, 0xb8, 0xbf, 0x98, 0x62, 0xc6, 0x1d, 0x4e, 0x9e,
-	0x9d, 0x06, 0xc9, 0x5d, 0x54, 0x77, 0xb6, 0xfd, 0x70, 0x5d, 0x09, 0xa9, 0x39, 0xfe, 0x28, 0xa5,
-	0x27, 0x77, 0xa7, 0x02, 0x6e, 0x64, 0x6f, 0xa0, 0xf1, 0x7b, 0x09, 0xec, 0x66, 0x6e, 0x22, 0xe7,
-	0xf9, 0x7f, 0x34, 0xd4, 0xbc, 0xcc, 0x50, 0x55, 0x4f, 0x26, 0x87, 0xce, 0x97, 0x7a, 0x3a, 0x39,
-	0xf4, 0xf1, 0x12, 0x39, 0xcf, 0x0b, 0x8c, 0xb4, 0xdf, 0x61, 0xe4, 0xbb, 0x74, 0xde, 0xa7, 0x7f,
-	0x2f, 0xcb, 0xa0, 0x82, 0xc8, 0x9c, 0x9e, 0x91, 0xff, 0xe1, 0x7d, 0x8d, 0x40, 0x35, 0x8a, 0xb5,
-	0x9c, 0x00, 0x47, 0xc4, 0x61, 0x74, 0x21, 0x4c, 0xac, 0xb6, 0xbe, 0x29, 0x90, 0xc8, 0x15, 0x4d,
-	0xd6, 0x4e, 0x80, 0x04, 0x07, 0xed, 0x45, 0xf9, 0x6d, 0xe3, 0x97, 0x12, 0xd8, 0x5b, 0x03, 0xc0,
-	0x1a, 0xd0, 0x90, 0xd5, 0x1f, 0x3e, 0x69, 0xf7, 0x30, 0xb2, 0xda, 0xa3, 0xe1, 0x00, 0x3f, 0x1e,
-	0x8c, 0x8e, 0x2c, 0xd3, 0x7e, 0x68, 0x5b, 0x1d, 0x45, 0x82, 0x77, 0x41, 0x63, 0x23, 0xdf, 0xb1,
-	0x90, 0x39, 0xec, 0xf5, 0xda, 0x63, 0x0b, 0xb5, 0x7b, 0xf6, 0xb1, 0xd5, 0x51, 0xe4, 0x02, 0x1c,
-	0xb2, 0x3a, 0x8f, 0x4d, 0x0b, 0x0f, 0x07, 0xbd, 0x1f, 0xb1, 0x3d, 0x78, 0xd2, 0xee, 0xd9, 0x1d,
-	0xa5, 0x04, 0x1f, 0x00, 0xe3, 0x2d, 0x5c, 0x9a, 0xc3, 0x3f, 0x74, 0xad, 0x01, 0x1e, 0x23, 0xfb,
-	0xd1, 0x23, 0x0b, 0x59, 0x1d, 0x7c, 0x34, 0x1c, 0x8d, 0x05, 0x59, 0x29, 0xc3, 0x03, 0x70, 0xef,
-	0x6a, 0xa4, 0x91, 0xd5, 0x7b, 0x88, 0xc7, 0xa8, 0xdd, 0xb1, 0x94, 0x1d, 0x58, 0x07, 0xb7, 0xdf,
-	0x62, 0xbd, 0x01, 0xda, 0x43, 0x53, 0xb9, 0xd6, 0x7a, 0x59, 0x02, 0xe5, 0x3e, 0x9b, 0xc2, 0x10,
-	0xc0, 0x82, 0x6f, 0x4b, 0xf3, 0x92, 0xf7, 0xbf, 0x81, 0xd4, 0xee, 0x5d, 0x15, 0xb9, 0x1a, 0x5c,
-	0xf0, 0x29, 0x00, 0xb9, 0x51, 0xbf, 0x75, 0xd2, 0x68, 0xcd, 0x6d, 0x88, 0x4c, 0xf9, 0x27, 0x50,
-	0xc9, 0xcf, 0xf8, 0xed, 0x43, 0x47, 0xfb, 0x6a, 0x2b, 0x64, 0x25, 0x7e, 0xd8, 0x7e, 0x75, 0x5e,
-	0x93, 0x5f, 0x9f, 0xd7, 0xe4, 0x7f, 0xce, 0x6b, 0xf2, 0xaf, 0x17, 0x35, 0xe9, 0xf5, 0x45, 0x4d,
-	0xfa, 0xeb, 0xa2, 0x26, 0x1d, 0x7f, 0x39, 0xf5, 0xf9, 0xec, 0x74, 0xa2, 0xbb, 0x74, 0x6e, 0xac,
-	0x7d, 0xce, 0xcf, 0x0e, 0x8c, 0x65, 0xfa, 0x9f, 0xe2, 0x45, 0x48, 0xd8, 0xe4, 0x03, 0x91, 0x79,
-	0xf0, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x92, 0x21, 0xd0, 0xee, 0x75, 0x08, 0x00, 0x00,
+	// 545 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x94, 0xcf, 0x6e, 0xd3, 0x4e,
+	0x10, 0xc7, 0xed, 0xe6, 0xf7, 0xa3, 0x30, 0x49, 0x4a, 0x30, 0x7f, 0x6a, 0x59, 0xd4, 0x09, 0x39,
+	0x14, 0x73, 0x89, 0x51, 0xe8, 0x0d, 0x71, 0x20, 0x15, 0x28, 0x1c, 0xa2, 0x06, 0x2b, 0x07, 0x04,
+	0x07, 0xcb, 0xb1, 0x17, 0xc7, 0xc2, 0xf6, 0x18, 0xef, 0xa6, 0xa4, 0x6f, 0xc1, 0x93, 0x70, 0xe6,
+	0x11, 0x7a, 0xec, 0xb1, 0x27, 0x84, 0x92, 0x17, 0x41, 0xbb, 0x76, 0x8c, 0xa3, 0x38, 0x2a, 0x37,
+	0xef, 0xcc, 0x67, 0x66, 0xf6, 0x3b, 0xfe, 0x6a, 0x41, 0xf3, 0x2e, 0xbc, 0x45, 0x92, 0x22, 0x43,
+	0x17, 0x43, 0xd3, 0x0d, 0x71, 0x6a, 0xb2, 0x45, 0x4f, 0x04, 0x94, 0x7b, 0xe5, 0x5c, 0x8f, 0xe7,
+	0xb4, 0x07, 0x3e, 0xfa, 0x28, 0x42, 0x26, 0xff, 0xca, 0x40, 0xed, 0x68, 0xbb, 0x09, 0xa6, 0x1e,
+	0x49, 0xf3, 0xf4, 0xf1, 0x8e, 0xb4, 0x9d, 0x92, 0x08, 0xcf, 0x9d, 0x90, 0xe6, 0x5c, 0x7b, 0x9b,
+	0x8b, 0x1c, 0xe6, 0xce, 0x48, 0x0e, 0x74, 0x03, 0x78, 0x38, 0xa2, 0xfe, 0x38, 0xc5, 0x04, 0x29,
+	0xf1, 0xce, 0x12, 0x92, 0x3a, 0x2c, 0xc0, 0x98, 0x2a, 0x63, 0x68, 0x61, 0x71, 0xb2, 0xbf, 0xce,
+	0xc9, 0x9c, 0xa8, 0x72, 0xa7, 0x66, 0xd4, 0xfb, 0xed, 0xde, 0x96, 0x88, 0x5e, 0x51, 0x68, 0x39,
+	0xdf, 0x06, 0xff, 0x5d, 0xfe, 0x6a, 0x4b, 0xd6, 0xdd, 0xbf, 0xe5, 0xef, 0x79, 0x75, 0xb7, 0x0d,
+	0x47, 0x95, 0xa3, 0x2c, 0x42, 0x13, 0x8c, 0x29, 0xe9, 0xbe, 0x81, 0x26, 0x07, 0x42, 0xc7, 0x25,
+	0x67, 0x5c, 0x8c, 0x72, 0x02, 0xff, 0x0b, 0x55, 0xaa, 0xdc, 0x91, 0x8d, 0x7a, 0x5f, 0xad, 0x1a,
+	0xcc, 0xf3, 0xf9, 0xc4, 0x0c, 0xee, 0x1e, 0x66, 0x92, 0x8a, 0x36, 0x45, 0xff, 0x9f, 0x32, 0x1c,
+	0x8c, 0xa8, 0x7f, 0xea, 0xc4, 0x2e, 0x09, 0xb3, 0x09, 0x2f, 0xe1, 0x76, 0xb6, 0xb7, 0xc0, 0xcb,
+	0x87, 0x68, 0xbb, 0x86, 0xbc, 0xf3, 0xf2, 0x31, 0xfb, 0x98, 0x1d, 0x95, 0x63, 0x38, 0xf0, 0x11,
+	0x3d, 0x9b, 0x05, 0xa1, 0x3d, 0x0d, 0xd1, 0xfd, 0xa2, 0xee, 0x75, 0x64, 0xa3, 0x39, 0x94, 0xac,
+	0x06, 0x8f, 0x4f, 0x82, 0x70, 0xc0, 0xa3, 0x8a, 0x09, 0xf7, 0x37, 0x39, 0x9b, 0x05, 0x11, 0x51,
+	0x6b, 0x1d, 0xd9, 0xd8, 0x1f, 0x4a, 0x56, 0xab, 0x0c, 0x4f, 0x82, 0x88, 0x0c, 0x5a, 0xa5, 0xc6,
+	0x18, 0x13, 0xfc, 0xdc, 0x55, 0xe1, 0xd1, 0xe6, 0xcd, 0x0b, 0x51, 0xd7, 0x32, 0x34, 0xca, 0xdb,
+	0xe7, 0x4b, 0x13, 0xbf, 0x38, 0xd7, 0xf3, 0xb8, 0x42, 0xcf, 0x69, 0x88, 0xd3, 0x11, 0x67, 0x86,
+	0x92, 0x95, 0xc1, 0xca, 0x2b, 0xd0, 0xe8, 0x0c, 0x53, 0x66, 0x33, 0x92, 0x46, 0x76, 0xb6, 0x93,
+	0x84, 0xaf, 0x30, 0x22, 0x31, 0x13, 0xba, 0x1a, 0x43, 0xc9, 0x3a, 0x14, 0xcc, 0x84, 0xa4, 0x91,
+	0xb8, 0xc4, 0x78, 0x0d, 0x28, 0x6f, 0xa1, 0xb9, 0xe1, 0x3f, 0x21, 0x6e, 0x87, 0x55, 0xb2, 0xeb,
+	0x0b, 0x8c, 0xaf, 0x0a, 0x4b, 0xe7, 0x41, 0x1d, 0xee, 0x14, 0xb6, 0xe9, 0xff, 0xd8, 0x83, 0xda,
+	0x88, 0xfa, 0x4a, 0x02, 0x4a, 0x85, 0x41, 0x8d, 0x8a, 0xde, 0x95, 0xfe, 0xd2, 0x9e, 0xff, 0x2b,
+	0xb9, 0x5e, 0xaa, 0xf2, 0x01, 0xa0, 0x64, 0xc3, 0xce, 0x8e, 0xfa, 0x82, 0xd0, 0x8c, 0x9b, 0x88,
+	0xa2, 0xf3, 0x27, 0xa8, 0x97, 0xfd, 0xf7, 0xa4, 0xba, 0xb0, 0x84, 0x68, 0xcf, 0x6e, 0x44, 0xd6,
+	0xcd, 0x07, 0xaf, 0x2f, 0x97, 0xba, 0x7c, 0xb5, 0xd4, 0xe5, 0xdf, 0x4b, 0x5d, 0xfe, 0xbe, 0xd2,
+	0xa5, 0xab, 0x95, 0x2e, 0x5d, 0xaf, 0x74, 0xe9, 0xe3, 0x53, 0x3f, 0x60, 0xb3, 0xf9, 0xb4, 0xe7,
+	0x62, 0x64, 0x6e, 0x3c, 0x09, 0xe7, 0x27, 0xe6, 0x22, 0x7f, 0xa3, 0x2e, 0x12, 0x42, 0xa7, 0xb7,
+	0x44, 0xe6, 0xc5, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xc9, 0x07, 0x8b, 0x11, 0xc5, 0x04, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -935,15 +663,6 @@ func (m *MsgProposedOperations) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.AddToOrderbookCollatCheckOrderHashes) > 0 {
-		for iNdEx := len(m.AddToOrderbookCollatCheckOrderHashes) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.AddToOrderbookCollatCheckOrderHashes[iNdEx])
-			copy(dAtA[i:], m.AddToOrderbookCollatCheckOrderHashes[iNdEx])
-			i = encodeVarintTx(dAtA, i, uint64(len(m.AddToOrderbookCollatCheckOrderHashes[iNdEx])))
-			i--
-			dAtA[i] = 0x12
-		}
-	}
 	if len(m.OperationsQueue) > 0 {
 		for iNdEx := len(m.OperationsQueue) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -1130,122 +849,6 @@ func (m *MsgCancelOrderResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *Operation) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Operation) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Operation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Operation != nil {
-		{
-			size := m.Operation.Size()
-			i -= size
-			if _, err := m.Operation.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Operation_Match) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Operation_Match) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.Match != nil {
-		{
-			size, err := m.Match.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-func (m *Operation_OrderPlacement) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Operation_OrderPlacement) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.OrderPlacement != nil {
-		{
-			size, err := m.OrderPlacement.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	return len(dAtA) - i, nil
-}
-func (m *Operation_OrderCancellation) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Operation_OrderCancellation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.OrderCancellation != nil {
-		{
-			size, err := m.OrderCancellation.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	return len(dAtA) - i, nil
-}
-func (m *Operation_PreexistingStatefulOrder) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Operation_PreexistingStatefulOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.PreexistingStatefulOrder != nil {
-		{
-			size, err := m.PreexistingStatefulOrder.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x22
-	}
-	return len(dAtA) - i, nil
-}
 func (m *OperationRaw) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1299,37 +902,32 @@ func (m *OperationRaw_Match) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *OperationRaw_OrderPlacement) MarshalTo(dAtA []byte) (int, error) {
+func (m *OperationRaw_ShortTermOrderPlacement) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OperationRaw_OrderPlacement) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OperationRaw_ShortTermOrderPlacement) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
-	if m.OrderPlacement != nil {
-		{
-			size, err := m.OrderPlacement.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
+	if m.ShortTermOrderPlacement != nil {
+		i -= len(m.ShortTermOrderPlacement)
+		copy(dAtA[i:], m.ShortTermOrderPlacement)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ShortTermOrderPlacement)))
 		i--
 		dAtA[i] = 0x12
 	}
 	return len(dAtA) - i, nil
 }
-func (m *OperationRaw_OrderCancellation) MarshalTo(dAtA []byte) (int, error) {
+func (m *OperationRaw_OrderRemoval) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OperationRaw_OrderCancellation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OperationRaw_OrderRemoval) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
-	if m.OrderCancellation != nil {
+	if m.OrderRemoval != nil {
 		{
-			size, err := m.OrderCancellation.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.OrderRemoval.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1341,65 +939,6 @@ func (m *OperationRaw_OrderCancellation) MarshalToSizedBuffer(dAtA []byte) (int,
 	}
 	return len(dAtA) - i, nil
 }
-func (m *OperationRaw_PreexistingStatefulOrder) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *OperationRaw_PreexistingStatefulOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.PreexistingStatefulOrder != nil {
-		{
-			size, err := m.PreexistingStatefulOrder.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x22
-	}
-	return len(dAtA) - i, nil
-}
-func (m *RemoveOrder) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *RemoveOrder) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *RemoveOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.RemovalReason != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.RemovalReason))
-		i--
-		dAtA[i] = 0x10
-	}
-	{
-		size, err := m.OrderId.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1420,12 +959,6 @@ func (m *MsgProposedOperations) Size() (n int) {
 	if len(m.OperationsQueue) > 0 {
 		for _, e := range m.OperationsQueue {
 			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	if len(m.AddToOrderbookCollatCheckOrderHashes) > 0 {
-		for _, b := range m.AddToOrderbookCollatCheckOrderHashes {
-			l = len(b)
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
@@ -1502,66 +1035,6 @@ func (m *MsgCancelOrderResponse) Size() (n int) {
 	return n
 }
 
-func (m *Operation) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Operation != nil {
-		n += m.Operation.Size()
-	}
-	return n
-}
-
-func (m *Operation_Match) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Match != nil {
-		l = m.Match.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-func (m *Operation_OrderPlacement) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.OrderPlacement != nil {
-		l = m.OrderPlacement.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-func (m *Operation_OrderCancellation) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.OrderCancellation != nil {
-		l = m.OrderCancellation.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-func (m *Operation_PreexistingStatefulOrder) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.PreexistingStatefulOrder != nil {
-		l = m.PreexistingStatefulOrder.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
 func (m *OperationRaw) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1586,52 +1059,27 @@ func (m *OperationRaw_Match) Size() (n int) {
 	}
 	return n
 }
-func (m *OperationRaw_OrderPlacement) Size() (n int) {
+func (m *OperationRaw_ShortTermOrderPlacement) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.OrderPlacement != nil {
-		l = m.OrderPlacement.Size()
+	if m.ShortTermOrderPlacement != nil {
+		l = len(m.ShortTermOrderPlacement)
 		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
 }
-func (m *OperationRaw_OrderCancellation) Size() (n int) {
+func (m *OperationRaw_OrderRemoval) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.OrderCancellation != nil {
-		l = m.OrderCancellation.Size()
+	if m.OrderRemoval != nil {
+		l = m.OrderRemoval.Size()
 		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-func (m *OperationRaw_PreexistingStatefulOrder) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.PreexistingStatefulOrder != nil {
-		l = m.PreexistingStatefulOrder.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-func (m *RemoveOrder) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.OrderId.Size()
-	n += 1 + l + sovTx(uint64(l))
-	if m.RemovalReason != 0 {
-		n += 1 + sovTx(uint64(m.RemovalReason))
 	}
 	return n
 }
@@ -1700,42 +1148,10 @@ func (m *MsgProposedOperations) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.OperationsQueue = append(m.OperationsQueue, Operation{})
+			m.OperationsQueue = append(m.OperationsQueue, OperationRaw{})
 			if err := m.OperationsQueue[len(m.OperationsQueue)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AddToOrderbookCollatCheckOrderHashes", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AddToOrderbookCollatCheckOrderHashes = append(m.AddToOrderbookCollatCheckOrderHashes, make([]byte, postIndex-iNdEx))
-			copy(m.AddToOrderbookCollatCheckOrderHashes[len(m.AddToOrderbookCollatCheckOrderHashes)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2105,196 +1521,6 @@ func (m *MsgCancelOrderResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Operation) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Operation: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Operation: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Match", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &ClobMatch{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Operation = &Operation_Match{v}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OrderPlacement", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &MsgPlaceOrder{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Operation = &Operation_OrderPlacement{v}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OrderCancellation", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &MsgCancelOrder{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Operation = &Operation_OrderCancellation{v}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PreexistingStatefulOrder", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &OrderId{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Operation = &Operation_PreexistingStatefulOrder{v}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *OperationRaw) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2361,9 +1587,9 @@ func (m *OperationRaw) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OrderPlacement", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ShortTermOrderPlacement", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -2373,30 +1599,28 @@ func (m *OperationRaw) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &tx.TxRaw{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Operation = &OperationRaw_OrderPlacement{v}
+			v := make([]byte, postIndex-iNdEx)
+			copy(v, dAtA[iNdEx:postIndex])
+			m.Operation = &OperationRaw_ShortTermOrderPlacement{v}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OrderCancellation", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OrderRemoval", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2423,149 +1647,12 @@ func (m *OperationRaw) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &tx.TxRaw{}
+			v := &OrderRemoval{}
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.Operation = &OperationRaw_OrderCancellation{v}
+			m.Operation = &OperationRaw_OrderRemoval{v}
 			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PreexistingStatefulOrder", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &OrderId{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Operation = &OperationRaw_PreexistingStatefulOrder{v}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *RemoveOrder) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: RemoveOrder: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RemoveOrder: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.OrderId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RemovalReason", wireType)
-			}
-			m.RemovalReason = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.RemovalReason |= RemoveOrder_RemovalReason(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

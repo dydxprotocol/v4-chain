@@ -31,6 +31,63 @@ var (
 	)
 )
 
+func TestIsExchangeError_Mixed(t *testing.T) {
+	tests := map[string]struct {
+		err             error
+		isExchangeError bool
+	}{
+		"Exchange Error - server sent GOAWAY": {
+			err:             fmt.Errorf(`http2: server sent GOAWAY and closed the connection`),
+			isExchangeError: true,
+		},
+		"Exchange Error - server sent GOAWAY with extra text": {
+			err:             fmt.Errorf(`http2: server sent GOAWAY and closed the connection blah blah blah`),
+			isExchangeError: true,
+		},
+		"Exchange Error - Huobi response status is not ok": {
+			err:             fmt.Errorf(`huobi response status is not "ok"`),
+			isExchangeError: true,
+		},
+		"Exchange Error - Crypto.com": {
+			err:             fmt.Errorf(`response code is not 0`),
+			isExchangeError: true,
+		},
+		"Exchange Error - Binance": {
+			err: fmt.Errorf(
+				`(Key: 'BinanceTicker.AskPrice' Error:Field validation for 'AskPrice' failed on the ` +
+					`'positive-float-string' tag\nKey: 'BinanceTicker.BidPrice' Error:Field validation for ` +
+					`'BidPrice' failed on the 'positive-float-string' tag)`,
+			),
+			isExchangeError: true,
+		},
+		"Exchange Error - Binance BidPrice": {
+			err:             fmt.Errorf(`Key: 'BinanceTicker.BidPrice' Error`),
+			isExchangeError: true,
+		},
+		"Exchange Error - internal error": {
+			err:             fmt.Errorf("internal error: something went wrong"),
+			isExchangeError: true,
+		},
+		"Exchange Error - Internal error": {
+			err:             fmt.Errorf("Internal error: something went wrong"),
+			isExchangeError: true,
+		},
+		"Exchange Error - generic": {
+			err:             fmt.Errorf("Unexpected response status code of: 5"),
+			isExchangeError: true,
+		},
+		"Not exchange error": {
+			err:             fmt.Errorf("some other error"),
+			isExchangeError: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, tc.isExchangeError, IsExchangeError(tc.err))
+		})
+	}
+}
+
 func TestGetApiResponseValidator_validatePositiveNumericString_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		testValue     string
@@ -320,44 +377,44 @@ func TestGetFloatValuesFromMap(t *testing.T) {
 	}
 }
 
-func TestGetOnlyMarketSymbolAndExponent(t *testing.T) {
+func TestGetOnlyTickerAndExponent(t *testing.T) {
 	tests := map[string]struct {
 		//parameters
-		marketPriceExponent map[string]int32
-		exchange            string
+		tickerToExponent map[string]int32
+		exchange         string
 
 		// expectations
-		expectedSymbol   string
+		expectedTicker   string
 		expectedExponent int32
 		expectedError    error
 	}{
 		"Success - isPositive = true and exchange = Binance": {
-			marketPriceExponent: map[string]int32{
+			tickerToExponent: map[string]int32{
 				ETHUSDC: 6,
 			},
 			exchange:         exchange_common.EXCHANGE_NAME_BINANCE,
-			expectedSymbol:   ETHUSDC,
+			expectedTicker:   ETHUSDC,
 			expectedExponent: 6,
 		},
 
 		"Success - isNegative = false and exchange = Bitfinex": {
-			marketPriceExponent: map[string]int32{
+			tickerToExponent: map[string]int32{
 				ETHUSDC: -6,
 			},
 			exchange:         exchange_common.EXCHANGE_NAME_BITFINEX,
-			expectedSymbol:   ETHUSDC,
+			expectedTicker:   ETHUSDC,
 			expectedExponent: -6,
 		},
 		"Failure - no exponents": {
-			marketPriceExponent: map[string]int32{},
-			exchange:            exchange_common.EXCHANGE_NAME_BINANCE,
+			tickerToExponent: map[string]int32{},
+			exchange:         exchange_common.EXCHANGE_NAME_BINANCE,
 			expectedError: errors.New(
 				"Invalid market price exponent map for Binance price function of length: 0, expected length 1",
 			),
 		},
 
 		"Failure - too many exponents": {
-			marketPriceExponent: map[string]int32{
+			tickerToExponent: map[string]int32{
 				ETHUSDC: -6,
 				BTCUSDC: -8,
 			},
@@ -370,22 +427,22 @@ func TestGetOnlyMarketSymbolAndExponent(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			symbol,
+			ticker,
 				exponent,
-				err := GetOnlyMarketSymbolAndExponent(
-				tc.marketPriceExponent,
+				err := GetOnlyTickerAndExponent(
+				tc.tickerToExponent,
 				tc.exchange,
 			)
 
 			if tc.expectedError != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
 
-				require.Equal(t, tc.expectedSymbol, symbol)
+				require.Equal(t, tc.expectedTicker, ticker)
 				require.Equal(t, tc.expectedExponent, exponent)
 			} else {
 				require.NoError(t, err)
 
-				require.Equal(t, tc.expectedSymbol, symbol)
+				require.Equal(t, tc.expectedTicker, ticker)
 				require.Equal(t, tc.expectedExponent, exponent)
 			}
 		})
@@ -638,6 +695,41 @@ func TestReverseShiftBigFloatSlice(t *testing.T) {
 				bigSliceToFloatSlice(updatedFloatValues),
 				deltaPrecision,
 			)
+		})
+	}
+}
+
+func TestConvertFloat64ToString(t *testing.T) {
+	tests := map[string]struct {
+		// parameters
+		float64Value float64
+
+		// expectations
+		expectedFloat64String string
+	}{
+		"Success with low precision number": {
+			float64Value:          float64(1.23),
+			expectedFloat64String: "1.23",
+		},
+		"Success with a high precision number": {
+			float64Value:          float64(0.12345678987654321),
+			expectedFloat64String: "0.12345678987654321",
+		},
+		"Success with a large positive number": {
+			float64Value:          float64(123456789.12345),
+			expectedFloat64String: "123456789.12345",
+		},
+		"Success with a large negative number": {
+			float64Value:          float64(-123456789.12345),
+			expectedFloat64String: "-123456789.12345",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			float64String := ConvertFloat64ToString(tc.float64Value)
+
+			require.Equal(t, tc.expectedFloat64String, float64String)
 		})
 	}
 }

@@ -15,31 +15,43 @@ func TestLiquidityTierValidate(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		BasePositionNotional   uint64
+		ImpactNotional         uint64
 		expectedError          error
 	}{
 		"Validates successfully": {
 			initialMarginPpm:       150_000,           // 15%
 			maintenanceFractionPpm: 800_000,           // 80% of IM
 			BasePositionNotional:   1_000_000_000_000, // 1 million USDC
+			ImpactNotional:         3_333_000_000,     // 3_333 USDC
 			expectedError:          nil,
 		},
 		"Failure: initial margin ppm exceeds max": {
 			initialMarginPpm:       1_000_001,         // above 100%
 			maintenanceFractionPpm: 800_000,           // 80% of IM
 			BasePositionNotional:   1_000_000_000_000, // 1 million USDC
+			ImpactNotional:         1_000_000_000,     // 1_000 USDC
 			expectedError:          types.ErrInitialMarginPpmExceedsMax,
 		},
 		"Failure: maintenance fraction ppm exceeds max": {
 			initialMarginPpm:       1_000_000,         // 100%
 			maintenanceFractionPpm: 1_000_001,         // above 100%
 			BasePositionNotional:   1_000_000_000_000, // 1 million USDC
+			ImpactNotional:         1_000_000_000,     // 1_000 USDC
 			expectedError:          types.ErrMaintenanceFractionPpmExceedsMax,
 		},
 		"Failure: base position notional is zero": {
-			initialMarginPpm:       1_000_000, // 100%
-			maintenanceFractionPpm: 1_000_000, // 100%
-			BasePositionNotional:   0,         // 0
+			initialMarginPpm:       1_000_000,   // 100%
+			maintenanceFractionPpm: 1_000_000,   // 100%
+			BasePositionNotional:   0,           // 0
+			ImpactNotional:         500_000_000, // 500 USDC
 			expectedError:          types.ErrBasePositionNotionalIsZero,
+		},
+		"Failure: impact notional is zero": {
+			initialMarginPpm:       1_000_000,         // 100%
+			maintenanceFractionPpm: 1_000_000,         // 100%
+			BasePositionNotional:   1_000_000_000_000, // 1 million USDC
+			ImpactNotional:         0,                 // 0
+			expectedError:          types.ErrImpactNotionalIsZero,
 		},
 	}
 
@@ -50,6 +62,7 @@ func TestLiquidityTierValidate(t *testing.T) {
 				InitialMarginPpm:       tc.initialMarginPpm,
 				MaintenanceFractionPpm: tc.maintenanceFractionPpm,
 				BasePositionNotional:   tc.BasePositionNotional,
+				ImpactNotional:         tc.ImpactNotional,
 			}
 
 			err := liquidityTier.Validate()

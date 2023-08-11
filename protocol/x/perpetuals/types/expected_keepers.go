@@ -8,10 +8,10 @@ import (
 )
 
 type PricesKeeper interface {
-	GetMarket(
+	GetMarketPrice(
 		ctx sdk.Context,
 		id uint32,
-	) (market pricestypes.Market, err error)
+	) (marketPrice pricestypes.MarketPrice, err error)
 }
 
 // PricePremiumGetter defines an interface that returns price premium for a perpetual.

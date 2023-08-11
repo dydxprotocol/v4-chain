@@ -28,10 +28,10 @@ const (
 	FAKEUSD_ID              = 100001
 	unavailableId           = 100002
 	// No price exponent exists for this fake pair.
-	noPriceExponentMarketSymbol = "INVALID-USD"
-	noMarketSymbol              = "NO-MARKET-SYMBOL"
-	unavailableSymbol           = "UNAVAILABLE"
-	unavailableExponent         = -6
+	noPriceExponentTicker = "INVALID-USD"
+	noMarketTicker        = "NO-MARKET-SYMBOL"
+	unavailableTicker     = "UNAVAILABLE"
+	unavailableExponent   = -6
 )
 
 var (
@@ -40,11 +40,14 @@ var (
 	tickerNotAvailableError = errors.New("Ticker not available")
 	baseEqd                 = &types.ExchangeQueryDetails{
 		Url: "https://api.binance.us/api/v3/ticker/24hr?symbol=$",
-		MarketSymbols: map[types.MarketId]string{
+	}
+	baseEmc = &types.MutableExchangeMarketConfig{
+		Id: "BinanceUS",
+		MarketToTicker: map[types.MarketId]string{
 			exchange_common.MARKET_BTC_USD: constants.BtcUsdPair,
 			exchange_common.MARKET_ETH_USD: constants.EthUsdPair,
-			noPriceExponentMarketId:        noPriceExponentMarketSymbol,
-			unavailableId:                  unavailableSymbol,
+			noPriceExponentMarketId:        noPriceExponentTicker,
+			unavailableId:                  unavailableTicker,
 		},
 	}
 	testMarketExponentMap = generateTestMarketPriceExponentMap()
@@ -58,7 +61,7 @@ func TestQuery(t *testing.T) {
 		// parameters
 		priceFunc func(
 			response *http.Response,
-			marketSymbolPriceExponentMap map[string]int32,
+			tickerToPriceExponent map[string]int32,
 			medianizer lib.Medianizer,
 		) (prices map[string]uint64, unavailable map[string]error, err error)
 		marketIds      []types.MarketId
@@ -112,14 +115,14 @@ func TestQuery(t *testing.T) {
 				},
 			},
 		},
-		"Success - multiple markets and unavailable symbol": {
-			priceFunc: priceFuncWithValidAndUnavailableSymbols,
+		"Success - multiple markets and unavailable ticker": {
+			priceFunc: priceFuncWithValidAndUnavailableTickers,
 			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD, exchange_common.MARKET_ETH_USD, unavailableId},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{
 					constants.BtcUsdPair,
 					constants.EthUsdPair,
-					unavailableSymbol,
+					unavailableTicker,
 				}),
 				successStatus,
 				nil,
@@ -141,8 +144,8 @@ func TestQuery(t *testing.T) {
 				unavailableId: tickerNotAvailableError,
 			},
 		},
-		"Failure - price function returns non-existent unavailable symbol": {
-			priceFunc: priceFuncReturnsInvalidUnavailableSymbol,
+		"Failure - price function returns non-existent unavailable ticker": {
+			priceFunc: priceFuncReturnsInvalidUnavailableTicker,
 			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{
@@ -152,7 +155,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: true,
-			expectedError:    fmt.Errorf("Severe unexpected error: no market id for symbol: %s", noMarketSymbol),
+			expectedError:    fmt.Errorf("Severe unexpected error: no market id for ticker: %s", noMarketTicker),
 		},
 		"Failure - no marketIds queried": {
 			marketIds: []types.MarketId{},
@@ -164,7 +167,7 @@ func TestQuery(t *testing.T) {
 			expectApiRequest: false,
 			expectedError:    errors.New("At least one marketId must be queried"),
 		},
-		"Failure - market symbol not defined for market": {
+		"Failure - ticker not defined for market": {
 			marketIds: []types.MarketId{FAKEUSD_ID},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{}),
@@ -172,7 +175,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: false,
-			expectedError:    fmt.Errorf("No market symbol for id: %v", FAKEUSD_ID),
+			expectedError:    fmt.Errorf("No ticker for market: %v", FAKEUSD_ID),
 		},
 		"Failure - market price exponent not defined for market": {
 			marketIds: []types.MarketId{noPriceExponentMarketId},
@@ -240,8 +243,8 @@ func TestQuery(t *testing.T) {
 			),
 			expectApiRequest: true,
 			expectedError: fmt.Errorf(
-				"Severe unexpected error: no market id for symbol: %v",
-				noMarketSymbol,
+				"Severe unexpected error: no market id for ticker: %v",
+				noMarketTicker,
 			),
 		},
 	}
@@ -253,6 +256,7 @@ func TestQuery(t *testing.T) {
 			prices, unavailableMarkets, err := eqh.Query(
 				context.Background(),
 				baseEqd,
+				baseEmc,
 				tc.marketIds,
 				tc.requestHandler,
 				testMarketExponentMap,
@@ -293,63 +297,65 @@ func generateMockRequestHandler(url string, statusCode int, err error) *mocks.Re
 }
 
 func generateTestMarketPriceExponentMap() map[types.MarketId]types.Exponent {
-	marketExponents := make(map[types.MarketId]types.Exponent, len(pf_constants.StaticMarketPriceExponent)+1)
-	for market, exponent := range pf_constants.StaticMarketPriceExponent {
-		marketExponents[market] = exponent
-	}
+	marketExponents := make(map[types.MarketId]types.Exponent, 6)
+	marketExponents[exchange_common.MARKET_BTC_USD] = constants.BtcUsdExponent
+	marketExponents[exchange_common.MARKET_ETH_USD] = constants.EthUsdExponent
+	marketExponents[exchange_common.MARKET_LINK_USD] = constants.LinkUsdExponent
+	marketExponents[exchange_common.MARKET_MATIC_USD] = constants.MaticUsdExponent
+	marketExponents[exchange_common.MARKET_CRV_USD] = constants.CrvUsdExponent
 	marketExponents[unavailableId] = unavailableExponent
 	return marketExponents
 }
 
 func priceFunc(
 	response *http.Response,
-	marketSymbolPriceExponentMap map[string]int32,
+	tickerToPriceExponent map[string]int32,
 	medianizer lib.Medianizer,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
-	prices = make(map[string]uint64, len(marketSymbolPriceExponentMap))
-	for symbol := range marketSymbolPriceExponentMap {
-		prices[symbol] = dummyPrice
+	prices = make(map[string]uint64, len(tickerToPriceExponent))
+	for ticker := range tickerToPriceExponent {
+		prices[ticker] = dummyPrice
 	}
 	return prices, nil, nil
 }
 
 func priceFuncWithInvalidResponse(
 	response *http.Response,
-	marketSymbolPriceExponentMap map[string]int32,
+	tickerToPriceExponent map[string]int32,
 	medianizer lib.Medianizer,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
-	prices = make(map[string]uint64, len(marketSymbolPriceExponentMap))
-	for range marketSymbolPriceExponentMap {
-		prices[noMarketSymbol] = dummyPrice
+	prices = make(map[string]uint64, len(tickerToPriceExponent))
+	for range tickerToPriceExponent {
+		prices[noMarketTicker] = dummyPrice
 	}
 	return prices, nil, nil
 }
 
-func priceFuncWithValidAndUnavailableSymbols(
+func priceFuncWithValidAndUnavailableTickers(
 	response *http.Response,
-	marketSymbolPriceExponentMap map[string]int32,
+	tickerToPriceExponent map[string]int32,
 	medianizer lib.Medianizer,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
-	prices = make(map[string]uint64, len(marketSymbolPriceExponentMap))
-	for symbol := range marketSymbolPriceExponentMap {
-		if symbol != unavailableSymbol {
-			prices[symbol] = dummyPrice
+	prices = make(map[string]uint64, len(tickerToPriceExponent))
+	for ticker := range tickerToPriceExponent {
+		if ticker != unavailableTicker {
+			prices[ticker] = dummyPrice
 		}
 	}
-	return prices, map[string]error{unavailableSymbol: tickerNotAvailableError}, nil
+	return prices, map[string]error{unavailableTicker: tickerNotAvailableError}, nil
 }
 
-func priceFuncReturnsInvalidUnavailableSymbol(
+func priceFuncReturnsInvalidUnavailableTicker(
 	response *http.Response,
-	marketSymbolPriceExponentMap map[string]int32,
+	tickerToPriceExponent map[string]int32,
 	medianizer lib.Medianizer,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
-	return nil, map[string]error{noMarketSymbol: tickerNotAvailableError}, nil
+	return nil, map[string]error{noMarketTicker: tickerNotAvailableError}, nil
 }
 
 func priceFuncWithErr(
 	response *http.Response,
-	marketSymbolPriceExponentMap map[string]int32,
+	tickerToPriceExponent map[string]int32,
 	medianizer lib.Medianizer,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
 	return nil, nil, priceFuncError

@@ -74,19 +74,19 @@ func SimulateMsgUpdateMarketPrices(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		proposer, _ := simtypes.RandomAcc(r, accs)
 
-		allMarkets := k.GetAllMarkets(ctx)
+		allMarketParamPrices, _ := k.GetAllMarketParamPrices(ctx)
 
 		priceUpdates := make([]*types.MsgUpdateMarketPrices_MarketPrice, 0)
-		for _, market := range allMarkets {
+		for _, marketParamPrice := range allMarketParamPrices {
 			// 50% chance of updating the price.
 			if sim_helpers.RandBool(r) {
-				newPrice := getRandomlyUpdatedPrice(r, market)
+				newPrice := getRandomlyUpdatedPrice(r, marketParamPrice)
 
 				// only update if the new price is not 0
 				if newPrice != 0 {
 					priceUpdates = append(
 						priceUpdates,
-						types.NewMarketPriceUpdate(market.Id, newPrice),
+						types.NewMarketPriceUpdate(marketParamPrice.Param.Id, newPrice),
 					)
 				}
 			}
@@ -123,9 +123,11 @@ func SimulateMsgUpdateMarketPrices(
 }
 
 // getRandomlyUpdatedPrice returns a valid, random new market price.
-func getRandomlyUpdatedPrice(r *rand.Rand, market types.Market) uint64 {
-	randomValidChangePpm := uint32(simtypes.RandIntBetween(r, int(market.MinPriceChangePpm), maxPriceChangePpm+1))
-	bigPrice := new(big.Int).SetUint64(market.Price)
+func getRandomlyUpdatedPrice(r *rand.Rand, marketParamPrice types.MarketParamPrice) uint64 {
+	randomValidChangePpm := uint32(
+		simtypes.RandIntBetween(r, int(marketParamPrice.Param.MinPriceChangePpm), maxPriceChangePpm+1),
+	)
+	bigPrice := new(big.Int).SetUint64(marketParamPrice.Price.Price)
 
 	bigPriceChange := lib.BigIntMulPpm(bigPrice, randomValidChangePpm)
 	// 50% chance that the change is in the negative direction.

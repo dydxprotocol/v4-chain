@@ -17,3 +17,14 @@ func AssertCheckTxMode(ctx sdk.Context) {
 		panic("assert checkTx mode failed")
 	}
 }
+
+// TxMode returns a textual representation of the tx mode, one of `CheckTx`, `ReCheckTx`, or `DeliverTx`.
+func TxMode(ctx sdk.Context) string {
+	if ctx.IsReCheckTx() {
+		return "ReCheckTx"
+	} else if ctx.IsCheckTx() {
+		return "CheckTx"
+	} else {
+		return "DeliverTx"
+	}
+}

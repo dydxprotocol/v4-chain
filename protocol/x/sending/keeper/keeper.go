@@ -18,7 +18,7 @@ type (
 		storeKey            storetypes.StoreKey
 		accountKeeper       types.AccountKeeper
 		subaccountsKeeper   types.SubaccountsKeeper
-		indexerEventManager *indexer_manager.IndexerEventManagerImpl
+		indexerEventManager indexer_manager.IndexerEventManager
 	}
 )
 
@@ -27,7 +27,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	accountKeeper types.AccountKeeper,
 	subaccountsKeeper types.SubaccountsKeeper,
-	indexerEventManager *indexer_manager.IndexerEventManagerImpl,
+	indexerEventManager indexer_manager.IndexerEventManager,
 ) *Keeper {
 	return &Keeper{
 		cdc:                 cdc,
@@ -38,7 +38,7 @@ func NewKeeper(
 	}
 }
 
-func (k Keeper) GetIndexerEventManager() *indexer_manager.IndexerEventManagerImpl {
+func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 
