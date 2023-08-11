@@ -16,6 +16,9 @@ const (
 	// TreasuryAccountName defines the root string for the rewards treasury account address.
 	TreasuryAccountName = "rewards_treasury"
 
+	// VesterAccountName defines the root string for the rewards vester account address.
+	VesterAccountName = "rewards_vester"
+
 	// RewardShareKeyPrefix is the prefix to retrieve reward shares for all addresses.
 	RewardShareKeyPrefix = "reward_shares"
 )

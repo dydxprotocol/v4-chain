@@ -1,32 +1,38 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"XMRUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"XMRUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Bitfinex",
-      "ticker":"tXMRUSD"
+      "exchangeName": "Bitfinex",
+      "ticker": "tXMRUSD",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"XMR_USDT"
+      "exchangeName": "Gate",
+      "ticker": "XMR_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kraken",
-      "ticker":"XXMRZUSD"
+      "exchangeName": "Kraken",
+      "ticker": "XXMRZUSD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"XMR-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "XMR-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Mexc",
-      "ticker":"XMR_USDT"
+      "exchangeName": "Mexc",
+      "ticker": "XMR_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"XMR-USDT"
+      "exchangeName": "Okx",
+      "ticker": "XMR-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

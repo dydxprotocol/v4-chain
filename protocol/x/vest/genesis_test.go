@@ -1,0 +1,24 @@
+package vest_test
+
+import (
+	"testing"
+
+	testapp "github.com/dydxprotocol/v4/testutil/app"
+
+	"github.com/dydxprotocol/v4/x/vest"
+	"github.com/dydxprotocol/v4/x/vest/types"
+	"github.com/stretchr/testify/require"
+)
+
+func TestGenesis(t *testing.T) {
+	genesisState := types.DefaultGenesis()
+
+	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.VestKeeper
+
+	vest.InitGenesis(ctx, k, *genesisState)
+	got := vest.ExportGenesis(ctx, k)
+	require.NotNil(t, got)
+	require.Equal(t, *genesisState, *got)
+}

@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/dydxprotocol/v4/mocks"
+	"github.com/dydxprotocol/v4/testutil/daemons/pricefeed"
 	"github.com/dydxprotocol/v4/testutil/keeper"
 	"github.com/dydxprotocol/v4/x/prices"
 	prices_keeper "github.com/dydxprotocol/v4/x/prices/keeper"
@@ -117,10 +119,13 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
+	expectedGenesisJsonString := pricefeed.ReadJsonTestFile(t, "expected_default_genesis.json")
+
 	result := am.DefaultGenesis(cdc)
 	json, err := result.MarshalJSON()
 	require.NoError(t, err)
-	require.Equal(t, `{"market_params":[],"market_prices":[]}`, string(json))
+
+	require.Equal(t, expectedGenesisJsonString, string(json))
 }
 
 func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {

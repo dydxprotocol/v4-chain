@@ -41,7 +41,6 @@ func (msg *MsgPlaceOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(ErrInvalidOrderQuantums, "order size quantums cannot be 0")
 	}
 
-	// TODO(DEC-1267): Update `ValidateBasic` to account for conditional orders.
 	orderId := msg.Order.GetOrderId()
 	if orderId.IsShortTermOrder() {
 		// This also implicitly verifies that GoodTilBlockTime is not set / is zero for short-term orders.
@@ -69,6 +68,27 @@ func (msg *MsgPlaceOrder) ValidateBasic() error {
 
 	if msg.Order.Subticks == uint64(0) {
 		return sdkerrors.Wrapf(ErrInvalidOrderSubticks, "order subticks cannot be 0")
+	}
+
+	if orderId.IsConditionalOrder() {
+		if msg.Order.ConditionType == Order_CONDITION_TYPE_UNSPECIFIED {
+			return sdkerrors.Wrapf(ErrInvalidConditionType, "condition type cannot be unspecified")
+		}
+
+		if msg.Order.ConditionalOrderTriggerSubticks == uint64(0) {
+			return sdkerrors.Wrapf(ErrInvalidConditionalOrderTriggerSubticks, "conditional order trigger subticks cannot be 0")
+		}
+	} else {
+		if msg.Order.ConditionType != Order_CONDITION_TYPE_UNSPECIFIED {
+			return sdkerrors.Wrapf(ErrInvalidConditionType, "condition type specified for non-conditional order")
+		}
+
+		if msg.Order.ConditionalOrderTriggerSubticks != uint64(0) {
+			return sdkerrors.Wrapf(
+				ErrInvalidConditionalOrderTriggerSubticks,
+				"conditional order trigger subticks greater than 0 for non-conditional order",
+			)
+		}
 	}
 
 	return nil

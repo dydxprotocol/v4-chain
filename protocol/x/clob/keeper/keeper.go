@@ -3,13 +3,15 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4/x/clob/rate_limit"
 	"sync/atomic"
+
+	"github.com/dydxprotocol/v4/x/clob/rate_limit"
 
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 
 	"github.com/cometbft/cometbft/libs/log"
 
+	sdklog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -25,7 +27,7 @@ type (
 		transientStoreKey storetypes.StoreKey
 
 		MemClob                      types.MemClob
-		untriggeredConditionalOrders map[types.ClobPairId]UntriggeredConditionalOrders
+		UntriggeredConditionalOrders map[types.ClobPairId]*UntriggeredConditionalOrders
 
 		subaccountsKeeper   types.SubaccountsKeeper
 		assetsKeeper        types.AssetsKeeper
@@ -33,6 +35,7 @@ type (
 		feeTiersKeeper      types.FeeTiersKeeper
 		perpetualsKeeper    types.PerpetualsKeeper
 		statsKeeper         types.StatsKeeper
+		rewardsKeeper       types.RewardsKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
 
 		memStoreInitialized *atomic.Bool
@@ -60,13 +63,14 @@ func NewKeeper(
 	memKey storetypes.StoreKey,
 	liquidationsStoreKey storetypes.StoreKey,
 	memClob types.MemClob,
-	untriggeredConditionalOrders map[types.ClobPairId]UntriggeredConditionalOrders,
+	untriggeredConditionalOrders map[types.ClobPairId]*UntriggeredConditionalOrders,
 	subaccountsKeeper types.SubaccountsKeeper,
 	assetsKeeper types.AssetsKeeper,
 	bankKeeper types.BankKeeper,
 	feeTiersKeeper types.FeeTiersKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
 	statsKeeper types.StatsKeeper,
+	rewardsKeeper types.RewardsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	txDecoder sdk.TxDecoder,
 	mevTelemetryHost string,
@@ -80,13 +84,14 @@ func NewKeeper(
 		memKey:                       memKey,
 		transientStoreKey:            liquidationsStoreKey,
 		MemClob:                      memClob,
-		untriggeredConditionalOrders: untriggeredConditionalOrders,
+		UntriggeredConditionalOrders: untriggeredConditionalOrders,
 		subaccountsKeeper:            subaccountsKeeper,
 		assetsKeeper:                 assetsKeeper,
 		bankKeeper:                   bankKeeper,
 		feeTiersKeeper:               feeTiersKeeper,
 		perpetualsKeeper:             perpetualsKeeper,
 		statsKeeper:                  statsKeeper,
+		rewardsKeeper:                rewardsKeeper,
 		indexerEventManager:          indexerEventManager,
 		memStoreInitialized:          &atomic.Bool{},
 		txDecoder:                    txDecoder,
@@ -108,7 +113,7 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/clob")
+	return ctx.Logger().With(sdklog.ModuleKey, "x/clob")
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
@@ -138,7 +143,7 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 	// Initialize all the necessary memory stores.
 	for _, keyPrefix := range []string{
 		types.OrderAmountFilledKeyPrefix,
-		types.StatefulOrderPlacementKeyPrefix,
+		types.StatefulOrderKeyPrefix,
 	} {
 		// Retrieve an instance of the memstore.
 		memPrefixStore := prefix.NewStore(

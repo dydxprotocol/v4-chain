@@ -38,6 +38,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 		StatefulOrders              []types.Order
 		StatefulOrderPlacement      types.Order
 		PlacedStatefulCancellations []types.OrderId
+		RemovedOrderIds             []types.OrderId
 		ExpectedError               error
 	}{
 		"Returns an error when validation fails": {
@@ -61,6 +62,13 @@ func TestPlaceOrder_Error(t *testing.T) {
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 			},
 			ExpectedError: types.ErrStatefulOrderPreviouslyCancelled,
+		},
+		"Returns an error when order has already been removed": {
+			StatefulOrderPlacement: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+			RemovedOrderIds: []types.OrderId{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+			},
+			ExpectedError: types.ErrStatefulOrderPreviouslyRemoved,
 		},
 	}
 
@@ -123,8 +131,9 @@ func TestPlaceOrder_Error(t *testing.T) {
 			}
 
 			processProposerMatchesEvents := types.ProcessProposerMatchesEvents{
-				BlockHeight:                 6,
-				PlacedStatefulCancellations: tc.PlacedStatefulCancellations,
+				BlockHeight:                        6,
+				PlacedStatefulCancellationOrderIds: tc.PlacedStatefulCancellations,
+				RemovedStatefulOrderIds:            tc.RemovedOrderIds,
 			}
 			ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 				ctx,
@@ -143,8 +152,19 @@ func TestPlaceOrder_Success(t *testing.T) {
 		StatefulOrderPlacement types.Order
 		Subaccounts            []satypes.Subaccount
 	}{
-		"Succeeds": {
+		"Succeeds with long term order": {
 			StatefulOrderPlacement: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.MustGetOrder(),
+			Subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+				},
+			},
+		},
+		"Succeeds with conditional order": {
+			StatefulOrderPlacement: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 			Subaccounts: []satypes.Subaccount{
 				{
 					Id: &constants.Alice_Num0,
@@ -211,16 +231,29 @@ func TestPlaceOrder_Success(t *testing.T) {
 			require.NoError(t, err)
 
 			// Setup IndexerEventManager mock.
-			indexerEventManager.On(
-				"AddTxnEvent",
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewStatefulOrderPlacementEvent(
-						tc.StatefulOrderPlacement,
+			if tc.StatefulOrderPlacement.IsConditionalOrder() {
+				indexerEventManager.On(
+					"AddTxnEvent",
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewConditionalOrderPlacementEvent(
+							tc.StatefulOrderPlacement,
+						),
 					),
-				),
-			).Return().Once()
+				).Return().Once()
+			} else {
+				indexerEventManager.On(
+					"AddTxnEvent",
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewLongTermOrderPlacementEvent(
+							tc.StatefulOrderPlacement,
+						),
+					),
+				).Return().Once()
+			}
 
 			// Add BlockHeight to `ProcessProposerMatchesEvents`. This is normally done in `BeginBlock`.
 			ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
@@ -240,9 +273,14 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			// Ensure placement exists in `ProcessProposerMatchesEvents`.
 			events := ks.ClobKeeper.GetProcessProposerMatchesEvents(ctx)
-			placements := events.GetPlacedStatefulOrders()
+			var placements []types.OrderId
+			if tc.StatefulOrderPlacement.IsConditionalOrder() {
+				placements = events.GetPlacedConditionalOrderIds()
+			} else {
+				placements = events.GetPlacedLongTermOrderIds()
+			}
 			require.Len(t, placements, 1)
-			require.Equal(t, placements[0], tc.StatefulOrderPlacement)
+			require.Equal(t, placements[0], tc.StatefulOrderPlacement.OrderId)
 
 			// Run mock assertions.
 			indexerEventManager.AssertExpectations(t)

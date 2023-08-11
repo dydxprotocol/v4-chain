@@ -1,32 +1,36 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"ZECUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"ZECUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"ZECUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"ZECUSD\""
     },
     {
-      "exchangeName":"Bitfinex",
-      "ticker":"tZECUSD"
+      "exchangeName": "Bitfinex",
+      "ticker": "tZECUSD",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"ZEC-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "ZEC-USD"
     },
     {
-      "exchangeName":"Kraken",
-      "ticker":"XZECZUSD"
+      "exchangeName": "Kraken",
+      "ticker": "XZECZUSD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"ZEC-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "ZEC-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"ZEC-USDT"
+      "exchangeName": "Okx",
+      "ticker": "ZEC-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

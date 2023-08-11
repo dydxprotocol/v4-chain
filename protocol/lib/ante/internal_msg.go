@@ -16,6 +16,7 @@ import (
 	feetiers "github.com/dydxprotocol/v4/x/feetiers/types"
 	rewards "github.com/dydxprotocol/v4/x/rewards/types"
 	stats "github.com/dydxprotocol/v4/x/stats/types"
+	vest "github.com/dydxprotocol/v4/x/vest/types"
 )
 
 // IsInternalMsg returns true if the given msg is an internal message.
@@ -35,6 +36,8 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*staking.MsgUpdateParams,
 		*stats.MsgUpdateParams,
 		*rewards.MsgUpdateParams,
+		*vest.MsgSetVestEntry,
+		*vest.MsgDeleteVestEntry,
 
 		// bank
 		*bank.MsgSetSendEnabled,

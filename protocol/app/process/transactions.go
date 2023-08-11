@@ -10,12 +10,13 @@ type txtype int
 
 const (
 	ProposedOperationsTxType txtype = 1
-	AddPremiumVotesTxType    txtype = 2
-	UpdateMarketPricesTxType txtype = 3
+	AcknowledgeBridgesTxType txtype = 2
+	AddPremiumVotesTxType    txtype = 3
+	UpdateMarketPricesTxType txtype = 4
 )
 
 const (
-	MinTxsCount = 3
+	MinTxsCount = 4
 )
 
 // ProcessProposalTxs is used as an intermediary struct to validate a proposed list of txs
@@ -23,6 +24,7 @@ const (
 type ProcessProposalTxs struct {
 	// Single msg txs.
 	ProposedOperationsTx *ProposedOperationsTx
+	AcknowledgeBridgesTx *AcknowledgeBridgesTx
 	AddPremiumVotesTx    *AddPremiumVotesTx
 	UpdateMarketPricesTx *UpdateMarketPricesTx
 
@@ -35,6 +37,7 @@ func DecodeProcessProposalTxs(
 	ctx sdk.Context,
 	decoder sdk.TxDecoder,
 	req abci.RequestProcessProposal,
+	bridgeKeeper ProcessBridgeKeeper,
 	pricesKeeper ProcessPricesKeeper,
 ) (*ProcessProposalTxs, error) {
 	// Check len.
@@ -56,6 +59,21 @@ func DecodeProcessProposalTxs(
 		panic("must define ProposedOperationsTxType")
 	}
 	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[orderIdx])
+	if err != nil {
+		return nil, err
+	}
+
+	// Acknowledge bridges.
+	acknowledgeBridgesIdx, ok := txTypeToIdx[AcknowledgeBridgesTxType]
+	if !ok {
+		panic("must define AcknowledgeBridgesTxType")
+	}
+	acknowledgeBridgesTx, err := DecodeAcknowledgeBridgesTx(
+		ctx,
+		bridgeKeeper,
+		decoder,
+		req.Txs[acknowledgeBridgesIdx],
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +117,7 @@ func DecodeProcessProposalTxs(
 
 	return &ProcessProposalTxs{
 		ProposedOperationsTx: operationsTx,
+		AcknowledgeBridgesTx: acknowledgeBridgesTx,
 		AddPremiumVotesTx:    addPremiumVotesTx,
 		UpdateMarketPricesTx: updatePricesTx,
 		OtherTxs:             allOtherTxs,
@@ -115,6 +134,7 @@ func (ppt *ProcessProposalTxs) Validate() error {
 	singleTxs := []SingleMsgTx{
 		ppt.ProposedOperationsTx,
 		ppt.AddPremiumVotesTx,
+		ppt.AcknowledgeBridgesTx,
 		ppt.UpdateMarketPricesTx,
 	}
 	for _, smt := range singleTxs {

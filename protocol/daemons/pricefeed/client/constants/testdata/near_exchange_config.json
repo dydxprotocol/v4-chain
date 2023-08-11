@@ -1,36 +1,42 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"NEARUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"NEARUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"NEARUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"NEARUSD\""
     },
     {
-      "exchangeName":"Bybit",
-      "ticker":"NEARUSDT"
+      "exchangeName": "Bybit",
+      "ticker": "NEARUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"NEAR-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "NEAR-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"NEAR_USDT"
+      "exchangeName": "Gate",
+      "ticker": "NEAR_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"nearusdt"
+      "exchangeName": "Huobi",
+      "ticker": "nearusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"NEAR-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "NEAR-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"NEAR-USDT"
+      "exchangeName": "Okx",
+      "ticker": "NEAR-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

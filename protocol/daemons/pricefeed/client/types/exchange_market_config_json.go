@@ -10,8 +10,8 @@ import (
 type ExchangeMarketConfigJson struct {
 	ExchangeName   string `json:"exchangeName"`
 	Ticker         string `json:"ticker"`
-	AdjustByMarket string `json:"adjustByMarket"`
-	Invert         bool   `json:"invert"`
+	AdjustByMarket string `json:"adjustByMarket,omitempty"`
+	Invert         bool   `json:"invert,omitempty"`
 }
 
 // Validate validates the exchange market configuration json. It returns an error if the

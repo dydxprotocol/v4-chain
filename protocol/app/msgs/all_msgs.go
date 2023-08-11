@@ -133,8 +133,8 @@ var (
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},
 
 		// bridge
-		"/dydxprotocol.bridge.MsgAcknowledgeBridge":           {},
-		"/dydxprotocol.bridge.MsgAcknowledgeBridgeResponse":   {},
+		"/dydxprotocol.bridge.MsgAcknowledgeBridges":          {},
+		"/dydxprotocol.bridge.MsgAcknowledgeBridgesResponse":  {},
 		"/dydxprotocol.bridge.MsgCompleteBridge":              {},
 		"/dydxprotocol.bridge.MsgCompleteBridgeResponse":      {},
 		"/dydxprotocol.bridge.MsgUpdateEventParams":           {},
@@ -175,6 +175,12 @@ var (
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         {},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
+
+		// vest
+		"/dydxprotocol.vest.MsgSetVestEntry":            {},
+		"/dydxprotocol.vest.MsgSetVestEntryResponse":    {},
+		"/dydxprotocol.vest.MsgDeleteVestEntry":         {},
+		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": {},
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         {},

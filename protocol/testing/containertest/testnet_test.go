@@ -99,8 +99,8 @@ func TestPlaceOrder(t *testing.T) {
 					ClobPairId: 0,
 				},
 				Side:     clob.Order_SIDE_BUY,
-				Quantums: 1000000,
-				Subticks: 10000,
+				Quantums: 10_000_000,
+				Subticks: 10_000,
 				GoodTilOneof: &clob.Order_GoodTilBlock{
 					GoodTilBlock: 20,
 				},

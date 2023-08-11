@@ -12,7 +12,7 @@ func TestGetAppInjectedMsgIdxMaps(t *testing.T) {
 	tests := map[string]struct {
 		numTxs int
 	}{
-		"NumTxs = 3":        {numTxs: 3},
+		"NumTxs = 4":        {numTxs: 4},
 		"NumTxs = 100_0000": {numTxs: 10_000},
 	}
 
@@ -21,11 +21,15 @@ func TestGetAppInjectedMsgIdxMaps(t *testing.T) {
 			txTypeToIdx, idxToTxType := process.GetAppInjectedMsgIdxMaps(tc.numTxs)
 
 			// Validate txTypeToIdx.
-			require.Len(t, txTypeToIdx, 3)
+			require.Len(t, txTypeToIdx, 4)
 
 			orderIdx, ok := txTypeToIdx[process.ProposedOperationsTxType]
 			require.True(t, ok)
 			require.Equal(t, 0, orderIdx)
+
+			acknowledgeBridgesIdx, ok := txTypeToIdx[process.AcknowledgeBridgesTxType]
+			require.True(t, ok)
+			require.Equal(t, tc.numTxs-3, acknowledgeBridgesIdx)
 
 			addFundingIdx, ok := txTypeToIdx[process.AddPremiumVotesTxType]
 			require.True(t, ok)
@@ -36,10 +40,14 @@ func TestGetAppInjectedMsgIdxMaps(t *testing.T) {
 			require.Equal(t, tc.numTxs-1, updatePricesIdx)
 
 			// Validate idxToTxType.
-			require.Len(t, idxToTxType, 3)
+			require.Len(t, idxToTxType, 4)
 			operationsTxType, ok := idxToTxType[0]
 			require.True(t, ok)
 			require.Equal(t, process.ProposedOperationsTxType, operationsTxType)
+
+			acknowledgeBridgesTxType, ok := idxToTxType[tc.numTxs-3]
+			require.True(t, ok)
+			require.Equal(t, process.AcknowledgeBridgesTxType, acknowledgeBridgesTxType)
 
 			addFundingTxType, ok := idxToTxType[tc.numTxs-2]
 			require.True(t, ok)
@@ -58,14 +66,14 @@ func TestGetAppInjectedMsgIdxMaps_Panic(t *testing.T) {
 	}{
 		"NumTxs: negative": {numTxs: -10},
 		"NumTxs: zero":     {numTxs: 0},
-		"NumTxs: two":      {numTxs: 2},
+		"NumTxs: three":    {numTxs: 3},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			require.PanicsWithError(
 				t,
-				fmt.Errorf("num of txs must be at least 3").Error(),
+				fmt.Errorf("num of txs must be at least 4").Error(),
 				func() { _, _ = process.GetAppInjectedMsgIdxMaps(tc.numTxs) },
 			)
 		})

@@ -17,6 +17,8 @@ func NewOrderFillEvent(
 	fillAmount satypes.BaseQuantums,
 	makerFee int64,
 	takerFee int64,
+	totalFilledMaker satypes.BaseQuantums,
+	totalFilledTaker satypes.BaseQuantums,
 ) *OrderFillEventV1 {
 	indexerTakerOrder := v1.OrderToIndexerOrder(takerOrder)
 	return &OrderFillEventV1{
@@ -24,9 +26,11 @@ func NewOrderFillEvent(
 		TakerOrder: &OrderFillEventV1_Order{
 			Order: &indexerTakerOrder,
 		},
-		FillAmount: fillAmount.ToUint64(),
-		MakerFee:   makerFee,
-		TakerFee:   takerFee,
+		FillAmount:       fillAmount.ToUint64(),
+		MakerFee:         makerFee,
+		TakerFee:         takerFee,
+		TotalFilledMaker: totalFilledMaker.ToUint64(),
+		TotalFilledTaker: totalFilledTaker.ToUint64(),
 	}
 }
 
@@ -39,6 +43,7 @@ func NewLiquidationOrderFillEvent(
 	fillAmount satypes.BaseQuantums,
 	makerFee int64,
 	takerFee int64,
+	totalFilledMaker satypes.BaseQuantums,
 ) *OrderFillEventV1 {
 	if !liquidationTakerOrder.IsLiquidation() {
 		panic(fmt.Sprintf("liquidationTakerOrder is not a liquidation order: %v", liquidationTakerOrder))
@@ -52,10 +57,12 @@ func NewLiquidationOrderFillEvent(
 		Subticks:    uint64(liquidationTakerOrder.GetOrderSubticks()),
 	}
 	return &OrderFillEventV1{
-		MakerOrder: v1.OrderToIndexerOrder(makerOrder),
-		TakerOrder: &OrderFillEventV1_LiquidationOrder{LiquidationOrder: &liquidationOrder},
-		FillAmount: fillAmount.ToUint64(),
-		MakerFee:   makerFee,
-		TakerFee:   takerFee,
+		MakerOrder:       v1.OrderToIndexerOrder(makerOrder),
+		TakerOrder:       &OrderFillEventV1_LiquidationOrder{LiquidationOrder: &liquidationOrder},
+		FillAmount:       fillAmount.ToUint64(),
+		MakerFee:         makerFee,
+		TakerFee:         takerFee,
+		TotalFilledMaker: totalFilledMaker.ToUint64(),
+		TotalFilledTaker: fillAmount.ToUint64(),
 	}
 }

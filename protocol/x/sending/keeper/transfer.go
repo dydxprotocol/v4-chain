@@ -116,9 +116,31 @@ func (k Keeper) ProcessDepositToSubaccount(
 				metrics.GetLabelForIntValue(metrics.RecipientSubaccount, int(msgDepositToSubaccount.Recipient.Number)),
 			},
 		)
+
+		// Add deposit event to Indexer block message.
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeTransfer,
+			indexer_manager.GetB64EncodedEventMessage(
+				k.GenerateDepositEvent(msgDepositToSubaccount),
+			),
+		)
 	}
 
 	return err
+}
+
+// GenerateDepositEvent takes in a deposit and returns a deposit event.
+func (k Keeper) GenerateDepositEvent(deposit *types.MsgDepositToSubaccount) *indexerevents.TransferEventV1 {
+	return indexerevents.NewDepositEvent(
+		deposit.Sender,
+		satypes.SubaccountId{
+			Owner:  deposit.Recipient.Owner,
+			Number: deposit.Recipient.Number,
+		},
+		deposit.AssetId,
+		satypes.BaseQuantums(deposit.Quantums),
+	)
 }
 
 // ProcessWithdrawFromSubaccount transfers quote balance from a subaccount to an account.
@@ -160,7 +182,29 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 				metrics.GetLabelForStringValue(metrics.RecipientAddress, msgWithdrawFromSubaccount.Recipient),
 			},
 		)
+
+		// Add withdraw event to Indexer block message.
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeTransfer,
+			indexer_manager.GetB64EncodedEventMessage(
+				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
+			),
+		)
 	}
 
 	return err
+}
+
+// GenerateWithdrawEvent takes in a withdrawal and returns a withdraw event.
+func (k Keeper) GenerateWithdrawEvent(withdraw *types.MsgWithdrawFromSubaccount) *indexerevents.TransferEventV1 {
+	return indexerevents.NewWithdrawEvent(
+		satypes.SubaccountId{
+			Owner:  withdraw.Sender.Owner,
+			Number: withdraw.Sender.Number,
+		},
+		withdraw.Recipient,
+		withdraw.AssetId,
+		satypes.BaseQuantums(withdraw.Quantums),
+	)
 }

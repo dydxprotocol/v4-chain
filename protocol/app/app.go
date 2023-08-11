@@ -102,6 +102,7 @@ import (
 	"github.com/dydxprotocol/v4/mempool"
 
 	// Daemons
+	bridgeclient "github.com/dydxprotocol/v4/daemons/bridge/client"
 	"github.com/dydxprotocol/v4/daemons/configs"
 	daemonflags "github.com/dydxprotocol/v4/daemons/flags"
 	liquidationclient "github.com/dydxprotocol/v4/daemons/liquidation/client"
@@ -151,6 +152,9 @@ import (
 	subaccountsmodule "github.com/dydxprotocol/v4/x/subaccounts"
 	subaccountsmodulekeeper "github.com/dydxprotocol/v4/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	vestmodule "github.com/dydxprotocol/v4/x/vest"
+	vestmodulekeeper "github.com/dydxprotocol/v4/x/vest/keeper"
+	vestmoduletypes "github.com/dydxprotocol/v4/x/vest/types"
 
 	// IBC
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
@@ -181,7 +185,10 @@ var (
 		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
 		satypes.ModuleName:                nil,
 		clobmoduletypes.InsuranceFundName: nil,
-		// TODO(CORE-399): Decide whether to add rewards.TreasuryAccountName here.
+		// Add rewards treasury account as module account to receive and distribute reward tokens.
+		rewardsmoduletypes.TreasuryAccountName: nil,
+		// Add rewards vest treasury account as module account to distribute vest tokens.
+		rewardsmoduletypes.VesterAccountName: nil,
 	}
 
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
@@ -253,6 +260,8 @@ type App struct {
 
 	PerpetualsKeeper perpetualsmodulekeeper.Keeper
 
+	VestKeeper vestmodulekeeper.Keeper
+
 	RewardsKeeper rewardsmodulekeeper.Keeper
 
 	StatsKeeper statsmodulekeeper.Keeper
@@ -317,6 +326,7 @@ func New(
 		perpetualsmoduletypes.StoreKey,
 		satypes.StoreKey,
 		statsmoduletypes.StoreKey,
+		vestmoduletypes.StoreKey,
 		rewardsmoduletypes.StoreKey,
 		clobmoduletypes.StoreKey,
 		sendingmoduletypes.StoreKey,
@@ -567,6 +577,23 @@ func New(
 		)
 	}
 
+	// Start Bridge Daemon.
+	// Non-validating full-nodes have no need to run the bridge daemon.
+	if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
+		go func() {
+			if err := bridgeclient.Start(
+				// The client will use `context.Background` so that it can have a different context from
+				// the main application.
+				context.Background(),
+				daemonFlags,
+				logger,
+				&lib.GrpcClientImpl{},
+			); err != nil {
+				panic(err)
+			}
+		}()
+	}
+
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
@@ -594,6 +621,7 @@ func New(
 		appCodec,
 		keys[bridgemoduletypes.StoreKey],
 		bridgeEventManager,
+		app.BankKeeper,
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
@@ -621,11 +649,24 @@ func New(
 	)
 	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
 
+	app.VestKeeper = *vestmodulekeeper.NewKeeper(
+		appCodec,
+		keys[vestmoduletypes.StoreKey],
+		app.BankKeeper,
+		app.BlockTimeKeeper,
+		// set the governance module account as the authority for conducting upgrades
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	vestModule := vestmodule.NewAppModule(appCodec, app.VestKeeper)
+
 	app.RewardsKeeper = *rewardsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[rewardsmoduletypes.StoreKey],
 		tkeys[rewardsmoduletypes.TransientStoreKey],
+		app.AssetsKeeper,
+		app.BankKeeper,
 		app.FeeTiersKeeper,
+		app.PricesKeeper,
 		// set the governance module account as the authority for conducting upgrades
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -647,7 +688,7 @@ func New(
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
-	untriggeredConditionalOrders := make(map[clobmoduletypes.ClobPairId]clobmodulekeeper.UntriggeredConditionalOrders)
+	untriggeredConditionalOrders := make(map[clobmoduletypes.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
 		keys[clobmoduletypes.StoreKey],
@@ -661,6 +702,7 @@ func New(
 		app.FeeTiersKeeper,
 		app.PerpetualsKeeper,
 		app.StatsKeeper,
+		app.RewardsKeeper,
 		app.IndexerEventManager,
 		txConfig.TxDecoder(),
 		clobFlags.MevTelemetryHost,
@@ -748,6 +790,7 @@ func New(
 		feeTiersModule,
 		perpetualsModule,
 		statsModule,
+		vestModule,
 		rewardsModule,
 		subaccountsModule,
 		clobModule,
@@ -785,6 +828,7 @@ func New(
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
+		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 	)
@@ -818,6 +862,7 @@ func New(
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		epochsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName, // Must be last
@@ -854,6 +899,7 @@ func New(
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
+		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 	)
@@ -886,6 +932,7 @@ func New(
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
+		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 
@@ -925,6 +972,7 @@ func New(
 		app.SetPrepareProposal(
 			prepare.PrepareProposalHandler(
 				txConfig,
+				app.BridgeKeeper,
 				app.ClobKeeper,
 				app.PricesKeeper,
 				app.PerpetualsKeeper,
@@ -940,6 +988,7 @@ func New(
 		app.SetProcessProposal(
 			process.FullNodeProcessProposalHandler(
 				txConfig,
+				app.BridgeKeeper,
 				app.ClobKeeper,
 				app.StakingKeeper,
 				app.PerpetualsKeeper,
@@ -950,6 +999,7 @@ func New(
 		app.SetProcessProposal(
 			process.ProcessProposalHandler(
 				txConfig,
+				app.BridgeKeeper,
 				app.ClobKeeper,
 				app.StakingKeeper,
 				app.PerpetualsKeeper,

@@ -229,27 +229,27 @@ func (_m *MemClob) GetSubaccountOrders(ctx types.Context, clobPairId clobtypes.C
 	return r0, r1
 }
 
-// PlaceOrder provides a mock function with given fields: ctx, order, performAddToOrderbookCollatCheck
-func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order, performAddToOrderbookCollatCheck bool) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
-	ret := _m.Called(ctx, order, performAddToOrderbookCollatCheck)
+// PlaceOrder provides a mock function with given fields: ctx, order
+func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
+	ret := _m.Called(ctx, order)
 
 	var r0 subaccountstypes.BaseQuantums
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order, bool) subaccountstypes.BaseQuantums); ok {
-		r0 = rf(ctx, order, performAddToOrderbookCollatCheck)
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) subaccountstypes.BaseQuantums); ok {
+		r0 = rf(ctx, order)
 	} else {
 		r0 = ret.Get(0).(subaccountstypes.BaseQuantums)
 	}
 
 	var r1 clobtypes.OrderStatus
-	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.Order, bool) clobtypes.OrderStatus); ok {
-		r1 = rf(ctx, order, performAddToOrderbookCollatCheck)
+	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.Order) clobtypes.OrderStatus); ok {
+		r1 = rf(ctx, order)
 	} else {
 		r1 = ret.Get(1).(clobtypes.OrderStatus)
 	}
 
 	var r2 *clobtypes.OffchainUpdates
-	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.Order, bool) *clobtypes.OffchainUpdates); ok {
-		r2 = rf(ctx, order, performAddToOrderbookCollatCheck)
+	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.Order) *clobtypes.OffchainUpdates); ok {
+		r2 = rf(ctx, order)
 	} else {
 		if ret.Get(2) != nil {
 			r2 = ret.Get(2).(*clobtypes.OffchainUpdates)
@@ -257,8 +257,8 @@ func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order, performA
 	}
 
 	var r3 error
-	if rf, ok := ret.Get(3).(func(types.Context, clobtypes.Order, bool) error); ok {
-		r3 = rf(ctx, order, performAddToOrderbookCollatCheck)
+	if rf, ok := ret.Get(3).(func(types.Context, clobtypes.Order) error); ok {
+		r3 = rf(ctx, order)
 	} else {
 		r3 = ret.Error(3)
 	}

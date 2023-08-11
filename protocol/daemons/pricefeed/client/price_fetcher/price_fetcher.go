@@ -53,11 +53,19 @@ func NewPriceFetcher(
 	*PriceFetcher,
 	error,
 ) {
+	// Configure price fetcher logger to have fetcher-specific metadata.
+	pfLogger := logger.With(
+		constants.SubmoduleLogKey,
+		constants.PriceFetcherSubmoduleName,
+		constants.ExchangeIdLogKey,
+		exchangeStartupConfig.ExchangeId,
+	)
+
 	pf := &PriceFetcher{
 		exchangeStartupConfig: exchangeStartupConfig,
 		exchangeDetails:       exchangeDetails,
 		queryHandler:          queryHandler,
-		logger:                logger,
+		logger:                pfLogger,
 		bCh:                   bCh,
 		mutableState:          &mutableState{},
 	}
@@ -79,7 +87,7 @@ func (p *PriceFetcher) GetExchangeId() types.ExchangeId {
 
 // UpdateMutableExchangeConfig updates the price fetcher with the most current copy of the exchange config, as
 // well as all markets supported by the exchange.
-// This method is added to support the MutableExchangeConfigUpdater interface.
+// This method is added to support the ExchangeConfigUpdater interface.
 func (p *PriceFetcher) UpdateMutableExchangeConfig(
 	newConfig *types.MutableExchangeMarketConfig,
 	newMarketConfigs []*types.MutableMarketConfig,
@@ -219,7 +227,7 @@ func (pf *PriceFetcher) runSubTask(
 		[]gometrics.Label{pricefeedmetrics.GetLabelForExchangeId(exchangeId)},
 	)
 
-	prices, unavailableMarkets, err := pf.queryHandler.Query(
+	prices, _, err := pf.queryHandler.Query(
 		ctxWithTimeout,
 		&pf.exchangeDetails,
 		taskLoopDefinition.mutableExchangeConfig,
@@ -251,23 +259,16 @@ func (pf *PriceFetcher) runSubTask(
 
 		// Log each new price (per-market per-exchange).
 		pf.logger.Debug(
-			fmt.Sprintf(
-				"Adding new price for market. Price: %d. MarketId: %d. LastUpdatedAt: %v. ExchangeId: '%v'",
-				price.Price,
-				price.MarketId,
-				price.LastUpdatedAt,
-				exchangeId,
-			),
+			"price_fetcher: Adding new price for market.",
+			constants.PriceLogKey,
+			price.Price,
+			constants.MarketIdLogKey,
+			price.MarketId,
+			"LastUpdatedAt",
+			price.LastUpdatedAt,
 		)
 
 		pf.writeToBufferedChannel(exchangeId, price, err)
-	}
-	for market, error := range unavailableMarkets {
-		pf.writeToBufferedChannel(
-			exchangeId,
-			nil,
-			fmt.Errorf("Market %d unavailable on exchange '%v' (%w)", market, exchangeId, error),
-		)
 	}
 }
 
@@ -281,12 +282,7 @@ func (pf *PriceFetcher) writeToBufferedChannel(
 	// Sanity check that the channel is not full already.
 	if len(pf.bCh) == constants.FixedBufferSize {
 		// Log if writing to buffered channel failed.
-		pf.logger.Error(
-			fmt.Sprintf(
-				"Pricefeed daemon's shared buffer is full. Exchange '%v'.",
-				exchangeId,
-			),
-		)
+		pf.logger.Error("Pricefeed daemon's shared buffer is full.")
 	}
 
 	pf.bCh <- &PriceFetcherSubtaskResponse{

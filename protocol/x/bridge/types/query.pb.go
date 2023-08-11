@@ -276,23 +276,23 @@ func (m *QuerySafetyParamsResponse) GetParams() SafetyParams {
 	return SafetyParams{}
 }
 
-// QueryNextAcknowledgedEventIdRequest is a request type for the
-// NextAcknowledgedEventId RPC method.
-type QueryNextAcknowledgedEventIdRequest struct {
+// QueryAcknowledgedEventInfoRequest is a request type for the
+// AcknowledgedEventInfo RPC method.
+type QueryAcknowledgedEventInfoRequest struct {
 }
 
-func (m *QueryNextAcknowledgedEventIdRequest) Reset()         { *m = QueryNextAcknowledgedEventIdRequest{} }
-func (m *QueryNextAcknowledgedEventIdRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryNextAcknowledgedEventIdRequest) ProtoMessage()    {}
-func (*QueryNextAcknowledgedEventIdRequest) Descriptor() ([]byte, []int) {
+func (m *QueryAcknowledgedEventInfoRequest) Reset()         { *m = QueryAcknowledgedEventInfoRequest{} }
+func (m *QueryAcknowledgedEventInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAcknowledgedEventInfoRequest) ProtoMessage()    {}
+func (*QueryAcknowledgedEventInfoRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b4ca11b6b8f7f939, []int{6}
 }
-func (m *QueryNextAcknowledgedEventIdRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryAcknowledgedEventInfoRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryNextAcknowledgedEventIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAcknowledgedEventInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryNextAcknowledgedEventIdRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAcknowledgedEventInfoRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -302,36 +302,36 @@ func (m *QueryNextAcknowledgedEventIdRequest) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *QueryNextAcknowledgedEventIdRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryNextAcknowledgedEventIdRequest.Merge(m, src)
+func (m *QueryAcknowledgedEventInfoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAcknowledgedEventInfoRequest.Merge(m, src)
 }
-func (m *QueryNextAcknowledgedEventIdRequest) XXX_Size() int {
+func (m *QueryAcknowledgedEventInfoRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryNextAcknowledgedEventIdRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryNextAcknowledgedEventIdRequest.DiscardUnknown(m)
+func (m *QueryAcknowledgedEventInfoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAcknowledgedEventInfoRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryNextAcknowledgedEventIdRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryAcknowledgedEventInfoRequest proto.InternalMessageInfo
 
-// QueryNextAcknowledgedEventIdResponse is a response type for the
-// NextAcknowledgedEventId RPC method.
-type QueryNextAcknowledgedEventIdResponse struct {
-	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+// QueryAcknowledgedEventInfoResponse is a response type for the
+// AcknowledgedEventInfo RPC method.
+type QueryAcknowledgedEventInfoResponse struct {
+	Info BridgeEventInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info"`
 }
 
-func (m *QueryNextAcknowledgedEventIdResponse) Reset()         { *m = QueryNextAcknowledgedEventIdResponse{} }
-func (m *QueryNextAcknowledgedEventIdResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryNextAcknowledgedEventIdResponse) ProtoMessage()    {}
-func (*QueryNextAcknowledgedEventIdResponse) Descriptor() ([]byte, []int) {
+func (m *QueryAcknowledgedEventInfoResponse) Reset()         { *m = QueryAcknowledgedEventInfoResponse{} }
+func (m *QueryAcknowledgedEventInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAcknowledgedEventInfoResponse) ProtoMessage()    {}
+func (*QueryAcknowledgedEventInfoResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b4ca11b6b8f7f939, []int{7}
 }
-func (m *QueryNextAcknowledgedEventIdResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryAcknowledgedEventInfoResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryNextAcknowledgedEventIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAcknowledgedEventInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryNextAcknowledgedEventIdResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAcknowledgedEventInfoResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -341,42 +341,42 @@ func (m *QueryNextAcknowledgedEventIdResponse) XXX_Marshal(b []byte, determinist
 		return b[:n], nil
 	}
 }
-func (m *QueryNextAcknowledgedEventIdResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryNextAcknowledgedEventIdResponse.Merge(m, src)
+func (m *QueryAcknowledgedEventInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAcknowledgedEventInfoResponse.Merge(m, src)
 }
-func (m *QueryNextAcknowledgedEventIdResponse) XXX_Size() int {
+func (m *QueryAcknowledgedEventInfoResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryNextAcknowledgedEventIdResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryNextAcknowledgedEventIdResponse.DiscardUnknown(m)
+func (m *QueryAcknowledgedEventInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAcknowledgedEventInfoResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryNextAcknowledgedEventIdResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryAcknowledgedEventInfoResponse proto.InternalMessageInfo
 
-func (m *QueryNextAcknowledgedEventIdResponse) GetId() uint32 {
+func (m *QueryAcknowledgedEventInfoResponse) GetInfo() BridgeEventInfo {
 	if m != nil {
-		return m.Id
+		return m.Info
 	}
-	return 0
+	return BridgeEventInfo{}
 }
 
-// QueryNextRecognizedEventIdRequest is a request type for the
-// NextRecognizedEventId RPC method.
-type QueryNextRecognizedEventIdRequest struct {
+// QueryRecognizedEventInfoRequest is a request type for the
+// RecognizedEventInfo RPC method.
+type QueryRecognizedEventInfoRequest struct {
 }
 
-func (m *QueryNextRecognizedEventIdRequest) Reset()         { *m = QueryNextRecognizedEventIdRequest{} }
-func (m *QueryNextRecognizedEventIdRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryNextRecognizedEventIdRequest) ProtoMessage()    {}
-func (*QueryNextRecognizedEventIdRequest) Descriptor() ([]byte, []int) {
+func (m *QueryRecognizedEventInfoRequest) Reset()         { *m = QueryRecognizedEventInfoRequest{} }
+func (m *QueryRecognizedEventInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRecognizedEventInfoRequest) ProtoMessage()    {}
+func (*QueryRecognizedEventInfoRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b4ca11b6b8f7f939, []int{8}
 }
-func (m *QueryNextRecognizedEventIdRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryRecognizedEventInfoRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryNextRecognizedEventIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryRecognizedEventInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryNextRecognizedEventIdRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryRecognizedEventInfoRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -386,36 +386,36 @@ func (m *QueryNextRecognizedEventIdRequest) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *QueryNextRecognizedEventIdRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryNextRecognizedEventIdRequest.Merge(m, src)
+func (m *QueryRecognizedEventInfoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRecognizedEventInfoRequest.Merge(m, src)
 }
-func (m *QueryNextRecognizedEventIdRequest) XXX_Size() int {
+func (m *QueryRecognizedEventInfoRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryNextRecognizedEventIdRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryNextRecognizedEventIdRequest.DiscardUnknown(m)
+func (m *QueryRecognizedEventInfoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRecognizedEventInfoRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryNextRecognizedEventIdRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryRecognizedEventInfoRequest proto.InternalMessageInfo
 
-// QueryNextRecognizedEventIdResponse is a response type for the
-// NextRecognizedEventId RPC method.
-type QueryNextRecognizedEventIdResponse struct {
-	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+// QueryRecognizedEventInfoResponse is a response type for the
+// RecognizedEventInfo RPC method.
+type QueryRecognizedEventInfoResponse struct {
+	Info BridgeEventInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info"`
 }
 
-func (m *QueryNextRecognizedEventIdResponse) Reset()         { *m = QueryNextRecognizedEventIdResponse{} }
-func (m *QueryNextRecognizedEventIdResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryNextRecognizedEventIdResponse) ProtoMessage()    {}
-func (*QueryNextRecognizedEventIdResponse) Descriptor() ([]byte, []int) {
+func (m *QueryRecognizedEventInfoResponse) Reset()         { *m = QueryRecognizedEventInfoResponse{} }
+func (m *QueryRecognizedEventInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRecognizedEventInfoResponse) ProtoMessage()    {}
+func (*QueryRecognizedEventInfoResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b4ca11b6b8f7f939, []int{9}
 }
-func (m *QueryNextRecognizedEventIdResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryRecognizedEventInfoResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryNextRecognizedEventIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryRecognizedEventInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryNextRecognizedEventIdResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryRecognizedEventInfoResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -425,23 +425,23 @@ func (m *QueryNextRecognizedEventIdResponse) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *QueryNextRecognizedEventIdResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryNextRecognizedEventIdResponse.Merge(m, src)
+func (m *QueryRecognizedEventInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRecognizedEventInfoResponse.Merge(m, src)
 }
-func (m *QueryNextRecognizedEventIdResponse) XXX_Size() int {
+func (m *QueryRecognizedEventInfoResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryNextRecognizedEventIdResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryNextRecognizedEventIdResponse.DiscardUnknown(m)
+func (m *QueryRecognizedEventInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRecognizedEventInfoResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryNextRecognizedEventIdResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryRecognizedEventInfoResponse proto.InternalMessageInfo
 
-func (m *QueryNextRecognizedEventIdResponse) GetId() uint32 {
+func (m *QueryRecognizedEventInfoResponse) GetInfo() BridgeEventInfo {
 	if m != nil {
-		return m.Id
+		return m.Info
 	}
-	return 0
+	return BridgeEventInfo{}
 }
 
 func init() {
@@ -451,51 +451,51 @@ func init() {
 	proto.RegisterType((*QueryProposeParamsResponse)(nil), "dydxprotocol.bridge.QueryProposeParamsResponse")
 	proto.RegisterType((*QuerySafetyParamsRequest)(nil), "dydxprotocol.bridge.QuerySafetyParamsRequest")
 	proto.RegisterType((*QuerySafetyParamsResponse)(nil), "dydxprotocol.bridge.QuerySafetyParamsResponse")
-	proto.RegisterType((*QueryNextAcknowledgedEventIdRequest)(nil), "dydxprotocol.bridge.QueryNextAcknowledgedEventIdRequest")
-	proto.RegisterType((*QueryNextAcknowledgedEventIdResponse)(nil), "dydxprotocol.bridge.QueryNextAcknowledgedEventIdResponse")
-	proto.RegisterType((*QueryNextRecognizedEventIdRequest)(nil), "dydxprotocol.bridge.QueryNextRecognizedEventIdRequest")
-	proto.RegisterType((*QueryNextRecognizedEventIdResponse)(nil), "dydxprotocol.bridge.QueryNextRecognizedEventIdResponse")
+	proto.RegisterType((*QueryAcknowledgedEventInfoRequest)(nil), "dydxprotocol.bridge.QueryAcknowledgedEventInfoRequest")
+	proto.RegisterType((*QueryAcknowledgedEventInfoResponse)(nil), "dydxprotocol.bridge.QueryAcknowledgedEventInfoResponse")
+	proto.RegisterType((*QueryRecognizedEventInfoRequest)(nil), "dydxprotocol.bridge.QueryRecognizedEventInfoRequest")
+	proto.RegisterType((*QueryRecognizedEventInfoResponse)(nil), "dydxprotocol.bridge.QueryRecognizedEventInfoResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/bridge/query.proto", fileDescriptor_b4ca11b6b8f7f939) }
 
 var fileDescriptor_b4ca11b6b8f7f939 = []byte{
-	// 553 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0x3f, 0x6f, 0xd3, 0x40,
-	0x18, 0xc6, 0x73, 0x11, 0x64, 0x78, 0x4b, 0x19, 0x0e, 0x50, 0xdb, 0x03, 0xb9, 0xa9, 0xfb, 0x87,
-	0x22, 0xb5, 0x36, 0x0a, 0x51, 0x29, 0x0c, 0xfc, 0x29, 0x62, 0x60, 0x41, 0x25, 0x6c, 0x15, 0x22,
-	0x72, 0x72, 0x87, 0xb1, 0x48, 0x7d, 0xae, 0x7d, 0x29, 0x09, 0x23, 0x9f, 0x00, 0x89, 0x85, 0x81,
-	0x81, 0xcf, 0xc2, 0x54, 0x31, 0x45, 0x62, 0x61, 0x42, 0x28, 0xe1, 0x33, 0x30, 0xa3, 0x9c, 0xcf,
-	0x91, 0x9d, 0x9c, 0xad, 0xc0, 0x16, 0xf9, 0x7d, 0x9e, 0xf7, 0xf9, 0xdd, 0xdd, 0x13, 0x58, 0xa5,
-	0x7d, 0xda, 0x0b, 0x42, 0x2e, 0x78, 0x9b, 0x77, 0xec, 0x56, 0xe8, 0x51, 0x97, 0xd9, 0x27, 0x5d,
-	0x16, 0xf6, 0x2d, 0xf9, 0x15, 0x5f, 0x4a, 0x0b, 0xac, 0x58, 0x40, 0x2e, 0xbb, 0xdc, 0xe5, 0xf2,
-	0xa3, 0x3d, 0xfe, 0x15, 0x4b, 0xc9, 0x35, 0x97, 0x73, 0xb7, 0xc3, 0x6c, 0x27, 0xf0, 0x6c, 0xc7,
-	0xf7, 0xb9, 0x70, 0x84, 0xc7, 0xfd, 0x48, 0x4d, 0xab, 0xba, 0xa4, 0xc0, 0x09, 0x9d, 0x63, 0xa5,
-	0x30, 0x57, 0x60, 0xe9, 0xd9, 0x38, 0xf9, 0xf1, 0x29, 0xf3, 0xc5, 0xa1, 0x9c, 0x34, 0xd8, 0x49,
-	0x97, 0x45, 0xc2, 0x3c, 0x82, 0xe5, 0xd9, 0x51, 0x14, 0x70, 0x3f, 0x62, 0xf8, 0x1e, 0x54, 0xe2,
-	0x35, 0xcb, 0xa8, 0x8a, 0xb6, 0x17, 0x6a, 0x55, 0x4b, 0x83, 0x6c, 0xa5, 0x9c, 0x07, 0xe7, 0xce,
-	0x7e, 0xae, 0x96, 0x1a, 0xca, 0x65, 0x5e, 0x85, 0x15, 0xb9, 0xfb, 0x30, 0xe4, 0x01, 0x8f, 0x58,
-	0x36, 0xf8, 0x25, 0x10, 0xdd, 0x50, 0x45, 0x3f, 0x98, 0x8a, 0x36, 0xb5, 0xd1, 0x19, 0xef, 0x54,
-	0x38, 0x51, 0x07, 0x7b, 0xee, 0xbc, 0x62, 0xa2, 0x9f, 0xcd, 0x7e, 0xa1, 0xc0, 0xb2, 0x33, 0x15,
-	0x7d, 0x7f, 0x2a, 0x7a, 0x4d, 0x1b, 0x9d, 0xb6, 0x4e, 0x25, 0x6f, 0xc2, 0xba, 0xdc, 0xfe, 0x94,
-	0xf5, 0xc4, 0xc3, 0xf6, 0x1b, 0x9f, 0xbf, 0xed, 0x30, 0xea, 0x32, 0x2a, 0x2f, 0xea, 0x09, 0x4d,
-	0x20, 0xf6, 0x60, 0xa3, 0x58, 0xa6, 0x78, 0x2e, 0x42, 0xd9, 0xa3, 0x92, 0x65, 0xb1, 0x51, 0xf6,
-	0xa8, 0xb9, 0x0e, 0x6b, 0x13, 0x5f, 0x83, 0xb5, 0xb9, 0xeb, 0x7b, 0xef, 0x66, 0x96, 0xd7, 0xc1,
-	0x2c, 0x12, 0xe9, 0x57, 0xd7, 0xfe, 0x54, 0xe0, 0xbc, 0xb4, 0xe1, 0x4f, 0x08, 0x16, 0x52, 0x0f,
-	0x8b, 0x77, 0xb4, 0x97, 0x90, 0x53, 0x2a, 0xb2, 0x3b, 0xa7, 0x3a, 0xc6, 0x30, 0x77, 0xde, 0x7f,
-	0xff, 0xfd, 0xb1, 0xbc, 0x85, 0x37, 0xec, 0x4c, 0x93, 0x4f, 0xeb, 0x49, 0x99, 0xd9, 0xd8, 0xd4,
-	0x8c, 0xaf, 0x17, 0x7f, 0x41, 0xb0, 0x98, 0x79, 0x78, 0x6c, 0xe5, 0xc7, 0xe9, 0xaa, 0x47, 0xec,
-	0xb9, 0xf5, 0x0a, 0xd0, 0x92, 0x80, 0xdb, 0x78, 0x2b, 0x0f, 0x30, 0x88, 0x6d, 0x09, 0xe2, 0x67,
-	0x04, 0x17, 0xd2, 0x05, 0xc1, 0x05, 0x17, 0xa2, 0xe9, 0x27, 0xb1, 0xe6, 0x95, 0x2b, 0xbe, 0x5d,
-	0xc9, 0x77, 0x1d, 0x6f, 0xe6, 0xf1, 0x45, 0xd2, 0x95, 0xe0, 0x7d, 0x43, 0xb0, 0x94, 0xd3, 0x3a,
-	0xbc, 0x9f, 0x1f, 0x5d, 0xdc, 0x67, 0x72, 0xe7, 0x3f, 0x9c, 0x8a, 0xff, 0xae, 0xe4, 0xaf, 0xe3,
-	0x5a, 0x1e, 0xbf, 0xcf, 0x7a, 0xa2, 0xe9, 0xa4, 0x36, 0x34, 0xe3, 0x4a, 0x78, 0x14, 0x7f, 0x45,
-	0x70, 0x45, 0xdb, 0x72, 0xbc, 0x57, 0x0c, 0x94, 0xf7, 0xdf, 0x21, 0xb7, 0xff, 0xd9, 0xa7, 0x8e,
-	0xb1, 0x2f, 0x8f, 0x51, 0xc3, 0x37, 0x0b, 0x8f, 0x11, 0x4e, 0xfc, 0x93, 0x43, 0x1c, 0x3c, 0x3a,
-	0x1b, 0x1a, 0x68, 0x30, 0x34, 0xd0, 0xaf, 0xa1, 0x81, 0x3e, 0x8c, 0x8c, 0xd2, 0x60, 0x64, 0x94,
-	0x7e, 0x8c, 0x8c, 0xd2, 0xd1, 0x0d, 0xd7, 0x13, 0xaf, 0xbb, 0x2d, 0xab, 0xcd, 0x8f, 0x67, 0xb6,
-	0xf6, 0x92, 0xbd, 0xa2, 0x1f, 0xb0, 0xa8, 0x55, 0x91, 0xb3, 0x5b, 0x7f, 0x03, 0x00, 0x00, 0xff,
-	0xff, 0x10, 0x51, 0x86, 0x82, 0x7a, 0x06, 0x00, 0x00,
+	// 560 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0x3f, 0x6f, 0xd3, 0x40,
+	0x18, 0xc6, 0x73, 0xa8, 0x64, 0xb8, 0xc2, 0x72, 0x05, 0xd1, 0x1e, 0xc8, 0x49, 0x4c, 0x29, 0x45,
+	0x34, 0x3e, 0x51, 0x5a, 0xba, 0xf1, 0x27, 0x88, 0x81, 0xad, 0x84, 0xad, 0x42, 0x54, 0x4e, 0x7c,
+	0x31, 0x16, 0xe9, 0x9d, 0x6b, 0x3b, 0xa5, 0x61, 0xe4, 0x13, 0x20, 0xb1, 0x30, 0x30, 0xf0, 0x35,
+	0x18, 0xd9, 0x3a, 0x56, 0x62, 0x61, 0x42, 0x28, 0xe9, 0x07, 0x41, 0x79, 0x7d, 0x8e, 0x6c, 0xf7,
+	0x2e, 0x4a, 0x25, 0x26, 0x47, 0x7e, 0x9f, 0xe7, 0x7d, 0x7e, 0xbe, 0x7b, 0xdf, 0xe0, 0x9a, 0x37,
+	0xf4, 0x8e, 0xc3, 0x48, 0x26, 0xb2, 0x2b, 0xfb, 0xac, 0x13, 0x05, 0x9e, 0xcf, 0xd9, 0xe1, 0x80,
+	0x47, 0x43, 0x07, 0xde, 0x92, 0xa5, 0xbc, 0xc0, 0x49, 0x05, 0xf4, 0x9a, 0x2f, 0x7d, 0x09, 0x2f,
+	0xd9, 0xe4, 0x57, 0x2a, 0xa5, 0xb7, 0x7c, 0x29, 0xfd, 0x3e, 0x67, 0x6e, 0x18, 0x30, 0x57, 0x08,
+	0x99, 0xb8, 0x49, 0x20, 0x45, 0xac, 0xaa, 0xf7, 0x75, 0x49, 0xe9, 0x63, 0x9f, 0x1f, 0x71, 0x91,
+	0xec, 0x07, 0xa2, 0x97, 0xb5, 0xaa, 0xeb, 0xc4, 0xa1, 0x1b, 0xb9, 0x07, 0xaa, 0x9d, 0xbd, 0x82,
+	0x6f, 0xbc, 0x9a, 0x60, 0xbe, 0x98, 0x58, 0x77, 0xa1, 0xd2, 0xe6, 0x87, 0x03, 0x1e, 0x27, 0xf6,
+	0x1e, 0x5e, 0x3e, 0x5f, 0x8a, 0x43, 0x29, 0x62, 0x4e, 0x1e, 0xe3, 0x6a, 0xda, 0x66, 0x19, 0xd5,
+	0xd1, 0xfa, 0xe2, 0x66, 0xdd, 0xd1, 0x7c, 0x9f, 0x93, 0x73, 0xb6, 0x16, 0x4e, 0xfe, 0xd4, 0x2a,
+	0x6d, 0xe5, 0xb2, 0x6f, 0xe2, 0x15, 0xe8, 0xbd, 0x1b, 0xc9, 0x50, 0xc6, 0xbc, 0x18, 0xfc, 0x16,
+	0x53, 0x5d, 0x51, 0x45, 0x3f, 0x2d, 0x45, 0xdb, 0xda, 0xe8, 0x82, 0xb7, 0x14, 0x4e, 0xd5, 0x87,
+	0xbd, 0x76, 0x7b, 0x3c, 0x19, 0x16, 0xb3, 0xdf, 0x28, 0xb0, 0x62, 0x4d, 0x45, 0x3f, 0x29, 0x45,
+	0x37, 0xb4, 0xd1, 0x79, 0x6b, 0x29, 0xf9, 0x36, 0x6e, 0x40, 0xf7, 0x67, 0xdd, 0xf7, 0x42, 0x7e,
+	0xe8, 0x73, 0xcf, 0xe7, 0x1e, 0x1c, 0xd2, 0x4b, 0xd1, 0x93, 0x19, 0x82, 0x87, 0xed, 0x59, 0xa2,
+	0xe9, 0x0d, 0x2c, 0x4c, 0x2e, 0x5a, 0x91, 0xac, 0x6a, 0x49, 0x5a, 0xf0, 0x98, 0x7a, 0x15, 0x0c,
+	0xf8, 0xec, 0x06, 0xae, 0x41, 0x4a, 0x9b, 0x77, 0xa5, 0x2f, 0x82, 0x8f, 0x1a, 0x90, 0x0e, 0xae,
+	0x9b, 0x25, 0xff, 0x07, 0x63, 0xf3, 0xac, 0x8a, 0x2f, 0x43, 0x08, 0xf9, 0x8a, 0xf0, 0x62, 0x6e,
+	0x60, 0xc8, 0x86, 0xb6, 0x97, 0x61, 0x58, 0x69, 0x73, 0x4e, 0x75, 0x8a, 0x6d, 0x6f, 0x7c, 0xfa,
+	0x75, 0xf6, 0xe5, 0xd2, 0x1a, 0x59, 0x65, 0x85, 0x0d, 0x39, 0xda, 0xca, 0x96, 0x24, 0x5d, 0xa5,
+	0xf4, 0xda, 0xc8, 0x77, 0x84, 0xaf, 0x16, 0x06, 0x8a, 0x38, 0xe6, 0x38, 0xdd, 0x48, 0x53, 0x36,
+	0xb7, 0x5e, 0x01, 0x3a, 0x00, 0xb8, 0x4e, 0xd6, 0x4c, 0x80, 0x61, 0x6a, 0xcb, 0x10, 0xbf, 0x21,
+	0x7c, 0x25, 0x3f, 0x78, 0x64, 0xc6, 0x81, 0x68, 0xe6, 0x9e, 0x3a, 0xf3, 0xca, 0x15, 0x5f, 0x13,
+	0xf8, 0xee, 0x92, 0x3b, 0x26, 0xbe, 0x18, 0x5c, 0x19, 0xde, 0x4f, 0x84, 0xaf, 0x6b, 0xe7, 0x99,
+	0x3c, 0x32, 0x07, 0xcf, 0xda, 0x12, 0xba, 0x73, 0x61, 0x9f, 0x22, 0xdf, 0x01, 0xf2, 0x07, 0x84,
+	0x99, 0xc8, 0xdd, 0x9c, 0x3d, 0xf7, 0x97, 0x4a, 0x7e, 0x20, 0xbc, 0xa4, 0x59, 0x05, 0xb2, 0x65,
+	0x26, 0x31, 0x2f, 0x17, 0xdd, 0xbe, 0xa0, 0x4b, 0xd1, 0x6f, 0x03, 0x3d, 0x23, 0x4d, 0x13, 0x7d,
+	0x34, 0x35, 0xe7, 0xd8, 0x5b, 0xcf, 0x4f, 0x46, 0x16, 0x3a, 0x1d, 0x59, 0xe8, 0xef, 0xc8, 0x42,
+	0x9f, 0xc7, 0x56, 0xe5, 0x74, 0x6c, 0x55, 0x7e, 0x8f, 0xad, 0xca, 0xde, 0x3d, 0x3f, 0x48, 0xde,
+	0x0d, 0x3a, 0x4e, 0x57, 0x1e, 0x9c, 0x6b, 0x79, 0x9c, 0x35, 0x4d, 0x86, 0x21, 0x8f, 0x3b, 0x55,
+	0xa8, 0x3d, 0xfc, 0x17, 0x00, 0x00, 0xff, 0xff, 0x6e, 0xa6, 0x8f, 0x28, 0xed, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -516,14 +516,14 @@ type QueryClient interface {
 	ProposeParams(ctx context.Context, in *QueryProposeParamsRequest, opts ...grpc.CallOption) (*QueryProposeParamsResponse, error)
 	// Queries the SafetyParams.
 	SafetyParams(ctx context.Context, in *QuerySafetyParamsRequest, opts ...grpc.CallOption) (*QuerySafetyParamsResponse, error)
-	// Queries the NextAcknowledgedEventId.
+	// Queries the AcknowledgedEventInfo.
 	// An "acknowledged" event is one that is in-consensus and has been stored
 	// in-state.
-	NextAcknowledgedEventId(ctx context.Context, in *QueryNextAcknowledgedEventIdRequest, opts ...grpc.CallOption) (*QueryNextAcknowledgedEventIdResponse, error)
-	// Queries the NextRecognizedEventId.
+	AcknowledgedEventInfo(ctx context.Context, in *QueryAcknowledgedEventInfoRequest, opts ...grpc.CallOption) (*QueryAcknowledgedEventInfoResponse, error)
+	// Queries the RecognizedEventInfo.
 	// A "recognized" event is one that is finalized on the Ethereum blockchain
 	// and has been identified by the queried node. It is not yet in-consensus.
-	NextRecognizedEventId(ctx context.Context, in *QueryNextRecognizedEventIdRequest, opts ...grpc.CallOption) (*QueryNextRecognizedEventIdResponse, error)
+	RecognizedEventInfo(ctx context.Context, in *QueryRecognizedEventInfoRequest, opts ...grpc.CallOption) (*QueryRecognizedEventInfoResponse, error)
 }
 
 type queryClient struct {
@@ -561,18 +561,18 @@ func (c *queryClient) SafetyParams(ctx context.Context, in *QuerySafetyParamsReq
 	return out, nil
 }
 
-func (c *queryClient) NextAcknowledgedEventId(ctx context.Context, in *QueryNextAcknowledgedEventIdRequest, opts ...grpc.CallOption) (*QueryNextAcknowledgedEventIdResponse, error) {
-	out := new(QueryNextAcknowledgedEventIdResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.bridge.Query/NextAcknowledgedEventId", in, out, opts...)
+func (c *queryClient) AcknowledgedEventInfo(ctx context.Context, in *QueryAcknowledgedEventInfoRequest, opts ...grpc.CallOption) (*QueryAcknowledgedEventInfoResponse, error) {
+	out := new(QueryAcknowledgedEventInfoResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.bridge.Query/AcknowledgedEventInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) NextRecognizedEventId(ctx context.Context, in *QueryNextRecognizedEventIdRequest, opts ...grpc.CallOption) (*QueryNextRecognizedEventIdResponse, error) {
-	out := new(QueryNextRecognizedEventIdResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.bridge.Query/NextRecognizedEventId", in, out, opts...)
+func (c *queryClient) RecognizedEventInfo(ctx context.Context, in *QueryRecognizedEventInfoRequest, opts ...grpc.CallOption) (*QueryRecognizedEventInfoResponse, error) {
+	out := new(QueryRecognizedEventInfoResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.bridge.Query/RecognizedEventInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -587,14 +587,14 @@ type QueryServer interface {
 	ProposeParams(context.Context, *QueryProposeParamsRequest) (*QueryProposeParamsResponse, error)
 	// Queries the SafetyParams.
 	SafetyParams(context.Context, *QuerySafetyParamsRequest) (*QuerySafetyParamsResponse, error)
-	// Queries the NextAcknowledgedEventId.
+	// Queries the AcknowledgedEventInfo.
 	// An "acknowledged" event is one that is in-consensus and has been stored
 	// in-state.
-	NextAcknowledgedEventId(context.Context, *QueryNextAcknowledgedEventIdRequest) (*QueryNextAcknowledgedEventIdResponse, error)
-	// Queries the NextRecognizedEventId.
+	AcknowledgedEventInfo(context.Context, *QueryAcknowledgedEventInfoRequest) (*QueryAcknowledgedEventInfoResponse, error)
+	// Queries the RecognizedEventInfo.
 	// A "recognized" event is one that is finalized on the Ethereum blockchain
 	// and has been identified by the queried node. It is not yet in-consensus.
-	NextRecognizedEventId(context.Context, *QueryNextRecognizedEventIdRequest) (*QueryNextRecognizedEventIdResponse, error)
+	RecognizedEventInfo(context.Context, *QueryRecognizedEventInfoRequest) (*QueryRecognizedEventInfoResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -610,11 +610,11 @@ func (*UnimplementedQueryServer) ProposeParams(ctx context.Context, req *QueryPr
 func (*UnimplementedQueryServer) SafetyParams(ctx context.Context, req *QuerySafetyParamsRequest) (*QuerySafetyParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SafetyParams not implemented")
 }
-func (*UnimplementedQueryServer) NextAcknowledgedEventId(ctx context.Context, req *QueryNextAcknowledgedEventIdRequest) (*QueryNextAcknowledgedEventIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NextAcknowledgedEventId not implemented")
+func (*UnimplementedQueryServer) AcknowledgedEventInfo(ctx context.Context, req *QueryAcknowledgedEventInfoRequest) (*QueryAcknowledgedEventInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcknowledgedEventInfo not implemented")
 }
-func (*UnimplementedQueryServer) NextRecognizedEventId(ctx context.Context, req *QueryNextRecognizedEventIdRequest) (*QueryNextRecognizedEventIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NextRecognizedEventId not implemented")
+func (*UnimplementedQueryServer) RecognizedEventInfo(ctx context.Context, req *QueryRecognizedEventInfoRequest) (*QueryRecognizedEventInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecognizedEventInfo not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -675,38 +675,38 @@ func _Query_SafetyParams_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_NextAcknowledgedEventId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryNextAcknowledgedEventIdRequest)
+func _Query_AcknowledgedEventInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAcknowledgedEventInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).NextAcknowledgedEventId(ctx, in)
+		return srv.(QueryServer).AcknowledgedEventInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.bridge.Query/NextAcknowledgedEventId",
+		FullMethod: "/dydxprotocol.bridge.Query/AcknowledgedEventInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).NextAcknowledgedEventId(ctx, req.(*QueryNextAcknowledgedEventIdRequest))
+		return srv.(QueryServer).AcknowledgedEventInfo(ctx, req.(*QueryAcknowledgedEventInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_NextRecognizedEventId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryNextRecognizedEventIdRequest)
+func _Query_RecognizedEventInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRecognizedEventInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).NextRecognizedEventId(ctx, in)
+		return srv.(QueryServer).RecognizedEventInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.bridge.Query/NextRecognizedEventId",
+		FullMethod: "/dydxprotocol.bridge.Query/RecognizedEventInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).NextRecognizedEventId(ctx, req.(*QueryNextRecognizedEventIdRequest))
+		return srv.(QueryServer).RecognizedEventInfo(ctx, req.(*QueryRecognizedEventInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -728,12 +728,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_SafetyParams_Handler,
 		},
 		{
-			MethodName: "NextAcknowledgedEventId",
-			Handler:    _Query_NextAcknowledgedEventId_Handler,
+			MethodName: "AcknowledgedEventInfo",
+			Handler:    _Query_AcknowledgedEventInfo_Handler,
 		},
 		{
-			MethodName: "NextRecognizedEventId",
-			Handler:    _Query_NextRecognizedEventId_Handler,
+			MethodName: "RecognizedEventInfo",
+			Handler:    _Query_RecognizedEventInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -908,7 +908,7 @@ func (m *QuerySafetyParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryNextAcknowledgedEventIdRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryAcknowledgedEventInfoRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -918,12 +918,12 @@ func (m *QueryNextAcknowledgedEventIdRequest) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *QueryNextAcknowledgedEventIdRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAcknowledgedEventInfoRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryNextAcknowledgedEventIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAcknowledgedEventInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -931,7 +931,7 @@ func (m *QueryNextAcknowledgedEventIdRequest) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryNextAcknowledgedEventIdResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryAcknowledgedEventInfoResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -941,25 +941,30 @@ func (m *QueryNextAcknowledgedEventIdResponse) Marshal() (dAtA []byte, err error
 	return dAtA[:n], nil
 }
 
-func (m *QueryNextAcknowledgedEventIdResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAcknowledgedEventInfoResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryNextAcknowledgedEventIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAcknowledgedEventInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.Id))
-		i--
-		dAtA[i] = 0x8
+	{
+		size, err := m.Info.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryNextRecognizedEventIdRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryRecognizedEventInfoRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -969,12 +974,12 @@ func (m *QueryNextRecognizedEventIdRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryNextRecognizedEventIdRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryRecognizedEventInfoRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryNextRecognizedEventIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryRecognizedEventInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -982,7 +987,7 @@ func (m *QueryNextRecognizedEventIdRequest) MarshalToSizedBuffer(dAtA []byte) (i
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryNextRecognizedEventIdResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryRecognizedEventInfoResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -992,21 +997,26 @@ func (m *QueryNextRecognizedEventIdResponse) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *QueryNextRecognizedEventIdResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryRecognizedEventInfoResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryNextRecognizedEventIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryRecognizedEventInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.Id))
-		i--
-		dAtA[i] = 0x8
+	{
+		size, err := m.Info.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1081,7 +1091,7 @@ func (m *QuerySafetyParamsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryNextAcknowledgedEventIdRequest) Size() (n int) {
+func (m *QueryAcknowledgedEventInfoRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1090,19 +1100,18 @@ func (m *QueryNextAcknowledgedEventIdRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryNextAcknowledgedEventIdResponse) Size() (n int) {
+func (m *QueryAcknowledgedEventInfoResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovQuery(uint64(m.Id))
-	}
+	l = m.Info.Size()
+	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
-func (m *QueryNextRecognizedEventIdRequest) Size() (n int) {
+func (m *QueryRecognizedEventInfoRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1111,15 +1120,14 @@ func (m *QueryNextRecognizedEventIdRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryNextRecognizedEventIdResponse) Size() (n int) {
+func (m *QueryRecognizedEventInfoResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovQuery(uint64(m.Id))
-	}
+	l = m.Info.Size()
+	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
@@ -1528,7 +1536,7 @@ func (m *QuerySafetyParamsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryNextAcknowledgedEventIdRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryAcknowledgedEventInfoRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1551,10 +1559,10 @@ func (m *QueryNextAcknowledgedEventIdRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryNextAcknowledgedEventIdRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAcknowledgedEventInfoRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryNextAcknowledgedEventIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAcknowledgedEventInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -1578,7 +1586,7 @@ func (m *QueryNextAcknowledgedEventIdRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryNextAcknowledgedEventIdResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryAcknowledgedEventInfoResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1601,17 +1609,17 @@ func (m *QueryNextAcknowledgedEventIdResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryNextAcknowledgedEventIdResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAcknowledgedEventInfoResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryNextAcknowledgedEventIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAcknowledgedEventInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Info", wireType)
 			}
-			m.Id = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -1621,11 +1629,25 @@ func (m *QueryNextAcknowledgedEventIdResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint32(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Info.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -1647,7 +1669,7 @@ func (m *QueryNextAcknowledgedEventIdResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryNextRecognizedEventIdRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryRecognizedEventInfoRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1670,10 +1692,10 @@ func (m *QueryNextRecognizedEventIdRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryNextRecognizedEventIdRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryRecognizedEventInfoRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryNextRecognizedEventIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryRecognizedEventInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -1697,7 +1719,7 @@ func (m *QueryNextRecognizedEventIdRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryNextRecognizedEventIdResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryRecognizedEventInfoResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1720,17 +1742,17 @@ func (m *QueryNextRecognizedEventIdResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryNextRecognizedEventIdResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryRecognizedEventInfoResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryNextRecognizedEventIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryRecognizedEventInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Info", wireType)
 			}
-			m.Id = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -1740,11 +1762,25 @@ func (m *QueryNextRecognizedEventIdResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint32(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Info.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

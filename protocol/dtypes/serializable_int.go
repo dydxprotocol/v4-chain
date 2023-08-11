@@ -53,6 +53,33 @@ func ZeroInt() SerializableInt {
 	return SerializableInt{big.NewInt(0)}
 }
 
+func (i SerializableInt) String() string {
+	if i.IsNil() {
+		return "nil"
+	}
+	return i.BigInt().String()
+}
+
+// Cmp compares x and y and returns:
+//
+//	-1 if (x <  y) OR (x is nil and y is not nil)
+//	 0 if (x == y) OR (x is nil and y is nil)
+//	+1 if (x >  y) OR (x is not nil and y is nil
+//
+// This is similar to big.Int.Cmp where nil values sort first.
+func (i SerializableInt) Cmp(j SerializableInt) int {
+	if i.IsNil() {
+		if j.IsNil() {
+			return 0
+		}
+		return -1
+	}
+	if j.IsNil() {
+		return 1
+	}
+	return i.BigInt().Cmp(j.BigInt())
+}
+
 // Marshal implements the gogo proto custom type interface.
 func (i SerializableInt) Marshal() ([]byte, error) {
 	i.ensureNonNil()

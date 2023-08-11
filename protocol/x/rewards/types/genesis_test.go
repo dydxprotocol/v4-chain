@@ -13,7 +13,7 @@ func TestDefaultGenesis(t *testing.T) {
 	expectedGenesisState := &types.GenesisState{
 		Params: types.Params{
 			TreasuryAccount:  "rewards_treasury",
-			Denom:            "eth_rewards_denom",
+			Denom:            "testnet_reward_token",
 			DenomExponent:    -6,
 			MarketId:         1,
 			FeeMultiplierPpm: 990_000, // 0.99

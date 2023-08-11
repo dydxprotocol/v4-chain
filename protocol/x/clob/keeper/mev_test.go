@@ -17,6 +17,7 @@ import (
 	"github.com/dydxprotocol/v4/x/clob/keeper"
 	"github.com/dydxprotocol/v4/x/clob/memclob"
 	"github.com/dydxprotocol/v4/x/clob/types"
+	feetierstypes "github.com/dydxprotocol/v4/x/feetiers/types"
 	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
@@ -29,6 +30,7 @@ func TestRecordMevMetrics(t *testing.T) {
 		// Setup.
 		subaccounts       []satypes.Subaccount
 		clobPairs         []types.ClobPair
+		feeParams         feetierstypes.PerpetualFeeParams
 		perpetuals        []perptypes.Perpetual
 		restingOrders     []types.Order
 		liquidationOrders []types.LiquidationOrder
@@ -60,6 +62,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -109,6 +112,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -141,124 +145,127 @@ func TestRecordMevMetrics(t *testing.T) {
 			expectedProposerNumFills:             1,
 			expectedProposerVolumeQuoteQuantums:  big.NewInt(10_100_000_000),
 		},
-		"Case 1 (positive funding) - capturing the spread": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_10_000USD,
-				constants.Bob_Num0_10_000USD,
-				constants.Carl_Num0_10000USD,
+		// TODO(CLOB-742): re-enable deleveraging and funding in MEV calculation.
+		// "Case 1 (positive funding) - capturing the spread": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Alice_Num0_10_000USD,
+		// 		constants.Bob_Num0_10_000USD,
+		// 		constants.Carl_Num0_10000USD,
 
-				// Dave_Num1 is the subaccount controlled by the block proposer.
-				constants.Dave_Num1_10_000USD,
-			},
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			restingOrders: []types.Order{
-				constants.Order_Alice_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20,
-				constants.Order_Bob_Num0_Id1_Clob0_Buy100BTC_Price99_GTB20,
-			},
-			intrablockMsgs: []sdk.Msg{
-				types.NewMsgPlaceOrder(
-					constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20,
-				),
-			},
-			setupPerpetualKeeperMocks: func(perpKeeper *mocks.ProcessPerpetualKeeper) {
-				perpKeeper.On("MaybeProcessNewFundingTickEpoch", mock.Anything).Return()
-				perpKeeper.On("GetPerpetual", mock.Anything, mock.Anything).
-					Return(constants.BtcUsd_20PercentInitial_10PercentMaintenance, nil)
-				// Long positions pay $10.
-				perpKeeper.On("GetSettlement", mock.Anything, mock.Anything, big.NewInt(10_000_000_000), mock.Anything).
-					Return(big.NewInt(-10_000_000), new(big.Int), nil)
-				// Short positions receive $10.
-				perpKeeper.On("GetSettlement", mock.Anything, mock.Anything, big.NewInt(-10_000_000_000), mock.Anything).
-					Return(big.NewInt(10_000_000), new(big.Int), nil)
-			},
-			proposedOperations: &types.MsgProposedOperations{
-				OperationsQueue: []types.OperationRaw{
-					// X sells 100 at $101 instead of A.
-					clobtest.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num1_Id0_Clob0_Sell100BTC_Price101_GTB20),
-					clobtest.NewShortTermOrderPlacementOperationRaw(constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20),
-					clobtest.NewMatchOperationRaw(
-						&constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20,
-						[]types.MakerFill{
-							{
-								MakerOrderId: constants.Order_Dave_Num1_Id0_Clob0_Sell100BTC_Price101_GTB20.GetOrderId(),
-								FillAmount:   10_000_000_000,
-							},
-						},
-					),
-				},
-			},
-			// $100 from MEV, $10 from funding.
-			expectedMev:                          110_000_000, // $110
-			expectedMidPrice:                     100_000_000,
-			expectedValidatorNumFills:            1,
-			expectedValidatorVolumeQuoteQuantums: big.NewInt(10_100_000_000),
-			expectedProposerNumFills:             1,
-			expectedProposerVolumeQuoteQuantums:  big.NewInt(10_100_000_000),
-		},
-		"Case 1 (negative funding) - capturing the spread": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_10_000USD,
-				constants.Bob_Num0_10_000USD,
-				constants.Carl_Num0_10000USD,
+		// 		// Dave_Num1 is the subaccount controlled by the block proposer.
+		// 		constants.Dave_Num1_10_000USD,
+		// 	},
+		// 	clobPairs: []types.ClobPair{
+		// 		constants.ClobPair_Btc_No_Fee,
+		// 	},
+		//  feeParams: constants.PerpetualFeeParamsNoFee,
+		// 	perpetuals: []perptypes.Perpetual{
+		// 		constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+		// 	},
+		// 	restingOrders: []types.Order{
+		// 		constants.Order_Alice_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20,
+		// 		constants.Order_Bob_Num0_Id1_Clob0_Buy100BTC_Price99_GTB20,
+		// 	},
+		// 	intrablockMsgs: []sdk.Msg{
+		// 		types.NewMsgPlaceOrder(
+		// 			constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20,
+		// 		),
+		// 	},
+		// 	setupPerpetualKeeperMocks: func(perpKeeper *mocks.ProcessPerpetualKeeper) {
+		// 		perpKeeper.On("MaybeProcessNewFundingTickEpoch", mock.Anything).Return()
+		// 		perpKeeper.On("GetPerpetual", mock.Anything, mock.Anything).
+		// 			Return(constants.BtcUsd_20PercentInitial_10PercentMaintenance, nil)
+		// 		// Long positions pay $10.
+		// 		perpKeeper.On("GetSettlement", mock.Anything, mock.Anything, big.NewInt(10_000_000_000), mock.Anything).
+		// 			Return(big.NewInt(-10_000_000), new(big.Int), nil)
+		// 		// Short positions receive $10.
+		// 		perpKeeper.On("GetSettlement", mock.Anything, mock.Anything, big.NewInt(-10_000_000_000), mock.Anything).
+		// 			Return(big.NewInt(10_000_000), new(big.Int), nil)
+		// 	},
+		// 	proposedOperations: &types.MsgProposedOperations{
+		// 		OperationsQueue: []types.OperationRaw{
+		// 			// X sells 100 at $101 instead of A.
+		// 			clobtest.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num1_Id0_Clob0_Sell100BTC_Price101_GTB20),
+		// 			clobtest.NewShortTermOrderPlacementOperationRaw(constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20),
+		// 			clobtest.NewMatchOperationRaw(
+		// 				&constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20,
+		// 				[]types.MakerFill{
+		// 					{
+		// 						MakerOrderId: constants.Order_Dave_Num1_Id0_Clob0_Sell100BTC_Price101_GTB20.GetOrderId(),
+		// 						FillAmount:   10_000_000_000,
+		// 					},
+		// 				},
+		// 			),
+		// 		},
+		// 	},
+		// 	// $100 from MEV, $10 from funding.
+		// 	expectedMev:                          110_000_000, // $110
+		// 	expectedMidPrice:                     100_000_000,
+		// 	expectedValidatorNumFills:            1,
+		// 	expectedValidatorVolumeQuoteQuantums: big.NewInt(10_100_000_000),
+		// 	expectedProposerNumFills:             1,
+		// 	expectedProposerVolumeQuoteQuantums:  big.NewInt(10_100_000_000),
+		// },
+		// "Case 1 (negative funding) - capturing the spread": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Alice_Num0_10_000USD,
+		// 		constants.Bob_Num0_10_000USD,
+		// 		constants.Carl_Num0_10000USD,
 
-				// Dave_Num1 is the subaccount controlled by the block proposer.
-				constants.Dave_Num1_10_000USD,
-			},
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			restingOrders: []types.Order{
-				constants.Order_Alice_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20,
-				constants.Order_Bob_Num0_Id1_Clob0_Buy100BTC_Price99_GTB20,
-			},
-			intrablockMsgs: []sdk.Msg{
-				types.NewMsgPlaceOrder(
-					constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20,
-				),
-			},
-			setupPerpetualKeeperMocks: func(perpKeeper *mocks.ProcessPerpetualKeeper) {
-				perpKeeper.On("MaybeProcessNewFundingTickEpoch", mock.Anything).Return()
-				perpKeeper.On("GetPerpetual", mock.Anything, mock.Anything).
-					Return(constants.BtcUsd_20PercentInitial_10PercentMaintenance, nil)
-				// Long positions receive $10.
-				perpKeeper.On("GetSettlement", mock.Anything, mock.Anything, big.NewInt(10_000_000_000), mock.Anything).
-					Return(big.NewInt(10_000_000), new(big.Int), nil)
-				// Short positions pay $10.
-				perpKeeper.On("GetSettlement", mock.Anything, mock.Anything, big.NewInt(-10_000_000_000), mock.Anything).
-					Return(big.NewInt(-10_000_000), new(big.Int), nil)
-			},
-			proposedOperations: &types.MsgProposedOperations{
-				OperationsQueue: []types.OperationRaw{
-					// X sells 100 at $101 instead of A.
-					clobtest.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num1_Id0_Clob0_Sell100BTC_Price101_GTB20),
-					clobtest.NewShortTermOrderPlacementOperationRaw(constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20),
-					clobtest.NewMatchOperationRaw(
-						&constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20,
-						[]types.MakerFill{
-							{
-								MakerOrderId: constants.Order_Dave_Num1_Id0_Clob0_Sell100BTC_Price101_GTB20.GetOrderId(),
-								FillAmount:   10_000_000_000,
-							},
-						},
-					),
-				},
-			},
-			// $100 from MEV, minus $10 from funding.
-			expectedMev:                          90_000_000, // $90
-			expectedMidPrice:                     100_000_000,
-			expectedValidatorNumFills:            1,
-			expectedValidatorVolumeQuoteQuantums: big.NewInt(10_100_000_000),
-			expectedProposerNumFills:             1,
-			expectedProposerVolumeQuoteQuantums:  big.NewInt(10_100_000_000),
-		},
+		// 		// Dave_Num1 is the subaccount controlled by the block proposer.
+		// 		constants.Dave_Num1_10_000USD,
+		// 	},
+		// 	clobPairs: []types.ClobPair{
+		// 		constants.ClobPair_Btc_No_Fee,
+		// 	},
+		//  feeParams: constants.PerpetualFeeParamsNoFee,
+		// 	perpetuals: []perptypes.Perpetual{
+		// 		constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+		// 	},
+		// 	restingOrders: []types.Order{
+		// 		constants.Order_Alice_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20,
+		// 		constants.Order_Bob_Num0_Id1_Clob0_Buy100BTC_Price99_GTB20,
+		// 	},
+		// 	intrablockMsgs: []sdk.Msg{
+		// 		types.NewMsgPlaceOrder(
+		// 			constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20,
+		// 		),
+		// 	},
+		// 	setupPerpetualKeeperMocks: func(perpKeeper *mocks.ProcessPerpetualKeeper) {
+		// 		perpKeeper.On("MaybeProcessNewFundingTickEpoch", mock.Anything).Return()
+		// 		perpKeeper.On("GetPerpetual", mock.Anything, mock.Anything).
+		// 			Return(constants.BtcUsd_20PercentInitial_10PercentMaintenance, nil)
+		// 		// Long positions receive $10.
+		// 		perpKeeper.On("GetSettlement", mock.Anything, mock.Anything, big.NewInt(10_000_000_000), mock.Anything).
+		// 			Return(big.NewInt(10_000_000), new(big.Int), nil)
+		// 		// Short positions pay $10.
+		// 		perpKeeper.On("GetSettlement", mock.Anything, mock.Anything, big.NewInt(-10_000_000_000), mock.Anything).
+		// 			Return(big.NewInt(-10_000_000), new(big.Int), nil)
+		// 	},
+		// 	proposedOperations: &types.MsgProposedOperations{
+		// 		OperationsQueue: []types.OperationRaw{
+		// 			// X sells 100 at $101 instead of A.
+		// 			clobtest.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num1_Id0_Clob0_Sell100BTC_Price101_GTB20),
+		// 			clobtest.NewShortTermOrderPlacementOperationRaw(constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20),
+		// 			clobtest.NewMatchOperationRaw(
+		// 				&constants.Order_Carl_Num0_Id1_Clob0_Buy100BTC_Price101_GTB20,
+		// 				[]types.MakerFill{
+		// 					{
+		// 						MakerOrderId: constants.Order_Dave_Num1_Id0_Clob0_Sell100BTC_Price101_GTB20.GetOrderId(),
+		// 						FillAmount:   10_000_000_000,
+		// 					},
+		// 				},
+		// 			),
+		// 		},
+		// 	},
+		// 	// $100 from MEV, minus $10 from funding.
+		// 	expectedMev:                          90_000_000, // $90
+		// 	expectedMidPrice:                     100_000_000,
+		// 	expectedValidatorNumFills:            1,
+		// 	expectedValidatorVolumeQuoteQuantums: big.NewInt(10_100_000_000),
+		// 	expectedProposerNumFills:             1,
+		// 	expectedProposerVolumeQuoteQuantums:  big.NewInt(10_100_000_000),
+		// },
 		"Case 2 - capturing utility from excess limit price": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_10_000USD,
@@ -272,6 +279,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -335,6 +343,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -398,6 +407,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -451,6 +461,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -505,6 +516,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -559,6 +571,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -600,6 +613,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -641,6 +655,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc, // Non zero fee.
 			},
+			feeParams: constants.PerpetualFeeParams,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -694,6 +709,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -716,90 +732,93 @@ func TestRecordMevMetrics(t *testing.T) {
 			expectedProposerNumFills:             0,
 			expectedProposerVolumeQuoteQuantums:  big.NewInt(0),
 		},
-		"Case 8 (deleveraging) - ignores deleveraging": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_10_000USD,
-				constants.Bob_Num0_10_000USD,
-				constants.Carl_Num0_10000USD,
-				constants.Dave_Num0_100BTC_Long_9900USD_Short,
+		// TODO(CLOB-742): re-enable deleveraging and funding in MEV calculation.
+		// "Case 8 (deleveraging) - ignores deleveraging": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Alice_Num0_10_000USD,
+		// 		constants.Bob_Num0_10_000USD,
+		// 		constants.Carl_Num0_10000USD,
+		// 		constants.Dave_Num0_100BTC_Long_9900USD_Short,
 
-				// Dave_Num1 is the subaccount controlled by the block proposer.
-				// Here Dave_Num1 is supposed to get deleveraged.
-				constants.Dave_Num1_100BTC_Short_10100USD,
-			},
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			restingOrders: []types.Order{
-				constants.Order_Alice_Num0_Id0_Clob0_Sell100BTC_Price102_GTB20,
-				constants.Order_Bob_Num0_Id1_Clob0_Buy100BTC_Price98_GTB20,
-			},
-			liquidationOrders: []types.LiquidationOrder{
-				constants.LiquidationOrder_Dave_Num1_Clob0_Buy100BTC_Price102,
-			},
-			proposedOperations: &types.MsgProposedOperations{
-				OperationsQueue: []types.OperationRaw{
-					// Empty.
-				},
-			},
-			expectedMev:                          100_000_000, // $100
-			expectedMidPrice:                     100_000_000,
-			expectedValidatorNumFills:            1,
-			expectedValidatorVolumeQuoteQuantums: big.NewInt(10_100_000_000),
-			expectedProposerNumFills:             0,
-			expectedProposerVolumeQuoteQuantums:  big.NewInt(0),
-		},
-		"Case 9 (deleveraging) - deleverage against different subaccount": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_10_000USD,
-				constants.Bob_Num0_10_000USD,
-				constants.Carl_Num0_100BTC_Short_10100USD,
-				// Dave_Num0 is supposed to get deleveraged against Carl_Num0.
-				constants.Dave_Num0_100BTC_Long_9900USD_Short,
+		// 		// Dave_Num1 is the subaccount controlled by the block proposer.
+		// 		// Here Dave_Num1 is supposed to get deleveraged.
+		// 		constants.Dave_Num1_100BTC_Short_10100USD,
+		// 	},
+		// 	clobPairs: []types.ClobPair{
+		// 		constants.ClobPair_Btc_No_Fee,
+		// 	},
+		//  feeParams: constants.PerpetualFeeParamsNoFee,
+		// 	perpetuals: []perptypes.Perpetual{
+		// 		constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+		// 	},
+		// 	restingOrders: []types.Order{
+		// 		constants.Order_Alice_Num0_Id0_Clob0_Sell100BTC_Price102_GTB20,
+		// 		constants.Order_Bob_Num0_Id1_Clob0_Buy100BTC_Price98_GTB20,
+		// 	},
+		// 	liquidationOrders: []types.LiquidationOrder{
+		// 		constants.LiquidationOrder_Dave_Num1_Clob0_Buy100BTC_Price102,
+		// 	},
+		// 	proposedOperations: &types.MsgProposedOperations{
+		// 		OperationsQueue: []types.OperationRaw{
+		// 			// Empty.
+		// 		},
+		// 	},
+		// 	expectedMev:                          100_000_000, // $100
+		// 	expectedMidPrice:                     100_000_000,
+		// 	expectedValidatorNumFills:            1,
+		// 	expectedValidatorVolumeQuoteQuantums: big.NewInt(10_100_000_000),
+		// 	expectedProposerNumFills:             0,
+		// 	expectedProposerVolumeQuoteQuantums:  big.NewInt(0),
+		// },
+		// "Case 9 (deleveraging) - deleverage against different subaccount": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Alice_Num0_10_000USD,
+		// 		constants.Bob_Num0_10_000USD,
+		// 		constants.Carl_Num0_100BTC_Short_10100USD,
+		// 		// Dave_Num0 is supposed to get deleveraged against Carl_Num0.
+		// 		constants.Dave_Num0_100BTC_Long_9900USD_Short,
 
-				// Dave_Num1 is the subaccount controlled by the block proposer.
-				constants.Dave_Num1_100BTC_Short_10100USD,
-			},
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			restingOrders: []types.Order{
-				constants.Order_Alice_Num0_Id0_Clob0_Sell100BTC_Price102_GTB20,
-				constants.Order_Bob_Num0_Id1_Clob0_Buy100BTC_Price98_GTB20,
-			},
-			liquidationOrders: []types.LiquidationOrder{
-				constants.LiquidationOrder_Dave_Num0_Clob0_Sell100BTC_Price98,
-			},
-			proposedOperations: &types.MsgProposedOperations{
-				OperationsQueue: []types.OperationRaw{
-					clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
-						types.MatchPerpetualDeleveraging{
-							Liquidated:  constants.Dave_Num0,
-							PerpetualId: constants.ClobPair_Btc_No_Fee.MustGetPerpetualId(),
-							Fills: []types.MatchPerpetualDeleveraging_Fill{
-								{
-									// Deleverage against Dave_Num1 instead of Carl_Num0.
-									OffsettingSubaccountId: constants.Dave_Num1,
-									FillAmount:             10_000_000_000,
-								},
-							},
-						},
-					),
-				},
-			},
-			expectedMev:                          100_000_000, // $100
-			expectedMidPrice:                     100_000_000,
-			expectedValidatorNumFills:            1,
-			expectedValidatorVolumeQuoteQuantums: big.NewInt(9_900_000_000),
-			expectedProposerNumFills:             1,
-			expectedProposerVolumeQuoteQuantums:  big.NewInt(9_900_000_000),
-		},
+		// 		// Dave_Num1 is the subaccount controlled by the block proposer.
+		// 		constants.Dave_Num1_100BTC_Short_10100USD,
+		// 	},
+		// 	clobPairs: []types.ClobPair{
+		// 		constants.ClobPair_Btc_No_Fee,
+		// 	},
+		//  feeParams: constants.PerpetualFeeParamsNoFee,
+		// 	perpetuals: []perptypes.Perpetual{
+		// 		constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+		// 	},
+		// 	restingOrders: []types.Order{
+		// 		constants.Order_Alice_Num0_Id0_Clob0_Sell100BTC_Price102_GTB20,
+		// 		constants.Order_Bob_Num0_Id1_Clob0_Buy100BTC_Price98_GTB20,
+		// 	},
+		// 	liquidationOrders: []types.LiquidationOrder{
+		// 		constants.LiquidationOrder_Dave_Num0_Clob0_Sell100BTC_Price98,
+		// 	},
+		// 	proposedOperations: &types.MsgProposedOperations{
+		// 		OperationsQueue: []types.OperationRaw{
+		// 			clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+		// 				types.MatchPerpetualDeleveraging{
+		// 					Liquidated:  constants.Dave_Num0,
+		// 					PerpetualId: constants.ClobPair_Btc_No_Fee.MustGetPerpetualId(),
+		// 					Fills: []types.MatchPerpetualDeleveraging_Fill{
+		// 						{
+		// 							// Deleverage against Dave_Num1 instead of Carl_Num0.
+		// 							OffsettingSubaccountId: constants.Dave_Num1,
+		// 							FillAmount:             10_000_000_000,
+		// 						},
+		// 					},
+		// 				},
+		// 			),
+		// 		},
+		// 	},
+		// 	expectedMev:                          100_000_000, // $100
+		// 	expectedMidPrice:                     100_000_000,
+		// 	expectedValidatorNumFills:            1,
+		// 	expectedValidatorVolumeQuoteQuantums: big.NewInt(9_900_000_000),
+		// 	expectedProposerNumFills:             1,
+		// 	expectedProposerVolumeQuoteQuantums:  big.NewInt(9_900_000_000),
+		// },
 	}
 
 	for name, tc := range tests {
@@ -842,7 +861,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
 
-			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
 
 			// Set up USDC asset in assets module.
 			err = keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)

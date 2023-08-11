@@ -1,12 +1,12 @@
 package price_fetcher
 
 import (
-	"cosmossdk.io/math"
 	"errors"
-	"fmt"
+	"testing"
+
+	"cosmossdk.io/math"
 	pricefeed_cosntants "github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4/testutil/daemons/pricefeed"
-	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
@@ -173,7 +173,7 @@ func TestRunTaskLoop(t *testing.T) {
 			marketsPerCall := 1
 			if tc.queryDetails.IsMultiMarket {
 				expectedQueries = taskLoopIterations
-				marketsPerCall = len(tc.mutableExchangeConfig.MarketToTicker)
+				marketsPerCall = len(tc.mutableExchangeConfig.MarketToMarketConfig)
 			}
 			queryHandler.AssertNumberOfCalls(t, "Query", expectedQueries)
 			for i := 0; i < len(tc.expectedMarketIdsCalled); i = i + marketsPerCall {
@@ -558,8 +558,8 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 			if tc.isMultiMarket {
 				// For multi market exchanges, the query handler should be called once per task loop, and each
 				// query should be for all markets supported by the exchange at that time.
-				initialNumMarkets := len(tc.initialMutableExchangeConfig.MarketToTicker)
-				updateNumMarkets := len(tc.updateMutableExchangeConfig.MarketToTicker)
+				initialNumMarkets := len(tc.initialMutableExchangeConfig.MarketToMarketConfig)
+				updateNumMarkets := len(tc.updateMutableExchangeConfig.MarketToMarketConfig)
 
 				indexPtr := 0
 				if initialNumMarkets > 0 {
@@ -657,9 +657,6 @@ func TestRunSubTask_Mixed(t *testing.T) {
 			},
 			expectedPrices: []*types.MarketPriceTimestamp{
 				constants.Market8_TimeT_Price1,
-			},
-			expectedErrors: []error{
-				fmt.Errorf("Market 8 unavailable on exchange 'Exchange1' (%w)", tickerNotAvailable),
 			},
 		},
 	}

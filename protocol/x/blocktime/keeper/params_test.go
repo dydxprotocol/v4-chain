@@ -32,28 +32,31 @@ func TestSetDowntimeParams_Success(t *testing.T) {
 		Infos: []*types.AllDowntimeInfo_DowntimeInfo{
 			{
 				Duration: 10 * time.Second,
-				BlockInfo: &types.BlockInfo{
-					Height:    10,
-					Timestamp: time.Unix(100, 0).UTC(),
+				BlockInfo: types.BlockInfo{
+					Height:    30,
+					Timestamp: time.Unix(300, 0).UTC(),
 				},
 			},
 			{
 				Duration: 20 * time.Second,
-				BlockInfo: &types.BlockInfo{
+				BlockInfo: types.BlockInfo{
 					Height:    20,
 					Timestamp: time.Unix(200, 0).UTC(),
 				},
 			},
 			{
 				Duration: 30 * time.Second,
-				BlockInfo: &types.BlockInfo{
-					Height:    30,
-					Timestamp: time.Unix(300, 0).UTC(),
+				BlockInfo: types.BlockInfo{
+					Height:    10,
+					Timestamp: time.Unix(100, 0).UTC(),
 				},
 			},
 			{
-				Duration:  40 * time.Second,
-				BlockInfo: nil,
+				Duration: 40 * time.Second,
+				BlockInfo: types.BlockInfo{
+					Height:    1,
+					Timestamp: time.Unix(10, 0).UTC(),
+				},
 			},
 		},
 	})
@@ -72,35 +75,38 @@ func TestSetDowntimeParams_Success(t *testing.T) {
 		Infos: []*types.AllDowntimeInfo_DowntimeInfo{
 			{
 				Duration: 5 * time.Second,
-				BlockInfo: &types.BlockInfo{
+				BlockInfo: types.BlockInfo{
 					Height:    40,
 					Timestamp: time.Unix(400, 0).UTC(),
 				},
 			},
 			{
 				Duration: 20 * time.Second,
-				BlockInfo: &types.BlockInfo{
+				BlockInfo: types.BlockInfo{
 					Height:    20,
 					Timestamp: time.Unix(200, 0).UTC(),
 				},
 			},
 			{
 				Duration: 25 * time.Second,
-				BlockInfo: &types.BlockInfo{
+				BlockInfo: types.BlockInfo{
 					Height:    20,
 					Timestamp: time.Unix(200, 0).UTC(),
 				},
 			},
 			{
 				Duration: 35 * time.Second,
-				BlockInfo: &types.BlockInfo{
-					Height:    30,
-					Timestamp: time.Unix(300, 0).UTC(),
+				BlockInfo: types.BlockInfo{
+					Height:    10,
+					Timestamp: time.Unix(100, 0).UTC(),
 				},
 			},
 			{
-				Duration:  45 * time.Second,
-				BlockInfo: nil,
+				Duration: 45 * time.Second,
+				BlockInfo: types.BlockInfo{
+					Height:    1,
+					Timestamp: time.Unix(10, 0).UTC(),
+				},
 			},
 		},
 	}

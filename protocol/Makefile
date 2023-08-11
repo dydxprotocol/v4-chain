@@ -124,26 +124,8 @@ aws-push-dev4:
 aws-push-dev5:
 	./scripts/build-push-ecr.sh dev5
 
-aws-push-snapshot-dev:
-	./scripts/build-push-ecr.sh dev snapshot
-
-aws-push-snapshot-dev2:
-	./scripts/build-push-ecr.sh dev2 snapshot
-
-aws-push-snapshot-dev3:
-	./scripts/build-push-ecr.sh dev3 snapshot
-
-aws-push-snapshot-dev4:
-	./scripts/build-push-ecr.sh dev4 snapshot
-
-aws-push-snapshot-dev5:
-	./scripts/build-push-ecr.sh dev5 snapshot
-
 aws-push-staging:
 	./scripts/build-push-ecr.sh staging
-
-aws-push-snapshot-staging:
-	./scripts/build-push-ecr.sh staging snapshot
 
 ###############################################################################
 ###                                  Build                                  ###

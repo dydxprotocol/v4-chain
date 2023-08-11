@@ -343,11 +343,7 @@ func TestRemoveOrderIfFilled(t *testing.T) {
 
 			// Place all existing orders on the orderbook
 			for _, order := range tc.existingOrders {
-				_, _, _, err := memclob.PlaceOrder(
-					ctx,
-					order,
-					true,
-				)
+				_, _, _, err := memclob.PlaceOrder(ctx, order)
 				require.NoError(t, err)
 			}
 
@@ -623,11 +619,7 @@ func TestRemoveOrder(t *testing.T) {
 
 			// Place all existing orders on the orderbook
 			for _, order := range tc.existingOrders {
-				_, _, _, err := memclob.PlaceOrder(
-					ctx,
-					order,
-					true,
-				)
+				_, _, _, err := memclob.PlaceOrder(ctx, order)
 				require.NoError(t, err)
 			}
 

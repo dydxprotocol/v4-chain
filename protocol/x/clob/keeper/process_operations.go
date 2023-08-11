@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	indexershared "github.com/dydxprotocol/v4/indexer/shared"
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/lib/metrics"
 	"github.com/dydxprotocol/v4/x/clob/types"
@@ -21,7 +21,6 @@ import (
 // queue. If all validation passes, the operations queue is written to state.
 // The following operations are written to state:
 // - Order Matches, Liquidation Matches, Deleveraging Matches
-// If all of the state writes succeed, offchain events for the matches are emitted.
 func (k Keeper) ProcessProposerOperations(
 	ctx sdk.Context,
 	rawOperations []types.OperationRaw,
@@ -45,25 +44,15 @@ func (k Keeper) ProcessProposerOperations(
 	)
 
 	// Write results of the operations queue to state.
-	offchainUpdates, err := k.ProcessInternalOperations(ctx, operations)
-	if err != nil {
+	if err := k.ProcessInternalOperations(ctx, operations); err != nil {
 		return err
 	}
-
-	// Send off-chain updates generated from matching the orders. `SendOffchainMessages` enqueues the
-	// the messages to be sent in a channel and should be non-blocking.
-	// TODO(IND-146) Only onchain events are needed after this ticket is finished.
-	k.SendOffchainMessages(
-		offchainUpdates,
-		nil,
-		metrics.SendProposedOperationsOffchainUpdates,
-	)
 
 	// Collect the list of order ids filled and set the field in the `ProcessProposerMatchesEvents` object.
 	processProposerMatchesEvents := k.GenerateProcessProposerMatchesEvents(ctx, operations)
 
 	// Remove fully filled orders from state.
-	for _, orderId := range processProposerMatchesEvents.OrdersIdsFilledInLastBlock {
+	for _, orderId := range processProposerMatchesEvents.OrderIdsFilledInLastBlock {
 		if orderId.IsShortTermOrder() {
 			continue
 		}
@@ -84,9 +73,10 @@ func (k Keeper) ProcessProposerOperations(
 				telemetry.IncrCounterWithLabels(
 					[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
 					1,
-					[]gometrics.Label{
+					append(
+						orderPlacement.Order.GetOrderLabels(),
 						metrics.GetLabelForStringValue(metrics.RemovalReason, types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED.String()),
-					},
+					),
 				)
 
 				processProposerMatchesEvents.RemovedStatefulOrderIds = append(
@@ -119,25 +109,22 @@ func (k Keeper) ProcessProposerOperations(
 func (k Keeper) ProcessInternalOperations(
 	ctx sdk.Context,
 	operations []types.InternalOperation,
-) (*types.OffchainUpdates, error) {
+) error {
 	// Collect all the short-term orders placed for subsequent lookups.
 	placedShortTermOrders := make(map[types.OrderId]types.Order, 0)
-	offchainUpdates := types.NewOffchainUpdates()
 
 	// Write the matches to state if all stateful validation passes.
 	for _, operation := range operations {
 		switch castedOperation := operation.Operation.(type) {
 		case *types.InternalOperation_Match:
 			clobMatch := castedOperation.Match
-			matchOffchainUpdates, err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders)
-			if err != nil {
-				return nil, sdkerrors.Wrapf(
+			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
+				return sdkerrors.Wrapf(
 					err,
 					"ProcessInternalOperations: Failed to process clobMatch: %+v",
 					clobMatch,
 				)
 			}
-			offchainUpdates.Append(matchOffchainUpdates)
 		case *types.InternalOperation_ShortTermOrderPlacement:
 			order := castedOperation.ShortTermOrderPlacement.GetOrder()
 			placedShortTermOrders[order.GetOrderId()] = order
@@ -147,12 +134,27 @@ func (k Keeper) ProcessInternalOperations(
 			orderRemoval := castedOperation.OrderRemoval
 			k.MustRemoveStatefulOrder(ctx, orderRemoval.GetOrderId())
 
+			// Emit an on-chain indexer event for Stateful Order Removal.
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewStatefulOrderRemovalEvent(
+						orderRemoval.OrderId,
+						indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+							orderRemoval.RemovalReason,
+						),
+					),
+				),
+			)
+
 			telemetry.IncrCounterWithLabels(
 				[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
 				1,
-				[]gometrics.Label{
+				append(
+					orderRemoval.OrderId.GetOrderIdLabels(),
 					metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
-				},
+				),
 			)
 		case *types.InternalOperation_PreexistingStatefulOrder:
 			// When we fetch operations to propose, preexisting stateful orders are not included
@@ -172,7 +174,7 @@ func (k Keeper) ProcessInternalOperations(
 			)
 		}
 	}
-	return offchainUpdates, nil
+	return nil
 }
 
 // PersistMatchToState takes in an ClobMatch and writes the match to state. A map of orderId
@@ -182,32 +184,26 @@ func (k Keeper) PersistMatchToState(
 	ctx sdk.Context,
 	clobMatch *types.ClobMatch,
 	ordersMap map[types.OrderId]types.Order,
-) (*types.OffchainUpdates, error) {
-	offchainUpdates := types.NewOffchainUpdates()
-
+) error {
 	switch castedMatch := clobMatch.Match.(type) {
 	case *types.ClobMatch_MatchOrders:
-		matchOffchainUpdates, err := k.PersistMatchOrdersToState(ctx, castedMatch.MatchOrders, ordersMap)
-		if err != nil {
-			return nil, err
+		if err := k.PersistMatchOrdersToState(ctx, castedMatch.MatchOrders, ordersMap); err != nil {
+			return err
 		}
-		offchainUpdates.Append(matchOffchainUpdates)
 	case *types.ClobMatch_MatchPerpetualLiquidation:
-		liquidationOffchainEvents, err := k.PersistMatchLiquidationToState(
+		if err := k.PersistMatchLiquidationToState(
 			ctx,
 			castedMatch.MatchPerpetualLiquidation,
 			ordersMap,
-		)
-		if err != nil {
-			return nil, err
+		); err != nil {
+			return err
 		}
-		offchainUpdates.Append(liquidationOffchainEvents)
 	case *types.ClobMatch_MatchPerpetualDeleveraging:
 		if err := k.PersistMatchDeleveragingToState(
 			ctx,
 			castedMatch.MatchPerpetualDeleveraging,
 		); err != nil {
-			return nil, err
+			return err
 		}
 	default:
 		panic(
@@ -217,7 +213,7 @@ func (k Keeper) PersistMatchToState(
 			),
 		)
 	}
-	return offchainUpdates, nil
+	return nil
 }
 
 // PersistMatchOrdersToState writes a MatchOrders object to state and emits an onchain
@@ -227,10 +223,9 @@ func (k Keeper) PersistMatchOrdersToState(
 	ctx sdk.Context,
 	matchOrders *types.MatchOrders,
 	ordersMap map[types.OrderId]types.Order,
-) (*types.OffchainUpdates, error) {
+) error {
 	makerFills := matchOrders.GetFills()
 	takerOrder := k.MustFetchOrderFromOrderId(ctx, matchOrders.GetTakerOrderId(), ordersMap)
-	offchainUpdates := types.NewOffchainUpdates()
 
 	for _, makerFill := range makerFills {
 		makerOrder := k.MustFetchOrderFromOrderId(ctx, makerFill.GetMakerOrderId(), ordersMap)
@@ -241,17 +236,30 @@ func (k Keeper) PersistMatchOrdersToState(
 			FillAmount: satypes.BaseQuantums(makerFill.GetFillAmount()),
 		}
 
-		_, _, _, matchOffchainUpdates, err := k.ProcessSingleMatch(ctx, &matchWithOrders)
+		_, _, _, _, err := k.ProcessSingleMatch(ctx, &matchWithOrders)
 		if err != nil {
-			return nil, err
+			return err
 		}
-
-		// Batch off-chain updates generated from matching the orders. Offchain updates will be
-		// sent in `ProcessProposerOperations` if all state writes succeed.
-		offchainUpdates.Append(matchOffchainUpdates)
 
 		// Send on-chain update for the match. The events are stored in a TransientStore which should be rolled-back
 		// if the branched state is discarded, so batching is not necessary.
+
+		makerExists, totalFilledMaker, _ := k.GetOrderFillAmount(ctx, matchWithOrders.MakerOrder.MustGetOrder().OrderId)
+		takerExists, totalFilledTaker, _ := k.GetOrderFillAmount(ctx, matchWithOrders.TakerOrder.MustGetOrder().OrderId)
+		if !makerExists {
+			panic(
+				fmt.Sprintf("PersistMatchOrdersToState: Order fill amount not found for maker order: %+v",
+					matchWithOrders.MakerOrder.MustGetOrder().OrderId,
+				),
+			)
+		}
+		if !takerExists {
+			panic(
+				fmt.Sprintf("PersistMatchOrdersToState: Order fill amount not found for taker order: %+v",
+					matchWithOrders.TakerOrder.MustGetOrder().OrderId,
+				),
+			)
+		}
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,
@@ -262,12 +270,14 @@ func (k Keeper) PersistMatchOrdersToState(
 					matchWithOrders.FillAmount,
 					matchWithOrders.MakerFee,
 					matchWithOrders.TakerFee,
+					totalFilledMaker,
+					totalFilledTaker,
 				),
 			),
 		)
 	}
 
-	return offchainUpdates, nil
+	return nil
 }
 
 // PersistMatchLiquidationToState writes a MatchPerpetualLiquidation event and updates the keeper transient store.
@@ -276,13 +286,12 @@ func (k Keeper) PersistMatchLiquidationToState(
 	ctx sdk.Context,
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
-) (*types.OffchainUpdates, error) {
+) error {
 	fills := matchLiquidation.GetFills()
-	offchainUpdates := types.NewOffchainUpdates()
 
 	takerOrder, err := k.ConstructTakerOrderFromMatchPerpetualLiquidation(ctx, matchLiquidation)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, fill := range fills {
@@ -296,18 +305,22 @@ func (k Keeper) PersistMatchLiquidationToState(
 		}
 
 		// Write the position updates and state fill amounts for this match.
-		_, _, _, matchOffchainUpdates, err := k.ProcessSingleMatch(
+		_, _, _, _, err := k.ProcessSingleMatch(
 			ctx,
 			&matchWithOrders,
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		// Batch off-chain updates generated from matching the liquidation. Offchain updates will be
-		// sent in `ProcessProposerOperations` if all state writes succeed.
-		offchainUpdates.Append(matchOffchainUpdates)
-
+		makerExists, totalFilledMaker, _ := k.GetOrderFillAmount(ctx, matchWithOrders.MakerOrder.MustGetOrder().OrderId)
+		if !makerExists {
+			panic(
+				fmt.Sprintf("PersistMatchLiquidationToState: Order fill amount not found for maker order: %+v",
+					matchWithOrders.MakerOrder.MustGetOrder().OrderId,
+				),
+			)
+		}
 		// Send on-chain update for the liquidation. The events are stored in a TransientStore which should be rolled-back
 		// if the branched state is discarded, so batching is not necessary.
 		k.GetIndexerEventManager().AddTxnEvent(
@@ -320,6 +333,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 					matchWithOrders.FillAmount,
 					matchWithOrders.MakerFee,
 					matchWithOrders.TakerFee,
+					totalFilledMaker,
 				),
 			),
 		)
@@ -331,7 +345,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 		matchLiquidation.Liquidated,
 		matchLiquidation.PerpetualId,
 	)
-	return offchainUpdates, nil
+	return nil
 }
 
 // PersistMatchDeleveragingToState writes a MatchPerpetualDeleveraging object to state.
@@ -408,6 +422,9 @@ func (k Keeper) PersistMatchDeleveragingToState(
 
 // MustFetchOrderFromOrderId fetches an Order object given an orderId. If it is a short term order,
 // `ordersMap` will be used to populate the order. If it is a stateful order, read from state.
+// Note that this function is meant to be used for operation processing during DeliverTx and does not
+// fetch untriggered conditional orders.
+//
 // Function will panic if for any reason, the order cannot be searched up.
 func (k Keeper) MustFetchOrderFromOrderId(
 	ctx sdk.Context,
@@ -428,18 +445,32 @@ func (k Keeper) MustFetchOrderFromOrderId(
 	}
 
 	// For stateful orders, fetch from state.
-	statefulOrderPlacement, found := k.GetLongTermOrderPlacement(ctx, orderId)
-	if !found {
-		panic(
-			fmt.Sprintf("MustFetchOrderFromOrderId: failed fetching stateful term order for order id: %+v", orderId),
-		)
+	if orderId.IsLongTermOrder() {
+		statefulOrderPlacement, found := k.GetLongTermOrderPlacement(ctx, orderId)
+		if !found {
+			panic(
+				fmt.Sprintf("MustFetchOrderFromOrderId: failed fetching stateful term order for order id: %+v", orderId),
+			)
+		}
+		return statefulOrderPlacement.Order
+	} else if orderId.IsConditionalOrder() {
+		conditionalOrderPlacement, found := k.GetTriggeredConditionalOrderPlacement(ctx, orderId)
+		if !found {
+			panic(
+				fmt.Sprintf("MustFetchOrderFromOrderId: failed fetching triggered conditional order for order id: %+v", orderId),
+			)
+		}
+		return conditionalOrderPlacement.Order
 	}
-	return statefulOrderPlacement.Order
+
+	panic(
+		fmt.Sprintf("MustFetchOrderFromOrderId: unknown order type. order id: %+v", orderId),
+	)
 }
 
 // GenerateProcessProposerMatchesEvents generates a `ProcessProposerMatchesEvents` object from
 // an operations queue.
-// Currently, it sets the `OrdersIdsFilledInLastBlock` field and the `BlockHeight` field.
+// Currently, it sets the `OrderIdsFilledInLastBlock` field and the `BlockHeight` field.
 // This function expects the proposed operations to be valid, and does not verify that the `GoodTilBlockTime`
 // of order replacement and cancellation is greater than the `GoodTilBlockTime` of the existing order.
 func (k Keeper) GenerateProcessProposerMatchesEvents(
@@ -482,15 +513,19 @@ func (k Keeper) GenerateProcessProposerMatchesEvents(
 	types.MustSortAndHaveNoDuplicates(filledOrderIds)
 	types.MustSortAndHaveNoDuplicates(removedOrderIds)
 
-	// PlacedStatefulOrders to be populated in MsgHandler for MsgPlaceOrder.
+	// PlacedLongTermOrderIds to be populated in MsgHandler for MsgPlaceOrder.
+	// PlacedConditionalOrderIds to be populated in MsgHandler for MsgPlaceOrder.
+	// ConditionalOrderIdsTriggeredInLastBlock to be populated in EndBlocker.
 	// ExpiredOrderId to be populated in the EndBlocker.
-	// PlacedStatefulCancellations to be populated in MsgHandler for MsgCancelOrder.
+	// PlacedStatefulCancellation to be populated in MsgHandler for MsgCancelOrder.
 	return types.ProcessProposerMatchesEvents{
-		PlacedStatefulOrders:        []types.Order{},
-		ExpiredStatefulOrderIds:     []types.OrderId{},
-		OrdersIdsFilledInLastBlock:  filledOrderIds,
-		PlacedStatefulCancellations: []types.OrderId{},
-		RemovedStatefulOrderIds:     removedOrderIds,
-		BlockHeight:                 lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		PlacedLongTermOrderIds:                  []types.OrderId{},
+		ExpiredStatefulOrderIds:                 []types.OrderId{},
+		OrderIdsFilledInLastBlock:               filledOrderIds,
+		PlacedStatefulCancellationOrderIds:      []types.OrderId{},
+		RemovedStatefulOrderIds:                 removedOrderIds,
+		PlacedConditionalOrderIds:               []types.OrderId{},
+		ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
+		BlockHeight:                             lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 	}
 }

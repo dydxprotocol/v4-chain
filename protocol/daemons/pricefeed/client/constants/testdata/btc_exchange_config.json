@@ -1,40 +1,44 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"BTCUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"BTCUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"BTCUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"BTCUSD\""
     },
     {
-      "exchangeName":"Bitfinex",
-      "ticker":"tBTCUSD"
+      "exchangeName": "Bitfinex",
+      "ticker": "tBTCUSD",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Bitstamp",
-      "ticker":"BTC/USD"
+      "exchangeName": "Bitstamp",
+      "ticker": "BTC/USD"
     },
     {
-      "exchangeName":"Bybit",
-      "ticker":"BTCUSDT"
+      "exchangeName": "Bybit",
+      "ticker": "BTCUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"BTC-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "BTC-USD"
     },
     {
-      "exchangeName":"CryptoCom",
-      "ticker":"BTC_USD"
+      "exchangeName": "CryptoCom",
+      "ticker": "BTC_USD"
     },
     {
-      "exchangeName":"Kraken",
-      "ticker":"XXBTZUSD"
+      "exchangeName": "Kraken",
+      "ticker": "XXBTZUSD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"BTC-USDT"
+      "exchangeName": "Okx",
+      "ticker": "BTC-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

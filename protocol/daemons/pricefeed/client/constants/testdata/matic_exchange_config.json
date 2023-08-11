@@ -1,32 +1,37 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"MATICUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"MATICUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"MATICUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"MATICUSD\""
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"MATIC-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "MATIC-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"MATIC_USDT"
+      "exchangeName": "Gate",
+      "ticker": "MATIC_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"maticusdt"
+      "exchangeName": "Huobi",
+      "ticker": "maticusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"MATIC-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "MATIC-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"MATIC-USDT"
+      "exchangeName": "Okx",
+      "ticker": "MATIC-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

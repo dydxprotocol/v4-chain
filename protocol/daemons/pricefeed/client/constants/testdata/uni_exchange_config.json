@@ -1,40 +1,46 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"UNIUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"UNIUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"UNIUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"UNIUSD\""
     },
     {
-      "exchangeName":"Bybit",
-      "ticker":"UNIUSDT"
+      "exchangeName": "Bybit",
+      "ticker": "UNIUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"UNI-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "UNI-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"UNI_USDT"
+      "exchangeName": "Gate",
+      "ticker": "UNI_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"uniusdt"
+      "exchangeName": "Huobi",
+      "ticker": "uniusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kraken",
-      "ticker":"UNIUSD"
+      "exchangeName": "Kraken",
+      "ticker": "UNIUSD"
     },
     {
-      "exchangeName":"Mexc",
-      "ticker":"UNI_USDT"
+      "exchangeName": "Mexc",
+      "ticker": "UNI_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"UNI-USDT"
+      "exchangeName": "Okx",
+      "ticker": "UNI-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

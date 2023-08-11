@@ -59,20 +59,6 @@ func (_m *MemClobKeeper) CancelShortTermOrder(ctx types.Context, msgCancelOrder 
 	return r0
 }
 
-// DoesLongTermOrderExistInState provides a mock function with given fields: ctx, order
-func (_m *MemClobKeeper) DoesLongTermOrderExistInState(ctx types.Context, order clobtypes.Order) bool {
-	ret := _m.Called(ctx, order)
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) bool); ok {
-		r0 = rf(ctx, order)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
 // GetIndexerEventManager provides a mock function with given fields:
 func (_m *MemClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	ret := _m.Called()

@@ -14,6 +14,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		panic(err)
 	}
 
+	// Set to genesis block height and time
 	k.SetPreviousBlockInfo(ctx, &types.BlockInfo{
 		Height:    uint32(ctx.BlockHeight()),
 		Timestamp: ctx.BlockTime(),

@@ -113,20 +113,6 @@ func (_m *ClobKeeper) DeleteLongTermOrderPlacement(ctx types.Context, orderId cl
 	_m.Called(ctx, orderId)
 }
 
-// DoesLongTermOrderExistInState provides a mock function with given fields: ctx, order
-func (_m *ClobKeeper) DoesLongTermOrderExistInState(ctx types.Context, order clobtypes.Order) bool {
-	ret := _m.Called(ctx, order)
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) bool); ok {
-		r0 = rf(ctx, order)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
 // GetAllClobPair provides a mock function with given fields: ctx
 func (_m *ClobKeeper) GetAllClobPair(ctx types.Context) []clobtypes.ClobPair {
 	ret := _m.Called(ctx)

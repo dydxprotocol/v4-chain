@@ -7,9 +7,10 @@ import (
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		BlockRateLimitConfig: BlockRateLimitConfiguration{},
-		ClobPairs:            []ClobPair{},
-		LiquidationsConfig:   LiquidationsConfig_Default,
+		BlockRateLimitConfig:  BlockRateLimitConfiguration{},
+		ClobPairs:             []ClobPair{},
+		EquityTierLimitConfig: EquityTierLimitConfiguration{},
+		LiquidationsConfig:    LiquidationsConfig_Default,
 	}
 }
 
@@ -33,6 +34,10 @@ func (gs GenesisState) Validate() error {
 	}
 
 	if err := gs.BlockRateLimitConfig.Validate(); err != nil {
+		return err
+	}
+
+	if err := gs.EquityTierLimitConfig.Validate(); err != nil {
 		return err
 	}
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4/lib"
@@ -13,10 +14,16 @@ import (
 	"github.com/dydxprotocol/v4/x/clob/types"
 )
 
-// SetLongTermOrderPlacement sets a long term order in state, along with information about when
-// it was placed. Note the following:
-// - If a long term order placement already exists in state with `order.OrderId`, this function will overwrite it.
+// TODO(CLOB-739) Rename all functions in this file to StatefulOrder instead of LongTermOrder
+
+// SetLongTermOrderPlacement sets a stateful order in state, along with information about when
+// it was placed. The placed order can either be a conditional order or a long term order.
+// If the order is conditional, it will be placed into the Untriggered Conditional Orders state store.
+// If it is a long term order, it will be placed in the Long Term Order state store.
+// Note the following:
+// - If a stateful order placement already exists in state with `order.OrderId`, this function will overwrite it.
 // - The `TransactionIndex` field will be set to the next unused transaction index for this block.
+// - Triggered conditional orders should use the `TriggerConditionalOrder` write path.
 func (k Keeper) SetLongTermOrderPlacement(
 	ctx sdk.Context,
 	order types.Order,
@@ -29,16 +36,7 @@ func (k Keeper) SetLongTermOrderPlacement(
 
 	// Get the next stateful order block transaction index, defaulting to zero if not set.
 	// Note that the transaction index will always be overwritten at the end of this method.
-	nextTransactionIndexTransientStore := k.getTransientStore(ctx)
-	nextStatefulOrderTransactionIndexBytes := nextTransactionIndexTransientStore.Get(
-		types.KeyPrefix(
-			types.NextStatefulOrderBlockTransactionIndexKey,
-		),
-	)
-	nextStatefulOrderTransactionIndex := uint32(0)
-	if nextStatefulOrderTransactionIndexBytes != nil {
-		nextStatefulOrderTransactionIndex = lib.BytesToUint32(nextStatefulOrderTransactionIndexBytes)
-	}
+	nextStatefulOrderTransactionIndex := k.GetNextStatefulOrderTransactionIndex(ctx)
 
 	orderIdBytes := types.OrderIdKey(order.OrderId)
 	longTermOrderPlacement := types.LongTermOrderPlacement{
@@ -48,22 +46,15 @@ func (k Keeper) SetLongTermOrderPlacement(
 			TransactionIndex: nextStatefulOrderTransactionIndex,
 		},
 	}
-	statefulOrderPlacementBytes := k.cdc.MustMarshal(&longTermOrderPlacement)
+	longTermOrderPlacementBytes := k.cdc.MustMarshal(&longTermOrderPlacement)
 
-	// Write the `StatefulOrderPlacement` to state.
-	store := k.GetLongTermOrderPlacementStore(ctx)
-	store.Set(orderIdBytes, statefulOrderPlacementBytes)
+	// For setting long term order placements, always set conditional orders to the untriggered state store.
+	store, memStore := k.fetchStateStoresForOrder(ctx, order.OrderId)
+	// Write the `LongTermOrderPlacement` to state.
+	store.Set(orderIdBytes, longTermOrderPlacementBytes)
 
-	// Write the `StatefulOrderPlacement` to memstore.
-	memStore := k.GetLongTermOrderPlacementMemStore(ctx)
-	memStore.Set(orderIdBytes, statefulOrderPlacementBytes)
-
-	// Set the next stateful order transaction index to be one greater than the current transaction
-	// index, to ensure that transaction indexes are monotonically increasing.
-	nextTransactionIndexTransientStore.Set(
-		types.KeyPrefix(types.NextStatefulOrderBlockTransactionIndexKey),
-		lib.Uint32ToBytes(nextStatefulOrderTransactionIndex+1),
-	)
+	// Write the `LongTermOrderPlacement` to memstore.
+	memStore.Set(orderIdBytes, longTermOrderPlacementBytes)
 
 	if !found {
 		telemetry.IncrCounterWithLabels(
@@ -77,7 +68,42 @@ func (k Keeper) SetLongTermOrderPlacement(
 	}
 }
 
+// GetTriggeredConditionalOrderPlacement gets an triggered conditional order placement from the memstore.
+// Returns false if no triggered conditional order exists in memstore with `orderId`.
+func (k Keeper) GetTriggeredConditionalOrderPlacement(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) (val types.LongTermOrderPlacement, found bool) {
+	memStore := k.GetTriggeredConditionalOrderPlacementMemStore(ctx)
+
+	b := memStore.Get(types.OrderIdKey(orderId))
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
+// GetUntriggeredConditionalOrderPlacement gets an untriggered conditional order placement from the memstore.
+// Returns false if no untriggered conditional order exists in memstore with `orderId`.
+func (k Keeper) GetUntriggeredConditionalOrderPlacement(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) (val types.LongTermOrderPlacement, found bool) {
+	memStore := k.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
+
+	b := memStore.Get(types.OrderIdKey(orderId))
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
 // GetLongTermOrderPlacement gets a long term order and the placement information from state.
+// OrderId can be conditional or long term.
 // Returns false if no stateful order exists in state with `orderId`.
 func (k Keeper) GetLongTermOrderPlacement(
 	ctx sdk.Context,
@@ -86,8 +112,7 @@ func (k Keeper) GetLongTermOrderPlacement(
 	// If this is a Short-Term order, panic.
 	orderId.MustBeStatefulOrder()
 
-	// Get the `LongTermOrderPlacement` from state.
-	memStore := k.GetLongTermOrderPlacementMemStore(ctx)
+	_, memStore := k.fetchStateStoresForOrder(ctx, orderId)
 
 	b := memStore.Get(types.OrderIdKey(orderId))
 	if b == nil {
@@ -109,12 +134,12 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 
 	orderIdBytes := types.OrderIdKey(orderId)
 
+	store, memStore := k.fetchStateStoresForOrder(ctx, orderId)
+
 	// Delete the `StatefulOrderPlacement` from state.
-	store := k.GetLongTermOrderPlacementStore(ctx)
 	store.Delete(orderIdBytes)
 
 	// Delete the `StatefulOrderPlacement` from memstore.
-	memStore := k.GetLongTermOrderPlacementMemStore(ctx)
 	memStore.Delete(orderIdBytes)
 
 	telemetry.IncrCounterWithLabels(
@@ -144,6 +169,88 @@ func (k Keeper) GetStatefulOrdersTimeSlice(ctx sdk.Context, goodTilBlockTime tim
 	k.cdc.MustUnmarshal(statefulOrdersTimeSliceBytes, &longTermOrders)
 
 	return longTermOrders.OrderIds
+}
+
+// GetNextStatefulOrderTransactionIndex returns the next stateful order block transaction index
+// to be used, defeaulting to zero if not set. It then increments the transaction index by one.
+func (k Keeper) GetNextStatefulOrderTransactionIndex(ctx sdk.Context) (
+	nextStatefulOrderTransactionIndex uint32,
+) {
+	nextTransactionIndexTransientStore := k.getTransientStore(ctx)
+	nextStatefulOrderTransactionIndexBytes := nextTransactionIndexTransientStore.Get(
+		types.KeyPrefix(
+			types.NextStatefulOrderBlockTransactionIndexKey,
+		),
+	)
+	nextStatefulOrderTransactionIndex = uint32(0)
+	if nextStatefulOrderTransactionIndexBytes != nil {
+		nextStatefulOrderTransactionIndex = lib.BytesToUint32(nextStatefulOrderTransactionIndexBytes)
+	}
+	// Set the next stateful order transaction index to be one greater than the current transaction
+	// index, to ensure that transaction indexes are monotonically increasing.
+	nextTransactionIndexTransientStore.Set(
+		types.KeyPrefix(types.NextStatefulOrderBlockTransactionIndexKey),
+		lib.Uint32ToBytes(nextStatefulOrderTransactionIndex+1),
+	)
+	return nextStatefulOrderTransactionIndex
+}
+
+// MustTriggerConditionalOrder triggers an untriggered conditional order. The conditional order must
+// already exist in untriggered state, or else this function will panic. The LongTermOrderPlacement object
+// will be removed from the untriggered state store and placed in the triggered state store.
+// TODO(CLOB-746) define private R/W methods for conditional orders
+func (k Keeper) MustTriggerConditionalOrder(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) {
+	// If this is not a conditional order, panic.
+	orderId.MustBeConditionalOrder()
+
+	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
+	orderIdBytes := types.OrderIdKey(orderId)
+
+	untriggeredConditionalOrderMemStore := k.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
+	untriggeredConditionalOrderStore := k.GetUntriggeredConditionalOrderPlacementStore(ctx)
+
+	bytes := untriggeredConditionalOrderMemStore.Get(types.OrderIdKey(orderId))
+	if bytes == nil {
+		panic(
+			fmt.Sprintf(
+				"MustTriggerConditionalOrder: conditional order Id does not exist in Untriggered state: %+v",
+				orderId,
+			),
+		)
+	}
+	var longTermOrderPlacement types.LongTermOrderPlacement
+	k.cdc.MustUnmarshal(bytes, &longTermOrderPlacement)
+
+	nextStatefulOrderTransactionIndex := k.GetNextStatefulOrderTransactionIndex(ctx)
+
+	// Set the triggered block height and transaction index.
+	longTermOrderPlacement.PlacementIndex = types.TransactionOrdering{
+		BlockHeight:      blockHeight,
+		TransactionIndex: nextStatefulOrderTransactionIndex,
+	}
+
+	// Write the StatefulOrderPlacement to the Triggered state store/memstore.
+	longTermOrderPlacementBytes := k.cdc.MustMarshal(&longTermOrderPlacement)
+	triggeredConditionalOrderMemStore := k.GetTriggeredConditionalOrderPlacementMemStore(ctx)
+	triggeredConditionalOrderStore := k.GetTriggeredConditionalOrderPlacementStore(ctx)
+	triggeredConditionalOrderStore.Set(orderIdBytes, longTermOrderPlacementBytes)
+	triggeredConditionalOrderMemStore.Set(orderIdBytes, longTermOrderPlacementBytes)
+
+	// Delete the `StatefulOrderPlacement` from Untriggered state store/memstore.
+	untriggeredConditionalOrderStore.Delete(orderIdBytes)
+	untriggeredConditionalOrderMemStore.Delete(orderIdBytes)
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.ConditionalOrderTriggered, metrics.Count},
+		1,
+		append(
+			orderId.GetOrderIdLabels(),
+			metrics.GetLabelForIntValue(metrics.ClobPairId, int(orderId.GetClobPairId())),
+		),
+	)
 }
 
 // MustAddOrderToStatefulOrdersTimeSlice adds a new `OrderId` to an existing time slice, or creates a new time slice
@@ -181,8 +288,6 @@ func (k Keeper) MustAddOrderToStatefulOrdersTimeSlice(
 // If the time slice is empty after removing the `OrderId`, then the time slice is pruned from state.
 // For the `OrderId` which is removed, this method also calls `DeleteStatefulOrderPlacement` to remove
 // the order placement from state.
-// Note that this method conditionally calls `RemoveOrderFillAmount` depending on the context. This is needed
-// to avoid overfilling orders during `CheckTx`/`RecheckTx`.
 func (k Keeper) MustRemoveStatefulOrder(
 	ctx sdk.Context,
 	orderId types.OrderId,
@@ -190,12 +295,12 @@ func (k Keeper) MustRemoveStatefulOrder(
 	// If this is a Short-Term order, panic.
 	orderId.MustBeStatefulOrder()
 
-	statefulOrderPlacement, exists := k.GetLongTermOrderPlacement(ctx, orderId)
+	longTermOrderPlacement, exists := k.GetLongTermOrderPlacement(ctx, orderId)
 	if !exists {
 		panic(fmt.Sprintf("MustRemoveStatefulOrder: order %v does not exist", orderId))
 	}
 
-	goodTilBlockTime := statefulOrderPlacement.Order.MustGetUnixGoodTilBlockTime()
+	goodTilBlockTime := longTermOrderPlacement.Order.MustGetUnixGoodTilBlockTime()
 	longTermOrdersExpiringAtTime := k.GetStatefulOrdersTimeSlice(ctx, goodTilBlockTime)
 	updatedStatefulOrdersExpiringAtTime := make([]types.OrderId, 0, len(longTermOrdersExpiringAtTime))
 
@@ -227,15 +332,69 @@ func (k Keeper) MustRemoveStatefulOrder(
 	}
 
 	// Remove the order fill amount from state.
-	// Note that order fill amount shouldn't be removed for CheckTx/RecheckTx. This is because
-	// order matches are re-ordered to appear before cancellations in `PrepareProposal` so we need to keep the
-	// order fill amount in state to avoid overfilling orders.
-	if lib.IsDeliverTxMode(ctx) {
-		k.RemoveOrderFillAmount(ctx, orderId)
-	}
+	k.RemoveOrderFillAmount(ctx, orderId)
 
 	// Delete the Stateful order placement from state.
 	k.DeleteLongTermOrderPlacement(ctx, orderId)
+}
+
+// MustAddUncommittedStatefulOrderPlacement adds a new order by `OrderId` to a transient store.
+//
+// This method will panic if the order already exists.
+func (k Keeper) MustAddUncommittedStatefulOrderPlacement(ctx sdk.Context, msg *types.MsgPlaceOrder) {
+	lib.AssertCheckTxMode(ctx)
+
+	orderId := msg.Order.OrderId
+	// If this is a Short-Term order, panic.
+	orderId.MustBeStatefulOrder()
+
+	if _, exists := k.GetUncommittedStatefulOrderPlacement(ctx, orderId); exists {
+		panic(fmt.Sprintf("MustAddUncommittedStatefulOrderPlacement: order %v already exists", orderId))
+	}
+
+	longTermOrderPlacement := types.LongTermOrderPlacement{
+		Order: msg.Order,
+	}
+
+	orderIdBytes := types.OrderIdKey(orderId)
+	b := k.cdc.MustMarshal(&longTermOrderPlacement)
+
+	store := k.GetUncommittedStatefulOrderPlacementTransientStore(ctx)
+	store.Set(orderIdBytes, b)
+}
+
+// MustAddUncommittedStatefulOrderCancellation adds a new order cancellation by `OrderId` to a transient store.
+//
+// This method will panic if the order cancellation already exists.
+func (k Keeper) MustAddUncommittedStatefulOrderCancellation(ctx sdk.Context, msg *types.MsgCancelOrder) {
+	lib.AssertCheckTxMode(ctx)
+
+	orderId := msg.OrderId
+	// If this is a Short-Term order, panic.
+	orderId.MustBeStatefulOrder()
+
+	if _, exists := k.GetUncommittedStatefulOrderCancellation(ctx, orderId); exists {
+		panic(fmt.Sprintf("MustAddUncommittedStatefulOrderPlacement: order cancellation %v already exists", orderId))
+	}
+
+	orderIdBytes := types.OrderIdKey(orderId)
+	b := k.cdc.MustMarshal(msg)
+
+	store := k.GetUncommittedStatefulOrderCancellationTransientStore(ctx)
+	store.Set(orderIdBytes, b)
+}
+
+// IsConditionalOrderTriggered checks if a given order ID is triggered or untriggered in state.
+// Note: If the given order ID is neither in triggered or untriggered state, function will return false.
+func (k Keeper) IsConditionalOrderTriggered(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) (triggered bool) {
+	// If this is not a conditional order, panic.
+	orderId.MustBeConditionalOrder()
+	orderIdBytes := types.OrderIdKey(orderId)
+	triggeredMemstore := k.GetTriggeredConditionalOrderPlacementMemStore(ctx)
+	return triggeredMemstore.Has(orderIdBytes)
 }
 
 // RemoveExpiredStatefulOrdersTimeSlices iterates all time slices from 0 until the time specified by
@@ -302,10 +461,11 @@ func (k Keeper) MustGetBlockTimeForLastCommittedBlock(
 	return time.UTC()
 }
 
-// GetAllLongTermOrders iterates over all stateful order placements and returns a list
-// of orders, ordered by ascending time priority.
-func (k Keeper) GetAllLongTermOrders(ctx sdk.Context) []types.Order {
-	longTermOrderPlacementIterator := k.getLongTermOrderPlacementIterator(ctx)
+// GetAllPlacedStatefulOrders iterates over all stateful order placements and returns a list
+// of orders, ordered by ascending time priority. Note that this only returns placed orders,
+// and therefore will not return untriggered conditional orders.
+func (k Keeper) GetAllPlacedStatefulOrders(ctx sdk.Context) []types.Order {
+	longTermOrderPlacementIterator := k.getPlacedOrdersIterator(ctx)
 
 	defer longTermOrderPlacementIterator.Close()
 
@@ -327,20 +487,6 @@ func (k Keeper) GetAllLongTermOrders(ctx sdk.Context) []types.Order {
 	}
 
 	return sortedOrders
-}
-
-// DoesLongTermOrderExistInState returns true if the stateful order exists in state, false if not.
-// It checks the order hashes of the order stored in state to determine equality.
-// Note this function panics if called with a Short-Term order.
-func (k Keeper) DoesLongTermOrderExistInState(
-	ctx sdk.Context,
-	order types.Order,
-) bool {
-	// If this is a Short-Term order, panic.
-	order.MustBeStatefulOrder()
-
-	orderInState, found := k.GetLongTermOrderPlacement(ctx, order.OrderId)
-	return found && order.GetOrderHash() == orderInState.Order.GetOrderHash()
 }
 
 // setStatefulOrdersTimeSliceInState sets a sorted list of order IDs in state at a `goodTilBlockTime`.
@@ -386,8 +532,12 @@ func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time
 	)
 }
 
-// getLongTermOrderPlacementIterator returns an iterator over all long term orders.
-func (k Keeper) getLongTermOrderPlacementIterator(ctx sdk.Context) sdk.Iterator {
-	store := k.GetLongTermOrderPlacementStore(ctx)
+// getPlacedOrdersIterator returns an iterator over all placed orders, which includes all
+// Long-Term orders and triggered conditional orders.
+func (k Keeper) getPlacedOrdersIterator(ctx sdk.Context) sdk.Iterator {
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		types.KeyPrefix(types.PlacedStatefulOrderKeyPrefix),
+	)
 	return sdk.KVStorePrefixIterator(store, []byte{})
 }

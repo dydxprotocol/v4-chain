@@ -23,8 +23,8 @@ func TestAppInjectedMsgSamples_Key(t *testing.T) {
 		"/dydxprotocol.blocktime.MsgIsDelayedBlockResponse",
 
 		// bridge
-		"/dydxprotocol.bridge.MsgAcknowledgeBridge",
-		"/dydxprotocol.bridge.MsgAcknowledgeBridgeResponse",
+		"/dydxprotocol.bridge.MsgAcknowledgeBridges",
+		"/dydxprotocol.bridge.MsgAcknowledgeBridgesResponse",
 
 		// clob
 		"/dydxprotocol.clob.MsgProposedOperations",

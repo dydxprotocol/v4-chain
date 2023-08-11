@@ -1,32 +1,36 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"BCHUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"BCHUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"BCHUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"BCHUSD\""
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"BCH-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "BCH-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"BCH_USDT"
+      "exchangeName": "Gate",
+      "ticker": "BCH_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"bchusdt"
+      "exchangeName": "Huobi",
+      "ticker": "bchusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kraken",
-      "ticker":"BCHUSD"
+      "exchangeName": "Kraken",
+      "ticker": "BCHUSD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"BCH-USDT"
+      "exchangeName": "Okx",
+      "ticker": "BCH-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

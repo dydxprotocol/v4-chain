@@ -148,6 +148,12 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock contains the logic that is automatically triggered at the end of each block
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	if err := am.keeper.ProcessRewardsForBlock(ctx); err != nil {
+		// Panicking here will only happen due to misconfiguration of the rewards module,
+		// and will lead to consensus failure.
+		panic(err)
+	}
+
 	return []abci.ValidatorUpdate{}
 }

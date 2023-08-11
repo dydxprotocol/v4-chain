@@ -87,7 +87,7 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 			continue
 		}
 
-		// GetValidPrice filters prices based on cutoff time.
+		// GetValidPriceForMarket filters prices based on cutoff time.
 		validPrices := exchangeToPrice.GetValidPrices(cutoffTime)
 		telemetry.SetGaugeWithLabels(
 			[]string{

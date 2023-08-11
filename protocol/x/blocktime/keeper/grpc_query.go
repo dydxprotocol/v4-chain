@@ -43,7 +43,7 @@ func (k Keeper) PreviousBlockInfo(
 	ctx := sdk.UnwrapSDKContext(c)
 	info := k.GetPreviousBlockInfo(ctx)
 	return &types.QueryPreviousBlockInfoResponse{
-		Info: info,
+		Info: &info,
 	}, nil
 }
 

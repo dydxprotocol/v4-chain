@@ -10,6 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	DefaultBridgeEventInfo = types.BridgeEventInfo{
+		NextId:         0,
+		EthBlockHeight: 0,
+	}
+)
+
 func setupEventManager() *bdtypes.BridgeEventManager {
 	timeProvider := mocks.TimeProvider{}
 	timeProvider.On("Now").Return(constants.TimeT)
@@ -21,79 +28,152 @@ func setupEventManager() *bdtypes.BridgeEventManager {
 func TestNewBridgeEventManager(t *testing.T) {
 	bem := setupEventManager()
 
-	require.EqualValues(t, 0, bem.GetNextRecognizedEventId())
+	require.EqualValues(t, DefaultBridgeEventInfo, bem.GetRecognizedEventInfo())
 }
 
-func TestBridgeEventManager_SetNextRecognizedEventId(t *testing.T) {
+func TestBridgeEventManager_SetRecognizedEventInfo(t *testing.T) {
 	bem := setupEventManager()
 
 	// Check default value.
-	require.EqualValues(t, 0, bem.GetNextRecognizedEventId())
+	require.EqualValues(t, DefaultBridgeEventInfo, bem.GetRecognizedEventInfo())
 
-	// Increase by 1.
-	require.NoError(t, bem.SetNextRecognizedEventId(1))
-	require.EqualValues(t, 1, bem.GetNextRecognizedEventId())
+	// Increase `NextId` by 1.
+	eventInfo := types.BridgeEventInfo{
+		NextId:         1,
+		EthBlockHeight: 0,
+	}
+	require.NoError(t, bem.SetRecognizedEventInfo(eventInfo))
+	require.EqualValues(t, eventInfo, bem.GetRecognizedEventInfo())
 
-	// Increase by more than 1.
-	require.NoError(t, bem.SetNextRecognizedEventId(3))
-	require.EqualValues(t, 3, bem.GetNextRecognizedEventId())
+	// Increase `NextId` by more than 1.
+	eventInfo = types.BridgeEventInfo{
+		NextId:         3,
+		EthBlockHeight: 0,
+	}
+	require.NoError(t, bem.SetRecognizedEventInfo(eventInfo))
+	require.EqualValues(t, eventInfo, bem.GetRecognizedEventInfo())
 
-	// Keep the same
-	require.NoError(t, bem.SetNextRecognizedEventId(3))
-	require.EqualValues(t, 3, bem.GetNextRecognizedEventId())
+	// Keep `NextId` the same
+	require.NoError(t, bem.SetRecognizedEventInfo(eventInfo))
+	require.EqualValues(t, eventInfo, bem.GetRecognizedEventInfo())
 
-	// Cannot decrease.
-	require.ErrorContains(t, bem.SetNextRecognizedEventId(2), "nextRecognizedEventId cannot be set to a lower value")
+	// Cannot decrease `NextId`.
+	eventInfo = types.BridgeEventInfo{
+		NextId:         2,
+		EthBlockHeight: 0,
+	}
+	require.ErrorContains(t, bem.SetRecognizedEventInfo(eventInfo), "NextId cannot be set to a lower value")
+
+	// Increase `EthBlockHeight` by 1.
+	eventInfo = types.BridgeEventInfo{
+		NextId:         3,
+		EthBlockHeight: 1,
+	}
+	require.NoError(t, bem.SetRecognizedEventInfo(eventInfo))
+	require.EqualValues(t, eventInfo, bem.GetRecognizedEventInfo())
+
+	// Increase `EthBlockHeight` by more than 1.
+	eventInfo = types.BridgeEventInfo{
+		NextId:         3,
+		EthBlockHeight: 4,
+	}
+	require.NoError(t, bem.SetRecognizedEventInfo(eventInfo))
+	require.EqualValues(t, eventInfo, bem.GetRecognizedEventInfo())
+
+	// Cannot decrease `EthBlockHeight`.
+	eventInfo = types.BridgeEventInfo{
+		NextId:         3,
+		EthBlockHeight: 3,
+	}
+	require.ErrorContains(t, bem.SetRecognizedEventInfo(eventInfo), "EthBlockHeight cannot be set to a lower value")
+
+	// Increase `NextId` and `EthBlockHeight` at the same time.
+	eventInfo = types.BridgeEventInfo{
+		NextId:         5,
+		EthBlockHeight: 5,
+	}
+	require.NoError(t, bem.SetRecognizedEventInfo(eventInfo))
+	require.EqualValues(t, eventInfo, bem.GetRecognizedEventInfo())
 }
 
 func TestBridgeEventManager_AddBridgeEvents(t *testing.T) {
 	tests := map[string]struct {
-		initialNREI  uint32
-		expectedNREI uint32
-		events       []types.BridgeEvent
-		errorMsg     string
+		initialREI  types.BridgeEventInfo
+		expectedREI types.BridgeEventInfo
+		events      []types.BridgeEvent
+		errorMsg    string
 	}{
 		"Empty": {
-			initialNREI:  0,
-			expectedNREI: 0,
-			events:       []types.BridgeEvent{},
+			initialREI: types.BridgeEventInfo{
+				NextId:         0,
+				EthBlockHeight: 0,
+			},
+			expectedREI: types.BridgeEventInfo{
+				NextId:         0,
+				EthBlockHeight: 0,
+			},
+			events: []types.BridgeEvent{},
 		},
 		"Single": {
-			initialNREI:  constants.BridgeEvent_55.Id,
-			expectedNREI: constants.BridgeEvent_55.Id + 1,
+			initialREI: types.BridgeEventInfo{
+				NextId:         constants.BridgeEvent_Id55_Height15.Id,
+				EthBlockHeight: 0,
+			},
+			expectedREI: types.BridgeEventInfo{
+				NextId:         constants.BridgeEvent_Id55_Height15.Id + 1,
+				EthBlockHeight: constants.BridgeEvent_Id55_Height15.EthBlockHeight,
+			},
 			events: []types.BridgeEvent{
-				constants.BridgeEvent_55,
+				constants.BridgeEvent_Id55_Height15,
 			},
 		},
 		"Multiple": {
-			initialNREI:  0,
-			expectedNREI: 2,
+			initialREI: types.BridgeEventInfo{
+				NextId:         0,
+				EthBlockHeight: 0,
+			},
+			expectedREI: types.BridgeEventInfo{
+				NextId:         2,
+				EthBlockHeight: constants.BridgeEvent_Id1_Height0.EthBlockHeight,
+			},
 			events: []types.BridgeEvent{
-				constants.BridgeEvent_0,
-				constants.BridgeEvent_1,
+				constants.BridgeEvent_Id0_Height0,
+				constants.BridgeEvent_Id1_Height0,
 			},
 		},
 		"Previous": {
-			initialNREI:  1,
-			expectedNREI: 2,
+			initialREI: types.BridgeEventInfo{
+				NextId:         1,
+				EthBlockHeight: 0,
+			},
+			expectedREI: types.BridgeEventInfo{
+				NextId:         2,
+				EthBlockHeight: constants.BridgeEvent_Id1_Height0.EthBlockHeight,
+			},
 			events: []types.BridgeEvent{
-				constants.BridgeEvent_0,
-				constants.BridgeEvent_1,
+				constants.BridgeEvent_Id0_Height0,
+				constants.BridgeEvent_Id1_Height0,
 			},
 		},
 		"Error Not Contiguous": {
-			initialNREI: 0,
+			initialREI: types.BridgeEventInfo{
+				NextId:         0,
+				EthBlockHeight: 0,
+			},
 			events: []types.BridgeEvent{
-				constants.BridgeEvent_0,
-				constants.BridgeEvent_1,
-				constants.BridgeEvent_55,
+				constants.BridgeEvent_Id0_Height0,
+				constants.BridgeEvent_Id1_Height0,
+				constants.BridgeEvent_Id55_Height15,
 			},
 			errorMsg: "contiguous",
 		},
 		"Error Skip": {
-			initialNREI: 0,
+			initialREI: types.BridgeEventInfo{
+				NextId:         0,
+				EthBlockHeight: 0,
+			},
 			events: []types.BridgeEvent{
-				constants.BridgeEvent_1,
+				constants.BridgeEvent_Id1_Height0,
 			},
 			errorMsg: "is greater than the Next Id",
 		},
@@ -102,7 +182,7 @@ func TestBridgeEventManager_AddBridgeEvents(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// setup
 			bem := setupEventManager()
-			err := bem.SetNextRecognizedEventId(tc.initialNREI)
+			err := bem.SetRecognizedEventInfo(tc.initialREI)
 			require.NoError(t, err)
 
 			// add the events
@@ -115,10 +195,10 @@ func TestBridgeEventManager_AddBridgeEvents(t *testing.T) {
 			}
 
 			// ensure result is correct
-			require.EqualValues(t, tc.expectedNREI, bem.GetNextRecognizedEventId())
+			require.EqualValues(t, tc.expectedREI, bem.GetRecognizedEventInfo())
 			for _, event := range tc.events {
 				_, _, found := bem.GetBridgeEventById(event.Id)
-				if event.Id >= tc.initialNREI {
+				if event.Id >= tc.initialREI.NextId {
 					require.True(t, found)
 				} else {
 					require.False(t, found)
@@ -139,12 +219,12 @@ func TestBridgeEventManager_GetBridgeEventById_Success(t *testing.T) {
 	bem := setupEventManager()
 
 	err := bem.AddBridgeEvents([]types.BridgeEvent{
-		constants.BridgeEvent_0,
+		constants.BridgeEvent_Id0_Height0,
 	})
 	require.NoError(t, err)
 
-	result, timestamp, found := bem.GetBridgeEventById(constants.BridgeEvent_0.Id)
+	result, timestamp, found := bem.GetBridgeEventById(constants.BridgeEvent_Id0_Height0.Id)
 	require.True(t, found)
-	require.Equal(t, constants.BridgeEvent_0, result)
+	require.Equal(t, constants.BridgeEvent_Id0_Height0, result)
 	require.Equal(t, constants.TimeT, timestamp)
 }

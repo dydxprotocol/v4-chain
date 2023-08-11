@@ -11,6 +11,7 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/dydxprotocol/v4/indexer/msgsender"
 	"github.com/dydxprotocol/v4/indexer/off_chain_updates"
+	indexershared "github.com/dydxprotocol/v4/indexer/shared"
 	"github.com/dydxprotocol/v4/lib"
 	testutil_memclob "github.com/dydxprotocol/v4/testutil/memclob"
 	"github.com/dydxprotocol/v4/x/clob/types"
@@ -642,7 +643,7 @@ func applyOperationsToMemclob(
 		switch op.Operation.(type) {
 		case *types.Operation_ShortTermOrderPlacement:
 			orderPlacement := op.GetShortTermOrderPlacement()
-			_, _, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order, true)
+			_, _, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order)
 			require.NoError(t, err)
 		case *types.Operation_ShortTermOrderCancellation:
 			orderCancellation := op.GetShortTermOrderCancellation()
@@ -655,7 +656,7 @@ func applyOperationsToMemclob(
 				*preexistingStatefulOrderId,
 			)
 			require.True(t, found)
-			_, _, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order, false)
+			_, _, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order)
 			require.NoError(t, err)
 		default:
 			panic(
@@ -710,7 +711,6 @@ func createAllMatchableOrders(
 			_, _, _, err := memclob.PlaceOrder(
 				ctx,
 				order,
-				true,
 			)
 			require.NoError(t, err)
 
@@ -732,7 +732,6 @@ func createAllOrders(
 		_, _, _, err := memclob.PlaceOrder(
 			ctx,
 			order,
-			true,
 		)
 		require.NoError(t, err)
 	}
@@ -1119,7 +1118,7 @@ func placeOrderAndVerifyExpectations(
 	filledSize,
 		orderStatus,
 		offchainUpdates,
-		err := memclob.PlaceOrder(ctx, order, true)
+		err := memclob.PlaceOrder(ctx, order)
 
 	if fakeMemClobKeeper != nil {
 		if err == nil {
@@ -1216,7 +1215,7 @@ func placeOrderAndVerifyExpectationsOperations(
 	filledSize,
 		orderStatus,
 		offchainUpdates,
-		err := memclob.PlaceOrder(ctx, order, true)
+		err := memclob.PlaceOrder(ctx, order)
 
 	if fakeMemClobKeeper != nil {
 		if err == nil {
@@ -1330,7 +1329,7 @@ func assertPlaceOrderOffchainMessages(
 			updateMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 				noopLogger,
 				order.OrderId,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_REPLACED,
+				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
 				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			)
 			expectedOffchainMessages = append(
@@ -1359,7 +1358,7 @@ func assertPlaceOrderOffchainMessages(
 		cancelMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 			noopLogger,
 			orderId,
-			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+			indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
 			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		)
 		// If the reduce-only order was seen before updates, add it to the set so we don't try to check
@@ -1388,7 +1387,7 @@ func assertPlaceOrderOffchainMessages(
 				updateMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 					noopLogger,
 					matchOrder.OrderId,
-					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
+					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				)
 
@@ -1446,7 +1445,7 @@ func assertPlaceOrderOffchainMessages(
 		cancelMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 			noopLogger,
 			orderId,
-			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+			indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
 			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		)
 		expectedOffchainMessages = append(
@@ -1543,7 +1542,7 @@ func getExpectedPlacePerpetualLiquidationOffchainMessages(
 			updateMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 				noopLogger,
 				order.OrderId,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_SELF_TRADE_ERROR,
+				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_SELF_TRADE_ERROR,
 				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			)
 
@@ -1558,7 +1557,7 @@ func getExpectedPlacePerpetualLiquidationOffchainMessages(
 				updateMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 					noopLogger,
 					order.OrderId,
-					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
+					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				)
 

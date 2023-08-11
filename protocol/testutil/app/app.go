@@ -43,6 +43,7 @@ import (
 	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
 	stattypes "github.com/dydxprotocol/v4/x/stats/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	vesttypes "github.com/dydxprotocol/v4/x/vest/types"
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -138,6 +139,11 @@ type GenesisStates interface {
 	authtypes.GenesisState |
 		banktypes.GenesisState |
 		perptypes.GenesisState |
+		feetiertypes.GenesisState |
+		stattypes.GenesisState |
+		vesttypes.GenesisState |
+		rewardstypes.GenesisState |
+		blocktimetypes.GenesisState |
 		clobtypes.GenesisState |
 		pricestypes.GenesisState |
 		satypes.GenesisState |
@@ -177,6 +183,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = pricestypes.ModuleName
 	case rewardstypes.GenesisState:
 		moduleName = rewardstypes.ModuleName
+	case vesttypes.GenesisState:
+		moduleName = vesttypes.ModuleName
 	case stattypes.GenesisState:
 		moduleName = stattypes.ModuleName
 	case satypes.GenesisState:
@@ -505,6 +513,19 @@ func (tApp *TestApp) AdvanceToBlock(
 		// End the block and commit it.
 		tApp.App.EndBlock(abcitypes.RequestEndBlock{Height: tApp.header.Height})
 		tApp.App.Commit()
+
+		// Recheck the remaining transactions in the mempool pruning any that have failed during recheck.
+		passingRecheckTxs := make([][]byte, 0)
+		for _, passingCheckTx := range tApp.passingCheckTxs {
+			recheckTxRequest := abcitypes.RequestCheckTx{
+				Tx:   passingCheckTx,
+				Type: abcitypes.CheckTxType_Recheck,
+			}
+			if recheckTxResponse := tApp.App.CheckTx(recheckTxRequest); recheckTxResponse.IsOK() {
+				passingRecheckTxs = append(passingRecheckTxs, passingCheckTx)
+			}
+		}
+		tApp.passingCheckTxs = passingRecheckTxs
 	}
 
 	return tApp.App.NewContext(true, tApp.header)

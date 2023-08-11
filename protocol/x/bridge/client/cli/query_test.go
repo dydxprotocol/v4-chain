@@ -74,13 +74,13 @@ func TestQuerySafetyParams(t *testing.T) {
 	require.Equal(t, types.DefaultGenesis().SafetyParams, resp.Params)
 }
 
-func TestQueryNextAcknowledgedEventId(t *testing.T) {
+func TestQueryAcknowledgedEventInfo(t *testing.T) {
 	net, ctx := setupNetwork(t)
 
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryNextAcknowledgedEventId(), []string{})
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryAcknowledgedEventInfo(), []string{})
 
 	require.NoError(t, err)
-	var resp types.QueryNextAcknowledgedEventIdResponse
+	var resp types.QueryAcknowledgedEventInfoResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-	require.Equal(t, types.DefaultGenesis().NextAcknowledgedEventId, resp.Id)
+	require.Equal(t, types.DefaultGenesis().AcknowledgedEventInfo, resp.Info)
 }

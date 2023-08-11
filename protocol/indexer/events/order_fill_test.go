@@ -23,16 +23,26 @@ var (
 )
 
 func TestNewOrderFillEvent_Success(t *testing.T) {
-	orderFillEvent := events.NewOrderFillEvent(makerOrder, takerOrder, fillAmount, makerFee, takerFee)
+	orderFillEvent := events.NewOrderFillEvent(
+		makerOrder,
+		takerOrder,
+		fillAmount,
+		makerFee,
+		takerFee,
+		fillAmount,
+		fillAmount,
+	)
 
 	expectedOrderFillEventProto := &events.OrderFillEventV1{
 		MakerOrder: indexerMakerOrder,
 		TakerOrder: &events.OrderFillEventV1_Order{
 			Order: &indexerTakerOrder,
 		},
-		FillAmount: fillAmount.ToUint64(),
-		MakerFee:   makerFee,
-		TakerFee:   takerFee,
+		FillAmount:       fillAmount.ToUint64(),
+		MakerFee:         makerFee,
+		TakerFee:         takerFee,
+		TotalFilledMaker: fillAmount.ToUint64(),
+		TotalFilledTaker: fillAmount.ToUint64(),
 	}
 	require.Equal(t, expectedOrderFillEventProto, orderFillEvent)
 }
@@ -45,6 +55,7 @@ func TestNewLiquidationOrderFillEvent_Success(t *testing.T) {
 		fillAmount,
 		makerFee,
 		takerFee,
+		fillAmount,
 	)
 
 	expectedLiquidationOrder := events.LiquidationOrderV1{
@@ -60,9 +71,11 @@ func TestNewLiquidationOrderFillEvent_Success(t *testing.T) {
 		TakerOrder: &events.OrderFillEventV1_LiquidationOrder{
 			LiquidationOrder: &expectedLiquidationOrder,
 		},
-		FillAmount: fillAmount.ToUint64(),
-		MakerFee:   makerFee,
-		TakerFee:   takerFee,
+		FillAmount:       fillAmount.ToUint64(),
+		MakerFee:         makerFee,
+		TakerFee:         takerFee,
+		TotalFilledMaker: fillAmount.ToUint64(),
+		TotalFilledTaker: fillAmount.ToUint64(),
 	}
 	require.Equal(t, expectedOrderFillEventProto, liquidationOrderFillEvent)
 }

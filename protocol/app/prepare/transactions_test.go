@@ -13,6 +13,7 @@ type TestFunction int
 
 const (
 	testUpdateMarketPrices TestFunction = iota
+	testAcknowledgeBridges
 	testAddPremiumVotes
 	testProposedOperations
 )
@@ -29,6 +30,7 @@ func Test_NewPrepareProposalTransactions_Success(t *testing.T) {
 
 	require.Nil(t, ppt.UpdateMarketPricesTx)
 	require.Nil(t, ppt.AddPremiumVotesTx)
+	require.Nil(t, ppt.AcknowledgeBridgesTx)
 	require.Nil(t, ppt.ProposedOperationsTx)
 	require.Nil(t, ppt.OtherTxs)
 }
@@ -45,6 +47,10 @@ func Test_NewPrepareProposalTransactions_Fail(t *testing.T) {
 
 func Test_SetUpdateMarketPricesTx(t *testing.T) {
 	setterTestCases(t, testUpdateMarketPrices)
+}
+
+func Test_SetAcknowledgeBridgesTx(t *testing.T) {
+	setterTestCases(t, testAcknowledgeBridges)
 }
 
 func Test_SetAddPremiumVotesTx(t *testing.T) {
@@ -117,6 +123,8 @@ func setterTestHelper(tFunc TestFunction, target *prepare.PrepareProposalTxs, va
 		return target.SetUpdateMarketPricesTx(value)
 	case testAddPremiumVotes:
 		return target.SetAddPremiumVotesTx(value)
+	case testAcknowledgeBridges:
+		return target.SetAcknowledgeBridgesTx(value)
 	case testProposedOperations:
 		return target.SetProposedOperationsTx(value)
 	default:
@@ -130,6 +138,8 @@ func getterTestHelper(tFunc TestFunction, target *prepare.PrepareProposalTxs) []
 		return target.UpdateMarketPricesTx
 	case testAddPremiumVotes:
 		return target.AddPremiumVotesTx
+	case testAcknowledgeBridges:
+		return target.AcknowledgeBridgesTx
 	case testProposedOperations:
 		return target.ProposedOperationsTx
 	default:
@@ -385,83 +395,102 @@ func Test_GetAvailableBytes(t *testing.T) {
 
 func Test_GetTxsInOrder(t *testing.T) {
 	tests := map[string]struct {
-		pricesTx           []byte
-		fundingTx          []byte
 		operationsTx       []byte
 		otherTxs           [][]byte
 		otherAdditionalTxs [][]byte
+		bridgeTx           []byte
+		fundingTx          []byte
+		pricesTx           []byte
 
 		expectedTxs [][]byte
 		expectedErr error
 	}{
 		"update market prices is not set": {
-			pricesTx:           []byte{},
-			fundingTx:          []byte{},
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
+			bridgeTx:           []byte{},
+			fundingTx:          []byte{},
+			pricesTx:           []byte{},
 
 			expectedTxs: nil,
 			expectedErr: errors.New("UpdateMarketPricesTx must be set"),
 		},
 		"add funding samples is not set": {
-			pricesTx:           []byte{1},
-			fundingTx:          []byte{},
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
+			bridgeTx:           []byte{},
+			fundingTx:          []byte{},
+			pricesTx:           []byte{1},
 
 			expectedTxs: nil,
 			expectedErr: errors.New("AddPremiumVotesTx must be set"),
 		},
-		"prices and funding only": {
+		"acknowledge bridges is not set": {
+			operationsTx:       []byte{},
+			otherTxs:           [][]byte{},
+			otherAdditionalTxs: [][]byte{},
+			bridgeTx:           []byte{},
+			fundingTx:          []byte{2},
 			pricesTx:           []byte{1},
+
+			expectedTxs: nil,
+			expectedErr: errors.New("AcknowledgeBridgesTx must be set"),
+		},
+		"prices, funding, and bridge only": {
+			operationsTx:       []byte{},
+			otherTxs:           [][]byte{},
+			otherAdditionalTxs: [][]byte{},
+			bridgeTx:           []byte{4},
 			fundingTx:          []byte{2, 3},
-			operationsTx:       []byte{},
-			otherTxs:           [][]byte{},
-			otherAdditionalTxs: [][]byte{},
+			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{2, 3}, {1}},
+			expectedTxs: [][]byte{{4}, {2, 3}, {1}},
 			expectedErr: nil,
 		},
-		"prices and funding + matched orders": {
-			pricesTx:           []byte{1},
-			fundingTx:          []byte{2},
-			operationsTx:       []byte{3, 4, 5},
+		"prices, funding, bridge + matched orders": {
+			operationsTx:       []byte{4, 5, 6},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
+			bridgeTx:           []byte{3},
+			fundingTx:          []byte{2},
+			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{3, 4, 5}, {2}, {1}},
+			expectedTxs: [][]byte{{4, 5, 6}, {3}, {2}, {1}},
 			expectedErr: nil,
 		},
-		"prices and funding + others": {
-			pricesTx:           []byte{1},
-			fundingTx:          []byte{2},
+		"prices, funding, bridge + others": {
 			operationsTx:       []byte{},
-			otherTxs:           [][]byte{{3}, {4, 5}},
+			otherTxs:           [][]byte{{4}, {5, 6}},
 			otherAdditionalTxs: [][]byte{},
+			bridgeTx:           []byte{3},
+			fundingTx:          []byte{2},
+			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{3}, {4, 5}, {2}, {1}},
+			expectedTxs: [][]byte{{4}, {5, 6}, {3}, {2}, {1}},
 			expectedErr: nil,
 		},
 		"partially set": {
-			pricesTx:           []byte{1},
-			fundingTx:          []byte{2, 3},
 			operationsTx:       []byte{4, 5, 6},
 			otherTxs:           [][]byte{{7, 8}, {9, 10}},
 			otherAdditionalTxs: [][]byte{},
+			bridgeTx:           []byte{11},
+			fundingTx:          []byte{2, 3},
+			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{4, 5, 6}, {7, 8}, {9, 10}, {2, 3}, {1}},
+			expectedTxs: [][]byte{{4, 5, 6}, {7, 8}, {9, 10}, {11}, {2, 3}, {1}},
 			expectedErr: nil,
 		},
 		"all set": {
-			pricesTx:           []byte{1},
-			fundingTx:          []byte{2, 3},
 			operationsTx:       []byte{4, 5},
 			otherTxs:           [][]byte{{6}, {7, 8}},
 			otherAdditionalTxs: [][]byte{{9}, {10}},
+			bridgeTx:           []byte{11},
+			fundingTx:          []byte{2, 3},
+			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{4, 5}, {6}, {7, 8}, {9}, {10}, {2, 3}, {1}},
+			expectedTxs: [][]byte{{4, 5}, {6}, {7, 8}, {9}, {10}, {11}, {2, 3}, {1}},
 			expectedErr: nil,
 		},
 	}
@@ -470,17 +499,20 @@ func Test_GetTxsInOrder(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
 				abci.RequestPrepareProposal{
-					MaxTxBytes: 10,
+					MaxTxBytes: 11,
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, int64(10), ppt.MaxBytes)
+			require.Equal(t, int64(11), ppt.MaxBytes)
 			require.Equal(t, int64(0), ppt.UsedBytes)
 
 			err = ppt.SetUpdateMarketPricesTx(tc.pricesTx)
 			require.NoError(t, err)
 
 			err = ppt.SetAddPremiumVotesTx(tc.fundingTx)
+			require.NoError(t, err)
+
+			err = ppt.SetAcknowledgeBridgesTx(tc.bridgeTx)
 			require.NoError(t, err)
 
 			err = ppt.SetProposedOperationsTx(tc.operationsTx)

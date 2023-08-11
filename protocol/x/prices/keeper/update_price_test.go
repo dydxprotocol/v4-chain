@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4/lib/metrics"
-	"github.com/dydxprotocol/v4/x/prices/keeper"
 	"testing"
 
 	"github.com/dydxprotocol/v4/daemons/pricefeed/api"
@@ -14,22 +12,10 @@ import (
 
 const (
 	fiveBillionAndFiveMillion         = constants.FiveBillion + constants.FiveMillion
-	fiveBillionAndTenMillion          = constants.FiveBillion + 2*constants.FiveMillion
 	fiveBillionMinusFiveMillionAndOne = constants.FiveBillion - constants.FiveMillion - 1
-
-	testPriceValidUpdate                    = fiveBillionAndFiveMillion
-	testPriceLargeValidUpdate               = fiveBillionAndTenMillion
-	testPriceDoesNotMeetMinPriceChange      = constants.FiveBillion + 2
-	testPriceCrossesOraclePrice             = fiveBillionMinusFiveMillionAndOne
-	testPriceCrossesAndDoesNotMeetMinChange = constants.FiveBillion - 1
 )
 
 var (
-	testMarketParamPrice = types.MarketParamPrice{
-		Param: constants.TestMarketParams[0], // minPriceChangePpm of 50 - need 5 million to meet min change.
-		Price: constants.TestMarketPrices[0], // Price initialized to 5 billion.
-	}
-
 	// MsgUpdateMarketPrices test constants.
 	emptyResult = &types.MsgUpdateMarketPrices{
 		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{},
@@ -292,216 +278,6 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			// TODO(DEC-532): validate on either metrics or logging.
 			// Validating metrics might be difficult because it's hard to mock `telemetry`.
 			// Alternatively, we can add mock logging in `ctx`.
-		})
-	}
-}
-
-func TestShouldProposePrice(t *testing.T) {
-	tests := map[string]struct {
-		proposalPrice            uint64
-		indexPrice               uint64
-		historicalSmoothedPrices []uint64
-		expectShouldPropose      bool
-		expectReasons            map[string]bool
-	}{
-		"Should not propose: proposal price is smoothed price, crosses index price": {
-			proposalPrice: testPriceCrossesOraclePrice,
-			indexPrice:    testPriceLargeValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceCrossesOraclePrice,
-				testPriceValidUpdate,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				// These are both true because the proposed price is the most recent smoothed price.
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
-				metrics.ProposedPriceCrossesOraclePrice:              true,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
-			},
-		},
-		"Should not propose: proposal price is smoothed price, does not meet min price change": {
-			proposalPrice: testPriceDoesNotMeetMinPriceChange,
-			indexPrice:    testPriceLargeValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceDoesNotMeetMinPriceChange,
-				testPriceValidUpdate,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				// These are both true because the proposed price is the most recent smoothed price.
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       true,
-			},
-		},
-		"Should not propose: proposal price is index price, does not meet min price change": {
-			proposalPrice: testPriceDoesNotMeetMinPriceChange,
-			indexPrice:    testPriceDoesNotMeetMinPriceChange,
-			historicalSmoothedPrices: []uint64{
-				testPriceLargeValidUpdate,
-				testPriceValidUpdate,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       true,
-			},
-		},
-		"Should not propose: a historical smoothed price crosses index price": {
-			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceValidUpdate,
-				testPriceDoesNotMeetMinPriceChange,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
-			},
-		},
-		"Should not propose: multiple historical smoothed prices cross index price": {
-			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceValidUpdate,
-				testPriceCrossesOraclePrice,
-				testPriceCrossesOraclePrice,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
-			},
-		},
-		"Should not propose: a historical smoothed price does not meet min price change": {
-			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceValidUpdate,
-				testPriceDoesNotMeetMinPriceChange,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
-			},
-		},
-		"Should not propose: multiple historical smoothed prices do not meet min price change": {
-			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceValidUpdate,
-				testPriceDoesNotMeetMinPriceChange,
-				testPriceDoesNotMeetMinPriceChange,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
-			},
-		},
-		"Should not propose: historical smoothed price crosses and does not meet min price change": {
-			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceValidUpdate,
-				testPriceCrossesAndDoesNotMeetMinChange,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
-			},
-		},
-		"Should not propose: proposal price crosses and does not meet min price change": {
-			proposalPrice: testPriceCrossesAndDoesNotMeetMinChange,
-			indexPrice:    testPriceValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceValidUpdate,
-				testPriceLargeValidUpdate,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
-				metrics.ProposedPriceCrossesOraclePrice:              true,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       true,
-			},
-		},
-		"Should not propose: multiple historical smoothed prices issues": {
-			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceValidUpdate,
-				testPriceDoesNotMeetMinPriceChange,
-				testPriceCrossesOraclePrice,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
-			},
-		},
-		"Should not propose: multiple issues": {
-			proposalPrice: testPriceDoesNotMeetMinPriceChange,
-			indexPrice:    testPriceValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceValidUpdate,
-				testPriceDoesNotMeetMinPriceChange,
-				testPriceCrossesOraclePrice,
-			},
-			expectShouldPropose: false,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        true,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: true,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       true,
-			},
-		},
-		"Should propose": {
-			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceLargeValidUpdate,
-			historicalSmoothedPrices: []uint64{
-				testPriceValidUpdate,
-				testPriceLargeValidUpdate,
-				testPriceValidUpdate,
-			},
-			expectShouldPropose: true,
-			expectReasons: map[string]bool{
-				metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
-				metrics.ProposedPriceCrossesOraclePrice:              false,
-				metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
-				metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
-			},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			actualShouldPropose, actualReasons := keeper.ShouldProposePrice(
-				tc.proposalPrice,
-				testMarketParamPrice,
-				tc.indexPrice,
-				tc.historicalSmoothedPrices,
-			)
-			require.Equal(t, tc.expectShouldPropose, actualShouldPropose)
-			require.Equal(t, tc.expectReasons, actualReasons)
 		})
 	}
 }

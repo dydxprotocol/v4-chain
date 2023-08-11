@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	sdklog "cosmossdk.io/log"
 	"errors"
 	"fmt"
 	"github.com/dydxprotocol/v4/daemons/flags"
@@ -189,6 +190,7 @@ func (c *Client) start(ctx context.Context,
 			defer c.runningSubtasksWaitGroup.Done()
 			subTaskRunner.StartPriceEncoder(
 				exchangeId,
+				priceFeedMutableMarketConfigs,
 				exchangeToMarketPrices,
 				logger,
 				bCh,
@@ -273,7 +275,7 @@ func StartNewClient(
 		err := client.start(
 			ctx,
 			flags,
-			logger,
+			logger.With(sdklog.ModuleKey, constants.PricefeedDaemonModuleName),
 			grpcClient,
 			exchangeIdToStartupConfig,
 			exchangeIdToExchangeDetails,

@@ -27,6 +27,10 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 	// Valid add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
 
+	// Valid acknowledge bridges tx.
+	validAcknowledgeBridgesTx := constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes
+	validAcknowledgeBridgesTx_NoEvents := constants.MsgAcknowledgeBridges_NoEvents_TxBytes
+
 	// Valid update price tx.
 	validUpdatePriceTx := constants.ValidMsgUpdateMarketPricesTxBytes
 
@@ -38,6 +42,11 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 
 	// Invalid update price tx.
 	invalidUpdatePriceTx := constants.InvalidMsgUpdateMarketPricesStatelessTxBytes
+
+	// Invalid acknowledge bridges txs.
+	acknowledgeBridgesTx_IdsNotConsecutive := constants.MsgAcknowledgeBridges_Ids0_55_Height0_TxBytes
+	acknowledgeBridgesTx_NotRecognized := constants.MsgAcknowledgeBridges_Id55_Height15_TxBytes
+	acknowledgeBridgesTx_NotNextToAcknowledge := constants.MsgAcknowledgeBridges_Id1_Height0_TxBytes
 
 	tests := map[string]struct {
 		txsBytes [][]byte
@@ -51,8 +60,36 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 		"Reject: invalid price tx": {
 			txsBytes: [][]byte{
 				validOperationsTx,
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				invalidUpdatePriceTx, // invalid.
+			},
+			expectedResponse: rejectResponse,
+		},
+		"Reject: bridge event IDs not consecutive": {
+			txsBytes: [][]byte{
+				validOperationsTx,
+				acknowledgeBridgesTx_IdsNotConsecutive,
+				validAddFundingTx,
+				validUpdatePriceTx,
+			},
+			expectedResponse: rejectResponse,
+		},
+		"Reject: bridge event ID not yet recognized": {
+			txsBytes: [][]byte{
+				validOperationsTx,
+				acknowledgeBridgesTx_NotRecognized,
+				validAddFundingTx,
+				validUpdatePriceTx,
+			},
+			expectedResponse: rejectResponse,
+		},
+		"Reject: bridge event ID not next to acknowledge": {
+			txsBytes: [][]byte{
+				validOperationsTx,
+				acknowledgeBridgesTx_NotNextToAcknowledge,
+				validAddFundingTx,
+				validUpdatePriceTx,
 			},
 			expectedResponse: rejectResponse,
 		},
@@ -60,6 +97,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				constants.Msg_PlaceOrder_TxBtyes, // invalid other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -69,6 +107,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				constants.Msg_CancelOrder_TxBtyes, // invalid other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -78,6 +117,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				validUpdatePriceTx, // invalid other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -87,6 +127,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				testmsgs.MsgSoftwareUpgradeTxBytes, // invalid other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -96,6 +137,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				testmsgs.GovBetaMsgSubmitProposalTxBytes, // invalid other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -105,6 +147,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				testmsgs.MsgSubmitProposalWithUnsupportedInnerTxBytes, // invalid other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -114,6 +157,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				testmsgs.MsgSubmitProposalWithAppInjectedInnerTxBytes, // invalid other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -123,16 +167,28 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				testmsgs.MsgSubmitProposalWithDoubleNestedInnerTxBytes, // invalid other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
 			expectedResponse: rejectResponse,
+		},
+		"Accept: bridge tx with no events": {
+			txsBytes: [][]byte{
+				validOperationsTx,
+				validSingleMsgOtherTx,
+				validAcknowledgeBridgesTx_NoEvents,
+				validAddFundingTx,
+				validUpdatePriceTx,
+			},
+			expectedResponse: acceptResponse,
 		},
 		"Accept: Valid txs": {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				validMultiMsgOtherTx,  // other txs.
 				validSingleMsgOtherTx, // other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -151,8 +207,13 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			mockClobKeeper := &mocks.ProcessClobKeeper{}
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
+			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
+			mockBridgeKeeper.On("GetAcknowledgedEventInfo", mock.Anything).Return(constants.AcknowledgedEventInfo_Id0_Height0)
+			mockBridgeKeeper.On("GetRecognizedEventInfo", mock.Anything).Return(constants.RecognizedEventInfo_Id2_Height0)
+
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
+				mockBridgeKeeper,
 				mockClobKeeper,
 				&mocks.ProcessStakingKeeper{},
 				&mocks.ProcessPerpetualKeeper{},

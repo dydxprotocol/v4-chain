@@ -50,7 +50,7 @@ func NewGockBitfinexResponse(
 ) *gock.Response {
 	// Construct Bitfinex request URL.
 	sortedSymbols := GetTickersSortedByMarketId(
-		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BITFINEX].MarketToTicker,
+		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BITFINEX].MarketToMarketConfig,
 	)
 	url := handler.CreateRequestUrl(bitfinex.BitfinexDetails.Url, sortedSymbols)
 

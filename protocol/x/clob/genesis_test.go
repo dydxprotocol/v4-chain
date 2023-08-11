@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"github.com/dydxprotocol/v4/dtypes"
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -42,6 +43,60 @@ func TestGenesis(t *testing.T) {
 						{
 							Limit:     20,
 							NumBlocks: 100,
+						},
+					},
+				},
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					ShortTermOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(0),
+							Limit:          0,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(20),
+							Limit:          1,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(100),
+							Limit:          5,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(1000),
+							Limit:          10,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(10000),
+							Limit:          100,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(100000),
+							Limit:          200,
+						},
+					},
+					StatefulOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(0),
+							Limit:          0,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(20),
+							Limit:          1,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(100),
+							Limit:          5,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(1000),
+							Limit:          10,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(10000),
+							Limit:          100,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(100000),
+							Limit:          200,
 						},
 					},
 				},
@@ -340,6 +395,30 @@ func TestGenesis(t *testing.T) {
 				"{NumBlocks:0 Limit:1}",
 			expectedErrType: types.ErrInvalidBlockRateLimitConfig,
 		},
+		"Genesis state is invalid when EquityTierLimitConfiguration is invalid": {
+			genesis: types.GenesisState{
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					ShortTermOrderEquityTiers: []types.EquityTierLimit{
+						{
+							Limit:          0,
+							UsdTncRequired: dtypes.NewInt(-1),
+						},
+					},
+				},
+				LiquidationsConfig: types.LiquidationsConfig{
+					MaxLiquidationFeePpm: 5_000,
+					FillablePriceConfig: types.FillablePriceConfig{
+						BankruptcyAdjustmentPpm:           lib.OneMillion,
+						SpreadToMaintenanceMarginRatioPpm: 100_000,
+					},
+					PositionBlockLimits:   constants.PositionBlockLimits_Default,
+					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+				},
+			},
+			expectedErr: "-1 is not a valid UsdTncRequired for ShortTermOrderEquityTiers equity tier limit " +
+				"{UsdTncRequired:-1 Limit:0}",
+			expectedErrType: types.ErrInvalidEquityTierLimitConfig,
+		},
 	}
 
 	for name, tc := range tests {
@@ -381,6 +460,7 @@ func TestGenesis(t *testing.T) {
 			require.Equal(t, tc.genesis.ClobPairs, got.ClobPairs)
 			require.Equal(t, tc.genesis.LiquidationsConfig, got.LiquidationsConfig)
 			require.Equal(t, tc.genesis.BlockRateLimitConfig, got.BlockRateLimitConfig)
+			require.Equal(t, tc.genesis.EquityTierLimitConfig, got.EquityTierLimitConfig)
 
 			// The number of CLOB pairs in the store should match the amount created thus far.
 			numClobPairs := ks.ClobKeeper.GetNumClobPairs(ctx)

@@ -28,6 +28,8 @@ services:
       - ./localnet/dydxprotocol0:/dydxprotocol/chain/.alice/data
     ports:
       - 26657:26657
+      - 9090:9090
+      - 1317:1317
   
   dydxprotocold1:
     image: local:dydxprotocol

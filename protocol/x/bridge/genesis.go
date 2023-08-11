@@ -10,25 +10,26 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.InitializeForGenesis(ctx)
 
-	if err := k.SetEventParams(ctx, genState.EventParams); err != nil {
+	if err := k.UpdateEventParams(ctx, genState.EventParams); err != nil {
 		panic(err)
 	}
-	if err := k.SetProposeParams(ctx, genState.ProposeParams); err != nil {
+	if err := k.UpdateProposeParams(ctx, genState.ProposeParams); err != nil {
 		panic(err)
 	}
-	if err := k.SetSafetyParams(ctx, genState.SafetyParams); err != nil {
+	if err := k.UpdateSafetyParams(ctx, genState.SafetyParams); err != nil {
 		panic(err)
 	}
-
-	k.SetNextAcknowledgedEventId(ctx, genState.NextAcknowledgedEventId)
+	if err := k.SetAcknowledgedEventInfo(ctx, genState.AcknowledgedEventInfo); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the bridge module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
-		EventParams:             k.GetEventParams(ctx),
-		ProposeParams:           k.GetProposeParams(ctx),
-		SafetyParams:            k.GetSafetyParams(ctx),
-		NextAcknowledgedEventId: k.GetNextAcknowledgedEventId(ctx),
+		EventParams:           k.GetEventParams(ctx),
+		ProposeParams:         k.GetProposeParams(ctx),
+		SafetyParams:          k.GetSafetyParams(ctx),
+		AcknowledgedEventInfo: k.GetAcknowledgedEventInfo(ctx),
 	}
 }

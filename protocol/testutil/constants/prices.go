@@ -135,17 +135,36 @@ var (
 
 	Prices_DefaultGenesisState = types.GenesisState{
 		// `ExchangeConfigJson` is left unset as it is not used by the server.
-		MarketParams: []types.MarketParam{{
-			Pair:               BtcUsdPair,
-			Exponent:           BtcUsdExponent,
-			MinExchanges:       uint32(2),
-			ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_BTC_USD],
-			MinPriceChangePpm:  uint32(50),
-		}},
-		MarketPrices: []types.MarketPrice{{
-			Exponent: BtcUsdExponent,
-			Price:    FiveBillion, // $50,000 == 1 BTC
-		}},
+		MarketParams: []types.MarketParam{
+			{
+				Id:                 uint32(0),
+				Pair:               BtcUsdPair,
+				Exponent:           BtcUsdExponent,
+				MinExchanges:       uint32(2),
+				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+				MinPriceChangePpm:  uint32(50),
+			},
+			{
+				Id:                 uint32(1),
+				Pair:               EthUsdPair,
+				Exponent:           EthUsdExponent,
+				MinExchanges:       uint32(1),
+				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+				MinPriceChangePpm:  uint32(50),
+			},
+		},
+		MarketPrices: []types.MarketPrice{
+			{
+				Id:       uint32(0),
+				Exponent: BtcUsdExponent,
+				Price:    FiveBillion, // $50,000 == 1 BTC
+			},
+			{
+				Id:       uint32(1),
+				Exponent: EthUsdExponent,
+				Price:    ThreeBillion, // $3,000 == 1 ETH
+			},
+		},
 	}
 
 	Prices_MultiExchangeMarketGenesisState = types.GenesisState{

@@ -1,32 +1,37 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"1INCHUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"1INCHUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"1INCHUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"1INCHUSD\""
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"1INCH-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "1INCH-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"1INCH_USDT"
+      "exchangeName": "Gate",
+      "ticker": "1INCH_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"1inchusdt"
+      "exchangeName": "Huobi",
+      "ticker": "1inchusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"1INCH-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "1INCH-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"1INCH-USDT"
+      "exchangeName": "Okx",
+      "ticker": "1INCH-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

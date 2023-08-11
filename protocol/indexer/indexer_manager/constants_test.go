@@ -6,7 +6,7 @@ import (
 	"github.com/dydxprotocol/v4/dtypes"
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4/indexer/protocol/v1"
+	v1 "github.com/dydxprotocol/v4/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
@@ -118,10 +118,21 @@ var SubaccountEvent = indexerevents.SubaccountUpdateEventV1{
 	UpdatedAssetPositions:     assetPositions,
 }
 
+var Alice_Num0_IndexerSubaccountId = v1.SubaccountIdToIndexerSubaccountId(constants.Alice_Num0)
+var Alice_Num1_IndexerSubaccountId = v1.SubaccountIdToIndexerSubaccountId(constants.Alice_Num1)
 var TransferEvent = indexerevents.TransferEventV1{
-
-	SenderSubaccountId:    v1.SubaccountIdToIndexerSubaccountId(constants.Alice_Num0),
-	RecipientSubaccountId: v1.SubaccountIdToIndexerSubaccountId(constants.Alice_Num1),
-	Amount:                uint64(5),
-	AssetId:               uint32(0),
+	SenderSubaccountId:    &Alice_Num0_IndexerSubaccountId,
+	RecipientSubaccountId: &Alice_Num1_IndexerSubaccountId,
+	Sender: &indexerevents.SourceOfFunds{
+		Source: &indexerevents.SourceOfFunds_SubaccountId{
+			SubaccountId: &Alice_Num0_IndexerSubaccountId,
+		},
+	},
+	Recipient: &indexerevents.SourceOfFunds{
+		Source: &indexerevents.SourceOfFunds_SubaccountId{
+			SubaccountId: &Alice_Num1_IndexerSubaccountId,
+		},
+	},
+	Amount:  uint64(5),
+	AssetId: uint32(0),
 }

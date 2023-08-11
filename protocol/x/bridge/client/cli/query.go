@@ -24,7 +24,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryEventParams())
 	cmd.AddCommand(CmdQueryProposeParams())
 	cmd.AddCommand(CmdQuerySafetyParams())
-	cmd.AddCommand(CmdQueryNextAcknowledgedEventId())
+	cmd.AddCommand(CmdQueryAcknowledgedEventInfo())
 
 	return cmd
 }
@@ -98,16 +98,16 @@ func CmdQuerySafetyParams() *cobra.Command {
 	return cmd
 }
 
-func CmdQueryNextAcknowledgedEventId() *cobra.Command {
+func CmdQueryAcknowledgedEventInfo() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-next-acknowledged-event-id",
-		Short: "get the NextAcknowledgedEventId",
+		Use:   "get-acknowledged-event-info",
+		Short: "get the AcknowledgedEventInfo",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.NextAcknowledgedEventId(
+			res, err := queryClient.AcknowledgedEventInfo(
 				context.Background(),
-				&types.QueryNextAcknowledgedEventIdRequest{},
+				&types.QueryAcknowledgedEventInfoRequest{},
 			)
 			if err != nil {
 				return err

@@ -22,6 +22,9 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 	// Valid operations tx.
 	validOperationsTx := constants.ValidEmptyMsgProposedOperationsTxBytes
 
+	// Valid acknowledge bridges tx.
+	validAcknowledgeBridgesTx := constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes
+
 	// Valid add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
 
@@ -48,6 +51,7 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 		"Invalid transactions": {
 			txsBytes: [][]byte{
 				validOperationsTx,
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				invalidUpdatePriceTx, // invalid.
 			},
@@ -57,6 +61,7 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 				validOperationsTx,
 				validMultiMsgOtherTx,  // other txs.
 				validSingleMsgOtherTx, // other txs.
+				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -66,6 +71,8 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
+			_, bridgeKeeper, _, _, _, _ := keepertest.BridgeKeepers(t)
+
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
@@ -76,6 +83,7 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 
 			handler := process.FullNodeProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
+				bridgeKeeper,
 				mockClobKeeper,
 				&mocks.ProcessStakingKeeper{},
 				&mocks.ProcessPerpetualKeeper{},

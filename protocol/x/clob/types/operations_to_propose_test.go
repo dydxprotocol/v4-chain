@@ -834,7 +834,7 @@ func TestGetOperationsToReplay_Success(t *testing.T) {
 		"Can get order matches to replay": {
 			setup: func(otp *types.OperationsToPropose) {
 				takerOrder := constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16
-				makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15
+				makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15
 				makerFillsWithOrders := []types.MakerFillWithOrder{
 					{
 						MakerFill: types.MakerFill{
@@ -851,7 +851,7 @@ func TestGetOperationsToReplay_Success(t *testing.T) {
 			},
 			expectedOperations: []types.InternalOperation{
 				types.NewPreexistingStatefulOrderPlacementInternalOperation(
-					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15,
+					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15,
 				),
 				types.NewShortTermOrderPlacementInternalOperation(
 					constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16,
@@ -860,7 +860,7 @@ func TestGetOperationsToReplay_Success(t *testing.T) {
 					constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16,
 					[]types.MakerFill{
 						{
-							MakerOrderId: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
+							MakerOrderId: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId,
 							FillAmount:   5,
 						},
 					},
@@ -873,7 +873,7 @@ func TestGetOperationsToReplay_Success(t *testing.T) {
 		"Can get liquidations matches to replay": {
 			setup: func(otp *types.OperationsToPropose) {
 				liquidationOrder := constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC
-				makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15
+				makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15
 				otp.MustAddStatefulOrderPlacementToOperationsQueue(makerOrder)
 				otp.MustAddMatchToOperationsQueue(
 					&liquidationOrder,
@@ -890,14 +890,14 @@ func TestGetOperationsToReplay_Success(t *testing.T) {
 			},
 			expectedOperations: []types.InternalOperation{
 				types.NewPreexistingStatefulOrderPlacementInternalOperation(
-					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15,
+					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15,
 				),
 				types.NewMatchPerpetualLiquidationInternalOperation(
 					&constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
 					[]types.MakerFill{
 						{
 							FillAmount:   5,
-							MakerOrderId: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
+							MakerOrderId: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId,
 						},
 					},
 				),
@@ -1008,7 +1008,7 @@ func TestGetOperationsToPropose_Success(t *testing.T) {
 		"Order matches are included in operations to propose": {
 			setup: func(otp *types.OperationsToPropose) {
 				takerOrder := constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16
-				makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15
+				makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15
 				makerFillsWithOrders := []types.MakerFillWithOrder{
 					{
 						MakerFill: types.MakerFill{
@@ -1039,7 +1039,7 @@ func TestGetOperationsToPropose_Success(t *testing.T) {
 									Fills: []types.MakerFill{
 										{
 											FillAmount:   5,
-											MakerOrderId: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
+											MakerOrderId: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId,
 										},
 									},
 								},
@@ -1052,7 +1052,7 @@ func TestGetOperationsToPropose_Success(t *testing.T) {
 		"Liquidation matches are included in operations to propose": {
 			setup: func(otp *types.OperationsToPropose) {
 				liquidationOrder := constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC
-				makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15
+				makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15
 				// This is not included in operations to propose.
 				otp.MustAddStatefulOrderPlacementToOperationsQueue(makerOrder)
 				otp.MustAddMatchToOperationsQueue(
@@ -1082,7 +1082,7 @@ func TestGetOperationsToPropose_Success(t *testing.T) {
 									Fills: []types.MakerFill{
 										{
 											FillAmount:   5,
-											MakerOrderId: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15.OrderId,
+											MakerOrderId: constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId,
 										},
 									},
 								},

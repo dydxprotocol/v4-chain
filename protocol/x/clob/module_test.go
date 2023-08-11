@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/dydxprotocol/v4/dtypes"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -43,7 +44,14 @@ func getValidGenesisStr() string {
 	gs += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
 	gs += `{"max_short_term_orders_per_market_per_n_blocks":[{"limit": 50,"num_blocks":1}],`
 	gs += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},{"limit": 20,"num_blocks":100}],`
-	gs += `"max_short_term_order_cancellations_per_market_per_n_blocks":[{"limit": 50,"num_blocks":1}]}}`
+	gs += `"max_short_term_order_cancellations_per_market_per_n_blocks":[{"limit": 50,"num_blocks":1}]},`
+	gs += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[{"limit":0,"usd_tnc_required":"0"},`
+	gs += `{"limit":1,"usd_tnc_required":"20"},{"limit":5,"usd_tnc_required":"100"},`
+	gs += `{"limit":10,"usd_tnc_required":"1000"},{"limit":100,"usd_tnc_required":"10000"},`
+	gs += `{"limit":200,"usd_tnc_required":"100000"}],"stateful_order_equity_tiers":[`
+	gs += `{"limit":0,"usd_tnc_required":"0"},{"limit":1,"usd_tnc_required":"20"},`
+	gs += `{"limit":5,"usd_tnc_required":"100"},{"limit":10,"usd_tnc_required":"1000"},`
+	gs += `{"limit":100,"usd_tnc_required":"10000"},{"limit":200,"usd_tnc_required":"100000"}]}}`
 	return gs
 }
 
@@ -163,7 +171,8 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
 	expected += `{"max_short_term_orders_per_market_per_n_blocks":[],"max_stateful_orders_per_n_blocks":[],`
-	expected += `"max_short_term_order_cancellations_per_market_per_n_blocks":[]}}`
+	expected += `"max_short_term_order_cancellations_per_market_per_n_blocks":[]},`
+	expected += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[], "stateful_order_equity_tiers":[]}}`
 
 	require.JSONEq(t, expected, string(json))
 }
@@ -327,30 +336,94 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.Equal(t, uint64(100_000_000_000_000), liquidationsConfig.SubaccountBlockLimits.MaxQuantumsInsuranceLost)
 
 	blockRateLimitConfig := keeper.GetBlockRateLimitConfiguration(ctx)
-	require.Equal(t, clob_types.BlockRateLimitConfiguration{
-		MaxShortTermOrdersPerMarketPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
-			{
-				Limit:     50,
-				NumBlocks: 1,
+	require.Equal(
+		t,
+		clob_types.BlockRateLimitConfiguration{
+			MaxShortTermOrdersPerMarketPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
+				{
+					Limit:     50,
+					NumBlocks: 1,
+				},
+			},
+			MaxStatefulOrdersPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
+				{
+					Limit:     2,
+					NumBlocks: 1,
+				},
+				{
+					Limit:     20,
+					NumBlocks: 100,
+				},
+			},
+			MaxShortTermOrderCancellationsPerMarketPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
+				{
+					Limit:     50,
+					NumBlocks: 1,
+				},
 			},
 		},
-		MaxStatefulOrdersPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
-			{
-				Limit:     2,
-				NumBlocks: 1,
+		blockRateLimitConfig,
+	)
+
+	equityTierLimitConfig := keeper.GetEquityTierLimitConfiguration(ctx)
+	require.Equal(
+		t,
+		clob_types.EquityTierLimitConfiguration{
+			ShortTermOrderEquityTiers: []clob_types.EquityTierLimit{
+				{
+					UsdTncRequired: dtypes.NewInt(0),
+					Limit:          0,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(20),
+					Limit:          1,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(100),
+					Limit:          5,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(1000),
+					Limit:          10,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(10000),
+					Limit:          100,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(100000),
+					Limit:          200,
+				},
 			},
-			{
-				Limit:     20,
-				NumBlocks: 100,
+			StatefulOrderEquityTiers: []clob_types.EquityTierLimit{
+				{
+					UsdTncRequired: dtypes.NewInt(0),
+					Limit:          0,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(20),
+					Limit:          1,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(100),
+					Limit:          5,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(1000),
+					Limit:          10,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(10000),
+					Limit:          100,
+				},
+				{
+					UsdTncRequired: dtypes.NewInt(100000),
+					Limit:          200,
+				},
 			},
 		},
-		MaxShortTermOrderCancellationsPerMarketPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
-			{
-				Limit:     50,
-				NumBlocks: 1,
-			},
-		},
-	}, blockRateLimitConfig)
+		equityTierLimitConfig,
+	)
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	expected := `{"clob_pairs":[{"id":0,"perpetual_clob_metadata":{"perpetual_id":0},`
@@ -365,7 +438,14 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected += `{"max_short_term_orders_per_market_per_n_blocks":[{"limit": 50,"num_blocks":1}],`
 	expected += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},`
 	expected += `{"limit": 20,"num_blocks":100}],"max_short_term_order_cancellations_per_market_per_n_blocks":`
-	expected += `[{"limit": 50,"num_blocks":1}]}}`
+	expected += `[{"limit": 50,"num_blocks":1}]},`
+	expected += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[{"limit":0,"usd_tnc_required":"0"},`
+	expected += `{"limit":1,"usd_tnc_required":"20"},{"limit":5,"usd_tnc_required":"100"},`
+	expected += `{"limit":10,"usd_tnc_required":"1000"},{"limit":100,"usd_tnc_required":"10000"},`
+	expected += `{"limit":200,"usd_tnc_required":"100000"}],"stateful_order_equity_tiers":[`
+	expected += `{"limit":0,"usd_tnc_required":"0"},{"limit":1,"usd_tnc_required":"20"},`
+	expected += `{"limit":5,"usd_tnc_required":"100"},{"limit":10,"usd_tnc_required":"1000"},`
+	expected += `{"limit":100,"usd_tnc_required":"10000"},{"limit":200,"usd_tnc_required":"100000"}]}}`
 	require.JSONEq(t, expected, string(genesisJson))
 }
 

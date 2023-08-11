@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -69,12 +68,12 @@ func (k Keeper) SafetyParams(
 	}, nil
 }
 
-// NextAcknowledgedEventId processes a query request/response for the NextAcknowledgedEventId from state.
-func (k Keeper) NextAcknowledgedEventId(
+// AcknowledgedEventInfo processes a query request/response for `AcknowledgedEventInfo` from state.
+func (k Keeper) AcknowledgedEventInfo(
 	c context.Context,
-	req *types.QueryNextAcknowledgedEventIdRequest,
+	req *types.QueryAcknowledgedEventInfoRequest,
 ) (
-	*types.QueryNextAcknowledgedEventIdResponse,
+	*types.QueryAcknowledgedEventInfoResponse,
 	error,
 ) {
 	if req == nil {
@@ -82,22 +81,23 @@ func (k Keeper) NextAcknowledgedEventId(
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	return &types.QueryNextAcknowledgedEventIdResponse{
-		Id: k.GetNextAcknowledgedEventId(ctx),
+	acknowledgedEventInfo := k.GetAcknowledgedEventInfo(ctx)
+	return &types.QueryAcknowledgedEventInfoResponse{
+		Info: acknowledgedEventInfo,
 	}, nil
 }
 
-// NextRecognizedEventId processes a query request/response for
-// the greater of:
-// - the NextAcknowledgedEventId from state
-// - the NextRecognizedEventId from memory
-// Since NextRecognizedEventId is from memory, the value is not deterministic based on state
+// RecognizedEventInfo processes a query request/response for the following
+// that has a greater `NextId`:
+// - the `AcknowledgedEventInfo` from state
+// - the `RecognizedEventInfo` from memory
+// Since RecognizedEventInfo is from memory, the value is not deterministic based on state
 // and therefore may be different between nodes.
-func (k Keeper) NextRecognizedEventId(
+func (k Keeper) RecognizedEventInfo(
 	c context.Context,
-	req *types.QueryNextRecognizedEventIdRequest,
+	req *types.QueryRecognizedEventInfoRequest,
 ) (
-	*types.QueryNextRecognizedEventIdResponse,
+	*types.QueryRecognizedEventInfoResponse,
 	error,
 ) {
 	if req == nil {
@@ -105,9 +105,16 @@ func (k Keeper) NextRecognizedEventId(
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	ackEventId := k.GetNextAcknowledgedEventId(ctx)
-	recEventId := uint32(0) // TODO(CORE-323): get the next recognized event id from bridgeEventManager
-	return &types.QueryNextRecognizedEventIdResponse{
-		Id: lib.MaxUint32(ackEventId, recEventId),
+	acknowledgedEventInfo := k.GetAcknowledgedEventInfo(ctx)
+	recognizedEventInfo := k.bridgeEventManager.GetRecognizedEventInfo()
+
+	// If `AcknowledgedEventInfo` from state has a greater `NextId`, use that in response.
+	// This implies that the EventInfo that has a greater `NextId` also has a equal-or-higher
+	// value of `EthBlockHeight`.
+	if acknowledgedEventInfo.NextId > recognizedEventInfo.NextId {
+		recognizedEventInfo = acknowledgedEventInfo
+	}
+	return &types.QueryRecognizedEventInfoResponse{
+		Info: recognizedEventInfo,
 	}, nil
 }

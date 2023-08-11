@@ -1,36 +1,42 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"MKRUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"MKRUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"MKRUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"MKRUSD\""
     },
     {
-      "exchangeName":"Bitfinex",
-      "ticker":"tMKRUSD"
+      "exchangeName": "Bitfinex",
+      "ticker": "tMKRUSD",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"MKR-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "MKR-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"MKR_USDT"
+      "exchangeName": "Gate",
+      "ticker": "MKR_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"mkrusdt"
+      "exchangeName": "Huobi",
+      "ticker": "mkrusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"MKR-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "MKR-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"MKR-USDT"
+      "exchangeName": "Okx",
+      "ticker": "MKR-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

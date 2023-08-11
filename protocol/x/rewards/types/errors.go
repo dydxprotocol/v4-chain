@@ -8,5 +8,6 @@ import (
 
 // x/rewards module sentinel errors
 var (
-	ErrSample = sdkerrors.Register(ModuleName, 1100, "sample error")
+	ErrInvalidTreasuryAccount  = sdkerrors.Register(ModuleName, 1001, "invalid treasury account")
+	ErrInvalidFeeMultiplierPpm = sdkerrors.Register(ModuleName, 1002, "invalid FeeMultiplierPpm")
 )

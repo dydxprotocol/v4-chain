@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"sort"
 
+	gometrics "github.com/armon/go-metrics"
+	"github.com/dydxprotocol/v4/lib/metrics"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -60,7 +63,7 @@ func (o *OrderId) MustBeStatefulOrder() {
 func (o *OrderId) MustBeConditionalOrder() {
 	if !o.IsConditionalOrder() {
 		panic(
-			fmt.Errorf(
+			fmt.Sprintf(
 				"MustBeConditionalOrder: called with non-conditional order ID (%+v)",
 				o,
 			),
@@ -157,4 +160,12 @@ func MustSortAndHaveNoDuplicates(orderIds []OrderId) {
 		orderIdSet[orderId] = struct{}{}
 	}
 	sort.Sort(SortedOrders(orderIds))
+}
+
+// GetOrderIdLabels returns the telemetry labels of this order ID.
+func (o *OrderId) GetOrderIdLabels() []gometrics.Label {
+	return []gometrics.Label{
+		metrics.GetLabelForIntValue(metrics.OrderFlag, int(o.GetOrderFlags())),
+		metrics.GetLabelForIntValue(metrics.ClobPairId, int(o.GetClobPairId())),
+	}
 }

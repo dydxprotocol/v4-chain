@@ -1,32 +1,37 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"SUSHIUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"SUSHIUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"SUSHIUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"SUSHIUSD\""
     },
     {
-      "exchangeName":"Bitfinex",
-      "ticker":"tSUSHI:USD"
+      "exchangeName": "Bitfinex",
+      "ticker": "tSUSHI:USD",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"SUSHI-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "SUSHI-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"SUSHI_USDT"
+      "exchangeName": "Gate",
+      "ticker": "SUSHI_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"sushiusdt"
+      "exchangeName": "Huobi",
+      "ticker": "sushiusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"SUSHI-USDT"
+      "exchangeName": "Okx",
+      "ticker": "SUSHI-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

@@ -86,6 +86,9 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 				panic("incorrect validator type")
 			}
 
+			// Disable the Bridge daemon in the integration tests.
+			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
+
 			// Enable the Price daemon in the integration tests.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, true)
 			homeDir := filepath.Join(testval.Dir, "simd")

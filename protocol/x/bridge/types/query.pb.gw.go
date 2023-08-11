@@ -87,38 +87,38 @@ func local_request_Query_SafetyParams_0(ctx context.Context, marshaler runtime.M
 
 }
 
-func request_Query_NextAcknowledgedEventId_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryNextAcknowledgedEventIdRequest
+func request_Query_AcknowledgedEventInfo_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryAcknowledgedEventInfoRequest
 	var metadata runtime.ServerMetadata
 
-	msg, err := client.NextAcknowledgedEventId(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AcknowledgedEventInfo(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Query_NextAcknowledgedEventId_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryNextAcknowledgedEventIdRequest
+func local_request_Query_AcknowledgedEventInfo_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryAcknowledgedEventInfoRequest
 	var metadata runtime.ServerMetadata
 
-	msg, err := server.NextAcknowledgedEventId(ctx, &protoReq)
+	msg, err := server.AcknowledgedEventInfo(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Query_NextRecognizedEventId_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryNextRecognizedEventIdRequest
+func request_Query_RecognizedEventInfo_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryRecognizedEventInfoRequest
 	var metadata runtime.ServerMetadata
 
-	msg, err := client.NextRecognizedEventId(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.RecognizedEventInfo(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Query_NextRecognizedEventId_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryNextRecognizedEventIdRequest
+func local_request_Query_RecognizedEventInfo_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryRecognizedEventInfoRequest
 	var metadata runtime.ServerMetadata
 
-	msg, err := server.NextRecognizedEventId(ctx, &protoReq)
+	msg, err := server.RecognizedEventInfo(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -198,7 +198,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
-	mux.Handle("GET", pattern_Query_NextAcknowledgedEventId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_AcknowledgedEventInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -209,7 +209,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_NextAcknowledgedEventId_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Query_AcknowledgedEventInfo_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -217,11 +217,11 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_NextAcknowledgedEventId_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_AcknowledgedEventInfo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Query_NextRecognizedEventId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_RecognizedEventInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -232,7 +232,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_NextRecognizedEventId_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Query_RecognizedEventInfo_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -240,7 +240,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_NextRecognizedEventId_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_RecognizedEventInfo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -345,7 +345,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
-	mux.Handle("GET", pattern_Query_NextAcknowledgedEventId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_AcknowledgedEventInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -354,18 +354,18 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Query_NextAcknowledgedEventId_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Query_AcknowledgedEventInfo_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Query_NextAcknowledgedEventId_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_AcknowledgedEventInfo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Query_NextRecognizedEventId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_RecognizedEventInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -374,14 +374,14 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Query_NextRecognizedEventId_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Query_RecognizedEventInfo_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Query_NextRecognizedEventId_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_RecognizedEventInfo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -395,9 +395,9 @@ var (
 
 	pattern_Query_SafetyParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"dydxprotocol", "v4", "bridge", "safety_params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_NextAcknowledgedEventId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"dydxprotocol", "v4", "bridge", "next_acknowledged_event_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_AcknowledgedEventInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"dydxprotocol", "v4", "bridge", "acknowledged_event_info"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_NextRecognizedEventId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"dydxprotocol", "v4", "bridge", "next_recognized_event_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_RecognizedEventInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"dydxprotocol", "v4", "bridge", "recognized_event_info"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
@@ -407,7 +407,7 @@ var (
 
 	forward_Query_SafetyParams_0 = runtime.ForwardResponseMessage
 
-	forward_Query_NextAcknowledgedEventId_0 = runtime.ForwardResponseMessage
+	forward_Query_AcknowledgedEventInfo_0 = runtime.ForwardResponseMessage
 
-	forward_Query_NextRecognizedEventId_0 = runtime.ForwardResponseMessage
+	forward_Query_RecognizedEventInfo_0 = runtime.ForwardResponseMessage
 )

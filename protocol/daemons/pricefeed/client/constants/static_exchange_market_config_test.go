@@ -11,342 +11,1056 @@ import (
 func TestStaticExchangeMarketConfigCache(t *testing.T) {
 	tests := map[string]struct {
 		id             types.ExchangeId
-		marketToTicker map[types.MarketId]string
+		marketToConfig map[types.MarketId]types.MarketConfig
 		expectedFound  bool
 	}{
 		"Binance": {
 			id: "Binance",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD:   `"BTCUSDT"`,
-				exchange_common.MARKET_ETH_USD:   `"ETHUSDT"`,
-				exchange_common.MARKET_LINK_USD:  `"LINKUSDT"`,
-				exchange_common.MARKET_MATIC_USD: `"MATICUSDT"`,
-				exchange_common.MARKET_CRV_USD:   `"CRVUSDT"`,
-				exchange_common.MARKET_SOL_USD:   `"SOLUSDT"`,
-				exchange_common.MARKET_ADA_USD:   `"ADAUSDT"`,
-				exchange_common.MARKET_AVAX_USD:  `"AVAXUSDT"`,
-				exchange_common.MARKET_FIL_USD:   `"FILUSDT"`,
-				exchange_common.MARKET_AAVE_USD:  `"AAVEUSDT"`,
-				exchange_common.MARKET_LTC_USD:   `"LTCUSDT"`,
-				exchange_common.MARKET_DOGE_USD:  `"DOGEUSDT"`,
-				exchange_common.MARKET_ICP_USD:   `"ICPUSDT"`,
-				exchange_common.MARKET_ATOM_USD:  `"ATOMUSDT"`,
-				exchange_common.MARKET_DOT_USD:   `"DOTUSDT"`,
-				exchange_common.MARKET_XTZ_USD:   `"XTZUSDT"`,
-				exchange_common.MARKET_UNI_USD:   `"UNIUSDT"`,
-				exchange_common.MARKET_BCH_USD:   `"BCHUSDT"`,
-				exchange_common.MARKET_EOS_USD:   `"EOSUSDT"`,
-				exchange_common.MARKET_TRX_USD:   `"TRXUSDT"`,
-				exchange_common.MARKET_ALGO_USD:  `"ALGOUSDT"`,
-				exchange_common.MARKET_NEAR_USD:  `"NEARUSDT"`,
-				exchange_common.MARKET_SNX_USD:   `"SNXUSDT"`,
-				exchange_common.MARKET_MKR_USD:   `"MKRUSDT"`,
-				exchange_common.MARKET_SUSHI_USD: `"SUSHIUSDT"`,
-				exchange_common.MARKET_XLM_USD:   `"XLMUSDT"`,
-				exchange_common.MARKET_XMR_USD:   `"XMRUSDT"`,
-				exchange_common.MARKET_ETC_USD:   `"ETCUSDT"`,
-				exchange_common.MARKET_1INCH_USD: `"1INCHUSDT"`,
-				exchange_common.MARKET_COMP_USD:  `"COMPUSDT"`,
-				exchange_common.MARKET_ZEC_USD:   `"ZECUSDT"`,
-				exchange_common.MARKET_ZRX_USD:   `"ZRXUSDT"`,
-				exchange_common.MARKET_YFI_USD:   `"YFIUSDT"`,
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker:         `"BTCUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker:         `"ETHUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_LINK_USD: {
+					Ticker:         `"LINKUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MATIC_USD: {
+					Ticker:         `"MATICUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker:         `"CRVUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SOL_USD: {
+					Ticker:         `"SOLUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ADA_USD: {
+					Ticker:         `"ADAUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker:         `"AVAXUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_FIL_USD: {
+					Ticker:         `"FILUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AAVE_USD: {
+					Ticker:         `"AAVEUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_LTC_USD: {
+					Ticker:         `"LTCUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOGE_USD: {
+					Ticker:         `"DOGEUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ICP_USD: {
+					Ticker:         `"ICPUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ATOM_USD: {
+					Ticker:         `"ATOMUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOT_USD: {
+					Ticker:         `"DOTUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XTZ_USD: {
+					Ticker:         `"XTZUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker:         `"UNIUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_BCH_USD: {
+					Ticker:         `"BCHUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_EOS_USD: {
+					Ticker:         `"EOSUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_TRX_USD: {
+					Ticker:         `"TRXUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ALGO_USD: {
+					Ticker:         `"ALGOUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker:         `"NEARUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SNX_USD: {
+					Ticker:         `"SNXUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         `"MKRUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SUSHI_USD: {
+					Ticker:         `"SUSHIUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XLM_USD: {
+					Ticker:         `"XLMUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XMR_USD: {
+					Ticker:         `"XMRUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ETC_USD: {
+					Ticker:         `"ETCUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_1INCH_USD: {
+					Ticker:         `"1INCHUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker:         `"COMPUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ZEC_USD: {
+					Ticker:         `"ZECUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ZRX_USD: {
+					Ticker:         `"ZRXUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_YFI_USD: {
+					Ticker:         `"YFIUSDT"`,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker:         `"BTCUSDT"`, // Adjusted with BTC index price.
+					Invert:         true,
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_BTC_USD),
+				},
 			},
 			expectedFound: true,
 		},
 		"BinanceUS": {
 			id: "BinanceUS",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD:   `"BTCUSD"`,
-				exchange_common.MARKET_ETH_USD:   `"ETHUSD"`,
-				exchange_common.MARKET_LINK_USD:  `"LINKUSD"`,
-				exchange_common.MARKET_MATIC_USD: `"MATICUSD"`,
-				exchange_common.MARKET_CRV_USD:   `"CRVUSD"`,
-				exchange_common.MARKET_SOL_USD:   `"SOLUSD"`,
-				exchange_common.MARKET_ADA_USD:   `"ADAUSD"`,
-				exchange_common.MARKET_AVAX_USD:  `"AVAXUSD"`,
-				exchange_common.MARKET_FIL_USD:   `"FILUSD"`,
-				exchange_common.MARKET_AAVE_USD:  `"AAVEUSD"`,
-				exchange_common.MARKET_LTC_USD:   `"LTCUSD"`,
-				exchange_common.MARKET_DOGE_USD:  `"DOGEUSD"`,
-				exchange_common.MARKET_ICP_USD:   `"ICPUSD"`,
-				exchange_common.MARKET_ATOM_USD:  `"ATOMUSD"`,
-				exchange_common.MARKET_DOT_USD:   `"DOTUSD"`,
-				exchange_common.MARKET_XTZ_USD:   `"XTZUSD"`,
-				exchange_common.MARKET_UNI_USD:   `"UNIUSD"`,
-				exchange_common.MARKET_BCH_USD:   `"BCHUSD"`,
-				exchange_common.MARKET_EOS_USD:   `"EOSUSD"`,
-				exchange_common.MARKET_ALGO_USD:  `"ALGOUSD"`,
-				exchange_common.MARKET_NEAR_USD:  `"NEARUSD"`,
-				exchange_common.MARKET_SNX_USD:   `"SNXUSD"`,
-				exchange_common.MARKET_MKR_USD:   `"MKRUSD"`,
-				exchange_common.MARKET_SUSHI_USD: `"SUSHIUSD"`,
-				exchange_common.MARKET_XLM_USD:   `"XLMUSD"`,
-				exchange_common.MARKET_ETC_USD:   `"ETCUSD"`,
-				exchange_common.MARKET_1INCH_USD: `"1INCHUSD"`,
-				exchange_common.MARKET_COMP_USD:  `"COMPUSD"`,
-				exchange_common.MARKET_ZEC_USD:   `"ZECUSD"`,
-				exchange_common.MARKET_ZRX_USD:   `"ZRXUSD"`,
-				exchange_common.MARKET_YFI_USD:   `"YFIUSD"`,
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker: `"BTCUSD"`,
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker: `"ETHUSD"`,
+				},
+				exchange_common.MARKET_LINK_USD: {
+					Ticker: `"LINKUSD"`,
+				},
+				exchange_common.MARKET_MATIC_USD: {
+					Ticker: `"MATICUSD"`,
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker: `"CRVUSD"`,
+				},
+				exchange_common.MARKET_SOL_USD: {
+					Ticker: `"SOLUSD"`,
+				},
+				exchange_common.MARKET_ADA_USD: {
+					Ticker: `"ADAUSD"`,
+				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker: `"AVAXUSD"`,
+				},
+				exchange_common.MARKET_FIL_USD: {
+					Ticker: `"FILUSD"`,
+				},
+				exchange_common.MARKET_AAVE_USD: {
+					Ticker: `"AAVEUSD"`,
+				},
+				exchange_common.MARKET_LTC_USD: {
+					Ticker: `"LTCUSD"`,
+				},
+				exchange_common.MARKET_DOGE_USD: {
+					Ticker: `"DOGEUSD"`,
+				},
+				exchange_common.MARKET_ICP_USD: {
+					Ticker: `"ICPUSD"`,
+				},
+				exchange_common.MARKET_ATOM_USD: {
+					Ticker: `"ATOMUSD"`,
+				},
+				exchange_common.MARKET_DOT_USD: {
+					Ticker: `"DOTUSD"`,
+				},
+				exchange_common.MARKET_XTZ_USD: {
+					Ticker: `"XTZUSD"`,
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker: `"UNIUSD"`,
+				},
+				exchange_common.MARKET_BCH_USD: {
+					Ticker: `"BCHUSD"`,
+				},
+				exchange_common.MARKET_EOS_USD: {
+					Ticker: `"EOSUSD"`,
+				},
+				exchange_common.MARKET_ALGO_USD: {
+					Ticker: `"ALGOUSD"`,
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker: `"NEARUSD"`,
+				},
+				exchange_common.MARKET_SNX_USD: {
+					Ticker: `"SNXUSD"`,
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker: `"MKRUSD"`,
+				},
+				exchange_common.MARKET_SUSHI_USD: {
+					Ticker: `"SUSHIUSD"`,
+				},
+				exchange_common.MARKET_XLM_USD: {
+					Ticker: `"XLMUSD"`,
+				},
+				exchange_common.MARKET_ETC_USD: {
+					Ticker: `"ETCUSD"`,
+				},
+				exchange_common.MARKET_1INCH_USD: {
+					Ticker: `"1INCHUSD"`,
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker: `"COMPUSD"`,
+				},
+				exchange_common.MARKET_ZEC_USD: {
+					Ticker: `"ZECUSD"`,
+				},
+				exchange_common.MARKET_ZRX_USD: {
+					Ticker: `"ZRXUSD"`,
+				},
+				exchange_common.MARKET_YFI_USD: {
+					Ticker: `"YFIUSD"`,
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker: `"USDTUSD"`,
+				},
 			},
 			expectedFound: true,
 		},
 		"Bitfinex": {
 			id: "Bitfinex",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD:   "tBTCUSD",
-				exchange_common.MARKET_ETH_USD:   "tETHUSD",
-				exchange_common.MARKET_SOL_USD:   "tSOLUSD",
-				exchange_common.MARKET_ADA_USD:   "tADAUSD",
-				exchange_common.MARKET_AVAX_USD:  "tAVAX:USD",
-				exchange_common.MARKET_DOT_USD:   "tDOTUSD",
-				exchange_common.MARKET_XTZ_USD:   "tXTZUSD",
-				exchange_common.MARKET_EOS_USD:   "tEOSUSD",
-				exchange_common.MARKET_TRX_USD:   "tTRXUSD",
-				exchange_common.MARKET_SNX_USD:   "tSNXUSD",
-				exchange_common.MARKET_MKR_USD:   "tMKRUSD",
-				exchange_common.MARKET_SUSHI_USD: "tSUSHI:USD",
-				exchange_common.MARKET_XLM_USD:   "tXLMUSD",
-				exchange_common.MARKET_XMR_USD:   "tXMRUSD",
-				exchange_common.MARKET_ZEC_USD:   "tZECUSD",
-				exchange_common.MARKET_ZRX_USD:   "tZRXUSD",
-				exchange_common.MARKET_YFI_USD:   "tYFIUSD",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker:         "tBTCUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker:         "tETHUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SOL_USD: {
+					Ticker:         "tSOLUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ADA_USD: {
+					Ticker:         "tADAUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker:         "tAVAX:USD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOT_USD: {
+					Ticker:         "tDOTUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XTZ_USD: {
+					Ticker:         "tXTZUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_EOS_USD: {
+					Ticker:         "tEOSUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_TRX_USD: {
+					Ticker:         "tTRXUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SNX_USD: {
+					Ticker:         "tSNXUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "tMKRUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SUSHI_USD: {
+					Ticker:         "tSUSHI:USD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XLM_USD: {
+					Ticker:         "tXLMUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XMR_USD: {
+					Ticker:         "tXMRUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ZEC_USD: {
+					Ticker:         "tZECUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ZRX_USD: {
+					Ticker:         "tZRXUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_YFI_USD: {
+					Ticker:         "tYFIUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker:         "tUSTUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
 			},
 			expectedFound: true,
 		},
 		"Kraken": {
 			id: "Kraken",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD:  "XXBTZUSD",
-				exchange_common.MARKET_ETH_USD:  "XETHZUSD",
-				exchange_common.MARKET_LINK_USD: "LINKUSD",
-				exchange_common.MARKET_CRV_USD:  "CRVUSD",
-				exchange_common.MARKET_SOL_USD:  "SOLUSD",
-				exchange_common.MARKET_ADA_USD:  "ADAUSD",
-				exchange_common.MARKET_FIL_USD:  "FILUSD",
-				exchange_common.MARKET_AAVE_USD: "AAVEUSD",
-				exchange_common.MARKET_LTC_USD:  "XLTCZUSD",
-				exchange_common.MARKET_ATOM_USD: "ATOMUSD",
-				exchange_common.MARKET_DOT_USD:  "DOTUSD",
-				exchange_common.MARKET_XTZ_USD:  "XTZUSD",
-				exchange_common.MARKET_UNI_USD:  "UNIUSD",
-				exchange_common.MARKET_BCH_USD:  "BCHUSD",
-				exchange_common.MARKET_EOS_USD:  "EOSUSD",
-				exchange_common.MARKET_ALGO_USD: "ALGOUSD",
-				exchange_common.MARKET_SNX_USD:  "SNXUSD",
-				exchange_common.MARKET_XLM_USD:  "XXLMZUSD",
-				exchange_common.MARKET_XMR_USD:  "XXMRZUSD",
-				exchange_common.MARKET_ETC_USD:  "XETCZUSD",
-				exchange_common.MARKET_COMP_USD: "COMPUSD",
-				exchange_common.MARKET_ZEC_USD:  "XZECZUSD",
-				exchange_common.MARKET_ZRX_USD:  "ZRXUSD",
-				exchange_common.MARKET_YFI_USD:  "YFIUSD",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker: "XXBTZUSD",
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker: "XETHZUSD",
+				},
+				exchange_common.MARKET_LINK_USD: {
+					Ticker: "LINKUSD",
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker: "CRVUSD",
+				},
+				exchange_common.MARKET_SOL_USD: {
+					Ticker: "SOLUSD",
+				},
+				exchange_common.MARKET_ADA_USD: {
+					Ticker: "ADAUSD",
+				},
+				exchange_common.MARKET_FIL_USD: {
+					Ticker: "FILUSD",
+				},
+				exchange_common.MARKET_AAVE_USD: {
+					Ticker: "AAVEUSD",
+				},
+				exchange_common.MARKET_LTC_USD: {
+					Ticker: "XLTCZUSD",
+				},
+				exchange_common.MARKET_ATOM_USD: {
+					Ticker: "ATOMUSD",
+				},
+				exchange_common.MARKET_DOT_USD: {
+					Ticker: "DOTUSD",
+				},
+				exchange_common.MARKET_XTZ_USD: {
+					Ticker: "XTZUSD",
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker: "UNIUSD",
+				},
+				exchange_common.MARKET_BCH_USD: {
+					Ticker: "BCHUSD",
+				},
+				exchange_common.MARKET_EOS_USD: {
+					Ticker: "EOSUSD",
+				},
+				exchange_common.MARKET_ALGO_USD: {
+					Ticker: "ALGOUSD",
+				},
+				exchange_common.MARKET_SNX_USD: {
+					Ticker: "SNXUSD",
+				},
+				exchange_common.MARKET_XLM_USD: {
+					Ticker: "XXLMZUSD",
+				},
+				exchange_common.MARKET_XMR_USD: {
+					Ticker: "XXMRZUSD",
+				},
+				exchange_common.MARKET_ETC_USD: {
+					Ticker: "XETCZUSD",
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker: "COMPUSD",
+				},
+				exchange_common.MARKET_ZEC_USD: {
+					Ticker: "XZECZUSD",
+				},
+				exchange_common.MARKET_ZRX_USD: {
+					Ticker: "ZRXUSD",
+				},
+				exchange_common.MARKET_YFI_USD: {
+					Ticker: "YFIUSD",
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker: "USDTZUSD",
+				},
 			},
 			expectedFound: true,
 		},
 		"Gate": {
 			id: "Gate",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_MATIC_USD: "MATIC_USDT",
-				exchange_common.MARKET_CRV_USD:   "CRV_USDT",
-				exchange_common.MARKET_ADA_USD:   "ADA_USDT",
-				exchange_common.MARKET_AVAX_USD:  "AVAX_USDT",
-				exchange_common.MARKET_DOGE_USD:  "DOGE_USDT",
-				exchange_common.MARKET_ICP_USD:   "ICP_USDT",
-				exchange_common.MARKET_DOT_USD:   "DOT_USDT",
-				exchange_common.MARKET_XTZ_USD:   "XTZ_USDT",
-				exchange_common.MARKET_UNI_USD:   "UNI_USDT",
-				exchange_common.MARKET_BCH_USD:   "BCH_USDT",
-				exchange_common.MARKET_TRX_USD:   "TRX_USDT",
-				exchange_common.MARKET_NEAR_USD:  "NEAR_USDT",
-				exchange_common.MARKET_MKR_USD:   "MKR_USDT",
-				exchange_common.MARKET_SUSHI_USD: "SUSHI_USDT",
-				exchange_common.MARKET_XLM_USD:   "XLM_USDT",
-				exchange_common.MARKET_XMR_USD:   "XMR_USDT",
-				exchange_common.MARKET_ETC_USD:   "ETC_USDT",
-				exchange_common.MARKET_1INCH_USD: "1INCH_USDT",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_MATIC_USD: {
+					Ticker:         "MATIC_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker:         "CRV_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ADA_USD: {
+					Ticker:         "ADA_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker:         "AVAX_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOGE_USD: {
+					Ticker:         "DOGE_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ICP_USD: {
+					Ticker:         "ICP_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOT_USD: {
+					Ticker:         "DOT_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XTZ_USD: {
+					Ticker:         "XTZ_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker:         "UNI_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_BCH_USD: {
+					Ticker:         "BCH_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_TRX_USD: {
+					Ticker:         "TRX_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker:         "NEAR_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "MKR_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SUSHI_USD: {
+					Ticker:         "SUSHI_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XLM_USD: {
+					Ticker:         "XLM_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XMR_USD: {
+					Ticker:         "XMR_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ETC_USD: {
+					Ticker:         "ETC_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_1INCH_USD: {
+					Ticker:         "1INCH_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker: "USDT_USD",
+				},
 			},
 			expectedFound: true,
 		},
 		"Bitstamp": {
 			id: "Bitstamp",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD: "BTC/USD",
-				exchange_common.MARKET_ETH_USD: "ETH/USD",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker: "BTC/USD",
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker: "ETH/USD",
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker: "USDT/USD",
+				},
 			},
 			expectedFound: true,
 		},
 		"Bybit": {
 			id: "Bybit",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD:  "BTCUSDT",
-				exchange_common.MARKET_ETH_USD:  "ETHUSDT",
-				exchange_common.MARKET_CRV_USD:  "CRVUSDT",
-				exchange_common.MARKET_LTC_USD:  "LTCUSDT",
-				exchange_common.MARKET_ATOM_USD: "ATOMUSDT",
-				exchange_common.MARKET_UNI_USD:  "UNIUSDT",
-				exchange_common.MARKET_NEAR_USD: "NEARUSDT",
-				exchange_common.MARKET_COMP_USD: "COMPUSDT",
-				exchange_common.MARKET_YFI_USD:  "YFIUSDT",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker:         "BTCUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker:         "ETHUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker:         "CRVUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_LTC_USD: {
+					Ticker:         "LTCUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ATOM_USD: {
+					Ticker:         "ATOMUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker:         "UNIUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker:         "NEARUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker:         "COMPUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_YFI_USD: {
+					Ticker:         "YFIUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker: "USDCUSDT",
+					Invert: true,
+				},
 			},
 			expectedFound: true,
 		},
 		"Crypto.com": {
 			id: "CryptoCom",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD:  "BTC_USD",
-				exchange_common.MARKET_ETH_USD:  "ETH_USD",
-				exchange_common.MARKET_LINK_USD: "LINK_USD",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker: "BTC_USD",
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker: "ETH_USD",
+				},
+				exchange_common.MARKET_LINK_USD: {
+					Ticker: "LINK_USD",
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker: "USDT_USD",
+				},
 			},
 			expectedFound: true,
 		},
 		"Huobi": {
 			id: "Huobi",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_LINK_USD:  "linkusdt",
-				exchange_common.MARKET_MATIC_USD: "maticusdt",
-				exchange_common.MARKET_CRV_USD:   "crvusdt",
-				exchange_common.MARKET_SOL_USD:   "solusdt",
-				exchange_common.MARKET_ADA_USD:   "adausdt",
-				exchange_common.MARKET_AVAX_USD:  "avaxusdt",
-				exchange_common.MARKET_FIL_USD:   "filusdt",
-				exchange_common.MARKET_AAVE_USD:  "aaveusdt",
-				exchange_common.MARKET_LTC_USD:   "ltcusdt",
-				exchange_common.MARKET_DOGE_USD:  "dogeusdt",
-				exchange_common.MARKET_ICP_USD:   "icpusdt",
-				exchange_common.MARKET_ATOM_USD:  "atomusdt",
-				exchange_common.MARKET_DOT_USD:   "dotusdt",
-				exchange_common.MARKET_XTZ_USD:   "xtzusdt",
-				exchange_common.MARKET_UNI_USD:   "uniusdt",
-				exchange_common.MARKET_BCH_USD:   "bchusdt",
-				exchange_common.MARKET_EOS_USD:   "eosusdt",
-				exchange_common.MARKET_TRX_USD:   "trxusdt",
-				exchange_common.MARKET_ALGO_USD:  "algousdt",
-				exchange_common.MARKET_NEAR_USD:  "nearusdt",
-				exchange_common.MARKET_SNX_USD:   "snxusdt",
-				exchange_common.MARKET_MKR_USD:   "mkrusdt",
-				exchange_common.MARKET_SUSHI_USD: "sushiusdt",
-				exchange_common.MARKET_ETC_USD:   "etcusdt",
-				exchange_common.MARKET_1INCH_USD: "1inchusdt",
-				exchange_common.MARKET_COMP_USD:  "compusdt",
-				exchange_common.MARKET_ZRX_USD:   "zrxusdt",
-				exchange_common.MARKET_YFI_USD:   "yfiusdt",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_LINK_USD: {
+					Ticker:         "linkusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MATIC_USD: {
+					Ticker:         "maticusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker:         "crvusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SOL_USD: {
+					Ticker:         "solusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ADA_USD: {
+					Ticker:         "adausdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker:         "avaxusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_FIL_USD: {
+					Ticker:         "filusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AAVE_USD: {
+					Ticker:         "aaveusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_LTC_USD: {
+					Ticker:         "ltcusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOGE_USD: {
+					Ticker:         "dogeusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ICP_USD: {
+					Ticker:         "icpusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ATOM_USD: {
+					Ticker:         "atomusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOT_USD: {
+					Ticker:         "dotusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XTZ_USD: {
+					Ticker:         "xtzusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker:         "uniusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_BCH_USD: {
+					Ticker:         "bchusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_EOS_USD: {
+					Ticker:         "eosusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_TRX_USD: {
+					Ticker:         "trxusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ALGO_USD: {
+					Ticker:         "algousdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker:         "nearusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SNX_USD: {
+					Ticker:         "snxusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "mkrusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SUSHI_USD: {
+					Ticker:         "sushiusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ETC_USD: {
+					Ticker:         "etcusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_1INCH_USD: {
+					Ticker:         "1inchusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker:         "compusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ZRX_USD: {
+					Ticker:         "zrxusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_YFI_USD: {
+					Ticker:         "yfiusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker:         "ethusdt", // Adjusted with ETH index price.
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_ETH_USD),
+					Invert:         true,
+				},
 			},
 			expectedFound: true,
 		},
 		"Kucoin": {
 			id: "Kucoin",
-			marketToTicker: map[types.MarketId]string{
-				2:                                "LINK-USDT",
-				exchange_common.MARKET_MATIC_USD: "MATIC-USDT",
-				exchange_common.MARKET_CRV_USD:   "CRV-USDT",
-				exchange_common.MARKET_SOL_USD:   "SOL-USDT",
-				exchange_common.MARKET_ADA_USD:   "ADA-USDT",
-				exchange_common.MARKET_AVAX_USD:  "AVAX-USDT",
-				exchange_common.MARKET_FIL_USD:   "FIL-USDT",
-				exchange_common.MARKET_AAVE_USD:  "AAVE-USDT",
-				exchange_common.MARKET_LTC_USD:   "LTC-USDT",
-				exchange_common.MARKET_DOGE_USD:  "DOGE-USDT",
-				exchange_common.MARKET_ICP_USD:   "ICP-USDT",
-				exchange_common.MARKET_ATOM_USD:  "ATOM-USDT",
-				exchange_common.MARKET_DOT_USD:   "DOT-USDT",
-				exchange_common.MARKET_ALGO_USD:  "ALGO-USDT",
-				exchange_common.MARKET_NEAR_USD:  "NEAR-USDT",
-				exchange_common.MARKET_SNX_USD:   "SNX-USDT",
-				exchange_common.MARKET_MKR_USD:   "MKR-USDT",
-				exchange_common.MARKET_XLM_USD:   "XLM-USDT",
-				exchange_common.MARKET_XMR_USD:   "XMR-USDT",
-				exchange_common.MARKET_1INCH_USD: "1INCH-USDT",
-				exchange_common.MARKET_COMP_USD:  "COMP-USDT",
-				exchange_common.MARKET_ZEC_USD:   "ZEC-USDT",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_LINK_USD: {
+					Ticker:         "LINK-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MATIC_USD: {
+					Ticker:         "MATIC-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker:         "CRV-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SOL_USD: {
+					Ticker:         "SOL-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ADA_USD: {
+					Ticker:         "ADA-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker:         "AVAX-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_FIL_USD: {
+					Ticker:         "FIL-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AAVE_USD: {
+					Ticker:         "AAVE-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_LTC_USD: {
+					Ticker:         "LTC-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOGE_USD: {
+					Ticker:         "DOGE-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ICP_USD: {
+					Ticker:         "ICP-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ATOM_USD: {
+					Ticker:         "ATOM-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOT_USD: {
+					Ticker:         "DOT-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ALGO_USD: {
+					Ticker:         "ALGO-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker:         "NEAR-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SNX_USD: {
+					Ticker:         "SNX-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "MKR-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XLM_USD: {
+					Ticker:         "XLM-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XMR_USD: {
+					Ticker:         "XMR-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_1INCH_USD: {
+					Ticker:         "1INCH-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker:         "COMP-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ZEC_USD: {
+					Ticker:         "ZEC-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker:         "BTC-USDT", // Adjusted with BTC index price.
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_BTC_USD),
+					Invert:         true,
+				},
 			},
 			expectedFound: true,
 		},
 		"Okx": {
 			id: "Okx",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD:   "BTC-USDT",
-				exchange_common.MARKET_ETH_USD:   "ETH-USDT",
-				exchange_common.MARKET_LINK_USD:  "LINK-USDT",
-				exchange_common.MARKET_MATIC_USD: "MATIC-USDT",
-				exchange_common.MARKET_CRV_USD:   "CRV-USDT",
-				exchange_common.MARKET_SOL_USD:   "SOL-USDT",
-				exchange_common.MARKET_AVAX_USD:  "AVAX-USDT",
-				exchange_common.MARKET_FIL_USD:   "FIL-USDT",
-				exchange_common.MARKET_AAVE_USD:  "AAVE-USDT",
-				exchange_common.MARKET_LTC_USD:   "LTC-USDT",
-				exchange_common.MARKET_DOGE_USD:  "DOGE-USDT",
-				exchange_common.MARKET_ICP_USD:   "ICP-USDT",
-				exchange_common.MARKET_ATOM_USD:  "ATOM-USDT",
-				exchange_common.MARKET_DOT_USD:   "DOT-USDT",
-				exchange_common.MARKET_XTZ_USD:   "XTZ-USDT",
-				exchange_common.MARKET_UNI_USD:   "UNI-USDT",
-				exchange_common.MARKET_BCH_USD:   "BCH-USDT",
-				exchange_common.MARKET_EOS_USD:   "EOS-USDT",
-				exchange_common.MARKET_TRX_USD:   "TRX-USDT",
-				exchange_common.MARKET_ALGO_USD:  "ALGO-USDT",
-				exchange_common.MARKET_NEAR_USD:  "NEAR-USDT",
-				exchange_common.MARKET_SNX_USD:   "SNX-USDT",
-				exchange_common.MARKET_MKR_USD:   "MKR-USDT",
-				exchange_common.MARKET_SUSHI_USD: "SUSHI-USDT",
-				exchange_common.MARKET_XLM_USD:   "XLM-USDT",
-				exchange_common.MARKET_XMR_USD:   "XMR-USDT",
-				exchange_common.MARKET_ETC_USD:   "ETC-USDT",
-				exchange_common.MARKET_1INCH_USD: "1INCH-USDT",
-				exchange_common.MARKET_COMP_USD:  "COMP-USDT",
-				exchange_common.MARKET_ZEC_USD:   "ZEC-USDT",
-				exchange_common.MARKET_ZRX_USD:   "ZRX-USDT",
-				exchange_common.MARKET_YFI_USD:   "YFI-USDT",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker:         "BTC-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker:         "ETH-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_LINK_USD: {
+					Ticker:         "LINK-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MATIC_USD: {
+					Ticker:         "MATIC-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker:         "CRV-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SOL_USD: {
+					Ticker:         "SOL-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker:         "AVAX-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_FIL_USD: {
+					Ticker:         "FIL-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AAVE_USD: {
+					Ticker:         "AAVE-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_LTC_USD: {
+					Ticker:         "LTC-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOGE_USD: {
+					Ticker:         "DOGE-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ICP_USD: {
+					Ticker:         "ICP-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ATOM_USD: {
+					Ticker:         "ATOM-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_DOT_USD: {
+					Ticker:         "DOT-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XTZ_USD: {
+					Ticker:         "XTZ-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker:         "UNI-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_BCH_USD: {
+					Ticker:         "BCH-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_EOS_USD: {
+					Ticker:         "EOS-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_TRX_USD: {
+					Ticker:         "TRX-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ALGO_USD: {
+					Ticker:         "ALGO-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker:         "NEAR-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SNX_USD: {
+					Ticker:         "SNX-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "MKR-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_SUSHI_USD: {
+					Ticker:         "SUSHI-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XLM_USD: {
+					Ticker:         "XLM-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XMR_USD: {
+					Ticker:         "XMR-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ETC_USD: {
+					Ticker:         "ETC-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_1INCH_USD: {
+					Ticker:         "1INCH-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker:         "COMP-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ZEC_USD: {
+					Ticker:         "ZEC-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ZRX_USD: {
+					Ticker:         "ZRX-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_YFI_USD: {
+					Ticker:         "YFI-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker:         "BTC-USDT", // Adjusted with BTC index price.
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_BTC_USD),
+					Invert:         true,
+				},
 			},
 			expectedFound: true,
 		},
 		"Mexc": {
 			id: "Mexc",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_UNI_USD: "UNI_USDT",
-				exchange_common.MARKET_XMR_USD: "XMR_USDT",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_UNI_USD: {
+					Ticker:         "UNI_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_XMR_USD: {
+					Ticker:         "XMR_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
 			},
 			expectedFound: true,
 		},
 		"Coinbase Pro": {
 			id: "CoinbasePro",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD:   "BTC-USD",
-				exchange_common.MARKET_ETH_USD:   "ETH-USD",
-				exchange_common.MARKET_LINK_USD:  "LINK-USD",
-				exchange_common.MARKET_MATIC_USD: "MATIC-USD",
-				exchange_common.MARKET_CRV_USD:   "CRV-USD",
-				exchange_common.MARKET_SOL_USD:   "SOL-USD",
-				exchange_common.MARKET_ADA_USD:   "ADA-USD",
-				exchange_common.MARKET_FIL_USD:   "FIL-USD",
-				exchange_common.MARKET_AAVE_USD:  "AAVE-USD",
-				exchange_common.MARKET_LTC_USD:   "LTC-USD",
-				exchange_common.MARKET_ICP_USD:   "ICP-USD",
-				exchange_common.MARKET_ATOM_USD:  "ATOM-USD",
-				exchange_common.MARKET_XTZ_USD:   "XTZ-USD",
-				exchange_common.MARKET_UNI_USD:   "UNI-USD",
-				exchange_common.MARKET_BCH_USD:   "BCH-USD",
-				exchange_common.MARKET_EOS_USD:   "EOS-USD",
-				exchange_common.MARKET_ALGO_USD:  "ALGO-USD",
-				exchange_common.MARKET_NEAR_USD:  "NEAR-USD",
-				exchange_common.MARKET_SNX_USD:   "SNX-USD",
-				exchange_common.MARKET_MKR_USD:   "MKR-USD",
-				exchange_common.MARKET_SUSHI_USD: "SUSHI-USD",
-				exchange_common.MARKET_XLM_USD:   "XLM-USD",
-				exchange_common.MARKET_ETC_USD:   "ETC-USD",
-				exchange_common.MARKET_1INCH_USD: "1INCH-USD",
-				exchange_common.MARKET_COMP_USD:  "COMP-USD",
-				exchange_common.MARKET_ZEC_USD:   "ZEC-USD",
-				exchange_common.MARKET_ZRX_USD:   "ZRX-USD",
-				exchange_common.MARKET_YFI_USD:   "YFI-USD",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker: "BTC-USD",
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker: "ETH-USD",
+				},
+				exchange_common.MARKET_LINK_USD: {
+					Ticker: "LINK-USD",
+				},
+				exchange_common.MARKET_MATIC_USD: {
+					Ticker: "MATIC-USD",
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker: "CRV-USD",
+				},
+				exchange_common.MARKET_SOL_USD: {
+					Ticker: "SOL-USD",
+				},
+				exchange_common.MARKET_ADA_USD: {
+					Ticker: "ADA-USD",
+				},
+				exchange_common.MARKET_FIL_USD: {
+					Ticker: "FIL-USD",
+				},
+				exchange_common.MARKET_AAVE_USD: {
+					Ticker: "AAVE-USD",
+				},
+				exchange_common.MARKET_LTC_USD: {
+					Ticker: "LTC-USD",
+				},
+				exchange_common.MARKET_ICP_USD: {
+					Ticker: "ICP-USD",
+				},
+				exchange_common.MARKET_ATOM_USD: {
+					Ticker: "ATOM-USD",
+				},
+				exchange_common.MARKET_XTZ_USD: {
+					Ticker: "XTZ-USD",
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker: "UNI-USD",
+				},
+				exchange_common.MARKET_BCH_USD: {
+					Ticker: "BCH-USD",
+				},
+				exchange_common.MARKET_EOS_USD: {
+					Ticker: "EOS-USD",
+				},
+				exchange_common.MARKET_ALGO_USD: {
+					Ticker: "ALGO-USD",
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker: "NEAR-USD",
+				},
+				exchange_common.MARKET_SNX_USD: {
+					Ticker: "SNX-USD",
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker: "MKR-USD",
+				},
+				exchange_common.MARKET_SUSHI_USD: {
+					Ticker: "SUSHI-USD",
+				},
+				exchange_common.MARKET_XLM_USD: {
+					Ticker: "XLM-USD",
+				},
+				exchange_common.MARKET_ETC_USD: {
+					Ticker: "ETC-USD",
+				},
+				exchange_common.MARKET_1INCH_USD: {
+					Ticker: "1INCH-USD",
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker: "COMP-USD",
+				},
+				exchange_common.MARKET_ZEC_USD: {
+					Ticker: "ZEC-USD",
+				},
+				exchange_common.MARKET_ZRX_USD: {
+					Ticker: "ZRX-USD",
+				},
+				exchange_common.MARKET_YFI_USD: {
+					Ticker: "YFI-USD",
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker: "USDT-USD",
+				},
 			},
 			expectedFound: true,
 		},
 		"Test exchange": {
 			id: "TestExchange",
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_BTC_USD:  "BTC-USD",
-				exchange_common.MARKET_ETH_USD:  "ETH-USD",
-				exchange_common.MARKET_LINK_USD: "LINK-USD",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_BTC_USD: {
+					Ticker: "BTC-USD",
+				},
+				exchange_common.MARKET_ETH_USD: {
+					Ticker: "ETH-USD",
+				},
+				exchange_common.MARKET_LINK_USD: {
+					Ticker: "LINK-USD",
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker: "USDT-USD",
+				},
 			},
 			expectedFound: true,
 		},
@@ -361,7 +1075,12 @@ func TestStaticExchangeMarketConfigCache(t *testing.T) {
 			if tc.expectedFound {
 				require.True(t, ok)
 				require.Equal(t, tc.id, config.Id)
-				require.Equal(t, tc.marketToTicker, config.MarketToTicker)
+				require.Len(t, config.MarketToMarketConfig, len(tc.marketToConfig))
+				for market, expectedConfig := range tc.marketToConfig {
+					actualConfig, ok := config.MarketToMarketConfig[market]
+					require.True(t, ok, "Market %v missing from exchange market config", market)
+					require.Equal(t, expectedConfig, actualConfig)
+				}
 			} else {
 				require.False(t, ok)
 			}
@@ -375,7 +1094,7 @@ func TestStaticExchangeMarketConfigCacheLen(t *testing.T) {
 
 func TestGenerateExchangeConfigJsonLength(t *testing.T) {
 	configs := GenerateExchangeConfigJson(StaticExchangeMarketConfig)
-	require.Len(t, configs, 33)
+	require.Len(t, configs, 34)
 }
 
 func TestGenerateExchangeConfigJson(t *testing.T) {
@@ -515,13 +1234,24 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 			id:                             exchange_common.MARKET_YFI_USD,
 			expectedExchangeConfigJsonFile: "yfi_exchange_config.json",
 		},
+		"USDT exchange config": {
+			id:                             exchange_common.MARKET_USDT_USD,
+			expectedExchangeConfigJsonFile: "usdt_exchange_config.json",
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			configs := GenerateExchangeConfigJson(StaticExchangeMarketConfig)
-			actualExchangeConfigJson, ok := configs[tc.id]
+
+			// Uncomment to update test data
+			//f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+			//require.NoError(t, err)
+			//defer f.Close()
+			//_, err = f.WriteString(configs[tc.id] + "\n") // Final newline added manually.
+			//require.NoError(t, err)
+
+			actualExchangeConfigJson := pricefeed.CompactJsonString(t, configs[tc.id])
 			expectedExchangeConfigJson := pricefeed.ReadJsonTestFile(t, tc.expectedExchangeConfigJsonFile)
-			require.True(t, ok)
 			require.Equal(t, expectedExchangeConfigJson, actualExchangeConfigJson)
 		})
 	}

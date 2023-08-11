@@ -74,7 +74,7 @@ func TestGetMarketExponents(t *testing.T) {
 	require.Equal(t, pf.mutableState.marketExponents, marketExponents)
 }
 
-func TestMutableExchangeConfig(t *testing.T) {
+func TestGetMutableExchangeConfig(t *testing.T) {
 	pf, err := NewPriceFetcher(
 		constants.Exchange1_2MaxQueries_StartupConfig,
 		types.ExchangeQueryDetails{},

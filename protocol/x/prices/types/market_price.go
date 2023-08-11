@@ -1,6 +1,8 @@
 package types
 
-import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+import (
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
 
 // ValidateFromParam checks that the MarketPrice is valid and that it corresponds to the given MarketParam.
 func (mp *MarketPrice) ValidateFromParam(marketParam MarketParam) error {

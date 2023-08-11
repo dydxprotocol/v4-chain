@@ -1,32 +1,38 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"AVAXUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"AVAXUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"AVAXUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"AVAXUSD\""
     },
     {
-      "exchangeName":"Bitfinex",
-      "ticker":"tAVAX:USD"
+      "exchangeName": "Bitfinex",
+      "ticker": "tAVAX:USD",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"AVAX_USDT"
+      "exchangeName": "Gate",
+      "ticker": "AVAX_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"avaxusdt"
+      "exchangeName": "Huobi",
+      "ticker": "avaxusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"AVAX-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "AVAX-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"AVAX-USDT"
+      "exchangeName": "Okx",
+      "ticker": "AVAX-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

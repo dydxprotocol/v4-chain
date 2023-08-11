@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4/x/clob/rate_limit"
 	"testing"
+
+	"github.com/dydxprotocol/v4/x/clob/rate_limit"
 
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4/testutil/constants"
@@ -19,6 +20,7 @@ import (
 	feetierskeeper "github.com/dydxprotocol/v4/x/feetiers/keeper"
 	perpkeeper "github.com/dydxprotocol/v4/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4/x/prices/keeper"
+	rewardskeeper "github.com/dydxprotocol/v4/x/rewards/keeper"
 	statskeeper "github.com/dydxprotocol/v4/x/stats/keeper"
 	subkeeper "github.com/dydxprotocol/v4/x/subaccounts/keeper"
 )
@@ -31,9 +33,11 @@ type ClobKeepersTestContext struct {
 	FeeTiersKeeper    *feetierskeeper.Keeper
 	PerpetualsKeeper  *perpkeeper.Keeper
 	StatsKeeper       *statskeeper.Keeper
+	RewardsKeeper     *rewardskeeper.Keeper
 	SubaccountsKeeper *subkeeper.Keeper
 	StoreKey          storetypes.StoreKey
 	MemKey            storetypes.StoreKey
+	Cdc               *codec.ProtoCodec
 }
 
 func NewClobKeepersTestContext(
@@ -87,6 +91,15 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			db,
 			cdc,
 		)
+		ks.RewardsKeeper, _ = createRewardsKeeper(
+			stateStore,
+			ks.AssetsKeeper,
+			bankKeeper,
+			ks.FeeTiersKeeper,
+			ks.PricesKeeper,
+			db,
+			cdc,
+		)
 		ks.SubaccountsKeeper, _ = createSubaccountsKeeper(
 			stateStore,
 			db,
@@ -107,10 +120,12 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.FeeTiersKeeper,
 			ks.PerpetualsKeeper,
 			ks.StatsKeeper,
+			ks.RewardsKeeper,
 			ks.SubaccountsKeeper,
 			indexerEventManager,
 			indexerEventsTransientStoreKey,
 		)
+		ks.Cdc = cdc
 
 		return []GenesisInitializer{
 			ks.PricesKeeper,
@@ -136,6 +151,7 @@ func createClobKeeper(
 	feeTiersKeeper types.FeeTiersKeeper,
 	perpKeeper *perpkeeper.Keeper,
 	statsKeeper *statskeeper.Keeper,
+	rewardsKeeper types.RewardsKeeper,
 	saKeeper *subkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
@@ -143,7 +159,7 @@ func createClobKeeper(
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	transientStoreKey := sdk.NewTransientStoreKey(types.TransientStoreKey)
-	untriggeredConditionalOrders := make(map[types.ClobPairId]keeper.UntriggeredConditionalOrders)
+	untriggeredConditionalOrders := make(map[types.ClobPairId]*keeper.UntriggeredConditionalOrders)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
@@ -162,6 +178,7 @@ func createClobKeeper(
 		feeTiersKeeper,
 		perpKeeper,
 		statsKeeper,
+		rewardsKeeper,
 		indexerEventManager,
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		"",

@@ -61,6 +61,60 @@ func assertTransferEventInIndexerBlock(
 	require.Contains(t, transfers, expectedEvent)
 }
 
+// assertDepositEventInIndexerBlock verifies that the deposit has a corresponding deposit
+// event in the Indexer Kafka message.
+func assertDepositEventInIndexerBlock(
+	t *testing.T,
+	ctx sdk.Context,
+	k *keeper.Keeper,
+	deposit *types.MsgDepositToSubaccount,
+) {
+	block := k.GetIndexerEventManager().ProduceBlock(ctx)
+	expectedEvent := k.GenerateDepositEvent(deposit)
+	var deposits []*indexerevents.TransferEventV1
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeTransfer {
+			continue
+		}
+		bytes := indexer_manager.GetBytesFromEventData(event.Data)
+		unmarshaler := common.UnmarshalerImpl{}
+		var deposit indexerevents.TransferEventV1
+		err := unmarshaler.Unmarshal(bytes, &deposit)
+		if err != nil {
+			panic(err)
+		}
+		deposits = append(deposits, &deposit)
+	}
+	require.Contains(t, deposits, expectedEvent)
+}
+
+// assertWithdrawEventInIndexerBlock verifies that the withdraw has a corresponding withdraw
+// event in the Indexer Kafka message.
+func assertWithdrawEventInIndexerBlock(
+	t *testing.T,
+	ctx sdk.Context,
+	k *keeper.Keeper,
+	withdraw *types.MsgWithdrawFromSubaccount,
+) {
+	block := k.GetIndexerEventManager().ProduceBlock(ctx)
+	expectedEvent := k.GenerateWithdrawEvent(withdraw)
+	var withdraws []*indexerevents.TransferEventV1
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeTransfer {
+			continue
+		}
+		bytes := indexer_manager.GetBytesFromEventData(event.Data)
+		unmarshaler := common.UnmarshalerImpl{}
+		var withdraw indexerevents.TransferEventV1
+		err := unmarshaler.Unmarshal(bytes, &withdraw)
+		if err != nil {
+			panic(err)
+		}
+		withdraws = append(withdraws, &withdraw)
+	}
+	require.Contains(t, withdraws, expectedEvent)
+}
+
 func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	ctx, keeper, accountKeeper, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
 	ctx = ctx.WithBlockHeight(5)
@@ -312,6 +366,9 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 					require.Contains(t, err.Error(), tc.expectedErrContains)
 				} else {
 					require.NoError(t, err)
+
+					// Verify that corresponding indexer deposit event was emitted.
+					assertDepositEventInIndexerBlock(t, ctx, keeper, &msg)
 				}
 			}
 		})
@@ -395,6 +452,9 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 					require.Contains(t, err.Error(), tc.expectedErrContains)
 				} else {
 					require.NoError(t, err)
+
+					// Verify that corresponding indexer withdraw event was emitted.
+					assertWithdrawEventInIndexerBlock(t, ctx, keeper, &msg)
 				}
 			}
 		})

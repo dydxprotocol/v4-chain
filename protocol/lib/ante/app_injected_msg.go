@@ -21,7 +21,7 @@ func IsAppInjectedMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
 		*blocktimetypes.MsgIsDelayedBlock,
-		*bridgetypes.MsgAcknowledgeBridge,
+		*bridgetypes.MsgAcknowledgeBridges,
 		*clobtypes.MsgProposedOperations,
 		*perpetualstypes.MsgAddPremiumVotes,
 		*pricestypes.MsgUpdateMarketPrices:

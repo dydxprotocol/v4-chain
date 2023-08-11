@@ -71,4 +71,8 @@ const (
 	MARKET_ZRX_USD types.MarketId = 31
 	// MARKET_YFI_USD is the id for the YFI-USD market pair.
 	MARKET_YFI_USD types.MarketId = 32
+
+	// Non-trading adjust-by markets.
+	// MARKET_USDT_USD is the id for the USDT-USD market pair.
+	MARKET_USDT_USD types.MarketId = 33
 )

@@ -3,6 +3,7 @@ package types_test
 import (
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4/dtypes"
 	"testing"
 
 	"github.com/dydxprotocol/v4/lib"
@@ -60,6 +61,28 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 					{
 						Id: uint32(1),
+					},
+				},
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					ShortTermOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(1),
+							Limit:          1,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(2),
+							Limit:          types.MaxShortTermOrdersForEquityTier,
+						},
+					},
+					StatefulOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(1),
+							Limit:          1,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(2),
+							Limit:          types.MaxStatefulOrdersForEquityTier,
+						},
 					},
 				},
 				LiquidationsConfig: types.LiquidationsConfig{
@@ -456,6 +479,118 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			expectedError: fmt.Errorf("Multiple rate limits"),
+		},
+		"duplicate short term order equity tier limit UsdTncRequired not allowed": {
+			genState: &types.GenesisState{
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					ShortTermOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(1),
+							Limit:          5,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(1),
+							Limit:          3,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("Multiple equity tier limits"),
+		},
+		"duplicate stateful order equity tier limit UsdTncRequired not allowed": {
+			genState: &types.GenesisState{
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					StatefulOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(1),
+							Limit:          5,
+						},
+						{
+							UsdTncRequired: dtypes.NewInt(1),
+							Limit:          3,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("Multiple equity tier limits"),
+		},
+		"short term order equity tier limit UsdTncRequired is nil": {
+			genState: &types.GenesisState{
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					ShortTermOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.SerializableInt{},
+							Limit:          5,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("not a valid UsdTncRequired"),
+		},
+		"short term order equity tier limit UsdTncRequired is negative": {
+			genState: &types.GenesisState{
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					ShortTermOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(-1),
+							Limit:          5,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("not a valid UsdTncRequired"),
+		},
+		"stateful order equity tier limit UsdTncRequired is nil": {
+			genState: &types.GenesisState{
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					StatefulOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.SerializableInt{},
+							Limit:          5,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("not a valid UsdTncRequired"),
+		},
+		"stateful order equity tier limit UsdTncRequired is negative": {
+			genState: &types.GenesisState{
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					StatefulOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(-1),
+							Limit:          5,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("not a valid UsdTncRequired"),
+		},
+		"short term order equity tier limit Limit is greater than max": {
+			genState: &types.GenesisState{
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					ShortTermOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(1),
+							Limit:          types.MaxShortTermOrdersForEquityTier + 1,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("not a valid Limit"),
+		},
+		"stateful order equity tier limit Limit is greater than max": {
+			genState: &types.GenesisState{
+				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
+					StatefulOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(1),
+							Limit:          types.MaxStatefulOrdersForEquityTier + 1,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("not a valid Limit"),
 		},
 	}
 	for name, tc := range tests {

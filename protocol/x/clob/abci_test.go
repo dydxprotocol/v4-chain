@@ -3,6 +3,7 @@ package clob_test
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"testing"
 	"time"
 
@@ -10,11 +11,11 @@ import (
 	"github.com/dydxprotocol/v4/daemons/liquidation/api"
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	indexershared "github.com/dydxprotocol/v4/indexer/shared"
 	testapp "github.com/dydxprotocol/v4/testutil/app"
 	clobtest "github.com/dydxprotocol/v4/testutil/clob"
 	prices "github.com/dydxprotocol/v4/x/prices/types"
 
-	"github.com/dydxprotocol/v4/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/testutil/constants"
 
@@ -86,6 +87,86 @@ func assertFillAmountAndPruneState(
 	}
 }
 
+func TestEndBlocker_Failure(t *testing.T) {
+	blockHeight := uint32(5)
+	tests := map[string]struct {
+		blockTime               time.Time
+		expiredStatefulOrderIds []types.OrderId
+		setupState              func(ctx sdk.Context, k keepertest.ClobKeepersTestContext, m *mocks.MemClob)
+
+		expectedPanicMessage string
+	}{
+		"Panics if cancelled order ids and expired order ids overlap": {
+			blockTime: unixTimeFifteen,
+			expiredStatefulOrderIds: []types.OrderId{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+			},
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
+				expiredOrder := constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20
+
+				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, expiredOrder, blockHeight)
+				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+					ctx,
+					expiredOrder.MustGetUnixGoodTilBlockTime(),
+					expiredOrder.OrderId,
+				)
+
+				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
+					ctx,
+					types.ProcessProposerMatchesEvents{
+						BlockHeight: blockHeight,
+						PlacedStatefulCancellationOrderIds: []types.OrderId{
+							expiredOrder.OrderId,
+						},
+					},
+				)
+			},
+			expectedPanicMessage: fmt.Sprintf(
+				"PruneUntriggeredConditionalOrders: duplicate order id %+v in expired and "+
+					"cancelled order lists", constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+			),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := &mocks.MemClob{}
+			memClob.On("SetClobKeeper", mock.Anything).Return()
+
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
+
+			for _, orderId := range tc.expiredStatefulOrderIds {
+				mockIndexerEventManager.On("AddTxnEvent",
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewStatefulOrderRemovalEvent(
+							orderId,
+							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+						),
+					),
+				).Once().Return()
+			}
+
+			tc.setupState(ctx, ks, memClob)
+
+			require.PanicsWithValue(
+				t,
+				tc.expectedPanicMessage,
+				func() {
+					clob.EndBlocker(
+						ctx,
+						*ks.ClobKeeper,
+					)
+				},
+			)
+		})
+	}
+}
+
 func TestEndBlocker_Success(t *testing.T) {
 	prunedOrderIdOne := types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0}
 	prunedOrderIdTwo := types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 1}
@@ -94,21 +175,24 @@ func TestEndBlocker_Success(t *testing.T) {
 
 	tests := map[string]struct {
 		// Setup.
-		setupState func(ctx sdk.Context, k *keeper.Keeper)
+		setupState func(ctx sdk.Context, k keepertest.ClobKeepersTestContext, m *mocks.MemClob)
+		blockTime  time.Time
 
 		// Expectations.
 		expectedFillAmounts                  map[types.OrderId]satypes.BaseQuantums
-		expectedOffchainUpdateOrders         map[types.OrderId]bool
 		expectedPruneableBlockHeights        map[uint32][]types.OrderId
 		expectedPrunedOrders                 map[types.OrderId]bool
 		expectedStatefulPlacementInState     map[types.OrderId]bool
 		expectedStatefulOrderTimeSlice       map[time.Time][]types.OrderId
 		expectedProcessProposerMatchesEvents types.ProcessProposerMatchesEvents
+		expectedUntriggeredConditionalOrders map[types.ClobPairId]*keeper.UntriggeredConditionalOrders
+		expectedTriggeredConditionalOrderIds []types.OrderId
 	}{
 		"Prunes existing Short-Term orders and seen place orders correctly": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			blockTime: unixTimeTen,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
 				// Set `prunedOrderIdOne` and `prunedOrderIdTwo` as existing orders which already have fill amounts.
-				k.SetOrderFillAmount(
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					prunedOrderIdOne,
 					100,
@@ -117,7 +201,7 @@ func TestEndBlocker_Success(t *testing.T) {
 
 				// Set `prunedOrderIdTwo` to be prunable at the next block height (this takes precedent of the blockHeight
 				// set in `AddOrdersForPruning`).
-				k.SetOrderFillAmount(
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					prunedOrderIdTwo,
 					100,
@@ -125,7 +209,7 @@ func TestEndBlocker_Success(t *testing.T) {
 				)
 
 				// This order should not be pruned.
-				k.SetOrderFillAmount(
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					orderIdThree,
 					150,
@@ -134,17 +218,17 @@ func TestEndBlocker_Success(t *testing.T) {
 
 				// Set both of these orders as prunable at the current `blockHeight` so we can assert that they were pruned
 				// correctly.
-				k.AddOrdersForPruning(
+				ks.ClobKeeper.AddOrdersForPruning(
 					ctx,
 					[]types.OrderId{prunedOrderIdOne, prunedOrderIdTwo},
 					blockHeight,
 				)
 
-				k.MustSetProcessProposerMatchesEvents(
+				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						BlockHeight:                blockHeight,
-						OrdersIdsFilledInLastBlock: []types.OrderId{prunedOrderIdTwo, orderIdThree},
+						BlockHeight:               blockHeight,
+						OrderIdsFilledInLastBlock: []types.OrderId{prunedOrderIdTwo, orderIdThree},
 					},
 				)
 			},
@@ -152,56 +236,278 @@ func TestEndBlocker_Success(t *testing.T) {
 				prunedOrderIdTwo: 100,
 				orderIdThree:     150,
 			},
-			expectedOffchainUpdateOrders: map[types.OrderId]bool{
-				prunedOrderIdTwo: true,
-				orderIdThree:     true,
-			},
 			expectedPrunedOrders: map[types.OrderId]bool{
 				prunedOrderIdOne: true,
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				BlockHeight:                blockHeight,
-				OrdersIdsFilledInLastBlock: []types.OrderId{prunedOrderIdTwo, orderIdThree},
+				BlockHeight:               blockHeight,
+				OrderIdsFilledInLastBlock: []types.OrderId{prunedOrderIdTwo, orderIdThree},
+			},
+		},
+		"Prunes expired and cancelled untriggered conditional orders from UntriggeredConditionalorders": {
+			blockTime: unixTimeFifteen,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
+				// expired orders
+				orderToPrune1 := constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20
+				orderToPrune2 := constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25
+				orderToPrune3 := constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit20
+				// cancelled order
+				orderToPrune4 := constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTB30_TakeProfit20
+
+				// add expired orders to state, cancelled orders already removed in DeliverTx
+				orders := []types.Order{
+					orderToPrune1,
+					orderToPrune2,
+					orderToPrune3,
+				}
+				for _, order := range orders {
+					ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, 0)
+					ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+						ctx,
+						order.MustGetUnixGoodTilBlockTime(),
+						order.OrderId,
+					)
+				}
+
+				ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+					constants.ClobPair_Btc.GetClobPairId(): {
+						OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{orderToPrune1, orderToPrune2, orderToPrune4},
+						OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{},
+					},
+					constants.ClobPair_Eth.GetClobPairId(): {
+						OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{},
+						OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{orderToPrune3},
+					},
+				}
+
+				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
+					ctx,
+					types.ProcessProposerMatchesEvents{
+						PlacedStatefulCancellationOrderIds: []types.OrderId{
+							orderToPrune4.OrderId,
+						},
+						BlockHeight: blockHeight,
+					},
+				)
+			},
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{},
+			expectedStatefulPlacementInState: map[types.OrderId]bool{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId:   false,
+				constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25.OrderId:  false,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit20.OrderId: false,
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTB30_TakeProfit20.OrderId: false,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				PlacedStatefulCancellationOrderIds: []types.OrderId{
+					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTB30_TakeProfit20.OrderId,
+				},
+				ExpiredStatefulOrderIds: []types.OrderId{
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit20.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25.OrderId,
+				},
+				BlockHeight: blockHeight,
+			},
+		},
+		`Adds newly-placed conditional order to UntriggeredConditionalOrders, but does not add
+		cancelled order`: {
+			blockTime: unixTimeTen,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
+				orders := []types.Order{
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10,
+					constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_TakeProfit5,
+					constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10,
+				}
+				for _, order := range orders {
+					ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
+				}
+
+				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
+					ctx,
+					types.ProcessProposerMatchesEvents{
+						PlacedConditionalOrderIds: []types.OrderId{
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10.OrderId,
+							constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10.OrderId,
+						},
+						PlacedStatefulCancellationOrderIds: []types.OrderId{
+							constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10.OrderId,
+						},
+						BlockHeight: blockHeight,
+					},
+				)
+			},
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+				constants.ClobPair_Btc.GetClobPairId(): {
+					OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10,
+					},
+					OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{},
+				},
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				PlacedConditionalOrderIds: []types.OrderId{
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10.OrderId,
+				},
+				PlacedStatefulCancellationOrderIds: []types.OrderId{
+					constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10.OrderId,
+				},
+				BlockHeight: blockHeight,
+			},
+		},
+		`Polls triggered conditional orders from UntriggeredConditionalOrders, update state and
+		ProcessProposerMatchesEvents`: {
+			blockTime: unixTimeTen,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
+				// Update perpetual prices
+				err := ks.PricesKeeper.UpdateMarketPrices(ctx, []*prices.MsgUpdateMarketPrices_MarketPrice{
+					{
+						MarketId: constants.ClobPair_Btc.Id,
+						Price: types.SubticksToPrice(
+							types.Subticks(10),
+							constants.BtcUsdExponent,
+							constants.ClobPair_Btc,
+							constants.BtcUsd_20PercentInitial_10PercentMaintenance.AtomicResolution,
+							lib.QuoteCurrencyAtomicResolution,
+						),
+					},
+				})
+				require.NoError(t, err)
+
+				err = ks.PricesKeeper.UpdateMarketPrices(ctx, []*prices.MsgUpdateMarketPrices_MarketPrice{
+					{
+						MarketId: constants.ClobPair_Eth.Id,
+						Price: types.SubticksToPrice(
+							types.Subticks(35),
+							constants.EthUsdExponent,
+							constants.ClobPair_Eth,
+							constants.EthUsd_20PercentInitial_10PercentMaintenance.AtomicResolution,
+							lib.QuoteCurrencyAtomicResolution,
+						),
+					},
+				})
+				require.NoError(t, err)
+
+				ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+					constants.ClobPair_Btc.GetClobPairId(): {
+						// 10 oracle price subticks triggers 3 orders here.
+						OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10,
+							constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_TakeProfit5,
+							constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10,
+							constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Sell25_Price10_GTBT15_StopLoss10,
+						},
+						// 10 oracle price subticks triggers no orders here.
+						OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price20_GTBT15_StopLoss20,
+							constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25,
+							constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Sell20_Price20_GTBT15_TakeProfit20,
+							constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price25_GTBT15_StopLoss25,
+						},
+					},
+					constants.ClobPair_Eth.GetClobPairId(): {
+						// 35 oracle price subticks triggers no orders here.
+						OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+							constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit30,
+						},
+						// 35 oracle price subticks triggers one order here.
+						OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
+							constants.ConditionalOrder_Alice_Num0_Id3_Clob1_Buy25_Price10_GTBT15_StopLoss20,
+						},
+					},
+				}
+
+				for _, untrigCondOrders := range ks.ClobKeeper.UntriggeredConditionalOrders {
+					for _, conditionalOrder := range untrigCondOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice {
+						ks.ClobKeeper.SetLongTermOrderPlacement(ctx, conditionalOrder, blockHeight)
+					}
+					for _, conditionalOrder := range untrigCondOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
+						ks.ClobKeeper.SetLongTermOrderPlacement(ctx, conditionalOrder, blockHeight)
+					}
+				}
+
+				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
+					ctx,
+					types.ProcessProposerMatchesEvents{
+						BlockHeight: blockHeight,
+					},
+				)
+			},
+
+			expectedTriggeredConditionalOrderIds: []types.OrderId{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Sell25_Price10_GTBT15_StopLoss10.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id3_Clob1_Buy25_Price10_GTBT15_StopLoss20.OrderId,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Sell25_Price10_GTBT15_StopLoss10.OrderId,
+					constants.ConditionalOrder_Alice_Num0_Id3_Clob1_Buy25_Price10_GTBT15_StopLoss20.OrderId,
+				},
+			},
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+				constants.ClobPair_Btc.GetClobPairId(): {
+					OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_TakeProfit5,
+					},
+					OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price20_GTBT15_StopLoss20,
+						constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25,
+						constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Sell20_Price20_GTBT15_TakeProfit20,
+						constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price25_GTBT15_StopLoss25,
+					},
+				},
+				constants.ClobPair_Eth.GetClobPairId(): {
+					OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit30,
+					},
+					OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{},
+				},
 			},
 		},
 		"Removes expired stateful orders and updates process proposer matches events": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			blockTime: unixTimeTen,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
 				// These orders should get removed.
-				k.SetOrderFillAmount(
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 					5,
 					blockHeight,
 				)
-				k.SetLongTermOrderPlacement(
+				ks.ClobKeeper.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 					blockHeight,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
 					ctx,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 				)
-				k.SetOrderFillAmount(
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
 					5,
 					blockHeight,
 				)
-				k.SetLongTermOrderPlacement(
+				ks.ClobKeeper.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10,
 					blockHeight,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
 					ctx,
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
 				)
 
 				// This order should not be pruned.
-				k.SetOrderFillAmount(
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					orderIdThree,
 					150,
@@ -209,36 +515,33 @@ func TestEndBlocker_Success(t *testing.T) {
 				)
 
 				// This order should not get removed.
-				k.SetOrderFillAmount(
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 					5,
 					blockHeight,
 				)
-				k.SetLongTermOrderPlacement(
+				ks.ClobKeeper.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					blockHeight,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 				)
 
-				k.MustSetProcessProposerMatchesEvents(
+				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						BlockHeight:                blockHeight,
-						OrdersIdsFilledInLastBlock: []types.OrderId{orderIdThree},
+						BlockHeight:               blockHeight,
+						OrderIdsFilledInLastBlock: []types.OrderId{orderIdThree},
 					},
 				)
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
 				orderIdThree: 150,
-			},
-			expectedOffchainUpdateOrders: map[types.OrderId]bool{
-				orderIdThree: true,
 			},
 			expectedStatefulPlacementInState: map[types.OrderId]bool{
 				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId:  false,
@@ -256,67 +559,66 @@ func TestEndBlocker_Success(t *testing.T) {
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
 				},
-				BlockHeight:                blockHeight,
-				OrdersIdsFilledInLastBlock: []types.OrderId{orderIdThree},
+				BlockHeight:               blockHeight,
+				OrderIdsFilledInLastBlock: []types.OrderId{orderIdThree},
 			},
 		},
 		"Stateful order placements are not overwritten": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			blockTime: unixTimeTen,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
 				// This order should not be pruned.
-				k.SetOrderFillAmount(
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					orderIdThree,
 					150,
 					blockHeight+10,
 				)
 
-				k.MustSetProcessProposerMatchesEvents(
+				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						PlacedStatefulOrders: []types.Order{
-							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+						PlacedLongTermOrderIds: []types.OrderId{
+							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 						},
-						OrdersIdsFilledInLastBlock: []types.OrderId{orderIdThree},
-						ExpiredStatefulOrderIds:    []types.OrderId{},
-						BlockHeight:                blockHeight,
+						OrderIdsFilledInLastBlock: []types.OrderId{orderIdThree},
+						ExpiredStatefulOrderIds:   []types.OrderId{},
+						BlockHeight:               blockHeight,
 					},
 				)
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
 				orderIdThree: 150,
 			},
-			expectedOffchainUpdateOrders: map[types.OrderId]bool{
-				orderIdThree: true,
-			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders: []types.Order{
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				PlacedLongTermOrderIds: []types.OrderId{
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 				},
-				OrdersIdsFilledInLastBlock: []types.OrderId{orderIdThree},
-				BlockHeight:                blockHeight,
+				OrderIdsFilledInLastBlock: []types.OrderId{orderIdThree},
+				BlockHeight:               blockHeight,
 			},
 		},
 		"Does not send order update message offchain message for a stateful order fill that got cancelled": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
-				k.SetOrderFillAmount(
+			blockTime: unixTimeTen,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10.GetOrderId(),
 					20,
 					blockHeight+10,
 				)
-				k.SetOrderFillAmount(
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.GetOrderId(),
 					20,
 					blockHeight+10,
 				)
-				k.MustSetProcessProposerMatchesEvents(ctx, types.ProcessProposerMatchesEvents{
-					PlacedStatefulCancellations: []types.OrderId{
+				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(ctx, types.ProcessProposerMatchesEvents{
+					PlacedStatefulCancellationOrderIds: []types.OrderId{
 						constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.GetOrderId(),
 					},
-					OrdersIdsFilledInLastBlock: []types.OrderId{
+					OrderIdsFilledInLastBlock: []types.OrderId{
 						constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.GetOrderId(),
 						constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10.GetOrderId(),
 					},
@@ -324,10 +626,10 @@ func TestEndBlocker_Success(t *testing.T) {
 				})
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulCancellations: []types.OrderId{
+				PlacedStatefulCancellationOrderIds: []types.OrderId{
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.GetOrderId(),
 				},
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.GetOrderId(),
 					constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10.GetOrderId(),
 				},
@@ -336,11 +638,6 @@ func TestEndBlocker_Success(t *testing.T) {
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
 				constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10.GetOrderId(): 20,
 				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.GetOrderId():    20,
-			},
-			expectedOffchainUpdateOrders: map[types.OrderId]bool{
-				constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10.GetOrderId(): true,
-				// For Bob's order, there should be 20 fill amount but no indexer OrderUpdate SendOffchainData call.
-				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.GetOrderId(): false,
 			},
 		},
 	}
@@ -353,27 +650,58 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
-			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(unixTimeTen)
+			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
+
+			// Set up prices keeper markets with default prices.
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers on perpetuals keeper.
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+			// Set up clob keeper perpetuals and clob pairs.
+			for _, p := range []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			} {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
+					p.Ticker,
+					p.MarketId,
+					p.AtomicResolution,
+					p.DefaultFundingPpm,
+					p.LiquidityTier,
+				)
+				require.NoError(t, err)
+			}
+			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+				ctx,
+				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.Status,
+				constants.ClobPair_Btc.MakerFeePpm,
+				constants.ClobPair_Btc.TakerFeePpm,
+			)
+			require.NoError(t, err)
+			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Eth).Return()
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				ctx,
+				clobtest.MustPerpetualId(constants.ClobPair_Eth),
+				satypes.BaseQuantums(constants.ClobPair_Eth.StepBaseQuantums),
+				satypes.BaseQuantums(constants.ClobPair_Eth.MinOrderBaseQuantums),
+				constants.ClobPair_Eth.QuantumConversionExponent,
+				constants.ClobPair_Eth.SubticksPerTick,
+				constants.ClobPair_Eth.Status,
+				constants.ClobPair_Eth.MakerFeePpm,
+				constants.ClobPair_Eth.TakerFeePpm,
+			)
+			require.NoError(t, err)
 
 			if tc.setupState != nil {
-				tc.setupState(ctx, ks.ClobKeeper)
-			}
-
-			// Add expectations for Indexer off-chain order updates.
-			offchainUpdates := types.NewOffchainUpdates()
-			for orderId, fillAmount := range tc.expectedFillAmounts {
-				message, success := off_chain_updates.CreateOrderUpdateMessage(
-					ctx.Logger(),
-					orderId,
-					fillAmount,
-				)
-				require.Equal(t, true, success)
-				offchainUpdates.AddUpdateMessage(orderId, message)
-				// Test must indicate if an offchain update must be sent.
-				require.Contains(t, tc.expectedOffchainUpdateOrders, orderId)
-				if tc.expectedOffchainUpdateOrders[orderId] {
-					mockIndexerEventManager.On("SendOffchainData", message).Return()
-				}
+				tc.setupState(ctx, ks, memClob)
 			}
 
 			// Assert that the indexer events for Expired Stateful Orders were emitted.
@@ -382,7 +710,21 @@ func TestEndBlocker_Success(t *testing.T) {
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
 					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewStatefulOrderExpirationEvent(
+						indexerevents.NewStatefulOrderRemovalEvent(
+							orderId,
+							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+						),
+					),
+				).Once().Return()
+			}
+
+			// Assert that the indexer events for triggered conditional orders were emitted.
+			for _, orderId := range tc.expectedTriggeredConditionalOrderIds {
+				mockIndexerEventManager.On("AddTxnEvent",
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewConditionalOrderTriggeredEvent(
 							orderId,
 						),
 					),
@@ -408,7 +750,7 @@ func TestEndBlocker_Success(t *testing.T) {
 
 			require.True(
 				t,
-				unixTimeTen.Equal(
+				tc.blockTime.Equal(
 					ks.ClobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx),
 				),
 			)
@@ -423,11 +765,35 @@ func TestEndBlocker_Success(t *testing.T) {
 				require.Equal(t, expected, actual)
 			}
 
+			actualProcessProposerMatchesEvents := ks.ClobKeeper.GetProcessProposerMatchesEvents(ctx)
+			// Sort the conditional order ids triggered in the last block for
+			// comparison to expected triggered conditional orders.
+			sort.Sort(types.SortedOrders(actualProcessProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock))
 			require.Equal(
 				t,
 				tc.expectedProcessProposerMatchesEvents,
-				ks.ClobKeeper.GetProcessProposerMatchesEvents(ctx),
+				actualProcessProposerMatchesEvents,
 			)
+
+			// Triggered conditional order placements should be shifted from the untriggered store to the triggered store.
+			for _, triggeredConditionalOrderId := range actualProcessProposerMatchesEvents.
+				ConditionalOrderIdsTriggeredInLastBlock {
+				// TODO(CLOB-746) Once R/W methods are created, substitute those methods here.
+				triggeredConditionalOrderMemstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
+				untriggeredConditionalOrderMemstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
+				exists := triggeredConditionalOrderMemstore.Has(types.OrderIdKey(triggeredConditionalOrderId))
+				require.True(t, exists)
+				exists = untriggeredConditionalOrderMemstore.Has(types.OrderIdKey(triggeredConditionalOrderId))
+				require.False(t, exists)
+			}
+
+			if tc.expectedUntriggeredConditionalOrders != nil {
+				require.Equal(
+					t,
+					tc.expectedUntriggeredConditionalOrders,
+					ks.ClobKeeper.UntriggeredConditionalOrders,
+				)
+			}
 
 			// Assert that the necessary off-chain indexer events have been added.
 			mockIndexerEventManager.AssertExpectations(t)
@@ -723,11 +1089,10 @@ func TestBeginBlocker_Success(t *testing.T) {
 				k.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						PlacedStatefulOrders: []types.Order{
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
-							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+						PlacedLongTermOrderIds: []types.OrderId{
+							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
@@ -744,11 +1109,10 @@ func TestBeginBlocker_Success(t *testing.T) {
 				k.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						PlacedStatefulOrders: []types.Order{
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
-							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+						PlacedLongTermOrderIds: []types.OrderId{
+							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
@@ -761,9 +1125,9 @@ func TestBeginBlocker_Success(t *testing.T) {
 				k.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						PlacedStatefulOrders: []types.Order{
-							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+						PlacedLongTermOrderIds: []types.OrderId{
+							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
@@ -860,8 +1224,8 @@ func TestPrepareCheckState(t *testing.T) {
 			clobs:                     []types.ClobPair{constants.ClobPair_Btc},
 			preExistingStatefulOrders: []types.Order{},
 			processProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				BlockHeight:          4,
-				PlacedStatefulOrders: []types.Order{},
+				BlockHeight:            4,
+				PlacedLongTermOrderIds: []types.OrderId{},
 			},
 			placedOperations: []types.Operation{
 				// This order lands on the book.

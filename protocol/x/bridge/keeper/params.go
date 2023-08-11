@@ -23,9 +23,9 @@ func (k Keeper) GetEventParams(
 	return params
 }
 
-// SetEventParams updates the EventParams in state.
+// UpdateEventParams updates the EventParams in state.
 // Returns an error iff validation fails.
-func (k Keeper) SetEventParams(
+func (k Keeper) UpdateEventParams(
 	ctx sdk.Context,
 	params types.EventParams,
 ) error {
@@ -52,9 +52,9 @@ func (k Keeper) GetProposeParams(
 	return params
 }
 
-// SetProposeParams updates the ProposeParams in state.
+// UpdateProposeParams updates the ProposeParams in state.
 // Returns an error iff validation fails.
-func (k Keeper) SetProposeParams(
+func (k Keeper) UpdateProposeParams(
 	ctx sdk.Context,
 	params types.ProposeParams,
 ) error {
@@ -81,9 +81,9 @@ func (k Keeper) GetSafetyParams(
 	return params
 }
 
-// SetSafetyParams updates the SafetyParams in state.
+// UpdateSafetyParams updates the SafetyParams in state.
 // Returns an error iff validation fails.
-func (k Keeper) SetSafetyParams(
+func (k Keeper) UpdateSafetyParams(
 	ctx sdk.Context,
 	params types.SafetyParams,
 ) error {

@@ -1,36 +1,42 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"DOTUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"DOTUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"DOTUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"DOTUSD\""
     },
     {
-      "exchangeName":"Bitfinex",
-      "ticker":"tDOTUSD"
+      "exchangeName": "Bitfinex",
+      "ticker": "tDOTUSD",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"DOT_USDT"
+      "exchangeName": "Gate",
+      "ticker": "DOT_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"dotusdt"
+      "exchangeName": "Huobi",
+      "ticker": "dotusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kraken",
-      "ticker":"DOTUSD"
+      "exchangeName": "Kraken",
+      "ticker": "DOTUSD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"DOT-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "DOT-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"DOT-USDT"
+      "exchangeName": "Okx",
+      "ticker": "DOT-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

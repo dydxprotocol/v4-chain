@@ -1,32 +1,36 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"EOSUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"EOSUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"EOSUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"EOSUSD\""
     },
     {
-      "exchangeName":"Bitfinex",
-      "ticker":"tEOSUSD"
+      "exchangeName": "Bitfinex",
+      "ticker": "tEOSUSD",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"EOS-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "EOS-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"eosusdt"
+      "exchangeName": "Huobi",
+      "ticker": "eosusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kraken",
-      "ticker":"EOSUSD"
+      "exchangeName": "Kraken",
+      "ticker": "EOSUSD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"EOS-USDT"
+      "exchangeName": "Okx",
+      "ticker": "EOS-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

@@ -60,11 +60,7 @@ func TestShortTermCancelOrder_OrdersTilBlockExceedsCancels(t *testing.T) {
 		[]types.Order{order},
 	)
 
-	_, _, _, err := memclob.PlaceOrder(
-		ctx,
-		order,
-		true,
-	)
+	_, _, _, err := memclob.PlaceOrder(ctx, order)
 	require.NoError(t, err)
 
 	// Cancel without error once.
@@ -263,11 +259,7 @@ func TestCancelOrder(t *testing.T) {
 
 			// Place all existing orders on the orderbook.
 			for _, order := range tc.existingOrders {
-				_, _, _, err := memclob.PlaceOrder(
-					ctx,
-					order,
-					true,
-				)
+				_, _, _, err := memclob.PlaceOrder(ctx, order)
 				require.NoError(t, err)
 			}
 
@@ -352,17 +344,9 @@ func TestCancelOrder_Telemetry(t *testing.T) {
 		[]types.Order{orderOne, orderTwo},
 	)
 
-	_, _, _, err = memclob.PlaceOrder(
-		ctx,
-		orderOne,
-		true,
-	)
+	_, _, _, err = memclob.PlaceOrder(ctx, orderOne)
 	require.NoError(t, err)
-	_, _, _, err = memclob.PlaceOrder(
-		ctx,
-		orderTwo,
-		true,
-	)
+	_, _, _, err = memclob.PlaceOrder(ctx, orderTwo)
 	require.NoError(t, err)
 
 	// Cancel both orders.

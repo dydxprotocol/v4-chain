@@ -46,3 +46,18 @@ func InvertMustHaveDistinctValues[K comparable, V comparable](m map[K]V) map[V]K
 	}
 	return invert
 }
+
+// AreMapsEqual returns true if the two maps are equal. Two maps are equal if they have the same keys and values.
+func AreMapsEqual[K comparable, V comparable](a map[K]V, b map[K]V) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for k, v := range a {
+		if bv, ok := b[k]; !ok || bv != v {
+			return false
+		}
+	}
+
+	return true
+}

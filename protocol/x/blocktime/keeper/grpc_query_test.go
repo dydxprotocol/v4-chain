@@ -55,7 +55,7 @@ func TestAllDowntimeInfo(t *testing.T) {
 		Infos: []*types.AllDowntimeInfo_DowntimeInfo{
 			{
 				Duration: time.Second,
-				BlockInfo: &types.BlockInfo{
+				BlockInfo: types.BlockInfo{
 					Height:    1,
 					Timestamp: time.Now().UTC(),
 				},

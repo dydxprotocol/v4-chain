@@ -1,32 +1,37 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"ICPUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"ICPUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"ICPUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"ICPUSD\""
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"ICP-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "ICP-USD"
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"ICP_USDT"
+      "exchangeName": "Gate",
+      "ticker": "ICP_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"icpusdt"
+      "exchangeName": "Huobi",
+      "ticker": "icpusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"ICP-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "ICP-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"ICP-USDT"
+      "exchangeName": "Okx",
+      "ticker": "ICP-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

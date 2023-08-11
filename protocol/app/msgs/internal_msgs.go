@@ -17,6 +17,7 @@ import (
 	feetiers "github.com/dydxprotocol/v4/x/feetiers/types"
 	rewards "github.com/dydxprotocol/v4/x/rewards/types"
 	stats "github.com/dydxprotocol/v4/x/stats/types"
+	vest "github.com/dydxprotocol/v4/x/vest/types"
 )
 
 var (
@@ -87,5 +88,11 @@ var (
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         &stats.MsgUpdateParams{},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": nil,
+
+		// vest
+		"/dydxprotocol.vest.MsgSetVestEntry":            &vest.MsgSetVestEntry{},
+		"/dydxprotocol.vest.MsgSetVestEntryResponse":    nil,
+		"/dydxprotocol.vest.MsgDeleteVestEntry":         &vest.MsgDeleteVestEntry{},
+		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": nil,
 	}
 )

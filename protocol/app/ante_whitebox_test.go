@@ -1,9 +1,10 @@
 package app
 
 import (
-	"github.com/dydxprotocol/v4/x/clob/rate_limit"
 	"reflect"
 	"testing"
+
+	"github.com/dydxprotocol/v4/x/clob/rate_limit"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -47,7 +48,7 @@ func newTestHandlerOptions() HandlerOptions {
 	feeGrantKeeper := feegrantkeeper.NewKeeper(appCodec, nil, accountKeeper)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(false)
-	untriggeredConditionalOrders := make(map[types.ClobPairId]clobmodulekeeper.UntriggeredConditionalOrders)
+	untriggeredConditionalOrders := make(map[types.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
 	clobKeeper := clobmodulekeeper.NewKeeper(
 		appCodec,
 		nil,
@@ -58,6 +59,7 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		nil,
 		bankKeeper,
+		nil,
 		nil,
 		nil,
 		nil,

@@ -2,6 +2,7 @@ package types
 
 import (
 	"sync"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/types"
@@ -65,4 +66,14 @@ func (mtp *MarketToPrice) GetAllPrices() []MarketPriceTimestamp {
 	}
 
 	return marketPricesForExchange
+}
+
+// GetValidPriceForMarket returns the most recent valid price for a market for an exchange.
+func (mtp *MarketToPrice) GetValidPriceForMarket(marketId MarketId, cutoffTime time.Time) (uint64, bool) {
+	price, exists := mtp.MarketToPriceTimestamp[marketId]
+	if !exists {
+		return 0, false
+	}
+
+	return price.GetValidPrice(cutoffTime)
 }

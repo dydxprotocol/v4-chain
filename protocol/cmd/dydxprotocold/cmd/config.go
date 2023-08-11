@@ -86,11 +86,11 @@ func initTendermintConfig() *tmcfg.Config {
 	// Enable telemetry.
 	cfg.Instrumentation.Prometheus = true
 
-	// Set default commit timeout to 999ms for faster block time.
+	// Set default commit timeout to 500ms for faster block time.
 	// Note: avoid using 1s since it's considered tne default Tendermint value
 	// (https://github.com/dydxprotocol/tendermint/blob/dc03b21cf5d54c641e1d14b14fae5920fa7ba656/config/config.go#L982)
 	// and will be overridden by `interceptConfigs` in `cosmos-sdk`.
-	cfg.Consensus.TimeoutCommit = 999 * time.Millisecond
+	cfg.Consensus.TimeoutCommit = 500 * time.Millisecond
 
 	return cfg
 }

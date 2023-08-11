@@ -56,10 +56,6 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 		msgCancelOrder *MsgCancelOrder,
 	) error
-	DoesLongTermOrderExistInState(
-		ctx sdk.Context,
-		order Order,
-	) bool
 	GetLongTermOrderPlacement(
 		ctx sdk.Context,
 		orderId OrderId,

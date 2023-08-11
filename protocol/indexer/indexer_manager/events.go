@@ -175,6 +175,18 @@ func produceBlock(ctx sdk.Context, storeKey storetypes.StoreKey) *IndexerTenderm
 	for _, txHash := range txHashes {
 		allEvents = append(allEvents, txEventsMap[txHash]...)
 	}
+	// set the event index of block events
+	numBeginBlockerEvents, numEndBlockerEvents := 0, 0
+	for i, event := range blockEvents {
+		switch event.GetBlockEvent() {
+		case IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK:
+			blockEvents[i].EventIndex = uint32(numBeginBlockerEvents)
+			numBeginBlockerEvents++
+		case IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK:
+			blockEvents[i].EventIndex = uint32(numEndBlockerEvents)
+			numEndBlockerEvents++
+		}
+	}
 	// append block events
 	allEvents = append(allEvents, blockEvents...)
 	recordMetrics(numTxnEvents, len(blockEvents))

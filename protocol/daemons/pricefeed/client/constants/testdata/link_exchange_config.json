@@ -1,36 +1,40 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"LINKUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"LINKUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"LINKUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"LINKUSD\""
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"LINK-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "LINK-USD"
     },
     {
-      "exchangeName":"CryptoCom",
-      "ticker":"LINK_USD"
+      "exchangeName": "CryptoCom",
+      "ticker": "LINK_USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"linkusdt"
+      "exchangeName": "Huobi",
+      "ticker": "linkusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kraken",
-      "ticker":"LINKUSD"
+      "exchangeName": "Kraken",
+      "ticker": "LINKUSD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"LINK-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "LINK-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"LINK-USDT"
+      "exchangeName": "Okx",
+      "ticker": "LINK-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

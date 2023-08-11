@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	indexershared "github.com/dydxprotocol/v4/indexer/shared"
 	"github.com/dydxprotocol/v4/lib/metrics"
 	"github.com/dydxprotocol/v4/x/clob/types"
 )
@@ -31,8 +32,8 @@ func (m msgServer) CancelOrder(
 	// 3. Update `ProcessProposerMatchesEvents` with the new stateful order cancellation.
 	processProposerMatchesEvents := m.Keeper.GetProcessProposerMatchesEvents(ctx)
 
-	processProposerMatchesEvents.PlacedStatefulCancellations = append(
-		processProposerMatchesEvents.PlacedStatefulCancellations,
+	processProposerMatchesEvents.PlacedStatefulCancellationOrderIds = append(
+		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
 		msg.OrderId,
 	)
 
@@ -43,13 +44,18 @@ func (m msgServer) CancelOrder(
 		ctx,
 		indexerevents.SubtypeStatefulOrder,
 		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewStatefulOrderCancelationEvent(
+			indexerevents.NewStatefulOrderRemovalEvent(
 				msg.OrderId,
+				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 			),
 		),
 	)
 
-	telemetry.IncrCounter(1, types.ModuleName, metrics.StatefulCancellationMsgHandlerSuccess, metrics.Count)
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.StatefulCancellationMsgHandlerSuccess, metrics.Count},
+		1,
+		msg.OrderId.GetOrderIdLabels(),
+	)
 
 	return &types.MsgCancelOrderResponse{}, nil
 }

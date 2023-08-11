@@ -3,7 +3,10 @@ package types_test
 import (
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4/testutil/client"
 	"testing"
+	"time"
 
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4/testutil/constants"
@@ -64,7 +67,7 @@ func TestUpdatePrice_IsValid(t *testing.T) {
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId1,
-		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
+		constants.Market9_TimeT_Price1,
 		false,
 	)
 
@@ -89,14 +92,14 @@ func TestUpdatePrice_UpdateIsValid(t *testing.T) {
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId1,
-		(*types.MarketPriceTimestamp)(constants.Market9_TimeTMinusThreshold_Price2),
+		constants.Market9_TimeTMinusThreshold_Price2,
 		false,
 	)
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId1,
-		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
+		constants.Market9_TimeT_Price1,
 		false,
 	)
 
@@ -121,14 +124,14 @@ func TestUpdatePrice_UpdateIsInvalid(t *testing.T) {
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId1,
-		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
+		constants.Market9_TimeT_Price1,
 		false,
 	)
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId1,
-		(*types.MarketPriceTimestamp)(constants.Market9_TimeTMinusThreshold_Price2),
+		constants.Market9_TimeTMinusThreshold_Price2,
 		false,
 	)
 
@@ -153,14 +156,14 @@ func TestUpdatePrice_IsValidForTwoMarkets(t *testing.T) {
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId1,
-		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
+		constants.Market9_TimeT_Price1,
 		false,
 	)
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId1,
-		(*types.MarketPriceTimestamp)(constants.Market8_TimeTMinusThreshold_Price2),
+		constants.Market8_TimeTMinusThreshold_Price2,
 		false,
 	)
 
@@ -196,14 +199,14 @@ func TestUpdatePrice_IsValidForTwoExchanges(t *testing.T) {
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId1,
-		(*types.MarketPriceTimestamp)(constants.Market9_TimeT_Price1),
+		constants.Market9_TimeT_Price1,
 		false,
 	)
 	updatePriceAndCheckForPanic(
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId2,
-		(*types.MarketPriceTimestamp)(constants.Market8_TimeTMinusThreshold_Price2),
+		constants.Market8_TimeTMinusThreshold_Price2,
 		false,
 	)
 
@@ -232,14 +235,96 @@ func TestNewExchangeToMarketPrices_UpdateIsInvalidForInvalidExchange(t *testing.
 		t,
 		exchangeToMarketPrices,
 		constants.ExchangeId3,
-		(*types.MarketPriceTimestamp)(constants.Market8_TimeTMinusThreshold_Price2),
+		constants.Market8_TimeTMinusThreshold_Price2,
 		true,
 	)
 }
 
+func TestGetIndexPrice_Mixed(t *testing.T) {
+	tests := map[string]struct {
+		initialPrices []*client.ExchangeIdMarketPriceTimestamp
+		market        types.MarketId
+		cutoffTime    time.Time
+
+		expectedMedianPrice         uint64
+		expectedNumPricesMedianized int
+	}{
+		"invalid: no prices": {
+			market:                      constants.MarketId9,
+			cutoffTime:                  constants.TimeT,
+			expectedMedianPrice:         0,
+			expectedNumPricesMedianized: 0,
+		},
+		"invalid: no prices for market": {
+			initialPrices: []*client.ExchangeIdMarketPriceTimestamp{
+				constants.ExchangeId2_Market8_TimeT_Price2, // Valid timestamp, wrong market.
+			},
+			market:                      constants.MarketId9,
+			cutoffTime:                  constants.TimeTMinus1,
+			expectedMedianPrice:         0,
+			expectedNumPricesMedianized: 0,
+		},
+		"valid: 1 price": {
+			initialPrices: []*client.ExchangeIdMarketPriceTimestamp{
+				constants.ExchangeId2_Market9_TimeT_Price2,
+			},
+			market:                      constants.MarketId9,
+			cutoffTime:                  constants.TimeTMinus1,
+			expectedMedianPrice:         constants.Price2,
+			expectedNumPricesMedianized: 1,
+		},
+		"valid: 1 current price, 1 stale price": {
+			initialPrices: []*client.ExchangeIdMarketPriceTimestamp{
+				constants.ExchangeId2_Market8_TimeT_Price2,       // Valid timestamp, same market.
+				constants.ExchangeId1_Market8_BeforeTimeT_Price3, // Stale timestamp, same market.
+				constants.ExchangeId1_Market9_TimeT_Price1,       // Valid timestamp, different market.
+			},
+			market:                      constants.MarketId8,
+			cutoffTime:                  constants.TimeTMinus1,
+			expectedMedianPrice:         constants.Price2,
+			expectedNumPricesMedianized: 1,
+		},
+		"valid: multiple prices": {
+			initialPrices: []*client.ExchangeIdMarketPriceTimestamp{
+				constants.ExchangeId1_Market9_TimeT_Price1,
+				constants.ExchangeId2_Market9_TimeT_Price2,
+				constants.ExchangeId3_Market9_TimeT_Price3,
+			},
+			market:                      constants.MarketId9,
+			cutoffTime:                  constants.TimeTMinus1,
+			expectedMedianPrice:         constants.Price2,
+			expectedNumPricesMedianized: 3,
+		},
+	}
+
+	testExchanges := []types.ExchangeId{constants.ExchangeId1, constants.ExchangeId2, constants.ExchangeId3}
+
+	for testName, tc := range tests {
+		t.Run(testName, func(t *testing.T) {
+			// Setup.
+			etmp := getNewExchangeToMarketPricesAndCheckForError(t, testExchanges, nil)
+
+			// Update prices with initial prices.
+			for _, exchangeMarketPriceTimestamp := range tc.initialPrices {
+				exchange := exchangeMarketPriceTimestamp.ExchangeId
+				marketPriceTimestamp := exchangeMarketPriceTimestamp.MarketPriceTimestamp
+				etmp.UpdatePrice(exchange, marketPriceTimestamp)
+			}
+
+			// Execute.
+			medianizer := &lib.MedianizerImpl{}
+			medianPrice, numPricesMedianized := etmp.GetIndexPrice(tc.market, tc.cutoffTime, medianizer)
+
+			// Assert.
+			require.Equal(t, tc.expectedMedianPrice, medianPrice)
+			require.Equal(t, tc.expectedNumPricesMedianized, numPricesMedianized)
+		})
+	}
+}
+
 func updatePriceAndCheckForPanic(
 	t *testing.T,
-	exchangeToMarketPrices *types.ExchangeToMarketPrices,
+	exchangeToMarketPrices types.ExchangeToMarketPrices,
 	exchangeId types.ExchangeId,
 	marketPriceTimestamp *types.MarketPriceTimestamp,
 	panics bool,
@@ -271,12 +356,13 @@ func getNewExchangeToMarketPricesAndCheckForError(
 	t *testing.T,
 	exchangeIds []types.ExchangeId,
 	expectedErr error,
-) *types.ExchangeToMarketPrices {
+) *types.ExchangeToMarketPricesImpl {
 	exchangeToMarketPrices, err := types.NewExchangeToMarketPrices(exchangeIds)
 
 	if expectedErr != nil {
 		require.EqualError(t, err, expectedErr.Error())
+		return nil
 	}
 
-	return exchangeToMarketPrices
+	return exchangeToMarketPrices.(*types.ExchangeToMarketPricesImpl)
 }

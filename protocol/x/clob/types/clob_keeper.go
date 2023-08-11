@@ -83,10 +83,6 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		orderId OrderId,
 	)
-	DoesLongTermOrderExistInState(
-		ctx sdk.Context,
-		order Order,
-	) bool
 	RemoveOrderFillAmount(ctx sdk.Context, orderId OrderId)
 	MustAddOrderToStatefulOrdersTimeSlice(
 		ctx sdk.Context,

@@ -7,6 +7,7 @@ import (
 
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	indexershared "github.com/dydxprotocol/v4/indexer/shared"
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/mocks"
 	"github.com/dydxprotocol/v4/testutil/constants"
@@ -125,8 +126,9 @@ func TestCancelOrder_Success(t *testing.T) {
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
 				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewStatefulOrderCancelationEvent(
+					indexerevents.NewStatefulOrderRemovalEvent(
 						tc.StatefulOrderPlacement.GetOrderId(),
+						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 					),
 				),
 			).Return().Once()
@@ -157,7 +159,7 @@ func TestCancelOrder_Success(t *testing.T) {
 
 			// Ensure cancellation exists in `ProcessProposerMatchesEvents`.
 			events := ks.ClobKeeper.GetProcessProposerMatchesEvents(ctx)
-			cancellations := events.GetPlacedStatefulCancellations()
+			cancellations := events.GetPlacedStatefulCancellationOrderIds()
 			require.Len(t, cancellations, 1)
 			require.Equal(t, cancellations[0], tc.StatefulOrderCancellation.OrderId)
 

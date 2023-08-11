@@ -221,12 +221,12 @@ func (o *Order) GetClobPairId() ClobPairId {
 
 // GetOrderLabels returns the telemetry labels of this order.
 func (o *Order) GetOrderLabels() []gometrics.Label {
-	return []gometrics.Label{
-		metrics.GetLabelForStringValue(metrics.TimeInForce, o.GetTimeInForce().String()),
-		metrics.GetLabelForBoolValue(metrics.ReduceOnly, o.IsReduceOnly()),
-		metrics.GetLabelForBoolValue(metrics.ShortTermOrder, o.IsShortTermOrder()),
-		metrics.GetLabelForBoolValue(metrics.StatefulOrder, o.IsStatefulOrder()),
-		metrics.GetLabelForStringValue(metrics.OrderSide, o.GetSide().String()),
-		metrics.GetLabelForIntValue(metrics.ClobPairId, int(o.GetClobPairId())),
-	}
+	return append(
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.TimeInForce, o.GetTimeInForce().String()),
+			metrics.GetLabelForBoolValue(metrics.ReduceOnly, o.IsReduceOnly()),
+			metrics.GetLabelForStringValue(metrics.OrderSide, o.GetSide().String()),
+		},
+		o.OrderId.GetOrderIdLabels()...,
+	)
 }

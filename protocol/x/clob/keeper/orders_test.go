@@ -2,11 +2,12 @@ package keeper_test
 
 import (
 	"fmt"
-	cmt "github.com/cometbft/cometbft/types"
-	testapp "github.com/dydxprotocol/v4/testutil/app"
 	"math/big"
 	"testing"
 	"time"
+
+	cmt "github.com/cometbft/cometbft/types"
+	testapp "github.com/dydxprotocol/v4/testutil/app"
 
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 
@@ -1009,7 +1010,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 
 	order := constants.Order_Carl_Num0_Id5_Clob0_Buy2BTC_Price50000
 	msgPlaceOrder := &types.MsgPlaceOrder{Order: order}
-	memClob.On("PlaceOrder", ctx, order, true).
+	memClob.On("PlaceOrder", ctx, order).
 		Return(order.GetBaseQuantums(), types.OrderStatus(0), constants.TestOffchainUpdates, nil)
 
 	_, _, err = ks.ClobKeeper.PlaceShortTermOrder(ctx, msgPlaceOrder)
@@ -1044,19 +1045,18 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
 
-	// TODO(CLOB-249): Re-implement test once sanity check is added.
-	// // Run the test if the preexisting order is not in state. Expected panic.
-	// require.PanicsWithError(
-	// 	t,
-	// 	fmt.Errorf(
-	// 		"PerformStatefulOrderValidation: Called for preExistingStatefulOrder "+
-	// 			"%+v but does not exist in state",
-	// 		order,
-	// 	).Error(),
-	// 	func() {
-	// 		_ = clobKeeper.PerformStatefulOrderValidation(ctx, &order, 10, true)
-	// 	},
-	// )
+	// Run the test if the preexisting order is not in state. Expected panic.
+	require.Panicsf(
+		t,
+		func() {
+			_ = ks.ClobKeeper.PerformStatefulOrderValidation(ctx, &order, 10, true)
+		},
+		fmt.Sprintf(
+			"PerformStatefulOrderValidation: Expected pre-existing stateful order to exist in state "+
+				"order: (%+v).",
+			&order,
+		),
+	)
 
 	// Run the test if the preexisting order is not in state. Expected no panic.
 	err = ks.ClobKeeper.PerformStatefulOrderValidation(ctx, &order, 10, false)
@@ -1329,6 +1329,8 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				GoodTilOneof: &types.Order_GoodTilBlockTime{
 					GoodTilBlockTime: 4,
 				},
+				ConditionType:                   types.Order_CONDITION_TYPE_TAKE_PROFIT,
+				ConditionalOrderTriggerSubticks: uint64(100),
 			},
 			expectedErr: types.ErrTimeExceedsGoodTilBlockTime.Error(),
 		},
@@ -1348,6 +1350,8 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 						time.Unix(5, 0).Add(types.StatefulOrderTimeWindow).Unix() + 1,
 					),
 				},
+				ConditionType:                   types.Order_CONDITION_TYPE_TAKE_PROFIT,
+				ConditionalOrderTriggerSubticks: uint64(100),
 			},
 			expectedErr: types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow.Error(),
 		},
@@ -1361,10 +1365,12 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							ClientId:     0,
 							OrderFlags:   types.OrderIdFlags_Conditional,
 						},
-						Side:         types.Order_SIDE_BUY,
-						Quantums:     600,
-						Subticks:     78,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 20},
+						Side:                            types.Order_SIDE_BUY,
+						Quantums:                        600,
+						Subticks:                        78,
+						GoodTilOneof:                    &types.Order_GoodTilBlockTime{GoodTilBlockTime: 20},
+						ConditionType:                   types.Order_CONDITION_TYPE_TAKE_PROFIT,
+						ConditionalOrderTriggerSubticks: uint64(100),
 					},
 					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 				)
@@ -1375,10 +1381,12 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 					ClientId:     0,
 					OrderFlags:   types.OrderIdFlags_Conditional,
 				},
-				Side:         types.Order_SIDE_BUY,
-				Quantums:     600,
-				Subticks:     78,
-				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 20},
+				Side:                            types.Order_SIDE_BUY,
+				Quantums:                        600,
+				Subticks:                        78,
+				GoodTilOneof:                    &types.Order_GoodTilBlockTime{GoodTilBlockTime: 20},
+				ConditionType:                   types.Order_CONDITION_TYPE_TAKE_PROFIT,
+				ConditionalOrderTriggerSubticks: uint64(100),
 			},
 			expectedErr: types.ErrStatefulOrderAlreadyExists.Error(),
 		},
@@ -1392,10 +1400,12 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							ClientId:     0,
 							OrderFlags:   types.OrderIdFlags_Conditional,
 						},
-						Side:         types.Order_SIDE_BUY,
-						Quantums:     600,
-						Subticks:     78,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 20},
+						Side:                            types.Order_SIDE_BUY,
+						Quantums:                        600,
+						Subticks:                        78,
+						GoodTilOneof:                    &types.Order_GoodTilBlockTime{GoodTilBlockTime: 20},
+						ConditionType:                   types.Order_CONDITION_TYPE_TAKE_PROFIT,
+						ConditionalOrderTriggerSubticks: uint64(100),
 					},
 					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 				)
@@ -1406,12 +1416,35 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 					ClientId:     0,
 					OrderFlags:   types.OrderIdFlags_Conditional,
 				},
-				Side:         types.Order_SIDE_BUY,
-				Quantums:     600,
-				Subticks:     78,
-				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 15},
+				Side:                            types.Order_SIDE_BUY,
+				Quantums:                        600,
+				Subticks:                        78,
+				GoodTilOneof:                    &types.Order_GoodTilBlockTime{GoodTilBlockTime: 15},
+				ConditionType:                   types.Order_CONDITION_TYPE_TAKE_PROFIT,
+				ConditionalOrderTriggerSubticks: uint64(100),
 			},
 			expectedErr: types.ErrStatefulOrderAlreadyExists.Error(),
+		},
+		"Conditional: Fails if ConditionalOrderTriggerSubticks is not a multiple of clob pair subticks": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					OrderFlags:   types.OrderIdFlags_Conditional,
+					ClobPairId:   uint32(0),
+				},
+				Side:     types.Order_SIDE_BUY,
+				Quantums: 600,
+				Subticks: 78,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{
+					GoodTilBlockTime: lib.MustConvertIntegerToUint32(
+						time.Unix(5, 0).Add(types.StatefulOrderTimeWindow).Unix(),
+					),
+				},
+				ConditionType:                   types.Order_CONDITION_TYPE_TAKE_PROFIT,
+				ConditionalOrderTriggerSubticks: uint64(101),
+			},
+			expectedErr: types.ErrInvalidPlaceOrder.Error(),
 		},
 	}
 
@@ -1617,55 +1650,99 @@ func TestGetStatePosition_PanicsOnInvalidClob(t *testing.T) {
 func TestInitStatefulOrdersInMemClob(t *testing.T) {
 	tests := map[string]struct {
 		// CLOB module return values.
-		statefulOrders       []types.Order
-		orderPlacementErrors []error
+		statefulOrdersInState       []types.Order
+		isConditionalOrderTriggered map[types.OrderId]bool
+		orderPlacementErrors        map[types.OrderId]error
 	}{
-		`Can initialize no stateful order in the memclob with no errors`: {
-			statefulOrders:       []types.Order{},
-			orderPlacementErrors: []error{},
+		`Can initialize 0 Long-Term orders or triggered conditional orders in the memclob with no errors`: {
+			statefulOrdersInState:       []types.Order{},
+			orderPlacementErrors:        map[types.OrderId]error{},
+			isConditionalOrderTriggered: map[types.OrderId]bool{},
 		},
-		`Can initialize one stateful order in the memclob with no errors`: {
-			statefulOrders: []types.Order{
+		`Can initialize 0 Long-Term orders or triggered conditional orders in the memclob with no errors
+			and does not place untriggered conditional orders`: {
+			statefulOrdersInState: []types.Order{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005,
+			},
+			orderPlacementErrors:        map[types.OrderId]error{},
+			isConditionalOrderTriggered: map[types.OrderId]bool{},
+		},
+		`Can initialize one Long-Term order in the memclob with no errors`: {
+			statefulOrdersInState: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 			},
-			orderPlacementErrors: []error{
-				nil,
+			orderPlacementErrors:        map[types.OrderId]error{},
+			isConditionalOrderTriggered: map[types.OrderId]bool{},
+		},
+		`Can initialize one triggered conditional order in the memclob with no errors`: {
+			statefulOrdersInState: []types.Order{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005,
+			},
+			orderPlacementErrors: map[types.OrderId]error{},
+			isConditionalOrderTriggered: map[types.OrderId]bool{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005.OrderId: true,
 			},
 		},
-		`Can initialize multiple stateful orders in the memclob with no errors`: {
-			statefulOrders: []types.Order{
+		`Can initialize multiple Long-Term and triggered conditional orders in the memclob
+			with no errors`: {
+			statefulOrdersInState: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995,
+				constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10,
 				constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 			},
-			orderPlacementErrors: []error{
-				nil,
-				nil,
-				nil,
+			orderPlacementErrors: map[types.OrderId]error{},
+			isConditionalOrderTriggered: map[types.OrderId]bool{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995.OrderId: true,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10.OrderId:  true,
 			},
 		},
-		`Can initialize multiple stateful orders in the memclob with errors`: {
-			statefulOrders: []types.Order{
+		`Can initialize multiple Long-Term and triggered conditional orders in the memclob with errors`: {
+			statefulOrdersInState: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995,
+				constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10,
 				constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 			},
-			orderPlacementErrors: []error{
-				nil,
-				types.ErrInvalidStatefulOrderGoodTilBlockTime,
-				types.ErrTimeExceedsGoodTilBlockTime,
+			orderPlacementErrors: map[types.OrderId]error{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995.
+					OrderId: types.ErrInvalidStatefulOrderGoodTilBlockTime,
+				constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10.
+					OrderId: types.ErrTimeExceedsGoodTilBlockTime,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10.
+					OrderId: types.ErrStatefulOrderCollateralizationCheckFailed,
+			},
+			isConditionalOrderTriggered: map[types.OrderId]bool{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995.OrderId: true,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10.OrderId:  true,
 			},
 		},
-		`Can initialize multiple stateful orders in the memclob where each order throws an error`: {
-			statefulOrders: []types.Order{
+		`Can initialize multiple Long-Term and triggered conditional orders in the memclob where
+			each order throws an error`: {
+			statefulOrdersInState: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995,
+				constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10,
 				constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 			},
-			orderPlacementErrors: []error{
-				types.ErrInvalidStatefulOrderGoodTilBlockTime,
-				types.ErrInvalidStatefulOrderGoodTilBlockTime,
-				types.ErrTimeExceedsGoodTilBlockTime,
+			orderPlacementErrors: map[types.OrderId]error{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.
+					OrderId: types.ErrStatefulOrderCollateralizationCheckFailed,
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995.
+					OrderId: types.ErrInvalidStatefulOrderGoodTilBlockTime,
+				constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10.
+					OrderId: types.ErrTimeExceedsGoodTilBlockTime,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10.
+					OrderId: types.ErrStatefulOrderCollateralizationCheckFailed,
+				constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.
+					OrderId: types.ErrStatefulOrderCollateralizationCheckFailed,
+			},
+			isConditionalOrderTriggered: map[types.OrderId]bool{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995.OrderId: true,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10.OrderId:  true,
 			},
 		},
 	}
@@ -1675,8 +1752,6 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 			// Setup state.
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
-
-			require.Len(t, tc.statefulOrders, len(tc.orderPlacementErrors))
 
 			indexerEventManager := &mocks.IndexerEventManager{}
 
@@ -1700,12 +1775,27 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create each stateful order placement in state and properly mock the MemClob call.
-			for i, order := range tc.statefulOrders {
+			expectedPlacedOrders := make([]types.Order, 0)
+			for i, order := range tc.statefulOrdersInState {
 				require.True(t, order.IsStatefulOrder())
 
+				// Write the stateful order placement to state.
 				ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, uint32(i))
-				orderPlacementErr := tc.orderPlacementErrors[i]
-				memClob.On("PlaceOrder", mock.Anything, order, false).Return(
+
+				// No more state or memclob updates are required if this is an untriggered
+				// conditional order.
+				if order.IsConditionalOrder() && !tc.isConditionalOrderTriggered[order.OrderId] {
+					require.NotContains(t, tc.orderPlacementErrors, order.OrderId)
+					continue
+				}
+
+				// If it's a triggered conditional order, ensure it's triggered in state.
+				if order.IsConditionalOrder() && tc.isConditionalOrderTriggered[order.OrderId] {
+					ks.ClobKeeper.MustTriggerConditionalOrder(ks.Ctx, order.OrderId)
+				}
+
+				orderPlacementErr := tc.orderPlacementErrors[order.OrderId]
+				memClob.On("PlaceOrder", mock.Anything, order).Return(
 					satypes.BaseQuantums(0),
 					types.Success,
 					constants.TestOffchainUpdates,
@@ -1715,6 +1805,8 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 				for _, message := range constants.TestOffchainMessages {
 					indexerEventManager.On("SendOffchainData", message).Return().Once()
 				}
+
+				expectedPlacedOrders = append(expectedPlacedOrders, order)
 			}
 
 			// Run the test and verify expectations.
@@ -1723,7 +1815,7 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 			indexerEventManager.AssertNumberOfCalls(
 				t,
 				"SendOffchainData",
-				len(constants.TestOffchainMessages)*len(tc.statefulOrders),
+				len(constants.TestOffchainMessages)*len(expectedPlacedOrders),
 			)
 			memClob.AssertExpectations(t)
 		})
@@ -1792,7 +1884,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 				{
 					OrderId: types.OrderId{
 						SubaccountId: constants.Alice_Num0,
-						ClientId:     0,
+						ClientId:     1,
 						OrderFlags:   types.OrderIdFlags_LongTerm,
 						ClobPairId:   0,
 					},
@@ -1856,7 +1948,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 
 			// Assert expected order placement memclob calls.
 			for _, order := range tc.expectedOrderPlacementCalls {
-				memClob.On("PlaceOrder", mock.Anything, order, false).Return(
+				memClob.On("PlaceOrder", mock.Anything, order).Return(
 					satypes.BaseQuantums(0),
 					types.Success,
 					constants.TestOffchainUpdates,
@@ -1866,7 +1958,11 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 
 			// Run the test and verify expectations.
 			offchainUpdates := types.NewOffchainUpdates()
-			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, tc.orders, offchainUpdates)
+			orderIds := make([]types.OrderId, 0)
+			for _, order := range tc.orders {
+				orderIds = append(orderIds, order.OrderId)
+			}
+			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds, offchainUpdates)
 
 			// PlaceStatefulOrdersFromLastBlock utilizes the memclob's PlaceOrder flow, but we
 			// do not want to emit PlaceMessages in offchain events for stateful orders. This assertion
@@ -1876,6 +1972,175 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			// Verify that all removed orders have an associated off-chain update.
 			orderMap := make(map[types.OrderId]bool)
 			for _, order := range tc.orders {
+				orderMap[order.OrderId] = true
+			}
+
+			removedOrders := lib.FilterSlice(tc.expectedOrderPlacementCalls, func(order types.Order) bool {
+				return !orderMap[order.OrderId]
+			})
+
+			for _, order := range removedOrders {
+				require.True(
+					t,
+					memclobtest.HasMessage(offchainUpdates, order.OrderId, types.RemoveMessageType),
+				)
+			}
+
+			memClob.AssertExpectations(t)
+		})
+	}
+}
+
+func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
+	tests := map[string]struct {
+		triggeredOrders             []types.Order
+		untriggeredOrders           []types.Order
+		expectedOrderPlacementCalls []types.Order
+		expectedPanic               string
+	}{
+		"empty conditional orders": {
+			triggeredOrders:             []types.Order{},
+			expectedOrderPlacementCalls: []types.Order{},
+		},
+		"places conditional orders triggered in last block": {
+			triggeredOrders: []types.Order{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15,
+			},
+			expectedOrderPlacementCalls: []types.Order{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15,
+			},
+		},
+		"does not place stateful order": {
+			triggeredOrders: []types.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+			},
+			expectedPanic: fmt.Sprintf(
+				"MustBeConditionalOrder: called with non-conditional order ID (%+v)",
+				&constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+			),
+		},
+		"does not place conditional order if not in triggered state": {
+			untriggeredOrders: []types.Order{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+			},
+			expectedPanic: fmt.Sprintf(
+				"PlaceConditionalOrdersTriggeredInLastBlock: Order with OrderId %+v is not in triggered state",
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+			),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup state.
+			memClob := &mocks.MemClob{}
+
+			memClob.On("SetClobKeeper", mock.Anything).Return()
+
+			ks := keepertest.NewClobKeepersTestContext(
+				t,
+				memClob,
+				&mocks.BankKeeper{},
+				indexer_manager.NewIndexerEventManagerNoopEnabled(),
+			)
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+			ctx := ks.Ctx.WithBlockHeight(int64(100)).WithBlockTime(time.Unix(5, 0))
+			ctx = ctx.WithIsCheckTx(true)
+			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+
+			// Create CLOB pair.
+			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+				ctx,
+				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.Status,
+				constants.ClobPair_Btc.MakerFeePpm,
+				constants.ClobPair_Btc.TakerFeePpm,
+			)
+			require.NoError(t, err)
+
+			// Write to triggered orders state
+			for _, order := range tc.triggeredOrders {
+				orderIdBytes := types.OrderIdKey(order.OrderId)
+				longTermOrderPlacement := types.LongTermOrderPlacement{
+					Order: order,
+				}
+				longTermOrderPlacementBytes := ks.Cdc.MustMarshal(&longTermOrderPlacement)
+
+				store := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementStore(ctx)
+				memstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
+
+				store.Set(orderIdBytes, longTermOrderPlacementBytes)
+				memstore.Set(orderIdBytes, longTermOrderPlacementBytes)
+			}
+
+			// Write to untriggered orders state
+			for _, order := range tc.untriggeredOrders {
+				orderIdBytes := types.OrderIdKey(order.OrderId)
+				longTermOrderPlacement := types.LongTermOrderPlacement{
+					Order: order,
+				}
+				longTermOrderPlacementBytes := ks.Cdc.MustMarshal(&longTermOrderPlacement)
+
+				store := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementStore(ctx)
+				memstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
+
+				store.Set(orderIdBytes, longTermOrderPlacementBytes)
+				memstore.Set(orderIdBytes, longTermOrderPlacementBytes)
+			}
+
+			// Assert expected order placement memclob calls.
+			for _, order := range tc.expectedOrderPlacementCalls {
+				memClob.On("PlaceOrder", mock.Anything, order).Return(
+					satypes.BaseQuantums(0),
+					types.Success,
+					constants.TestOffchainUpdates,
+					nil,
+				).Once()
+			}
+
+			// Run the test and verify expectations.
+			offchainUpdates := types.NewOffchainUpdates()
+			orderIds := make([]types.OrderId, 0)
+			for _, order := range tc.triggeredOrders {
+				orderIds = append(orderIds, order.OrderId)
+			}
+			for _, order := range tc.untriggeredOrders {
+				orderIds = append(orderIds, order.OrderId)
+			}
+
+			if tc.expectedPanic != "" {
+				require.PanicsWithValue(
+					t,
+					tc.expectedPanic,
+					func() {
+						ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates)
+					},
+				)
+				return
+			}
+
+			ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates)
+
+			// PlaceStatefulOrdersFromLastBlock utilizes the memclob's PlaceOrder flow, but we
+			// do not want to emit PlaceMessages in offchain events for stateful orders. This assertion
+			// verifies that we call `ClearPlaceMessages()` on the offchain updates before returning.
+			require.Equal(t, 0, memclobtest.MessageCountOfType(offchainUpdates, types.PlaceMessageType))
+
+			// Verify that all removed orders have an associated off-chain update.
+			orderMap := make(map[types.OrderId]bool)
+			for _, order := range tc.triggeredOrders {
+				orderMap[order.OrderId] = true
+			}
+			for _, order := range tc.untriggeredOrders {
 				orderMap[order.OrderId] = true
 			}
 

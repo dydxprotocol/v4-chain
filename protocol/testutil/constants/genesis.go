@@ -187,8 +187,8 @@ const GenesisState = `{
     "bridge": {
       "event_params": {
         "denom": "bridge-token",
-        "eth_chain_id": "0",
-        "eth_address": "0x0000000000000000000000000000000000000000"
+        "eth_chain_id": "11155111",
+        "eth_address": "0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935"
       },
       "propose_params": {
         "max_bridges_per_block": 10,
@@ -200,7 +200,10 @@ const GenesisState = `{
         "is_disabled": false,
         "delay_blocks": 86400
       },
-      "next_acknowledged_event_id": 0
+      "acknowledged_event_info": {
+        "next_id": 0,
+        "eth_block_height": 0
+      }
     },
     "capability": {
       "index": "1",
@@ -259,6 +262,60 @@ const GenesisState = `{
           "taker_fee_ppm": 500
         }
       ],
+      "equity_tier_limit_config": {
+        "short_term_order_equity_tiers": [
+          {
+            "limit": 0,
+            "usd_tnc_required": "0"
+          },
+          {
+            "limit": 1,
+            "usd_tnc_required": "20"
+          },
+          {
+            "limit": 5,
+            "usd_tnc_required": "100"
+          },
+          {
+            "limit": 10,
+            "usd_tnc_required": "1000"
+          },
+          {
+            "limit": 100,
+            "usd_tnc_required": "10000"
+          },
+          {
+            "limit": 200,
+            "usd_tnc_required": "100000"
+          }
+        ],
+        "stateful_order_equity_tiers": [
+          {
+            "limit": 0,
+            "usd_tnc_required": "0"
+          },
+          {
+            "limit": 1,
+            "usd_tnc_required": "20"
+          },
+          {
+            "limit": 5,
+            "usd_tnc_required": "100"
+          },
+          {
+            "limit": 10,
+            "usd_tnc_required": "1000"
+          },
+          {
+            "limit": 100,
+            "usd_tnc_required": "10000"
+          },
+          {
+            "limit": 200,
+            "usd_tnc_required": "100000"
+          }
+        ]
+      },
       "liquidations_config": {
         "fillable_price_config": {
           "bankruptcy_adjustment_ppm": 1000000,
@@ -343,8 +400,72 @@ const GenesisState = `{
             "absolute_volume_requirement": "0",
             "total_volume_share_requirement_ppm": 0,
             "maker_volume_share_requirement_ppm": 0,
-            "maker_fee_ppm": 0,
-            "taker_fee_ppm": 0
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 500
+          },
+          {
+            "name": "2",
+            "absolute_volume_requirement": "1000000",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 450
+          },
+          {
+            "name": "3",
+            "absolute_volume_requirement": "5000000",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 400
+          },
+          {
+            "name": "4",
+            "absolute_volume_requirement": "25000000",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 350
+          },
+          {
+            "name": "5",
+            "absolute_volume_requirement": "125000000",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 300
+          },
+          {
+            "name": "6",
+            "absolute_volume_requirement": "125000000",
+            "total_volume_share_requirement_ppm": 10000,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 250
+          },
+          {
+            "name": "7",
+            "absolute_volume_requirement": "125000000",
+            "total_volume_share_requirement_ppm": 10000,
+            "maker_volume_share_requirement_ppm": 20000,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 250
+          },
+          {
+            "name": "8",
+            "absolute_volume_requirement": "125000000",
+            "total_volume_share_requirement_ppm": 10000,
+            "maker_volume_share_requirement_ppm": 50000,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 250
+          },
+          {
+            "name": "9",
+            "absolute_volume_requirement": "125000000",
+            "total_volume_share_requirement_ppm": 10000,
+            "maker_volume_share_requirement_ppm": 100000,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 250
           }
         ]
       }
@@ -1130,7 +1251,7 @@ const GenesisState = `{
     "rewards": {
       "params": {
         "treasury_account":"rewards_treasury",
-        "denom":"eth_rewards_denom",
+        "denom":"testnet_reward_token",
         "denom_exponent":-6,
         "market_id":1,
         "fee_multiplier_ppm":990000
@@ -1252,6 +1373,17 @@ const GenesisState = `{
       },
       "port_id": "transfer"
     },
-    "upgrade": {}
+    "upgrade": {},
+    "vest": {
+      "vest_entries": [
+        {
+          "denom": "testnet_reward_token",
+          "end_time": "2023-08-23T00:00:00Z",
+          "start_time": "2023-08-02T00:00:00Z",
+          "treasury_account": "rewards_treasury",
+          "vester_account": "rewards_vester"
+        }
+      ]
+    }
   }
 }`

@@ -5,6 +5,7 @@ package types
 
 import (
 	context "context"
+	encoding_binary "encoding/binary"
 	fmt "fmt"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -369,6 +370,176 @@ func (m *AreSubaccountsLiquidatableResponse_Result) GetIsLiquidatable() bool {
 	return false
 }
 
+// MevNodeToNodeCalculationRequest is a request message used to run the
+// MEV node <> node calculation.
+type MevNodeToNodeCalculationRequest struct {
+	// Represents the matches on the "block proposer". Note that this field
+	// does not need to be the actual block proposer's matches for a block, since
+	// the MEV calculation logic is run with this nodes matches as the "block
+	// proposer" matches.
+	BlockProposerMatches *ValidatorMevMatches `protobuf:"bytes,1,opt,name=block_proposer_matches,json=blockProposerMatches,proto3" json:"block_proposer_matches,omitempty"`
+	// Represents the matches and mid-prices on the validator.
+	ValidatorMevMetrics *MevNodeToNodeMetrics `protobuf:"bytes,2,opt,name=validator_mev_metrics,json=validatorMevMetrics,proto3" json:"validator_mev_metrics,omitempty"`
+}
+
+func (m *MevNodeToNodeCalculationRequest) Reset()         { *m = MevNodeToNodeCalculationRequest{} }
+func (m *MevNodeToNodeCalculationRequest) String() string { return proto.CompactTextString(m) }
+func (*MevNodeToNodeCalculationRequest) ProtoMessage()    {}
+func (*MevNodeToNodeCalculationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3365c195b25c5bc0, []int{6}
+}
+func (m *MevNodeToNodeCalculationRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MevNodeToNodeCalculationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MevNodeToNodeCalculationRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MevNodeToNodeCalculationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MevNodeToNodeCalculationRequest.Merge(m, src)
+}
+func (m *MevNodeToNodeCalculationRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MevNodeToNodeCalculationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MevNodeToNodeCalculationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MevNodeToNodeCalculationRequest proto.InternalMessageInfo
+
+func (m *MevNodeToNodeCalculationRequest) GetBlockProposerMatches() *ValidatorMevMatches {
+	if m != nil {
+		return m.BlockProposerMatches
+	}
+	return nil
+}
+
+func (m *MevNodeToNodeCalculationRequest) GetValidatorMevMetrics() *MevNodeToNodeMetrics {
+	if m != nil {
+		return m.ValidatorMevMetrics
+	}
+	return nil
+}
+
+// MevNodeToNodeCalculationResponse is a response message that contains the
+// MEV node <> node calculation result.
+type MevNodeToNodeCalculationResponse struct {
+	Results []MevNodeToNodeCalculationResponse_MevAndVolumePerClob `protobuf:"bytes,1,rep,name=results,proto3" json:"results"`
+}
+
+func (m *MevNodeToNodeCalculationResponse) Reset()         { *m = MevNodeToNodeCalculationResponse{} }
+func (m *MevNodeToNodeCalculationResponse) String() string { return proto.CompactTextString(m) }
+func (*MevNodeToNodeCalculationResponse) ProtoMessage()    {}
+func (*MevNodeToNodeCalculationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3365c195b25c5bc0, []int{7}
+}
+func (m *MevNodeToNodeCalculationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MevNodeToNodeCalculationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MevNodeToNodeCalculationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MevNodeToNodeCalculationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MevNodeToNodeCalculationResponse.Merge(m, src)
+}
+func (m *MevNodeToNodeCalculationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MevNodeToNodeCalculationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MevNodeToNodeCalculationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MevNodeToNodeCalculationResponse proto.InternalMessageInfo
+
+func (m *MevNodeToNodeCalculationResponse) GetResults() []MevNodeToNodeCalculationResponse_MevAndVolumePerClob {
+	if m != nil {
+		return m.Results
+	}
+	return nil
+}
+
+// MevAndVolumePerClob contains information about the MEV and volume per CLOB.
+type MevNodeToNodeCalculationResponse_MevAndVolumePerClob struct {
+	ClobPairId uint32  `protobuf:"varint,1,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
+	Mev        float32 `protobuf:"fixed32,2,opt,name=mev,proto3" json:"mev,omitempty"`
+	Volume     uint64  `protobuf:"varint,3,opt,name=volume,proto3" json:"volume,omitempty"`
+}
+
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) Reset() {
+	*m = MevNodeToNodeCalculationResponse_MevAndVolumePerClob{}
+}
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MevNodeToNodeCalculationResponse_MevAndVolumePerClob) ProtoMessage() {}
+func (*MevNodeToNodeCalculationResponse_MevAndVolumePerClob) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3365c195b25c5bc0, []int{7, 0}
+}
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MevNodeToNodeCalculationResponse_MevAndVolumePerClob.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MevNodeToNodeCalculationResponse_MevAndVolumePerClob.Merge(m, src)
+}
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) XXX_Size() int {
+	return m.Size()
+}
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) XXX_DiscardUnknown() {
+	xxx_messageInfo_MevNodeToNodeCalculationResponse_MevAndVolumePerClob.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MevNodeToNodeCalculationResponse_MevAndVolumePerClob proto.InternalMessageInfo
+
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) GetClobPairId() uint32 {
+	if m != nil {
+		return m.ClobPairId
+	}
+	return 0
+}
+
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) GetMev() float32 {
+	if m != nil {
+		return m.Mev
+	}
+	return 0
+}
+
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) GetVolume() uint64 {
+	if m != nil {
+		return m.Volume
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*QueryGetClobPairRequest)(nil), "dydxprotocol.clob.QueryGetClobPairRequest")
 	proto.RegisterType((*QueryClobPairResponse)(nil), "dydxprotocol.clob.QueryClobPairResponse")
@@ -377,49 +548,66 @@ func init() {
 	proto.RegisterType((*AreSubaccountsLiquidatableRequest)(nil), "dydxprotocol.clob.AreSubaccountsLiquidatableRequest")
 	proto.RegisterType((*AreSubaccountsLiquidatableResponse)(nil), "dydxprotocol.clob.AreSubaccountsLiquidatableResponse")
 	proto.RegisterType((*AreSubaccountsLiquidatableResponse_Result)(nil), "dydxprotocol.clob.AreSubaccountsLiquidatableResponse.Result")
+	proto.RegisterType((*MevNodeToNodeCalculationRequest)(nil), "dydxprotocol.clob.MevNodeToNodeCalculationRequest")
+	proto.RegisterType((*MevNodeToNodeCalculationResponse)(nil), "dydxprotocol.clob.MevNodeToNodeCalculationResponse")
+	proto.RegisterType((*MevNodeToNodeCalculationResponse_MevAndVolumePerClob)(nil), "dydxprotocol.clob.MevNodeToNodeCalculationResponse.MevAndVolumePerClob")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/clob/query.proto", fileDescriptor_3365c195b25c5bc0) }
 
 var fileDescriptor_3365c195b25c5bc0 = []byte{
-	// 583 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0x41, 0x6b, 0x13, 0x41,
-	0x14, 0xc7, 0xb3, 0xa9, 0xd6, 0x3a, 0x35, 0x11, 0x07, 0xc5, 0xb2, 0xd6, 0xd5, 0xac, 0xd2, 0x34,
-	0x15, 0x76, 0x68, 0xad, 0x37, 0x11, 0x52, 0xc1, 0x22, 0x78, 0x68, 0xb7, 0x07, 0x41, 0x84, 0x30,
-	0xbb, 0x3b, 0xac, 0x03, 0xd3, 0x9d, 0xcd, 0xce, 0x6c, 0x49, 0x10, 0x2f, 0xe2, 0xa5, 0xe8, 0x41,
-	0xf0, 0x23, 0xf8, 0x05, 0xfc, 0x18, 0x3d, 0x16, 0xbc, 0x78, 0x12, 0x49, 0xfc, 0x20, 0x92, 0xd9,
-	0x49, 0xb3, 0xdb, 0x34, 0x09, 0xf1, 0x12, 0x36, 0xf3, 0xfe, 0xf3, 0xe6, 0xf7, 0xde, 0xff, 0x3d,
-	0x70, 0x37, 0xe8, 0x06, 0x9d, 0x38, 0xe1, 0x92, 0xfb, 0x9c, 0x21, 0x9f, 0x71, 0x0f, 0xb5, 0x53,
-	0x92, 0x74, 0x1d, 0x75, 0x06, 0x6f, 0xe4, 0xc3, 0xce, 0x20, 0x6c, 0xde, 0x0c, 0x79, 0xc8, 0xd5,
-	0x11, 0x1a, 0x7c, 0x65, 0x42, 0x73, 0x35, 0xe4, 0x3c, 0x64, 0x04, 0xe1, 0x98, 0x22, 0x1c, 0x45,
-	0x5c, 0x62, 0x49, 0x79, 0x24, 0x74, 0x74, 0xc3, 0xe7, 0xe2, 0x90, 0x0b, 0xe4, 0x61, 0x41, 0xb2,
-	0xfc, 0xe8, 0x68, 0xd3, 0x23, 0x12, 0x6f, 0xa2, 0x18, 0x87, 0x34, 0x52, 0x62, 0xad, 0xad, 0x8d,
-	0x13, 0x0d, 0x7e, 0x5a, 0x31, 0xa6, 0x89, 0x96, 0x34, 0x0a, 0x12, 0x91, 0x7a, 0xd8, 0xf7, 0x79,
-	0x1a, 0x49, 0x91, 0xfb, 0xce, 0xa4, 0x76, 0x03, 0xdc, 0xde, 0x1f, 0xbc, 0xb7, 0x4b, 0xe4, 0x73,
-	0xc6, 0xbd, 0x3d, 0x4c, 0x13, 0x97, 0xb4, 0x53, 0x22, 0x24, 0xac, 0x82, 0x32, 0x0d, 0x56, 0x8c,
-	0xfb, 0xc6, 0x7a, 0xc5, 0x2d, 0xd3, 0xc0, 0x7e, 0x0d, 0x6e, 0x29, 0xe9, 0x48, 0x27, 0x62, 0x1e,
-	0x09, 0x02, 0x9f, 0x81, 0xab, 0x67, 0x04, 0x4a, 0xbf, 0xbc, 0x75, 0xc7, 0x19, 0x6b, 0x8c, 0x33,
-	0xbc, 0xb7, 0x73, 0xe9, 0xe4, 0xf7, 0xbd, 0x92, 0xbb, 0xe4, 0xeb, 0xff, 0x36, 0xd6, 0x0c, 0x4d,
-	0xc6, 0xce, 0x33, 0xbc, 0x00, 0x60, 0xd4, 0x00, 0x9d, 0x7b, 0xcd, 0xc9, 0xba, 0xe5, 0x0c, 0xba,
-	0xe5, 0x64, 0x6e, 0xe8, 0x6e, 0x39, 0x7b, 0x38, 0x24, 0xfa, 0xae, 0x9b, 0xbb, 0x69, 0x7f, 0x37,
-	0xc0, 0x4a, 0x01, 0xbe, 0xc9, 0xd8, 0x24, 0xfe, 0x85, 0x39, 0xf9, 0xe1, 0x6e, 0x01, 0xb2, 0xac,
-	0x20, 0xeb, 0x33, 0x21, 0xb3, 0xc7, 0x0b, 0x94, 0x1d, 0x50, 0x6b, 0x26, 0xe4, 0x60, 0xe4, 0xd7,
-	0x2b, 0xda, 0x4e, 0x69, 0x80, 0x25, 0xf6, 0xd8, 0xb0, 0x2c, 0x78, 0x00, 0xaa, 0x23, 0x17, 0x5b,
-	0x34, 0x10, 0x1a, 0x79, 0xad, 0x88, 0x9c, 0x73, 0xdd, 0x19, 0x65, 0x7c, 0x19, 0x68, 0xfa, 0x8a,
-	0xc8, 0x9d, 0x09, 0xfb, 0xb8, 0x0c, 0xec, 0x69, 0x4f, 0xeb, 0x4e, 0xbd, 0x05, 0x57, 0x12, 0x22,
-	0x52, 0x26, 0x87, 0x8f, 0x3e, 0xbd, 0xa0, 0x4f, 0xb3, 0xf3, 0x38, 0xae, 0x4a, 0xa2, 0x51, 0x86,
-	0x29, 0xcd, 0x4f, 0x06, 0x58, 0xcc, 0x22, 0x70, 0x1f, 0x54, 0x0a, 0x45, 0x9e, 0x59, 0x3f, 0x4f,
-	0x8d, 0xd7, 0xf2, 0x35, 0xc2, 0x3a, 0xb8, 0x4e, 0x45, 0x8b, 0xe5, 0x70, 0x94, 0x55, 0x4b, 0x6e,
-	0x95, 0x16, 0x20, 0xb7, 0x7e, 0x2c, 0x80, 0xcb, 0x6a, 0x56, 0xe0, 0x67, 0x03, 0x2c, 0x0d, 0x5d,
-	0x87, 0x1b, 0x17, 0x94, 0x3a, 0x61, 0x75, 0xcc, 0xf5, 0x49, 0xda, 0xf3, 0xbb, 0x63, 0x37, 0x3e,
-	0xfe, 0xfc, 0xfb, 0xad, 0xfc, 0x00, 0xd6, 0xd0, 0x94, 0xb5, 0x46, 0xef, 0x69, 0xf0, 0x01, 0x7e,
-	0x31, 0xc0, 0x72, 0x6e, 0x7c, 0x27, 0x03, 0x8d, 0xef, 0x91, 0xf9, 0x68, 0x16, 0x50, 0x6e, 0x1f,
-	0xec, 0x87, 0x8a, 0xc9, 0x82, 0xab, 0xd3, 0x98, 0xe0, 0xb1, 0x01, 0xcc, 0xc9, 0x56, 0xc3, 0xed,
-	0x39, 0x27, 0x23, 0xe3, 0x7c, 0xf2, 0x5f, 0xf3, 0xb4, 0xd3, 0x3c, 0xe9, 0x59, 0xc6, 0x69, 0xcf,
-	0x32, 0xfe, 0xf4, 0x2c, 0xe3, 0x6b, 0xdf, 0x2a, 0x9d, 0xf6, 0xad, 0xd2, 0xaf, 0xbe, 0x55, 0x7a,
-	0x53, 0x0f, 0xa9, 0x7c, 0x97, 0x7a, 0x8e, 0xcf, 0x0f, 0x8b, 0xd5, 0x1c, 0x6d, 0xa3, 0x4e, 0x56,
-	0x92, 0xec, 0xc6, 0x44, 0x78, 0x8b, 0x2a, 0xf2, 0xf8, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xdb,
-	0x75, 0x9c, 0x2f, 0xf1, 0x05, 0x00, 0x00,
+	// 814 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x95, 0xcb, 0x6a, 0xe4, 0x46,
+	0x14, 0x86, 0x5b, 0x6d, 0xc7, 0x71, 0xca, 0x97, 0x24, 0xe5, 0x4b, 0x9a, 0xb6, 0xd3, 0x6e, 0x2b,
+	0xc1, 0xb7, 0x80, 0x84, 0x2f, 0xd9, 0x98, 0x10, 0x68, 0x1b, 0x62, 0x0c, 0xe9, 0xd0, 0x96, 0x83,
+	0x03, 0x89, 0x41, 0x94, 0xa4, 0x42, 0x16, 0x29, 0xa9, 0x64, 0x95, 0x24, 0x6c, 0x42, 0x36, 0x21,
+	0x1b, 0x93, 0x2c, 0x02, 0x79, 0x84, 0x79, 0x90, 0xd9, 0x7a, 0x69, 0x98, 0xcd, 0x2c, 0x86, 0x61,
+	0xb0, 0x67, 0x3d, 0x8b, 0x79, 0x82, 0x41, 0xa5, 0x52, 0xb7, 0xd4, 0x17, 0x37, 0xed, 0x4d, 0x5b,
+	0xaa, 0xf3, 0xeb, 0xaf, 0xaf, 0xce, 0xa9, 0x73, 0x0c, 0xbe, 0xb4, 0xae, 0xad, 0x2b, 0x3f, 0xa0,
+	0x21, 0x35, 0x29, 0x51, 0x4d, 0x42, 0x0d, 0xf5, 0x32, 0xc2, 0xc1, 0xb5, 0xc2, 0xd7, 0xe0, 0xe7,
+	0xf9, 0xb0, 0x92, 0x84, 0xab, 0xf3, 0x36, 0xb5, 0x29, 0x5f, 0x52, 0x93, 0xa7, 0x54, 0x58, 0x5d,
+	0xb6, 0x29, 0xb5, 0x09, 0x56, 0x91, 0xef, 0xa8, 0xc8, 0xf3, 0x68, 0x88, 0x42, 0x87, 0x7a, 0x4c,
+	0x44, 0xb7, 0x4c, 0xca, 0x5c, 0xca, 0x54, 0x03, 0x31, 0x9c, 0xfa, 0xab, 0xf1, 0xb6, 0x81, 0x43,
+	0xb4, 0xad, 0xfa, 0xc8, 0x76, 0x3c, 0x2e, 0x16, 0xda, 0xd5, 0x5e, 0xa2, 0xe4, 0x47, 0xf7, 0x91,
+	0x13, 0x08, 0xc9, 0x52, 0xaf, 0xc4, 0xc5, 0xb1, 0x08, 0x6e, 0x16, 0x82, 0x2c, 0x32, 0x90, 0x69,
+	0xd2, 0xc8, 0x0b, 0x59, 0xee, 0x39, 0x95, 0xca, 0x9b, 0xe0, 0x8b, 0x93, 0x04, 0xe6, 0x08, 0x87,
+	0x87, 0x84, 0x1a, 0x2d, 0xe4, 0x04, 0x1a, 0xbe, 0x8c, 0x30, 0x0b, 0xe1, 0x2c, 0x28, 0x3b, 0x56,
+	0x45, 0xaa, 0x4b, 0x1b, 0x33, 0x5a, 0xd9, 0xb1, 0xe4, 0x5f, 0xc0, 0x02, 0x97, 0x76, 0x74, 0xcc,
+	0xa7, 0x1e, 0xc3, 0xf0, 0x7b, 0xf0, 0x49, 0x1b, 0x8f, 0xeb, 0xa7, 0x76, 0x96, 0x94, 0x9e, 0xac,
+	0x29, 0xd9, 0x77, 0x07, 0xe3, 0xb7, 0xaf, 0x57, 0x4a, 0xda, 0xa4, 0x29, 0xde, 0x65, 0x24, 0x18,
+	0x1a, 0x84, 0x74, 0x33, 0xfc, 0x00, 0x40, 0x27, 0x3b, 0xc2, 0x7b, 0x4d, 0x49, 0x53, 0xa9, 0x24,
+	0xa9, 0x54, 0xd2, 0x52, 0x89, 0x54, 0x2a, 0x2d, 0x64, 0x63, 0xf1, 0xad, 0x96, 0xfb, 0x52, 0x7e,
+	0x26, 0x81, 0x4a, 0x01, 0xbe, 0x41, 0xc8, 0x20, 0xfe, 0xb1, 0x11, 0xf9, 0xe1, 0x51, 0x01, 0xb2,
+	0xcc, 0x21, 0xd7, 0x87, 0x42, 0xa6, 0x9b, 0x17, 0x28, 0xaf, 0xc0, 0x6a, 0x23, 0xc0, 0xa7, 0x9d,
+	0x7a, 0xfd, 0xe8, 0x5c, 0x46, 0x8e, 0x85, 0x42, 0x64, 0x90, 0xec, 0x58, 0xf0, 0x14, 0xcc, 0x76,
+	0xaa, 0xa8, 0x3b, 0x16, 0x13, 0xc8, 0x6b, 0x45, 0xe4, 0x5c, 0xd5, 0x95, 0x8e, 0xe3, 0xb1, 0x25,
+	0xe8, 0x67, 0x58, 0x6e, 0x8d, 0xc9, 0x37, 0x65, 0x20, 0x3f, 0xb6, 0xb5, 0xc8, 0xd4, 0x39, 0xf8,
+	0x38, 0xc0, 0x2c, 0x22, 0x61, 0xb6, 0xe9, 0x77, 0x7d, 0xf2, 0x34, 0xdc, 0x47, 0xd1, 0xb8, 0x89,
+	0x40, 0xc9, 0x2c, 0xab, 0x7f, 0x4b, 0x60, 0x22, 0x8d, 0xc0, 0x13, 0x30, 0x53, 0x38, 0x64, 0xbb,
+	0xf4, 0xa3, 0x9c, 0x71, 0x3a, 0x7f, 0x46, 0xb8, 0x0e, 0x3e, 0x75, 0x98, 0x4e, 0x72, 0x38, 0xbc,
+	0x54, 0x93, 0xda, 0xac, 0x53, 0x80, 0x94, 0x5f, 0x49, 0x60, 0xa5, 0x89, 0xe3, 0x9f, 0xa8, 0x85,
+	0x7f, 0xa6, 0xc9, 0xef, 0x21, 0x22, 0x66, 0x44, 0x78, 0x89, 0xb2, 0x22, 0x9c, 0x83, 0x45, 0x83,
+	0x50, 0xf3, 0x77, 0xdd, 0x0f, 0xa8, 0x4f, 0x19, 0x0e, 0x74, 0x17, 0x85, 0xe6, 0x05, 0x66, 0xfd,
+	0x41, 0x79, 0x5e, 0xce, 0x10, 0x49, 0xf6, 0xa0, 0x41, 0x13, 0xc7, 0xcd, 0x54, 0xad, 0xcd, 0x73,
+	0x97, 0x96, 0x30, 0x11, 0xab, 0xf0, 0x37, 0xb0, 0x10, 0x67, 0x62, 0xdd, 0xc5, 0xb1, 0xee, 0xe2,
+	0x30, 0x70, 0x4c, 0xd6, 0xbe, 0x5b, 0xbd, 0xe6, 0x05, 0xe0, 0x66, 0x2a, 0xd7, 0xe6, 0xe2, 0xfc,
+	0x96, 0xe9, 0xa2, 0xfc, 0x4e, 0x02, 0xf5, 0xc1, 0xc7, 0x13, 0x85, 0xb6, 0xbb, 0x0b, 0x7d, 0x34,
+	0x6c, 0xcf, 0x3e, 0x2e, 0x89, 0xa0, 0xe1, 0x59, 0x67, 0x94, 0x44, 0x2e, 0x6e, 0xe1, 0x20, 0x69,
+	0xa0, 0xee, 0x9a, 0x23, 0x30, 0xd7, 0x47, 0x05, 0xeb, 0x60, 0xba, 0xdd, 0x92, 0x7a, 0x7b, 0x0a,
+	0x81, 0xac, 0xe5, 0x8e, 0x2d, 0xf8, 0x19, 0x18, 0x73, 0x71, 0xcc, 0x33, 0x52, 0xd6, 0x92, 0x47,
+	0xb8, 0x08, 0x26, 0x62, 0x6e, 0x52, 0x19, 0xab, 0x4b, 0x1b, 0xe3, 0x9a, 0x78, 0xdb, 0x79, 0x3f,
+	0x0e, 0x3e, 0xe2, 0xbd, 0x0f, 0xff, 0x91, 0xc0, 0x64, 0xd6, 0xc5, 0x70, 0xab, 0xcf, 0x89, 0x06,
+	0x8c, 0xc2, 0xea, 0xc6, 0x20, 0x6d, 0xf7, 0x2c, 0x94, 0x37, 0xff, 0x7a, 0xf1, 0xf6, 0xff, 0xf2,
+	0x57, 0x70, 0x55, 0x7d, 0x64, 0x86, 0xab, 0x7f, 0x38, 0xd6, 0x9f, 0xf0, 0x5f, 0x09, 0x4c, 0xe5,
+	0xc6, 0xd1, 0x60, 0xa0, 0xde, 0xb9, 0x58, 0xfd, 0x66, 0x18, 0x50, 0x6e, 0xbe, 0xc9, 0x5f, 0x73,
+	0xa6, 0x1a, 0x5c, 0x7e, 0x8c, 0x09, 0xde, 0x48, 0xa0, 0x3a, 0xb8, 0x75, 0xe1, 0xde, 0x88, 0x9d,
+	0x9e, 0x72, 0x7e, 0xfb, 0xa4, 0xf9, 0x00, 0x9f, 0x4b, 0xa0, 0x32, 0xe8, 0x76, 0xc1, 0x9d, 0x91,
+	0xae, 0x62, 0xca, 0xb1, 0xfb, 0x84, 0xeb, 0x2b, 0xef, 0xf3, 0xbc, 0xed, 0xed, 0x4b, 0x5b, 0xb2,
+	0xaa, 0xf6, 0xfd, 0x7f, 0xab, 0x7b, 0xd4, 0xc2, 0x7a, 0x48, 0xd3, 0xbf, 0x66, 0xc7, 0xe3, 0xa0,
+	0x71, 0x7b, 0x5f, 0x93, 0xee, 0xee, 0x6b, 0xd2, 0x9b, 0xfb, 0x9a, 0xf4, 0xdf, 0x43, 0xad, 0x74,
+	0xf7, 0x50, 0x2b, 0xbd, 0x7c, 0xa8, 0x95, 0x7e, 0x5d, 0xb7, 0x9d, 0xf0, 0x22, 0x32, 0x14, 0x93,
+	0xba, 0x45, 0xd3, 0x78, 0x4f, 0xbd, 0x4a, 0x9d, 0xc3, 0x6b, 0x1f, 0x33, 0x63, 0x82, 0x47, 0x76,
+	0x3f, 0x04, 0x00, 0x00, 0xff, 0xff, 0x2e, 0x73, 0x86, 0x69, 0xa0, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -440,6 +628,8 @@ type QueryClient interface {
 	ClobPairAll(ctx context.Context, in *QueryAllClobPairRequest, opts ...grpc.CallOption) (*QueryClobPairAllResponse, error)
 	// Returns whether a subaccount is liquidatable.
 	AreSubaccountsLiquidatable(ctx context.Context, in *AreSubaccountsLiquidatableRequest, opts ...grpc.CallOption) (*AreSubaccountsLiquidatableResponse, error)
+	// Runs the MEV node <> node calculation with the provided parameters.
+	MevNodeToNodeCalculation(ctx context.Context, in *MevNodeToNodeCalculationRequest, opts ...grpc.CallOption) (*MevNodeToNodeCalculationResponse, error)
 }
 
 type queryClient struct {
@@ -477,6 +667,15 @@ func (c *queryClient) AreSubaccountsLiquidatable(ctx context.Context, in *AreSub
 	return out, nil
 }
 
+func (c *queryClient) MevNodeToNodeCalculation(ctx context.Context, in *MevNodeToNodeCalculationRequest, opts ...grpc.CallOption) (*MevNodeToNodeCalculationResponse, error) {
+	out := new(MevNodeToNodeCalculationResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Query/MevNodeToNodeCalculation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Queries a ClobPair by id.
@@ -485,6 +684,8 @@ type QueryServer interface {
 	ClobPairAll(context.Context, *QueryAllClobPairRequest) (*QueryClobPairAllResponse, error)
 	// Returns whether a subaccount is liquidatable.
 	AreSubaccountsLiquidatable(context.Context, *AreSubaccountsLiquidatableRequest) (*AreSubaccountsLiquidatableResponse, error)
+	// Runs the MEV node <> node calculation with the provided parameters.
+	MevNodeToNodeCalculation(context.Context, *MevNodeToNodeCalculationRequest) (*MevNodeToNodeCalculationResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -499,6 +700,9 @@ func (*UnimplementedQueryServer) ClobPairAll(ctx context.Context, req *QueryAllC
 }
 func (*UnimplementedQueryServer) AreSubaccountsLiquidatable(ctx context.Context, req *AreSubaccountsLiquidatableRequest) (*AreSubaccountsLiquidatableResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AreSubaccountsLiquidatable not implemented")
+}
+func (*UnimplementedQueryServer) MevNodeToNodeCalculation(ctx context.Context, req *MevNodeToNodeCalculationRequest) (*MevNodeToNodeCalculationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MevNodeToNodeCalculation not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -559,6 +763,24 @@ func _Query_AreSubaccountsLiquidatable_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_MevNodeToNodeCalculation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MevNodeToNodeCalculationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MevNodeToNodeCalculation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.clob.Query/MevNodeToNodeCalculation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MevNodeToNodeCalculation(ctx, req.(*MevNodeToNodeCalculationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.clob.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -574,6 +796,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AreSubaccountsLiquidatable",
 			Handler:    _Query_AreSubaccountsLiquidatable_Handler,
+		},
+		{
+			MethodName: "MevNodeToNodeCalculation",
+			Handler:    _Query_MevNodeToNodeCalculation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -842,6 +1068,129 @@ func (m *AreSubaccountsLiquidatableResponse_Result) MarshalToSizedBuffer(dAtA []
 	return len(dAtA) - i, nil
 }
 
+func (m *MevNodeToNodeCalculationRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MevNodeToNodeCalculationRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MevNodeToNodeCalculationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ValidatorMevMetrics != nil {
+		{
+			size, err := m.ValidatorMevMetrics.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.BlockProposerMatches != nil {
+		{
+			size, err := m.BlockProposerMatches.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MevNodeToNodeCalculationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MevNodeToNodeCalculationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MevNodeToNodeCalculationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Results) > 0 {
+		for iNdEx := len(m.Results) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Results[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Volume != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Volume))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Mev != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Mev))))
+		i--
+		dAtA[i] = 0x15
+	}
+	if m.ClobPairId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ClobPairId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -948,6 +1297,56 @@ func (m *AreSubaccountsLiquidatableResponse_Result) Size() (n int) {
 	n += 1 + l + sovQuery(uint64(l))
 	if m.IsLiquidatable {
 		n += 2
+	}
+	return n
+}
+
+func (m *MevNodeToNodeCalculationRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BlockProposerMatches != nil {
+		l = m.BlockProposerMatches.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.ValidatorMevMetrics != nil {
+		l = m.ValidatorMevMetrics.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *MevNodeToNodeCalculationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Results) > 0 {
+		for _, e := range m.Results {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ClobPairId != 0 {
+		n += 1 + sovQuery(uint64(m.ClobPairId))
+	}
+	if m.Mev != 0 {
+		n += 5
+	}
+	if m.Volume != 0 {
+		n += 1 + sovQuery(uint64(m.Volume))
 	}
 	return n
 }
@@ -1566,6 +1965,311 @@ func (m *AreSubaccountsLiquidatableResponse_Result) Unmarshal(dAtA []byte) error
 				}
 			}
 			m.IsLiquidatable = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MevNodeToNodeCalculationRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MevNodeToNodeCalculationRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MevNodeToNodeCalculationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlockProposerMatches", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BlockProposerMatches == nil {
+				m.BlockProposerMatches = &ValidatorMevMatches{}
+			}
+			if err := m.BlockProposerMatches.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorMevMetrics", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ValidatorMevMetrics == nil {
+				m.ValidatorMevMetrics = &MevNodeToNodeMetrics{}
+			}
+			if err := m.ValidatorMevMetrics.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MevNodeToNodeCalculationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MevNodeToNodeCalculationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MevNodeToNodeCalculationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Results", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Results = append(m.Results, MevNodeToNodeCalculationResponse_MevAndVolumePerClob{})
+			if err := m.Results[len(m.Results)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MevNodeToNodeCalculationResponse_MevAndVolumePerClob) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MevAndVolumePerClob: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MevAndVolumePerClob: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClobPairId", wireType)
+			}
+			m.ClobPairId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ClobPairId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Mev", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Mev = float32(math.Float32frombits(v))
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Volume", wireType)
+			}
+			m.Volume = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Volume |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

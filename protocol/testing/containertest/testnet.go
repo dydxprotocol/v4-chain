@@ -2,7 +2,6 @@ package containertest
 
 import (
 	"fmt"
-	pricefeed_testutil "github.com/dydxprotocol/v4/testutil/pricefeed"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -11,6 +10,7 @@ import (
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/testexchange"
 	pricefeed "github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4/testutil/constants"
+	pricefeed_testutil "github.com/dydxprotocol/v4/testutil/pricefeed"
 	"github.com/ory/dockertest/v3"
 )
 
@@ -103,7 +103,7 @@ func (t *Testnet) initialize() (err error) {
 
 	for moniker, node := range t.Nodes {
 		if err := t.pool.Retry(func() error {
-			return node.WaitUntilBlockHeight(1)
+			return node.WaitUntilBlockHeight(2)
 		}); err != nil {
 			return fmt.Errorf("could not connect to node: %s", moniker)
 		}

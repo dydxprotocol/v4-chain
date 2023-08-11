@@ -68,8 +68,9 @@ func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
 				panic("incorrect validator type")
 			}
 
-			// Disable the Price daemon in the integration tests.
+			// Disable the Bridge and Price daemons in the integration tests.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
+			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
 
 			// Enable the liquidations daemon in the integration tests.
 			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)

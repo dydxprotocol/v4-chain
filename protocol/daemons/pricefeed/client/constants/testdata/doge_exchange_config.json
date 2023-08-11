@@ -1,28 +1,33 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"DOGEUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"DOGEUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"DOGEUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"DOGEUSD\""
     },
     {
-      "exchangeName":"Gate",
-      "ticker":"DOGE_USDT"
+      "exchangeName": "Gate",
+      "ticker": "DOGE_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"dogeusdt"
+      "exchangeName": "Huobi",
+      "ticker": "dogeusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"DOGE-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "DOGE-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"DOGE-USDT"
+      "exchangeName": "Okx",
+      "ticker": "DOGE-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

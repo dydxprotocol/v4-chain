@@ -56,8 +56,9 @@ func (s *SendingIntegrationTestSuite) SetupTest() {
 	s.cfg = network.DefaultConfig(&network.NetworkConfigOptions{
 		AppOptions: appOptions,
 		OnNewApp: func(val networktestutil.ValidatorI) {
-			// Disable the Price daemon in the integration tests.
+			// Disable the Bridge and Price daemons in the integration tests.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
+			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
 		},
 	})
 

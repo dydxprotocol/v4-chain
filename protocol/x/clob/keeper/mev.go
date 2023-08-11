@@ -38,7 +38,7 @@ type CumulativePnL struct {
 type PnLCalculationParams struct {
 	subaccountId satypes.SubaccountId
 	isBuy        bool
-	feePpm       uint32
+	feePpm       int32
 }
 
 // RecordMevMetrics measures and records MEV by comparing the block proposer's list of matches
@@ -75,7 +75,7 @@ func (k Keeper) RecordMevMetrics(
 	)
 
 	// Calculate the block proposer's PnL from regular and liquidation matches.
-	blockProposerMevMatches, blockProposerLiquidationMatches, err := k.GetMEVDataFromOperations(
+	blockProposerMevMatches, err := k.GetMEVDataFromOperations(
 		ctx,
 		msgProposedOperations.GetOperationsQueue(),
 		clobPairs,
@@ -95,7 +95,6 @@ func (k Keeper) RecordMevMetrics(
 		ctx,
 		blockProposerPnL,
 		blockProposerMevMatches,
-		blockProposerLiquidationMatches,
 	); err != nil {
 		k.Logger(ctx).Error(
 			fmt.Sprintf(
@@ -109,7 +108,7 @@ func (k Keeper) RecordMevMetrics(
 	}
 
 	// Calculate the validator's PnL from regular and liquidation matches.
-	validatorMevMatches, validatorLiquidationMatches, err := k.GetMEVDataFromOperations(
+	validatorMevMatches, err := k.GetMEVDataFromOperations(
 		ctx,
 		k.GetOperations(ctx).GetOperationsQueue(),
 		clobPairs,
@@ -129,7 +128,6 @@ func (k Keeper) RecordMevMetrics(
 		ctx,
 		validatorPnL,
 		validatorMevMatches,
-		validatorLiquidationMatches,
 	); err != nil {
 		k.Logger(ctx).Error(
 			fmt.Sprintf(
@@ -142,66 +140,70 @@ func (k Keeper) RecordMevMetrics(
 		return
 	}
 
+	// TODO(CLOB-742): re-enable deleveraging and funding in MEV calculation.
 	// Calculate Trading PnL for block proposer.
-	if err := k.CalculateSubaccountPnLForMatches(
-		ctx,
-		blockProposerPnL,
-		msgProposedOperations.GetOperationsQueue(),
-	); err != nil {
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"Failed to calculate PnL for block proposer: Error: %+v, Operations: %+v",
-				err.Error(),
-				msgProposedOperations.GetOperationsQueue(),
-			),
-		)
-		telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
-		return
-	}
+	// if err := k.CalculateSubaccountPnLForMatches(
+	// 	ctx,
+	// 	blockProposerPnL,
+	// 	msgProposedOperations.GetOperationsQueue(),
+	// ); err != nil {
+	// 	k.Logger(ctx).Error(
+	// 		fmt.Sprintf(
+	// 			"Failed to calculate PnL for block proposer: Error: %+v, Operations: %+v",
+	// 			err.Error(),
+	// 			msgProposedOperations.GetOperationsQueue(),
+	// 		),
+	// 	)
+	// 	telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
+	// 	return
+	// }
 
-	// Calculate Trading PnL for the current validator.
-	if err := k.CalculateSubaccountPnLForMatches(
-		ctx,
-		validatorPnL,
-		k.GetOperations(ctx).GetOperationsQueue(),
-	); err != nil {
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"Failed to calculate PnL for validator: Error: %+v, Operations: %+v",
-				err.Error(),
-				k.GetOperations(ctx).GetOperationsQueue(),
-			),
-		)
-		telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
-		return
-	}
+	// TODO(CLOB-742): re-enable deleveraging and funding in MEV calculation.
+	// // Calculate Trading PnL for the current validator.
+	// if err := k.CalculateSubaccountPnLForMatches(
+	// 	ctx,
+	// 	validatorPnL,
+	// 	k.GetOperations(ctx).GetOperationsQueue(),
+	// ); err != nil {
+	// 	k.Logger(ctx).Error(
+	// 		fmt.Sprintf(
+	// 			"Failed to calculate PnL for validator: Error: %+v, Operations: %+v",
+	// 			err.Error(),
+	// 			k.GetOperations(ctx).GetOperationsQueue(),
+	// 		),
+	// 	)
+	// 	telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
+	// 	return
+	// }
 
 	// Since `MaybeProcessNewFundingTickEpoch` modifies state, operate on a cached context
 	// so that state updates are not persisted.
 	// Funding indices for perpetuals are updated in the EndBlocker.
 	// In order to measure MEV for funding received/paid in this block, update
 	// the funding indices before processing operations.
-	cacheCtx, _ := ctx.CacheContext()
-	perpetualKeeper.MaybeProcessNewFundingTickEpoch(cacheCtx)
 
-	// Calculate funding using the position size delta.
-	for _, cumulativePnL := range []map[types.ClobPairId]*CumulativePnL{blockProposerPnL, validatorPnL} {
-		// Funding payments are additive, so BP's funding PnL is equal to the sum of funding from initial
-		// position size and funding from position size delta from the proposed queue.
-		// Similarly, validator's funding PnL is equal to the sum of funding from initial position size
-		// and funding from position size delta from validator's queue.
-		// The funding payment from initial position size cancel out, and we only need to calculate
-		// the funding from position size delta.
-		if err := k.AddSettlementForPositionDelta(
-			ctx,
-			perpetualKeeper,
-			cumulativePnL,
-		); err != nil {
-			k.Logger(ctx).Error(err.Error())
-			telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
-			return
-		}
-	}
+	// TODO(CLOB-742): re-enable deleveraging and funding in MEV calculation.
+	// cacheCtx, _ := ctx.CacheContext()
+	// perpetualKeeper.MaybeProcessNewFundingTickEpoch(cacheCtx)
+
+	// // Calculate funding using the position size delta.
+	// for _, cumulativePnL := range []map[types.ClobPairId]*CumulativePnL{blockProposerPnL, validatorPnL} {
+	// 	// Funding payments are additive, so BP's funding PnL is equal to the sum of funding from initial
+	// 	// position size and funding from position size delta from the proposed queue.
+	// 	// Similarly, validator's funding PnL is equal to the sum of funding from initial position size
+	// 	// and funding from position size delta from validator's queue.
+	// 	// The funding payment from initial position size cancel out, and we only need to calculate
+	// 	// the funding from position size delta.
+	// 	if err := k.AddSettlementForPositionDelta(
+	// 		ctx,
+	// 		perpetualKeeper,
+	// 		cumulativePnL,
+	// 	); err != nil {
+	// 		k.Logger(ctx).Error(err.Error())
+	// 		telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
+	// 		return
+	// 	}
+	// }
 
 	// Add label for consensus round if available.
 	consensusRound, ok := ctx.Value(process.ConsensusRound).(int64)
@@ -290,6 +292,16 @@ func (k Keeper) RecordMevMetrics(
 	}
 
 	if k.mevTelemetryHost != "" {
+		mevClobMidPrices := make([]types.ClobMidPrice, 0, len(clobPairs))
+		for _, clobPair := range clobPairs {
+			mevClobMidPrices = append(
+				mevClobMidPrices,
+				types.ClobMidPrice{
+					ClobPair: clobPair,
+					Subticks: clobMidPrices[types.ClobPairId(clobPair.Id)].ToUint64(),
+				},
+			)
+		}
 		go mev_telemetry.SendDatapoints(
 			ctx,
 			k.mevTelemetryHost,
@@ -302,10 +314,8 @@ func (k Keeper) RecordMevMetrics(
 					Identifier:          k.mevTelemetryIdentifier,
 				},
 				MevNodeToNode: types.MevNodeToNodeMetrics{
-					ValidatorMevMatches:            validatorMevMatches,
-					ValidatorMevLiquidationMatches: validatorLiquidationMatches,
-					ClobMidPrices:                  clobMidPrices,
-					ClobPairs:                      clobPairs,
+					ValidatorMevMatches: validatorMevMatches,
+					ClobMidPrices:       mevClobMidPrices,
 				},
 			},
 		)
@@ -423,16 +433,15 @@ func (k Keeper) GetMEVDataFromOperations(
 	operations []types.OperationRaw,
 	clobPairs map[types.ClobPairId]types.ClobPair,
 ) (
-	mevMatches []types.MEVMatch,
-	mevLiquidationMatches []types.MEVLiquidationMatch,
+	validatorMevMatches *types.ValidatorMevMatches,
 	err error,
 ) {
 	// Collect all the short-term orders placed for subsequent lookups.
 	placedShortTermOrders := make(map[types.OrderId]types.Order)
 
 	// Populate `mevMatches` and `mevLiquidationMatches` from the local validator's match operations.
-	mevMatches = make([]types.MEVMatch, 0)
-	mevLiquidationMatches = make([]types.MEVLiquidationMatch, 0)
+	mevMatches := make([]types.MEVMatch, 0)
+	mevLiquidationMatches := make([]types.MEVLiquidationMatch, 0)
 	for _, operation := range operations {
 		switch typedOperation := operation.Operation.(type) {
 		case *types.OperationRaw_ShortTermOrderPlacement:
@@ -442,7 +451,7 @@ func (k Keeper) GetMEVDataFromOperations(
 			bytes := typedOperation.ShortTermOrderPlacement
 			tx, err := k.txDecoder(bytes)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			msgPlaceOrder := tx.GetMsgs()[0].(*types.MsgPlaceOrder)
 			order := msgPlaceOrder.Order
@@ -452,51 +461,35 @@ func (k Keeper) GetMEVDataFromOperations(
 			case *types.ClobMatch_MatchOrders:
 				matchOrders := match.MatchOrders
 
-				// Get the CLOB pair and panic if it doesn't exist in state.
-				clobPairId := types.ClobPairId(matchOrders.TakerOrderId.GetClobPairId())
-				clobPair, exists := clobPairs[clobPairId]
-				if !exists {
-					panic(
-						fmt.Sprintf(
-							"GetMEVMatchesFromOperations: CLOB pair %+v does not exist",
-							clobPair,
-						),
-					)
-				}
-
 				// Add a MEV match for each fill.
 				takerOrder := k.MustFetchOrderFromOrderId(ctx, matchOrders.TakerOrderId, placedShortTermOrders)
 				for _, fill := range matchOrders.Fills {
 					makerOrder := k.MustFetchOrderFromOrderId(ctx, fill.MakerOrderId, placedShortTermOrders)
 					mevMatch := types.MEVMatch{
-						TakerOrderSubaccountId: takerOrder.GetSubaccountId(),
-						TakerFeePpm:            clobPair.GetTakerFeePpm(),
+						TakerOrderSubaccountId: &takerOrder.OrderId.SubaccountId,
+						TakerFeePpm: k.feeTiersKeeper.GetPerpetualFeePpm(
+							ctx,
+							takerOrder.GetSubaccountId().Owner,
+							true,
+						),
 
-						MakerOrderSubaccountId: makerOrder.GetSubaccountId(),
-						MakerOrderSubticks:     makerOrder.GetOrderSubticks(),
+						MakerOrderSubaccountId: &makerOrder.OrderId.SubaccountId,
+						MakerOrderSubticks:     makerOrder.Subticks,
 						MakerOrderIsBuy:        makerOrder.IsBuy(),
-						MakerFeePpm:            clobPair.GetMakerFeePpm(),
+						MakerFeePpm: k.feeTiersKeeper.GetPerpetualFeePpm(
+							ctx,
+							makerOrder.GetSubaccountId().Owner,
+							false,
+						),
 
-						ClobPairId: clobPairId,
-						FillAmount: satypes.BaseQuantums(fill.FillAmount),
+						ClobPairId: takerOrder.OrderId.ClobPairId,
+						FillAmount: fill.FillAmount,
 					}
 					mevMatches = append(mevMatches, mevMatch)
 				}
 
 			case *types.ClobMatch_MatchPerpetualLiquidation:
 				matchLiquidation := match.MatchPerpetualLiquidation
-
-				// Get the CLOB pair and panic if it doesn't exist in state.
-				clobPairId := types.ClobPairId(matchLiquidation.ClobPairId)
-				clobPair, exists := clobPairs[clobPairId]
-				if !exists {
-					panic(
-						fmt.Sprintf(
-							"GetMEVMatchesFromOperations: CLOB pair %+v does not exist",
-							clobPairId,
-						),
-					)
-				}
 
 				for _, fill := range matchLiquidation.Fills {
 					makerOrder := k.MustFetchOrderFromOrderId(ctx, fill.MakerOrderId, placedShortTermOrders)
@@ -512,7 +505,7 @@ func (k Keeper) GetMEVDataFromOperations(
 						makerOrder.GetOrderSubticks(),
 					)
 					if err != nil {
-						return nil, nil, err
+						return nil, err
 					}
 
 					mevLiquidationMatch := types.MEVLiquidationMatch{
@@ -520,13 +513,17 @@ func (k Keeper) GetMEVDataFromOperations(
 						// TODO: Panic if insurance fund delta is not an int64.
 						InsuranceFundDeltaQuoteQuantums: insuranceFundDelta.Int64(),
 
-						MakerOrderSubaccountId: makerOrder.GetSubaccountId(),
-						MakerOrderSubticks:     makerOrder.GetOrderSubticks(),
+						MakerOrderSubaccountId: makerOrder.OrderId.SubaccountId,
+						MakerOrderSubticks:     makerOrder.Subticks,
 						MakerOrderIsBuy:        makerOrder.IsBuy(),
-						MakerFeePpm:            clobPair.GetMakerFeePpm(),
+						MakerFeePpm: k.feeTiersKeeper.GetPerpetualFeePpm(
+							ctx,
+							makerOrder.GetSubaccountId().Owner,
+							false,
+						),
 
-						ClobPairId: clobPairId,
-						FillAmount: satypes.BaseQuantums(fill.FillAmount),
+						ClobPairId: matchLiquidation.ClobPairId,
+						FillAmount: fill.FillAmount,
 					}
 					mevLiquidationMatches = append(mevLiquidationMatches, mevLiquidationMatch)
 				}
@@ -536,7 +533,10 @@ func (k Keeper) GetMEVDataFromOperations(
 		}
 	}
 
-	return mevMatches, mevLiquidationMatches, nil
+	validatorMevMatches = &types.ValidatorMevMatches{}
+	validatorMevMatches.Matches = mevMatches
+	validatorMevMatches.LiquidationMatches = mevLiquidationMatches
+	return validatorMevMatches, nil
 }
 
 // CalculateSubaccountPnLForMevMatches calculates the PnL for each subaccount for the given
@@ -545,14 +545,13 @@ func (k Keeper) GetMEVDataFromOperations(
 func (k Keeper) CalculateSubaccountPnLForMevMatches(
 	ctx sdk.Context,
 	clobPairToPnLs map[types.ClobPairId]*CumulativePnL,
-	mevMatches []types.MEVMatch,
-	mevLiquidationMatches []types.MEVLiquidationMatch,
+	matches *types.ValidatorMevMatches,
 ) (
 	err error,
 ) {
-	for _, matchWithOrders := range mevMatches {
+	for _, matchWithOrders := range matches.Matches {
 		clobPairId := matchWithOrders.ClobPairId
-		cumulativePnL, exists := clobPairToPnLs[clobPairId]
+		cumulativePnL, exists := clobPairToPnLs[types.ClobPairId(clobPairId)]
 		if !exists {
 			panic(
 				fmt.Sprintf(
@@ -565,12 +564,12 @@ func (k Keeper) CalculateSubaccountPnLForMevMatches(
 		// Update the PnL for the match.
 		for _, p := range []PnLCalculationParams{
 			{
-				matchWithOrders.TakerOrderSubaccountId,
+				*matchWithOrders.TakerOrderSubaccountId,
 				!matchWithOrders.MakerOrderIsBuy,
 				matchWithOrders.TakerFeePpm,
 			},
 			{
-				matchWithOrders.MakerOrderSubaccountId,
+				*matchWithOrders.MakerOrderSubaccountId,
 				matchWithOrders.MakerOrderIsBuy,
 				matchWithOrders.MakerFeePpm,
 			},
@@ -578,8 +577,8 @@ func (k Keeper) CalculateSubaccountPnLForMevMatches(
 			if err := cumulativePnL.AddPnLForTradeWithFilledSubticks(
 				p.subaccountId,
 				p.isBuy,
-				matchWithOrders.MakerOrderSubticks,
-				matchWithOrders.FillAmount,
+				types.Subticks(matchWithOrders.MakerOrderSubticks),
+				satypes.BaseQuantums(matchWithOrders.FillAmount),
 				p.feePpm,
 			); err != nil {
 				return err
@@ -590,9 +589,9 @@ func (k Keeper) CalculateSubaccountPnLForMevMatches(
 	}
 
 	// Calculate MEV for liquidation matches.
-	for _, mevLiquidation := range mevLiquidationMatches {
+	for _, mevLiquidation := range matches.LiquidationMatches {
 		clobPairId := mevLiquidation.ClobPairId
-		cumulativePnL, exists := clobPairToPnLs[clobPairId]
+		cumulativePnL, exists := clobPairToPnLs[types.ClobPairId(clobPairId)]
 		if !exists {
 			panic(
 				fmt.Sprintf(
@@ -611,8 +610,8 @@ func (k Keeper) CalculateSubaccountPnLForMevMatches(
 			if err := cumulativePnL.AddPnLForTradeWithFilledSubticks(
 				p.subaccountId,
 				p.isBuy,
-				mevLiquidation.MakerOrderSubticks,
-				mevLiquidation.FillAmount,
+				types.Subticks(mevLiquidation.MakerOrderSubticks),
+				satypes.BaseQuantums(mevLiquidation.FillAmount),
 				p.feePpm,
 			); err != nil {
 				return err
@@ -668,6 +667,8 @@ func (k Keeper) CalculateSubaccountPnLForMatches(
 				// will eventually be deleted.
 			case *types.ClobMatch_MatchPerpetualDeleveraging:
 				// Calculate MEV for deleveraging matches.
+				// TODO(CLOB-742): This whole function is currently not being called since deleveraging and funding
+				// are excluded from MEV calculations. Re-enable deleveraging and funding in MEV calculation.
 				matchDeleveraging := match.MatchPerpetualDeleveraging
 				clobPairId, err := k.MemClob.GetClobPairForPerpetual(ctx, matchDeleveraging.PerpetualId)
 				if err != nil {
@@ -773,7 +774,7 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledSubticks(
 	isBuy bool,
 	filledSubticks types.Subticks,
 	filledQuantums satypes.BaseQuantums,
-	feePpm uint32,
+	feePpm int32,
 ) (err error) {
 	// Get the fill quote quantums using the filled subticks and filled quantums.
 	filledQuoteQuantums, err := getFillQuoteQuantums(c.ClobPair, filledSubticks, filledQuantums)
@@ -806,7 +807,7 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledQuoteQuantums(
 	isBuy bool,
 	filledQuoteQuantums *big.Int,
 	filledQuantums satypes.BaseQuantums,
-	feePpm uint32,
+	feePpm int32,
 ) (err error) {
 	// Get the fill quote quantums using the mid price subticks and filled quantums.
 	filledQuoteQuantumsUsingMidPrice, err := getFillQuoteQuantums(c.ClobPair, c.MidPriceSubticks, filledQuantums)
@@ -823,8 +824,8 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledQuoteQuantums(
 	}
 
 	// Calculate fees.
-	bigFee := lib.BigIntMulPpm(filledQuoteQuantums, feePpm)
-	pnl.Sub(pnl, bigFee)
+	bigFeeQuoteQuantums := lib.BigIntMulSignedPpm(filledQuoteQuantums, feePpm)
+	pnl.Sub(pnl, bigFeeQuoteQuantums)
 
 	c.AddDeltaToSubaccount(subaccountId, pnl)
 

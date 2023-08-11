@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/dydxprotocol/v4/lib"
+	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
@@ -78,5 +79,37 @@ func GetAveragePriceSubticks(
 	return result.Quo(
 		result,
 		new(big.Rat).SetInt(bigBaseQuantums),
+	)
+}
+
+// NotionalToCoinAmount returns the coin amount (e.g. `uatom`) that has equal worth to the notional (in quote quantums).
+// For example, given price of 9.5 USDC/ATOM, notional of 9_500_000 quote quantums, return 1_000_000 `uatom` (since
+// `tokenDenomExp“=-6).
+// Note the return value is in coin amount, which is different from base quantums.
+//
+// Given the below by definitions:
+//
+//	quote_quantums * 10^quote_atomic_resolution = full_quote_coin_amount (e.g. 2_000_000 quote quantums * 10^-6 = 2 USDC)
+//	coin_amount * 10^denom_exponent = full_coin_amount (e.g. 1_000_000 uatom * 10^-6 = 1 ATOM)
+//	full_coin_amount * coin_price = full_quote_coin_amount (e.g. 1 ATOM * 9.5 USDC/ATOM = 9.5 USDC)
+//
+// Therefore:
+//
+//	coin_amount * 10^denom_exponent * coin_price = quote_quantums * 10^quote_atomic_resolution
+//	coin_amount = quote_quantums * 10^(quote_atomic_resolution - denom_exponent) / coin_price
+func NotionalToCoinAmount(
+	notionalQuoteQuantums *big.Int,
+	quoteAtomicResolution int32,
+	denomExp int32,
+	marketPrice pricestypes.MarketPrice,
+) *big.Rat {
+	fullCoinPrice := lib.BigMulPow10(
+		new(big.Int).SetUint64(marketPrice.Price),
+		marketPrice.Exponent,
+	)
+	ret := lib.BigMulPow10(notionalQuoteQuantums, quoteAtomicResolution-denomExp)
+	return ret.Quo(
+		ret,
+		fullCoinPrice,
 	)
 }

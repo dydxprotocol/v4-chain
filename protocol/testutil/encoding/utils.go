@@ -25,6 +25,7 @@ import (
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	custommodule "github.com/dydxprotocol/v4/app/module"
+	bridgemodule "github.com/dydxprotocol/v4/x/bridge"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
 	perpetualtypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
@@ -61,6 +62,7 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 		consensus.AppModuleBasic{},
 
 		// Custom modules
+		bridgemodule.AppModuleBasic{},
 		subaccountsmodule.AppModuleBasic{})
 
 	msgInterfacesToRegister := []sdk.Msg{

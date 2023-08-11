@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	bridgetypes "github.com/dydxprotocol/v4/x/bridge/types"
 	"github.com/dydxprotocol/v4/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
@@ -52,4 +53,14 @@ type ProcessPerpetualKeeper interface {
 		err error,
 	)
 	GetPerpetual(ctx sdk.Context, id uint32) (val perptypes.Perpetual, err error)
+}
+
+// ProcessBridgeKeeper defines the expected bridge keeper used for `ProcessProposal`.
+type ProcessBridgeKeeper interface {
+	GetAcknowledgedEventInfo(
+		ctx sdk.Context,
+	) (acknowledgedEventInfo bridgetypes.BridgeEventInfo)
+	GetRecognizedEventInfo(
+		ctx sdk.Context,
+	) (recognizedEventInfo bridgetypes.BridgeEventInfo)
 }

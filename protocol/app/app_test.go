@@ -44,6 +44,7 @@ import (
 	sendingmodule "github.com/dydxprotocol/v4/x/sending"
 	statsmodule "github.com/dydxprotocol/v4/x/stats"
 	subaccountsmodule "github.com/dydxprotocol/v4/x/subaccounts"
+	vestmodule "github.com/dydxprotocol/v4/x/vest"
 
 	"github.com/stretchr/testify/require"
 )
@@ -164,6 +165,10 @@ func TestBlockedAddresses(t *testing.T) {
 		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true,
 		"dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6": true,
 		"dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5": true,
+		// `rewards_treasury` module account
+		"dydx16wrau2x4tsg033xfrrdpae6kxfn9kyuerr5jjp": true,
+		// `vester_treasury` module accoount
+		"dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp": true,
 	}
 	require.Equal(t, expectedBlockedAddresses, blockedAddresses, "default blocked address list does not match expected")
 }
@@ -179,6 +184,8 @@ func TestMaccPerms(t *testing.T) {
 		"not_bonded_tokens_pool": {"burner", "staking"},
 		"subaccounts":            []string(nil),
 		"transfer":               {"minter", "burner"},
+		"rewards_treasury":       nil,
+		"rewards_vester":         nil,
 	}
 	require.Equal(t, expectedMaccPerms, maccPerms, "default macc perms list does not match expected")
 }
@@ -220,6 +227,7 @@ func TestModuleBasics(t *testing.T) {
 		statsmodule.AppModuleBasic{},
 		subaccountsmodule.AppModuleBasic{},
 		clobmodule.AppModuleBasic{},
+		vestmodule.AppModuleBasic{},
 		rewardsmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},

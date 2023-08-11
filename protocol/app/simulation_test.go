@@ -30,6 +30,7 @@ import (
 	rewardsmodule "github.com/dydxprotocol/v4/x/rewards/types"
 	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	vestmodule "github.com/dydxprotocol/v4/x/vest/types"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
@@ -102,6 +103,7 @@ var genesisModuleOrder = []string{
 	satypes.ModuleName,
 	clobtypes.ModuleName,
 	sendingtypes.ModuleName,
+	vestmodule.ModuleName,
 	rewardsmodule.ModuleName,
 	epochstypes.ModuleName,
 }
@@ -382,5 +384,6 @@ func defaultAppOptionsForSimulation() simtestutil.AppOptionsMap {
 	appOptions[flags.FlagHome] = app.DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 	appOptions[daemonflags.FlagPriceDaemonEnabled] = false
+	appOptions[daemonflags.FlagBridgeDaemonEnabled] = false
 	return appOptions
 }

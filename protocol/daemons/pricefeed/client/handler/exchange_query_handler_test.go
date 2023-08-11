@@ -43,11 +43,19 @@ var (
 	}
 	baseEmc = &types.MutableExchangeMarketConfig{
 		Id: "BinanceUS",
-		MarketToTicker: map[types.MarketId]string{
-			exchange_common.MARKET_BTC_USD: constants.BtcUsdPair,
-			exchange_common.MARKET_ETH_USD: constants.EthUsdPair,
-			noPriceExponentMarketId:        noPriceExponentTicker,
-			unavailableId:                  unavailableTicker,
+		MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+			exchange_common.MARKET_BTC_USD: {
+				Ticker: constants.BtcUsdPair,
+			},
+			exchange_common.MARKET_ETH_USD: {
+				Ticker: constants.EthUsdPair,
+			},
+			noPriceExponentMarketId: {
+				Ticker: noPriceExponentTicker,
+			},
+			unavailableId: {
+				Ticker: unavailableTicker,
+			},
 		},
 	}
 	testMarketExponentMap = generateTestMarketPriceExponentMap()
@@ -167,7 +175,7 @@ func TestQuery(t *testing.T) {
 			expectApiRequest: false,
 			expectedError:    errors.New("At least one marketId must be queried"),
 		},
-		"Failure - ticker not defined for market": {
+		"Failure - market config not defined for market": {
 			marketIds: []types.MarketId{FAKEUSD_ID},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{}),
@@ -175,7 +183,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: false,
-			expectedError:    fmt.Errorf("No ticker for market: %v", FAKEUSD_ID),
+			expectedError:    fmt.Errorf("No market config for market: %v", FAKEUSD_ID),
 		},
 		"Failure - market price exponent not defined for market": {
 			marketIds: []types.MarketId{noPriceExponentMarketId},

@@ -15,6 +15,7 @@ var (
 	TimeTwentyFive      = time.Unix(25, 0)
 	TimeThirty          = time.Unix(30, 0)
 	TimeT               = time.Unix(1650000000, 0) // 2022-04-14 22:20:00 -0700 PDT
+	TimeTMinus1         = TimeT.Add(-time.Duration(1))
 	TimeTPlus1          = TimeT.Add(time.Duration(1))
 	TimeTMinusThreshold = TimeT.Add(-pricefeed.MaxPriceAge).Add(-time.Duration(1))
 	TimeTPlusThreshold  = TimeT.Add(pricefeed.MaxPriceAge).Add(time.Duration(1))

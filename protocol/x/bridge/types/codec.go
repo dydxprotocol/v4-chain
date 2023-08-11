@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgAcknowledgeBridge{}, "bridge/AcknowledgeBridge", nil)
+	cdc.RegisterConcrete(&MsgAcknowledgeBridges{}, "bridge/AcknowledgeBridges", nil)
 	cdc.RegisterConcrete(&MsgCompleteBridge{}, "bridge/CompleteBridge", nil)
 	cdc.RegisterConcrete(&MsgUpdateEventParams{}, "bridge/UpdateEventParams", nil)
 	cdc.RegisterConcrete(&MsgUpdateProposeParams{}, "bridge/UpdateProposeParams", nil)
@@ -17,7 +17,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgAcknowledgeBridge{},
+		&MsgAcknowledgeBridges{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCompleteBridge{},

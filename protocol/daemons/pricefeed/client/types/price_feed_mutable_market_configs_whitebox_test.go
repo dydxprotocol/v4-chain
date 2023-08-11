@@ -9,16 +9,16 @@ import (
 	"testing"
 )
 
-// Define a simple mock class to avoid import loops.
-type MockPriceFetcher struct {
+// Define a simple mock class to avoid import loops caused by importing the mock class.
+type MockUpdater struct {
 	Called            bool
 	ExchangeId        ExchangeId
 	NewExchangeConfig *MutableExchangeMarketConfig
 	NewMarketConfigs  []*MutableMarketConfig
 }
 
-func (m *MockPriceFetcher) GetExchangeId() ExchangeId { return m.ExchangeId }
-func (m *MockPriceFetcher) UpdateMutableExchangeConfig(
+func (m *MockUpdater) GetExchangeId() ExchangeId { return m.ExchangeId }
+func (m *MockUpdater) UpdateMutableExchangeConfig(
 	newConfig *MutableExchangeMarketConfig,
 	newMarketConfigs []*MutableMarketConfig,
 ) error {
@@ -41,24 +41,47 @@ var (
 	// since this is a whitebox test in the types package.
 	coinbaseMutableExchangeConfig = &MutableExchangeMarketConfig{
 		Id: exchangeIdCoinbase,
-		MarketToTicker: map[uint32]string{
-			5: "BTC-USD",
-			6: "ETH-USD",
+		MarketToMarketConfig: map[MarketId]MarketConfig{
+			5: {
+				Ticker: "BTC-USD",
+			},
 		},
 	}
-	updatedBinanceMutableExchangeConfig = &MutableExchangeMarketConfig{
-		Id: exchangeIdBinance,
-		MarketToTicker: map[uint32]string{
-			5: "BTCUSDT",
-			6: "ETHUSDT",
-			7: "SOLUSDT",
+	updatedCoinbaseMutableExchangeConfig = &MutableExchangeMarketConfig{
+		Id: exchangeIdCoinbase,
+		MarketToMarketConfig: map[MarketId]MarketConfig{
+			5: {
+				Ticker: "BTC-USD",
+			},
+			7: {
+				Ticker:         "SOL-USD",
+				AdjustByMarket: newMarketIdWithValue(6),
+			},
 		},
 	}
 	binanceMutableExchangeConfig = &MutableExchangeMarketConfig{
 		Id: exchangeIdBinance,
-		MarketToTicker: map[uint32]string{
-			5: "BTCUSDT",
-			6: "ETHUSDT",
+		MarketToMarketConfig: map[MarketId]MarketConfig{
+			5: {
+				Ticker: "BTCUSDT",
+			},
+			6: {
+				Ticker: "ETHUSDT",
+			},
+		},
+	}
+	updatedBinanceMutableExchangeConfig = &MutableExchangeMarketConfig{
+		Id: exchangeIdBinance,
+		MarketToMarketConfig: map[MarketId]MarketConfig{
+			5: {
+				Ticker: "BTCUSDT",
+			},
+			6: {
+				Ticker: "ETHUSDT",
+			},
+			7: {
+				Ticker: "SOLUSDT",
+			},
 		},
 	}
 
@@ -66,25 +89,32 @@ var (
 		exchangeIdCoinbase: coinbaseMutableExchangeConfig,
 		exchangeIdBinance:  binanceMutableExchangeConfig,
 	}
-	updatedMutableExchangeMarketConfigs = map[string]*MutableExchangeMarketConfig{
+	updatedBinanceExchangeMarketConfigs = map[string]*MutableExchangeMarketConfig{
 		exchangeIdCoinbase: coinbaseMutableExchangeConfig,
 		exchangeIdBinance:  updatedBinanceMutableExchangeConfig,
 	}
+	updatedCoinbaseExchangeMarketConfigs = map[string]*MutableExchangeMarketConfig{
+		exchangeIdCoinbase: updatedCoinbaseMutableExchangeConfig,
+		exchangeIdBinance:  binanceMutableExchangeConfig,
+	}
 
 	market5MutableMarketConfig = &MutableMarketConfig{
-		Id:       5,
-		Pair:     "BTC-USD",
-		Exponent: -5,
+		Id:           5,
+		Pair:         "BTC-USD",
+		Exponent:     -5,
+		MinExchanges: 1,
 	}
 	market6MutableMarketConfig = &MutableMarketConfig{
-		Id:       6,
-		Pair:     "ETH-USD",
-		Exponent: -6,
+		Id:           6,
+		Pair:         "ETH-USD",
+		Exponent:     -6,
+		MinExchanges: 2,
 	}
 	market7MutableMarketConfig = &MutableMarketConfig{
-		Id:       7,
-		Pair:     "SOL-USD",
-		Exponent: -7,
+		Id:           7,
+		Pair:         "SOL-USD",
+		Exponent:     -7,
+		MinExchanges: 1,
 	}
 
 	testMutableMarketConfigs = map[MarketId]*MutableMarketConfig{
@@ -97,22 +127,32 @@ var (
 		7: market7MutableMarketConfig,
 	}
 
-	market5BinanceConfig  = `{"exchangeName":"binance","ticker":"BTCUSDT"}`
-	market5CoinbaseConfig = `{"exchangeName":"coinbase","ticker":"BTC-USD"}`
-	market6BinanceConfig  = `{"exchangeName":"binance","ticker":"ETHUSDT"}`
-	market6CoinbaseConfig = `{"exchangeName":"coinbase","ticker":"ETH-USD"}`
-	market7BinanceConfig  = `{"exchangeName":"binance","ticker":"SOLUSDT"}`
+	market5BinanceConfig                  = `{"exchangeName":"binance","ticker":"BTCUSDT"}`
+	market5CoinbaseConfig                 = `{"exchangeName":"coinbase","ticker":"BTC-USD"}`
+	market6BinanceConfig                  = `{"exchangeName":"binance","ticker":"ETHUSDT"}`
+	market7BinanceConfig                  = `{"exchangeName":"binance","ticker":"SOLUSDT"}`
+	market7CoinbaseConfig_AdjustByMarket6 = `{"exchangeName":"coinbase","ticker":"SOL-USD","adjustByMarket":"ETH-USD"}`
 )
 
+func newMarketIdWithValue(id MarketId) *MarketId {
+	ptr := new(MarketId)
+	*ptr = id
+	return ptr
+}
+
 func TestAddExchangeConfigUpdater(t *testing.T) {
-	pfmc := NewPriceFeedMutableMarketConfigs(nil)
+	pfmmc := NewPriceFeedMutableMarketConfigs([]ExchangeId{exchangeIdCoinbase})
 
-	mockPriceFetcher := MockPriceFetcher{ExchangeId: exchangeIdCoinbase}
-	pfmc.AddExchangeConfigUpdater(&mockPriceFetcher)
+	mockPriceFetcher := MockUpdater{ExchangeId: exchangeIdCoinbase}
+	pfmmc.AddPriceFetcher(&mockPriceFetcher)
 
-	exchangeConfigUpdater, ok := pfmc.mutableExchangeConfigUpdaters[exchangeIdCoinbase]
+	mockPriceEncoder := MockUpdater{ExchangeId: exchangeIdCoinbase}
+	pfmmc.AddPriceEncoder(&mockPriceEncoder)
+
+	exchangeConfigUpdaters, ok := pfmmc.mutableExchangeConfigUpdaters[exchangeIdCoinbase]
 	require.True(t, ok)
-	require.Equal(t, &mockPriceFetcher, exchangeConfigUpdater)
+	require.Equal(t, &mockPriceFetcher, exchangeConfigUpdaters.PriceFetcher)
+	require.Equal(t, &mockPriceEncoder, exchangeConfigUpdaters.PriceEncoder)
 }
 
 func TestUpdateMarkets_Mixed(t *testing.T) {
@@ -134,15 +174,18 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 				},
 			},
 			expectedError: errors.New(
-				"UpdateMarkets market param validation failed: invalid market param 0: pair cannot be empty",
+				"UpdateMarkets market param validation failed: invalid market param 0: Pair cannot be empty: " +
+					"Invalid input",
 			),
 		},
 		"Success: No updates": {
 			marketParams: []prices_types.MarketParam{
 				{
-					Id:       5,
-					Exponent: -5,
-					Pair:     "BTC-USD",
+					Id:                5,
+					Exponent:          -5,
+					Pair:              "BTC-USD",
+					MinExchanges:      1,
+					MinPriceChangePpm: 1,
 					ExchangeConfigJson: fmt.Sprintf(
 						`{"exchanges":[%s,%s]}`,
 						market5CoinbaseConfig,
@@ -150,12 +193,13 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 					),
 				},
 				{
-					Id:       6,
-					Exponent: -6,
-					Pair:     "ETH-USD",
+					Id:                6,
+					Exponent:          -6,
+					Pair:              "ETH-USD",
+					MinExchanges:      2,
+					MinPriceChangePpm: 1,
 					ExchangeConfigJson: fmt.Sprintf(
-						`{"exchanges":[%s,%s]}`,
-						market6CoinbaseConfig,
+						`{"exchanges":[%s]}`,
 						market6BinanceConfig,
 					),
 				},
@@ -166,9 +210,11 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 		"Success: Added market to 1 exchange": {
 			marketParams: []prices_types.MarketParam{
 				{
-					Id:       5,
-					Exponent: -5,
-					Pair:     "BTC-USD",
+					Id:                5,
+					Exponent:          -5,
+					Pair:              "BTC-USD",
+					MinExchanges:      1,
+					MinPriceChangePpm: 1,
 					ExchangeConfigJson: fmt.Sprintf(
 						`{"exchanges":[%s,%s]}`,
 						market5CoinbaseConfig,
@@ -176,12 +222,13 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 					),
 				},
 				{
-					Id:       6,
-					Exponent: -6,
-					Pair:     "ETH-USD",
+					Id:                6,
+					Exponent:          -6,
+					Pair:              "ETH-USD",
+					MinExchanges:      2,
+					MinPriceChangePpm: 1,
 					ExchangeConfigJson: fmt.Sprintf(
-						`{"exchanges":[%s,%s]}`,
-						market6CoinbaseConfig,
+						`{"exchanges":[%s]}`,
 						market6BinanceConfig,
 					),
 				},
@@ -190,10 +237,12 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 					Id:                 7,
 					Exponent:           -7,
 					Pair:               "SOL-USD",
+					MinExchanges:       1,
+					MinPriceChangePpm:  1,
 					ExchangeConfigJson: fmt.Sprintf(`{"exchanges":[%s]}`, market7BinanceConfig),
 				},
 			},
-			updatedExchangeConfigs: updatedMutableExchangeMarketConfigs,
+			updatedExchangeConfigs: updatedBinanceExchangeMarketConfigs,
 			updatedMarketConfigs:   updatedMutableMarketConfigs,
 			expectedUpdates: map[ExchangeId]struct {
 				updatedExchangeConfig *MutableExchangeMarketConfig
@@ -209,24 +258,92 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 				},
 			},
 		},
+		"Success - Added market with un-supported adjustment market to 1 exchange": {
+			marketParams: []prices_types.MarketParam{
+				{
+					Id:                5,
+					Exponent:          -5,
+					Pair:              "BTC-USD",
+					MinExchanges:      1,
+					MinPriceChangePpm: 1,
+					ExchangeConfigJson: fmt.Sprintf(
+						`{"exchanges":[%s,%s]}`,
+						market5CoinbaseConfig,
+						market5BinanceConfig,
+					),
+				},
+				{
+					Id:                6,
+					Exponent:          -6,
+					Pair:              "ETH-USD",
+					MinExchanges:      2,
+					MinPriceChangePpm: 1,
+					ExchangeConfigJson: fmt.Sprintf(
+						`{"exchanges":[%s]}`,
+						market6BinanceConfig,
+					),
+				},
+				// Add market 7 to coinbase with an adjustment market of 6.
+				{
+					Id:                7,
+					Exponent:          -7,
+					Pair:              "SOL-USD",
+					MinExchanges:      1,
+					MinPriceChangePpm: 1,
+					ExchangeConfigJson: fmt.Sprintf(
+						`{"exchanges":[%s]}`,
+						market7CoinbaseConfig_AdjustByMarket6,
+					),
+				},
+			},
+			updatedExchangeConfigs: updatedCoinbaseExchangeMarketConfigs,
+			updatedMarketConfigs:   updatedMutableMarketConfigs,
+			expectedUpdates: map[ExchangeId]struct {
+				updatedExchangeConfig *MutableExchangeMarketConfig
+				updatedMarketConfigs  []*MutableMarketConfig
+			}{
+				exchangeIdCoinbase: {
+					updatedExchangeConfig: updatedCoinbaseMutableExchangeConfig,
+					updatedMarketConfigs: []*MutableMarketConfig{
+						market5MutableMarketConfig,
+						market6MutableMarketConfig,
+						market7MutableMarketConfig,
+					},
+				},
+			},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			// Initialize the price feed mutable market config.
+			// Initialize the price feed mutable market config manually.
 			pfmmc := PricefeedMutableMarketConfigsImpl{
 				mutableExchangeToConfigs:      testMutableExchangeMarketConfigs,
 				mutableMarketToConfigs:        testMutableMarketConfigs,
-				mutableExchangeConfigUpdaters: map[ExchangeId]ExchangeConfigUpdater{},
+				mutableExchangeConfigUpdaters: map[ExchangeId]UpdatersForExchange{},
 			}
 
-			// Create mock fetchers for each exchange and add them to the price feed mutable market config.
-			// These fetchers should receive updates when an exchange config changes.
-			priceFetchers := make(map[ExchangeId]*MockPriceFetcher)
+			// Create mock updaters for each exchange and add them to the price feed mutable market config.
+			// These should receive updates when an exchange config changes.
+			exchangeToUpdaters := make(map[ExchangeId]struct {
+				PriceEncoder *MockUpdater
+				PriceFetcher *MockUpdater
+			})
 			for exchangeId := range testMutableExchangeMarketConfigs {
-				priceFetcher := MockPriceFetcher{ExchangeId: exchangeId}
-				priceFetchers[exchangeId] = &priceFetcher
-				pfmmc.AddExchangeConfigUpdater(&priceFetcher)
+				// Increment the wait group to ensure that registering the updaters does not cause the waitgroup
+				// to become negative.
+				pfmmc.updatersInitialized.Add(2)
+
+				updatersForExchange := struct {
+					PriceEncoder *MockUpdater
+					PriceFetcher *MockUpdater
+				}{
+					PriceEncoder: &MockUpdater{ExchangeId: exchangeId},
+					PriceFetcher: &MockUpdater{ExchangeId: exchangeId},
+				}
+				exchangeToUpdaters[exchangeId] = updatersForExchange
+				pfmmc.AddPriceFetcher(updatersForExchange.PriceFetcher)
+				pfmmc.AddPriceEncoder(updatersForExchange.PriceEncoder)
 			}
 
 			// Take a snapshot of the old mutable state to validate updates occurred.
@@ -243,12 +360,13 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 			err := pfmmc.UpdateMarkets(tc.marketParams)
 
 			if tc.expectedError != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
+				require.ErrorContains(t, err, tc.expectedError.Error())
 
-				// Under normal circumstances, we expect that errors will come from validation and price fetchers
-				// will not be updated.
-				for _, priceFetcher := range priceFetchers {
-					require.False(t, priceFetcher.Called)
+				// Under normal circumstances, we expect that errors will come from validation and price fetchers and
+				// encoders will not be updated.
+				for _, exchangeFeedUpdaters := range exchangeToUpdaters {
+					require.False(t, exchangeFeedUpdaters.PriceEncoder.Called)
+					require.False(t, exchangeFeedUpdaters.PriceFetcher.Called)
 				}
 
 				// PricefeedMutableMarketConfigsImpl should not have updated its internal state.
@@ -257,22 +375,57 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 			} else {
 				require.Nil(t, err)
 
-				// If the exchange config was updated, expect that the appropriate price fetchers were updated.
-				// Otherwise, the price fetcher should be untouched.
-				for exchangeId, priceFetcher := range priceFetchers {
+				// If the exchange config was updated, expect that the appropriate updaters were updated.
+				// Otherwise, each updater should be untouched.
+				for exchangeId, exchangeUpdaters := range exchangeToUpdaters {
+					updaters := []*MockUpdater{exchangeUpdaters.PriceEncoder, exchangeUpdaters.PriceFetcher}
+
+					// Keep track of each mutable exchange config to ensure that the config owned by the pfmmc and the
+					// config used to update each updater is unique. That way, we can ensure that only copies of pfmmc
+					// state are used to update the updaters.
+					uniqueMutableExchangeConfigs := map[*MutableExchangeMarketConfig]struct{}{}
+					uniqueMutableExchangeConfigs[pfmmc.mutableExchangeToConfigs[exchangeId]] = struct{}{}
+
+					// Likewise, keep track of each mutable market config in order to ensure that the configs owned
+					// by the pfmmc and the configs sent to each updater are also unique, and that only copies of pfmmc
+					// mutable market state are used to update the updaters.
+					uniqueMutableMarketConfigs := map[*MutableMarketConfig]struct{}{}
+					for _, marketConfig := range pfmmc.mutableMarketToConfigs {
+						uniqueMutableMarketConfigs[marketConfig] = struct{}{}
+					}
+
 					if parameters, ok := tc.expectedUpdates[exchangeId]; ok {
-						require.True(t, priceFetcher.Called)
+						for _, updater := range updaters {
+							require.True(t, updater.Called)
 
-						// Expect that a copy of the new state was sent to the price fetcher.
-						require.NotSame(t, priceFetcher.NewExchangeConfig, pfmmc.mutableExchangeToConfigs[exchangeId])
-						require.EqualValues(t, priceFetcher.NewExchangeConfig, pfmmc.mutableExchangeToConfigs[exchangeId])
+							// Expect that the parameters of the update match the expected update values.
+							marketConfigsSliceEqual(t, parameters.updatedMarketConfigs, updater.NewMarketConfigs)
+							require.True(t, parameters.updatedExchangeConfig.Equal(updater.NewExchangeConfig))
 
-						// Expect that price fetcher update parameters match the expected update values.
-						require.EqualValues(t, parameters.updatedMarketConfigs, priceFetcher.NewMarketConfigs)
-						require.EqualValues(t, parameters.updatedExchangeConfig, priceFetcher.NewExchangeConfig)
+							uniqueMutableExchangeConfigs[updater.NewExchangeConfig] = struct{}{}
+							for _, marketConfig := range updater.NewMarketConfigs {
+								uniqueMutableMarketConfigs[marketConfig] = struct{}{}
+							}
+						}
+
+						require.Len(
+							t,
+							uniqueMutableExchangeConfigs,
+							len(pfmmc.mutableExchangeToConfigs)+1,
+							"Expected a new copy of the exchange config to be created for each updater",
+						)
+
+						require.Len(
+							t,
+							uniqueMutableMarketConfigs,
+							len(parameters.updatedMarketConfigs)*3,
+							"Expected a new copy of each market config to be created for each updater",
+						)
 					} else {
-						// Expect price fetcher was not updated when the exchange config does not change.
-						require.False(t, priceFetcher.Called)
+						for _, updater := range updaters {
+							// Expect updaters are not updated when the exchange config does not change.
+							require.False(t, updater.Called)
+						}
 					}
 				}
 
@@ -319,5 +472,17 @@ func marketConfigsEqual(
 		actualMarketConfig, ok := actual[marketId]
 		require.True(t, ok)
 		require.Equal(t, *expectedMarketConfig, *actualMarketConfig)
+	}
+}
+
+// marketConfigsSliceEqual compares two slices of market configs for equality.
+func marketConfigsSliceEqual(t *testing.T,
+	expected []*MutableMarketConfig,
+	actual []*MutableMarketConfig,
+) {
+	require.Equal(t, len(expected), len(actual), "market config slice lengths do not match")
+
+	for i, expectedConfig := range expected {
+		require.Equal(t, *expectedConfig, *actual[i])
 	}
 }

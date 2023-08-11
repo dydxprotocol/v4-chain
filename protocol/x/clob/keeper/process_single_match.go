@@ -82,6 +82,22 @@ func (k Keeper) ProcessSingleMatch(
 		return false, takerUpdateResult, makerUpdateResult, nil, err
 	}
 
+	if bigFillQuoteQuantums.Sign() == 0 {
+		// Note: If `subticks`, `baseQuantums`, are small enough, `quantumConversionExponent` is negative,
+		// it's possible to have zero `quoteQuantums` for a non-zero amount of `baseQuantums`.
+		// This could mean that it's possible that a maker sell order on the book
+		// at a very unfavorable price (subticks) could receive `0` `quoteQuantums` amount.
+		k.Logger(ctx).Error(
+			"Match resulted in zero quote quantums",
+			"MakerOrder",
+			fmt.Sprintf("%+v", matchWithOrders.MakerOrder),
+			"TakerOrder",
+			fmt.Sprintf("%+v", matchWithOrders.TakerOrder),
+			"FillAmount",
+			matchWithOrders.FillAmount.ToUint64(),
+		)
+	}
+
 	// Retrieve the associated perpetual id for the `ClobPair`.
 	perpetualId, err := clobPair.GetPerpetualId()
 	if err != nil {
@@ -328,16 +344,6 @@ func (k Keeper) persistMatchedOrders(
 		return false, satypes.UpdateCausedError, satypes.UpdateCausedError, err
 	}
 
-	// Record stats
-	if success {
-		k.statsKeeper.RecordFill(
-			ctx,
-			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
-			matchWithOrders.MakerOrder.GetSubaccountId().Owner,
-			bigFillQuoteQuantums,
-		)
-	}
-
 	takerUpdateResult = successPerUpdate[0]
 	makerUpdateResult = successPerUpdate[1]
 
@@ -367,6 +373,26 @@ func (k Keeper) persistMatchedOrders(
 			err,
 		)
 	}
+
+	// Process fill in x/stats and x/rewards
+	if success {
+		k.rewardsKeeper.AddRewardSharesForFill(
+			ctx,
+			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+			matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+			bigFillQuoteQuantums,
+			bigTakerFeeQuoteQuantums,
+			bigMakerFeeQuoteQuantums,
+		)
+
+		k.statsKeeper.RecordFill(
+			ctx,
+			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+			matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+			bigFillQuoteQuantums,
+		)
+	}
+
 	return success, takerUpdateResult, makerUpdateResult, nil
 }
 

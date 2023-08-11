@@ -1,13 +1,14 @@
 package testutil
 
 import (
+	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
 	"sort"
 )
 
-func GetTickersSortedByMarketId(marketIdToTicker map[uint32]string) []string {
+func GetTickersSortedByMarketId(marketToMarketConfig map[uint32]types.MarketConfig) []string {
 	// Get all `marketId`s in `marketIdToTicker` as a sorted array.
-	marketIds := make([]uint32, 0, len(marketIdToTicker))
-	for marketId := range marketIdToTicker {
+	marketIds := make([]uint32, 0, len(marketToMarketConfig))
+	for marketId := range marketToMarketConfig {
 		marketIds = append(marketIds, marketId)
 	}
 	sort.Slice(marketIds, func(i, j int) bool {
@@ -15,9 +16,9 @@ func GetTickersSortedByMarketId(marketIdToTicker map[uint32]string) []string {
 	})
 
 	// Get a list of tickers sorted by their corresponding `marketId`.
-	tickers := make([]string, 0, len(marketIdToTicker))
+	tickers := make([]string, 0, len(marketToMarketConfig))
 	for _, marketId := range marketIds {
-		tickers = append(tickers, marketIdToTicker[marketId])
+		tickers = append(tickers, marketToMarketConfig[marketId].Ticker)
 	}
 
 	return tickers

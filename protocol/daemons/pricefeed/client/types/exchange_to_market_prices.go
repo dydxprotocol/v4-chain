@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4/lib"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -12,21 +13,40 @@ import (
 // ExchangeToMarketPrices maintains price info for multiple exchanges. Each exchange can support
 // prices from multiple market sources. Methods are goroutine safe in the underlying MarketToPrice
 // objects.
-type ExchangeToMarketPrices struct {
+type ExchangeToMarketPrices interface {
+	UpdatePrice(
+		exchangeId ExchangeId,
+		marketPriceTimestamp *MarketPriceTimestamp,
+	)
+	GetAllPrices() map[ExchangeId][]MarketPriceTimestamp
+	GetIndexPrice(
+		marketId MarketId,
+		cutoffTime time.Time,
+		medianizer lib.Medianizer,
+	) (
+		medianPrice uint64,
+		numPricesMedianized int,
+	)
+}
+
+type ExchangeToMarketPricesImpl struct {
 	// {k: exchangeId, v: market prices, read-write lock}
 	ExchangeMarketPrices map[ExchangeId]*MarketToPrice
 }
 
+// Enforce conformity of ExchangeToMarketPricesImpl to ExchangeToMarketPrices interface at compile time.
+var _ ExchangeToMarketPrices = &ExchangeToMarketPricesImpl{}
+
 // NewExchangeToMarketPrices creates a new ExchangeToMarketPrices. Since `ExchangeToMarketPrices` is
 // not goroutine safe to write to, all key-value store creation is done on initialization.
 // Validation is also done to verify `exchangeIds` is a valid input.
-func NewExchangeToMarketPrices(exchangeIds []ExchangeId) (*ExchangeToMarketPrices, error) {
+func NewExchangeToMarketPrices(exchangeIds []ExchangeId) (ExchangeToMarketPrices, error) {
 	// Verify `ExchangeToMarketPrices` will not be initialized without `exchangeIds`.
 	if len(exchangeIds) == 0 {
 		return nil, errors.New("exchangeIds must not be empty")
 	}
 
-	exchangeToMarketPrices := &ExchangeToMarketPrices{
+	exchangeToMarketPrices := &ExchangeToMarketPricesImpl{
 		ExchangeMarketPrices: make(map[ExchangeId]*MarketToPrice, len(exchangeIds)),
 	}
 
@@ -49,7 +69,7 @@ func NewExchangeToMarketPrices(exchangeIds []ExchangeId) (*ExchangeToMarketPrice
 // Note: if an invalid `exchangeId` is being written to the `UpdatePrice` it is possible the
 // underlying map was corrupted or the priceDaemon logic is invalid. Therefore, `UpdatePrice`
 // will panic.
-func (exchangeToMarketPrices *ExchangeToMarketPrices) UpdatePrice(
+func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) UpdatePrice(
 	exchangeId ExchangeId,
 	marketPriceTimestamp *MarketPriceTimestamp,
 ) {
@@ -65,7 +85,7 @@ func (exchangeToMarketPrices *ExchangeToMarketPrices) UpdatePrice(
 }
 
 // GetAllPrices returns a map of exchangeIds to a list of all `MarketPriceTimestamps` for the exchange.
-func (exchangeToMarketPrices *ExchangeToMarketPrices) GetAllPrices() map[ExchangeId][]MarketPriceTimestamp {
+func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) GetAllPrices() map[ExchangeId][]MarketPriceTimestamp {
 	// Measure latency to get all prices from in-memory map.
 	defer telemetry.ModuleMeasureSince(
 		metrics.PricefeedDaemon,
@@ -85,4 +105,33 @@ func (exchangeToMarketPrices *ExchangeToMarketPrices) GetAllPrices() map[Exchang
 	}
 
 	return exchangeIdToPrices
+}
+
+// GetIndexPrice returns the index price for a given marketId, disallowing prices that are older than cutoffTime.
+// If no valid prices are found, an error is returned.
+func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) GetIndexPrice(
+	marketId MarketId,
+	cutoffTime time.Time,
+	medianizer lib.Medianizer,
+) (
+	medianPrice uint64,
+	numPricesMedianized int,
+) {
+	prices := make([]uint64, 0, len(exchangeToMarketPrices.ExchangeMarketPrices))
+	for _, mtp := range exchangeToMarketPrices.ExchangeMarketPrices {
+		price, ok := mtp.GetValidPriceForMarket(marketId, cutoffTime)
+		if ok {
+			prices = append(prices, price)
+		}
+	}
+
+	if len(prices) == 0 {
+		return 0, 0
+	}
+	median, err := medianizer.MedianUint64(prices)
+
+	if err != nil {
+		return 0, 0
+	}
+	return median, len(prices)
 }

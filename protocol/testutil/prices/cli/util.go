@@ -2,11 +2,12 @@ package cli
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/dydxprotocol/v4/testutil/constants"
 	"github.com/dydxprotocol/v4/testutil/network"
 	"github.com/dydxprotocol/v4/x/prices/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func NetworkWithMarketObjects(t *testing.T, n int) (*network.Network, []types.MarketParam, []types.MarketPrice) {
@@ -14,6 +15,10 @@ func NetworkWithMarketObjects(t *testing.T, n int) (*network.Network, []types.Ma
 	cfg := network.DefaultConfig(nil)
 	state := types.GenesisState{}
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
+
+	// Overwrite market params and prices in default genesis state.
+	state.MarketParams = []types.MarketParam{}
+	state.MarketPrices = []types.MarketPrice{}
 
 	// Market params
 	for i := 0; i < n; i++ {

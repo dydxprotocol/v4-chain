@@ -74,7 +74,6 @@ type MemClob interface {
 	PlaceOrder(
 		ctx sdk.Context,
 		order Order,
-		performAddToOrderbookCollatCheck bool,
 	) (satypes.BaseQuantums, OrderStatus, *OffchainUpdates, error)
 	PlacePerpetualLiquidation(
 		ctx sdk.Context,

@@ -28,26 +28,42 @@ const (
 	CheckTx          = "check_tx"
 	DeliverTx        = "deliver_tx"
 
+	// Common (Daemons).
+	MainTaskLoop = "main_task_loop"
+
 	// ABCI: Prepare / Process
-	ConsensusRound     = "consensus_round"
-	DisallowMsg        = "disallow_msg"
-	Decode             = "decode"
-	FundingTx          = "funding_tx"
-	GetTxsInOrder      = "get_txs_in_order"
-	Handler            = "handler"
-	NumOtherTxs        = "num_other_txs"
-	OperationsTx       = "operations_tx"
-	OriginalNumTxs     = "original_num_txs"
-	OtherTxs           = "other_txs"
-	RemoveDisallowMsgs = "remove_disallow_msgs"
-	PrepareProposalTxs = "prepare_proposal_txs"
-	PricesTx           = "prices_tx"
-	TotalNumBytes      = "total_num_bytes"
-	TotalNumTxs        = "total_num_txs"
-	Validate           = "validate"
+	AcknowledgeBridgesTx = "acknowledge_bridges_tx"
+	ConsensusRound       = "consensus_round"
+	DisallowMsg          = "disallow_msg"
+	Decode               = "decode"
+	FundingTx            = "funding_tx"
+	GetTxsInOrder        = "get_txs_in_order"
+	Handler              = "handler"
+	NumOtherTxs          = "num_other_txs"
+	OperationsTx         = "operations_tx"
+	OriginalNumTxs       = "original_num_txs"
+	OtherTxs             = "other_txs"
+	RemoveDisallowMsgs   = "remove_disallow_msgs"
+	PrepareProposalTxs   = "prepare_proposal_txs"
+	PricesTx             = "prices_tx"
+	TotalNumBytes        = "total_num_bytes"
+	TotalNumTxs          = "total_num_txs"
+	Validate             = "validate"
+
+	// Bridge.
+	AcknowledgeBridges      = "acknowledge_bridges"
+	CompleteBridge          = "complete_bridge"
+	LastCompletedBridgeId   = "last_completed_bridge_id"
+	NextAcknowledgedEventId = "next_acknowledge_event_id"
+	NumBridges              = "num_bridges"
+
+	// Bridge Daemon.
+	BridgeDaemon = "bridge_daemon"
 
 	// CLOB.
 	AddPerpetualFillAmount                       = "add_perpetual_fill_amount"
+	CancelOrder                                  = "cancel_order"
+	CancelOrderSubaccounts                       = "cancel_order_subaccounts"
 	CancelShortTermOrder                         = "cancel_short_term_order"
 	CancelStatefulOrder                          = "cancel_stateful_order"
 	ClobPairId                                   = "clob_pair_id"
@@ -55,6 +71,7 @@ const (
 	CollateralizationCheckSubaccounts            = "collateralization_check_subaccounts"
 	ConvertToUpdates                             = "convert_to_updates"
 	Conditional                                  = "conditional"
+	ConditionalOrderTriggered                    = "conditional_order_triggered"
 	Expired                                      = "expired"
 	GetFillQuoteQuantums                         = "get_fill_quote_quantums"
 	Hydrate                                      = "hydrate"
@@ -67,11 +84,14 @@ const (
 	NumMatchPerpDeleveragingOperations           = "num_match_perp_deleveraging_operations"
 	NumOffsettingSubaccountsForDeleveraging      = "num_offsetting_subaccounts_for_deleveraging"
 	NumProposedOperations                        = "num_proposed_operations"
+	OrderFlag                                    = "order_flag"
 	OrderSide                                    = "order_side"
 	PlaceOrder                                   = "place_order"
+	PlaceOrderSubaccounts                        = "place_order_subaccounts"
 	ProcessMatches                               = "process_matches"
 	ProcessOperations                            = "process_operations"
 	Proposer                                     = "proposer"
+	RateLimit                                    = "rate_limit"
 	ReduceOnly                                   = "reduce_only"
 	RemovalReason                                = "removal_reason"
 	ShortTermOrder                               = "short_term_order"
@@ -132,7 +152,20 @@ const (
 	PremiumType                  = "premium_type"
 
 	// Rewards.
-	GetRewardShare = "get_reward_share"
+	GetRewardShare                   = "get_reward_share"
+	ProcessRewardsForBlock           = "process_rewards_for_block"
+	TotalRewardShareWeight           = "total_reward_share_weight"
+	DistributedRewardTokens          = "distributed_reward_tokens"
+	TreasuryBalanceAfterDistribution = "treasury_balance_after_distribution"
+
+	// Vest.
+	GetVestEntry          = "get_vest_entry"
+	VestAmount            = "vest_amount"
+	BalanceAfterVestEvent = "balance_after_vest_event"
+	VesterAccount         = "vester_account"
+
+	// Block Time.
+	BlockTimeMs = "block_time_ms"
 
 	// Prices.
 	CurrentMarketPrices                          = "current_market_prices"
@@ -177,7 +210,6 @@ const (
 	AllSubaccounts               = "get_all_subaccounts"
 	LiquidatableSubaccountIds    = "liquidatable_subaccount_ids"
 	LiquidationDaemon            = "liquidation_daemon"
-	MainTaskLoop                 = "main_task_loop"
 	SubaccountsWithOpenPositions = "subaccounts_with_open_positions"
 
 	// Liquidation.
@@ -211,6 +243,7 @@ const (
 	MarketUpdaterGetAllMarketParams         = "market_updater_get_all_market_params"
 	MarketUpdaterApplyMarketUpdates         = "market_updater_apply_market_updates"
 	MarketUpdaterUpdateMarkets              = "market_updater_update_markets"
+	PriceEncoderPriceConversion             = "price_encoder_price_conversion"
 	PriceFetcherQueryExchange               = "price_fetcher_query_exchange"
 	PriceFetcherSubtaskLoop                 = "price_fetcher_subtask_loop"
 	PriceFetcherSubtaskLoopAndSetCtxTimeout = "price_fetcher_subtask_loop_and_set_ctx_timeout"

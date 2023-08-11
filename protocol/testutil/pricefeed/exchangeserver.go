@@ -27,13 +27,13 @@ var (
 )
 
 func init() {
-	marketToTicker := constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_TEST_EXCHANGE].MarketToTicker
-	for marketId, symbol := range marketToTicker {
-		testExchangeSymbolToMarketId[symbol] = marketId
+	testExchangeConfig := constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_TEST_EXCHANGE]
+	for marketId, config := range testExchangeConfig.MarketToMarketConfig {
+		testExchangeSymbolToMarketId[config.Ticker] = marketId
 	}
-	marketToTicker = constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BITFINEX].MarketToTicker
-	for marketId, symbol := range marketToTicker {
-		bitfinexExchangeSymbolToMarketId[symbol] = marketId
+	bitfinexExchangeConfig := constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BITFINEX]
+	for marketId, config := range bitfinexExchangeConfig.MarketToMarketConfig {
+		bitfinexExchangeSymbolToMarketId[config.Ticker] = marketId
 	}
 }
 

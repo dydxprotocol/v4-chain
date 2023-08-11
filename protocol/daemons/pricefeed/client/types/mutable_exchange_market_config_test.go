@@ -13,40 +13,59 @@ const (
 	ExchangeId2 = "Exchange2"
 )
 
-func TestCopy(t *testing.T) {
+func newUint32WithValue(val uint32) *uint32 {
+	ptr := new(uint32)
+	*ptr = val
+	return ptr
+}
+
+func TestMutableExchangeMarketConfig_Copy(t *testing.T) {
 	mutableMarketExchangeConfig := &types.MutableExchangeMarketConfig{
 		Id: ExchangeId1,
-		MarketToTicker: map[types.MarketId]string{
-			exchange_common.MARKET_ETH_USD: "ETHUSD",
-			exchange_common.MARKET_BTC_USD: "BTCUSD",
+		MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+			exchange_common.MARKET_ETH_USD: {
+				Ticker: "ETHUSD",
+				Invert: false,
+			},
+			exchange_common.MARKET_BTC_USD: {
+				Ticker:         "BTCUSD",
+				AdjustByMarket: newUint32WithValue(exchange_common.MARKET_ETH_USD),
+				Invert:         true,
+			},
 		},
 	}
 	mmecCopy := mutableMarketExchangeConfig.Copy()
 	require.NotSame(t, mutableMarketExchangeConfig, mmecCopy)
-	require.Equal(t, mutableMarketExchangeConfig, mmecCopy)
+	require.True(t, mutableMarketExchangeConfig.Equal(mmecCopy))
 }
 
 func TestGetMarketIds_Success(t *testing.T) {
 	tests := map[string]struct {
-		marketToTicker  map[types.MarketId]string
+		marketToConfig  map[types.MarketId]types.MarketConfig
 		expectedMarkets []types.MarketId
 	}{
 		"Empty map": {
-			marketToTicker:  map[types.MarketId]string{},
+			marketToConfig:  map[types.MarketId]types.MarketConfig{},
 			expectedMarkets: []types.MarketId{},
 		},
 		"One market": {
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_ETH_USD: "ETHUSD",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_ETH_USD: {
+					Ticker: "ETHUSD",
+				},
 			},
 			expectedMarkets: []types.MarketId{
 				exchange_common.MARKET_ETH_USD,
 			},
 		},
 		"Multiple markets": {
-			marketToTicker: map[types.MarketId]string{
-				exchange_common.MARKET_ETH_USD: "ETHUSD",
-				exchange_common.MARKET_BTC_USD: "BTCUSD",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_ETH_USD: {
+					Ticker: "ETHUSD",
+				},
+				exchange_common.MARKET_BTC_USD: {
+					Ticker: "BTCUSD",
+				},
 			},
 			expectedMarkets: []types.MarketId{
 				exchange_common.MARKET_BTC_USD,
@@ -57,8 +76,8 @@ func TestGetMarketIds_Success(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			memc := types.MutableExchangeMarketConfig{
-				Id:             ExchangeId1,
-				MarketToTicker: tc.marketToTicker,
+				Id:                   ExchangeId1,
+				MarketToMarketConfig: tc.marketToConfig,
 			}
 			actualMarkets := memc.GetMarketIds()
 			require.ElementsMatch(t, tc.expectedMarkets, actualMarkets)
@@ -83,14 +102,18 @@ func TestEqual_Mixed(t *testing.T) {
 		"False: non-matching tickers": {
 			A: &types.MutableExchangeMarketConfig{
 				Id: ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{
-					1: "ETHUSD",
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "ETHUSD",
+					},
 				},
 			},
 			B: &types.MutableExchangeMarketConfig{
 				Id: ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{
-					1: "BTCUSD",
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "BTCUSD", // Non-matching ticker.
+					},
 				},
 			},
 			expectedEqual: false,
@@ -98,29 +121,124 @@ func TestEqual_Mixed(t *testing.T) {
 		"False: non-matching markets": {
 			A: &types.MutableExchangeMarketConfig{
 				Id: ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{
-					2: "ETHUSD",
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "ETHUSD",
+					},
 				},
 			},
 			B: &types.MutableExchangeMarketConfig{
 				Id: ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{
-					1: "BTCUSD",
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					2: { // Non-matching market id.
+						Ticker: "ETHUSD",
+					},
 				},
 			},
 			expectedEqual: false,
 		},
-		"True": {
+		"False: non-matching adjust-by markets": {
 			A: &types.MutableExchangeMarketConfig{
 				Id: ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{
-					1: "ETHUSD",
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "ETHUSD",
+						AdjustByMarket: newUint32WithValue(2),
+					},
 				},
 			},
 			B: &types.MutableExchangeMarketConfig{
 				Id: ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{
-					1: "ETHUSD",
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "ETHUSD",
+						AdjustByMarket: newUint32WithValue(3),
+					},
+				},
+			},
+			expectedEqual: false,
+		},
+		"False: adjust-by market defined on one config": {
+			A: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "ETHUSD",
+					},
+				},
+			},
+			B: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "ETHUSD",
+						AdjustByMarket: newUint32WithValue(3),
+					},
+				},
+			},
+			expectedEqual: false,
+		},
+		"False: non-matching inversions": {
+			A: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "ETHUSD",
+						AdjustByMarket: newUint32WithValue(2),
+						Invert:         true,
+					},
+				},
+			},
+			B: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "ETHUSD",
+						AdjustByMarket: newUint32WithValue(2),
+						Invert:         false,
+					},
+				},
+			},
+			expectedEqual: false,
+		},
+		"True: populated adjust-by markets": {
+			A: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "ETHUSD",
+						AdjustByMarket: newUint32WithValue(2),
+						Invert:         true,
+					},
+				},
+			},
+			B: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "ETHUSD",
+						AdjustByMarket: newUint32WithValue(2),
+						Invert:         true,
+					},
+				},
+			},
+			expectedEqual: true,
+		},
+		"True: nil adjust-by markets": {
+			A: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "ETHUSD",
+					},
+				},
+			},
+			B: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "ETHUSD",
+					},
 				},
 			},
 			expectedEqual: true,
@@ -141,38 +259,74 @@ func TestValidate_Mixed(t *testing.T) {
 	}{
 		"Success: 0 markets": {
 			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
-				Id:             ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{},
+				Id:                   ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{},
 			},
 			marketConfigs: []*types.MutableMarketConfig{},
 		},
 		"Success: 1 market": {
 			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
 				Id: ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{
-					1: "ETHUSD",
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "ETHUSD",
+						Invert: true,
+					},
 				},
 			},
 			marketConfigs: []*types.MutableMarketConfig{
 				{
-					Id:       1,
-					Pair:     "ETHUSD",
-					Exponent: -5,
+					Id:           1,
+					Pair:         "ETHUSD",
+					Exponent:     -5,
+					MinExchanges: 1,
+				},
+			},
+		},
+		"Success: Multiple markets with conversion details": {
+			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "ETHUSD",
+						AdjustByMarket: newUint32WithValue(2),
+					},
+					2: {
+						Ticker: "USDBTC",
+						Invert: true,
+					},
+				},
+			},
+			marketConfigs: []*types.MutableMarketConfig{
+				{
+					Id:           1,
+					Pair:         "ETHUSD",
+					Exponent:     -5,
+					MinExchanges: 1,
+				},
+				{
+					Id:           2,
+					Pair:         "BTCUSD",
+					Exponent:     -6,
+					MinExchanges: 1,
 				},
 			},
 		},
 		"Failure: Missing market config": {
 			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
 				Id: ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{
-					1: "ETHUSD",
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "ETHUSD",
+					},
 				},
 			},
 			marketConfigs: []*types.MutableMarketConfig{
 				{
-					Id:       3,
-					Pair:     "BTCUSD",
-					Exponent: -6,
+					Id:           3,
+					Pair:         "BTCUSD",
+					Exponent:     -6,
+					MinExchanges: 1,
 				},
 			},
 			expectedError: fmt.Errorf("no market config for market 1 on exchange 'Exchange1'"),
@@ -180,17 +334,44 @@ func TestValidate_Mixed(t *testing.T) {
 		"Failure: Invalid market config": {
 			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
 				Id: ExchangeId1,
-				MarketToTicker: map[types.MarketId]string{
-					1: "ETHUSD",
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "ETHUSD",
+					},
 				},
 			},
 			marketConfigs: []*types.MutableMarketConfig{
 				{
-					Id:       1,
-					Exponent: -5,
+					// Missing pair
+					Id:           1,
+					Exponent:     -5,
+					MinExchanges: 1,
 				},
 			},
 			expectedError: fmt.Errorf("invalid market config for market 1 on exchange 'Exchange1': pair cannot be empty"),
+		},
+		"Failure: no market config exists for adjust-by market": {
+			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
+				Id: ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "ETHUSD",
+						AdjustByMarket: newUint32WithValue(2),
+						Invert:         false,
+					},
+				},
+			},
+			marketConfigs: []*types.MutableMarketConfig{
+				{
+					Id:           1,
+					Pair:         "ETHUSD",
+					Exponent:     -5,
+					MinExchanges: 1,
+				},
+			},
+			expectedError: fmt.Errorf(
+				"no market config for adjust-by market 2 used to convert market 1 price on exchange 'Exchange1'",
+			),
 		},
 	}
 	for name, tc := range tests {

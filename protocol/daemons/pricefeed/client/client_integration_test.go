@@ -69,7 +69,8 @@ var (
 			Exponent: -5,
 			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tBTCUSD"},` +
 				`{"exchangeName":"TestExchange","ticker":"BTC-USD"}]}`,
-			MinExchanges: 2,
+			MinExchanges:      2,
+			MinPriceChangePpm: 1,
 		},
 	}
 
@@ -82,7 +83,8 @@ var (
 			Exponent: -5,
 			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tBTCUSD"},` +
 				`{"exchangeName":"TestExchange","ticker":"BTC-USD"}]}`,
-			MinExchanges: 2,
+			MinExchanges:      2,
+			MinPriceChangePpm: 1,
 		},
 		{
 			Id:       1,
@@ -90,7 +92,8 @@ var (
 			Exponent: -6,
 			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tETHUSD"},` +
 				`{"exchangeName":"TestExchange","ticker":"ETH-USD"}]}`,
-			MinExchanges: 2,
+			MinExchanges:      2,
+			MinPriceChangePpm: 1,
 		},
 		{
 			Id:                 2,
@@ -98,6 +101,49 @@ var (
 			Exponent:           -8,
 			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"TestExchange","ticker":"LINK-USD"}]}`,
 			MinExchanges:       1,
+			MinPriceChangePpm:  1,
+		},
+	}
+
+	// marketParams_AddMarketsWithAdjustments: adds ETH on Bitfinex and TestExchange, LINK on test exchange, and
+	// USDT on the test exchange. ETH and LINK prices are all adjusted by USDT, and should be 90% of the un-adjusted
+	// price from the non-converting test case.
+	marketParams_AddMarketsWithAdjustments = []pricetypes.MarketParam{
+		{
+			Id:       0,
+			Pair:     "BTC-USD",
+			Exponent: -5,
+			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tBTCUSD"},` +
+				`{"exchangeName":"TestExchange","ticker":"BTC-USD"}]}`,
+			MinExchanges:      2,
+			MinPriceChangePpm: 1,
+		},
+		{
+			Id:       1,
+			Pair:     "ETH-USD",
+			Exponent: -6,
+			ExchangeConfigJson: `{"exchanges":[` +
+				`{"exchangeName":"Bitfinex","ticker":"tETHUSD","adjustByMarket":"USDT-USD"},` +
+				`{"exchangeName":"TestExchange","ticker":"ETH-USD","adjustByMarket":"USDT-USD"}]}`,
+			MinExchanges:      2,
+			MinPriceChangePpm: 1,
+		},
+		{
+			Id:       2,
+			Pair:     "LINK-USD",
+			Exponent: -8,
+			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"TestExchange","ticker":"LINK-USD",` +
+				`"adjustByMarket":"USDT-USD"}]}`,
+			MinExchanges:      1,
+			MinPriceChangePpm: 1,
+		},
+		{
+			Id:                 33,
+			Pair:               "USDT-USD",
+			Exponent:           -9,
+			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"TestExchange","ticker":"USDT-USD"}]}`,
+			MinExchanges:       1,
+			MinPriceChangePpm:  1,
 		},
 	}
 
@@ -109,7 +155,8 @@ var (
 			// Invalid exchange name.
 			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Nonexistent","ticker":"tBTCUSD"},` +
 				`{"exchangeName":"TestExchange","ticker":"BTC-USD"}]}`,
-			MinExchanges: 2,
+			MinExchanges:      2,
+			MinPriceChangePpm: 1,
 		},
 		{
 			Id:       1,
@@ -117,7 +164,8 @@ var (
 			Exponent: -6,
 			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tETHUSD"},` +
 				`{"exchangeName":"TestExchange","ticker":"ETH-USD"}]}`,
-			MinExchanges: 2,
+			MinExchanges:      2,
+			MinPriceChangePpm: 1,
 		},
 	}
 
@@ -127,6 +175,10 @@ var (
 	expectedMedianEthPrice = uint64(2_000_050_000_000)
 	testExchangeLinkPrice  = uint64(300_000_000_000_000) // Link not available on Bitfinex.
 
+	// USDT is set to $.90, so expect 90% of the expected median price after applying USDT conversion.
+	expectedAdjustedMedianEthPrice = uint64(1_800_045_000_000)
+	expectedAdjustedLinkPrice      = uint64(270_000_000_000_000)
+
 	expectedPrices1Market = map[types.MarketId]uint64{
 		exchange_common.MARKET_BTC_USD: expectedMedianBtcPrice,
 	}
@@ -135,6 +187,12 @@ var (
 		exchange_common.MARKET_BTC_USD:  expectedMedianBtcPrice,
 		exchange_common.MARKET_ETH_USD:  expectedMedianEthPrice,
 		exchange_common.MARKET_LINK_USD: testExchangeLinkPrice,
+	}
+
+	expectedPrices3MarketsWithConversions = map[types.MarketId]uint64{
+		exchange_common.MARKET_BTC_USD:  expectedMedianBtcPrice,
+		exchange_common.MARKET_ETH_USD:  expectedAdjustedMedianEthPrice,
+		exchange_common.MARKET_LINK_USD: expectedAdjustedLinkPrice,
 	}
 
 	// 5s is chosen to give us a comfortable margin of error for prices to make it through the
@@ -194,6 +252,9 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 	s.exchangeServer.SetPrice(exchange_common.MARKET_ETH_USD, 2_000_000)
 	s.exchangeServer.SetPrice(exchange_common.MARKET_LINK_USD, 3_000_000)
 
+	// Set USDT to 90 cents.
+	s.exchangeServer.SetPrice(exchange_common.MARKET_USDT_USD, 900_000_000)
+
 	// Save daemon flags to use for client startup.
 	s.daemonFlags = flags.GetDefaultDaemonFlags()
 
@@ -247,7 +308,7 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 	s.pricefeedDaemon = client.StartNewClient(
 		grpc_util.Ctx,
 		s.daemonFlags,
-		log.NewNopLogger(),
+		log.TestingLogger(),
 		&lib.GrpcClientImpl{},
 		testExchangeStartupConfigs,
 		testExchangeToQueryDetails,
@@ -314,7 +375,7 @@ func (s *PriceDaemonIntegrationTestSuite) TestPriceDaemon() {
 
 // TestUpdateMarkets_AddMarket tests that the pricefeed daemon produces prices for a new market after it is added.
 func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_AddMarket() {
-	// Start the daemon with a single market. Then, update the endpoint to return market params that have a new markets.
+	// Start the daemon with a single market. Then, update the endpoint to return market params that have new markets.
 	s.mockAllMarketParamsResponseNTimes(
 		&pricetypes.QueryAllMarketParamsResponse{
 			MarketParams: defaultMarketParams,
@@ -340,6 +401,38 @@ func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_AddMarket() {
 	// Eventually, the daemon should update its market params and produce prices for the new markets.
 	s.expectPricesWithTimeout(
 		expectedPrices3Markets,
+		marketParams_AddMarkets,
+		30*time.Second,
+	)
+}
+
+func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_AddMarketWithUSDTConversion() {
+	// Start the daemon with a single market. Then, update the endpoint to return market params that have new markets.
+	s.mockAllMarketParamsResponseNTimes(
+		&pricetypes.QueryAllMarketParamsResponse{
+			MarketParams: defaultMarketParams,
+		},
+		1,
+	)
+	s.mockAllMarketParamsResponseNTimes(
+		&pricetypes.QueryAllMarketParamsResponse{
+			MarketParams: marketParams_AddMarketsWithAdjustments,
+		},
+		100,
+	)
+
+	s.startClient()
+
+	// Expect prices for one market configuration first.
+	s.expectPricesWithTimeout(
+		expectedPrices1Market,
+		defaultMarketParams,
+		testPriceCacheExpirationDuration,
+	)
+
+	// Eventually, the daemon should update its market params and produce prices for the new markets.
+	s.expectPricesWithTimeout(
+		expectedPrices3MarketsWithConversions,
 		marketParams_AddMarkets,
 		30*time.Second,
 	)

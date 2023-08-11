@@ -121,6 +121,17 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (perpetualsmoduletypes.Perpetual, pricestypes.MarketPrice, error)
+	GetSettlement(
+		ctx sdk.Context,
+		perpetualId uint32,
+		quantums *big.Int,
+		index *big.Int,
+	) (
+		bigNetSettlement *big.Int,
+		newFundingIndex *big.Int,
+		err error,
+	)
+	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)
 }
 
 type StatsKeeper interface {
@@ -136,4 +147,15 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+}
+
+type RewardsKeeper interface {
+	AddRewardSharesForFill(
+		ctx sdk.Context,
+		takerAddress string,
+		makerAddress string,
+		bigFillQuoteQuantums *big.Int,
+		bigTakerFeeQuoteQuantums *big.Int,
+		bigMakerFeeQuoteQuantums *big.Int,
+	)
 }

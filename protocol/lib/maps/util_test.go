@@ -157,3 +157,75 @@ func TestInvertMustHaveDistinctValues(t *testing.T) {
 		})
 	}
 }
+
+func TestAreMapsEqual_Mixed(t *testing.T) {
+	tests := map[string]struct {
+		inputMap1     map[string]string
+		inputMap2     map[string]string
+		expectedEqual bool
+	}{
+		"True: Nil maps": {
+			inputMap1:     nil,
+			inputMap2:     nil,
+			expectedEqual: true,
+		},
+		"True: Empty maps": {
+			inputMap1:     map[string]string{},
+			inputMap2:     map[string]string{},
+			expectedEqual: true,
+		},
+		"True: Nil map and empty map": {
+			inputMap1:     nil,
+			inputMap2:     map[string]string{},
+			expectedEqual: true,
+		},
+		"True: Non-empty maps, same keys and values": {
+			inputMap1: map[string]string{
+				"a": "1",
+				"b": "2",
+			},
+			inputMap2: map[string]string{
+				"a": "1",
+				"b": "2",
+			},
+			expectedEqual: true,
+		},
+		"False: Non-empty maps, same keys, different values": {
+			inputMap1: map[string]string{
+				"a": "1",
+				"b": "5",
+			},
+			inputMap2: map[string]string{
+				"a": "2",
+				"b": "5",
+			},
+			expectedEqual: false,
+		},
+		"False: Non-empty maps, second map missing a key": {
+			inputMap1: map[string]string{
+				"a": "1",
+				"b": "5",
+			},
+			inputMap2: map[string]string{
+				"b": "5",
+			},
+			expectedEqual: false,
+		},
+		"False: Non-empty maps, second map has extra key": {
+			inputMap1: map[string]string{
+				"b": "5",
+			},
+			inputMap2: map[string]string{
+				"a": "1",
+				"b": "5",
+			},
+			expectedEqual: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualEqual := maps.AreMapsEqual(tc.inputMap1, tc.inputMap2)
+			require.Equal(t, tc.expectedEqual, actualEqual)
+		})
+	}
+}

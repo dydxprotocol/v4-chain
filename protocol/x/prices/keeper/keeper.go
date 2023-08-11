@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdklog "cosmossdk.io/log"
 	"fmt"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -53,5 +54,5 @@ func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }

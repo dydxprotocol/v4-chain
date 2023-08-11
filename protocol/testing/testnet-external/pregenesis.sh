@@ -15,7 +15,7 @@ set -eo pipefail
 # Node ID: `dydxprotocold tendermint show-node-id`
 
 source "./testing/genesis.sh"
-CHAIN_ID="dydx-testnet-1"
+CHAIN_ID="dydx-testnet-2"
 FAUCET_ACCOUNTS=(
 	"dydx1g2ygh8ufgwwpg5clp2qh3tmcmlewuyt2z6px8k" # main faucet
 	"dydx1fzhzmcvcy7nycvu46j9j4f7f8cnqxn3770q260" # backup #1
@@ -23,6 +23,7 @@ FAUCET_ACCOUNTS=(
 )
 TMP_GENTX_DIR="/tmp/gentx"
 TMP_CHAIN_DIR="/tmp/chain"
+TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/exchange_config"
 AWS_REGION="us-east-2"
 
 # Define monikers for each validator. These are made up strings and can be anything.
@@ -80,12 +81,53 @@ VALIDATOR_ACCOUNTS=(
 )
 
 cleanup_tmp_dir() {
+	if [ -d "$TMP_EXCHANGE_CONFIG_JSON_DIR" ]; then
+		rm -r "$TMP_EXCHANGE_CONFIG_JSON_DIR"
+	fi
 	if [ -d "$TMP_GENTX_DIR" ]; then
 		rm -r "$TMP_GENTX_DIR"
 	fi
 	if [ -d "$TMP_CHAIN_DIR" ]; then
 		rm -r "$TMP_CHAIN_DIR"
 	fi
+}
+
+# Set public-testnet specific genesis params.
+function overwrite_genesis_public_testnet() {
+	# Overwrite with public-testnet specific params.
+	# See https://www.notion.so/dydx/AC-Priv-Genesis-Parameters-d2321636dd494ee49cc95b7825cbbc98?pvs=4.
+	
+	# Slashing params
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.signed_blocks_window' -v '12000' # ~5 hr
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.min_signed_per_window' -v '0.2' # 20%
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.downtime_jail_duration' -v '60s'
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.slash_fraction_double_sign' -v '0.0' # 0%
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.slash_fraction_downtime' -v '0.0' # 0%
+
+	# Staking params
+	dasel put -t string -f "$GENESIS" '.app_state.staking.params.bond_denom' -v "$NATIVE_TOKEN"
+	dasel put -t int -f "$GENESIS" '.app_state.staking.params.max_validators' -v '100'
+	dasel put -t string -f "$GENESIS" '.app_state.staking.params.min_commission_rate' -v '0.05' # 5%
+	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '259200s' # 3 days
+	dasel put -t int -f "$GENESIS" '.app_state.staking.params.max_entries' -v '7'
+	dasel put -t int -f "$GENESIS" '.app_state.staking.params.historical_entries' -v '10000'
+
+	# Distribution params
+	dasel put -t string -f "$GENESIS" '.app_state.distribution.params.community_tax' -v '0.0' # 0%
+	dasel put -t bool -f "$GENESIS" '.app_state.distribution.params.withdraw_addr_enabled' -v 'true'
+
+	# Governance params
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].amount' -v '1000000'
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '86400s' # 1 day
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '86400s' # 1 day
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v '0.33400' # 33.4%
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.threshold' -v '0.50000' # 50%
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.veto_threshold' -v '0.33400' # 33.4%
+
+	# Consensus params
+	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '22020096'
+	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
 }
 
 create_pregenesis_file() {
@@ -99,12 +141,18 @@ create_pregenesis_file() {
 
 	# This initializes the $VAL_HOME_DIR folder.
 	dydxprotocold init "test-moniker" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+
+	# Create temporary directory for exchange config jsons.
+	echo "Copying exchange config jsons to $TMP_EXCHANGE_CONFIG_JSON_DIR"
+	cp -R ./daemons/pricefeed/client/constants/testdata $TMP_EXCHANGE_CONFIG_JSON_DIR
+
 	# Do not pass in test accounts and faucet accounts to `edit_genesis`. This skips
 	# initializing USDC balance in the subacounts.
 	# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 	# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
 	# Note: `edit_genesis` must be called before `add-genesis-account`.
-	edit_genesis "$VAL_CONFIG_DIR"
+	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR"
+	overwrite_genesis_public_testnet
 	for acct in "${FAUCET_ACCOUNTS[@]}"; do
 		dydxprotocold add-genesis-account "$acct" "${FAUCET_INITIAL_STAKE_BALANCE}$NATIVE_TOKEN" --home "$VAL_HOME_DIR"
 	done

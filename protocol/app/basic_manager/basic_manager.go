@@ -32,6 +32,7 @@ import (
 	sendingmodule "github.com/dydxprotocol/v4/x/sending"
 	statsmodule "github.com/dydxprotocol/v4/x/stats"
 	subaccountsmodule "github.com/dydxprotocol/v4/x/subaccounts"
+	vestmodule "github.com/dydxprotocol/v4/x/vest"
 
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
@@ -80,6 +81,7 @@ var (
 		statsmodule.AppModuleBasic{},
 		subaccountsmodule.AppModuleBasic{},
 		clobmodule.AppModuleBasic{},
+		vestmodule.AppModuleBasic{},
 		rewardsmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},

@@ -50,5 +50,5 @@ func TestStaticMarketPairs(t *testing.T) {
 }
 
 func TestStaticMarketPairsLength(t *testing.T) {
-	require.Len(t, metrics.StaticMarketPairs, 33)
+	require.Len(t, metrics.StaticMarketPairs, 34)
 }

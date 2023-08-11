@@ -5,6 +5,7 @@ import (
 
 	"github.com/dydxprotocol/v4/indexer/events"
 	"github.com/dydxprotocol/v4/indexer/protocol/v1"
+	"github.com/dydxprotocol/v4/indexer/shared"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	"github.com/stretchr/testify/require"
 )
@@ -14,40 +15,54 @@ var (
 	indexerOrder   = v1.OrderToIndexerOrder(order)
 	orderId        = constants.OrderId_Alice_Num0_ClientId0_Clob0
 	indexerOrderId = v1.OrderIdToIndexerOrderId(orderId)
+	reason         = shared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED
 )
 
-func TestStatefulOrderPlacementEvent_Success(t *testing.T) {
-	statefulOrderPlacementEvent := events.NewStatefulOrderPlacementEvent(order)
+func TestLongTermOrderPlacementEvent_Success(t *testing.T) {
+	longTermOrderPlacementEvent := events.NewLongTermOrderPlacementEvent(order)
 	expectedStatefulOrderEventProto := &events.StatefulOrderEventV1{
-		Event: &events.StatefulOrderEventV1_OrderPlace{
-			OrderPlace: &events.StatefulOrderEventV1_StatefulOrderPlacementV1{
+		Event: &events.StatefulOrderEventV1_LongTermOrderPlacement{
+			LongTermOrderPlacement: &events.StatefulOrderEventV1_LongTermOrderPlacementV1{
 				Order: &indexerOrder,
 			},
 		},
 	}
-	require.Equal(t, expectedStatefulOrderEventProto, statefulOrderPlacementEvent)
+	require.Equal(t, expectedStatefulOrderEventProto, longTermOrderPlacementEvent)
 }
 
-func TestStatefulOrderCancelationEvent_Success(t *testing.T) {
-	statefulOrderCancelationEvent := events.NewStatefulOrderCancelationEvent(orderId)
+func TestStatefulOrderRemovalEvent_Success(t *testing.T) {
+	statefulOrderRemovalEvent := events.NewStatefulOrderRemovalEvent(orderId, reason)
 	expectedStatefulOrderEventProto := &events.StatefulOrderEventV1{
-		Event: &events.StatefulOrderEventV1_OrderCancel{
-			OrderCancel: &events.StatefulOrderEventV1_StatefulOrderCancelationV1{
-				CanceledOrderId: &indexerOrderId,
+		Event: &events.StatefulOrderEventV1_OrderRemoval{
+			OrderRemoval: &events.StatefulOrderEventV1_StatefulOrderRemovalV1{
+				RemovedOrderId: &indexerOrderId,
+				Reason:         reason,
 			},
 		},
 	}
-	require.Equal(t, expectedStatefulOrderEventProto, statefulOrderCancelationEvent)
+	require.Equal(t, expectedStatefulOrderEventProto, statefulOrderRemovalEvent)
 }
 
-func TestStatefulOrderExpirationEvent_Success(t *testing.T) {
-	statefulOrderExpirationEvent := events.NewStatefulOrderExpirationEvent(orderId)
+func TestConditionalOrderPlacementEvent_Success(t *testing.T) {
+	conditionalOrderPlacementEvent := events.NewConditionalOrderPlacementEvent(order)
 	expectedStatefulOrderEventProto := &events.StatefulOrderEventV1{
-		Event: &events.StatefulOrderEventV1_OrderExpiration{
-			OrderExpiration: &events.StatefulOrderEventV1_StatefulOrderExpirationV1{
-				ExpiredOrderId: &indexerOrderId,
+		Event: &events.StatefulOrderEventV1_ConditionalOrderPlacement{
+			ConditionalOrderPlacement: &events.StatefulOrderEventV1_ConditionalOrderPlacementV1{
+				Order: &indexerOrder,
 			},
 		},
 	}
-	require.Equal(t, expectedStatefulOrderEventProto, statefulOrderExpirationEvent)
+	require.Equal(t, expectedStatefulOrderEventProto, conditionalOrderPlacementEvent)
+}
+
+func TestConditionalOrderTriggeredEvent_Success(t *testing.T) {
+	conditionalOrderTriggeredEvent := events.NewConditionalOrderTriggeredEvent(orderId)
+	expectedStatefulOrderEventProto := &events.StatefulOrderEventV1{
+		Event: &events.StatefulOrderEventV1_ConditionalOrderTriggered{
+			ConditionalOrderTriggered: &events.StatefulOrderEventV1_ConditionalOrderTriggeredV1{
+				TriggeredOrderId: &indexerOrderId,
+			},
+		},
+	}
+	require.Equal(t, expectedStatefulOrderEventProto, conditionalOrderTriggeredEvent)
 }

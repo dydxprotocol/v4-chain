@@ -1,8 +1,10 @@
 package rate_limit
 
 import (
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4/lib/metrics"
 	"github.com/dydxprotocol/v4/x/clob/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
@@ -21,6 +23,8 @@ type placeOrderRateLimiter struct {
 	checkStateShortTermOrderRateLimiter  RateLimiter[subaccountIdAndClobPairId]
 	checkStateStatefulOrderRateLimiter   RateLimiter[satypes.SubaccountId]
 	deliverStateStatefulOrderRateLimiter RateLimiter[satypes.SubaccountId]
+	// The set of rate limited subaccounts is only stored for telemetry purposes.
+	rateLimitedSubaccounts map[satypes.SubaccountId]bool
 }
 
 var _ RateLimiter[*types.MsgPlaceOrder] = (*placeOrderRateLimiter)(nil)
@@ -48,7 +52,9 @@ func NewPlaceOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimi
 		return noOpRateLimiter[*types.MsgPlaceOrder]{}
 	}
 
-	r := placeOrderRateLimiter{}
+	r := placeOrderRateLimiter{
+		rateLimitedSubaccounts: make(map[satypes.SubaccountId]bool, 0),
+	}
 	if len(config.MaxShortTermOrdersPerMarketPerNBlocks) == 0 {
 		r.checkStateShortTermOrderRateLimiter = NewNoOpRateLimiter[subaccountIdAndClobPairId]()
 	} else if len(config.MaxShortTermOrdersPerMarketPerNBlocks) == 1 &&
@@ -90,7 +96,7 @@ func NewPlaceOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimi
 	return &r
 }
 
-func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOrder) error {
+func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOrder) (err error) {
 	if lib.IsDeliverTxMode(ctx) {
 		// Short-Term orders don't go through AnteHandler in DeliverTx since they're placed
 		// as part of MsgProposedOperations and don't need to be rate limited since the user
@@ -99,7 +105,7 @@ func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOr
 			return nil
 		} else {
 			msg.Order.MustBeStatefulOrder()
-			return r.deliverStateStatefulOrderRateLimiter.RateLimit(
+			err = r.deliverStateStatefulOrderRateLimiter.RateLimit(
 				// We specifically pass in `height-1` since we want the deliverTx rate limiting to happen
 				// as if the order was placed in the last block so that PruneRateLimits during EndBlocker
 				// doesn't immediately clear it out.
@@ -109,7 +115,7 @@ func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOr
 		}
 	} else {
 		if msg.Order.IsShortTermOrder() {
-			return r.checkStateShortTermOrderRateLimiter.RateLimit(
+			err = r.checkStateShortTermOrderRateLimiter.RateLimit(
 				ctx,
 				subaccountIdAndClobPairId{
 					subaccountId: msg.Order.GetSubaccountId(),
@@ -118,12 +124,34 @@ func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOr
 			)
 		} else {
 			msg.Order.MustBeStatefulOrder()
-			return r.checkStateStatefulOrderRateLimiter.RateLimit(ctx, msg.Order.GetSubaccountId())
+			err = r.checkStateStatefulOrderRateLimiter.RateLimit(ctx, msg.Order.GetSubaccountId())
 		}
 	}
+	if err != nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.RateLimit, metrics.PlaceOrder, metrics.Count},
+			1,
+			msg.Order.GetOrderLabels(),
+		)
+		r.rateLimitedSubaccounts[msg.Order.GetSubaccountId()] = true
+	}
+	return err
 }
 
 func (r *placeOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
+	telemetry.IncrCounter(
+		float32(len(r.rateLimitedSubaccounts)),
+		types.ModuleName,
+		metrics.RateLimit,
+		metrics.PlaceOrderSubaccounts,
+		metrics.Count,
+	)
+	// Note that this method for clearing the map is optimized by the go compiler significantly
+	// and will leave the relative size of the map the same so that it doesn't need to be resized
+	// often.
+	for key := range r.rateLimitedSubaccounts {
+		delete(r.rateLimitedSubaccounts, key)
+	}
 	r.checkStateShortTermOrderRateLimiter.PruneRateLimits(ctx)
 	r.checkStateStatefulOrderRateLimiter.PruneRateLimits(ctx)
 	r.deliverStateStatefulOrderRateLimiter.PruneRateLimits(ctx)
@@ -134,6 +162,8 @@ func (r *placeOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
 // The rate limiting keeps track of short term order cancellations during CheckTx.
 type cancelOrderRateLimiter struct {
 	checkStateShortTermRateLimiter RateLimiter[subaccountIdAndClobPairId]
+	// The set of rate limited subaccounts is only stored for telemetry purposes.
+	rateLimitedSubaccounts map[satypes.SubaccountId]bool
 }
 
 var _ RateLimiter[*types.MsgCancelOrder] = (*cancelOrderRateLimiter)(nil)
@@ -161,6 +191,7 @@ func NewCancelOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLim
 	} else if len(config.MaxShortTermOrderCancellationsPerMarketPerNBlocks) == 1 &&
 		config.MaxShortTermOrderCancellationsPerMarketPerNBlocks[0].NumBlocks == 1 {
 		return &cancelOrderRateLimiter{
+			rateLimitedSubaccounts: make(map[satypes.SubaccountId]bool, 0),
 			checkStateShortTermRateLimiter: NewSingleBlockRateLimiter[subaccountIdAndClobPairId](
 				"MaxShortTermOrdersPerMarketPerNBlocks",
 				config.MaxShortTermOrderCancellationsPerMarketPerNBlocks[0],
@@ -168,6 +199,7 @@ func NewCancelOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLim
 		}
 	} else {
 		return &cancelOrderRateLimiter{
+			rateLimitedSubaccounts: make(map[satypes.SubaccountId]bool, 0),
 			checkStateShortTermRateLimiter: NewMultiBlockRateLimiter[subaccountIdAndClobPairId](
 				"MaxShortTermOrdersPerMarketPerNBlocks",
 				config.MaxShortTermOrderCancellationsPerMarketPerNBlocks,
@@ -176,7 +208,7 @@ func NewCancelOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLim
 	}
 }
 
-func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancelOrder) error {
+func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancelOrder) (err error) {
 	// Short-Term order cancellations don't go through AnteHandler in DeliverTx since they are removed
 	// from the orderbook immediately which prevents them from being matched and we don't perform
 	// any rate limiting on stateful order cancellation since the order must exist in state for it be
@@ -186,7 +218,7 @@ func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancel
 	}
 
 	if msg.OrderId.IsShortTermOrder() {
-		return r.checkStateShortTermRateLimiter.RateLimit(
+		err = r.checkStateShortTermRateLimiter.RateLimit(
 			ctx,
 			subaccountIdAndClobPairId{
 				subaccountId: msg.OrderId.GetSubaccountId(),
@@ -194,9 +226,30 @@ func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancel
 			},
 		)
 	}
-	return nil
+	if err != nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.RateLimit, metrics.CancelOrder, metrics.Count},
+			1,
+			msg.OrderId.GetOrderIdLabels(),
+		)
+		r.rateLimitedSubaccounts[msg.OrderId.GetSubaccountId()] = true
+	}
+	return err
 }
 
 func (r *cancelOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
+	telemetry.IncrCounter(
+		float32(len(r.rateLimitedSubaccounts)),
+		types.ModuleName,
+		metrics.RateLimit,
+		metrics.CancelOrderSubaccounts,
+		metrics.Count,
+	)
+	// Note that this method for clearing the map is optimized by the go compiler significantly
+	// and will leave the relative size of the map the same so that it doesn't need to be resized
+	// often.
+	for key := range r.rateLimitedSubaccounts {
+		delete(r.rateLimitedSubaccounts, key)
+	}
 	r.checkStateShortTermRateLimiter.PruneRateLimits(ctx)
 }

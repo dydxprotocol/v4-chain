@@ -56,6 +56,7 @@ var ExpectedEvent3 = indexer_manager.IndexerTendermintEvent{
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	},
+	EventIndex: 0,
 }
 
 var ExpectedEvent4 = indexer_manager.IndexerTendermintEvent{
@@ -66,6 +67,29 @@ var ExpectedEvent4 = indexer_manager.IndexerTendermintEvent{
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	},
+	EventIndex: 1,
+}
+
+var ExpectedEvent5 = indexer_manager.IndexerTendermintEvent{
+	Subtype: indexerevents.SubtypeFundingValues,
+	Data: indexer_manager.GetB64EncodedEventMessage(
+		&FundingPremiumSampleEvent,
+	),
+	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
+		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
+	},
+	EventIndex: 0,
+}
+
+var ExpectedEvent6 = indexer_manager.IndexerTendermintEvent{
+	Subtype: indexerevents.SubtypeFundingValues,
+	Data: indexer_manager.GetB64EncodedEventMessage(
+		&FundingRateAndIndexEvent,
+	),
+	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
+		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
+	},
+	EventIndex: 1,
 }
 
 func assertIsEnabled(t *testing.T, isEnabled bool) {
@@ -253,14 +277,32 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	)
+	indexerEventManager.AddBlockEvent(
+		ctx,
+		indexerevents.SubtypeFundingValues,
+		indexer_manager.GetB64EncodedEventMessage(
+			&FundingPremiumSampleEvent,
+		),
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
+	)
+	indexerEventManager.AddBlockEvent(
+		ctx,
+		indexerevents.SubtypeFundingValues,
+		indexer_manager.GetB64EncodedEventMessage(
+			&FundingRateAndIndexEvent,
+		),
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
+	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
-	require.Len(t, block.Events, 5)
+	require.Len(t, block.Events, 7)
 	require.Equal(t, ExpectedEvent0, *block.Events[0])
 	require.Equal(t, ExpectedEvent1, *block.Events[1])
 	require.Equal(t, ExpectedEvent2, *block.Events[2])
 	require.Equal(t, ExpectedEvent3, *block.Events[3])
 	require.Equal(t, ExpectedEvent4, *block.Events[4])
+	require.Equal(t, ExpectedEvent5, *block.Events[5])
+	require.Equal(t, ExpectedEvent6, *block.Events[6])
 	require.Equal(t, []string{
 		string(constants.TestTxHashString),
 		string(constants.TestTxHashString1),

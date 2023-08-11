@@ -116,3 +116,27 @@ func (s SortedStatefulOrderPlacement) Less(i, j int) bool {
 		),
 	)
 }
+
+// SortedClobPairId is type alias for `[]ClobPairId` which supports deterministic
+// sorting of clob pair Ids.
+// This list assumes that all clob pair ids are unique and will panic if
+// any two order placements have the same block height and transaction index.
+type SortedClobPairId []ClobPairId
+
+// The below methods are required to implement `sort.Interface` for sorting using the sort package.
+var _ sort.Interface = SortedClobPairId{}
+
+func (s SortedClobPairId) Len() int {
+	return len(s)
+}
+
+func (s SortedClobPairId) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s SortedClobPairId) Less(i, j int) bool {
+	si := s[i]
+	sj := s[j]
+
+	return uint32(si) < uint32(sj)
+}

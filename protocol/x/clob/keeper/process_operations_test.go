@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/dydxprotocol/v4/dtypes"
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4/indexer/shared"
 	"github.com/dydxprotocol/v4/mocks"
 	clobtest "github.com/dydxprotocol/v4/testutil/clob"
 	"github.com/dydxprotocol/v4/testutil/constants"
@@ -23,14 +25,22 @@ import (
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
+// MatchWithOrdersForTesting represents a match which occurred between two orders and the amount that was matched.
+type MatchWithOrdersForTesting struct {
+	types.MatchWithOrders
+	TotalFilledMaker satypes.BaseQuantums
+	TotalFilledTaker satypes.BaseQuantums
+}
+
 type processProposerOperationsTestCase struct {
 	// State
-	perpetuals                []*perptypes.Perpetual
-	perpetualFeeParams        *feetierstypes.PerpetualFeeParams
-	clobPairs                 []types.ClobPair
-	subaccounts               []satypes.Subaccount
-	preExistingStatefulOrders []types.Order
-	rawOperations             []types.OperationRaw
+	perpetuals                 []*perptypes.Perpetual
+	perpetualFeeParams         *feetierstypes.PerpetualFeeParams
+	clobPairs                  []types.ClobPair
+	subaccounts                []satypes.Subaccount
+	preExistingStatefulOrders  []types.Order
+	triggeredConditionalOrders []types.Order
+	rawOperations              []types.OperationRaw
 
 	// Liquidation specific setup.
 	liquidationConfig    *types.LiquidationsConfig
@@ -40,10 +50,11 @@ type processProposerOperationsTestCase struct {
 	// Note that for expectedProcessProposerMatchesEvents, the OperationsProposedInLastBlock field is populated from
 	// the operations field above.
 	expectedProcessProposerMatchesEvents types.ProcessProposerMatchesEvents
-	expectedMatches                      []*types.MatchWithOrders
+	expectedMatches                      []*MatchWithOrdersForTesting
 	expectedQuoteBalances                map[satypes.SubaccountId]int64
 	expectedPerpetualPositions           map[satypes.SubaccountId][]*satypes.PerpetualPosition
 	expectedError                        error
+	expectedPanics                       string
 }
 
 func TestProcessProposerOperations(t *testing.T) {
@@ -150,29 +161,33 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedMatches: []*types.MatchWithOrders{
+			expectedMatches: []*MatchWithOrdersForTesting{
 				{
-					TakerOrder: &types.Order{
-						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
-						Side:         types.Order_SIDE_SELL,
-						Quantums:     100_000_000,
-						Subticks:     50_000_000,
-						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &types.Order{
+							OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+							Side:         types.Order_SIDE_SELL,
+							Quantums:     100_000_000,
+							Subticks:     50_000_000,
+							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						},
+						MakerOrder: &types.Order{
+							OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+							Side:         types.Order_SIDE_BUY,
+							Quantums:     100_000_000,
+							Subticks:     50_000_000,
+							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						},
+						FillAmount: 100_000_000,
+						MakerFee:   10_000,
+						TakerFee:   25_000,
 					},
-					MakerOrder: &types.Order{
-						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
-						Side:         types.Order_SIDE_BUY,
-						Quantums:     100_000_000,
-						Subticks:     50_000_000,
-						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
-					},
-					FillAmount: 100_000_000,
-					MakerFee:   10_000,
-					TakerFee:   25_000,
+					TotalFilledMaker: 100_000_000,
+					TotalFilledTaker: 100_000_000,
 				},
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
 					{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
 				},
@@ -270,29 +285,33 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedMatches: []*types.MatchWithOrders{
+			expectedMatches: []*MatchWithOrdersForTesting{
 				{
-					TakerOrder: &types.Order{
-						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
-						Side:         types.Order_SIDE_SELL,
-						Quantums:     100_000_000,
-						Subticks:     50_000_000,
-						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &types.Order{
+							OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+							Side:         types.Order_SIDE_SELL,
+							Quantums:     100_000_000,
+							Subticks:     50_000_000,
+							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						},
+						MakerOrder: &types.Order{
+							OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+							Side:         types.Order_SIDE_BUY,
+							Quantums:     100_000_000,
+							Subticks:     50_000_000,
+							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						},
+						FillAmount: 100_000_000,
+						MakerFee:   -10_000,
+						TakerFee:   25_000,
 					},
-					MakerOrder: &types.Order{
-						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
-						Side:         types.Order_SIDE_BUY,
-						Quantums:     100_000_000,
-						Subticks:     50_000_000,
-						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
-					},
-					FillAmount: 100_000_000,
-					MakerFee:   -10_000,
-					TakerFee:   25_000,
+					TotalFilledMaker: 100_000_000,
+					TotalFilledTaker: 100_000_000,
 				},
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
 					{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
 				},
@@ -383,21 +402,25 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedMatches: []*types.MatchWithOrders{
+			expectedMatches: []*MatchWithOrdersForTesting{
 				{
-					TakerOrder: &types.Order{
-						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
-						Side:         types.Order_SIDE_SELL,
-						Quantums:     10,
-						Subticks:     10,
-						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &types.Order{
+							OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+							Side:         types.Order_SIDE_SELL,
+							Quantums:     10,
+							Subticks:     10,
+							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						},
+						MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+						FillAmount: 5,
 					},
-					MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-					FillAmount: 5,
+					TotalFilledMaker: 5,
+					TotalFilledTaker: 5,
 				},
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				},
@@ -476,16 +499,20 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedMatches: []*types.MatchWithOrders{
+			expectedMatches: []*MatchWithOrdersForTesting{
 				{
-					TakerOrder: &constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
-					MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-					FillAmount: 5,
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+						MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+						FillAmount: 5,
+					},
+					TotalFilledMaker: 5,
+					TotalFilledTaker: 5,
 				},
 			},
 
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15.GetOrderId(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				},
@@ -614,34 +641,42 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedMatches: []*types.MatchWithOrders{
+			expectedMatches: []*MatchWithOrdersForTesting{
 				{
-					TakerOrder: &types.Order{
-						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
-						Side:         types.Order_SIDE_SELL,
-						Quantums:     10,
-						Subticks:     10,
-						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &types.Order{
+							OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+							Side:         types.Order_SIDE_SELL,
+							Quantums:     10,
+							Subticks:     10,
+							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						},
+						MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+						FillAmount: 10,
 					},
-					MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
-					FillAmount: 10,
+					TotalFilledMaker: 10,
+					TotalFilledTaker: 10,
 				},
 				{
-					TakerOrder: &types.Order{
-						OrderId:      types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 14, ClobPairId: 0},
-						Side:         types.Order_SIDE_SELL,
-						Quantums:     15,
-						Subticks:     10,
-						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
-					},
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &types.Order{
+							OrderId:      types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 14, ClobPairId: 0},
+							Side:         types.Order_SIDE_SELL,
+							Quantums:     15,
+							Subticks:     10,
+							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						},
 
-					MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
-					FillAmount: 15,
+						MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+						FillAmount: 15,
+					},
+					TotalFilledMaker: 25,
+					TotalFilledTaker: 15,
 				},
 			},
 
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.GetOrderId(),
 					{SubaccountId: constants.Carl_Num0, ClientId: 14, ClobPairId: 0},
@@ -715,18 +750,22 @@ func TestProcessProposerOperations(t *testing.T) {
 				),
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price49999_GTB10.GetOrderId(),
 				},
 				BlockHeight: blockHeight,
 			},
-			expectedMatches: []*types.MatchWithOrders{
+			expectedMatches: []*MatchWithOrdersForTesting{
 				{
-					TakerOrder: &constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
-					MakerOrder: &constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price49999_GTB10,
-					FillAmount: 100_000_000,
-					MakerFee:   9_999_800,
-					TakerFee:   1_000_000,
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+						MakerOrder: &constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price49999_GTB10,
+						FillAmount: 100_000_000,
+						MakerFee:   9_999_800,
+						TakerFee:   1_000_000,
+					},
+					TotalFilledMaker: 100_000_000,
+					TotalFilledTaker: 100_000_000,
 				},
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
@@ -835,17 +874,21 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedMatches: []*types.MatchWithOrders{
+			expectedMatches: []*MatchWithOrdersForTesting{
 				{
-					TakerOrder: &constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
-					MakerOrder: &constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
-					FillAmount: 25_000_000,
-					MakerFee:   2_500_000,
-					TakerFee:   0,
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+						MakerOrder: &constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+						FillAmount: 25_000_000,
+						MakerFee:   2_500_000,
+						TakerFee:   0,
+					},
+					TotalFilledMaker: 25_000_000,
+					TotalFilledTaker: 25_000_000,
 				},
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.GetOrderId(),
 				},
 				BlockHeight: blockHeight,
@@ -930,6 +973,207 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedError: types.ErrDeleveragedSubaccountNotLiquidatable,
 		},
+		"Conditional: succeeds with singular match of a triggered conditional order": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+			},
+			triggeredConditionalOrders: []types.Order{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+					[]types.MakerFill{
+						{
+							FillAmount:   5,
+							MakerOrderId: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+						},
+					},
+				),
+			},
+			expectedMatches: []*MatchWithOrdersForTesting{
+				{
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+						MakerOrder: &constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+						FillAmount: 5,
+					},
+					TotalFilledMaker: 5,
+					TotalFilledTaker: 5,
+				},
+			},
+
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15.GetOrderId(),
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+				},
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+				},
+				BlockHeight: blockHeight,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Bob_Num0:   constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Bob_Num0: {
+					{
+						PerpetualId:  0,
+						Quantums:     dtypes.NewInt(1_000_000_000 - 5),
+						FundingIndex: dtypes.ZeroInt(),
+					},
+				},
+				constants.Alice_Num0: {
+					{
+						PerpetualId:  0,
+						Quantums:     dtypes.NewInt(1_000_000_000 + 5),
+						FundingIndex: dtypes.ZeroInt(),
+					},
+				},
+			},
+		},
+		"Conditional: panics with a non-existent conditional order": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+					[]types.MakerFill{
+						{
+							FillAmount:   5,
+							MakerOrderId: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+						},
+					},
+				),
+			},
+			expectedPanics: fmt.Sprintf(
+				"MustFetchOrderFromOrderId: failed fetching triggered conditional order for order id: %+v",
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+			),
+		},
+		"Conditional: panics with an untriggered conditional order": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+					[]types.MakerFill{
+						{
+							FillAmount:   5,
+							MakerOrderId: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+						},
+					},
+				),
+			},
+			expectedPanics: fmt.Sprintf(
+				"MustFetchOrderFromOrderId: failed fetching triggered conditional order for order id: %+v",
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+			),
+		},
 	}
 
 	for name, tc := range tests {
@@ -968,6 +1212,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				ctx,
 				mockIndexerEventManager,
 				tc.expectedMatches,
+				tc.rawOperations,
 			)
 
 			// Create the default markets.
@@ -1039,11 +1284,32 @@ func TestProcessProposerOperations(t *testing.T) {
 				)
 			}
 
+			for _, order := range tc.triggeredConditionalOrders {
+				_, exists := seenOrderIds[order.GetOrderId()]
+				require.Falsef(t, exists, "Duplicate pre-existing stateful order (+%v)", order)
+				seenOrderIds[order.GetOrderId()] = struct{}{}
+				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
+				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+					ctx,
+					order.MustGetUnixGoodTilBlockTime(),
+					order.OrderId,
+				)
+
+				ks.ClobKeeper.MustTriggerConditionalOrder(ctx, order.OrderId)
+			}
+
 			// Set the block time on the context and of the last committed block.
 			ctx = ctx.WithBlockTime(time.Unix(5, 0)).WithBlockHeight(int64(blockHeight))
 			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
 
 			// Run the DeliverTx ProcessProposerOperations flow.
+			if tc.expectedPanics != "" {
+				require.PanicsWithValue(t, tc.expectedPanics, func() {
+					_ = ks.ClobKeeper.ProcessProposerOperations(ctx, tc.rawOperations)
+				})
+				return
+			}
+
 			err = ks.ClobKeeper.ProcessProposerOperations(ctx, tc.rawOperations)
 			if tc.expectedError != nil {
 				require.ErrorContains(t, err, tc.expectedError.Error())
@@ -1056,9 +1322,9 @@ func TestProcessProposerOperations(t *testing.T) {
 			require.Equal(t, tc.expectedProcessProposerMatchesEvents, processProposerMatchesEvents)
 
 			// Verify that newly-placed stateful orders were written to state.
-			for _, newlyPlacedStatefulOrder := range processProposerMatchesEvents.PlacedStatefulOrders {
-				exists := ks.ClobKeeper.DoesLongTermOrderExistInState(ctx, newlyPlacedStatefulOrder)
-				require.Truef(t, exists, "order (%+v) was not placed in state.", newlyPlacedStatefulOrder)
+			for _, newlyPlacedStatefulOrderId := range processProposerMatchesEvents.PlacedLongTermOrderIds {
+				_, exists := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, newlyPlacedStatefulOrderId)
+				require.Truef(t, exists, "order with ID (%+v) was not placed in state.", newlyPlacedStatefulOrderId)
 			}
 
 			// Verify that removed stateful orders were in fact removed from state.
@@ -1089,12 +1355,14 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 		"empty operations queue": {
 			operations: []types.InternalOperation{},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders:        []types.Order{},
-				ExpiredStatefulOrderIds:     []types.OrderId{},
-				OrdersIdsFilledInLastBlock:  []types.OrderId{},
-				PlacedStatefulCancellations: []types.OrderId{},
-				RemovedStatefulOrderIds:     []types.OrderId{},
-				BlockHeight:                 blockHeight,
+				PlacedLongTermOrderIds:                  []types.OrderId{},
+				ExpiredStatefulOrderIds:                 []types.OrderId{},
+				OrderIdsFilledInLastBlock:               []types.OrderId{},
+				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
+				RemovedStatefulOrderIds:                 []types.OrderId{},
+				PlacedConditionalOrderIds:               []types.OrderId{},
+				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
+				BlockHeight:                             blockHeight,
 			},
 		},
 		"short term order matches": {
@@ -1116,15 +1384,17 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 				),
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders:    []types.Order{},
+				PlacedLongTermOrderIds:  []types.OrderId{},
 				ExpiredStatefulOrderIds: []types.OrderId{},
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId,
 					constants.Order_Alice_Num0_Id9_Clob1_Buy15_Price45_GTB19.OrderId,
 				},
-				PlacedStatefulCancellations: []types.OrderId{},
-				RemovedStatefulOrderIds:     []types.OrderId{},
-				BlockHeight:                 blockHeight,
+				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
+				RemovedStatefulOrderIds:                 []types.OrderId{},
+				PlacedConditionalOrderIds:               []types.OrderId{},
+				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
+				BlockHeight:                             blockHeight,
 			},
 		},
 		"liquidation matches": {
@@ -1143,14 +1413,16 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 				),
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders:    []types.Order{},
+				PlacedLongTermOrderIds:  []types.OrderId{},
 				ExpiredStatefulOrderIds: []types.OrderId{},
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30.OrderId,
 				},
-				PlacedStatefulCancellations: []types.OrderId{},
-				RemovedStatefulOrderIds:     []types.OrderId{},
-				BlockHeight:                 blockHeight,
+				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
+				RemovedStatefulOrderIds:                 []types.OrderId{},
+				PlacedConditionalOrderIds:               []types.OrderId{},
+				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
+				BlockHeight:                             blockHeight,
 			},
 		},
 		"stateful orders in matches": {
@@ -1172,15 +1444,17 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 				),
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders:    []types.Order{},
+				PlacedLongTermOrderIds:  []types.OrderId{},
 				ExpiredStatefulOrderIds: []types.OrderId{},
-				OrdersIdsFilledInLastBlock: []types.OrderId{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.Order_Alice_Num0_Id9_Clob1_Buy15_Price45_GTB19.OrderId,
 					constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
 				},
-				PlacedStatefulCancellations: []types.OrderId{},
-				RemovedStatefulOrderIds:     []types.OrderId{},
-				BlockHeight:                 blockHeight,
+				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
+				RemovedStatefulOrderIds:                 []types.OrderId{},
+				PlacedConditionalOrderIds:               []types.OrderId{},
+				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
+				BlockHeight:                             blockHeight,
 			},
 		},
 		"skips pre existing stateful order operations": {
@@ -1190,12 +1464,14 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 				),
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders:        []types.Order{},
-				ExpiredStatefulOrderIds:     []types.OrderId{},
-				OrdersIdsFilledInLastBlock:  []types.OrderId{},
-				PlacedStatefulCancellations: []types.OrderId{},
-				RemovedStatefulOrderIds:     []types.OrderId{},
-				BlockHeight:                 blockHeight,
+				PlacedLongTermOrderIds:                  []types.OrderId{},
+				ExpiredStatefulOrderIds:                 []types.OrderId{},
+				OrderIdsFilledInLastBlock:               []types.OrderId{},
+				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
+				RemovedStatefulOrderIds:                 []types.OrderId{},
+				PlacedConditionalOrderIds:               []types.OrderId{},
+				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
+				BlockHeight:                             blockHeight,
 			},
 		},
 		"order removals": {
@@ -1210,15 +1486,17 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 				),
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedStatefulOrders:        []types.Order{},
-				ExpiredStatefulOrderIds:     []types.OrderId{},
-				OrdersIdsFilledInLastBlock:  []types.OrderId{},
-				PlacedStatefulCancellations: []types.OrderId{},
+				PlacedLongTermOrderIds:             []types.OrderId{},
+				ExpiredStatefulOrderIds:            []types.OrderId{},
+				OrderIdsFilledInLastBlock:          []types.OrderId{},
+				PlacedStatefulCancellationOrderIds: []types.OrderId{},
 				RemovedStatefulOrderIds: []types.OrderId{
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
 				},
-				BlockHeight: blockHeight,
+				PlacedConditionalOrderIds:               []types.OrderId{},
+				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
+				BlockHeight:                             blockHeight,
 			},
 		},
 	}
@@ -1240,7 +1518,8 @@ func setupNewMockEventManager(
 	t *testing.T,
 	ctx sdk.Context,
 	mockIndexerEventManager *mocks.IndexerEventManager,
-	matches []*types.MatchWithOrders,
+	matches []*MatchWithOrdersForTesting,
+	rawOperations []types.OperationRaw,
 ) {
 	if len(matches) > 0 {
 		mockIndexerEventManager.On("Enabled").Return(true)
@@ -1260,6 +1539,7 @@ func setupNewMockEventManager(
 						match.FillAmount,
 						match.MakerFee,
 						match.TakerFee,
+						match.TotalFilledTaker,
 					),
 				),
 			).Return()
@@ -1276,11 +1556,30 @@ func setupNewMockEventManager(
 						match.FillAmount,
 						match.MakerFee,
 						match.TakerFee,
+						match.TotalFilledMaker,
+						match.TotalFilledTaker,
 					),
 				),
 			).Return()
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
 			matchOrderCallMap[match.TakerOrder.MustGetOrder().OrderId] = call
+		}
+	}
+
+	for _, operation := range rawOperations {
+		if removal, ok := operation.Operation.(*types.OperationRaw_OrderRemoval); ok {
+			mockIndexerEventManager.On("AddTxnEvent",
+				mock.Anything,
+				indexerevents.SubtypeStatefulOrder,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewStatefulOrderRemovalEvent(
+						removal.OrderRemoval.OrderId,
+						shared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+							removal.OrderRemoval.RemovalReason,
+						),
+					),
+				),
+			).Once().Return()
 		}
 	}
 }

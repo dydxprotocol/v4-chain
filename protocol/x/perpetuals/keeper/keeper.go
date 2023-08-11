@@ -6,6 +6,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 
+	sdklog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,7 +54,7 @@ func (k *Keeper) SetPricePremiumGetter(getter types.PricePremiumGetter) {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {

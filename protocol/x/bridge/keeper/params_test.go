@@ -16,7 +16,7 @@ func TestGetEventParams(t *testing.T) {
 	require.Equal(t, types.DefaultGenesis().EventParams, k.GetEventParams(ctx))
 }
 
-func TestSetEventParams_Success(t *testing.T) {
+func TestUpdateEventParams_Success(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
@@ -28,7 +28,7 @@ func TestSetEventParams_Success(t *testing.T) {
 	}
 	require.NoError(t, params.Validate())
 
-	require.NoError(t, k.SetEventParams(ctx, params))
+	require.NoError(t, k.UpdateEventParams(ctx, params))
 	require.Equal(t, params, k.GetEventParams(ctx))
 }
 
@@ -40,7 +40,7 @@ func TestGetProposeParams(t *testing.T) {
 	require.Equal(t, types.DefaultGenesis().ProposeParams, k.GetProposeParams(ctx))
 }
 
-func TestSetProposeParams_Success(t *testing.T) {
+func TestUpdateProposeParams_Success(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
@@ -53,11 +53,11 @@ func TestSetProposeParams_Success(t *testing.T) {
 	}
 	require.NoError(t, params.Validate())
 
-	require.NoError(t, k.SetProposeParams(ctx, params))
+	require.NoError(t, k.UpdateProposeParams(ctx, params))
 	require.Equal(t, params, k.GetProposeParams(ctx))
 }
 
-func TestSetProposeParams_ValidationError(t *testing.T) {
+func TestUpdateProposeParams_ValidationError(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
@@ -68,7 +68,7 @@ func TestSetProposeParams_ValidationError(t *testing.T) {
 		SkipRatePpm:                  56,
 		SkipIfBlockDelayedByDuration: 78,
 	}
-	require.ErrorIs(t, params.Validate(), k.SetProposeParams(ctx, params))
+	require.ErrorIs(t, params.Validate(), k.UpdateProposeParams(ctx, params))
 	require.NotEqual(t, params, k.GetProposeParams(ctx))
 }
 
@@ -80,7 +80,7 @@ func TestGetSafetyParams(t *testing.T) {
 	require.Equal(t, types.DefaultGenesis().SafetyParams, k.GetSafetyParams(ctx))
 }
 
-func TestSetSafetyParams_Success(t *testing.T) {
+func TestUpdateSafetyParams_Success(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
@@ -91,6 +91,6 @@ func TestSetSafetyParams_Success(t *testing.T) {
 	}
 	require.NoError(t, params.Validate())
 
-	require.NoError(t, k.SetSafetyParams(ctx, params))
+	require.NoError(t, k.UpdateSafetyParams(ctx, params))
 	require.Equal(t, params, k.GetSafetyParams(ctx))
 }

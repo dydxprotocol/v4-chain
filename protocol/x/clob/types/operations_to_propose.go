@@ -24,15 +24,18 @@ type OperationsToPropose struct {
 	// ID that are matched. In that case, only the "greatest" of any such orders
 	// is maintained in this map.
 	MatchedOrderIdToOrder map[OrderId]Order
+	// A set of order ids where the order removal has already been included in the operations queue.
+	OrderRemovalsInOperationsQueue map[OrderId]bool
 }
 
 // NewOperationsToPropose returns a new instance of `OperationsToPropose`.
 func NewOperationsToPropose() *OperationsToPropose {
 	return &OperationsToPropose{
-		OperationsQueue:              make([]InternalOperation, 0),
-		OrderHashesInOperationsQueue: make(map[OrderHash]bool),
-		ShortTermOrderHashToTxBytes:  make(map[OrderHash][]byte),
-		MatchedOrderIdToOrder:        make(map[OrderId]Order),
+		OperationsQueue:                make([]InternalOperation, 0),
+		OrderHashesInOperationsQueue:   make(map[OrderHash]bool),
+		ShortTermOrderHashToTxBytes:    make(map[OrderHash][]byte),
+		MatchedOrderIdToOrder:          make(map[OrderId]Order),
+		OrderRemovalsInOperationsQueue: make(map[OrderId]bool),
 	}
 }
 
@@ -42,6 +45,8 @@ func NewOperationsToPropose() *OperationsToPropose {
 func (o *OperationsToPropose) ClearOperationsQueue() {
 	o.OperationsQueue = make([]InternalOperation, 0)
 	o.OrderHashesInOperationsQueue = make(map[OrderHash]bool, 0)
+	o.MatchedOrderIdToOrder = make(map[OrderId]Order)
+	o.OrderRemovalsInOperationsQueue = make(map[OrderId]bool, 0)
 }
 
 // MustAddShortTermOrderTxBytes adds the provided Short-Term order hash and TX bytes into
@@ -316,10 +321,24 @@ func (o *OperationsToPropose) MustAddOrderRemovalToOperationsQueue(
 		panic("MustAddOrderRemovalToOperationsQueue: removal reason unspecified")
 	}
 
+	if _, exists := o.OrderRemovalsInOperationsQueue[orderId]; exists {
+		panic("MustAddOrderRemovalToOperationsQueue: order removal already exists in operations queue")
+	}
+
 	o.OperationsQueue = append(
 		o.OperationsQueue,
 		NewOrderRemovalInternalOperation(orderId, removalReason),
 	)
+	o.OrderRemovalsInOperationsQueue[orderId] = true
+}
+
+// IsOrderRemovalInOperationsQueue returns true if the provided order ID is included in
+// `OrderRemovalsInOperationsQueue`, false if not.
+func (o *OperationsToPropose) IsOrderRemovalInOperationsQueue(
+	orderId OrderId,
+) bool {
+	_, exists := o.OrderRemovalsInOperationsQueue[orderId]
+	return exists
 }
 
 // IsOrderPlacementInOperationsQueue returns true if the provided order hash is included in

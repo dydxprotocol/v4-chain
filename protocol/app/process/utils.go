@@ -43,9 +43,9 @@ func GetAppInjectedMsgIdxMaps(numTxs int) (map[txtype]int, map[int]txtype) {
 	if numTxs < MinTxsCount {
 		panic(fmt.Errorf("num of txs must be at least %d", MinTxsCount))
 	}
-
 	txTypeToIdx := map[txtype]int{
 		ProposedOperationsTxType: 0,
+		AcknowledgeBridgesTxType: numTxs - 3,
 		AddPremiumVotesTxType:    numTxs - 2,
 		UpdateMarketPricesTxType: numTxs - 1,
 	}

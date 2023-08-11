@@ -153,6 +153,11 @@ var (
 		31,
 		"Missing mid price for ClobPair",
 	)
+	ErrStatefulOrderCancellationAlreadyExists = sdkerrors.Register(
+		ModuleName,
+		32,
+		"Existing stateful order cancellation has higher-or-equal priority than the new one",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(
@@ -329,6 +334,11 @@ var (
 		3008,
 		"Stateful order was previously cancelled and therefore cannot be placed",
 	)
+	ErrStatefulOrderPreviouslyRemoved = sdkerrors.Register(
+		ModuleName,
+		3009,
+		"Stateful order was previously removed and therefore cannot be placed",
+	)
 
 	// Operations Queue validation errors
 	ErrInvalidMsgProposedOperations = sdkerrors.Register(
@@ -374,6 +384,18 @@ var (
 		"Block rate limit exceeded",
 	)
 
+	// Conditional order errors.
+	ErrInvalidConditionType = sdkerrors.Register(
+		ModuleName,
+		6000,
+		"Conditional type is invalid",
+	)
+	ErrInvalidConditionalOrderTriggerSubticks = sdkerrors.Register(
+		ModuleName,
+		6001,
+		"Conditional order trigger subticks is invalid",
+	)
+
 	// Errors for unimplemented and disabled functionality.
 	ErrAssetOrdersNotImplemented = sdkerrors.Register(
 		ModuleName,
@@ -394,5 +416,12 @@ var (
 		ModuleName,
 		9003,
 		"Reduce-only is currently disabled",
+	)
+
+	// Equity tier limit errors.
+	ErrInvalidEquityTierLimitConfig = sdkerrors.Register(
+		ModuleName,
+		10000,
+		"Proposed EquityTierLimitConfig is invalid",
 	)
 )

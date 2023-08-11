@@ -77,18 +77,18 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	tickerToPriceExponent := make(map[string]int32, len(marketIds))
 	tickerToMarketId := make(map[string]types.MarketId, len(marketIds))
 	for _, marketId := range marketIds {
-		ticker, ok := exchangeConfig.MarketToTicker[marketId]
+		config, ok := exchangeConfig.MarketToMarketConfig[marketId]
 		if !ok {
-			return nil, nil, fmt.Errorf("No ticker for market: %v", marketId)
+			return nil, nil, fmt.Errorf("No market config for market: %v", marketId)
 		}
 		priceExponent, ok := marketPriceExponent[marketId]
 		if !ok {
 			return nil, nil, fmt.Errorf("No market price exponent for id: %v", marketId)
 		}
 
-		tickers = append(tickers, ticker)
-		tickerToPriceExponent[ticker] = priceExponent
-		tickerToMarketId[ticker] = marketId
+		tickers = append(tickers, config.Ticker)
+		tickerToPriceExponent[config.Ticker] = priceExponent
+		tickerToMarketId[config.Ticker] = marketId
 
 		// Measure count of requests sent.
 		telemetry.IncrCounterWithLabels(

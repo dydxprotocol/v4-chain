@@ -9,8 +9,8 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		EventParams: EventParams{
 			Denom:      "bridge-token",
-			EthChainId: 0,
-			EthAddress: "0x0000000000000000000000000000000000000000",
+			EthChainId: 11155111,
+			EthAddress: "0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935",
 		},
 		ProposeParams: ProposeParams{
 			MaxBridgesPerBlock:           10,
@@ -22,7 +22,10 @@ func DefaultGenesis() *GenesisState {
 			IsDisabled:  false,
 			DelayBlocks: 86_400, // Seconds in a day
 		},
-		NextAcknowledgedEventId: 0,
+		AcknowledgedEventInfo: BridgeEventInfo{
+			NextId:         0,
+			EthBlockHeight: 0,
+		},
 	}
 }
 
@@ -36,6 +39,9 @@ func (gs GenesisState) Validate() error {
 		return err
 	}
 	if err := gs.SafetyParams.Validate(); err != nil {
+		return err
+	}
+	if err := gs.AcknowledgedEventInfo.Validate(); err != nil {
 		return err
 	}
 

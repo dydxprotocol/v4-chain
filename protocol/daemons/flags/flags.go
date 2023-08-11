@@ -15,8 +15,9 @@ const (
 	FlagPriceDaemonEnabled     = "price-daemon-enabled"
 	FlagPriceDaemonLoopDelayMs = "price-daemon-loop-delay-ms"
 
-	FlagBridgeDaemonEnabled     = "bridge-daemon-enabled"
-	FlagBridgeDaemonLoopDelayMs = "bridge-daemon-loop-delay-ms"
+	FlagBridgeDaemonEnabled        = "bridge-daemon-enabled"
+	FlagBridgeDaemonLoopDelayMs    = "bridge-daemon-loop-delay-ms"
+	FlagBridgeDaemonEthRpcEndpoint = "bridge-daemon-eth-rpc-endpoint"
 
 	FlagLiquidationDaemonEnabled             = "liquidation-daemon-enabled"
 	FlagLiquidationDaemonLoopDelayMs         = "liquidation-daemon-loop-delay-ms"
@@ -29,8 +30,9 @@ type SharedFlags struct {
 }
 
 type BridgeFlags struct {
-	Enabled     bool
-	LoopDelayMs uint32
+	Enabled        bool
+	LoopDelayMs    uint32
+	EthRpcEndpoint string
 }
 
 type LiquidationFlags struct {
@@ -61,8 +63,9 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				GrpcServerAddress: constants.DefaultGrpcEndpoint,
 			},
 			Bridge: BridgeFlags{
-				Enabled:     true,
-				LoopDelayMs: 30_000,
+				Enabled:        true,
+				LoopDelayMs:    30_000,
+				EthRpcEndpoint: "https://eth-sepolia.g.alchemy.com/v2/demo",
 			},
 			Liquidation: LiquidationFlags{
 				Enabled:             true,
@@ -110,6 +113,11 @@ func AddDaemonFlagsToCmd(
 		FlagBridgeDaemonLoopDelayMs,
 		df.Bridge.LoopDelayMs,
 		"Delay in milliseconds between running the Bridge Daemon task loop.",
+	)
+	cmd.Flags().String(
+		FlagBridgeDaemonEthRpcEndpoint,
+		df.Bridge.EthRpcEndpoint,
+		"Ethereum Node Rpc Endpoint",
 	)
 
 	// Liquidation Daemon.

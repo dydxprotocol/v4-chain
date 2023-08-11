@@ -67,7 +67,7 @@ func TestNewPreexistingStatefulOrderPlacementInternalOperation_PanicsOnShortTerm
 
 func TestNewMatchOrdersInternalOperation(t *testing.T) {
 	takerOrder := constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16
-	makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15
+	makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15
 	makerFills := []types.MakerFill{
 		{
 			FillAmount:   5,
@@ -115,7 +115,7 @@ func TestNewMatchOrdersInternalOperation_PanicsOnZeroFills(t *testing.T) {
 }
 
 func TestNewMatchPerpetualLiquidationInternalOperation(t *testing.T) {
-	makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15
+	makerOrder := constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15
 	makerFills := []types.MakerFill{
 		{
 			FillAmount:   5,

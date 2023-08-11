@@ -24,17 +24,19 @@ var (
 		"/dydxprotocol.blocktime.MsgIsDelayedBlockResponse": nil,
 
 		// bridge
-		"/dydxprotocol.bridge.MsgAcknowledgeBridge": &bridgetypes.MsgAcknowledgeBridge{
-			Event: bridgetypes.BridgeEvent{
-				Id: 0,
-				Coin: sdk.NewCoin(
-					"bridge-token",
-					sdk.NewIntFromUint64(1234),
-				),
-				Address: constants.Alice_Num0.Owner,
+		"/dydxprotocol.bridge.MsgAcknowledgeBridges": &bridgetypes.MsgAcknowledgeBridges{
+			Events: []bridgetypes.BridgeEvent{
+				{
+					Id: 0,
+					Coin: sdk.NewCoin(
+						"bridge-token",
+						sdk.NewIntFromUint64(1234),
+					),
+					Address: constants.Alice_Num0.Owner,
+				},
 			},
 		},
-		"/dydxprotocol.bridge.MsgAcknowledgeBridgeResponse": nil,
+		"/dydxprotocol.bridge.MsgAcknowledgeBridgesResponse": nil,
 
 		// clob
 		"/dydxprotocol.clob.MsgProposedOperations": &clobtypes.MsgProposedOperations{

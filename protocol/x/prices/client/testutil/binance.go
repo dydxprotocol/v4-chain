@@ -48,7 +48,7 @@ func NewGockBinanceResponse(
 
 	// Construct `symbols` parameter in Binance API request.
 	sortedTickers := GetTickersSortedByMarketId(
-		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BINANCE].MarketToTicker,
+		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BINANCE].MarketToMarketConfig,
 	)
 	symbolsParam := fmt.Sprintf(
 		"[%s]",
@@ -78,7 +78,7 @@ func NewGockBinanceUSResponse(
 
 	// Construct `symbols` parameter in BinanceUS API request.
 	sortedTickers := GetTickersSortedByMarketId(
-		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BINANCE_US].MarketToTicker,
+		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BINANCE_US].MarketToMarketConfig,
 	)
 	symbolsParam := fmt.Sprintf(
 		"[%s]",

@@ -2639,7 +2639,7 @@ func TestAddOrderToOrderbook_ErrorPlaceNewFullyFilledOrder(t *testing.T) {
 
 	// Place an order which was already fully-filled in a previous block as though
 	// we are only now learning of the order itself via p2p.
-	_, _, _, err := memclob.PlaceOrder(ctx, order, true)
+	_, _, _, err := memclob.PlaceOrder(ctx, order)
 
 	// Should fail as the order has already been fully filled.
 	require.ErrorIs(t, err, types.ErrOrderFullyFilled)
@@ -2768,11 +2768,7 @@ func TestPlaceOrder_ErrOrderWouldExceedMaxOpenOrdersPerClobAndSide(t *testing.T)
 			)
 
 			// Place a new order on the same side and CLOB.
-			_, _, _, err := memclob.PlaceOrder(
-				ctx,
-				tc.offendingOrder,
-				true,
-			)
+			_, _, _, err := memclob.PlaceOrder(ctx, tc.offendingOrder)
 			require.ErrorIs(t, err, types.ErrOrderWouldExceedMaxOpenOrdersPerClobAndSide)
 		})
 	}
@@ -4083,11 +4079,7 @@ func TestPlaceOrder_GenerateOffchainUpdatesFalse_NoMessagesSent(t *testing.T) {
 	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
 
 	// Place a new order.
-	_, _, offchainUpdates, err := memclob.PlaceOrder(
-		ctx,
-		order,
-		true,
-	)
+	_, _, offchainUpdates, err := memclob.PlaceOrder(ctx, order)
 	require.NoError(t, err)
 	require.Empty(t, offchainUpdates.GetMessages())
 }
@@ -4107,8 +4099,8 @@ func TestPlaceOrder_DuplicateOrder(t *testing.T) {
 	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
 
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15
-	_, _, _, err := memclob.PlaceOrder(ctx, order, true)
+	_, _, _, err := memclob.PlaceOrder(ctx, order)
 	require.NoError(t, err)
-	_, _, _, err = memclob.PlaceOrder(ctx, order, true)
+	_, _, _, err = memclob.PlaceOrder(ctx, order)
 	require.Error(t, err, types.ErrInvalidReplacement)
 }

@@ -34,21 +34,21 @@ func TestUpdateAllDowntimeInfo(t *testing.T) {
 				Infos: []*types.AllDowntimeInfo_DowntimeInfo{
 					{
 						Duration: time.Second,
-						BlockInfo: &types.BlockInfo{
+						BlockInfo: types.BlockInfo{
 							Height:    1,
 							Timestamp: time.Unix(10, 0).UTC(),
 						},
 					},
 					{
 						Duration: 5 * time.Second,
-						BlockInfo: &types.BlockInfo{
+						BlockInfo: types.BlockInfo{
 							Height:    1,
 							Timestamp: time.Unix(10, 0).UTC(),
 						},
 					},
 					{
 						Duration: 10 * time.Second,
-						BlockInfo: &types.BlockInfo{
+						BlockInfo: types.BlockInfo{
 							Height:    1,
 							Timestamp: time.Unix(10, 0).UTC(),
 						},
@@ -59,21 +59,21 @@ func TestUpdateAllDowntimeInfo(t *testing.T) {
 				Infos: []*types.AllDowntimeInfo_DowntimeInfo{
 					{
 						Duration: time.Second,
-						BlockInfo: &types.BlockInfo{
+						BlockInfo: types.BlockInfo{
 							Height:    11,
 							Timestamp: time.Unix(105, 0).UTC(),
 						},
 					},
 					{
 						Duration: 5 * time.Second,
-						BlockInfo: &types.BlockInfo{
+						BlockInfo: types.BlockInfo{
 							Height:    11,
 							Timestamp: time.Unix(105, 0).UTC(),
 						},
 					},
 					{
 						Duration: 10 * time.Second,
-						BlockInfo: &types.BlockInfo{
+						BlockInfo: types.BlockInfo{
 							Height:    1,
 							Timestamp: time.Unix(10, 0).UTC(),
 						},
@@ -91,14 +91,17 @@ func TestUpdateAllDowntimeInfo(t *testing.T) {
 				Infos: []*types.AllDowntimeInfo_DowntimeInfo{
 					{
 						Duration: 5 * time.Second,
-						BlockInfo: &types.BlockInfo{
-							Height:    1,
+						BlockInfo: types.BlockInfo{
+							Height:    2,
 							Timestamp: time.Unix(10, 0).UTC(),
 						},
 					},
 					{
-						Duration:  10 * time.Second,
-						BlockInfo: nil,
+						Duration: 10 * time.Second,
+						BlockInfo: types.BlockInfo{
+							Height:    1,
+							Timestamp: time.Unix(5, 0).UTC(),
+						},
 					},
 				},
 			},
@@ -106,14 +109,17 @@ func TestUpdateAllDowntimeInfo(t *testing.T) {
 				Infos: []*types.AllDowntimeInfo_DowntimeInfo{
 					{
 						Duration: 5 * time.Second,
-						BlockInfo: &types.BlockInfo{
-							Height:    1,
+						BlockInfo: types.BlockInfo{
+							Height:    2,
 							Timestamp: time.Unix(10, 0).UTC(),
 						},
 					},
 					{
-						Duration:  10 * time.Second,
-						BlockInfo: nil,
+						Duration: 10 * time.Second,
+						BlockInfo: types.BlockInfo{
+							Height:    1,
+							Timestamp: time.Unix(5, 0).UTC(),
+						},
 					},
 				},
 			},
@@ -150,7 +156,7 @@ func TestGetDowntimeInfoFor(t *testing.T) {
 			duration: 5 * time.Second,
 			expectedDowntimeInfo: types.AllDowntimeInfo_DowntimeInfo{
 				Duration: 0,
-				BlockInfo: &types.BlockInfo{
+				BlockInfo: types.BlockInfo{
 					Height:    40,
 					Timestamp: time.Unix(400, 0).UTC(),
 				},
@@ -160,7 +166,7 @@ func TestGetDowntimeInfoFor(t *testing.T) {
 			duration: 20 * time.Second,
 			expectedDowntimeInfo: types.AllDowntimeInfo_DowntimeInfo{
 				Duration: 20 * time.Second,
-				BlockInfo: &types.BlockInfo{
+				BlockInfo: types.BlockInfo{
 					Height:    20,
 					Timestamp: time.Unix(200, 0).UTC(),
 				},
@@ -170,7 +176,7 @@ func TestGetDowntimeInfoFor(t *testing.T) {
 			duration: 25 * time.Second,
 			expectedDowntimeInfo: types.AllDowntimeInfo_DowntimeInfo{
 				Duration: 20 * time.Second,
-				BlockInfo: &types.BlockInfo{
+				BlockInfo: types.BlockInfo{
 					Height:    20,
 					Timestamp: time.Unix(200, 0).UTC(),
 				},
@@ -179,8 +185,11 @@ func TestGetDowntimeInfoFor(t *testing.T) {
 		"greater than all durations": {
 			duration: 45 * time.Second,
 			expectedDowntimeInfo: types.AllDowntimeInfo_DowntimeInfo{
-				Duration:  40 * time.Second,
-				BlockInfo: nil,
+				Duration: 40 * time.Second,
+				BlockInfo: types.BlockInfo{
+					Height:    1,
+					Timestamp: time.Unix(10, 0).UTC(),
+				},
 			},
 		},
 	}
@@ -200,28 +209,31 @@ func TestGetDowntimeInfoFor(t *testing.T) {
 				Infos: []*types.AllDowntimeInfo_DowntimeInfo{
 					{
 						Duration: 10 * time.Second,
-						BlockInfo: &types.BlockInfo{
-							Height:    10,
-							Timestamp: time.Unix(100, 0).UTC(),
+						BlockInfo: types.BlockInfo{
+							Height:    30,
+							Timestamp: time.Unix(300, 0).UTC(),
 						},
 					},
 					{
 						Duration: 20 * time.Second,
-						BlockInfo: &types.BlockInfo{
+						BlockInfo: types.BlockInfo{
 							Height:    20,
 							Timestamp: time.Unix(200, 0).UTC(),
 						},
 					},
 					{
 						Duration: 30 * time.Second,
-						BlockInfo: &types.BlockInfo{
-							Height:    30,
-							Timestamp: time.Unix(300, 0).UTC(),
+						BlockInfo: types.BlockInfo{
+							Height:    10,
+							Timestamp: time.Unix(100, 0).UTC(),
 						},
 					},
 					{
-						Duration:  40 * time.Second,
-						BlockInfo: nil,
+						Duration: 40 * time.Second,
+						BlockInfo: types.BlockInfo{
+							Height:    1,
+							Timestamp: time.Unix(10, 0).UTC(),
+						},
 					},
 				},
 			})

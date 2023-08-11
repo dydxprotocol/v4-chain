@@ -44,6 +44,10 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 		panic(err)
 	}
 
+	if err := k.InitializeEquityTierLimit(ctx, genState.EquityTierLimitConfig); err != nil {
+		panic(err)
+	}
+
 	k.InitializeProcessProposerMatchesEvents(ctx)
 
 	// Set the last committed block-time to the genesis time.
@@ -62,6 +66,9 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	// Read the block rate limit configuration from state.
 	genesis.BlockRateLimitConfig = k.GetBlockRateLimitConfiguration(ctx)
+
+	// Read the equity tier limit configuration from state.
+	genesis.EquityTierLimitConfig = k.GetEquityTierLimitConfiguration(ctx)
 
 	return genesis
 }

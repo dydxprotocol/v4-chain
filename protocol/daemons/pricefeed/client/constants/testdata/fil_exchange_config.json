@@ -1,32 +1,36 @@
 {
-  "exchanges":[
+  "exchanges": [
     {
-      "exchangeName":"Binance",
-      "ticker":"\"FILUSDT\""
+      "exchangeName": "Binance",
+      "ticker": "\"FILUSDT\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"BinanceUS",
-      "ticker":"\"FILUSD\""
+      "exchangeName": "BinanceUS",
+      "ticker": "\"FILUSD\""
     },
     {
-      "exchangeName":"CoinbasePro",
-      "ticker":"FIL-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "FIL-USD"
     },
     {
-      "exchangeName":"Huobi",
-      "ticker":"filusdt"
+      "exchangeName": "Huobi",
+      "ticker": "filusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Kraken",
-      "ticker":"FILUSD"
+      "exchangeName": "Kraken",
+      "ticker": "FILUSD"
     },
     {
-      "exchangeName":"Kucoin",
-      "ticker":"FIL-USDT"
+      "exchangeName": "Kucoin",
+      "ticker": "FIL-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName":"Okx",
-      "ticker":"FIL-USDT"
+      "exchangeName": "Okx",
+      "ticker": "FIL-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

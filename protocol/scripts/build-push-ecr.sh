@@ -32,7 +32,7 @@ elif [ "$1" == "testnet" ]; then
 	aws_account="419937869548"
 	ecr_repo="testnet-validator"
 else
-	echo "Usage: build-push-ecr.sh (dev|dev2|dev3|dev4|dev5|staging) (optional: snapshot)"
+	echo "Usage: build-push-ecr.sh (dev|dev2|dev3|dev4|dev5|staging)"
 	exit 1
 fi
 
@@ -54,6 +54,9 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 	exit 1
 fi
 
+# Note: the following is based on this [AWS user guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html).
+aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin $aws_account.dkr.ecr.us-east-2.amazonaws.com
+
 ecr="$aws_account.dkr.ecr.us-east-2.amazonaws.com/$ecr_repo"
 
 current_time=$(date '+%Y%m%d%H%M')
@@ -67,10 +70,7 @@ DOCKER_BUILDKIT=1 docker build \
 docker_tag="$ecr:$current_time-$commit_hash-test-build"
 docker_file="testing/testnet-dev/Dockerfile"
 
-if [ "$2" == "snapshot" ]; then
-  docker_tag="$ecr:$current_time-$commit_hash-test-build-snapshot"
-  docker_file="testing/snapshotting/Dockerfile.snapshot"
-elif [ "$1" == "staging" ]; then
+if [ "$1" == "staging" ]; then
 	docker_file="testing/testnet-staging/Dockerfile"
 fi
 
@@ -80,8 +80,16 @@ docker build \
 	-f $docker_file \
 	--progress plain .
 
+docker push $docker_tag
 
-# Note: the following is based on this [AWS user guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html).
-aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin $aws_account.dkr.ecr.us-east-2.amazonaws.com
+# Build and push the snapshot image with the commit hash
+docker_tag="$ecr-snapshot:$current_time-$commit_hash-test-build"
+docker_file="testing/snapshotting/Dockerfile.snapshot"
+
+docker build \
+	--platform linux/amd64 \
+	-t $docker_tag \
+	-f $docker_file \
+	--progress plain .
 
 docker push $docker_tag

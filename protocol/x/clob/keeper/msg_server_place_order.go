@@ -23,12 +23,20 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	order := msg.GetOrder()
 	order.MustBeStatefulOrder()
 
-	// 2. Return an error if an associated cancellation already exists in the current block.
+	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
-	cancelledOrderIds := lib.SliceToSet(processProposerMatchesEvents.PlacedStatefulCancellations)
+	cancelledOrderIds := lib.SliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
 	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
 		return nil, sdkerrors.Wrapf(
 			types.ErrStatefulOrderPreviouslyCancelled,
+			"PlaceOrder: order (%+v)",
+			order,
+		)
+	}
+	removedOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
+	if _, found := removedOrderIds[order.GetOrderId()]; found {
+		return nil, sdkerrors.Wrapf(
+			types.ErrStatefulOrderPreviouslyRemoved,
 			"PlaceOrder: order (%+v)",
 			order,
 		)
@@ -42,28 +50,47 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 		return nil, err
 	}
 
-	// 6. Emit the new stateful order placement indexer event.
-	k.Keeper.GetIndexerEventManager().AddTxnEvent(
-		ctx,
-		indexerevents.SubtypeStatefulOrder,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewStatefulOrderPlacementEvent(
-				order,
+	// 4. Emit the new order placement indexer event.
+	if order.IsConditionalOrder() {
+		k.Keeper.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.NewConditionalOrderPlacementEvent(
+					order,
+				),
 			),
-		),
-	)
-
+		)
+		processProposerMatchesEvents.PlacedConditionalOrderIds = append(
+			processProposerMatchesEvents.PlacedConditionalOrderIds,
+			order.OrderId,
+		)
+	} else {
+		k.Keeper.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.NewLongTermOrderPlacementEvent(
+					order,
+				),
+			),
+		)
+		processProposerMatchesEvents.PlacedLongTermOrderIds = append(
+			processProposerMatchesEvents.PlacedLongTermOrderIds,
+			order.OrderId,
+		)
+	}
 	// 5. Add the newly-placed stateful order to `ProcessProposerMatchesEvents` for use in `PrepareCheckState`.
-	processProposerMatchesEvents.PlacedStatefulOrders = append(
-		processProposerMatchesEvents.PlacedStatefulOrders,
-		order,
-	)
 	k.Keeper.MustSetProcessProposerMatchesEvents(
 		ctx,
 		processProposerMatchesEvents,
 	)
 
-	telemetry.IncrCounter(1, types.ModuleName, metrics.StatefulOrderMsgHandlerSuccess, metrics.Count)
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.StatefulOrderMsgHandlerSuccess, metrics.Count},
+		1,
+		order.GetOrderLabels(),
+	)
 
 	return &types.MsgPlaceOrderResponse{}, nil
 }

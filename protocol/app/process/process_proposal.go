@@ -29,6 +29,7 @@ const ConsensusRound = sdk.ContextKey("consensus_round")
 // Note: stakingKeeper and perpetualKeeper are only needed for MEV calculations.
 func ProcessProposalHandler(
 	txConfig client.TxConfig,
+	bridgeKeeper ProcessBridgeKeeper,
 	clobKeeper ProcessClobKeeper,
 	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
@@ -64,7 +65,7 @@ func ProcessProposalHandler(
 			ctx.Logger().Error(fmt.Sprintf("UpdateSmoothedPrices failed, err = %v", err))
 		}
 
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeper, pricesKeeper)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("DecodeProcessProposalTxs failed: %v", err))
 			recordErrorMetricsWithLabel(metrics.Decode)

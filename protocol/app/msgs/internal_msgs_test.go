@@ -87,6 +87,12 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams",
 		"/dydxprotocol.stats.MsgUpdateParamsResponse",
+
+		// vest
+		"/dydxprotocol.vest.MsgDeleteVestEntry",
+		"/dydxprotocol.vest.MsgDeleteVestEntryResponse",
+		"/dydxprotocol.vest.MsgSetVestEntry",
+		"/dydxprotocol.vest.MsgSetVestEntryResponse",
 	}
 
 	require.Equal(t, expectedMsgs, maps.GetSortedKeys(msgs.InternalMsgSamplesGovAuth))

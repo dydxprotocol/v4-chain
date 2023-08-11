@@ -14,6 +14,13 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 	}
+	Alice_Num0_100_000USD = satypes.Subaccount{
+		Id: &Alice_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_100_000,
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{},
+	}
 	Alice_Num1_10_000USD = satypes.Subaccount{
 		Id: &Alice_Num1,
 		AssetPositions: []*satypes.AssetPosition{
@@ -32,6 +39,13 @@ var (
 		Id: &Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			&Usdc_Asset_10_000,
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{},
+	}
+	Bob_Num0_100_000USD = satypes.Subaccount{
+		Id: &Bob_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 	}

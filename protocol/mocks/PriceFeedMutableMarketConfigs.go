@@ -14,8 +14,13 @@ type PricefeedMutableMarketConfigs struct {
 	mock.Mock
 }
 
-// AddExchangeConfigUpdater provides a mock function with given fields: updater
-func (_m *PricefeedMutableMarketConfigs) AddExchangeConfigUpdater(updater types.ExchangeConfigUpdater) {
+// AddPriceEncoder provides a mock function with given fields: updater
+func (_m *PricefeedMutableMarketConfigs) AddPriceEncoder(updater types.ExchangeConfigUpdater) {
+	_m.Called(updater)
+}
+
+// AddPriceFetcher provides a mock function with given fields: updater
+func (_m *PricefeedMutableMarketConfigs) AddPriceFetcher(updater types.ExchangeConfigUpdater) {
 	_m.Called(updater)
 }
 

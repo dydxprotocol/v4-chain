@@ -6,8 +6,10 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/dydxprotocol/v4/lib"
 	big_testutil "github.com/dydxprotocol/v4/testutil/big"
 	"github.com/dydxprotocol/v4/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -133,6 +135,66 @@ func TestGetAveragePriceSubticks(t *testing.T) {
 			require.Equal(t,
 				tc.bigRatExpectedSubticks,
 				bigRatSubticks,
+			)
+		})
+	}
+}
+
+func TestNotionalToCoinAmount(t *testing.T) {
+	tests := map[string]struct {
+		notionalQuoteQuantums    *big.Int
+		denomExp                 int32
+		marketPrice              pricestypes.MarketPrice
+		bigRatExpectedCoinAmount *big.Rat
+	}{
+		"$9.5 notional, ATOM price at $9.5, get amount in `uatom` (exp = -6)": {
+			notionalQuoteQuantums: big.NewInt(9_500_000),
+			marketPrice: pricestypes.MarketPrice{
+				Price:    95_000,
+				Exponent: -4,
+			},
+			denomExp:                 -6,
+			bigRatExpectedCoinAmount: big.NewRat(1_000_000, 1),
+		},
+		"$4.75 notional, ATOM price at $9.5, get amount in `uatom` (exp = -6)": {
+			notionalQuoteQuantums: big.NewInt(4_750_000),
+			marketPrice: pricestypes.MarketPrice{
+				Price:    95_000,
+				Exponent: -4,
+			},
+			denomExp:                 -6,
+			bigRatExpectedCoinAmount: big.NewRat(500_000, 1),
+		},
+		"$10.5 notional, ETH price at $2000, get amount in `gwei` (exp = -9)": {
+			notionalQuoteQuantums: big.NewInt(10_500_000),
+			marketPrice: pricestypes.MarketPrice{
+				Price:    20_000_000_000,
+				Exponent: -7,
+			},
+			denomExp:                 -9,
+			bigRatExpectedCoinAmount: big.NewRat(5_250_000, 1),
+		},
+		"$1000 notional, ETH price at $2001.57, get amount in `gwei` (exp = -9)": {
+			notionalQuoteQuantums: big.NewInt(1_000_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Price:    20_015_700_000,
+				Exponent: -7,
+			},
+			denomExp:                 -9,
+			bigRatExpectedCoinAmount: big.NewRat(100_000_000_000_000, 200157), // 499607807.871 Gwei, or 0.499607807871 Eth.
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			bigRatCoinAmount := types.NotionalToCoinAmount(
+				tc.notionalQuoteQuantums,
+				lib.QuoteCurrencyAtomicResolution,
+				tc.denomExp,
+				tc.marketPrice,
+			)
+			require.Equal(t,
+				tc.bigRatExpectedCoinAmount,
+				bigRatCoinAmount,
 			)
 		})
 	}

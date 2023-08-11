@@ -8,6 +8,22 @@ import (
 
 // x/bridge module sentinel errors
 var (
+	ErrBridgeIdNotRecognized = sdkerrors.Register(
+		ModuleName,
+		1,
+		"Bridge event ID is not recognized",
+	)
+	ErrBridgeIdNotNextToAcknowledge = sdkerrors.Register(
+		ModuleName,
+		2,
+		"Bridge event ID is not the ID to be next acknowledged",
+	)
+	ErrBridgeIdsNotConsecutive = sdkerrors.Register(
+		ModuleName,
+		3,
+		"Bridge event IDs are not consecutive",
+	)
+
 	ErrNegativeDuration = sdkerrors.Register(
 		ModuleName,
 		400,

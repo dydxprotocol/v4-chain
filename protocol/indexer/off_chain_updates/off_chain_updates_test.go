@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4/indexer/msgsender"
 	"github.com/dydxprotocol/v4/indexer/protocol/v1"
+	"github.com/dydxprotocol/v4/indexer/shared"
 	"github.com/dydxprotocol/v4/mocks"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
@@ -24,9 +25,9 @@ var (
 	totalFilledAmount              = satypes.BaseQuantums(5)
 	orderStatus                    = clobtypes.Undercollateralized
 	orderError               error = nil
-	reason                         = OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
+	reason                         = shared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
 	status                         = OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED
-	defaultRemovalReason           = OrderRemoveV1_ORDER_REMOVAL_REASON_INTERNAL_ERROR
+	defaultRemovalReason           = shared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR
 	offchainUpdateOrderPlace       = OffChainUpdateV1{
 		UpdateMessage: &OffChainUpdateV1_OrderPlace{
 			&OrderPlaceV1{
@@ -168,7 +169,7 @@ func TestCreateOrderRemoveMessageWithDefaultReason_InvalidDefault(t *testing.T) 
 				clobtypes.Success,
 				orderError,
 				status,
-				OrderRemoveV1_ORDER_REMOVAL_REASON_UNSPECIFIED,
+				shared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED,
 			)
 		},
 	)
@@ -294,63 +295,6 @@ func TestGetOrderIdHash(t *testing.T) {
 			hash, err := GetOrderIdHash(tc.orderId)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedHash, hash)
-		})
-	}
-}
-
-func TestGetOrderRemovalReason_Success(t *testing.T) {
-	tests := map[string]struct {
-		// Input
-		orderStatus clobtypes.OrderStatus
-		orderError  error
-
-		// Expectations
-		expectedReason OrderRemoveV1_OrderRemovalReason
-		expectedErr    error
-	}{
-		"Gets order removal reason for order status Undercollateralized": {
-			orderStatus:    clobtypes.Undercollateralized,
-			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
-			expectedErr:    nil,
-		},
-		"Gets order removal reason for order status InternalError": {
-			orderStatus:    clobtypes.InternalError,
-			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-			expectedErr:    nil,
-		},
-		"Gets order removal reason for order status ImmediateOrCancelWouldRestOnBook": {
-			orderStatus:    clobtypes.ImmediateOrCancelWouldRestOnBook,
-			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK,
-			expectedErr:    nil,
-		},
-		"Gets order removal reason for order error ErrFokOrderCouldNotBeFullyFilled": {
-			orderError:     clobtypes.ErrFokOrderCouldNotBeFullyFilled,
-			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED,
-			expectedErr:    nil,
-		},
-		"Gets order removal reason for order error ErrPostOnlyWouldCrossMakerOrder": {
-			orderError:     clobtypes.ErrPostOnlyWouldCrossMakerOrder,
-			expectedReason: OrderRemoveV1_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
-			expectedErr:    nil,
-		},
-		"Returns error for order status Success": {
-			orderStatus:    clobtypes.Success,
-			orderError:     clobtypes.ErrNotImplemented,
-			expectedReason: 0,
-			expectedErr: fmt.Errorf(
-				"unrecognized order status %d and error \"%w\"",
-				clobtypes.Success,
-				clobtypes.ErrNotImplemented,
-			),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			reason, err := GetOrderRemovalReason(tc.orderStatus, tc.orderError)
-			require.Equal(t, tc.expectedReason, reason)
-			if tc.expectedErr != nil {
-				require.ErrorContains(t, err, tc.expectedErr.Error())
-			}
 		})
 	}
 }

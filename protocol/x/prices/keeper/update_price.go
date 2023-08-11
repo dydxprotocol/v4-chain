@@ -88,7 +88,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 
 		proposalPrice := getProposalPrice(smoothedPrice, indexPrice, marketParamPrice.Price.Price)
 
-		shouldPropose, reasons := ShouldProposePrice(
+		shouldPropose, reasons := shouldProposePrice(
 			proposalPrice,
 			marketParamPrice,
 			indexPrice,
@@ -136,7 +136,7 @@ func logPriceUpdateBehavior(
 	indexPrice uint64,
 	marketMetricsLabel gometrics.Label,
 	shouldPropose bool,
-	reasons map[string]bool,
+	reasons []proposeCancellationReason,
 ) {
 	loggingVerb := "proposed"
 	if !shouldPropose {
@@ -145,8 +145,9 @@ func logPriceUpdateBehavior(
 		// Convert reasons map to a slice of metrics labels and include market label.
 		labels := make([]gometrics.Label, 0, len(reasons)+1)
 		labels = append(labels, marketMetricsLabel)
-		for reason, updateCancelledForReason := range reasons {
-			labels = append(labels, metrics.NewBinaryStringLabel(reason, updateCancelledForReason))
+
+		for _, reason := range reasons {
+			labels = append(labels, metrics.NewBinaryStringLabel(reason.Reason, reason.Value))
 		}
 
 		metrics.IncrCountMetricWithLabels(
@@ -166,28 +167,35 @@ func logPriceUpdateBehavior(
 	))
 }
 
-// ShouldProposePrice determines if a price should be proposed for a market. It returns the result as well as a map of
+type proposeCancellationReason struct {
+	Reason string
+	Value  bool
+}
+
+// shouldProposePrice determines if a price should be proposed for a market. It returns the result as well as a list of
 // possible reasons why the price should not be proposed that can be used to create metrics labels.
 // All of the logic for determining if a price should be proposed was consolidated here to prevent inconsistencies
 // between proposal behavior and logging/metrics.
-func ShouldProposePrice(
+func shouldProposePrice(
 	proposalPrice uint64,
 	marketParamPrice types.MarketParamPrice,
 	indexPrice uint64,
 	historicalSmoothedPrices []uint64,
 ) (
 	shouldPropose bool,
-	reasons map[string]bool,
+	reasons []proposeCancellationReason,
 ) {
-	reasons = map[string]bool{
-		metrics.RecentSmoothedPriceCrossesOraclePrice:        false,
-		metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange: false,
-		metrics.ProposedPriceDoesNotMeetMinPriceChange:       false,
-		metrics.ProposedPriceCrossesOraclePrice:              false,
-	}
+	reasons = make([]proposeCancellationReason, 0, 4)
 	shouldPropose = true
 
 	// If any smoothed price crosses the old price compared to the index price, do not update.
+	reasons = append(
+		reasons,
+		proposeCancellationReason{
+			Reason: metrics.RecentSmoothedPriceCrossesOraclePrice,
+			Value:  false,
+		},
+	)
 	for _, smoothedPrice := range historicalSmoothedPrices {
 		if isCrossingOldPrice(PriceTuple{
 			OldPrice:   marketParamPrice.Price.Price,
@@ -195,34 +203,53 @@ func ShouldProposePrice(
 			NewPrice:   smoothedPrice,
 		}) {
 			shouldPropose = false
-			reasons[metrics.RecentSmoothedPriceCrossesOraclePrice] = true
-			break
-		}
-	}
-
-	// If any smoothed price does not meet the min price change, do not update.
-	for _, smoothedPrice := range historicalSmoothedPrices {
-		if !isAboveRequiredMinPriceChange(marketParamPrice, smoothedPrice) {
-			shouldPropose = false
-			reasons[metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange] = true
+			reasons[len(reasons)-1].Value = true
 			break
 		}
 	}
 
 	// If the proposal price crosses the old price compared to the index price, do not update.
+	reasons = append(
+		reasons,
+		proposeCancellationReason{
+			Reason: metrics.ProposedPriceCrossesOraclePrice,
+		},
+	)
 	if isCrossingOldPrice(PriceTuple{
 		OldPrice:   marketParamPrice.Price.Price,
 		IndexPrice: indexPrice,
 		NewPrice:   proposalPrice,
 	}) {
 		shouldPropose = false
-		reasons[metrics.ProposedPriceCrossesOraclePrice] = true
+		reasons[len(reasons)-1].Value = true
+	}
+
+	// If any smoothed price does not meet the min price change, do not update.
+	reasons = append(
+		reasons,
+		proposeCancellationReason{
+			Reason: metrics.RecentSmoothedPriceDoesNotMeetMinPriceChange,
+			Value:  false,
+		},
+	)
+	for _, smoothedPrice := range historicalSmoothedPrices {
+		if !isAboveRequiredMinPriceChange(marketParamPrice, smoothedPrice) {
+			shouldPropose = false
+			reasons[len(reasons)-1].Value = true
+			break
+		}
 	}
 
 	// If the proposal price does not meet the min price change, do not update.
+	reasons = append(
+		reasons,
+		proposeCancellationReason{
+			Reason: metrics.ProposedPriceDoesNotMeetMinPriceChange,
+		},
+	)
 	if !isAboveRequiredMinPriceChange(marketParamPrice, proposalPrice) {
 		shouldPropose = false
-		reasons[metrics.ProposedPriceDoesNotMeetMinPriceChange] = true
+		reasons[len(reasons)-1].Value = true
 	}
 
 	return shouldPropose, reasons
