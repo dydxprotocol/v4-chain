@@ -3,9 +3,9 @@ package msgs
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/dydxprotocol/v4/testutil/constants"
 	"github.com/dydxprotocol/v4/testutil/encoding"
 	prices "github.com/dydxprotocol/v4/x/prices/types"
 )
@@ -40,24 +40,28 @@ func init() {
 }
 
 const (
-	testProposer = "test-proposer"
 	testMetadata = "test-metadata"
 	testTitle    = "test-title"
 	testSummary  = "test-summary"
 )
 
 var (
+	testProposer = constants.Bob_Num0.Owner
+
 	// Inner msgs.
 	MsgSoftwareUpgrade = &upgrade.MsgSoftwareUpgrade{
+		Authority: constants.Bob_Num0.Owner,
 		Plan: upgrade.Plan{
 			Name:   "test-plan",
-			Height: 0,
+			Height: 10,
 			Info:   "test-info",
 		},
 	}
 	MsgSoftwareUpgradeTxBytes []byte
 
-	MsgCancelUpgrade        = &upgrade.MsgCancelUpgrade{}
+	MsgCancelUpgrade = &upgrade.MsgCancelUpgrade{
+		Authority: constants.Bob_Num0.Owner,
+	}
 	MsgCancelUpgradeTxBytes []byte
 
 	// Invalid MsgSubmitProposals
@@ -66,7 +70,7 @@ var (
 	MsgSubmitProposalWithEmptyInnerTxBytes []byte
 
 	MsgSubmitProposalWithUnsupportedInner, _ = gov.NewMsgSubmitProposal(
-		[]sdk.Msg{&govbeta.MsgSubmitProposal{}}, nil, testProposer, testMetadata, testTitle, testSummary)
+		[]sdk.Msg{GovBetaMsgSubmitProposal}, nil, testProposer, testMetadata, testTitle, testSummary)
 	MsgSubmitProposalWithUnsupportedInnerTxBytes []byte
 
 	MsgSubmitProposalWithAppInjectedInner, _ = gov.NewMsgSubmitProposal(

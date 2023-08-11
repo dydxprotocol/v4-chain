@@ -8,7 +8,6 @@ import (
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/testutil/sample"
 	"github.com/dydxprotocol/v4/x/prices/keeper"
 	"github.com/dydxprotocol/v4/x/prices/types"
 	"github.com/stretchr/testify/require"
@@ -122,7 +121,7 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
@@ -130,7 +129,6 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 
 			// Run.
 			msg := &types.MsgUpdateMarketPrices{
-				Proposer:           sample.AccAddress(),
 				MarketPriceUpdates: tc.msgUpdateMarketPrices,
 			}
 			err := k.PerformStatefulPriceUpdateValidation(ctx, msg, true)
@@ -208,7 +206,7 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
@@ -216,7 +214,6 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 
 			// Run.
 			msg := &types.MsgUpdateMarketPrices{
-				Proposer:           sample.AccAddress(),
 				MarketPriceUpdates: tc.msgUpdateMarketPrices,
 			}
 			err := k.PerformStatefulPriceUpdateValidation(ctx, msg, false) // skips non-deterministic checks.
@@ -342,7 +339,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
@@ -350,7 +347,6 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 
 			// Run and Validate.
 			msg := &types.MsgUpdateMarketPrices{
-				Proposer:           sample.AccAddress(),
 				MarketPriceUpdates: tc.msgUpdateMarketPrices,
 			}
 			err := k.PerformStatefulPriceUpdateValidation(ctx, msg, true)
@@ -364,6 +360,7 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 		// Setup.
 		msgUpdateMarketPrices []*types.MsgUpdateMarketPrices_MarketPrice
 		indexPrices           []*api.MarketPriceUpdate
+		smoothedIndexPrices   types.MarketToSmoothedPrices
 
 		// Expected.
 		expectedMarketIds []uint32
@@ -372,7 +369,8 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 			expectedMarketIds: nil,
 		},
 		"Empty proposed updates, Non-empty local updates": {
-			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
+			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
+			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
 			// The returned market ids must be sorted.
 			expectedMarketIds: []uint32{constants.MarketId0, constants.MarketId1, constants.MarketId2},
 		},
@@ -383,6 +381,7 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 		"Non-empty proposed updates, Non-empty local updates, no missing markets": {
 			msgUpdateMarketPrices: constants.ValidMarketPriceUpdates,
 			indexPrices:           constants.AtTimeTSingleExchangePriceUpdate,
+			smoothedIndexPrices:   constants.AtTimeTSingleExchangeSmoothedPrices,
 			expectedMarketIds:     nil,
 		},
 		"Non-empty proposed updates, Non-empty local updates, single missing market": {
@@ -390,14 +389,16 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 				types.NewMarketPriceUpdate(constants.MarketId0, constants.Price5),
 				types.NewMarketPriceUpdate(constants.MarketId1, constants.Price6),
 			},
-			indexPrices:       constants.AtTimeTSingleExchangePriceUpdate,
-			expectedMarketIds: []uint32{constants.MarketId2},
+			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
+			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
+			expectedMarketIds:   []uint32{constants.MarketId2},
 		},
 		"Non-empty proposed updates, Non-empty local updates, multiple missing markets, sorted": {
 			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
 				types.NewMarketPriceUpdate(constants.MarketId1, constants.Price6),
 			},
-			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
+			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
+			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
 			// The returned market ids must be sorted.
 			expectedMarketIds: []uint32{constants.MarketId0, constants.MarketId2},
 		},
@@ -405,9 +406,11 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
-
+			for market, price := range tc.smoothedIndexPrices {
+				marketToSmoothedPrices[market] = price
+			}
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 

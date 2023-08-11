@@ -25,8 +25,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 		isRecheck      bool
 		txHasSignature bool
 
-		expectedErr   error
-		expectedPanic string
+		expectedErr error
 	}{
 		"fails ValidateBasic: no msg": {
 			txHasSignature: false, // this should cause ValidateBasic to fail.
@@ -34,7 +33,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 			expectedErr: sdkerrors.ErrNoSignatures,
 		},
 		"skip ValidateBasic: single msg, AppInjected msg": {
-			msgOne:         &pricestypes.MsgUpdateMarketPrices{Proposer: "abc"},
+			msgOne:         &pricestypes.MsgUpdateMarketPrices{},
 			txHasSignature: false, // this should cause ValidateBasic to fail, but this is skipped.
 
 			expectedErr: nil,
@@ -46,13 +45,11 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 			expectedErr: nil,
 		},
 		"fails ValidateBasic: mult msgs, AppInjected msg": {
-			msgOne: &pricestypes.MsgUpdateMarketPrices{Proposer: "abc"}, // AppInjected.
-			msgTwo: &testdata.TestMsg{Signers: []string{"meh"}},
-			// this should allow ValidateBasic to pass, but because AppInjected msg does not have signers,
-			// it will fail `GetSigners``
+			msgOne:         &pricestypes.MsgUpdateMarketPrices{}, // AppInjected.
+			msgTwo:         &testdata.TestMsg{Signers: []string{"meh"}},
 			txHasSignature: true,
 
-			expectedPanic: "decoding bech32 failed: invalid bech32 string length 3",
+			expectedErr: nil,
 		},
 		"valid: mult msgs, NO AppInjected msg": {
 			msgOne:         &testdata.TestMsg{Signers: []string{"meh"}},
@@ -62,7 +59,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 			expectedErr: nil,
 		},
 		"skip ValidateBasic: recheck": {
-			msgOne:         &pricestypes.MsgUpdateMarketPrices{Proposer: "abc"}, // AppInjected.
+			msgOne:         &pricestypes.MsgUpdateMarketPrices{}, // AppInjected.
 			msgTwo:         &testdata.TestMsg{Signers: []string{"meh"}},
 			isRecheck:      true,
 			txHasSignature: false, // this should cause ValidateBasic to fail, but this is skipped.
@@ -106,15 +103,6 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 
 			if tc.isRecheck {
 				suite.Ctx = suite.Ctx.WithIsReCheckTx(true) // test decorator skips on recheck
-			}
-
-			if tc.expectedPanic != "" {
-				require.PanicsWithError(
-					t,
-					tc.expectedPanic,
-					func() { _, _ = antehandler(suite.Ctx, tx, false) },
-				)
-				return
 			}
 
 			_, err = antehandler(suite.Ctx, tx, false)

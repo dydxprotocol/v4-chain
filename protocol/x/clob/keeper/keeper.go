@@ -112,7 +112,6 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 	for _, keyPrefix := range []string{
 		types.OrderAmountFilledKeyPrefix,
 		types.StatefulOrderPlacementKeyPrefix,
-		types.StatefulOrderCancellationKeyPrefix,
 	} {
 		// Retrieve an instance of the memstore.
 		memPrefixStore := prefix.NewStore(

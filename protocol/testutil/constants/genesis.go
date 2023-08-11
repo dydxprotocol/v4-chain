@@ -31,7 +31,8 @@ const GenesisState = `{
       "assets": [
         {
           "atomic_resolution": -6,
-          "denom": "USDC",
+          "symbol": "USDC",
+          "denom": "ibc/usdc-placeholder",
           "has_market": false,
           "id": 0,
           "long_interest": 0,
@@ -95,12 +96,12 @@ const GenesisState = `{
           "address": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
           "coins": [
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/usdc-placeholder",
+              "amount": "100000000000000000"
             },
             {
-              "denom": "usdc",
-              "amount": "100000000000000000"
+              "denom": "stake",
+              "amount": "100000000000"
             }
           ]
         },
@@ -108,12 +109,12 @@ const GenesisState = `{
           "address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
           "coins": [
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/usdc-placeholder",
+              "amount": "100000000000000000"
             },
             {
-              "denom": "usdc",
-              "amount": "100000000000000000"
+              "denom": "stake",
+              "amount": "100000000000"
             }
           ]
         },
@@ -121,7 +122,7 @@ const GenesisState = `{
           "address": "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
           "coins": [
             {
-              "denom": "USDC",
+              "denom": "ibc/usdc-placeholder",
               "amount": "1300000000000000000"
             }
           ]
@@ -130,12 +131,12 @@ const GenesisState = `{
           "address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
           "coins": [
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/usdc-placeholder",
+              "amount": "100000000000000000"
             },
             {
-              "denom": "usdc",
-              "amount": "100000000000000000"
+              "denom": "stake",
+              "amount": "100000000000"
             }
           ]
         },
@@ -143,12 +144,12 @@ const GenesisState = `{
           "address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
           "coins": [
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/usdc-placeholder",
+              "amount": "100000000000000000"
             },
             {
-              "denom": "usdc",
-              "amount": "100000000000000000"
+              "denom": "stake",
+              "amount": "100000000000"
             }
           ]
         },
@@ -156,12 +157,12 @@ const GenesisState = `{
           "address": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m",
           "coins": [
             {
-              "denom": "stake",
-              "amount": "100000000000"
+              "denom": "ibc/usdc-placeholder",
+              "amount": "900000000000000000"
             },
             {
-              "denom": "usdc",
-              "amount": "900000000000000000"
+              "denom": "stake",
+              "amount": "100000000000"
             }
           ]
         }

@@ -1,13 +1,9 @@
 package events
 
-import (
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
-)
-
 // NewPremiumSamplesEvent creates a FundingEvent representing a list of new funding premium
 // samples generated at the end of each `funding-sample` epoch.
 func NewPremiumSamplesEvent(
-	newSamplesForEvent []perptypes.FundingPremium,
+	newSamplesForEvent []FundingUpdate,
 ) *FundingEvent {
 	return newFundingEvent(
 		newSamplesForEvent,
@@ -15,23 +11,24 @@ func NewPremiumSamplesEvent(
 	)
 }
 
-// NewFundingRatesEvent creates a FundingEvent representing a list of new funding rates
-// generated at the end of each `funding-tick` epoch.
-func NewFundingRatesEvent(
-	newFundingRatesForEvent []perptypes.FundingPremium,
+// NewFundingRatesAndIndicesEvent creates a FundingEvent representing a list of new
+// funding rates generated at the end of each `funding-tick` epoch and funding indices
+// accordingly updated with `funding rate * price`.
+func NewFundingRatesAndIndicesEvent(
+	newFundingRatesAndIndicesForEvent []FundingUpdate,
 ) *FundingEvent {
 	return newFundingEvent(
-		newFundingRatesForEvent,
-		FundingEvent_TYPE_FUNDING_RATE,
+		newFundingRatesAndIndicesForEvent,
+		FundingEvent_TYPE_FUNDING_RATE_AND_INDEX,
 	)
 }
 
 func newFundingEvent(
-	newValuesForEvent []perptypes.FundingPremium,
-	valueType FundingEvent_Type,
+	newUpdatesForEvent []FundingUpdate,
+	updateType FundingEvent_Type,
 ) *FundingEvent {
 	return &FundingEvent{
-		Values: newValuesForEvent,
-		Type:   valueType,
+		Updates: newUpdatesForEvent,
+		Type:    updateType,
 	}
 }

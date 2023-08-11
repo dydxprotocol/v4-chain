@@ -269,7 +269,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						},
 					},
 				},
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 
 			liquidationConfig: constants.LiquidationsConfig_No_Limit,
@@ -352,7 +352,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						},
 					},
 				},
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
@@ -407,7 +407,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 		`PlacePerpetualLiquidation matches some order and stops before exceeding max notional liquidated per block`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
@@ -480,7 +480,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						},
 					},
 				},
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
@@ -535,7 +535,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 		`PlacePerpetualLiquidation matches some order and stops before exceeding max insurance lost per block`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
@@ -590,7 +590,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 		`Liquidation buy order does not generate a match when deleveraging is required`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -670,7 +670,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 		`Liquidation buy order matches with some orders and stops when deleveraging is required`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -856,7 +856,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						},
 					},
 				},
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 
 			liquidationConfig: constants.LiquidationsConfig_No_Limit,

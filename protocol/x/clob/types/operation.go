@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/gogoproto/proto"
+	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
 // OperationHash is used to represent the SHA256 hash of an operation.
@@ -98,6 +99,28 @@ func NewMatchOperationFromPerpetualLiquidation(perpLiquidation MatchPerpetualLiq
 			Match: &ClobMatch{
 				Match: &ClobMatch_MatchPerpetualLiquidation{
 					MatchPerpetualLiquidation: &perpLiquidation,
+				},
+			},
+		},
+	}
+}
+
+// NewDeleveragingMatchOperation returns a new match operation for deleveraging
+// against a undercollateralized subaccount that has failed liquidation.
+func NewDeleveragingMatchOperation(
+	liquidatedSubaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	fills []MatchPerpetualDeleveraging_Fill,
+) Operation {
+	return Operation{
+		Operation: &Operation_Match{
+			Match: &ClobMatch{
+				Match: &ClobMatch_MatchPerpetualDeleveraging{
+					MatchPerpetualDeleveraging: &MatchPerpetualDeleveraging{
+						Liquidated:  liquidatedSubaccountId,
+						PerpetualId: perpetualId,
+						Fills:       fills,
+					},
 				},
 			},
 		},

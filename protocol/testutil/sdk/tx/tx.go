@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/dydxprotocol/v4/app"
+	"github.com/dydxprotocol/v4/app/basic_manager"
 	"github.com/dydxprotocol/v4/lib/encoding"
 )
 
@@ -19,7 +19,7 @@ func CreateTestTx(
 	chainID string,
 	msgs []sdk.Msg,
 ) (xauthsigning.Tx, error) {
-	encodingConfig := encoding.MakeEncodingConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
 	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 	txBuilder := clientCtx.TxConfig.NewTxBuilder()
 	err := txBuilder.SetMsgs(msgs...)

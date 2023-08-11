@@ -1,16 +1,18 @@
 package app_test
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/dydxprotocol/v4/app"
+	"github.com/dydxprotocol/v4/app/basic_manager"
 	"github.com/dydxprotocol/v4/lib/encoding"
 	testApp "github.com/dydxprotocol/v4/testutil/app"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func newHandlerOptions() app.HandlerOptions {
-	encodingConfig := encoding.MakeEncodingConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
 	dydxApp := testApp.DefaultTestApp(nil)
 	return app.HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{

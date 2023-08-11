@@ -25,7 +25,54 @@ var (
 		"askPrice":       "300.102",
 		"nonStringValue": 1000,
 	}
+	positiveTagValidationError = errors.New(
+		"Key: 'TestPositiveValidation.PositiveFloatString' Error:Field validation for 'PositiveFloatString' " +
+			"failed on the 'positive-float-string' tag",
+	)
 )
+
+func TestGetApiResponseValidator_validatePositiveNumericString_Mixed(t *testing.T) {
+	tests := map[string]struct {
+		testValue     string
+		expectedError error
+	}{
+		"Success - canonical float": {
+			testValue: "12345.6",
+		},
+		"Failure - negative float": {
+			testValue:     "-12345.6",
+			expectedError: positiveTagValidationError,
+		},
+		"Failure - empty string": {
+			testValue:     "",
+			expectedError: positiveTagValidationError,
+		},
+		"Failure - text": {
+			testValue:     "cat",
+			expectedError: positiveTagValidationError,
+		},
+	}
+
+	type TestPositiveValidation struct {
+		PositiveFloatString string `validate:"positive-float-string"`
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			validator, err := GetApiResponseValidator()
+			require.Nil(t, err)
+			err = validator.Struct(TestPositiveValidation{
+				PositiveFloatString: tc.testValue,
+			})
+			if tc.expectedError == nil {
+				require.Nil(t, err)
+			} else {
+				require.NotNil(t, err)
+				require.EqualError(t, tc.expectedError, err.Error())
+			}
+		})
+	}
+}
 
 func TestExtractFirstStringFromSliceField(t *testing.T) {
 	tests := map[string]struct {

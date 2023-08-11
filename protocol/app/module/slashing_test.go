@@ -2,17 +2,18 @@ package module_test
 
 import (
 	"encoding/json"
-	"github.com/dydxprotocol/v4/app"
+	"os"
+	"testing"
+
+	"github.com/dydxprotocol/v4/app/basic_manager"
 	"github.com/dydxprotocol/v4/app/module"
 	"github.com/dydxprotocol/v4/lib/encoding"
 	"github.com/dydxprotocol/v4/testutil/stringutils"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestDefaultGenesis(t *testing.T) {
-	encodingConfig := encoding.MakeEncodingConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
 	defaultGenesis := module.SlashingModuleBasic{}.DefaultGenesis(encodingConfig.Codec)
 	humanReadableDefaultGenesisState, unmarshalErr := json.Marshal(&defaultGenesis)
 

@@ -13,12 +13,11 @@ func init() {
 }
 
 var (
-	ValidEmptyMsgProposedOperations        = &types.MsgProposedOperations{Proposer: "foobar"}
+	ValidEmptyMsgProposedOperations        = &types.MsgProposedOperations{}
 	ValidEmptyMsgProposedOperationsTxBytes []byte
 	// InvalidProposedOperations is invalid because the maker order for the match operation
 	// has not been previously placed or placed in the set of operations preceeding the match.
 	InvalidProposedOperations = &types.MsgProposedOperations{
-		Proposer: "foobar",
 		OperationsQueue: []types.Operation{
 			{
 				Operation: &types.Operation_OrderPlacement{

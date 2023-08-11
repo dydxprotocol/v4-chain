@@ -18,10 +18,7 @@ import (
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
-func (k Keeper) GetOperations(
-	ctx sdk.Context,
-	proposer sdk.AccAddress,
-) *types.MsgProposedOperations {
+func (k Keeper) GetOperations(ctx sdk.Context) *types.MsgProposedOperations {
 	operationsQueue := k.MemClob.GetOperations(ctx)
 	ordersWithAddToOrderbookCollatCheck := k.MemClob.GetOrdersWithAddToOrderbookCollatCheck(ctx)
 
@@ -32,7 +29,6 @@ func (k Keeper) GetOperations(
 	}
 
 	return &types.MsgProposedOperations{
-		Proposer:                             proposer.String(),
 		OperationsQueue:                      operationsQueue,
 		AddToOrderbookCollatCheckOrderHashes: addToOrderbookCollatCheckOrderHashes,
 	}

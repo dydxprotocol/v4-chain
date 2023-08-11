@@ -196,7 +196,7 @@ func TestFullNodePrepareProposalHandler(t *testing.T) {
 			mockContextHelper.On("Height", mock.Anything).Return(int64(1))
 
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything, mock.Anything).
+			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(tc.pricesResp)
 
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
@@ -207,7 +207,7 @@ func TestFullNodePrepareProposalHandler(t *testing.T) {
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(tc.clobResp)
 
-			ctx, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			handler := prepare.FullNodePrepareProposalHandler()
 

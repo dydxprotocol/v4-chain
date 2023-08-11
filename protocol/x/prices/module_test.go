@@ -36,7 +36,7 @@ func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.K
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, _, _, _ := keeper.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keeper.PricesKeepers(t)
 
 	return prices.NewAppModule(
 		appCodec,

@@ -28,7 +28,7 @@ var (
 	Usdc = &asstypes.Asset{
 		Id:               0,
 		Symbol:           "USDC",
-		Denom:            "ibc/xxx",
+		Denom:            "ibc/usdc-placeholder",
 		DenomExponent:    int32(-6),
 		HasMarket:        false,
 		MarketId:         uint32(0),

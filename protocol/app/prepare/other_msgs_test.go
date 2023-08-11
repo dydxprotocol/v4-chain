@@ -162,7 +162,7 @@ func TestRemoveDisallowMsgs(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 			txs := prepare.RemoveDisallowMsgs(ctx, encodingCfg.TxConfig.TxDecoder(), tc.txs)
 			require.Equal(t, tc.expectedTxs, txs)
 		})

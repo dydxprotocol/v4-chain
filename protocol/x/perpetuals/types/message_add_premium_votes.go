@@ -14,22 +14,13 @@ func NewFundingPremium(id uint32, premiumPpm int32) *FundingPremium {
 	}
 }
 
-func NewMsgAddPremiumVotes(
-	proposer string,
-	votes []FundingPremium,
-) *MsgAddPremiumVotes {
-	return &MsgAddPremiumVotes{
-		Proposer: proposer,
-		Votes:    votes,
-	}
+func NewMsgAddPremiumVotes(votes []FundingPremium) *MsgAddPremiumVotes {
+	return &MsgAddPremiumVotes{Votes: votes}
 }
 
 func (msg *MsgAddPremiumVotes) GetSigners() []sdk.AccAddress {
-	proposer, err := sdk.AccAddressFromBech32(msg.Proposer)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{proposer}
+	// Return empty slice because app-injected msg is not expected to be signed.
+	return []sdk.AccAddress{}
 }
 
 func (msg *MsgAddPremiumVotes) ValidateBasic() error {

@@ -1,6 +1,10 @@
 package app_test
 
 import (
+	"reflect"
+	"strings"
+	"testing"
+
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -24,6 +28,7 @@ import (
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/dydxprotocol/v4/app"
+	"github.com/dydxprotocol/v4/app/basic_manager"
 	"github.com/dydxprotocol/v4/app/flags"
 	custommodule "github.com/dydxprotocol/v4/app/module"
 	testapp "github.com/dydxprotocol/v4/testutil/app"
@@ -34,9 +39,6 @@ import (
 	pricesmodule "github.com/dydxprotocol/v4/x/prices"
 	sendingmodule "github.com/dydxprotocol/v4/x/sending"
 	subaccountsmodule "github.com/dydxprotocol/v4/x/subaccounts"
-	"reflect"
-	"strings"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 )
@@ -214,6 +216,6 @@ func TestModuleBasics(t *testing.T) {
 	)
 
 	expectedFieldTypes := getMapFieldsAndTypes(reflect.ValueOf(defaultAppModuleBasics))
-	actualFieldTypes := getMapFieldsAndTypes(reflect.ValueOf(app.ModuleBasics))
+	actualFieldTypes := getMapFieldsAndTypes(reflect.ValueOf(basic_manager.ModuleBasics))
 	require.Equal(t, expectedFieldTypes, actualFieldTypes, "Module basics does not match expected")
 }

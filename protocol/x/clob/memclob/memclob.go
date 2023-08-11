@@ -793,7 +793,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 
 	// If the order is post only and it's not the rewind step, then it cannot be filled.
 	// Set the matching error so that the order is canceled.
-	// TODO (DEC-998): Determine if allowing post-only orders to match in rewind step is valid.
+	// TODO(DEC-998): Determine if allowing post-only orders to match in rewind step is valid.
 	if len(newPendingFills) > 0 &&
 		!order.IsLiquidation() &&
 		order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
@@ -1385,7 +1385,12 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
 	remainingAmount, hasRemainingAmount := m.getOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
-		return types.ErrOrderFullyFilled
+		return sdkerrors.Wrapf(
+			types.ErrOrderFullyFilled,
+			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
+			remainingAmount,
+			order.GetOrderTextString(),
+		)
 	}
 
 	// Check if the order has already been seen by determining if the associated operation already has a nonce.

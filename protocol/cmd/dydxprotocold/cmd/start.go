@@ -14,9 +14,6 @@ func GetOptionWithCustomStartCmd() *RootCmdOption {
 		// Add app flags.
 		flags.AddFlagsToCmd(cmd)
 
-		// Add testing flags.
-		flags.AddTestFlagsToCmd(cmd)
-
 		// Add pricefeed flags.
 		pricefeed.AddSharedPriceFeedFlagsToCmd(cmd)
 		pricefeed.AddClientPriceFeedFlagsToCmd(cmd)

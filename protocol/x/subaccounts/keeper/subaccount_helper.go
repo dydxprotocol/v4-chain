@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"math/big"
 	"sort"
 
 	"github.com/dydxprotocol/v4/dtypes"
@@ -49,18 +50,27 @@ func getUpdatedAssetPositions(
 }
 
 // getUpdatedPerpetualPositions filters out all the perpetual positions on a subaccount that have
-// been updated. This will include any perpetual postions that were closed due to an update.
+// been updated. This will include any perpetual postions that were closed due to an update or that
+// received / paid out funding payments.
 func getUpdatedPerpetualPositions(
 	update settledUpdate,
+	lastFundingPayments map[uint32]*big.Int,
 ) []*types.PerpetualPosition {
 	perpetualIdToPositionMap := make(map[uint32]*types.PerpetualPosition)
 	for _, perpetualPosition := range update.SettledSubaccount.PerpetualPositions {
 		perpetualIdToPositionMap[perpetualPosition.PerpetualId] = perpetualPosition
 	}
 
+	// `updatedPerpetualIds` indicates which perpetuals were either explicitly updated
+	// (through update.PerpetualUpdates) or implicitly updated (had non-zero last funding
+	// payment).
 	updatedPerpetualIds := make(map[uint32]struct{})
 	for _, perpetualUpdate := range update.PerpetualUpdates {
 		updatedPerpetualIds[perpetualUpdate.PerpetualId] = struct{}{}
+	}
+	// Mark perpetuals with non-zero last funding also as updated.
+	for perpetualIdWithNonZeroLastFunding := range lastFundingPayments {
+		updatedPerpetualIds[perpetualIdWithNonZeroLastFunding] = struct{}{}
 	}
 
 	updatedPerpetualPositions := make([]*types.PerpetualPosition, 0, len(updatedPerpetualIds))
@@ -72,9 +82,16 @@ func getUpdatedPerpetualPositions(
 		// properties are left as the default values as a 0-sized position indicates the position is
 		// closed and thus the funding index and the side of the position does not matter.
 		if !exists {
+			// Last funding payment is by default 0 if perpetual doesn't exist in `lastFundingPayments`.
+			lastFundingPayment := big.NewInt(0)
+			if value, found := lastFundingPayments[updatedId]; found {
+				lastFundingPayment = value
+			}
 			perpetualPosition = &types.PerpetualPosition{
 				PerpetualId: updatedId,
 				Quantums:    dtypes.ZeroInt(),
+				// Include last funding payment of a closed position to be later emitted in indexer events.
+				LastFundingPayment: dtypes.NewIntFromBigInt(lastFundingPayment),
 			}
 		}
 		updatedPerpetualPositions = append(updatedPerpetualPositions, perpetualPosition)

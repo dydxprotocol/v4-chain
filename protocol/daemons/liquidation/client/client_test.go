@@ -84,7 +84,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				response := &satypes.QuerySubaccountAllResponse{
 					Subaccount: []satypes.Subaccount{
 						constants.Carl_Num0_1BTC_Short,
-						constants.Dave_Num0_1BTC_Long,
+						constants.Dave_Num0_1BTC_Long_50000USD,
 					},
 				}
 				mck.On("SubaccountAll", ctx, req).Return(response, nil)
@@ -149,7 +149,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				response := &satypes.QuerySubaccountAllResponse{
 					Subaccount: []satypes.Subaccount{
 						constants.Carl_Num0_1BTC_Short,
-						constants.Dave_Num0_1BTC_Long,
+						constants.Dave_Num0_1BTC_Long_50000USD,
 					},
 				}
 				mck.On("SubaccountAll", ctx, req).Return(response, nil)

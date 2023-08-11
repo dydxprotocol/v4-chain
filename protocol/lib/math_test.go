@@ -2,12 +2,72 @@ package lib_test
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"testing"
 
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/stretchr/testify/require"
 )
+
+func TestUint64LinearInterpolate(t *testing.T) {
+	tests := map[string]struct {
+		v0          uint64
+		v1          uint64
+		cPpm        uint32
+		expected    uint64
+		expectedErr error
+	}{
+		"lerp near uint64 max": {
+			v0:       math.MaxUint64 - 1,
+			v1:       math.MaxUint64,
+			cPpm:     1_000_000,
+			expected: math.MaxUint64,
+		},
+		"lerp near uint64 max with rounding": {
+			v0:       math.MaxUint64 - 1,
+			v1:       math.MaxUint64,
+			cPpm:     500_000,
+			expected: math.MaxUint64 - 1,
+		},
+		"lerp with same inputs": {
+			v0:       math.MaxUint64,
+			v1:       math.MaxUint64,
+			cPpm:     1_000_000,
+			expected: math.MaxUint64,
+		},
+		"lerp with << inputs": {
+			v0:       2_000_000,
+			v1:       3_000_000,
+			cPpm:     300_000,
+			expected: 2_300_000,
+		},
+		"lerp with << inputs, v1 < v0": {
+			v0:       3_000_000,
+			v1:       2_000_000,
+			cPpm:     700_000,
+			expected: 2_300_000,
+		},
+		"lerp with invalid inputs, cPpm > 1_000_000": {
+			v0:          3_000_000,
+			v1:          2_000_000,
+			cPpm:        1_500_000,
+			expectedErr: fmt.Errorf("uint64 interpolation requires 0 <= cPpm <= 1_000_000, but received cPpm value of 1500000"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := lib.Uint64LinearInterpolate(tc.v0, tc.v1, tc.cPpm)
+			if tc.expectedErr == nil {
+				require.Nil(t, err)
+				require.Equal(t, tc.expected, result)
+			} else {
+				require.Zero(t, result)
+				require.EqualError(t, tc.expectedErr, err.Error())
+			}
+		})
+	}
+}
 
 func TestDivisionUint32RoundUp(t *testing.T) {
 	tests := map[string]struct {
@@ -217,6 +277,12 @@ func TestInt64MulPpm(t *testing.T) {
 			ppm:            100_000, // 10%
 			expectedResult: 6,
 		},
+		"overflow causes panic": {
+			x:             math.MaxInt64,
+			ppm:           1_000_001,
+			shouldPanic:   true,
+			expectedError: fmt.Errorf("IntMulPpm (int = 9223372036854775807, ppm = 1000001) results in integer overflow"),
+		},
 	}
 
 	for name, tc := range tests {
@@ -233,6 +299,56 @@ func TestInt64MulPpm(t *testing.T) {
 			}
 
 			result := lib.Int64MulPpm(tc.x, tc.ppm)
+			require.Equal(t, tc.expectedResult, result)
+		})
+	}
+}
+
+func TestUint64MulPpm(t *testing.T) {
+	tests := map[string]struct {
+		x              uint64
+		ppm            uint32
+		expectedResult uint64
+		shouldPanic    bool
+		expectedError  error
+	}{
+		"60 * 25% = 15": {
+			x:              60,
+			ppm:            250_000, // 25%
+			expectedResult: 15,
+		},
+		"60 * 10% = 6": {
+			x:              60,
+			ppm:            100_000, // 10%
+			expectedResult: 6,
+		},
+		"61 * 10% rounds down to 6": {
+			x:              61,
+			ppm:            100_000, // 10%
+			expectedResult: 6,
+		},
+		"overflow causes panic": {
+			x:             math.MaxUint64,
+			ppm:           1_000_001,
+			shouldPanic:   true,
+			expectedError: fmt.Errorf("UintMulPpm (uint = 18446744073709551615, ppm = 1000001) results in integer overflow"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if tc.shouldPanic {
+				require.PanicsWithError(
+					t,
+					tc.expectedError.Error(),
+					func() {
+						lib.Uint64MulPpm(tc.x, tc.ppm)
+					},
+				)
+				return
+			}
+
+			result := lib.Uint64MulPpm(tc.x, tc.ppm)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}

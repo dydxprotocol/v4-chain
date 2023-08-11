@@ -22,6 +22,7 @@ message ClobMatch {
 // MakerFill represents the filled amount of a matched maker order.
 message MakerFill {
   // The filled amount of the matched maker order, in base quantums.
+  // TODO(CLOB-571): update to use SerializableInt.
   uint64 fill_amount = 1;
   // The `OrderId` of the matched maker order.
   dydxprotocol.clob.OrderId maker_order_id = 2 [ (gogoproto.nullable) = false ];
@@ -73,6 +74,7 @@ message MatchPerpetualDeleveraging {
         [ (gogoproto.nullable) = false ];
     // The amount filled between the liquidated and deleveraged position, in
     // base quantums.
+    // TODO(CLOB-571): update to use SerializableInt.
     uint64 fill_amount = 2;
   }
   // An ordered list of fills created by this liquidation.

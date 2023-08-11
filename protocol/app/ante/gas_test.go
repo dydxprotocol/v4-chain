@@ -41,7 +41,7 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 			expectFreeInfiniteGasMeter: true,
 		},
 		"yes freeInfiniteGasMeter: single msg, MsgUpdateMarketPrices": {
-			msgOne: &pricestypes.MsgUpdateMarketPrices{Proposer: "abc"}, // app-injected.
+			msgOne: &pricestypes.MsgUpdateMarketPrices{}, // app-injected.
 
 			expectFreeInfiniteGasMeter: true,
 		},
@@ -51,7 +51,7 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 			expectFreeInfiniteGasMeter: false,
 		},
 		"no freeInfiniteGasMeter: multi msg, MsgUpdateMarketPrices": {
-			msgOne: &pricestypes.MsgUpdateMarketPrices{Proposer: "abc"}, // app-injected.
+			msgOne: &pricestypes.MsgUpdateMarketPrices{}, // app-injected.
 			msgTwo: &testdata.TestMsg{Signers: []string{"meh"}},
 
 			expectFreeInfiniteGasMeter: false,

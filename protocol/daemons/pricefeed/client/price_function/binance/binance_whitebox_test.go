@@ -27,10 +27,17 @@ func TestUnmarshalBinanceResponse_Mixed(t *testing.T) {
 			expectedError: errors.New("json: cannot unmarshal number into Go struct field " +
 				"BinanceResponseBody.bidPrice of type string"),
 		},
+		"Invalid response - unexpected negative": {
+			// Invalid due to integer bidPrice when string was expected.
+			responseJsonString: `{"askPrice": "-1368.5100", "bidPrice": "1368.0800", "lastPrice": "1368.2100"}`,
+			expectedError: errors.New("Key: 'BinanceResponseBody.AskPrice' Error:Field validation for 'AskPrice' " +
+				"failed on the 'positive-float-string' tag",
+			),
+		},
 		"Invalid response - expected numeric string field value": {
 			responseJsonString: `{"askPrice": "1368.5100", "bidPrice": "Not a Number", "lastPrice": "1368.2100"}`,
 			expectedError: errors.New("Key: 'BinanceResponseBody.BidPrice' Error:Field validation for " +
-				"'BidPrice' failed on the 'numeric' tag"),
+				"'BidPrice' failed on the 'positive-float-string' tag"),
 		},
 		"Invalid response - empty": {
 			responseJsonString: `{}`,

@@ -11,15 +11,13 @@ import (
 	"github.com/dydxprotocol/v4/mocks"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/testutil/sample"
-	keeper "github.com/dydxprotocol/v4/x/prices/keeper"
+	"github.com/dydxprotocol/v4/x/prices/keeper"
 	"github.com/dydxprotocol/v4/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 
 const (
 	price_5_015_000_000 = constants.FiveBillion + (3 * constants.FiveMillion)
-	price_5_010_000_001 = constants.FiveBillion + (2 * constants.FiveMillion) + 1
 	price_5_010_000_000 = constants.FiveBillion + (2 * constants.FiveMillion)
 	price_5_005_000_000 = constants.FiveBillion + constants.FiveMillion
 	price_5_004_999_999 = price_5_005_000_000 - 1
@@ -173,7 +171,7 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
@@ -185,7 +183,6 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 			_, err := msgServer.UpdateMarketPrices(
 				goCtx,
 				&types.MsgUpdateMarketPrices{
-					Proposer:           sample.AccAddress(),
 					MarketPriceUpdates: tc.msgUpdateMarketPrices,
 				})
 			allMarketsAfterUpdate := k.GetAllMarkets(ctx)
@@ -292,7 +289,7 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
@@ -304,7 +301,6 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 			_, err := msgServer.UpdateMarketPrices(
 				goCtx,
 				&types.MsgUpdateMarketPrices{
-					Proposer:           sample.AccAddress(),
 					MarketPriceUpdates: tc.msgUpdateMarketPrices,
 				})
 			allMarketsAfterUpdate := k.GetAllMarkets(ctx)
@@ -354,7 +350,7 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
@@ -377,7 +373,7 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 
 func TestUpdateMarketPrices_Panic(t *testing.T) {
 	// Init.
-	ctx, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 	goCtx := sdk.WrapSDKContext(ctx)
 	mockKeeper := &mocks.PricesKeeper{}
 	msgServer := keeper.NewMsgServerImpl(mockKeeper)
@@ -385,7 +381,6 @@ func TestUpdateMarketPrices_Panic(t *testing.T) {
 	testError := errors.New("panic like there's no tomorrow")
 	testUpdates := []*types.MsgUpdateMarketPrices_MarketPrice{}
 	testMsg := &types.MsgUpdateMarketPrices{
-		Proposer:           sample.AccAddress(),
 		MarketPriceUpdates: testUpdates,
 	}
 

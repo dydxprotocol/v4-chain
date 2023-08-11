@@ -643,3 +643,8 @@ func TestGetAddToOrderbookCollatCheckOrderHashesSet_PanicsOnDuplicate(t *testing
 		func() { msg.GetAddToOrderbookCollatCheckOrderHashesSet() },
 	)
 }
+
+func TestGetSigners(t *testing.T) {
+	msg := types.MsgProposedOperations{}
+	require.Empty(t, msg.GetSigners())
+}

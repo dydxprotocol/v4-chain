@@ -68,7 +68,7 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 			// Setup.
 			mockContextHelper := mocks.ContextHelper{}
 			mockContextHelper.On("Height", mock.Anything).Return(int64(2))
-			ctx, pricesKeeper, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 			mockTimeProvider.On("Now").Return(constants.TimeT)

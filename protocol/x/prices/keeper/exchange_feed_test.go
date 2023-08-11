@@ -31,7 +31,7 @@ func createNExchangeFeeds(t *testing.T, keeper *keeper.Keeper, ctx sdk.Context, 
 }
 
 func TestCreateExchangeFeed(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	created, err := keeper.CreateExchangeFeed(ctx, constants.CoinbaseExchangeName, "bar")
 
 	require.NoError(t, err)
@@ -62,7 +62,7 @@ func TestCreateExchangeFeed_Errors(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 			_, err := keeper.CreateExchangeFeed(ctx, tc.name, tc.memo)
 			require.EqualError(t, err, tc.expectedErr)
 			require.ErrorIs(t, err, types.ErrInvalidInput)
@@ -71,7 +71,7 @@ func TestCreateExchangeFeed_Errors(t *testing.T) {
 }
 
 func TestModifyExchangeFeed(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	exchange, exchangeErr := keeper.CreateExchangeFeed(ctx, constants.CoinbaseExchangeName, "bar")
 	updated, err := keeper.ModifyExchangeFeed(ctx, exchange.Id, "foo")
 
@@ -82,7 +82,7 @@ func TestModifyExchangeFeed(t *testing.T) {
 }
 
 func TestModifyExchangeFeed_InvalidInput(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	exchange, exchangeErr := keeper.CreateExchangeFeed(ctx, constants.CoinbaseExchangeName, "bar")
 	_, err := keeper.ModifyExchangeFeed(ctx, exchange.Id, "")
 
@@ -92,7 +92,7 @@ func TestModifyExchangeFeed_InvalidInput(t *testing.T) {
 }
 
 func TestModifyExchangeFeed_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	_, err := keeper.ModifyExchangeFeed(ctx, 0, "foo")
 
 	require.EqualError(t, err, sdkerrors.Wrap(types.ErrExchangeFeedDoesNotExist, "0").Error())
@@ -100,7 +100,7 @@ func TestModifyExchangeFeed_NotFound(t *testing.T) {
 }
 
 func TestGetExchangeFeed(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	exchange, exchangeErr := keeper.CreateExchangeFeed(ctx, constants.CoinbaseExchangeName, "bar")
 	retrieved, err := keeper.GetExchangeFeed(ctx, exchange.Id)
 
@@ -112,7 +112,7 @@ func TestGetExchangeFeed(t *testing.T) {
 }
 
 func TestGetExchangeFeed_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	_, err := keeper.GetExchangeFeed(ctx, 0)
 
 	require.EqualError(t, err, sdkerrors.Wrap(types.ErrExchangeFeedDoesNotExist, "0").Error())
@@ -120,7 +120,7 @@ func TestGetExchangeFeed_NotFound(t *testing.T) {
 }
 
 func TestGetAllExchangeFeeds(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	items := createNExchangeFeeds(t, keeper, ctx, 10)
 	require.ElementsMatch(
 		t,
@@ -130,7 +130,7 @@ func TestGetAllExchangeFeeds(t *testing.T) {
 }
 
 func TestGetAllExchangeFeeds_MissingExchange(t *testing.T) {
-	ctx, keeper, storeKey, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, storeKey, _, _, _ := keepertest.PricesKeepers(t)
 
 	// Write some bad data to the store
 	store := ctx.KVStore(storeKey)
@@ -145,7 +145,7 @@ func TestGetAllExchangeFeeds_MissingExchange(t *testing.T) {
 }
 
 func TestGetNumExchangeFeeds(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	require.Equal(t, uint32(0), keeper.GetNumExchangeFeeds(ctx))
 
 	createNExchangeFeeds(t, keeper, ctx, 10)

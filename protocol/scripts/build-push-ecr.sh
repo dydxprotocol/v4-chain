@@ -13,11 +13,20 @@ make clean
 if [ "$1" == "dev" ]; then
 	aws_account="329916310755"
 	ecr_repo="dev-validator"
+elif [ "$1" == "dev2" ]; then
+	aws_account="220669270420"
+	ecr_repo="dev2-validator"
+elif [ "$1" == "dev3" ]; then
+	aws_account="295746761472"
+	ecr_repo="dev3-validator"
+elif [ "$1" == "dev4" ]; then
+	aws_account="525975847385"
+	ecr_repo="dev4-validator"
 elif [ "$1" == "staging" ]; then
 	aws_account="677285201534"
 	ecr_repo="staging-validator"
 else
-	echo "Usage: build-push-ecr.sh (dev|staging)"
+	echo "Usage: build-push-ecr.sh (dev|dev2|dev3|dev4|staging)"
 	exit 1
 fi
 

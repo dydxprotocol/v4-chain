@@ -6,7 +6,9 @@ import (
 )
 
 const (
-	minGasPrice = "0usdc"
+	// TODO(CORE-189): Support both USDC and DYDX for gas.
+	// TODO(CORE-194): Update denom for IBC USDC.
+	minGasPrice = "0ibc/usdc-placeholder"
 )
 
 // DydxAppConfig specifies dYdX app specific config.

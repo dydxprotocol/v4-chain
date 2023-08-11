@@ -51,7 +51,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
-		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 		perpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,
 			db,

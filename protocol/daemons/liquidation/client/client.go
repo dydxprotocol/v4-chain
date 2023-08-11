@@ -62,7 +62,7 @@ func Start(
 			clobQueryClient,
 			liquidationServiceClient,
 		); err != nil {
-			// TODO (DEC-947): Move daemon shutdown to application.
+			// TODO(DEC-947): Move daemon shutdown to application.
 			logger.Error("Liquidations daemon returned error", "error", err)
 		}
 	}

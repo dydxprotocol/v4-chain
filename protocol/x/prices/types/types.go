@@ -57,4 +57,9 @@ type PricesKeeper interface {
 		marketPriceUpdates *MsgUpdateMarketPrices,
 		performNonDeterministicValidation bool,
 	) error
+
+	// Proposal related.
+	UpdateSmoothedPrices(
+		ctx sdk.Context,
+	) error
 }

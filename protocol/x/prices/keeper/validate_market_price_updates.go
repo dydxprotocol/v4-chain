@@ -2,6 +2,9 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
+	"time"
+
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,8 +13,6 @@ import (
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/lib/metrics"
 	"github.com/dydxprotocol/v4/x/prices/types"
-	"math/big"
-	"time"
 )
 
 const (
@@ -190,11 +191,19 @@ func (k Keeper) validatePriceAccuracy(
 	priceUpdate *types.MsgUpdateMarketPrices_MarketPrice,
 	indexPrice uint64,
 ) error {
-	if isTowardsIndexPrice(currMarket.Price, priceUpdate.Price, indexPrice) {
+	if isTowardsIndexPrice(PriceTuple{
+		OldPrice:   currMarket.Price,
+		IndexPrice: indexPrice,
+		NewPrice:   priceUpdate.Price,
+	}) {
 		return nil
 	}
 
-	if !isCrossingIndexPrice(currMarket.Price, priceUpdate.Price, indexPrice) {
+	if !isCrossingIndexPrice(PriceTuple{
+		OldPrice:   currMarket.Price,
+		IndexPrice: indexPrice,
+		NewPrice:   priceUpdate.Price,
+	}) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidMarketPriceUpdateNonDeterministic,
 			"update price (%d) for market (%d) trends in the opposite direction of the index price (%d) compared "+
@@ -266,7 +275,7 @@ func (k Keeper) GetMarketsMissingFromPriceUpdates(
 	var missingMarkets []uint32
 	// Note that `GetValidMarketPriceUpdates` return value is ordered by market id.
 	// This is NOT deterministic, because the returned values are based on "index price".
-	allLocalUpdates := k.GetValidMarketPriceUpdates(ctx, []byte{}).MarketPriceUpdates
+	allLocalUpdates := k.GetValidMarketPriceUpdates(ctx).MarketPriceUpdates
 	for _, localUpdate := range allLocalUpdates {
 		if _, exists := proposedUpdatesMap[localUpdate.MarketId]; !exists {
 			missingMarkets = append(missingMarkets, localUpdate.MarketId)

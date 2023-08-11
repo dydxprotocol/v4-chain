@@ -88,6 +88,8 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 	expectedSuccess bool,
 	updates []types.Update,
 	expectedSuccessPerUpdates []types.UpdateResult,
+	expectedUpdatedPerpetualPositions map[types.SubaccountId][]*types.PerpetualPosition,
+	expectedUpdatedAssetPositions map[types.SubaccountId][]*types.AssetPosition,
 ) {
 	subaccountUpdates := getSubaccountUpdateEventsFromIndexerBlock(ctx, keeper)
 
@@ -109,6 +111,16 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 	// There should be exactly as many subaccount update events included as there were successful
 	// subaccount updates.
 	require.Len(t, subaccountUpdates, numSuccessfulUpdates)
+
+	// For each update, verify that the expected SubaccountUpdateEvent is emitted.
+	for _, update := range updates {
+		expecetedSubaccountUpdateEvent := indexerevents.NewSubaccountUpdateEvent(
+			&update.SubaccountId,
+			expectedUpdatedPerpetualPositions[update.SubaccountId],
+			expectedUpdatedAssetPositions[update.SubaccountId],
+		)
+		require.Contains(t, subaccountUpdates, expecetedSubaccountUpdateEvent)
+	}
 }
 
 func TestSubaccountGet(t *testing.T) {
@@ -139,13 +151,64 @@ func TestSubaccountGetNonExistent(t *testing.T) {
 	require.False(t, acct.MarginEnabled)
 }
 
-func TestSubaccountGetAll(t *testing.T) {
+func TestGetAllSubaccount(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
 	items := createNSubaccount(keeper, ctx, 10)
-	require.ElementsMatch(t,
-		nullify.Fill(items),                        //nolint:staticcheck
-		nullify.Fill(keeper.GetAllSubaccount(ctx)), //nolint:staticcheck
+	require.Equal(
+		t,
+		items,
+		keeper.GetAllSubaccount(ctx),
 	)
+}
+
+func TestForEachSubaccount(t *testing.T) {
+	tests := map[string]struct {
+		numSubaccountsInState int
+		iterationCount        int
+	}{
+		"No subaccounts in state": {
+			numSubaccountsInState: 0,
+			iterationCount:        0,
+		},
+		"one subaccount in state, one iteration": {
+			numSubaccountsInState: 1,
+			iterationCount:        1,
+		},
+		"two subaccount in state, one iteration": {
+			numSubaccountsInState: 2,
+			iterationCount:        1,
+		},
+		"ten subaccount in state, one iteration": {
+			numSubaccountsInState: 10,
+			iterationCount:        1,
+		},
+		"ten subaccount in state, partial iteration": {
+			numSubaccountsInState: 10,
+			iterationCount:        8,
+		},
+		"ten subaccount in state, full iteration": {
+			numSubaccountsInState: 10,
+			iterationCount:        10,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+			items := createNSubaccount(keeper, ctx, tc.numSubaccountsInState)
+			collectedSubaccounts := make([]types.Subaccount, 0)
+			i := 0
+			keeper.ForEachSubaccount(ctx, func(subaccount types.Subaccount) bool {
+				i++
+				collectedSubaccounts = append(collectedSubaccounts, subaccount)
+				return i == tc.iterationCount
+			})
+			require.Equal(
+				t,
+				items[:tc.iterationCount],
+				collectedSubaccounts,
+			)
+		})
+	}
 }
 
 func TestUpdateSubaccounts(t *testing.T) {
@@ -221,9 +284,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedAssetPositions: []*types.AssetPosition{
@@ -264,15 +328,26 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(-10),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(-10),
+					LastFundingPayment: dtypes.NewInt(2_000), // negated settlement
 				},
 			},
 			expectedAssetPositions: []*types.AssetPosition{
 				{
 					AssetId:  uint32(0),
 					Quantums: dtypes.NewInt(-2100), // 2100 USDC
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(100_000_000),
+						FundingIndex:       dtypes.NewInt(-10),
+						LastFundingPayment: dtypes.NewInt(2_000),
+					},
 				},
 			},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -308,15 +383,26 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(500_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(-17),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(500_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(-17),
+					LastFundingPayment: dtypes.NewInt(-8), // negated settlement
 				},
 			},
 			expectedAssetPositions: []*types.AssetPosition{
 				{
 					AssetId:  uint32(0),
 					Quantums: dtypes.NewInt(-92),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(500_000),
+						FundingIndex:       dtypes.NewInt(-17),
+						LastFundingPayment: dtypes.NewInt(-8),
+					},
 				},
 			},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -351,9 +437,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			updates: []types.Update{
@@ -404,17 +491,19 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(150_000_000), // 1.5 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(0),
-						Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(150_000_000), // 1.5 BTC
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -457,17 +546,19 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(50_000_000), // .50 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(50_000_000), // .50 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(0),
-						Quantums:     dtypes.NewInt(50_000_000), // .50 BTC
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(50_000_000), // .50 BTC
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -518,8 +609,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 				defaultSubaccountId: {
 					// Position closed update.
 					{
-						PerpetualId: uint32(0),
-						Quantums:    dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(0),
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -570,8 +663,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 				defaultSubaccountId: {
 					// Position closed update.
 					{
-						PerpetualId: uint32(0),
-						Quantums:    dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(0),
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -624,22 +719,26 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(-200_000_000), // -2 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(-200_000_000), // -2 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(0),
-						Quantums:     dtypes.NewInt(-200_000_000), // -2 BTC
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(-200_000_000), // -2 BTC
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 					// Position closed update.
 					{
-						PerpetualId: uint32(1),
-						Quantums:    dtypes.NewInt(0),
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(0),
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -738,22 +837,26 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(1),
-					Quantums:     dtypes.NewInt(-2_000_000_000), // -2 ETH
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(1),
+					Quantums:           dtypes.NewInt(-2_000_000_000), // -2 ETH
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					// Position closed update.
 					{
-						PerpetualId: uint32(0),
-						Quantums:    dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(0),
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 					{
-						PerpetualId:  uint32(1),
-						Quantums:     dtypes.NewInt(-2_000_000_000), // -2 ETH
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(-2_000_000_000), // -2 ETH
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -799,17 +902,19 @@ func TestUpdateSubaccounts(t *testing.T) {
 			perpetualPositions: []*types.PerpetualPosition{},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(0),
-						Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -851,17 +956,19 @@ func TestUpdateSubaccounts(t *testing.T) {
 			perpetualPositions: []*types.PerpetualPosition{},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(-100_000_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(-100_000_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(0),
-						Quantums:     dtypes.NewInt(-100_000_000), // 1 BTC
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(-100_000_000), // 1 BTC
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -910,22 +1017,25 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 				{
-					PerpetualId:  uint32(1),
-					Quantums:     dtypes.NewInt(1_000_000_000), // 1 ETH
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(1),
+					Quantums:           dtypes.NewInt(1_000_000_000), // 1 ETH
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(1),
-						Quantums:     dtypes.NewInt(1_000_000_000), // 1 ETH
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(1_000_000_000), // 1 ETH
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -971,22 +1081,25 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 				{
-					PerpetualId:  uint32(1),
-					Quantums:     dtypes.NewInt(-500_000_000), // -5 ETH
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(1),
+					Quantums:           dtypes.NewInt(-500_000_000), // -5 ETH
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(1),
-						Quantums:     dtypes.NewInt(-500_000_000), // -5 ETH
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(-500_000_000), // -5 ETH
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -1032,27 +1145,31 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 				{
-					PerpetualId:  uint32(1),
-					Quantums:     dtypes.NewInt(1_000_000_000), // 1 ETH
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(1),
+					Quantums:           dtypes.NewInt(1_000_000_000), // 1 ETH
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 				{
-					PerpetualId:  uint32(2),
-					Quantums:     dtypes.NewInt(1_000_000_000), // 1 SOL
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(2),
+					Quantums:           dtypes.NewInt(1_000_000_000), // 1 SOL
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(1),
-						Quantums:     dtypes.NewInt(1_000_000_000), // 1 ETH
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(1_000_000_000), // 1 ETH
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -1098,27 +1215,31 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 				{
-					PerpetualId:  uint32(1),
-					Quantums:     dtypes.NewInt(1_000_000_000), // 1 ETH
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(1),
+					Quantums:           dtypes.NewInt(1_000_000_000), // 1 ETH
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 				{
-					PerpetualId:  uint32(2),
-					Quantums:     dtypes.NewInt(1_000_000_000), // 1 SOL
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(2),
+					Quantums:           dtypes.NewInt(1_000_000_000), // 1 SOL
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(0),
-						Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -1169,37 +1290,43 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(200_000_000), // 2 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(200_000_000), // 2 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 				{
-					PerpetualId:  uint32(1),
-					Quantums:     dtypes.NewInt(2_000_000_000), // 2 ETH
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(1),
+					Quantums:           dtypes.NewInt(2_000_000_000), // 2 ETH
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 				{
-					PerpetualId:  uint32(2),
-					Quantums:     dtypes.NewInt(2_000_000_000), // 2 SOL
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(2),
+					Quantums:           dtypes.NewInt(2_000_000_000), // 2 SOL
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				defaultSubaccountId: {
 					{
-						PerpetualId:  uint32(0),
-						Quantums:     dtypes.NewInt(200_000_000), // 2 BTC
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(200_000_000), // 2 BTC
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 					{
-						PerpetualId:  uint32(1),
-						Quantums:     dtypes.NewInt(2_000_000_000), // 2 ETH
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(2_000_000_000), // 2 ETH
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 					{
-						PerpetualId:  uint32(2),
-						Quantums:     dtypes.NewInt(2_000_000_000), // 2 SOL
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(2),
+						Quantums:           dtypes.NewInt(2_000_000_000), // 2 SOL
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -1249,8 +1376,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 				defaultSubaccountId: {
 					// Position closed update.
 					{
-						PerpetualId: uint32(1),
-						Quantums:    dtypes.NewInt(0),
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(0),
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 				{
@@ -1258,9 +1387,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 					Number: uint32(12),
 				}: {
 					{
-						PerpetualId:  uint32(0),
-						Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-						FundingIndex: dtypes.NewInt(0),
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(100_000_000), // 1 BTC
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -1329,9 +1459,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(1_000_000), // 0.01 BTC
-					FundingIndex: dtypes.NewInt(0),
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(1_000_000), // 0.01 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			updates: []types.Update{
@@ -1409,9 +1540,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
-					PerpetualId:  uint32(0),
-					Quantums:     dtypes.NewInt(1_000_000), // 0.01 BTC
-					FundingIndex: dtypes.NewInt(-10),       // indexDelta=-3, settlement=3
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(1_000_000), // 0.01 BTC
+					FundingIndex:       dtypes.NewInt(-10),       // indexDelta=-3, settlement=3
+					LastFundingPayment: dtypes.NewInt(-3),        // negated settlement
 				},
 			},
 			expectedAssetPositions: []*types.AssetPosition{
@@ -1421,6 +1553,16 @@ func TestUpdateSubaccounts(t *testing.T) {
 						new(big.Int).SetUint64(math.MaxUint64),
 						new(big.Int).SetInt64(1),
 					)),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(1_000_000),
+						FundingIndex:       dtypes.NewInt(-10),
+						LastFundingPayment: dtypes.NewInt(-3),
+					},
 				},
 			},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -1443,7 +1585,6 @@ func TestUpdateSubaccounts(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-
 			updates: []types.Update{
 				{
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -1460,7 +1601,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					Quantums: dtypes.NewIntFromBigInt(
 						big_testutil.MustFirst(new(big.Int).SetString("18446744073709551616", 10)), // 1 BTC
 					),
-					FundingIndex: dtypes.NewInt(0),
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -1470,7 +1612,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 						Quantums: dtypes.NewIntFromBigInt(
 							big_testutil.MustFirst(new(big.Int).SetString("18446744073709551616", 10)), // 1 BTC
 						),
-						FundingIndex: dtypes.NewInt(0),
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -1505,7 +1648,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 							new(big.Int).SetUint64(1),
 						),
 					),
-					FundingIndex: dtypes.NewInt(0),
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
 				},
 			},
 			updates: []types.Update{
@@ -1529,7 +1673,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 								new(big.Int).SetUint64(1),
 							),
 						),
-						FundingIndex: dtypes.NewInt(0),
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
 					},
 				},
 			},
@@ -1552,6 +1697,270 @@ func TestUpdateSubaccounts(t *testing.T) {
 						{
 							PerpetualId:      uint32(999),
 							BigQuantumsDelta: big.NewInt(1),
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+		},
+		"update ETH position; start with BTC and ETH positions; both BTC and ETH positions have unsettled funding": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.EthUsd_NoMarginRequirement,
+			},
+			newFundingIndices: []*big.Int{big.NewInt(-10), big.NewInt(-8)},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId: uint32(0),
+					Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+					// indexDelta=-5
+					FundingIndex: dtypes.NewInt(-5),
+				},
+				{
+					PerpetualId: uint32(1),
+					Quantums:    dtypes.NewInt(-2_000_000_000), // -2 ETH
+					// indexDelta=-2
+					FundingIndex: dtypes.NewInt(-6),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
+					FundingIndex: dtypes.NewInt(-10),
+					// indexDelta=-5, settlement=5*-100_000_000/1_000_000=-500
+					LastFundingPayment: dtypes.NewInt(500),
+				},
+				{
+					PerpetualId:  uint32(1),
+					Quantums:     dtypes.NewInt(-1_000_000_000), // -1 ETH
+					FundingIndex: dtypes.NewInt(-8),
+					// indexDelta=-2, settlement=2*-2_000_000_000/1_000_000=-4_000
+					LastFundingPayment: dtypes.NewInt(4_000),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(-100_000_000), // -1 BTC
+						FundingIndex:       dtypes.NewInt(-10),
+						LastFundingPayment: dtypes.NewInt(500),
+					},
+					{
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(-1_000_000_000), // -1 ETH
+						FundingIndex:       dtypes.NewInt(-8),
+						LastFundingPayment: dtypes.NewInt(4_000),
+					},
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId: uint32(0),
+					// Original Asset Position - Funding Payments
+					// = 100_000_000_000 - 4_000 - 500
+					// = 99_999_995_500
+					Quantums: dtypes.NewInt(99_999_995_500),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(1),
+							BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ETH
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+		},
+		"update ETH position; start with BTC and ETH positions; only ETH position has unsettled funding": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.EthUsd_NoMarginRequirement,
+			},
+			newFundingIndices: []*big.Int{big.NewInt(0), big.NewInt(-8)},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId: uint32(0),
+					Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+					// indexDelta=0
+					FundingIndex: dtypes.NewInt(0),
+				},
+				{
+					PerpetualId: uint32(1),
+					Quantums:    dtypes.NewInt(-2_000_000_000), // -2 ETH
+					// indexDelta=-2
+					FundingIndex: dtypes.NewInt(-6),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:        uint32(0),
+					Quantums:           dtypes.NewInt(-100_000_000), // -1 BTC
+					FundingIndex:       dtypes.NewInt(0),
+					LastFundingPayment: dtypes.NewInt(0),
+				},
+				{
+					PerpetualId:  uint32(1),
+					Quantums:     dtypes.NewInt(-1_000_000_000), // -1 ETH
+					FundingIndex: dtypes.NewInt(-8),
+					// indexDelta=-2, settlement=2*-2_000_000_000/1_000_000=-4_000
+					LastFundingPayment: dtypes.NewInt(4_000),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					// Only ETH position is emitted here.
+					{
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(-1_000_000_000), // -1 ETH
+						FundingIndex:       dtypes.NewInt(-8),
+						LastFundingPayment: dtypes.NewInt(4_000),
+					},
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId: uint32(0),
+					// Original Asset Position - Funding Payments
+					// = 100_000_000_000 - 4_000
+					// = 99_999_996_000
+					Quantums: dtypes.NewInt(99_999_996_000),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(1),
+							BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ETH
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+		},
+		"update closes ETH position; start with BTC and ETH positions; both BTC and ETH positions have unsettled funding": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.EthUsd_NoMarginRequirement,
+			},
+			newFundingIndices: []*big.Int{big.NewInt(-10), big.NewInt(-8)},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId: uint32(0),
+					Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+					// indexDelta=-5
+					FundingIndex: dtypes.NewInt(-5),
+				},
+				{
+					PerpetualId: uint32(1),
+					Quantums:    dtypes.NewInt(-1_000_000_000), // -1 ETH
+					// indexDelta=-2
+					FundingIndex: dtypes.NewInt(-6),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
+					FundingIndex: dtypes.NewInt(-10),
+					// indexDelta=-5, settlement=5*-100_000_000/1_000_000=-500
+					LastFundingPayment: dtypes.NewInt(500),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:        uint32(0),
+						Quantums:           dtypes.NewInt(-100_000_000), // -1 BTC
+						FundingIndex:       dtypes.NewInt(-10),
+						LastFundingPayment: dtypes.NewInt(500),
+					},
+					// Position closed update.
+					{
+						PerpetualId:  uint32(1),
+						Quantums:     dtypes.NewInt(0),
+						FundingIndex: dtypes.NewInt(0),
+						// indexDelta=-2, settlement=2*-1_000_000_000/1_000_000=-2_000
+						LastFundingPayment: dtypes.NewInt(2_000),
+					},
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId: uint32(0),
+					// Original Asset Position - Funding Payments
+					// = 100_000_000_000 - 2_000 - 500
+					// = 99_999_997_500
+					Quantums: dtypes.NewInt(99_999_997_500),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(1),
+							BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ETH
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+		},
+		"update closes ETH position; start with ETH position; ETH position has no unsettled funding": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.EthUsd_NoMarginRequirement,
+			},
+			newFundingIndices: []*big.Int{big.NewInt(0)},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId: uint32(1),
+					Quantums:    dtypes.NewInt(-1_000_000_000), // -1 ETH
+					// indexDelta=0
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					// Position closed update.
+					{
+						PerpetualId:        uint32(1),
+						Quantums:           dtypes.NewInt(0),
+						FundingIndex:       dtypes.NewInt(0),
+						LastFundingPayment: dtypes.NewInt(0),
+					},
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(100_000_000_000),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(1),
+							BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ETH
 						},
 					},
 				},
@@ -1636,6 +2045,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					tc.expectedSuccess,
 					tc.updates,
 					tc.expectedSuccessPerUpdate,
+					tc.expectedUpdatedPerpetualPositions,
+					tc.expectedUpdatedAssetPositions,
 				)
 			} else {
 				assertSubaccountUpdateEventsNotInIndexerBlock(

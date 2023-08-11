@@ -12,7 +12,7 @@ import (
 func TestGenesis(t *testing.T) {
 	genesisState := constants.Prices_DefaultGenesisState
 
-	ctx, k, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
 	prices.InitGenesis(ctx, *k, genesisState)
 	got := prices.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)

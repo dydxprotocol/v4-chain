@@ -71,26 +71,6 @@ TEST_ACCOUNTS=(
 	"dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs" # bob
 	"dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70" # carl
 	"dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn" # dave
-	"dydx1x2hd82qerp7lc0kf5cs3yekftupkrl620te6u2"
-	"dydx1z9vz6r35ejc2l7l4wse8sc08gq2rm99t9c2hwr"
-	"dydx16flrr9x7wjypd8y38dqt93km7tmnhp3yx6gucx"
-	"dydx1ux65hjecs2cc64sw46dy5tr39s9xay5a7xz868"
-	"dydx13yrk2f4h568j8svst3nvrcf0utkumjnzrc822g"
-	"dydx1rkkrvxxvnufkwq9dve63getfyr2crpkgkqzrxy"
-	"dydx1ruvdhudz4tcvm9rxm3rv7npxqdkzmw30lacxzd"
-	"dydx1vewh46wf76szcnlajhxythaj4nja87vgjsez40"
-	"dydx1zhr6cstar6zlr0p3r70u7nt7vy0ag8er786wts"
-	"dydx1azcv6c9uqvyumxp0tq4efzyufrqft3vzpa3f70"
-	"dydx1ajyappxvuhwvm63vy9uk4tgd6n2nqsx5v09783"
-	"dydx1xm4mn2v5mquz5r0kth4l0s0pd8lgsl6ka9nwcd"
-	"dydx18gtyjf5jrnrhd2y837p7yg60n4e94kpfpmq49a"
-	"dydx1xu782jvc9k7wkxsdyckanlqxcy6v2vd7ups69u"
-	"dydx1rsk4kt2xw5yfdxwc55tsphj8g2yyajxpsnsh8f"
-	"dydx1sje4za9ww22czp0707ycyev72pfexzlgnpg8vp"
-	"dydx1ral6kmw4jpxjj3hcjxlqwxj8qek2440p2h9cca"
-	"dydx12qxafhmlcwr6mtdp24sn974qtfd32ffhuq6fjp"
-	"dydx16yhyu378me5enwlevsl7f9atumg5mpgvrzj5dm"
-	"dydx1ey95wck3szcm8dh96gjn0w5lmv4alwpah0zxmn"
 )
 
 FAUCET_ACCOUNTS=(
@@ -157,10 +137,10 @@ create_validators() {
 		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}"
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 100000000000000000usdc,100000000000stake --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,100000000000stake --home "$VAL_HOME_DIR"
 		done
 		for acct in "${FAUCET_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 900000000000000000usdc,100000000000stake --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,100000000000stake --home "$VAL_HOME_DIR"
 		done
 
 		dydxprotocold gentx "${MONIKERS[$i]}" 500000000stake --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
@@ -209,10 +189,10 @@ edit_config() {
 	CONFIG_FOLDER=$1
 
 	# Disable pex
-	dasel put bool -f "$CONFIG_FOLDER"/config.toml '.p2p.pex' 'false'
+	dasel put -t bool -f "$CONFIG_FOLDER"/config.toml '.p2p.pex' -v 'false'
 
 	# TODO(CORE-79): Set this parameter in the binary after we get a reasonable value from experiments.
-	dasel put string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' '1s'
+	dasel put -t string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' -v '1s'
 }
 
 install_prerequisites

@@ -15,14 +15,12 @@ var (
 	AppInjectedMsgSamples = map[string]sdk.Msg{
 		// clob
 		"/dydxprotocol.clob.MsgProposedOperations": &clobtypes.MsgProposedOperations{
-			Proposer:        "abc",
 			OperationsQueue: make([]clobtypes.Operation, 0),
 		},
 		"/dydxprotocol.clob.MsgProposedOperationsResponse": nil,
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes": &perptypes.MsgAddPremiumVotes{
-			Proposer: "abc",
 			Votes: []perptypes.FundingPremium{
 				{PerpetualId: 0, PremiumPpm: 1_000},
 			},
@@ -31,7 +29,6 @@ var (
 
 		// prices
 		"/dydxprotocol.prices.MsgUpdateMarketPrices": &pricestypes.MsgUpdateMarketPrices{
-			Proposer: "abc",
 			MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 				pricestypes.NewMarketPriceUpdate(constants.MarketId0, 123_000),
 			},

@@ -14,6 +14,21 @@ const (
 	AvgInt32MaxArrayLength = 2 << 31
 )
 
+// Uint64LinearInterpolate interpolates value v0 towards v1 by a small constant value c, typically expected to
+// be between 0 and 1. Here, the input value of c is represented in ppm. In order to avoid overflows, if
+// 0 <= cPpm <= 1_000_000 then an error is returned.
+func Uint64LinearInterpolate(v0 uint64, v1 uint64, cPpm uint32) (uint64, error) {
+	if cPpm > OneMillion {
+		return 0, fmt.Errorf("uint64 interpolation requires 0 <= cPpm <= 1_000_000, but received cPpm value of %v", cPpm)
+	}
+	absDelta := Uint64MulPpm(AbsDiffUint64(v0, v1), cPpm)
+	if v0 > v1 {
+		return v0 - absDelta, nil
+	} else {
+		return v0 + absDelta, nil
+	}
+}
+
 // DivisionUint32RoundUp returns the result of x/y, rounded up.
 func DivisionUint32RoundUp(x, y uint32) uint32 {
 	// Cast to uint64 so that equation below can't overflow.
@@ -53,6 +68,18 @@ func Int64MulPpm(x int64, ppm uint32) int64 {
 	}
 
 	return xMulPpm.Int64()
+}
+
+// Uint64MulPpm multiplies a uint64 value by a scaling factor represented in ppm. If the integer overflows,
+// this method panics.
+func Uint64MulPpm(x uint64, ppm uint32) uint64 {
+	xMulPpm := BigIntMulPpm(new(big.Int).SetUint64(x), ppm)
+
+	if !xMulPpm.IsUint64() {
+		panic(fmt.Errorf("UintMulPpm (uint = %d, ppm = %d) results in integer overflow", x, ppm))
+	}
+
+	return xMulPpm.Uint64()
 }
 
 func AbsInt32(i int32) uint32 {

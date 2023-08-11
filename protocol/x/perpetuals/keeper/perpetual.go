@@ -248,7 +248,7 @@ func (k Keeper) processPremiumVotesIntoSamples(
 	)
 
 	newSamples := []types.FundingPremium{}
-	newSamplesForEvent := []types.FundingPremium{}
+	newSamplesForEvent := []indexerevents.FundingUpdate{}
 
 	for perpId := uint32(0); perpId < k.GetNumPerpetuals(ctx); perpId++ {
 		summarizedPremium, found := perpIdToSummarizedPremium[perpId]
@@ -277,9 +277,9 @@ func (k Keeper) processPremiumVotesIntoSamples(
 
 		// Append all samples (including zeros) to `newSamplesForEvent`, since
 		// the indexer should forward all sample values to users.
-		newSamplesForEvent = append(newSamplesForEvent, types.FundingPremium{
-			PerpetualId: perpId,
-			PremiumPpm:  summarizedPremium,
+		newSamplesForEvent = append(newSamplesForEvent, indexerevents.FundingUpdate{
+			PerpetualId:     perpId,
+			FundingValuePpm: summarizedPremium,
 		})
 
 		if summarizedPremium != 0 {
@@ -375,7 +375,6 @@ func (k Keeper) getFundingIndexDelta(
 // TODO(DEC-1310): Rename to reflect new premium sampling design.
 func (k Keeper) GetAddPremiumVotes(
 	ctx sdk.Context,
-	address sdk.AccAddress,
 ) (
 	msgAddPremiumVotes *types.MsgAddPremiumVotes,
 ) {
@@ -400,18 +399,11 @@ func (k Keeper) GetAddPremiumVotes(
 				metrics.BlockHeight,
 				int(ctx.BlockHeight()),
 			),
-			metrics.GetLabelForStringValue(
-				metrics.Proposer,
-				address.String(),
-			),
 			// TODO(DEC-1071): Add epoch number as label.
 		},
 	)
 
-	return types.NewMsgAddPremiumVotes(
-		address.String(),
-		newPremiumVotes,
-	)
+	return types.NewMsgAddPremiumVotes(newPremiumVotes)
 }
 
 // sampleAllPerpetuals takes premium samples for each perpetual market,
@@ -558,7 +550,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 		sampleTailsRemovalFunc, // filterFunc
 	)
 
-	newFundingRatesForEvent := []types.FundingPremium{}
+	newFundingRatesAndIndicesForEvent := []indexerevents.FundingUpdate{}
 
 	for _, perp := range allPerps {
 		premiumPpm, found := perpIdToPremiumPpm[perp.Id]
@@ -628,11 +620,6 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			))
 		}
 
-		newFundingRatesForEvent = append(newFundingRatesForEvent, types.FundingPremium{
-			PerpetualId: perp.Id,
-			PremiumPpm:  int32(bigFundingRatePpm.Int64()),
-		})
-
 		if bigFundingRatePpm.Sign() != 0 {
 			fundingIndexDelta, err := k.getFundingIndexDelta(
 				ctx,
@@ -651,13 +638,24 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 				panic(err)
 			}
 		}
+
+		// Get perpetual object with updated funding index.
+		perp, err = k.GetPerpetual(ctx, perp.Id)
+		if err != nil {
+			panic(err)
+		}
+		newFundingRatesAndIndicesForEvent = append(newFundingRatesAndIndicesForEvent, indexerevents.FundingUpdate{
+			PerpetualId:     perp.Id,
+			FundingValuePpm: int32(bigFundingRatePpm.Int64()),
+			FundingIndex:    perp.FundingIndex,
+		})
 	}
 
 	k.indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
 		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewFundingRatesEvent(newFundingRatesForEvent),
+			indexerevents.NewFundingRatesAndIndicesEvent(newFundingRatesAndIndicesForEvent),
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	)

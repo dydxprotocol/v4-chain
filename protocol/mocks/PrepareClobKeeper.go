@@ -14,13 +14,13 @@ type PrepareClobKeeper struct {
 	mock.Mock
 }
 
-// GetOperations provides a mock function with given fields: ctx, proposer
-func (_m *PrepareClobKeeper) GetOperations(ctx types.Context, proposer types.AccAddress) *clobtypes.MsgProposedOperations {
-	ret := _m.Called(ctx, proposer)
+// GetOperations provides a mock function with given fields: ctx
+func (_m *PrepareClobKeeper) GetOperations(ctx types.Context) *clobtypes.MsgProposedOperations {
+	ret := _m.Called(ctx)
 
 	var r0 *clobtypes.MsgProposedOperations
-	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress) *clobtypes.MsgProposedOperations); ok {
-		r0 = rf(ctx, proposer)
+	if rf, ok := ret.Get(0).(func(types.Context) *clobtypes.MsgProposedOperations); ok {
+		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*clobtypes.MsgProposedOperations)

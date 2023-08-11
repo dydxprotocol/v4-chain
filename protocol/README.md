@@ -55,6 +55,9 @@ Merges to the `main` branch automatically trigger a new Docker container image t
 The following commands can be used to locally build and push containers to ECR.
 
 * `make aws-push-dev` locally build and push a container image to the "dev" environment.
+* `make aws-push-dev2` locally build and push a container image to the "dev2" environment.
+* `make aws-push-dev3` locally build and push a container image to the "dev3" environment.
+* `make aws-push-dev4` locally build and push a container image to the "dev4" environment.
 * `make aws-push-staging` locally build and push a container image to the "staging" environment.
 
 #### Linting

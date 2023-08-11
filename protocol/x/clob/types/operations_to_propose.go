@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/dydxprotocol/v4/lib"
+	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
 // Nonce is a nonce tied to an operation in the operation queue.
@@ -281,6 +282,25 @@ func (o *OperationsToPropose) AddMatchToOperationsQueue(
 	)
 
 	// Insert the match operation into the operations to propose.
+	o.assignNonceToOperation(matchOperation)
+	o.insertOperationIntoOperationsToPropose(matchOperation)
+}
+
+// AddDeleveragingMatchToOperationsQueue creates a deleveraging operation,
+// assigns a nonce to the deleveraging operation, and adds the deleveraging operation to the operations queue.
+func (o *OperationsToPropose) AddDeleveragingMatchToOperationsQueue(
+	liquidatedSubaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	fills []MatchPerpetualDeleveraging_Fill,
+) {
+	// Create the deleveraging operation.
+	matchOperation := NewDeleveragingMatchOperation(
+		liquidatedSubaccountId,
+		perpetualId,
+		fills,
+	)
+
+	// Insert the deleveraging operation into the operations to propose.
 	o.assignNonceToOperation(matchOperation)
 	o.insertOperationIntoOperationsToPropose(matchOperation)
 }

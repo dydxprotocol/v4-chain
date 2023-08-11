@@ -25,6 +25,7 @@ func PricesKeepers(
 	keeper *keeper.Keeper,
 	storeKey storetypes.StoreKey,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
+	marketToSmoothedPrices types.MarketToSmoothedPrices,
 	mockTimeProvider *mocks.TimeProvider,
 ) {
 	ctx = initKeepers(t, func(
@@ -35,12 +36,13 @@ func PricesKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		keeper, storeKey, indexPriceCache, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		keeper, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider =
+			createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 
 		return []GenesisInitializer{keeper}
 	})
 
-	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider
+	return ctx, keeper, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider
 }
 
 func createPricesKeeper(
@@ -52,6 +54,7 @@ func createPricesKeeper(
 	*keeper.Keeper,
 	storetypes.StoreKey,
 	*pricefeedtypes.MarketToExchangePrices,
+	types.MarketToSmoothedPrices,
 	*mocks.TimeProvider,
 ) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
@@ -59,6 +62,8 @@ func createPricesKeeper(
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices()
+
+	marketToSmoothedPrices := types.NewMarketToSmoothedPrices()
 
 	mockTimeProvider := &mocks.TimeProvider{}
 
@@ -70,11 +75,12 @@ func createPricesKeeper(
 		cdc,
 		storeKey,
 		indexPriceCache,
+		marketToSmoothedPrices,
 		mockTimeProvider,
 		mockIndexerEventsManager,
 	)
 
-	return k, storeKey, indexPriceCache, mockTimeProvider
+	return k, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider
 }
 
 // CreateTestExchangeFeeds creates exchanges for testing.

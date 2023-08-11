@@ -70,23 +70,14 @@ func (k Keeper) performOperationProcessing(
 		)
 	}
 
-	// Perform initial stateless checks and generate a user operation queue with state information
-	// necessary to place orders on temporary memclob.
-	replayableOperations, err := k.getReplayableOperationsFromOpQueue(
+	// Perform initial stateless checks and replay operations on the temporary memclob.
+	if err := k.replayOperationsFromOpQueue(
 		ctx,
 		operations,
 		addToOrderbookCollatCheckOrderHashesSet,
-	)
-	if err != nil {
+		replayMemclob,
+	); err != nil {
 		return err
-	}
-
-	// replay all user operations on the temporary memclob.
-	for _, operation := range replayableOperations {
-		err := operation.replay(ctx, k, replayMemclob)
-		if err != nil {
-			return err
-		}
 	}
 
 	memclobOperations := replayMemclob.GetOperations(ctx)
@@ -388,16 +379,16 @@ func (op *replayableCancelOrderOperation) replay(
 	return err
 }
 
-// getReplayableOperationsFromOpQueue takes in the operations queue and generates a list of replayable
-// operations we will replay on the temporary memclob. Each replayable operation struct contains all the
-// information necessary to perform a replayable operation on the memclob and a replay method to do so.
-func (k Keeper) getReplayableOperationsFromOpQueue(
+// replayOperationsFromOpQueue takes in the operations queue, validates and replays each operations on the
+// temporary memclob. It returns an error if
+// - Any of the operations fail validation.
+// - Any of the operations fail to replay.
+func (k Keeper) replayOperationsFromOpQueue(
 	ctx sdk.Context,
 	operations []types.Operation,
 	addToOrderbookCollatCheckOrderHashesSet map[types.OrderHash]bool,
-) ([]replayableOperation, error) {
-	replayableOperations := []replayableOperation{}
-
+	memclob *memclob.MemClobPriceTimePriority,
+) error {
 	for _, operation := range operations {
 		var replayableOp replayableOperation
 		var err error
@@ -424,17 +415,22 @@ func (k Keeper) getReplayableOperationsFromOpQueue(
 		}
 
 		if err != nil {
-			return nil, sdkerrors.Wrapf(
+			return sdkerrors.Wrapf(
 				err,
-				"processing failed on operation %+v",
-				operation,
+				"validation failed on operation %s",
+				operation.GetOperationTextString(),
 			)
 		}
 
-		// Append the generated memclob user operation to the queue to be returned.
-		replayableOperations = append(replayableOperations, replayableOp)
+		if err = replayableOp.replay(ctx, k, memclob); err != nil {
+			return sdkerrors.Wrapf(
+				err,
+				"processing failed on operation %s",
+				operation.GetOperationTextString(),
+			)
+		}
 	}
-	return replayableOperations, nil
+	return nil
 }
 
 // processPreexistingStatefulOrder takes in a `OrderId` object that represents a stateful order

@@ -87,7 +87,7 @@ func TestPlaceOrder(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc,
@@ -763,7 +763,7 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_10_000USD,
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			clobs: []types.ClobPair{constants.ClobPair_Btc},
 			existingOrders: []types.Order{
@@ -1499,12 +1499,12 @@ func TestGetStatePosition_Success(t *testing.T) {
 		expectedPositionSize *big.Int
 	}{
 		`Can fetch the position size of a long position`: {
-			subaccount: &constants.Dave_Num0_1BTC_Long,
+			subaccount: &constants.Dave_Num0_1BTC_Long_50000USD,
 
 			subaccountId: constants.Dave_Num0,
 			clobPairId:   types.ClobPairId(constants.ClobPair_Btc.Id),
 
-			expectedPositionSize: constants.Dave_Num0_1BTC_Long.PerpetualPositions[0].GetBigQuantums(),
+			expectedPositionSize: constants.Dave_Num0_1BTC_Long_50000USD.PerpetualPositions[0].GetBigQuantums(),
 		},
 		`Can fetch the position size from multiple positions`: {
 			subaccount: &constants.Dave_Num0_1BTC_Long_1ETH_Long_46000USD_Short,
@@ -1529,7 +1529,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 			expectedPositionSize: big.NewInt(0),
 		},
 		`Fetching a subaccount that doesn't have an open position corresponding to CLOB returns 0`: {
-			subaccount: &constants.Dave_Num0_1BTC_Long,
+			subaccount: &constants.Dave_Num0_1BTC_Long_50000USD,
 
 			subaccountId: constants.Dave_Num0,
 			clobPairId:   types.ClobPairId(constants.ClobPair_Eth.Id),

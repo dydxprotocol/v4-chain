@@ -42,6 +42,7 @@ func NewIndexerMessageSenderKafka(
 	config.Producer.Return.Errors = true
 	config.Producer.Return.Successes = true
 	config.Producer.Retry.Max = indexerFlags.MaxRetries
+	config.Producer.MaxMessageBytes = 4194304 // 4MB
 	producer, err := sarama.NewAsyncProducer(indexerFlags.KafkaAddrs, config)
 
 	if err != nil {
@@ -87,10 +88,12 @@ func (msgSender *IndexerMessageSenderKafka) SendOnchainData(message Message) {
 		metrics.Latency,
 	)
 
+	value := sarama.ByteEncoder(message.Value)
+	telemetry.SetGauge(float32(value.Length()), types.ModuleName, metrics.OnchainMessageLength)
 	msgSender.send(&sarama.ProducerMessage{
 		Topic:   ON_CHAIN_KAFKA_TOPIC,
 		Key:     sarama.ByteEncoder(message.Key),
-		Value:   sarama.ByteEncoder(message.Value),
+		Value:   value,
 		Headers: message.Headers,
 	})
 }
@@ -105,10 +108,12 @@ func (msgSender *IndexerMessageSenderKafka) SendOffchainData(message Message) {
 		metrics.Latency,
 	)
 
+	value := sarama.ByteEncoder(message.Value)
+	telemetry.SetGauge(float32(value.Length()), types.ModuleName, metrics.OffchainMessageLength)
 	msgSender.send(&sarama.ProducerMessage{
 		Topic:   OFF_CHAIN_KAFKA_TOPIC,
 		Key:     sarama.ByteEncoder(message.Key),
-		Value:   sarama.ByteEncoder(message.Value),
+		Value:   value,
 		Headers: message.Headers,
 	})
 }

@@ -68,7 +68,7 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 			exponentMap:        testutil.ExponentSymbolMap,
 			expectedUnavailableMap: map[string]error{
 				testutil.ETHUSDC: errors.New("Key: 'BinanceResponseBody.BidPrice' Error:Field validation for " +
-					"'BidPrice' failed on the 'numeric' tag"),
+					"'BidPrice' failed on the 'positive-float-string' tag"),
 			},
 		},
 		"Unavailable - empty response": {
@@ -90,11 +90,6 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 					"Key: 'BinanceResponseBody.LastPrice' Error:Field validation for 'LastPrice' failed on the 'required' tag",
 				),
 			},
-		},
-		"Failure - underflow due to invalid negative": {
-			responseJsonString: `{"askPrice": "-1368.5100", "bidPrice": "1368.0800", "lastPrice": "1368.2100"}`,
-			exponentMap:        testutil.ExponentSymbolMap,
-			expectedError:      errors.New("value underflows uint64"),
 		},
 		"Failure - overflow due to massively negative exponent": {
 			responseJsonString: binanceResponseString,

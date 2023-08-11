@@ -2,6 +2,7 @@ package binance
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function"
 	"github.com/dydxprotocol/v4/lib"
@@ -10,15 +11,19 @@ import (
 	"net/http"
 )
 
+var (
+	validate *validator.Validate
+)
+
 // BinanceResponseBody is the response body for the request to the GET
 // https://api.binance.us/api/v3/ticker/24hr?symbol=$ Binance API
 // Note that not all response fields are included here. See the API response docs for more information.
 // https://binance-docs.github.io/apidocs/spot/en/#24hr-ticker-price-change-statistics
 type BinanceResponseBody struct {
 	// Only relevant fields of the response are included
-	AskPrice  string `json:"askPrice" validate:"required,numeric"`
-	BidPrice  string `json:"bidPrice" validate:"required,numeric"`
-	LastPrice string `json:"lastPrice" validate:"required,numeric"`
+	AskPrice  string `json:"askPrice" validate:"required,positive-float-string"`
+	BidPrice  string `json:"bidPrice" validate:"required,positive-float-string"`
+	LastPrice string `json:"lastPrice" validate:"required,positive-float-string"`
 }
 
 // unmarshalBinanceResponse converts a raw JSON string representation of the ticker REST API response from
@@ -29,7 +34,14 @@ func unmarshalBinanceResponse(body io.ReadCloser) (*BinanceResponseBody, error) 
 	if err != nil {
 		return nil, err
 	}
-	validate := validator.New()
+
+	if validate == nil {
+		validate, err = price_function.GetApiResponseValidator()
+		if err != nil {
+			return nil, fmt.Errorf("Error creating API response validator (%w)", err)
+		}
+	}
+
 	err = validate.Struct(responseBody)
 	if err != nil {
 		return nil, err

@@ -56,7 +56,6 @@ func TestProposedOperations(t *testing.T) {
 			msgServer := keeper.NewMsgServerImpl(mockKeeper)
 			msg := &types.MsgProposedOperations{
 				OperationsQueue: make([]types.Operation, 0),
-				Proposer:        "foobar",
 			}
 			goCtx := sdk.WrapSDKContext(ctx)
 

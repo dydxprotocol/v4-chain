@@ -3,10 +3,42 @@ package price_function
 import (
 	"errors"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"math/big"
+	"strconv"
 
 	"github.com/dydxprotocol/v4/lib"
 )
+
+var (
+	apiResponseValidator *validator.Validate
+)
+
+// validatePositiveNumericString is a custom validation function that ensures a particular string field in
+// a struct being validated can be parsed into a positive-valued float. We register this function in order
+// to ensure that returned numeric string values in the Kraken response do not represent zero or negative numbers.
+// To see where this is used, note the `validate:"positive-float-string"` struct tag in the KrakenTickerResult.
+func validatePositiveNumericString(fl validator.FieldLevel) bool {
+	val, err := strconv.ParseFloat(fl.Field().String(), 64)
+	if err != nil {
+		return false
+	}
+	return val > 0
+}
+
+// GetApiResponseValidator returns a validator with custom logic registered to validate fields returned by
+// various exchange API responses.
+func GetApiResponseValidator() (*validator.Validate, error) {
+	if apiResponseValidator == nil {
+		validate := validator.New()
+		err := validate.RegisterValidation("positive-float-string", validatePositiveNumericString)
+		if err != nil {
+			return nil, fmt.Errorf("kraken API response validation internal error (%w)", err)
+		}
+		apiResponseValidator = validate
+	}
+	return apiResponseValidator, nil
+}
 
 // ExtractFirstStringFromSliceField takes a generic unmarshalled JSON object, interprets it
 // as a slice of strings, and returns the first element.

@@ -15,9 +15,8 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 	for i := 0; i < n; i++ {
 		var privkey cryptotypes.PrivKey = secp256k1.GenPrivKey()
 
-		// The following TODO is from Cosmos SDK repo, so ignoring the following TODO.
 		// github.com/cosmos/cosmos-sdk/blob/ad9e5620fb3445c716e9de45cfcdb56e8f1745bf/x/auth/ante/ante_test.go#L908
-		// TODO(ignore): also generate ed25519 keys as below when ed25519 keys are
+		// TODO(ignore - from CosmosSDK): also generate ed25519 keys as below when ed25519 keys are
 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789
 		// for now this fails:
 		//if rand.Int63()%2 == 0 {

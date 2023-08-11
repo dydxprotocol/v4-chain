@@ -7,6 +7,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/dydxprotocol/v4/dtypes"
 	"github.com/dydxprotocol/v4/indexer/common"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 
@@ -1540,7 +1541,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 		testFundingSamples               []int32
 		expectedFundingIndexDeltas       []*big.Int
 		expectedFundingIndexDeltaStrings []string
-		fundingPremiums                  []types.FundingPremium
+		fundingRatesAndIndices           []indexerevents.FundingUpdate
 	}{
 		"Success: 60 equivalent samples of 0.001 percent, 60 samples expected": {
 			testFundingSampleDuration: 60,
@@ -1551,10 +1552,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// Premium sample = 0.001%, length = 60.
 			testFundingSamples:               constants.GenerateConstantFundingPremiums(1000, 60),
 			expectedFundingIndexDeltaStrings: []string{"625"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  1_000,
+					PerpetualId:     0,
+					FundingValuePpm: 1_000,
+					FundingIndex:    dtypes.NewInt(625),
 				},
 			},
 		},
@@ -1567,10 +1569,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// Premium sample = -0.001%, length = 60.
 			testFundingSamples:               constants.GenerateConstantFundingPremiums(-1000, 60),
 			expectedFundingIndexDeltaStrings: []string{"-625"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  -1_000,
+					PerpetualId:     0,
+					FundingValuePpm: -1_000,
+					FundingIndex:    dtypes.NewInt(-625),
 				},
 			},
 		},
@@ -1585,10 +1588,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// 8-hr funding rate capped at 1_500_000, prorated funding rate thus is 187_500
 			// funding index delta = 187_500 * 5_000_000_000 * 10^(-5 + -10) * 10^6 = 937500
 			expectedFundingIndexDeltaStrings: []string{"937500"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  1_500_000,
+					PerpetualId:     0,
+					FundingValuePpm: 1_500_000,
+					FundingIndex:    dtypes.NewInt(937500),
 				},
 			},
 		},
@@ -1602,10 +1606,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(math.MinInt32, 60),
 			// 8-hr funding rate capped at -1_500_000, prorated funding rate thus is -187_500
 			expectedFundingIndexDeltaStrings: []string{"-937500"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  -1_500_000,
+					PerpetualId:     0,
+					FundingValuePpm: -1_500_000,
+					FundingIndex:    dtypes.NewInt(-937500),
 				},
 			},
 		},
@@ -1619,10 +1624,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(2000, 60),
 			// 8-hr funding rate is 2_000, prorated funding rate thus is 250
 			expectedFundingIndexDeltaStrings: []string{"1250"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  2_000,
+					PerpetualId:     0,
+					FundingValuePpm: 2_000,
+					FundingIndex:    dtypes.NewInt(1250),
 				},
 			},
 		},
@@ -1636,10 +1642,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(150_000, 60),
 			// 8-hr funding rate capped at 120_000, prorated funding rate thus is 15_000
 			expectedFundingIndexDeltaStrings: []string{"75000"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  120_000,
+					PerpetualId:     0,
+					FundingValuePpm: 120_000,
+					FundingIndex:    dtypes.NewInt(75000),
 				},
 			},
 		},
@@ -1653,10 +1660,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(-150_000, 60),
 			// 8-hr funding rate capped at -120_000, prorated funding rate thus is -15_000
 			expectedFundingIndexDeltaStrings: []string{"-75000"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  -120_000,
+					PerpetualId:     0,
+					FundingValuePpm: -120_000,
+					FundingIndex:    dtypes.NewInt(-75000),
 				},
 			},
 		},
@@ -1671,10 +1679,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// 8-hr funding rate capped at 120_000 (same value as sample)
 			// prorated funding rate for one hour thus is 15_000
 			expectedFundingIndexDeltaStrings: []string{"75000"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  120_000,
+					PerpetualId:     0,
+					FundingValuePpm: 120_000,
+					FundingIndex:    dtypes.NewInt(75000),
 				},
 			},
 		},
@@ -1688,10 +1697,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(-120_000, 60),
 			// 8-hr funding rate is -120_000, prorated funding rate thus is -15_000
 			expectedFundingIndexDeltaStrings: []string{"-75000"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  -120_000,
+					PerpetualId:     0,
+					FundingValuePpm: -120_000,
+					FundingIndex:    dtypes.NewInt(-75000),
 				},
 			},
 		},
@@ -1705,10 +1715,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(120_000, 60),
 			// funding rate is clamped to 0
 			expectedFundingIndexDeltaStrings: []string{"0"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  0,
+					PerpetualId:     0,
+					FundingValuePpm: 0,
+					FundingIndex:    dtypes.NewInt(0),
 				},
 			},
 		},
@@ -1728,14 +1739,16 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 				// Eth: 0.001% at $3000, (price_value= 3_000_000_000, base_atomic = -9, price_exponenet = -6)
 				"375",
 			},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  1_000,
+					PerpetualId:     0,
+					FundingValuePpm: 1_000,
+					FundingIndex:    dtypes.NewInt(625),
 				},
 				{
-					PerpetualId: 1,
-					PremiumPpm:  1_000,
+					PerpetualId:     1,
+					FundingValuePpm: 1_000,
+					FundingIndex:    dtypes.NewInt(375),
 				},
 			},
 		},
@@ -1749,10 +1762,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(1000, 60),
 			// Average sampled rate = 0.0005% due to padding of zeros.
 			expectedFundingIndexDeltaStrings: []string{"312"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  500,
+					PerpetualId:     0,
+					FundingValuePpm: 500,
+					FundingIndex:    dtypes.NewInt(312),
 				},
 			},
 		},
@@ -1765,10 +1779,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// Premium sample = 0.001%, length = 30. Average sampled rate = 0.0005% due to padding of zeros.
 			testFundingSamples:               constants.GenerateConstantFundingPremiums(1000, 30),
 			expectedFundingIndexDeltaStrings: []string{"312"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  500,
+					PerpetualId:     0,
+					FundingValuePpm: 500,
+					FundingIndex:    dtypes.NewInt(312),
 				},
 			},
 		},
@@ -1781,10 +1796,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			// Premium sample = 0.001%, length = 60.
 			testFundingSamples:               constants.GenerateConstantFundingPremiums(1000, 60),
 			expectedFundingIndexDeltaStrings: []string{"1250"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  2_000, // 0.001% (premium) + 0.001% (default funding)
+					PerpetualId:     0,
+					FundingValuePpm: 2_000, // 0.001% (premium) + 0.001% (default funding)
+					FundingIndex:    dtypes.NewInt(1250),
 				},
 			},
 		},
@@ -1800,10 +1816,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 				[]uint32{75, 25},
 			),
 			expectedFundingIndexDeltaStrings: []string{"1250"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  2_000,
+					PerpetualId:     0,
+					FundingValuePpm: 2_000,
+					FundingIndex:    dtypes.NewInt(1250),
 				},
 			},
 		},
@@ -1816,10 +1833,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			testFundingSamples: constants.GenerateConstantFundingPremiums(math.MaxInt32, 60),
 			// 8-hr funding rate capped at 6_000_000, prorated funding rate thus is 750_000
 			expectedFundingIndexDeltaStrings: []string{"37500000000000000"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  6_000_000,
+					PerpetualId:     0,
+					FundingValuePpm: 6_000_000,
+					FundingIndex:    dtypes.NewInt(37500000000000000),
 				},
 			},
 		},
@@ -1831,10 +1849,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			},
 			testFundingSamples:               []int32{},
 			expectedFundingIndexDeltaStrings: []string{"0"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  0,
+					PerpetualId:     0,
+					FundingValuePpm: 0,
+					FundingIndex:    dtypes.NewInt(0),
 				},
 			},
 		},
@@ -1846,10 +1865,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			},
 			testFundingSamples:               []int32{},
 			expectedFundingIndexDeltaStrings: []string{"-625"},
-			fundingPremiums: []types.FundingPremium{
+			fundingRatesAndIndices: []indexerevents.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  -1000,
+					PerpetualId:     0,
+					FundingValuePpm: -1000,
+					FundingIndex:    dtypes.NewInt(-625),
 				},
 			},
 		},
@@ -1952,8 +1972,8 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			}
 
 			fundingEvents := getFundingBlockEventsFromIndexerBlock(ctx, perpsKeeper)
-			expectedFundingEvent := indexerevents.NewFundingRatesEvent(
-				tc.fundingPremiums,
+			expectedFundingEvent := indexerevents.NewFundingRatesAndIndicesEvent(
+				tc.fundingRatesAndIndices,
 			)
 			require.Contains(t, fundingEvents, expectedFundingEvent)
 		})
@@ -2114,7 +2134,6 @@ func TestGetAddPremiumVotes_NoPremiumVotes(t *testing.T) {
 
 	msgAddPremiumVotes := perpsKeeper.GetAddPremiumVotes(
 		ctx.WithBlockHeight(int64(testCurrentFundingSampleEpochStartBlock)),
-		sdk.AccAddress{},
 	)
 	// We don't panic but only log an error if there are no new premium votes.
 	require.Equal(t, 0, len(msgAddPremiumVotes.Votes))
@@ -2202,7 +2221,8 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			}
 
 			msgAddPremiumVotes := perpsKeeper.GetAddPremiumVotes(
-				ctx.WithBlockHeight(int64(tc.blockHeight)), sdk.AccAddress{})
+				ctx.WithBlockHeight(int64(tc.blockHeight)),
+			)
 
 			mockPricePremiumGetter.AssertNumberOfCalls(
 				t,

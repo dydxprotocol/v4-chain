@@ -15,11 +15,12 @@ import (
 
 type (
 	Keeper struct {
-		cdc                 codec.BinaryCodec
-		storeKey            storetypes.StoreKey
-		indexPriceCache     *pricefeedtypes.MarketToExchangePrices
-		timeProvider        lib.TimeProvider
-		indexerEventManager *indexer_manager.IndexerEventManagerImpl
+		cdc                    codec.BinaryCodec
+		storeKey               storetypes.StoreKey
+		indexPriceCache        *pricefeedtypes.MarketToExchangePrices
+		marketToSmoothedPrices types.MarketToSmoothedPrices
+		timeProvider           lib.TimeProvider
+		indexerEventManager    *indexer_manager.IndexerEventManagerImpl
 	}
 )
 
@@ -29,15 +30,17 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
+	marketToSmoothedPrices types.MarketToSmoothedPrices,
 	timeProvider lib.TimeProvider,
 	indexerEventManager *indexer_manager.IndexerEventManagerImpl,
 ) *Keeper {
 	return &Keeper{
-		cdc:                 cdc,
-		storeKey:            storeKey,
-		indexPriceCache:     indexPriceCache,
-		timeProvider:        timeProvider,
-		indexerEventManager: indexerEventManager,
+		cdc:                    cdc,
+		storeKey:               storeKey,
+		indexPriceCache:        indexPriceCache,
+		marketToSmoothedPrices: marketToSmoothedPrices,
+		timeProvider:           timeProvider,
+		indexerEventManager:    indexerEventManager,
 	}
 }
 

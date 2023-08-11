@@ -27,7 +27,7 @@ func TestIsSingleAppInjectedMsg(t *testing.T) {
 		},
 		"single msg: app-injected msg": {
 			msgs: []sdk.Msg{
-				&pricestypes.MsgUpdateMarketPrices{Proposer: "abc"}, // app-injected.
+				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
 			},
 			expectedResult: true,
 		},
@@ -37,15 +37,15 @@ func TestIsSingleAppInjectedMsg(t *testing.T) {
 		},
 		"mult msg: all app-injected msgs": {
 			msgs: []sdk.Msg{
-				&pricestypes.MsgUpdateMarketPrices{Proposer: "abc"}, // app-injected.
-				&pricestypes.MsgUpdateMarketPrices{Proposer: "abc"}, // app-injected.
+				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
+				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
 			},
 			expectedResult: false,
 		},
 		"mult msg: mixed": {
 			msgs: []sdk.Msg{
 				testMsg,
-				&pricestypes.MsgUpdateMarketPrices{Proposer: "abc"}, // app-injected.
+				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
 			},
 			expectedResult: false,
 		},

@@ -5,12 +5,14 @@ import (
 )
 
 var AssetUsdc Asset = Asset{
-	Id:     0,
-	Symbol: "USDC",
-	// TODO(CORE-92): will likely replace this with the exponent of IBC USDC Denom.
+	Id:            0,
+	Symbol:        "USDC",
 	DenomExponent: -6,
-	// TODO(CORE-92): will likely replace this with the IBC USDC Denom.
-	Denom:            "ibc/xxx",
+	// Default placeholder for USDC.
+	// In a production environment, this value in the `Asset` state will be updated
+	// with the actual IBC USDC denom. The exact approach to update will be determined
+	// in CORE-92.
+	Denom:            "ibc/usdc-placeholder",
 	HasMarket:        false,
 	AtomicResolution: lib.QuoteCurrencyAtomicResolution,
 }

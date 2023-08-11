@@ -98,17 +98,6 @@ message StatefulOrderPlacement {
   uint32 transaction_index = 3;
 }
 
-// StatefulOrderCancellation represents the cancellation of a stateful order in
-// state. It stores the order id and the `GoodTilBlockTime` of the cancellation.
-message StatefulOrderCancellation {
-  OrderId order_id = 1 [ (gogoproto.nullable) = false ];
-
-  // good_til_block_time represents the unix timestamp (in seconds) at which a
-  // stateful order cancellation will be considered expired and removed from
-  // state.
-  fixed32 good_til_block_time = 2;
-}
-
 // Order represents a single order belonging to a `Subaccount`
 // for a particular `ClobPair`.
 message Order {

@@ -130,6 +130,7 @@ func (*ClobMatch) XXX_OneofWrappers() []interface{} {
 // MakerFill represents the filled amount of a matched maker order.
 type MakerFill struct {
 	// The filled amount of the matched maker order, in base quantums.
+	// TODO(CLOB-571): update to use SerializableInt.
 	FillAmount uint64 `protobuf:"varint,1,opt,name=fill_amount,json=fillAmount,proto3" json:"fill_amount,omitempty"`
 	// The `OrderId` of the matched maker order.
 	MakerOrderId OrderId `protobuf:"bytes,2,opt,name=maker_order_id,json=makerOrderId,proto3" json:"maker_order_id"`
@@ -412,6 +413,7 @@ type MatchPerpetualDeleveraging_Fill struct {
 	Deleveraged types.SubaccountId `protobuf:"bytes,1,opt,name=deleveraged,proto3" json:"deleveraged"`
 	// The amount filled between the liquidated and deleveraged position, in
 	// base quantums.
+	// TODO(CLOB-571): update to use SerializableInt.
 	FillAmount uint64 `protobuf:"varint,2,opt,name=fill_amount,json=fillAmount,proto3" json:"fill_amount,omitempty"`
 }
 

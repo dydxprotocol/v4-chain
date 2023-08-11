@@ -5,46 +5,26 @@ import (
 
 	"github.com/dydxprotocol/v4/x/prices/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	testAddress = "dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf"
 )
 
 func TestMsgUpdateMarketPrices(t *testing.T) {
 	update := types.NewMarketPriceUpdate(uint32(0), uint64(1))
 	updates := []*types.MsgUpdateMarketPrices_MarketPrice{update}
-	msg := types.NewMsgUpdateMarketPrices(testAddress, updates)
+	msg := types.NewMsgUpdateMarketPrices(updates)
 
 	require.Equal(t, uint32(0), update.MarketId)
 	require.Equal(t, uint64(1), update.Price)
 	require.Equal(t, updates, msg.MarketPriceUpdates)
 }
 
-func TestMsgUpdateMarketPrices_GetSigners_Success(t *testing.T) {
+func TestMsgUpdateMarketPrices_GetSigners(t *testing.T) {
 	update := types.NewMarketPriceUpdate(uint32(0), uint64(1))
 	updates := []*types.MsgUpdateMarketPrices_MarketPrice{update}
-	msg := types.NewMsgUpdateMarketPrices(testAddress, updates)
-
-	expectedAddress, err := sdk.AccAddressFromBech32(testAddress)
-	require.NoError(t, err)
+	msg := types.NewMsgUpdateMarketPrices(updates)
 
 	signers := msg.GetSigners()
-	require.Len(t, signers, 1)
-	require.Equal(t, expectedAddress, signers[0])
-}
-
-func TestMsgUpdateMarketPrices_GetSigners_Panics(t *testing.T) {
-	update := types.NewMarketPriceUpdate(uint32(0), uint64(1))
-	updates := []*types.MsgUpdateMarketPrices_MarketPrice{update}
-	msg := types.NewMsgUpdateMarketPrices("invalid", updates)
-
-	require.PanicsWithError(
-		t,
-		"decoding bech32 failed: invalid bech32 string length 7",
-		func() { msg.GetSigners() })
+	require.Empty(t, signers)
 }
 
 func TestMsgUpdateMarketPrices_ValidateBasic(t *testing.T) {
@@ -92,7 +72,7 @@ func TestMsgUpdateMarketPrices_ValidateBasic(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			msg := types.NewMsgUpdateMarketPrices("", tc.updates)
+			msg := types.NewMsgUpdateMarketPrices(tc.updates)
 			err := msg.ValidateBasic()
 			if tc.expectedErr != "" {
 				require.EqualError(t, err, tc.expectedErr)

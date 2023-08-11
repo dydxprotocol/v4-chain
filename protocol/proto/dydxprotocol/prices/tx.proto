@@ -1,8 +1,6 @@
 syntax = "proto3";
 package dydxprotocol.prices;
 
-import "cosmos_proto/cosmos.proto";
-
 option go_package = "github.com/dydxprotocol/v4/x/prices/types";
 
 // Msg defines the Msg service.
@@ -23,9 +21,7 @@ message MsgUpdateMarketPrices {
     uint64 price = 2;
   }
 
-  string proposer = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-
-  repeated MarketPrice market_price_updates = 2;
+  repeated MarketPrice market_price_updates = 1;
 }
 
 // MsgUpdateMarketPricesResponse defines the MsgUpdateMarketPrices response

@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	customante "github.com/dydxprotocol/v4/app/ante"
-	libante "github.com/dydxprotocol/v4/lib/ante"
 	testante "github.com/dydxprotocol/v4/testutil/ante"
 	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
 	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
@@ -213,19 +212,21 @@ func TestSigVerification(t *testing.T) {
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	type testCase struct {
-		name      string
-		msgs      []sdk.Msg
-		privs     []cryptotypes.PrivKey
-		accNums   []uint64
-		accSeqs   []uint64
-		recheck   bool
-		shouldErr bool
+		name        string
+		msgs        []sdk.Msg
+		privs       []cryptotypes.PrivKey
+		accNums     []uint64
+		accSeqs     []uint64
+		invalidSigs bool
+		recheck     bool
+		shouldErr   bool
 	}
 
 	testMsgs := make([]sdk.Msg, len(addrs))
 	for i, addr := range addrs {
 		testMsgs[i] = testdata.NewTestMsg(addr)
 	}
+	validSigs := false
 	testCases := []testCase{
 		{
 			"no signers",
@@ -233,6 +234,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{},
 			[]uint64{},
 			[]uint64{},
+			validSigs,
 			false,
 			true,
 		},
@@ -242,6 +244,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv1, priv2},
 			[]uint64{0, 1},
 			[]uint64{0, 0},
+			validSigs,
 			false,
 			true,
 		},
@@ -251,6 +254,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv3, priv2, priv1},
 			[]uint64{2, 1, 0},
 			[]uint64{0, 0, 0},
+			validSigs,
 			false,
 			true,
 		},
@@ -260,6 +264,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv1, priv2, priv3},
 			[]uint64{7, 8, 9},
 			[]uint64{0, 0, 0},
+			validSigs,
 			false,
 			true,
 		},
@@ -269,6 +274,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv1, priv2, priv3},
 			[]uint64{0, 1, 2},
 			[]uint64{3, 4, 5},
+			validSigs,
 			false,
 			true,
 		},
@@ -278,6 +284,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv1},
 			[]uint64{0},
 			[]uint64{3},
+			validSigs,
 			false,
 			false,
 		},
@@ -287,6 +294,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv2},
 			[]uint64{1},
 			[]uint64{4},
+			validSigs,
 			false,
 			false,
 		},
@@ -296,6 +304,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv3},
 			[]uint64{2},
 			[]uint64{5},
+			validSigs,
 			false,
 			false,
 		},
@@ -305,6 +314,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv1, priv2},
 			[]uint64{0, 1},
 			[]uint64{3, 4},
+			validSigs,
 			false,
 			true,
 		},
@@ -314,6 +324,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv1, priv2, priv3},
 			[]uint64{0, 1, 2},
 			[]uint64{0, 0, 0},
+			validSigs,
 			false,
 			false,
 		},
@@ -323,6 +334,7 @@ func TestSigVerification(t *testing.T) {
 			[]cryptotypes.PrivKey{priv1, priv2, priv3},
 			[]uint64{0, 0, 0}, // account numbers are incorrect, but skips the check
 			[]uint64{0, 0, 0},
+			validSigs,
 			true,
 			false,
 		},
@@ -337,6 +349,22 @@ func TestSigVerification(t *testing.T) {
 
 		tx, err := suite.CreateTestTx(tc.privs, tc.accNums, tc.accSeqs, suite.Ctx.ChainID())
 		require.NoError(t, err)
+
+		if tc.invalidSigs {
+			txSigs, _ := tx.GetSignaturesV2()
+			badSig, _ := tc.privs[0].Sign([]byte("unrelated message"))
+			txSigs[0] = signing.SignatureV2{
+				PubKey: tc.privs[0].PubKey(),
+				Data: &signing.SingleSignatureData{
+					SignMode:  suite.ClientCtx.TxConfig.SignModeHandler().DefaultMode(),
+					Signature: badSig,
+				},
+				Sequence: tc.accSeqs[0],
+			}
+			err := suite.TxBuilder.SetSignatures(txSigs...)
+			require.NoError(t, err)
+			tx = suite.TxBuilder.GetTx()
+		}
 
 		_, err = antehandler(suite.Ctx, tx, false)
 		if tc.shouldErr {
@@ -535,140 +563,5 @@ func newTransferMessageForAddr(addr sdk.AccAddress) sdk.Msg {
 				Owner: addr.String(),
 			},
 		},
-	}
-}
-
-func Test_IsSingleAppInjectedMsg(t *testing.T) {
-	type anteHandlerTestType int
-
-	const (
-		SetPubKey = iota
-		SigGasConsume
-		SigVerification
-		IncrementSequence
-	)
-
-	tests := map[string]struct {
-		antehandlerToTest anteHandlerTestType
-		useMixedMsg       bool
-
-		expectedPanic string
-	}{
-		// SetPubKey
-		"SetPubKey: skips a single app-injected msg": {
-			antehandlerToTest: SetPubKey,
-			useMixedMsg:       false,
-		},
-		"SetPubKey: fails mixed msgs": {
-			antehandlerToTest: SetPubKey,
-			useMixedMsg:       true,
-			expectedPanic:     "empty address string is not allowed",
-		},
-		// SigGasConsume
-		"SigGasConsume: skips a single app-injected msg": {
-			antehandlerToTest: SigGasConsume,
-			useMixedMsg:       false,
-		},
-		"SigGasConsume: fails mixed msgs": {
-			antehandlerToTest: SigGasConsume,
-			useMixedMsg:       true,
-			expectedPanic:     "empty address string is not allowed",
-		},
-		// SigVerification
-		"SigVerification: skips a single app-injected msg": {
-			antehandlerToTest: SigVerification,
-			useMixedMsg:       false,
-		},
-		"SigVerification: fails mixed msgs": {
-			antehandlerToTest: SigVerification,
-			useMixedMsg:       true,
-			expectedPanic:     "empty address string is not allowed",
-		},
-		// IncrementSequence
-		"IncrementSequence: skips a single app-injected msg": {
-			antehandlerToTest: IncrementSequence,
-			useMixedMsg:       false,
-		},
-		"IncrementSequence: fails mixed msgs": {
-			antehandlerToTest: IncrementSequence,
-			useMixedMsg:       true,
-			expectedPanic:     "empty address string is not allowed",
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			suite := testante.SetupTestSuite(t, true)
-			suite.TxBuilder = suite.ClientCtx.TxConfig.NewTxBuilder()
-
-			// keys and addresses
-			priv, _, addr := testdata.KeyTestPubAddr()
-
-			// set accounts and create msg
-			acc := suite.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr)
-			require.NoError(t, acc.SetAccountNumber(0))
-			suite.AccountKeeper.SetAccount(suite.Ctx, acc)
-
-			// Sample unsigned "app-injected msg".
-			appInjectedMsg := &clobtypes.MsgProposedOperations{}
-
-			validTestMsg := testdata.NewTestMsg(addr)
-
-			msgs := make([]sdk.Msg, 0)
-			msgs = append(msgs, appInjectedMsg)
-			if tc.useMixedMsg {
-				msgs = append(msgs, validTestMsg)
-			}
-
-			require.NoError(t, suite.TxBuilder.SetMsgs(msgs...))
-			suite.TxBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
-			suite.TxBuilder.SetGasLimit(testdata.NewTestGasLimit())
-
-			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv}, []uint64{0}, []uint64{0}
-			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.Ctx.ChainID())
-			require.NoError(t, err)
-
-			var antehandler sdk.AnteHandler
-
-			switch tc.antehandlerToTest {
-			case SetPubKey:
-				spkd := sdkante.NewSetPubKeyDecorator(suite.AccountKeeper)
-				wrappedSpkd := libante.NewAppInjectedMsgAnteWrapper(spkd)
-				antehandler = sdk.ChainAnteDecorators(wrappedSpkd)
-			case SigGasConsume:
-				sgcd := sdkante.NewSigGasConsumeDecorator(suite.AccountKeeper, nil)
-				wrappedSgcd := libante.NewAppInjectedMsgAnteWrapper(sgcd)
-				antehandler = sdk.ChainAnteDecorators(wrappedSgcd)
-			case SigVerification:
-				svd := customante.NewSigVerificationDecorator(
-					suite.AccountKeeper,
-					suite.ClientCtx.TxConfig.SignModeHandler(),
-				)
-				wrappedSvd := libante.NewAppInjectedMsgAnteWrapper(svd)
-				antehandler = sdk.ChainAnteDecorators(wrappedSvd)
-			case IncrementSequence:
-				isd := customante.NewIncrementSequenceDecorator(suite.AccountKeeper)
-				wrappedIsd := libante.NewAppInjectedMsgAnteWrapper(isd)
-				antehandler = sdk.ChainAnteDecorators(wrappedIsd)
-			default:
-				panic("not a valid antehandler type for testing")
-			}
-
-			if tc.expectedPanic != "" {
-				require.PanicsWithError(
-					t,
-					tc.expectedPanic,
-					func() { _, _ = antehandler(suite.Ctx, tx, false) },
-				)
-			} else {
-				ctx, err := antehandler(suite.Ctx, tx, false)
-				require.NoError(t, err)
-
-				// Pubkey is NOT set because the decorator did NOT process the tx msg.
-				pk, err := suite.AccountKeeper.GetPubKey(ctx, addr)
-				require.NoError(t, err, "Error on retrieving pubkey from account")
-				require.Nil(t, pk)
-			}
-		})
 	}
 }

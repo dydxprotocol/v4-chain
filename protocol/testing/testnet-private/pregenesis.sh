@@ -79,7 +79,7 @@ create_pregenesis_file() {
 	edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}"
 
 	for acct in "${FAUCET_ACCOUNTS[@]}"; do
-		dydxprotocold add-genesis-account "$acct" 900000000000000000usdc,900000000000stake --home "$VAL_HOME_DIR"
+		dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,900000000000stake --home "$VAL_HOME_DIR"
 	done
 
 	# Create temporary directory for all gentx files.
@@ -106,9 +106,9 @@ create_pregenesis_file() {
 
 		echo "${MNEMONICS[$i]}" | dydxprotocold keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$INDIVIDUAL_VAL_HOME_DIR"
 
-		dydxprotocold add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" 100000000000000000usdc,100000000000stake --home "$INDIVIDUAL_VAL_HOME_DIR"
+		dydxprotocold add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" 100000000000000000$USDC_DENOM,100000000000stake --home "$INDIVIDUAL_VAL_HOME_DIR"
 
-		dydxprotocold add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" 100000000000000000usdc,100000000000stake --home "$VAL_HOME_DIR"
+		dydxprotocold add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" 100000000000000000$USDC_DENOM,100000000000stake --home "$VAL_HOME_DIR"
 
 		dydxprotocold gentx "${MONIKERS[$i]}" 50000000000stake --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$INDIVIDUAL_VAL_HOME_DIR" --ip="${IPS[$i]}"
 

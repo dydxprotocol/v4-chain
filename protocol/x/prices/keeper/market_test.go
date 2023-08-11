@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dydxprotocol/v4/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
-	indexer_manager "github.com/dydxprotocol/v4/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -167,7 +167,7 @@ func assertMarketEventsNotInIndexerBlock(
 }
 
 func TestCreateMarket(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	createNExchangeFeeds(t, keeper, ctx, 2)
 
@@ -261,7 +261,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
 			createNExchangeFeeds(t, keeper, ctx, tc.numExchangesToCreate)
 			_, err := keeper.CreateMarket(
@@ -279,7 +279,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 }
 
 func TestUpdateMarketPrices(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := createNMarkets(t, keeper, ctx, 10)
 	require.Equal(t, uint32(10), keeper.GetNumMarkets(ctx))
@@ -314,7 +314,7 @@ func TestUpdateMarketPrices(t *testing.T) {
 }
 
 func TestUpdateMarketPricesGenesis(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	createNMarkets(t, keeper, ctx, 10)
 	require.Equal(t, uint32(10), keeper.GetNumMarkets(ctx))
@@ -338,7 +338,7 @@ func TestUpdateMarketPricesGenesis(t *testing.T) {
 }
 
 func TestUpdateMarketPrices_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	priceUpdates := createNMarketPriceUpdates(keeper, ctx, 10)
 	err := keeper.UpdateMarketPrices(
@@ -368,7 +368,7 @@ func TestUpdateMarketPrices_NotFound(t *testing.T) {
 }
 
 func TestModifyMarket(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := createNMarkets(t, keeper, ctx, 10)
 	createNExchangeFeeds(t, keeper, ctx, 2)
@@ -489,7 +489,7 @@ func TestModifyMarket_Errors(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
 			createNMarkets(t, keeper, ctx, tc.numMarketsToCreate)
 			createNExchangeFeeds(t, keeper, ctx, tc.numExchangesToCreate)
@@ -506,7 +506,7 @@ func TestModifyMarket_Errors(t *testing.T) {
 }
 
 func TestGetMarket(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	items := createNMarkets(t, keeper, ctx, 10)
 	for _, item := range items {
 		rst, err := keeper.GetMarket(ctx, item.Id)
@@ -520,13 +520,13 @@ func TestGetMarket(t *testing.T) {
 }
 
 func TestGetMarket_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	_, err := keeper.GetMarket(ctx, uint32(0))
 	require.EqualError(t, err, "0: Market does not exist")
 }
 
 func TestGetAllMarkets(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	items := createNMarkets(t, keeper, ctx, 10)
 	require.ElementsMatch(
 		t,
@@ -536,7 +536,7 @@ func TestGetAllMarkets(t *testing.T) {
 }
 
 func TestGetAllMarkets_MissingMarket(t *testing.T) {
-	ctx, keeper, storeKey, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, storeKey, _, _, _ := keepertest.PricesKeepers(t)
 
 	// Write some bad data to the store
 	store := ctx.KVStore(storeKey)
@@ -551,7 +551,7 @@ func TestGetAllMarkets_MissingMarket(t *testing.T) {
 }
 
 func TestGetNumMarkets(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	require.Equal(t, uint32(0), keeper.GetNumMarkets(ctx))
 
 	createNMarkets(t, keeper, ctx, 10)

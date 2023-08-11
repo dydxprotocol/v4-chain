@@ -23,6 +23,10 @@ const (
 	BitfinexResponseLength = 10
 )
 
+var (
+	validate *validator.Validate
+)
+
 // BitfinexResponseBody is our representation of the response body for the request to the GET
 // The raw response is a slice of floats. We use this constructed response to enable stricter
 // validation.
@@ -62,7 +66,13 @@ func unmarshalBitfinexResponse(body io.ReadCloser) (*BitfinexResponseBody, error
 	responseBody.AskPrice = rawResponse[AskPriceIndex]
 	responseBody.LastPrice = rawResponse[LastPriceIndex]
 
-	validate := validator.New()
+	if validate == nil {
+		validate, err = price_function.GetApiResponseValidator()
+		if err != nil {
+			return nil, fmt.Errorf("Error creating API response validator (%w)", err)
+		}
+	}
+
 	err = validate.Struct(responseBody)
 	if err != nil {
 		return nil, err

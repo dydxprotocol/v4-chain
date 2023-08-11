@@ -10,6 +10,7 @@ import (
 
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/dydxprotocol/v4/app/basic_manager"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -102,7 +103,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
 		// edit bank state to make it have the not bonded pool tokens
 		bankStateBz, ok := rawState[banktypes.ModuleName]
-		// TODO(fdymylja/jonathan): should we panic in this case
+		// TODO(ignore - from CosmosSDK): should we panic in this case
 		if !ok {
 			panic("bank genesis state is missing")
 		}
@@ -147,8 +148,9 @@ func AppStateRandomizedFn(
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
-	// TODO - in case runtime.RegisterModules(...) is used, the genesis state of the module won't be reflected here
-	genesisState := ModuleBasics.DefaultGenesis(cdc)
+	// TODO(ignore - from CosmosSDK)
+	// in case runtime.RegisterModules(...) is used, the genesis state of the module won't be reflected here
+	genesisState := basic_manager.ModuleBasics.DefaultGenesis(cdc)
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts

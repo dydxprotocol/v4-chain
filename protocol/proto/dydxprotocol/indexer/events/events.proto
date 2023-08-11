@@ -6,9 +6,25 @@ import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/subaccounts/asset_position.proto";
 import "dydxprotocol/subaccounts/perpetual_position.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
-import "dydxprotocol/perpetuals/tx.proto";
 
 option go_package = "github.com/dydxprotocol/v4/indexer/events";
+
+// FundingUpdate is used for funding update events and includes a funding
+// value and an optional funding index that correspond to a perpetual market.
+message FundingUpdate {
+  // The id of the perpetual market.
+  uint32 perpetual_id = 1;
+  // funding value (in parts-per-million) can be premium vote, premium sample,
+  // or funding rate.
+  int32 funding_value_ppm = 2;
+  // funding index is required if and only if parent `FundingEvent` type is
+  // `TYPE_FUNDING_RATE_AND_INDEX`.
+  bytes funding_index = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
 
 // FundingEvent message contains a list of per-market funding values. The
 // funding values in the list is of the same type and the types are: which can
@@ -16,15 +32,13 @@ option go_package = "github.com/dydxprotocol/v4/indexer/events";
 // 1. Premium vote: votes on the premium values injected by block proposers.
 // 2. Premium sample: combined value from all premium votes during a
 //    `funding-sample` epoch.
-// 3. Funding rate: final funding rate combining all premium samples during
-//    a `funding-tick` epoch.
+// 3. Funding rate and index: final funding rate combining all premium samples
+//    during a `funding-tick` epoch and funding index accordingly updated with
+//    `funding rate * price`.
 message FundingEvent {
-  // values is a list of per-market funding values for all existing perpetual
+  // updates is a list of per-market funding updates for all existing perpetual
   // markets. The list is sorted by `perpetualId`s which are unique.
-  // TODO(DEC-1503): Rename `FundingPremium` to `FundingValue` to reflect
-  // it can represent funding rate as well.
-  repeated dydxprotocol.perpetuals.FundingPremium values = 1
-      [ (gogoproto.nullable) = false ];
+  repeated FundingUpdate updates = 1 [ (gogoproto.nullable) = false ];
 
   // Type is the type for funding values.
   enum Type {
@@ -35,13 +49,13 @@ message FundingEvent {
     TYPE_PREMIUM_SAMPLE = 1;
     // Funding rate is the final funding rate combining all premium samples
     // during a `funding-tick` epoch.
-    TYPE_FUNDING_RATE = 2;
+    TYPE_FUNDING_RATE_AND_INDEX = 2;
     // TODO(DEC-1513): Investigate whether premium vote values need to be
     // sent to indexer.
     TYPE_PREMIUM_VOTE = 3;
   }
 
-  // type stores the type of funding values.
+  // type stores the type of funding updates.
   Type type = 2;
 }
 

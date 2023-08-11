@@ -21,12 +21,6 @@ const (
 	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
 	// expire at a given timestamp, sorted by order ID.
 	StatefulOrdersTimeSlicePrefix = "StatefulOrdersTimeSlice/value/"
-	// StatefulOrderCancellationKeyPrefix is the key to retrieve a stateful order cancellation and information about
-	// when it was placed.
-	StatefulOrderCancellationKeyPrefix = "StatefulOrderCancellation/value/"
-	// StatefulOrdersCancellationTimeSlicePrefix is the key to retrieve a unique list of the stateful orders
-	// cancellations that expire at a given timestamp, sorted by order ID.
-	StatefulOrdersCancellationTimeSlicePrefix = "StatefulOrdersCancellationTimeSlice/value/"
 	// LastCommittedBlockTimeKey defines the key that stores the block time of the previously committed block.
 	LastCommittedBlockTimeKey = "LastCommittedBlockTime/value"
 	// NextStatefulOrderBlockTransactionIndexKey is the transient store key that stores the next

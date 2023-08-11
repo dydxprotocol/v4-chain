@@ -373,6 +373,33 @@ func (k Keeper) persistMatchedOrders(
 	takerUpdateResult = successPerUpdate[0]
 	makerUpdateResult = successPerUpdate[1]
 
+	ctx.Logger().Info("Performed collateralization check in ProcessSingleMatch",
+		"matchWithOrders",
+		matchWithOrders,
+		"perpetualId",
+		perpetualId,
+		"takerFeePpm",
+		takerFeePpm,
+		"makerFeePpm",
+		makerFeePpm,
+		"bigTakerQuoteBalanceDelta",
+		bigTakerQuoteBalanceDelta.String(),
+		"bigMakerQuoteBalanceDelta",
+		bigMakerQuoteBalanceDelta.String(),
+		"bigTakerPerpetualQuantumsDelta",
+		bigTakerPerpetualQuantumsDelta.String(),
+		"bigMakerPerpetualQuantumsDelta",
+		bigMakerPerpetualQuantumsDelta.String(),
+		"insuranceFundDelta",
+		insuranceFundDelta.String(),
+		"takerUpdateResult",
+		takerUpdateResult.String(),
+		"makerUpdateResult",
+		makerUpdateResult.String(),
+		"block",
+		ctx.BlockHeight(),
+	)
+
 	// If not successful, return error indicating why.
 	if err := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); err != nil {
 		return success, takerUpdateResult, makerUpdateResult, err

@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -65,13 +64,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -82,9 +79,9 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/dydxprotocol/v4/app/basic_manager"
 	"github.com/dydxprotocol/v4/app/middleware"
 	"github.com/dydxprotocol/v4/app/prepare"
 	"github.com/dydxprotocol/v4/app/process"
@@ -104,7 +101,6 @@ import (
 
 	"github.com/dydxprotocol/v4/app/flags"
 
-	custommodule "github.com/dydxprotocol/v4/app/module"
 	"github.com/dydxprotocol/v4/daemons/pricefeed"
 	pricefeedclient "github.com/dydxprotocol/v4/daemons/pricefeed/client"
 	daemonserver "github.com/dydxprotocol/v4/daemons/server"
@@ -136,11 +132,9 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibcporttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
-	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	// Upgrades
 	"github.com/dydxprotocol/v4/app/upgrades"
@@ -149,45 +143,6 @@ import (
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
-
-	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration
-	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(
-		auth.AppModuleBasic{},
-		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-		bank.AppModuleBasic{},
-		capability.AppModuleBasic{},
-		staking.AppModuleBasic{},
-		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic(
-			[]govclient.ProposalHandler{
-				paramsclient.ProposalHandler,
-				upgradeclient.LegacyProposalHandler,
-				upgradeclient.LegacyCancelProposalHandler,
-				ibcclientclient.UpdateClientProposalHandler,
-				ibcclientclient.UpgradeProposalHandler,
-			},
-		),
-		params.AppModuleBasic{},
-		crisis.AppModuleBasic{},
-		custommodule.SlashingModuleBasic{},
-		feegrantmodule.AppModuleBasic{},
-		ibc.AppModuleBasic{},
-		ibctm.AppModuleBasic{},
-		upgrade.AppModuleBasic{},
-		transfer.AppModuleBasic{},
-		consensus.AppModuleBasic{},
-
-		// Custom modules
-		pricesmodule.AppModuleBasic{},
-		assetsmodule.AppModuleBasic{},
-		perpetualsmodule.AppModuleBasic{},
-		subaccountsmodule.AppModuleBasic{},
-		clobmodule.AppModuleBasic{},
-		sendingmodule.AppModuleBasic{},
-		epochsmodule.AppModuleBasic{},
-	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
@@ -294,18 +249,9 @@ func New(
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
 
-	// Test flags should only be used for testing.
-	testFlags := flags.GetTestFlagValuesFromOptions(appOpts)
-
-	// An example of how to use the test flags.
-	// TODO(DEC-1096): remove in production builds.
-	if testFlags.ExampleFlag == 1 {
-		panic(fmt.Errorf("textFlags.ExampleFlag is equal to %d", testFlags.ExampleFlag))
-	}
-
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
-	encodingConfig := encoding.MakeEncodingConfig(ModuleBasics)
+	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
 
 	appCodec := encodingConfig.Codec
 	legacyAmino := encodingConfig.Amino
@@ -583,6 +529,7 @@ func New(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
 		indexPriceCache,
+		pricesmoduletypes.NewMarketToSmoothedPrices(),
 		timeProvider,
 		app.IndexerEventManager,
 	)
@@ -1022,7 +969,7 @@ func (app *App) TxConfig() client.TxConfig {
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (app *App) DefaultGenesis() map[string]json.RawMessage {
-	return ModuleBasics.DefaultGenesis(app.appCodec)
+	return basic_manager.ModuleBasics.DefaultGenesis(app.appCodec)
 }
 
 // getSubspace returns a param subspace for a given module name.
@@ -1046,7 +993,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
-	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	basic_manager.ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
 	if apiConfig.Swagger {

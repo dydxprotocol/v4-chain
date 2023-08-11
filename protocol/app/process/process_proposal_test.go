@@ -1,6 +1,7 @@
 package process_test
 
 import (
+	"github.com/dydxprotocol/v4/x/prices/types"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -145,7 +146,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			// Setup.
 			mockContextHelper := mocks.ContextHelper{}
 			mockContextHelper.On("Height", mock.Anything).Return(int64(2))
-			ctx, pricesKeeper, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -161,6 +162,11 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 
 			// Validate.
 			require.Equal(t, tc.expectedResponse, resp)
+			require.Equal(
+				t,
+				marketToSmoothedPrices,
+				types.MarketToSmoothedPrices(constants.AtTimeTSingleExchangeSmoothedPrices),
+			)
 		})
 	}
 }

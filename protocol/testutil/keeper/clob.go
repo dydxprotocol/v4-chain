@@ -72,7 +72,7 @@ func ClobKeepersWithUninitializedMemStore(
 		indexerEventsTransientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, indexerEventsTransientStoreKey)
+		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, indexerEventsTransientStoreKey)
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		perpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,

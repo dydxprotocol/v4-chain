@@ -58,7 +58,6 @@ type PerpetualsKeeper interface {
 	)
 	GetAddPremiumVotes(
 		ctx sdk.Context,
-		address sdk.AccAddress,
 	) (
 		msgAddPremiumVotes *MsgAddPremiumVotes,
 	)

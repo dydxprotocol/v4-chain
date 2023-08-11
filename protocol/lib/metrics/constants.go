@@ -17,12 +17,14 @@ const (
 	Latency          = "latency"
 	Matched          = "matched"
 	Negative         = "negative"
+	No               = "no"
 	NonDeterministic = "non_deterministic"
 	Positive         = "positive"
 	Received         = "received"
 	Rejected         = "rejected"
 	Success          = "success"
 	Valid            = "valid"
+	Yes              = "yes"
 
 	// ABCI: Prepare / Process
 	DisallowMsg        = "disallow_msg"
@@ -99,19 +101,22 @@ const (
 	PremiumType               = "premium_type"
 
 	// Prices.
-	CurrentMarketPrices                 = "current_market_prices"
-	GetValidMarketPriceUpdates          = "get_valid_market_price_updates"
-	IndexPriceDoesNotExist              = "index_price_does_not_exist"
-	IndexPriceDoesNotMeetMinPriceChange = "index_price_does_not_meet_min_price_change"
-	IndexPriceIsZero                    = "index_price_is_zero"
-	IndexPriceNotAccurate               = "index_price_not_accurate"
-	IndexPriceNotAvailForAccuracyCheck  = "index_price_not_available_for_accuracy_check"
-	LastPriceUpdateForMarketBlock       = "last_price_update_for_market_block"
-	MissingPriceUpdates                 = "missing_price_updates"
-	NumMarketPricesToUpdate             = "num_market_prices_to_update"
-	PriceChangeRate                     = "price_change_rate"
-	StatefulPriceUpdateValidation       = "stateful_price_update_validation"
-	UpdateMarketPrices                  = "update_market_prices"
+	CurrentMarketPrices                     = "current_market_prices"
+	DoesNotMeetMinPriceChange               = "does_not_meet_min_price_change"
+	GetValidMarketPriceUpdates              = "get_valid_market_price_updates"
+	IndexPriceDoesNotExist                  = "index_price_does_not_exist"
+	IndexPriceIsZero                        = "index_price_is_zero"
+	IndexPriceNotAccurate                   = "index_price_not_accurate"
+	IndexPriceNotAvailForAccuracyCheck      = "index_price_not_available_for_accuracy_check"
+	LastPriceUpdateForMarketBlock           = "last_price_update_for_market_block"
+	MissingPriceUpdates                     = "missing_price_updates"
+	NumMarketPricesToUpdate                 = "num_market_prices_to_update"
+	PriceChangeRate                         = "price_change_rate"
+	ProposedPriceChangesPriceUpdateDecision = "proposed_price_changes_price_update_decision"
+	ProposedPriceCrossesOldPrice            = "proposed_price_crosses_old_price"
+	StatefulPriceUpdateValidation           = "stateful_price_update_validation"
+	UpdateMarketPrices                      = "update_market_prices"
+	UpdateSmoothedPrices                    = "update_smoothed_prices"
 
 	// Sending.
 	Account                       = "account"
@@ -154,10 +159,10 @@ const (
 	LiquidationRequiresDeleveraging       = "liquidation_requires_deleveraging"
 
 	// Deleveraging.
-	DeleveragedSubaccountWithNegativeTNC = "deleveraged_subaccount_with_negative_tnc"
-	OffsettingSubaccountWithNegativeTNC  = "offsetting_subaccount_with_negative_tnc"
-	NumSubaccountsIterated               = "num_subaccounts_iterated"
-	NotEnoughPositionToFullyOffset       = "not_enough_position_to_fully_offset"
+	Deleveraging                   = "deleveraging"
+	NumSubaccountsIterated         = "num_subaccounts_iterated"
+	NotEnoughPositionToFullyOffset = "not_enough_position_to_fully_offset"
+	NonOverlappingBankruptcyPrices = "non_overlapping_bankruptcy_prices"
 
 	// Pricefeed Daemon.
 	ExchangeQueryHandlerApiRequest          = "exchange_query_handler_api_request"
@@ -188,10 +193,12 @@ const (
 	UpdatePrice = "update_price"
 
 	// msgsender
-	MessageSendSuccess = "message_send_success"
-	MessageSendError   = "message_send_error"
-	SendOffchainData   = "send_offchain_data"
-	SendOnchainData    = "send_onchain_data"
+	MessageSendSuccess    = "message_send_success"
+	MessageSendError      = "message_send_error"
+	SendOffchainData      = "send_offchain_data"
+	SendOnchainData       = "send_onchain_data"
+	OnchainMessageLength  = "onchain_message_length"
+	OffchainMessageLength = "offchain_message_length"
 
 	// Indexer events.
 	TotalNumIndexerBlockEvents = "total_num_block_events"

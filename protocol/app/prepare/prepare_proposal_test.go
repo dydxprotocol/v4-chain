@@ -276,18 +276,18 @@ func TestPrepareProposalHandler(t *testing.T) {
 			)
 
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything, mock.Anything).
+			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(tc.pricesResp)
 
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
-			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything, mock.Anything).
+			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(tc.fundingResp)
 
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(tc.clobResp)
 
-			ctx, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			handler := prepare.PrepareProposalHandler(
 				mockTxConfig,
@@ -352,18 +352,18 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			mockContextHelper.On("Height", mock.Anything).Return(int64(1))
 
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything, mock.Anything).
+			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(constants.ValidMsgUpdateMarketPrices)
 
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
-			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything, mock.Anything).
+			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(constants.ValidMsgAddPremiumVotes)
 
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(constants.ValidEmptyMsgProposedOperations)
 
-			ctx, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			handler := prepare.PrepareProposalHandler(
 				encodingCfg.TxConfig,
@@ -431,7 +431,7 @@ func TestGetUpdateMarketPricesTx(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything, mock.Anything).
+			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(tc.keeperResp)
 
 			resp := prepare.GetUpdateMarketPricesTx(ctx, mockTxConfig, address, &mockPricesKeeper)
@@ -493,10 +493,10 @@ func TestGetAddPremiumVotesTx(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
-			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything, mock.Anything).
+			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(tc.keeperResp)
 
-			resp := prepare.GetAddPremiumVotesTx(ctx, mockTxConfig, address, &mockPerpKeeper)
+			resp := prepare.GetAddPremiumVotesTx(ctx, mockTxConfig, &mockPerpKeeper)
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, resp.Err, tc.expectedErr.Error())
 			} else {
@@ -546,7 +546,6 @@ func TestGetProposedOperationsTx(t *testing.T) {
 		"valid message": {
 			keeperResp: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.Operation{{}, {}},
-				Proposer:        "proposer",
 			},
 			txEncoder: passingTxEncoderOne,
 
@@ -561,7 +560,7 @@ func TestGetProposedOperationsTx(t *testing.T) {
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).Return(tc.keeperResp)
 
-			resp := prepare.GetProposedOperationsTx(ctx, mockTxConfig, address, &mockClobKeeper)
+			resp := prepare.GetProposedOperationsTx(ctx, mockTxConfig, &mockClobKeeper)
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, resp.Err, tc.expectedErr.Error())
 			} else {

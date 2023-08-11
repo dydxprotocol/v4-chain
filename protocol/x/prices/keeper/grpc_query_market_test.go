@@ -15,7 +15,7 @@ import (
 )
 
 func TestMarketQuerySingle(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNMarkets(t, keeper, ctx, 2)
 	for _, tc := range []struct {
@@ -66,7 +66,7 @@ func TestMarketQuerySingle(t *testing.T) {
 }
 
 func TestMarketQueryPaginated(t *testing.T) {
-	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNMarkets(t, keeper, ctx, 5)
 

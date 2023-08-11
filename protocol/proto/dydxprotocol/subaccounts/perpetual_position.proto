@@ -23,4 +23,12 @@ message PerpetualPosition {
         "github.com/dydxprotocol/v4/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+  // The last settled funding payment amount (in quote quantums).
+  // Note: a positive value means funding payment was paid out and
+  // a negative value means funding payment was received.
+  bytes last_funding_payment = 4 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
 }

@@ -167,7 +167,7 @@ func TestProcessTransfer(t *testing.T) {
 		"Receiver is under collateralized (transfer still succeeds)": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_599USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			transfer: &constants.Transfer_Carl_Num0_Dave_Num0_Quote_500,
 			expectedSubaccountBalance: map[satypes.SubaccountId]*big.Int{

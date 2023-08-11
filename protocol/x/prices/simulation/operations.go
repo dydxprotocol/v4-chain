@@ -97,7 +97,6 @@ func SimulateMsgUpdateMarketPrices(
 		}
 
 		msg := &types.MsgUpdateMarketPrices{
-			Proposer:           proposer.Address.String(),
 			MarketPriceUpdates: priceUpdates,
 		}
 

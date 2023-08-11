@@ -44,6 +44,14 @@ func ProcessProposalHandler(
 			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 		}
 
+		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
+		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
+		// consensus round to do so.
+		if err := pricesKeeper.UpdateSmoothedPrices(ctx); err != nil {
+			recordErrorMetricsWithLabel(metrics.UpdateSmoothedPrices)
+			ctx.Logger().Error(fmt.Sprintf("UpdateSmoothedPrices failed, err = %v", err))
+		}
+
 		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, pricesKeeper)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("DecodeProcessProposalTxs failed: %v", err))

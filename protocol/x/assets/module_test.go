@@ -102,7 +102,7 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	json, err := result.MarshalJSON()
 	require.NoError(t, err)
 
-	expected := `{"assets":[{"id":0,"symbol":"USDC","denom":"ibc/xxx","denom_exponent":-6,"has_market":false,`
+	expected := `{"assets":[{"id":0,"symbol":"USDC","denom":"ibc/usdc-placeholder","denom_exponent":-6,"has_market":false,`
 	expected += `"market_id":0,"atomic_resolution":-6,"long_interest":"0"}]}`
 	require.Equal(t, expected, string(json))
 }
@@ -137,7 +137,7 @@ func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	msg := `{"assets":[{"id":0,"symbol":"USDC","denom":"ibc/xxx","denom_exponent":-6,`
+	msg := `{"assets":[{"id":0,"symbol":"USDC","denom":"ibc/usdc-placeholder","denom_exponent":-6,`
 	msg += `"has_market":false,"atomic_resolution":-6}]}`
 	h := json.RawMessage(msg)
 
@@ -222,7 +222,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	msg := `{"assets":[{"id":0,"symbol":"USDC","denom":"ibc/xxx",`
+	msg := `{"assets":[{"id":0,"symbol":"USDC","denom":"ibc/usdc-placeholder",`
 	msg += `"denom_exponent":-6,"has_market":false,"atomic_resolution":-6}]}`
 	gs := json.RawMessage(msg)
 
@@ -233,14 +233,14 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.Equal(t, 1, len(assets))
 
 	require.Equal(t, uint32(0), assets[0].Id)
-	require.Equal(t, "ibc/xxx", assets[0].Denom)
+	require.Equal(t, "ibc/usdc-placeholder", assets[0].Denom)
 	require.False(t, assets[0].HasMarket)
 	require.Equal(t, uint32(0), assets[0].MarketId)
 	require.Equal(t, int32(-6), assets[0].AtomicResolution)
 	require.Equal(t, uint64(0), assets[0].LongInterest)
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
-	expected := `{"assets":[{"id":0,"symbol":"USDC","denom":"ibc/xxx","denom_exponent":-6,"has_market":false,`
+	expected := `{"assets":[{"id":0,"symbol":"USDC","denom":"ibc/usdc-placeholder","denom_exponent":-6,"has_market":false,`
 	expected += `"market_id":0,"atomic_resolution":-6,"long_interest":"0"}]}`
 	require.Equal(t, expected, string(genesisJson))
 }

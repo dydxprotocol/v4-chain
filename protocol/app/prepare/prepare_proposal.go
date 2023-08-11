@@ -86,7 +86,7 @@ func PrepareProposalHandler(
 			return EmptyResponse
 		}
 
-		fundingTxResp := GetAddPremiumVotesTx(ctx, txConfig, req.ProposerAddress, perpetualKeeper)
+		fundingTxResp := GetAddPremiumVotesTx(ctx, txConfig, perpetualKeeper)
 		if fundingTxResp.Err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetAddPremiumVotesTx error: %v", fundingTxResp.Err))
 			recordErrorMetricsWithLabel(metrics.FundingTx)
@@ -115,7 +115,7 @@ func PrepareProposalHandler(
 
 		// Gather "OperationsRelated" group messages.
 		// TODO(DEC-1237): ensure ProposedOperations is within a certain size.
-		operationsTxResp := GetProposedOperationsTx(ctx, txConfig, req.ProposerAddress, clobKeeper)
+		operationsTxResp := GetProposedOperationsTx(ctx, txConfig, clobKeeper)
 		if operationsTxResp.Err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetProposedOperationsTx error: %v", operationsTxResp.Err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
@@ -174,7 +174,7 @@ func GetUpdateMarketPricesTx(
 	pricesKeeper PreparePricesKeeper,
 ) PricesTxResponse {
 	// Get prices to update.
-	msgUpdateMarketPrices := pricesKeeper.GetValidMarketPriceUpdates(ctx, proposerAddress)
+	msgUpdateMarketPrices := pricesKeeper.GetValidMarketPriceUpdates(ctx)
 	if msgUpdateMarketPrices == nil {
 		return PricesTxResponse{Err: fmt.Errorf("MsgUpdateMarketPrices cannot be nil")}
 	}
@@ -198,14 +198,10 @@ func GetUpdateMarketPricesTx(
 func GetAddPremiumVotesTx(
 	ctx sdk.Context,
 	txConfig client.TxConfig,
-	proposerAddress []byte,
 	perpetualsKeeper PreparePerpetualsKeeper,
 ) FundingTxResponse {
 	// Get premium votes.
-	msgAddPremiumVotes := perpetualsKeeper.GetAddPremiumVotes(
-		ctx,
-		proposerAddress,
-	)
+	msgAddPremiumVotes := perpetualsKeeper.GetAddPremiumVotes(ctx)
 	if msgAddPremiumVotes == nil {
 		return FundingTxResponse{Err: fmt.Errorf("MsgAddPremiumVotes cannot be nil")}
 	}
@@ -229,11 +225,10 @@ func GetAddPremiumVotesTx(
 func GetProposedOperationsTx(
 	ctx sdk.Context,
 	txConfig client.TxConfig,
-	proposerAddress []byte,
 	clobKeeper PrepareClobKeeper,
 ) OperationsTxResponse {
 	// Get the order and fill messages from the CLOB keeper.
-	msgOperations := clobKeeper.GetOperations(ctx, proposerAddress)
+	msgOperations := clobKeeper.GetOperations(ctx)
 	if msgOperations == nil {
 		return OperationsTxResponse{Err: fmt.Errorf("MsgProposedOperations cannot be nil")}
 	}

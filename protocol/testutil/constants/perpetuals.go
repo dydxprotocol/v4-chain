@@ -228,7 +228,6 @@ var (
 // AddPremiumVotes messages.
 var (
 	TestAddPremiumVotesMsg = &perptypes.MsgAddPremiumVotes{
-		Proposer: "foo",
 		Votes: []perptypes.FundingPremium{
 			{
 				PerpetualId: 0,

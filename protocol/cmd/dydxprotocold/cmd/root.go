@@ -34,6 +34,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	dydxapp "github.com/dydxprotocol/v4/app"
+	"github.com/dydxprotocol/v4/app/basic_manager"
 	"github.com/dydxprotocol/v4/lib/encoding"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -48,7 +49,7 @@ const (
 // TODO(DEC-1097): improve `cmd/` by adding tests, custom app configs, custom init cmd, and etc.
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
 func NewRootCmd(option *RootCmdOption) *cobra.Command {
-	encodingConfig := encoding.MakeEncodingConfig(dydxapp.ModuleBasics)
+	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -106,18 +107,18 @@ func NewRootCmd(option *RootCmdOption) *cobra.Command {
 
 // initRootCmd initializes the app's root command with useful commands.
 func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig params.EncodingConfig) {
-	gentxModule := dydxapp.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
+	gentxModule := basic_manager.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(dydxapp.ModuleBasics, dydxapp.DefaultNodeHome),
+		genutilcli.InitCmd(basic_manager.ModuleBasics, dydxapp.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, dydxapp.DefaultNodeHome, gentxModule.GenTxValidator),
 		genutilcli.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(
-			dydxapp.ModuleBasics,
+			basic_manager.ModuleBasics,
 			encodingConfig.TxConfig,
 			banktypes.GenesisBalancesIterator{},
 			dydxapp.DefaultNodeHome,
 		),
-		genutilcli.ValidateGenesisCmd(dydxapp.ModuleBasics),
+		genutilcli.ValidateGenesisCmd(basic_manager.ModuleBasics),
 		AddGenesisAccountCmd(dydxapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
@@ -175,7 +176,7 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	dydxapp.ModuleBasics.AddQueryCommands(cmd)
+	basic_manager.ModuleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -203,7 +204,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	dydxapp.ModuleBasics.AddTxCommands(cmd)
+	basic_manager.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd

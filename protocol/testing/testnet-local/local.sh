@@ -104,10 +104,10 @@ create_validators() {
 		echo "${MNEMONICS[$i]}" | dydxprotocold keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$VAL_HOME_DIR"
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 100000000000000000usdc,100000000000stake --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,100000000000stake --home "$VAL_HOME_DIR"
 		done
 		for acct in "${FAUCET_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 900000000000000000usdc,100000000000stake --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,100000000000stake --home "$VAL_HOME_DIR"
 		done
 
 		dydxprotocold gentx "${MONIKERS[$i]}" 500000000stake --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
@@ -148,7 +148,7 @@ edit_config() {
 	CONFIG_FOLDER=$1
 
 	# Disable pex
-	dasel put bool -f "$CONFIG_FOLDER"/config.toml '.p2p.pex' 'false'
+	dasel put -t bool -f "$CONFIG_FOLDER"/config.toml '.p2p.pex' -v 'false'
 }
 
 install_prerequisites

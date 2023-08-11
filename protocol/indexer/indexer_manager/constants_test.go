@@ -3,10 +3,10 @@ package indexer_manager_test
 import (
 	"time"
 
+	"github.com/dydxprotocol/v4/dtypes"
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4/testutil/constants"
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 )
 
@@ -57,34 +57,37 @@ var OrderFillEvent = indexerevents.OrderFillEvent{
 	FillAmount: 5,
 }
 
-var FundingRateEvent = indexerevents.FundingEvent{
-	Type: indexerevents.FundingEvent_TYPE_FUNDING_RATE,
-	Values: []perptypes.FundingPremium{
+var FundingRateAndIndexEvent = indexerevents.FundingEvent{
+	Type: indexerevents.FundingEvent_TYPE_FUNDING_RATE_AND_INDEX,
+	Updates: []indexerevents.FundingUpdate{
 		{
-			PerpetualId: 0,
-			PremiumPpm:  -1000,
+			PerpetualId:     0,
+			FundingValuePpm: -1000,
+			FundingIndex:    dtypes.NewInt(0),
 		},
 		{
-			PerpetualId: 1,
-			PremiumPpm:  0,
+			PerpetualId:     1,
+			FundingValuePpm: 0,
+			FundingIndex:    dtypes.NewInt(1000),
 		},
 		{
-			PerpetualId: 2,
-			PremiumPpm:  5000,
+			PerpetualId:     2,
+			FundingValuePpm: 5000,
+			FundingIndex:    dtypes.NewInt(-1000),
 		},
 	},
 }
 
 var FundingPremiumSampleEvent = indexerevents.FundingEvent{
 	Type: indexerevents.FundingEvent_TYPE_PREMIUM_SAMPLE,
-	Values: []perptypes.FundingPremium{
+	Updates: []indexerevents.FundingUpdate{
 		{
-			PerpetualId: 0,
-			PremiumPpm:  1000,
+			PerpetualId:     0,
+			FundingValuePpm: 1000,
 		},
 		{
-			PerpetualId: 1,
-			PremiumPpm:  0,
+			PerpetualId:     1,
+			FundingValuePpm: 0,
 		},
 	},
 }

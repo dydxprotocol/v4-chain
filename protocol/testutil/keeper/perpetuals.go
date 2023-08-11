@@ -53,7 +53,7 @@ func PerpetualsKeepersWithPricePremiumGetter(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 		epochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
 		keeper, storeKey = createPerpetualsKeeperWithPricePremiumGetter(
 			stateStore,

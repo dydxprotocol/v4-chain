@@ -2,12 +2,13 @@ package network
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"os"
 	"os/signal"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
@@ -21,6 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4/app"
+	"github.com/dydxprotocol/v4/app/basic_manager"
 	"github.com/dydxprotocol/v4/lib/encoding"
 	"github.com/dydxprotocol/v4/testutil/appoptions"
 	"github.com/dydxprotocol/v4/testutil/ci"
@@ -118,7 +120,7 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 		onNewApp = options.OnNewApp
 	}
 
-	encoding := encoding.MakeEncodingConfig(app.ModuleBasics)
+	encoding := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
 	return network.Config{
 		Codec:             encoding.Codec,
 		TxConfig:          encoding.TxConfig,
@@ -142,7 +144,7 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 				baseapp.SetChainID("dydxprotocol"),
 			)
 		},
-		GenesisState:    app.ModuleBasics.DefaultGenesis(encoding.Codec),
+		GenesisState:    basic_manager.ModuleBasics.DefaultGenesis(encoding.Codec),
 		TimeoutCommit:   2 * time.Second,
 		ChainID:         "dydxprotocol",
 		NumValidators:   1,

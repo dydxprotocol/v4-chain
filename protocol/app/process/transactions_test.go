@@ -91,7 +91,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			// Run.
 			_, err := process.DecodeProcessProposalTxs(
@@ -160,7 +160,7 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			// Run.
 			ppt, err := process.DecodeProcessProposalTxs(
@@ -263,7 +263,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -329,7 +329,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 			mockTimeProvider.On("Now").Return(constants.TimeT)

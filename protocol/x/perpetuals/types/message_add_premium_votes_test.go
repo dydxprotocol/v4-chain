@@ -6,50 +6,30 @@ import (
 	"github.com/dydxprotocol/v4/app/config"
 	"github.com/dydxprotocol/v4/x/perpetuals/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	testAddress = "dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf"
 )
 
 func TestMsgAddPremiumVotes(t *testing.T) {
 	sample := types.NewFundingPremium(uint32(0), int32(10))
 	samples := []types.FundingPremium{*sample}
-	msg := types.NewMsgAddPremiumVotes(testAddress, samples)
+	msg := types.NewMsgAddPremiumVotes(samples)
 
 	require.Equal(t, uint32(0), sample.PerpetualId)
 	require.Equal(t, int32(10), sample.PremiumPpm)
 	require.Equal(t, samples, msg.Votes)
 }
 
-func TestMsgAddPremiumVotes_GetSigners_Success(t *testing.T) {
+func TestMsgAddPremiumVotes_GetSigners(t *testing.T) {
 	// This package does not contain the `app/config` package in its import chain, and therefore needs to call
 	// SetAddressPrefixes() explicitly in order to set the `dydx` address prefixes.
 	config.SetAddressPrefixes()
 
 	sample := types.NewFundingPremium(uint32(0), int32(10))
 	samples := []types.FundingPremium{*sample}
-	msg := types.NewMsgAddPremiumVotes(testAddress, samples)
-
-	expectedAddress, err := sdk.AccAddressFromBech32(testAddress)
-	require.NoError(t, err)
+	msg := types.NewMsgAddPremiumVotes(samples)
 
 	signers := msg.GetSigners()
-	require.Len(t, signers, 1)
-	require.Equal(t, expectedAddress, signers[0])
-}
-
-func TestMsgUpdateMarketPrices_GetSigners_Panics(t *testing.T) {
-	sample := types.NewFundingPremium(uint32(0), int32(10))
-	samples := []types.FundingPremium{*sample}
-	msg := types.NewMsgAddPremiumVotes("invalid", samples)
-
-	require.PanicsWithError(
-		t,
-		"decoding bech32 failed: invalid bech32 string length 7",
-		func() { msg.GetSigners() })
+	require.Empty(t, signers)
 }
 
 func TestValidateBasic(t *testing.T) {
@@ -91,7 +71,7 @@ func TestValidateBasic(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			msg := types.NewMsgAddPremiumVotes("", tc.samples)
+			msg := types.NewMsgAddPremiumVotes(tc.samples)
 			err := msg.ValidateBasic()
 			if tc.expectedErr {
 				require.ErrorContains(t, err, errStr)

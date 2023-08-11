@@ -64,7 +64,7 @@ func TestDecodeUpdateMarketPricesTx(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, k, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
 			umpt, err := process.DecodeUpdateMarketPricesTx(ctx, k, encodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
@@ -120,7 +120,7 @@ func TestUpdateMarketPricesTx_Validate(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarketsAndExchangeFeeds(t, ctx, k)
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -159,7 +159,7 @@ func TestUpdateMarketPricesTx_GetMsg(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			var msg sdk.Msg
 			if tc.txBytes != nil {
-				ctx, k, _, _, _ := keepertest.PricesKeepers(t)
+				ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
 				umpt, err := process.DecodeUpdateMarketPricesTx(ctx, k, constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 				require.NoError(t, err)
 				msg = umpt.GetMsg()

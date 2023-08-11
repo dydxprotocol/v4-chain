@@ -705,18 +705,18 @@ func TestLiquidateSubaccounts(t *testing.T) {
 				return genesis
 			}).WithTesting(t).Build()
 
-			ctx, app := tApp.AdvanceToBlock(2)
+			ctx := tApp.AdvanceToBlock(2)
 			// Create all existing orders.
 			existingOrderMsgs := make([]types.MsgPlaceOrder, len(tc.existingOrders))
 			for i, order := range tc.existingOrders {
 				existingOrderMsgs[i] = types.MsgPlaceOrder{Order: order}
 			}
-			for _, checkTx := range testapp.MustMakeCheckTxs(ctx, app, existingOrderMsgs...) {
-				require.True(t, app.CheckTx(checkTx).IsOK())
+			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, existingOrderMsgs...) {
+				require.True(t, tApp.CheckTx(checkTx).IsOK())
 			}
 
 			// Update the liquidatable subaccount IDs.
-			_, err := app.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
+			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
 				SubaccountIds: tc.liquidatableSubaccounts,
 			})
 			require.NoError(t, err)
@@ -1002,7 +1002,7 @@ func TestPrepareCheckState(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_10_000USD,
-				constants.User1_Num1_100_000USD,
+				constants.Alice_Num1_100_000USD,
 			},
 			clobs:                     []types.ClobPair{constants.ClobPair_Btc},
 			preExistingStatefulOrders: []types.Order{},

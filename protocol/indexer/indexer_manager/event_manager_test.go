@@ -51,7 +51,7 @@ var ExpectedEvent2 = indexer_manager.IndexerTendermintEvent{
 var ExpectedEvent3 = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeFundingValues,
 	Data: indexer_manager.GetB64EncodedEventMessage(
-		&FundingRateEvent,
+		&FundingRateAndIndexEvent,
 	),
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
@@ -151,7 +151,7 @@ func TestProduceBlockBasicBlockEvent(t *testing.T) {
 		ctx,
 		indexerevents.SubtypeFundingValues,
 		indexer_manager.GetB64EncodedEventMessage(
-			&FundingRateEvent,
+			&FundingRateAndIndexEvent,
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	)
@@ -248,7 +248,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 		ctx,
 		indexerevents.SubtypeFundingValues,
 		indexer_manager.GetB64EncodedEventMessage(
-			&FundingRateEvent,
+			&FundingRateAndIndexEvent,
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	)

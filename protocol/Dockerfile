@@ -1,4 +1,6 @@
-ARG GO_VERSION="1.19"
+# NB: This is a digest for a multi-arch manifest list, you will want to get this by running
+# `docker buildx imagetools inspect golang:1.19-alpine`
+ARG GOLANG_1_19_ALPINE_DIGEST="4147c2ad24a347e53a8a361b663dcf82fca4157a3f9a5136d696a4e53dd22b65"
 
 # This Dockerfile is a stateless build of the `dydxprotocold` binary as a Docker container.
 # It does not include any configuration, state, or genesis information.
@@ -7,7 +9,7 @@ ARG GO_VERSION="1.19"
 # Builder
 # --------------------------------------------------------
 
-FROM golang:${GO_VERSION}-alpine as builder
+FROM golang@sha256:${GOLANG_1_19_ALPINE_DIGEST} as builder
 
 RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers bash
 
@@ -43,7 +45,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # Runner
 # --------------------------------------------------------
 
-FROM golang:${GO_VERSION}-alpine
+FROM golang@sha256:${GOLANG_1_19_ALPINE_DIGEST}
 
 RUN apk add --no-cache bash
 

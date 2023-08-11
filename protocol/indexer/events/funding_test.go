@@ -1,65 +1,68 @@
 package events_test
 
 import (
+	"testing"
+
+	"github.com/dydxprotocol/v4/dtypes"
 	"github.com/dydxprotocol/v4/lib"
 	"github.com/dydxprotocol/v4/testutil/constants"
-	"testing"
 
 	"github.com/dydxprotocol/v4/indexer/events"
 	"github.com/stretchr/testify/require"
-
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
 )
 
 func TestNewFundingEvent(t *testing.T) {
 	tests := map[string]struct {
-		valueType    events.FundingEvent_Type
-		values       []perptypes.FundingPremium
+		updateType   events.FundingEvent_Type
+		updates      []events.FundingUpdate
 		txnHash      lib.TxHash
-		newEventFunc func(values []perptypes.FundingPremium) *events.FundingEvent
+		newEventFunc func(updates []events.FundingUpdate) *events.FundingEvent
 	}{
 		"premium samples": {
-			valueType: events.FundingEvent_TYPE_PREMIUM_SAMPLE,
-			values: []perptypes.FundingPremium{
+			updateType: events.FundingEvent_TYPE_PREMIUM_SAMPLE,
+			updates: []events.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  1000,
+					PerpetualId:     0,
+					FundingValuePpm: 1000,
 				},
 				{
-					PerpetualId: 1,
-					PremiumPpm:  0,
+					PerpetualId:     1,
+					FundingValuePpm: 0,
 				},
 			},
 			txnHash:      constants.TestTxHashString,
 			newEventFunc: events.NewPremiumSamplesEvent,
 		},
-		"funding rates": {
-			valueType: events.FundingEvent_TYPE_FUNDING_RATE,
-			values: []perptypes.FundingPremium{
+		"funding rates and indices": {
+			updateType: events.FundingEvent_TYPE_FUNDING_RATE_AND_INDEX,
+			updates: []events.FundingUpdate{
 				{
-					PerpetualId: 0,
-					PremiumPpm:  -1000,
+					PerpetualId:     0,
+					FundingValuePpm: -1000,
+					FundingIndex:    dtypes.NewInt(0),
 				},
 				{
-					PerpetualId: 1,
-					PremiumPpm:  0,
+					PerpetualId:     1,
+					FundingValuePpm: 0,
+					FundingIndex:    dtypes.NewInt(1000),
 				},
 				{
-					PerpetualId: 2,
-					PremiumPpm:  5000,
+					PerpetualId:     2,
+					FundingValuePpm: 5000,
+					FundingIndex:    dtypes.NewInt(-1000),
 				},
 			},
 			txnHash:      constants.TestTxHashString,
-			newEventFunc: events.NewFundingRatesEvent,
+			newEventFunc: events.NewFundingRatesAndIndicesEvent,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			FundingEvent := tc.newEventFunc(tc.values)
+			FundingEvent := tc.newEventFunc(tc.updates)
 			expectedFundingEventProto := &events.FundingEvent{
-				Type:   tc.valueType,
-				Values: tc.values,
+				Type:    tc.updateType,
+				Updates: tc.updates,
 			}
 			require.Equal(t, expectedFundingEventProto, FundingEvent)
 		})

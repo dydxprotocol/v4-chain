@@ -107,6 +107,15 @@ install: go.sum
 aws-push-dev:
 	./scripts/build-push-ecr.sh dev
 
+aws-push-dev2:
+	./scripts/build-push-ecr.sh dev2
+
+aws-push-dev3:
+	./scripts/build-push-ecr.sh dev3
+
+aws-push-dev4:
+	./scripts/build-push-ecr.sh dev4
+
 aws-push-staging:
 	./scripts/build-push-ecr.sh staging
 

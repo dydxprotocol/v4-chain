@@ -9,24 +9,15 @@ import (
 
 // PrepareClobKeeper defines the expected CLOB keeper used for `PrepareProposal`.
 type PrepareClobKeeper interface {
-	GetOperations(
-		ctx sdk.Context,
-		proposer sdk.AccAddress,
-	) *clobtypes.MsgProposedOperations
+	GetOperations(ctx sdk.Context) *clobtypes.MsgProposedOperations
 }
 
 // PreparePerpetualsKeeper defines the expected Perpetuals keeper used for `PrepareProposal`.
 type PreparePerpetualsKeeper interface {
-	GetAddPremiumVotes(
-		ctx sdk.Context,
-		address sdk.AccAddress,
-	) *perpstypes.MsgAddPremiumVotes
+	GetAddPremiumVotes(ctx sdk.Context) *perpstypes.MsgAddPremiumVotes
 }
 
 // PreparePricesKeeper defines the expected Prices keeper used for `PrepareProposal`.
 type PreparePricesKeeper interface {
-	GetValidMarketPriceUpdates(
-		ctx sdk.Context,
-		proposer sdk.AccAddress,
-	) *pricestypes.MsgUpdateMarketPrices
+	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MsgUpdateMarketPrices
 }

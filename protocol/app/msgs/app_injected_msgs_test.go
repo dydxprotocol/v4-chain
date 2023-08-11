@@ -7,9 +7,11 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/dydxprotocol/v4/app/msgs"
 	"github.com/dydxprotocol/v4/lib/maps"
+	"github.com/dydxprotocol/v4/testutil/encoding"
 	testmsgs "github.com/dydxprotocol/v4/testutil/msgs"
 	"github.com/stretchr/testify/require"
 )
@@ -58,5 +60,17 @@ func validateSampleMsgValue(
 			// Additionally, all other intermediary msgs should not be submitted as a top-level msg.
 			require.Nil(t, sample)
 		}
+	}
+}
+
+func TestAppInjectedMsgSamples_GetSigners(t *testing.T) {
+	testEncodingCfg := encoding.GetTestEncodingCfg()
+	testTxBuilder := testEncodingCfg.TxConfig.NewTxBuilder()
+
+	for _, sample := range testmsgs.GetNonNilSampleMsgs(msgs.AppInjectedMsgSamples) {
+		_ = testTxBuilder.SetMsgs(sample.Msg)
+		sigTx, ok := testTxBuilder.GetTx().(authsigning.SigVerifiableTx)
+		require.True(t, ok)
+		require.Empty(t, sigTx.GetSigners())
 	}
 }

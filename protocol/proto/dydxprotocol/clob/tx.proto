@@ -1,8 +1,8 @@
 syntax = "proto3";
 package dydxprotocol.clob;
 
+import "cosmos/tx/v1beta1/tx.proto";
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/matches.proto";
 
@@ -31,8 +31,6 @@ message MsgProposedOperations {
   // collateralization check performed when they are placed in the `DeliverTx`
   // validation flow.
   repeated bytes add_to_orderbook_collat_check_order_hashes = 2;
-  // The address of the block proposer.
-  string proposer = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
 // MsgProposedOperationsResponse is the response type of the message injected
@@ -75,6 +73,19 @@ message Operation {
     ClobMatch match = 1;
     MsgPlaceOrder order_placement = 2;
     MsgCancelOrder order_cancellation = 3;
+    OrderId preexisting_stateful_order = 4;
+  }
+}
+
+// OperationRaw represents an operation in the proposed operations.
+message OperationRaw {
+  // operationRaw represents an operation that occurred, which can be a match,
+  // order placement, order cancellation, or the placement of a pre-existing
+  // stateful order.
+  oneof operation {
+    ClobMatch match = 1;
+    cosmos.tx.v1beta1.TxRaw order_placement = 2;
+    cosmos.tx.v1beta1.TxRaw order_cancellation = 3;
     OrderId preexisting_stateful_order = 4;
   }
 }

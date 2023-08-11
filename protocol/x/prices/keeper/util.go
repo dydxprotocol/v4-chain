@@ -9,6 +9,15 @@ import (
 	"github.com/dydxprotocol/v4/x/prices/types"
 )
 
+// getProposalPrice returns the proposed price update for the next block, which is either the smoothed price or the
+// index price - whichever is closer to the current market price.
+func getProposalPrice(smoothedPrice uint64, indexPrice uint64, marketPrice uint64) uint64 {
+	if lib.AbsDiffUint64(smoothedPrice, marketPrice) > lib.AbsDiffUint64(indexPrice, marketPrice) {
+		return indexPrice
+	}
+	return smoothedPrice
+}
+
 // isAboveRequiredMinPriceChange returns true if the new price meets the required min price change
 // for the market. Otherwise, returns false.
 func isAboveRequiredMinPriceChange(market types.Market, newPrice uint64) bool {
@@ -34,24 +43,46 @@ func getMinPriceChangeAmountForMarket(market types.Market) uint64 {
 	return bigMinChangeAmt.Uint64()
 }
 
+// PriceTuple labels and encapsulates the set of prices used for various price computations.
+type PriceTuple struct {
+	OldPrice   uint64
+	IndexPrice uint64
+	NewPrice   uint64
+}
+
 // isTowardsIndexPrice returns true if the new price is between the current price and the index
 // price, inclusive. Otherwise, it returns false.
 func isTowardsIndexPrice(
-	oldPrice uint64,
-	newPrice uint64,
-	indexPrice uint64,
+	priceTuple PriceTuple,
 ) bool {
-	return newPrice <= lib.Max(oldPrice, indexPrice) && newPrice >= lib.Min(oldPrice, indexPrice)
+	return priceTuple.NewPrice <= lib.Max(priceTuple.OldPrice, priceTuple.IndexPrice) &&
+		priceTuple.NewPrice >= lib.Min(priceTuple.OldPrice, priceTuple.IndexPrice)
 }
 
 // isCrossingIndexPrice returns true if index price is between the current and the new price,
 // noninclusive. Otherwise, returns false.
 func isCrossingIndexPrice(
-	oldPrice uint64,
-	newPrice uint64,
-	indexPrice uint64,
+	priceTuple PriceTuple,
 ) bool {
-	return indexPrice < lib.Max(oldPrice, newPrice) && indexPrice > lib.Min(oldPrice, newPrice)
+	return isCrossingReferencePrice(priceTuple.OldPrice, priceTuple.IndexPrice, priceTuple.NewPrice)
+}
+
+// isCrossingOldPrice returns true if the old price is between the index price and the new
+// price, noninclusive. Otherwise, returns false.
+func isCrossingOldPrice(
+	priceTuple PriceTuple,
+) bool {
+	return isCrossingReferencePrice(priceTuple.IndexPrice, priceTuple.OldPrice, priceTuple.NewPrice)
+}
+
+// isCrossingReferencePrice returns true if the reference price is between the base price and the
+// test price, noninclusive. Otherwise, returns false.
+func isCrossingReferencePrice(
+	basePrice uint64,
+	referencePrice uint64,
+	testPrice uint64,
+) bool {
+	return referencePrice < lib.Max(basePrice, testPrice) && referencePrice > lib.Min(basePrice, testPrice)
 }
 
 // computeTickSizePpm calculates the tick_size of the currency at the current price, in ppm.

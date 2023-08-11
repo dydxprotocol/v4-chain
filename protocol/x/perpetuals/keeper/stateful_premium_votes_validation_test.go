@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/testutil/sample"
 	"github.com/dydxprotocol/v4/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
@@ -129,8 +128,7 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 
 			// Run.
 			msg := &types.MsgAddPremiumVotes{
-				Proposer: sample.AccAddress(),
-				Votes:    tc.votes,
+				Votes: tc.votes,
 			}
 
 			err = k.PerformStatefulPremiumVotesValidation(ctx, msg)

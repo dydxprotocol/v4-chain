@@ -6,6 +6,7 @@ import (
 
 	"github.com/dydxprotocol/v4/testutil/constants"
 	"github.com/dydxprotocol/v4/x/clob/types"
+	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1807,6 +1808,131 @@ func TestAddMatchToOperationsQueue_Success(t *testing.T) {
 
 			// Insert match operation
 			otp.AddMatchToOperationsQueue(tc.takerOrder, tc.makerFillsWithOrders)
+
+			// Verify expectations.
+			require.Equal(t, tc.expectedOperationsQueue, otp.NonceToOperationToPropose)
+
+			// Verify the next available nonce is correct.
+			require.Equal(t, types.Nonce(len(tc.expectedOperationsQueue)), otp.NextAvailableNonce)
+		})
+	}
+}
+
+func TestAddDeleveragingMatchToOperationsQueue(t *testing.T) {
+	tests := map[string]struct {
+		// Params.
+		deleveragingMatches []struct {
+			liquidatedSubaccountId satypes.SubaccountId
+			perpetualId            uint32
+			fills                  []types.MatchPerpetualDeleveraging_Fill
+		}
+
+		// Expectations.
+		expectedOperationsQueue map[types.Nonce]types.Operation
+	}{
+		"Starts with an empty operations queue": {
+			deleveragingMatches: []struct {
+				liquidatedSubaccountId satypes.SubaccountId
+				perpetualId            uint32
+				fills                  []types.MatchPerpetualDeleveraging_Fill
+			}{},
+
+			expectedOperationsQueue: map[types.Nonce]types.Operation{},
+		},
+		"Can add a deleveraging match to the operations queue": {
+			deleveragingMatches: []struct {
+				liquidatedSubaccountId satypes.SubaccountId
+				perpetualId            uint32
+				fills                  []types.MatchPerpetualDeleveraging_Fill
+			}{
+				{
+					liquidatedSubaccountId: constants.Alice_Num0,
+					perpetualId:            0,
+					fills: []types.MatchPerpetualDeleveraging_Fill{
+						{
+							Deleveraged: constants.Bob_Num0,
+							FillAmount:  5,
+						},
+					},
+				},
+			},
+
+			expectedOperationsQueue: map[types.Nonce]types.Operation{
+				0: types.NewDeleveragingMatchOperation(
+					constants.Alice_Num0,
+					0,
+					[]types.MatchPerpetualDeleveraging_Fill{
+						{
+							Deleveraged: constants.Bob_Num0,
+							FillAmount:  5,
+						},
+					},
+				),
+			},
+		},
+		"Can add multiple deleveraging match to the operations queue": {
+			deleveragingMatches: []struct {
+				liquidatedSubaccountId satypes.SubaccountId
+				perpetualId            uint32
+				fills                  []types.MatchPerpetualDeleveraging_Fill
+			}{
+				{
+					liquidatedSubaccountId: constants.Alice_Num0,
+					perpetualId:            0,
+					fills: []types.MatchPerpetualDeleveraging_Fill{
+						{
+							Deleveraged: constants.Bob_Num0,
+							FillAmount:  5,
+						},
+					},
+				},
+				{
+					liquidatedSubaccountId: constants.Carl_Num0,
+					perpetualId:            0,
+					fills: []types.MatchPerpetualDeleveraging_Fill{
+						{
+							Deleveraged: constants.Dave_Num0,
+							FillAmount:  10,
+						},
+					},
+				},
+			},
+
+			expectedOperationsQueue: map[types.Nonce]types.Operation{
+				0: types.NewDeleveragingMatchOperation(
+					constants.Alice_Num0,
+					0,
+					[]types.MatchPerpetualDeleveraging_Fill{
+						{
+							Deleveraged: constants.Bob_Num0,
+							FillAmount:  5,
+						},
+					},
+				),
+				1: types.NewDeleveragingMatchOperation(
+					constants.Carl_Num0,
+					0,
+					[]types.MatchPerpetualDeleveraging_Fill{
+						{
+							Deleveraged: constants.Dave_Num0,
+							FillAmount:  10,
+						},
+					},
+				),
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup the test.
+			otp := types.NewOperationsToPropose()
+			for _, match := range tc.deleveragingMatches {
+				otp.AddDeleveragingMatchToOperationsQueue(
+					match.liquidatedSubaccountId,
+					match.perpetualId,
+					match.fills,
+				)
+			}
 
 			// Verify expectations.
 			require.Equal(t, tc.expectedOperationsQueue, otp.NonceToOperationToPropose)

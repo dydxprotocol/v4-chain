@@ -59,7 +59,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			asset: asstypes.Asset{
 				Id:               0,
 				Symbol:           "USDC",
-				Denom:            "ibc/xxx",
+				Denom:            "ibc/usdc-placeholder",
 				DenomExponent:    int32(-3), // $1 = 1_000 coin unit.
 				HasMarket:        false,
 				MarketId:         uint32(0),
@@ -91,7 +91,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			asset: asstypes.Asset{
 				Id:               0,
 				Symbol:           "USDC",
-				Denom:            "ibc/xxx",
+				Denom:            "ibc/usdc-placeholder",
 				DenomExponent:    int32(-4), // $1 = 10_000 coin unit.
 				HasMarket:        false,
 				MarketId:         uint32(0),

@@ -14,11 +14,8 @@ const TypeMsgProposedOperations = "proposed_operations"
 var _ sdk.Msg = &MsgProposedOperations{}
 
 func (msg *MsgProposedOperations) GetSigners() []sdk.AccAddress {
-	proposer, err := sdk.AccAddressFromBech32(msg.Proposer)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{proposer}
+	// Return empty slice because app-injected msg is not expected to be signed.
+	return []sdk.AccAddress{}
 }
 
 // GetAddToOrderbookCollatCheckOrderHashesSet returns a set of order hashes from the

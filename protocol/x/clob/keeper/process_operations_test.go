@@ -246,16 +246,18 @@ func TestProcessProposerOperations_Success(t *testing.T) {
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 10),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 - 10),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 				constants.Alice_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 10),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 + 10),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 			},
@@ -352,16 +354,18 @@ func TestProcessProposerOperations_Success(t *testing.T) {
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 5),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 - 5),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 				constants.Alice_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 5),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 + 5),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 			},
@@ -444,16 +448,18 @@ func TestProcessProposerOperations_Success(t *testing.T) {
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 5),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 - 5),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 				constants.Alice_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 5),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 + 5),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 			},
@@ -604,23 +610,26 @@ func TestProcessProposerOperations_Success(t *testing.T) {
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 10),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 - 10),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 				constants.Alice_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 10 + 15),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 + 10 + 15),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 				constants.Carl_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 15),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 - 15),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 			},
@@ -774,16 +783,18 @@ func TestProcessProposerOperations_Success(t *testing.T) {
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Alice_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 10 + 15),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 + 10 + 15),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 				constants.Carl_Num0: {
 					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 15),
-						FundingIndex: dtypes.ZeroInt(),
+						PerpetualId:        0,
+						Quantums:           dtypes.NewInt(1_000_000_000 - 15),
+						FundingIndex:       dtypes.ZeroInt(),
+						LastFundingPayment: dtypes.ZeroInt(),
 					},
 				},
 			},

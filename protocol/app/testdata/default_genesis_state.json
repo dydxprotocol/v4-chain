@@ -5,7 +5,7 @@
       {
         "id": 0,
         "symbol": "USDC",
-        "denom": "ibc/xxx",
+        "denom": "ibc/usdc-placeholder",
         "denom_exponent": -6,
         "has_market": false,
         "market_id": 0,

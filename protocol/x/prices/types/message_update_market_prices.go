@@ -14,22 +14,15 @@ func NewMarketPriceUpdate(id uint32, price uint64) *MsgUpdateMarketPrices_Market
 	}
 }
 
-func NewMsgUpdateMarketPrices(
-	proposer string,
-	updates []*MsgUpdateMarketPrices_MarketPrice,
-) *MsgUpdateMarketPrices {
+func NewMsgUpdateMarketPrices(updates []*MsgUpdateMarketPrices_MarketPrice) *MsgUpdateMarketPrices {
 	return &MsgUpdateMarketPrices{
-		Proposer:           proposer,
 		MarketPriceUpdates: updates,
 	}
 }
 
 func (msg *MsgUpdateMarketPrices) GetSigners() []sdk.AccAddress {
-	proposer, err := sdk.AccAddressFromBech32(msg.Proposer)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{proposer}
+	// Return empty slice because app-injected msg is not expected to be signed.
+	return []sdk.AccAddress{}
 }
 
 // ValidateBasic performs stateless validations on the message. Specifically:

@@ -9,6 +9,7 @@ import (
 )
 
 // x/clob module sentinel errors
+// TODO(CLOB-553) Clean up sentinel errors not in use.
 var (
 	ErrMemClobOrderDoesNotExist = sdkerrors.Register(
 		ModuleName,
@@ -184,7 +185,6 @@ var (
 		1006,
 		"Total fills amount exceeds size of liquidation order",
 	)
-	// TODO remove once MsgProposedMatchedOrders is deprecated
 	ErrLiquidationContainsNoFills = sdkerrors.Register(
 		ModuleName,
 		1007,
@@ -238,17 +238,22 @@ var (
 	ErrDeleveragingAgainstSelf = sdkerrors.Register(
 		ModuleName,
 		1017,
-		"Cannot deleverage subaccount against itself.",
+		"Cannot deleverage subaccount against itself",
 	)
 	ErrDuplicateDeleveragingFillSubaccounts = sdkerrors.Register(
 		ModuleName,
 		1018,
-		"Deleveraging match cannot have fills with same id.",
+		"Deleveraging match cannot have fills with same id",
 	)
 	ErrZeroDeleveragingFillAmount = sdkerrors.Register(
 		ModuleName,
 		1019,
-		"Deleveraging match cannot have fills with same id.",
+		"Deleveraging match cannot have fills with zero amount",
+	)
+	ErrPositionCannotBeFullyDeleveraged = sdkerrors.Register(
+		ModuleName,
+		1020,
+		"Position cannot be fully deleveraged",
 	)
 
 	// Advanced order type errors.
