@@ -1,4 +1,4 @@
-name: Build & Test
+name: Protocol Build & Test
 on:  # yamllint disable-line rule:truthy
   pull_request:
     paths:

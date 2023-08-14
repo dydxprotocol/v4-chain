@@ -1,4 +1,4 @@
-name: Sims
+name: Protocol Sims
 # Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
 # This workflow will run on all pushes to main, if a .go, .mod or .sum file have been changed
 on:  # yamllint disable-line rule:truthy

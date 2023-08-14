@@ -1,4 +1,4 @@
-name: Container Tests
+name: Protocol Container Tests
 on:  # yamllint disable-line rule:truthy
   pull_request:
     paths:

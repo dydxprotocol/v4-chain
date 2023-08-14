@@ -1,9 +1,13 @@
-name: Lint
+name: Indexer Lint
 on:  # yamllint disable-line rule:truthy
   pull_request:
+    paths:
+      - 'indexer/**'
   push:
     branches:
-      - master
+      - main
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
+      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
 # Ensure only a single instance of this workflow is running, and cancel any that are in-progress
 # before this workflow instance starts
 concurrency:
@@ -13,12 +17,12 @@ concurrency:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Install Node.js
         uses: actions/setup-node@v3

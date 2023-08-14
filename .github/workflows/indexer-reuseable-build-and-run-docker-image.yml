@@ -1,4 +1,4 @@
-name: Reusable build and run docker image for ECS service
+name: Indexer reusable build and run docker image for ECS service
 
 on:
   workflow_call:
@@ -11,6 +11,9 @@ jobs:
   build-and-push-service:
     name: (${{ inputs.SERVICE }}) Check docker image build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
     services:
       postgres:
         image: postgres:12-alpine
@@ -40,9 +43,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Install Node.js
         uses: actions/setup-node@v3
