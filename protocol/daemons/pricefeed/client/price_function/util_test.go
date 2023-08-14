@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
-	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/stretchr/testify/require"
 )
 

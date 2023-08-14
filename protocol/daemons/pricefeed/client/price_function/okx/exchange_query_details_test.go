@@ -3,7 +3,7 @@ package okx_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/okx"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/okx"
 	"github.com/stretchr/testify/require"
 )
 

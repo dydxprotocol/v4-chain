@@ -1,17 +1,18 @@
 package keeper
 
 import (
-	sdklog "cosmossdk.io/log"
 	"fmt"
+
+	sdklog "cosmossdk.io/log"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pricefeedtypes "github.com/dydxprotocol/v4/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 type (

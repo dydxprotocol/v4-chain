@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/x/epochs/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/stretchr/testify/require"
 )
 

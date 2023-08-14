@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clobcli "github.com/dydxprotocol/v4/x/clob/client/cli"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	clobcli "github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -1,8 +1,8 @@
 package huobi
 
 import (
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 )
 
 var (

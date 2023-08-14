@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/dydxprotocol/v4/testutil/constants"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
-	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
 // Returns the encoded msg as transaction. Will panic if encoding fails.

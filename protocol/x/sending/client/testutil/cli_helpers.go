@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sendingcli "github.com/dydxprotocol/v4/x/sending/client/cli"
+	sendingcli "github.com/dydxprotocol/v4-chain/protocol/x/sending/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

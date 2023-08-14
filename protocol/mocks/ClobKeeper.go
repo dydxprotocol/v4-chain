@@ -5,12 +5,12 @@ package mocks
 import (
 	big "math/big"
 
-	indexer_manager "github.com/dydxprotocol/v4/indexer/indexer_manager"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
+	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	mock "github.com/stretchr/testify/mock"
 
-	subaccountstypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	time "time"
 

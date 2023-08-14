@@ -4,7 +4,7 @@ import (
 	"math"
 	"math/big"
 
-	asstypes "github.com/dydxprotocol/v4/x/assets/types"
+	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
 // BigNegMaxUint64 returns a `big.Int` that is set to -math.MaxUint64.

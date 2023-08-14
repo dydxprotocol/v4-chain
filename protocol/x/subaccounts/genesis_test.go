@@ -1,14 +1,15 @@
 package subaccounts_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/testutil/nullify"
-	"github.com/dydxprotocol/v4/x/subaccounts"
-	"github.com/dydxprotocol/v4/x/subaccounts/keeper"
-	"github.com/dydxprotocol/v4/x/subaccounts/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 

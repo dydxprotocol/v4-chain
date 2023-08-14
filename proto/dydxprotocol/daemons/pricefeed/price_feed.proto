@@ -4,7 +4,7 @@ package dydxprotocol.daemons.pricefeed;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/dydxprotocol/v4/daemons/pricefeed/api";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api";
 
 // PriceFeedService provides methods related to market prices.
 service PriceFeedService {

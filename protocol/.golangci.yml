@@ -26,7 +26,7 @@ linters-settings:
   importas:
     # List of aliases
     alias:
-      - pkg: github.com/dydxprotocol/v4/x/subaccounts/types
+      - pkg: github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types
         alias: satypes
-      - pkg: github.com/dydxprotocol/v4/testutil/constants
+      - pkg: github.com/dydxprotocol/v4-chain/protocol/testutil/constants
         alias: constants

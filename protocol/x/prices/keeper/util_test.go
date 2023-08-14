@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 

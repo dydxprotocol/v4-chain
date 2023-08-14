@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/mocks"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	keeper "github.com/dydxprotocol/v4/x/clob/keeper"
-	"github.com/dydxprotocol/v4/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	keeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

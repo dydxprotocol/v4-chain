@@ -1,6 +1,6 @@
 package exchange_common
 
-import "github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
+import "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 
 // All market ids must match with the genesis state.
 // TODO(CORE-296): Remove static daemon market config.

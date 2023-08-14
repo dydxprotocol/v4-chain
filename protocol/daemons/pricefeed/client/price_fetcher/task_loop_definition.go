@@ -1,6 +1,6 @@
 package price_fetcher
 
-import "github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
+import "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 
 // taskLoopDefinition defines the parameters for the price fetcher's task loop:
 // Which markets to query, and parameters for how to query them and process query results.

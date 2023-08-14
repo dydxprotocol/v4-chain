@@ -2,8 +2,8 @@ package assets
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/assets/keeper"
-	"github.com/dydxprotocol/v4/x/assets/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	perpetualstypes "github.com/dydxprotocol/v4/x/perpetuals/types"
+	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"

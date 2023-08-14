@@ -2,7 +2,7 @@ package kraken
 
 import (
 	"errors"
-	"github.com/dydxprotocol/v4/testutil/daemons/pricefeed"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"github.com/stretchr/testify/require"
 	"io"
 	"strings"

@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 // GetEquityTierLimitConfiguration gets the equity tier limit configuration from state.

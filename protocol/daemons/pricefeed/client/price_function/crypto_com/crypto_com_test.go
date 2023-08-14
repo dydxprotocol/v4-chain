@@ -3,15 +3,15 @@ package crypto_com_test
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"testing"
 
-	"github.com/dydxprotocol/v4/testutil/daemons/pricefeed"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/crypto_com"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/testutil"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/crypto_com"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/testutil"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

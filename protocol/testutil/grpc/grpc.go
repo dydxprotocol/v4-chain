@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/dydxprotocol/v4/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"google.golang.org/grpc"
 )
 

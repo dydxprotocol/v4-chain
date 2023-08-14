@@ -1,9 +1,9 @@
 package events
 
 import (
-	"github.com/dydxprotocol/v4/dtypes"
-	"github.com/dydxprotocol/v4/indexer/protocol/v1"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // NewSubaccountUpdateEvent creates a SubaccountUpdateEvent representing a subaccount update

@@ -6,10 +6,10 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/lib/metrics"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/x/epochs"
-	"github.com/dydxprotocol/v4/x/epochs/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/stretchr/testify/require"
 )
 

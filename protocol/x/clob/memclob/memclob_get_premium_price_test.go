@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	sdktest "github.com/dydxprotocol/v4/testutil/sdk"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 

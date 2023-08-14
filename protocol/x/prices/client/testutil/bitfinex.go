@@ -1,10 +1,10 @@
 package testutil
 
 import (
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/handler"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/bitfinex"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/bitfinex"
 	"github.com/h2non/gock"
 )
 

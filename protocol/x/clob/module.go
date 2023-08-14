@@ -18,10 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	liquidationtypes "github.com/dydxprotocol/v4/daemons/server/types/liquidations"
-	"github.com/dydxprotocol/v4/x/clob/client/cli"
-	"github.com/dydxprotocol/v4/x/clob/keeper"
-	"github.com/dydxprotocol/v4/x/clob/types"
+	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 var (

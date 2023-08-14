@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/dydxprotocol/v4/app/process"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	testmsgs "github.com/dydxprotocol/v4/testutil/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

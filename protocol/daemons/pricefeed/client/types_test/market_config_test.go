@@ -1,7 +1,7 @@
 package types_test
 
 import (
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

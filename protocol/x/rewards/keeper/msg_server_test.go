@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	testapp "github.com/dydxprotocol/v4/testutil/app"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 
-	"github.com/dydxprotocol/v4/x/rewards/keeper"
-	"github.com/dydxprotocol/v4/x/rewards/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	"github.com/stretchr/testify/require"
 )
 

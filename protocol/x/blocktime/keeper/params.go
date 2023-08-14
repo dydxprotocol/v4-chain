@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/blocktime/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 )
 
 const (

@@ -6,7 +6,7 @@ import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/vest/vest_entry.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/vest/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vest/types";
 
 // Msg defines the Msg service.
 service Msg {

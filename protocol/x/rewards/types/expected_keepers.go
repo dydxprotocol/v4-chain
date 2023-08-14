@@ -3,8 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	assets "github.com/dydxprotocol/v4/x/assets/types"
-	prices "github.com/dydxprotocol/v4/x/prices/types"
+	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

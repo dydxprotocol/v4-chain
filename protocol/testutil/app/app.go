@@ -27,23 +27,23 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	sdkproto "github.com/cosmos/gogoproto/proto"
 
-	"github.com/dydxprotocol/v4/app"
-	"github.com/dydxprotocol/v4/testutil/appoptions"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	testtx "github.com/dydxprotocol/v4/testutil/tx"
-	assettypes "github.com/dydxprotocol/v4/x/assets/types"
-	blocktimetypes "github.com/dydxprotocol/v4/x/blocktime/types"
-	bridgetypes "github.com/dydxprotocol/v4/x/bridge/types"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
-	epochstypes "github.com/dydxprotocol/v4/x/epochs/types"
-	feetiertypes "github.com/dydxprotocol/v4/x/feetiers/types"
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
-	rewardstypes "github.com/dydxprotocol/v4/x/rewards/types"
-	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
-	stattypes "github.com/dydxprotocol/v4/x/stats/types"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
-	vesttypes "github.com/dydxprotocol/v4/x/vest/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
+	feetiertypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	rewardstypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -122,7 +122,7 @@ func DefaultTestAppCreatorFn(customFlags map[string]interface{}) AppCreatorFn {
 
 // DefaultGenesis returns a genesis doc using configuration from the local net with a genesis time
 // equivalent to unix epoch + 1 nanosecond. We specifically use non-zero because stateful orders
-// validate that block time is non-zero (https://github.com/dydxprotocol/v4/blob/
+// validate that block time is non-zero (https://github.com/dydxprotocol/v4-chain/protocol/blob/
 // 84a046554ab1b4725475500d94a0b3179fdd18c2/x/clob/keeper/stateful_order_state.go#L237).
 func DefaultGenesis() (genesis types.GenesisDoc) {
 	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc

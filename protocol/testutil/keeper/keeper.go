@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	indexer_manager "github.com/dydxprotocol/v4/indexer/indexer_manager"
+	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
@@ -9,7 +9,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdktest "github.com/dydxprotocol/v4/testutil/sdk"
+	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	"github.com/stretchr/testify/require"
 )
 

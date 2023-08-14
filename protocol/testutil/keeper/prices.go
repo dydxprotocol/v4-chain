@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	pricefeed_types "github.com/dydxprotocol/v4/daemons/pricefeed/types"
-	"github.com/dydxprotocol/v4/indexer/common"
-	indexerevents "github.com/dydxprotocol/v4/indexer/events"
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
@@ -13,11 +13,11 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pricefeedserver_types "github.com/dydxprotocol/v4/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/x/prices/keeper"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 

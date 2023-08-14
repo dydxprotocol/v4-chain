@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/dydxprotocol/v4/daemons/configs"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	"github.com/spf13/cobra"
 )
 

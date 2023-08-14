@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "dydxprotocol/feetiers/params.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/feetiers/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types";
 
 // Query defines the gRPC querier service.
 service Query {

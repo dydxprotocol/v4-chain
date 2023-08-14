@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.feetiers;
 
-option go_package = "github.com/dydxprotocol/v4/x/feetiers/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types";
 
 // PerpetualFeeParams defines the parameters for perpetual fees.
 message PerpetualFeeParams {

@@ -3,7 +3,7 @@ package dydxprotocol.perpetuals;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/perpetuals/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types";
 
 // Msg defines the Msg service.
 service Msg {

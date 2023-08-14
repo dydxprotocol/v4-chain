@@ -2,9 +2,9 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/app/ante/types"
-	libante "github.com/dydxprotocol/v4/lib/ante"
-	clobante "github.com/dydxprotocol/v4/x/clob/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
+	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 )
 
 // FreeInfiniteGasDecorator is an AnteHandler that sets `GasMeter` to

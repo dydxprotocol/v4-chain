@@ -3,9 +3,9 @@ package metrics_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
-	pricefeedmetrics "github.com/dydxprotocol/v4/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/stretchr/testify/require"
 )
 

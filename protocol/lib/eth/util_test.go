@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	libeth "github.com/dydxprotocol/v4/lib/eth"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	bridgetypes "github.com/dydxprotocol/v4/x/bridge/types"
+	libeth "github.com/dydxprotocol/v4-chain/protocol/lib/eth"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 )

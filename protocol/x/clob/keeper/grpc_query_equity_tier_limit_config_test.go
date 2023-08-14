@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
-	abci "github.com/cometbft/cometbft/abci/types"
-	testApp "github.com/dydxprotocol/v4/testutil/app"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEquityTierLimitConfiguration(

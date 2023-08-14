@@ -33,9 +33,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	dydxapp "github.com/dydxprotocol/v4/app"
-	"github.com/dydxprotocol/v4/app/basic_manager"
-	"github.com/dydxprotocol/v4/lib/encoding"
+	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
+	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )

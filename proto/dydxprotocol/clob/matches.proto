@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/clob/order.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/clob/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // ClobMatch represents an operations queue entry around all different types
 // of matches, specifically regular matches, liquidation matches, and

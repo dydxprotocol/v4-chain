@@ -5,11 +5,11 @@ import (
 	"syscall"
 
 	"github.com/cometbft/cometbft/libs/log"
-	bridgeapi "github.com/dydxprotocol/v4/daemons/bridge/api"
-	"github.com/dydxprotocol/v4/daemons/constants"
-	liquidationapi "github.com/dydxprotocol/v4/daemons/liquidation/api"
-	pricefeedapi "github.com/dydxprotocol/v4/daemons/pricefeed/api"
-	"github.com/dydxprotocol/v4/lib"
+	bridgeapi "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
+	liquidationapi "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
+	pricefeedapi "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 // Server struct defines the shared gRPC server for all daemons.

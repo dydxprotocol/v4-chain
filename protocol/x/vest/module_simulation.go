@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/dydxprotocol/v4/testutil/sample"
-	vestsimulation "github.com/dydxprotocol/v4/x/vest/simulation"
-	"github.com/dydxprotocol/v4/x/vest/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
+	vestsimulation "github.com/dydxprotocol/v4-chain/protocol/x/vest/simulation"
+	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
 
 // avoid unused import issue

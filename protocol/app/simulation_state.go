@@ -10,7 +10,7 @@ import (
 
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/dydxprotocol/v4/app/basic_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"

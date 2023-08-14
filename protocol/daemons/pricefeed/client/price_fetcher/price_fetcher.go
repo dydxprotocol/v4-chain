@@ -8,12 +8,12 @@ import (
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/handler"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
-	pricefeedmetrics "github.com/dydxprotocol/v4/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"gopkg.in/typ.v4/lists"
 )
 

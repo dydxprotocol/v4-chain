@@ -8,7 +8,7 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	subaccountstypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )

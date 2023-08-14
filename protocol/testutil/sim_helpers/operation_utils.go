@@ -11,7 +11,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // GenerateAndDeliverTx generates a random fee (or with zero fees if set), then generates a

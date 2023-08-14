@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/dydxprotocol/v4/testutil/sample"
-	subaccountssimulation "github.com/dydxprotocol/v4/x/subaccounts/simulation"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
+	subaccountssimulation "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/simulation"
 )
 
 // avoid unused import issue

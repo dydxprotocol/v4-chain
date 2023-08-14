@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/testexchange"
-	pricefeed "github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	pricefeed_testutil "github.com/dydxprotocol/v4/testutil/pricefeed"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/testexchange"
+	pricefeed "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	"github.com/ory/dockertest/v3"
 )
 

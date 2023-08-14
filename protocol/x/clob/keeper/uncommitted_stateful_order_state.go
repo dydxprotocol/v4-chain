@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 // GetUncommittedStatefulOrderPlacement gets a stateful order and the placement information from uncommitted state.

@@ -9,11 +9,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/dydxprotocol/v4/dtypes"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/testutil/sim_helpers"
-	asstypes "github.com/dydxprotocol/v4/x/assets/types"
-	"github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
+	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // genSubaccountIdNumbers returns randomized slice of numbers to use for `Subaccount.SubaccountId.Number`.

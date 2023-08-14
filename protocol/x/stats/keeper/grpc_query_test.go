@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	testapp "github.com/dydxprotocol/v4/testutil/app"
-	"github.com/dydxprotocol/v4/x/stats/types"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
 func TestParams(t *testing.T) {

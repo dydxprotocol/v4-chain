@@ -1,7 +1,7 @@
 package app_test
 
 import (
-	"github.com/dydxprotocol/v4/app"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

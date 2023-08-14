@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	"github.com/stretchr/testify/require"
 )

@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	blocktimetypes "github.com/dydxprotocol/v4/x/blocktime/types"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

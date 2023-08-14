@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	api "github.com/dydxprotocol/v4/daemons/bridge/api"
+	api "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 
 	grpc "google.golang.org/grpc"
 

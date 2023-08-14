@@ -3,7 +3,7 @@ package dydxprotocol.clob;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/clob/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // Defines the block rate limits for CLOB specific operations.
 message BlockRateLimitConfiguration {

@@ -229,7 +229,7 @@ test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race -tags='test_ledger_mock $(build_tags)' ./...
 
 test-cover:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4/... -tags='test_ledger_mock $(build_tags)' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' ./...
 
 test-exchanges:
 	@VERSION=$(VERSION) go test -mod=readonly -race -tags='test_ledger_mock exchange_tests $(build_tags)' ./... -run "TestQueryingActualExchanges"
@@ -279,15 +279,6 @@ format:
 protoVer=0.11.5
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
-
-proto-gen:
-	@echo "Generating Protobuf files"
-	@$(protoImage) sh ./scripts/protocgen.sh
-
-# Note: this should mirror `proto-gen`.
-proto-gen-without-container:
-	@echo "Generating Protobuf files"
-	sh ./scripts/protocgen.sh
 
 proto-swagger-gen:
 	@make clean
@@ -342,7 +333,7 @@ proto-download-deps:
 	mkdir -p "$(THIRD_PARTY_DIR)/cosmos/ics23/v1" && \
 	curl -sSL https://raw.githubusercontent.com/cosmos/ics23/master/proto/cosmos/ics23/v1/proofs.proto > "$(THIRD_PARTY_DIR)/cosmos/ics23/v1/proofs.proto"
 
-.PHONY: proto-gen proto-swagger-gen
+.PHONY: proto-swagger-gen
 
 
 ###############################################################################

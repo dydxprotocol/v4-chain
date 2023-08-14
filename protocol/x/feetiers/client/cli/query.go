@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/dydxprotocol/v4/x/feetiers/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"github.com/spf13/cobra"
 )
 

@@ -2,8 +2,8 @@ package prices
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/prices/keeper"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

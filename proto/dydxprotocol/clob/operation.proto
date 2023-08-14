@@ -6,7 +6,7 @@ import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/order_removals.proto";
 import "dydxprotocol/clob/tx.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/clob/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // Operation represents an operation in the proposed operations. Operation is
 // used internally within the memclob only.

@@ -1,11 +1,11 @@
 package metrics_test
 
 import (
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"testing"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/stretchr/testify/require"
 )
 

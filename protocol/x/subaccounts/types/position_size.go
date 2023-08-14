@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 )
 
 // PositionSize is an interface for expressing the size of a position

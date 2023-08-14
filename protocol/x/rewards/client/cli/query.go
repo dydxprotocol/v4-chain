@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/dydxprotocol/v4/x/rewards/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

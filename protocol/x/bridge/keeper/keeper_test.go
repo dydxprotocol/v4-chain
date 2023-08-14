@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4/testutil/app"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/stretchr/testify/require"
 )
 

@@ -8,11 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appmsgs "github.com/dydxprotocol/v4/app/msgs"
-	"github.com/dydxprotocol/v4/lib/ante"
-	"github.com/dydxprotocol/v4/mocks"
-	testante "github.com/dydxprotocol/v4/testutil/ante"
-	testmsgs "github.com/dydxprotocol/v4/testutil/msgs"
+	appmsgs "github.com/dydxprotocol/v4-chain/protocol/app/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
+	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

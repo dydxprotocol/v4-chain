@@ -3,10 +3,10 @@ package prepare_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/app/prepare"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/testutil/encoding"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/stretchr/testify/require"
 )
 

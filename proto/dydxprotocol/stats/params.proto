@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.stats;
 
-option go_package = "github.com/dydxprotocol/v4/x/stats/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/stats/types";
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";

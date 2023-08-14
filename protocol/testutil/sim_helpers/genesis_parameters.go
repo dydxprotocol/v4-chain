@@ -3,8 +3,8 @@ package sim_helpers
 import (
 	"math"
 
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
 // All generated genesis parameters should be defined here.

@@ -2,8 +2,8 @@ package rewards
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/rewards/keeper"
-	"github.com/dydxprotocol/v4/x/rewards/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.

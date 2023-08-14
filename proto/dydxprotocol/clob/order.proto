@@ -4,7 +4,7 @@ package dydxprotocol.clob;
 import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/clob/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // OrderId refers to a single order belonging to a Subaccount.
 message OrderId {

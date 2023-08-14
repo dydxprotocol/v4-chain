@@ -2,8 +2,8 @@ package feetiers
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/feetiers/keeper"
-	"github.com/dydxprotocol/v4/x/feetiers/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 )
 
 // InitGenesis initializes the feetiers module's state from a provided genesis state.

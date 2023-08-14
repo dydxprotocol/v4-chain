@@ -3,10 +3,10 @@ package keeper
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/x/clob/rate_limit"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,15 +14,15 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	asskeeper "github.com/dydxprotocol/v4/x/assets/keeper"
-	"github.com/dydxprotocol/v4/x/clob/keeper"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	feetierskeeper "github.com/dydxprotocol/v4/x/feetiers/keeper"
-	perpkeeper "github.com/dydxprotocol/v4/x/perpetuals/keeper"
-	priceskeeper "github.com/dydxprotocol/v4/x/prices/keeper"
-	rewardskeeper "github.com/dydxprotocol/v4/x/rewards/keeper"
-	statskeeper "github.com/dydxprotocol/v4/x/stats/keeper"
-	subkeeper "github.com/dydxprotocol/v4/x/subaccounts/keeper"
+	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
+	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
+	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	rewardskeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
+	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
+	subkeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 )
 
 type ClobKeepersTestContext struct {

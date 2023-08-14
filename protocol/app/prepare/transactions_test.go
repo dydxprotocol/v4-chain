@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/dydxprotocol/v4/app/prepare"
+	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/stretchr/testify/require"
 )
 

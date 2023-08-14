@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/x/vest/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 )
 

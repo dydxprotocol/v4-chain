@@ -2,11 +2,12 @@ package testutil
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
 	"strings"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/binance"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/binance"
 	"github.com/h2non/gock"
 )
 

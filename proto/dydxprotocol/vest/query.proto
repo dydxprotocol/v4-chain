@@ -5,7 +5,7 @@ import "google/api/annotations.proto";
 import "dydxprotocol/vest/vest_entry.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/vest/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vest/types";
 
 // Query defines the gRPC querier service.
 service Query {

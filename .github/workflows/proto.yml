@@ -44,3 +44,24 @@ jobs:
           git config --global --add safe.directory /__w/v4-chain/v4-chain
           git fetch origin ${{ github.event.pull_request.base.sha || github.event.before }}
           buf breaking --against .git#branch=${{ github.event.pull_request.base.sha || github.event.before }}
+  protocol-gen:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.11.5
+      options: --user root
+    steps:
+      - uses: actions/checkout@v3
+      - run: git config --global --add safe.directory /__w/v4-chain/v4-chain
+      - run: sh ./protocol/scripts/protocgen.sh && git diff --exit-code
+  indexer-gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - working-directory: ./indexer
+        run: |
+          npm install -g pnpm@6.34.0
+          pnpm install --loglevel warn --frozen-lockfile
+          cd packages/v4-protos && npm run build:verify-proto

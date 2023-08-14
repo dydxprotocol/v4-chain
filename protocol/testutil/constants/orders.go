@@ -3,7 +3,7 @@ package constants
 import (
 	"math"
 
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 var (

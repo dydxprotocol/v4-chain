@@ -2,11 +2,12 @@ package cli
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 func CmdShowMarketParam() *cobra.Command {

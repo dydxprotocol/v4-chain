@@ -6,20 +6,20 @@ import (
 	"sort"
 	"time"
 
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/dtypes"
-	indexerevents "github.com/dydxprotocol/v4/indexer/events"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/lib/metrics"
-	epochstypes "github.com/dydxprotocol/v4/x/epochs/types"
-	"github.com/dydxprotocol/v4/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/pkg/errors"
 )
 

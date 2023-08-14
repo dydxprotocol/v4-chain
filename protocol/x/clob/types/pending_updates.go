@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/dydxprotocol/v4/lib"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // pendingUpdates is a utility struct used for storing the working updates to all Subaccounts.

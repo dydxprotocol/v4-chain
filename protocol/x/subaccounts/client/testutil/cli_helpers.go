@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sacli "github.com/dydxprotocol/v4/x/subaccounts/client/cli"
+	sacli "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"

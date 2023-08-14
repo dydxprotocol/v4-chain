@@ -10,7 +10,7 @@ import (
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	// sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/dydxprotocol/v4/x/epochs/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/x/bridge/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
 type EventId = uint32

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.prices;
 
-option go_package = "github.com/dydxprotocol/v4/x/prices/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/prices/types";
 
 // MarketParam represents the x/prices configuration for markets, including
 // representing price values, resolving markets on individual exchanges, and

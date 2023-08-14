@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/clob/clob_pair.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/clob/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // MEVMatch represents all necessary data to calculate MEV for a regular match.
 message MEVMatch {

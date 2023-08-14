@@ -3,11 +3,11 @@ package events_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/dtypes"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
-	"github.com/dydxprotocol/v4/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/stretchr/testify/require"
 )
 

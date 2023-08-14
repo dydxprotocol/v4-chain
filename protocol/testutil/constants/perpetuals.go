@@ -1,8 +1,8 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4/dtypes"
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
 func init() {

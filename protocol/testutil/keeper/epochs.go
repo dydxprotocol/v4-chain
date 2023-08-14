@@ -8,8 +8,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/epochs/keeper"
-	"github.com/dydxprotocol/v4/x/epochs/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 )
 
 const (

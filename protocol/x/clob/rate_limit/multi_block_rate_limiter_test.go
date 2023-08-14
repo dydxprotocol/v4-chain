@@ -1,9 +1,9 @@
 package rate_limit_test
 
 import (
-	testapp "github.com/dydxprotocol/v4/testutil/app"
-	"github.com/dydxprotocol/v4/x/clob/rate_limit"
-	"github.com/dydxprotocol/v4/x/clob/types"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

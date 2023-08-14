@@ -2,7 +2,7 @@ package types
 
 import (
 	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/dydxprotocol/v4/indexer/msgsender"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 )
 
 type OffchainUpdateMessageType int

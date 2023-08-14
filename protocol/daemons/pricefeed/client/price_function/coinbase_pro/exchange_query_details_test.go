@@ -3,7 +3,7 @@ package coinbase_pro_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function/coinbase_pro"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/coinbase_pro"
 	"github.com/stretchr/testify/require"
 )
 

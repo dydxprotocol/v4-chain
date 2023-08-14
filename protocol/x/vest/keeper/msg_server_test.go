@@ -8,10 +8,10 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	testapp "github.com/dydxprotocol/v4/testutil/app"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 
-	"github.com/dydxprotocol/v4/x/vest/keeper"
-	"github.com/dydxprotocol/v4/x/vest/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 )
 

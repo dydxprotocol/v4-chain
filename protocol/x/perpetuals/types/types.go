@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // GetPricePremiumParams includes the parameters used by

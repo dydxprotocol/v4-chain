@@ -9,11 +9,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/dydxprotocol/v4/dtypes"
-	testapp "github.com/dydxprotocol/v4/testutil/app"
-	feetierstypes "github.com/dydxprotocol/v4/x/feetiers/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
-	"github.com/dydxprotocol/v4/x/rewards/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	"github.com/stretchr/testify/require"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dydxprotocol/v4/app/process"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/stretchr/testify/require"
 )
 

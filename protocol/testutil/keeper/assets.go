@@ -10,10 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/x/assets/keeper"
-	"github.com/dydxprotocol/v4/x/assets/types"
-	priceskeeper "github.com/dydxprotocol/v4/x/prices/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 )
 
 // CreateUsdcAsset creates USDC in the assets module for tests.

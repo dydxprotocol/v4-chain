@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/mocks"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/x/clob/memclob"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/stretchr/testify/require"
 )
 

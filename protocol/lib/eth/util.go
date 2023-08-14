@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/app/config"
-	"github.com/dydxprotocol/v4/daemons/constants"
-	"github.com/dydxprotocol/v4/lib"
-	bridgetypes "github.com/dydxprotocol/v4/x/bridge/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/config"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	ethabi "github.com/ethereum/go-ethereum/accounts/abi"
 	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 )

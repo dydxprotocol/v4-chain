@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/dydxprotocol/v4/command/genprivkey"
+	"github.com/dydxprotocol/v4-chain/protocol/command/genprivkey"
 	"github.com/spf13/cobra"
 )
 
