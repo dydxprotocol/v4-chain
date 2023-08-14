@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants/exchange_common"
-	client_types "github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	client_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/require"
 )

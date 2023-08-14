@@ -3,7 +3,7 @@ package types
 import (
 	"net/http"
 
-	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 // ExchangeQueryDetails represents the information needed to query a specific exchange.

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dydxprotocol/v4/lib"
-	big_testutil "github.com/dydxprotocol/v4/testutil/big"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 
 	"github.com/stretchr/testify/require"
 )

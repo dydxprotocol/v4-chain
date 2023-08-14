@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/dydxprotocol/v4/x/clob/rate_limit"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -13,13 +13,13 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/dydxprotocol/v4/app/basic_manager"
-	libante "github.com/dydxprotocol/v4/lib/ante"
-	"github.com/dydxprotocol/v4/lib/encoding"
-	clobante "github.com/dydxprotocol/v4/x/clob/ante"
-	clobmodulekeeper "github.com/dydxprotocol/v4/x/clob/keeper"
-	clobmodulememclob "github.com/dydxprotocol/v4/x/clob/memclob"
-	"github.com/dydxprotocol/v4/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
+	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
+	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	clobmodulememclob "github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
 

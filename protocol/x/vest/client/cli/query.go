@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/dydxprotocol/v4/x/vest/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

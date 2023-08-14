@@ -5,9 +5,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/dydxprotocol/v4/app/msgs"
-	"github.com/dydxprotocol/v4/lib/maps"
-	testapp "github.com/dydxprotocol/v4/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/stretchr/testify/require"
 )
 

@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"testing"
 
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/x/perpetuals/types"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
 

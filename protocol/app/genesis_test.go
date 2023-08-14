@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dydxprotocol/v4/app"
-	"github.com/dydxprotocol/v4/app/basic_manager"
-	"github.com/dydxprotocol/v4/lib/encoding"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
+	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 	"github.com/stretchr/testify/require"
 )
 

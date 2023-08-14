@@ -5,12 +5,12 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/app/prepare"
-	"github.com/dydxprotocol/v4/mocks"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
-	perpetualtypes "github.com/dydxprotocol/v4/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

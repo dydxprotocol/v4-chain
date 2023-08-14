@@ -18,9 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/dydxprotocol/v4/x/perpetuals/client/cli"
-	"github.com/dydxprotocol/v4/x/perpetuals/keeper"
-	"github.com/dydxprotocol/v4/x/perpetuals/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/client/cli"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
 var (

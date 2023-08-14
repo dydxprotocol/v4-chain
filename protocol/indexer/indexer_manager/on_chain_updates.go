@@ -2,8 +2,8 @@ package indexer_manager
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4/indexer/common"
-	"github.com/dydxprotocol/v4/indexer/msgsender"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 )
 
 const (

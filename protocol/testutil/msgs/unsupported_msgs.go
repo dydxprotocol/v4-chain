@@ -3,8 +3,8 @@ package msgs
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/testutil/encoding"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 )
 
 func init() {

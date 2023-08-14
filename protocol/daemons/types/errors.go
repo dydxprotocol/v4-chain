@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/daemons/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 )
 
 const Name = "daemons"

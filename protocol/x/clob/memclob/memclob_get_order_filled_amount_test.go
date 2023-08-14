@@ -4,14 +4,14 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	sdktest "github.com/dydxprotocol/v4/testutil/sdk"
-	"github.com/dydxprotocol/v4/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 func TestGetOrderFilledAmount(t *testing.T) {

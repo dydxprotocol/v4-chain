@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	indexerevents "github.com/dydxprotocol/v4/indexer/events"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // GenerateMarketPriceUpdateEvents takes in a slice of market prices and returns a slice of price updates.

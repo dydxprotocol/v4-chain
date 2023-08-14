@@ -4,7 +4,7 @@ package cli_test
 
 import (
 	"fmt"
-	cli_util "github.com/dydxprotocol/v4/testutil/prices/cli"
+	cli_util "github.com/dydxprotocol/v4-chain/protocol/testutil/prices/cli"
 	"testing"
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -14,8 +14,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/dydxprotocol/v4/x/prices/client/cli"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/cli"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 func TestShowMarketPrice(t *testing.T) {

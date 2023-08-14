@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.indexer.shared;
 
-option go_package = "github.com/dydxprotocol/v4/indexer/shared";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/shared";
 
 // TODO(DEC-869): Update reasons/statuses for Advanced Orders.
 

@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
-	pricefeedconstants "github.com/dydxprotocol/v4/daemons/constants"
-	"github.com/dydxprotocol/v4/daemons/server"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/grpc"
+	pricefeedconstants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/server"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

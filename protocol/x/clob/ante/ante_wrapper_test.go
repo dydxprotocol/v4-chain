@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/dydxprotocol/v4/mocks"
-	testante "github.com/dydxprotocol/v4/testutil/ante"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/x/clob/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

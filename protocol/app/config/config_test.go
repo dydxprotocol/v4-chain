@@ -2,7 +2,7 @@ package config_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/app/config"
+	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

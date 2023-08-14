@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	indexerevents "github.com/dydxprotocol/v4/indexer/events"
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // CreateMarket creates a new market param in the store along with a new market price

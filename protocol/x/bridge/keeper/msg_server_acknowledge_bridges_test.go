@@ -6,11 +6,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/x/bridge/keeper"
-	"github.com/dydxprotocol/v4/x/bridge/types"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

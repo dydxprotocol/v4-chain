@@ -2,7 +2,7 @@ package msgsender_test
 
 import (
 	"github.com/Shopify/sarama"
-	"github.com/dydxprotocol/v4/indexer/msgsender"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

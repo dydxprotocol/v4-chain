@@ -1,6 +1,6 @@
 package msgs
 
-import "github.com/dydxprotocol/v4/lib/maps"
+import "github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 
 var (
 	// AllTypeMessages is a list of all messages and types that are used in the app.

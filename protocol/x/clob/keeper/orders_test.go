@@ -7,26 +7,26 @@ import (
 	"time"
 
 	cmt "github.com/cometbft/cometbft/types"
-	testapp "github.com/dydxprotocol/v4/testutil/app"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/mocks"
-	clobtest "github.com/dydxprotocol/v4/testutil/clob"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	memclobtest "github.com/dydxprotocol/v4/testutil/memclob"
-	"github.com/dydxprotocol/v4/testutil/proto"
-	"github.com/dydxprotocol/v4/testutil/tracer"
-	"github.com/dydxprotocol/v4/x/clob/keeper"
-	"github.com/dydxprotocol/v4/x/clob/memclob"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	"github.com/dydxprotocol/v4/x/perpetuals"
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
-	"github.com/dydxprotocol/v4/x/prices"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	memclobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/proto"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/tracer"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -416,7 +416,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 		// that weren't placed on the first CLOB. If firstClobPair.QuantumConversionExponent >
 		// expectedClobPair.QuantumConversionExponent, then sellers receive more quote quantums and buyers are charged
 		// more. Vice versa if firstClobPair.QuantumConversionExponent < expectedClobPair.QuantumConversionExponent.
-		// Context: https://github.com/dydxprotocol/v4/pull/562#discussion_r1024319468
+		// Context: https://github.com/dydxprotocol/v4-chain/protocol/pull/562#discussion_r1024319468
 		`Regression: New order should be fully collateralized when matching with previous fills
 				because the correct quantum conversion exponent was used`: {
 			perpetuals: []perptypes.Perpetual{

@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	pricefeed_cosntants "github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4/testutil/daemons/pricefeed"
+	pricefeed_cosntants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

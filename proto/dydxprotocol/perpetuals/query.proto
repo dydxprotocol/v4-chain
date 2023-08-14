@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "dydxprotocol/perpetuals/perpetual.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/perpetuals/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types";
 
 // Query defines the gRPC querier service.
 service Query {

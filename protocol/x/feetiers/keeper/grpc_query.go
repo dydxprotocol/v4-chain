@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/feetiers/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

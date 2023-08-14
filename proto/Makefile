@@ -1,7 +1,4 @@
 # TODO(roy): These are currently not used. Clean this up when moving dydxjs and dydxpy.
-proto-export:
-	rm -rf ./.proto-export && buf export --config ./buf.yaml --output ./.proto-export
-
 # dydxjs needs cosmos protos that aren't depended on by dydx protos.
 # Running the export command above will only get a subset of cosmos protos.
 # For now, we will export cosmos protos separately. Note that this doesn't verify the digest.

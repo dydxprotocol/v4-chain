@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
 // ProductKeeper represents a generic interface for a keeper

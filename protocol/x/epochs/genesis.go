@@ -2,8 +2,8 @@ package epochs
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/epochs/keeper"
-	"github.com/dydxprotocol/v4/x/epochs/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 )
 
 // InitGenesis initializes the epochs module's state from a provided genesis

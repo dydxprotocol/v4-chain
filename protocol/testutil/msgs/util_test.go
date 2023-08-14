@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/dydxprotocol/v4/testutil/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 
 	"github.com/stretchr/testify/require"
 )

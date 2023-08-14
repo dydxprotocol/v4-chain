@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	sendingsimulation "github.com/dydxprotocol/v4/x/sending/simulation"
-	"github.com/dydxprotocol/v4/x/sending/types"
+	sendingsimulation "github.com/dydxprotocol/v4-chain/protocol/x/sending/simulation"
+	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
 // GenerateGenesisState creates a randomized GenState of the module

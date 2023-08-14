@@ -3,9 +3,9 @@ package types_test
 import (
 	"testing"
 
-	liquidationstypes "github.com/dydxprotocol/v4/daemons/server/types/liquidations"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	liquidationstypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 

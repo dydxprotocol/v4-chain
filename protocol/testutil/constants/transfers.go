@@ -1,8 +1,8 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/x/sending/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
 var (

@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "dydxprotocol/rewards/params.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/rewards/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types";
 
 // Query defines the gRPC querier service.
 service Query {

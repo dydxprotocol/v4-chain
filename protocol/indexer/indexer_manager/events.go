@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-	ante_types "github.com/dydxprotocol/v4/app/ante/types"
-	"github.com/dydxprotocol/v4/indexer/common"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/lib/metrics"
+	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
 const (

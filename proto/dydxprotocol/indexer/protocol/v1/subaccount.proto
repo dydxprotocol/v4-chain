@@ -4,7 +4,7 @@ package dydxprotocol.indexer.protocol.v1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/dydxprotocol/v4/indexer/protocol/v1";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1";
 
 // Initial copy of protos from V4 application state protos for the subaccount
 // module for use to send Indexer specific messages. Do not make any breaking
@@ -28,14 +28,14 @@ message IndexerPerpetualPosition {
   // The size of the position in base quantums.
   bytes quantums = 2 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4/dtypes.SerializableInt",
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
   // The funding_index of the `Perpetual` the last time this position was
   // settled.
   bytes funding_index = 3 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4/dtypes.SerializableInt",
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
   // Amount of funding payment (in quote quantums).
@@ -44,7 +44,7 @@ message IndexerPerpetualPosition {
   // a negative value means funding payment was received.
   bytes funding_payment = 4 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4/dtypes.SerializableInt",
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }
@@ -57,7 +57,7 @@ message IndexerAssetPosition {
   // The absolute size of the position in base quantums.
   bytes quantums = 2 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4/dtypes.SerializableInt",
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
   // The `Index` (either `LongIndex` or `ShortIndex`) of the `Asset` the last

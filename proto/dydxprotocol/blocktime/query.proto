@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.blocktime;
 
-option go_package = "github.com/dydxprotocol/v4/x/blocktime/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types";
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";

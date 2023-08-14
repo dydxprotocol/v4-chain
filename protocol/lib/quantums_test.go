@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	big_testutil "github.com/dydxprotocol/v4/testutil/big"
+	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 )
 
 func TestBaseToQuoteQuantums(t *testing.T) {

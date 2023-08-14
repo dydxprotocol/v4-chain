@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	testapp "github.com/dydxprotocol/v4/testutil/app"
-	epochstypes "github.com/dydxprotocol/v4/x/epochs/types"
-	"github.com/dydxprotocol/v4/x/stats/types"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

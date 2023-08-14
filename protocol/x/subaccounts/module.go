@@ -16,9 +16,9 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/dydxprotocol/v4/x/subaccounts/client/cli"
-	"github.com/dydxprotocol/v4/x/subaccounts/keeper"
-	"github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/client/cli"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 var (

@@ -7,10 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/indexer/off_chain_updates"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // ProcessSingleMatch accepts a single match and its associated orders matched in the block,

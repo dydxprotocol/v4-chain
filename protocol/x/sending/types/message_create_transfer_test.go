@@ -3,11 +3,11 @@ package types_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/testutil/sample"
-	"github.com/dydxprotocol/v4/x/sending/types"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
+	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 

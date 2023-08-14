@@ -8,11 +8,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/lib/metrics"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/testutil/nullify"
-	"github.com/dydxprotocol/v4/x/epochs/keeper"
-	"github.com/dydxprotocol/v4/x/epochs/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/stretchr/testify/require"
 )
 

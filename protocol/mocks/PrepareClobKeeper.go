@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"

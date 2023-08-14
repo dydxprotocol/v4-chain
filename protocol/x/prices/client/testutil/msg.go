@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	pricescli "github.com/dydxprotocol/v4/x/prices/client/cli"
+	pricescli "github.com/dydxprotocol/v4-chain/protocol/x/prices/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"

@@ -5,8 +5,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/x/perpetuals/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
 

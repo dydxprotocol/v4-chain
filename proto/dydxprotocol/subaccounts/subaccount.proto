@@ -5,7 +5,7 @@ import "cosmos_proto/cosmos.proto";
 import "dydxprotocol/subaccounts/asset_position.proto";
 import "dydxprotocol/subaccounts/perpetual_position.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/subaccounts/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types";
 
 // SubaccountId defines a unique identifier for a Subaccount.
 message SubaccountId {

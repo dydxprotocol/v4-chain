@@ -2,7 +2,7 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 // ShouldSkipSequenceValidation returns whether sequence validation can be skipped for a given list of messages.

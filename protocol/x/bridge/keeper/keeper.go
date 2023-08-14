@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bridgeserver "github.com/dydxprotocol/v4/daemons/server/types/bridge"
-	"github.com/dydxprotocol/v4/x/bridge/types"
+	bridgeserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
 type (

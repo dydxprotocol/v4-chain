@@ -9,9 +9,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	libante "github.com/dydxprotocol/v4/lib/ante"
-	testante "github.com/dydxprotocol/v4/testutil/ante"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
 	"github.com/stretchr/testify/require"
 )

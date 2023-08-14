@@ -3,7 +3,7 @@ package dydxprotocol.perpetuals;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/perpetuals/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types";
 
 // Perpetual represents a perpetual on the dYdX exchange.
 message Perpetual {
@@ -38,7 +38,7 @@ message Perpetual {
   // history of the funding mechanism. Starts at zero.
   bytes funding_index = 7 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4/dtypes.SerializableInt",
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 

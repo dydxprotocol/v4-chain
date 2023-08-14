@@ -14,14 +14,14 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/testutil/network"
-	"github.com/dydxprotocol/v4/testutil/nullify"
-	"github.com/dydxprotocol/v4/x/clob/client/cli"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	perpetualstypes "github.com/dydxprotocol/v4/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // Prevent strconv unused error

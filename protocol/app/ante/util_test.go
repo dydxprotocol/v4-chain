@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/app/ante"
-	"github.com/dydxprotocol/v4/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/app/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/require"
 )
 

@@ -11,12 +11,12 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	blocktime "github.com/dydxprotocol/v4/x/blocktime/types"
-	bridge "github.com/dydxprotocol/v4/x/bridge/types"
-	feetiers "github.com/dydxprotocol/v4/x/feetiers/types"
-	rewards "github.com/dydxprotocol/v4/x/rewards/types"
-	stats "github.com/dydxprotocol/v4/x/stats/types"
-	vest "github.com/dydxprotocol/v4/x/vest/types"
+	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
+	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
+	vest "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
 
 // IsInternalMsg returns true if the given msg is an internal message.

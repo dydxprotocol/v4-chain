@@ -1,4 +1,4 @@
-module github.com/dydxprotocol/v4
+module github.com/dydxprotocol/v4-chain/protocol
 
 go 1.19
 

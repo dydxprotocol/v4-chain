@@ -7,12 +7,12 @@ import (
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/daemons/constants"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/api"
-	pricefeedmetrics "github.com/dydxprotocol/v4/daemons/pricefeed/metrics"
-	pricefeedtypes "github.com/dydxprotocol/v4/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4/daemons/types"
-	"github.com/dydxprotocol/v4/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
+	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
 // PriceFeedServer defines the fields required for price updates.

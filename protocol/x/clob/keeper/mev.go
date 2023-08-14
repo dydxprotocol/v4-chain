@@ -9,13 +9,13 @@ import (
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/app/process"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/lib/metrics"
-	"github.com/dydxprotocol/v4/x/clob/mev_telemetry"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/mev_telemetry"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // CumulativePnL keeps track of the cumulative PnL for each subaccount per market.

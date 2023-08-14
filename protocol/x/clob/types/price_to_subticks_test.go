@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4/x/clob/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 func TestPriceToSubticks(t *testing.T) {

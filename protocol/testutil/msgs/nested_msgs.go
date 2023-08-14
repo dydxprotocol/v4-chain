@@ -5,9 +5,9 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/testutil/encoding"
-	prices "github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
+	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 func init() {

@@ -3,7 +3,7 @@ package types
 import (
 	time "time"
 
-	rewardstypes "github.com/dydxprotocol/v4/x/rewards/types"
+	rewardstypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
 // DefaultGenesis returns the default genesis state

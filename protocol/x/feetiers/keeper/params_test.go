@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4/testutil/app"
-	"github.com/dydxprotocol/v4/x/feetiers/types"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"github.com/stretchr/testify/require"
 )
 

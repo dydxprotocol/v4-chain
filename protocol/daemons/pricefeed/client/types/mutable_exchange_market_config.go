@@ -2,7 +2,7 @@ package types
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 )
 
 // MutableExchangeMarketConfig stores all mutable market configuration per exchange.

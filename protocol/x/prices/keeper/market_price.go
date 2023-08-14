@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	indexerevents "github.com/dydxprotocol/v4/indexer/events"
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 	"math/big"
 	"time"
+
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	gometrics "github.com/armon/go-metrics"
 
@@ -12,10 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	pricefeedmetrics "github.com/dydxprotocol/v4/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/lib/metrics"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // newMarketPriceStore creates a new prefix store for MarketPrices.

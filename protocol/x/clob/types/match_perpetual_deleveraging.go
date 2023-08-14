@@ -1,7 +1,7 @@
 package types
 
 import (
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // Validate performs stateless validation on a `MatchPerpetualDeleveraging` object.

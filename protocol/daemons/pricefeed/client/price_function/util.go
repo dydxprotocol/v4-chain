@@ -3,7 +3,7 @@ package price_function
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/go-playground/validator/v10"
 	"math/big"
 	"regexp"

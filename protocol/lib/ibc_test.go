@@ -3,7 +3,7 @@ package lib_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/stretchr/testify/require"
 )
 

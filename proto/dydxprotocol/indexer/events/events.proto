@@ -7,7 +7,7 @@ import "dydxprotocol/indexer/shared/removal_reason.proto";
 import "dydxprotocol/indexer/protocol/v1/clob.proto";
 import "dydxprotocol/indexer/protocol/v1/subaccount.proto";
 
-option go_package = "github.com/dydxprotocol/v4/indexer/events";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/events";
 
 // Do not make any breaking changes to these protos, a new version should be
 // created if a breaking change is needed.
@@ -24,7 +24,7 @@ message FundingUpdateV1 {
   // `TYPE_FUNDING_RATE_AND_INDEX`.
   bytes funding_index = 3 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4/dtypes.SerializableInt",
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }

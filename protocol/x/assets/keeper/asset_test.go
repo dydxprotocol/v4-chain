@@ -7,13 +7,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/lib"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/testutil/nullify"
-	"github.com/dydxprotocol/v4/x/assets/keeper"
-	"github.com/dydxprotocol/v4/x/assets/types"
-	priceskeeper "github.com/dydxprotocol/v4/x/prices/keeper"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	"github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 

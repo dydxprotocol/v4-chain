@@ -3,8 +3,8 @@ package ante
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/lib"
-	libante "github.com/dydxprotocol/v4/lib/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 )
 
 // ValidateMsgTypeDecorator checks that the tx has the expected message types.

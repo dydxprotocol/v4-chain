@@ -4,7 +4,7 @@ package dydxprotocol.clob;
 import "gogoproto/gogo.proto";
 import "dydxprotocol/clob/order.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/clob/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // ProcessProposerMatchesEvents is used for communicating which events occurred
 // in the last block that require updating the state of the memclob in the

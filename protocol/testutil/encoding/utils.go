@@ -24,13 +24,13 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	custommodule "github.com/dydxprotocol/v4/app/module"
-	bridgemodule "github.com/dydxprotocol/v4/x/bridge"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
-	perpetualtypes "github.com/dydxprotocol/v4/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
-	sendingtypes "github.com/dydxprotocol/v4/x/sending/types"
-	subaccountsmodule "github.com/dydxprotocol/v4/x/subaccounts"
+	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
 )
 
 // GetTestEncodingCfg returns an encoding config for testing purposes.

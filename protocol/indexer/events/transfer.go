@@ -1,8 +1,8 @@
 package events
 
 import (
-	v1 "github.com/dydxprotocol/v4/indexer/protocol/v1"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // NewTransferEvent creates a TransferEvent representing a transfer of an asset between a sender

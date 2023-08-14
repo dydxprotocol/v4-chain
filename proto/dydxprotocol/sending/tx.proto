@@ -3,7 +3,7 @@ package dydxprotocol.sending;
 
 import "dydxprotocol/sending/transfer.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/sending/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/sending/types";
 
 // Msg defines the Msg service.
 service Msg {

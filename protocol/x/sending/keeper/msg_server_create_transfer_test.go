@@ -8,11 +8,11 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/x/sending/keeper"
-	"github.com/dydxprotocol/v4/x/sending/types"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	"github.com/stretchr/testify/require"
 )
 

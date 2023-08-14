@@ -16,8 +16,8 @@ import (
 	ibcconn "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	ibccore "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
-	clob "github.com/dydxprotocol/v4/x/clob/types"
-	sending "github.com/dydxprotocol/v4/x/sending/types"
+	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
 var (

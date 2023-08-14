@@ -3,20 +3,20 @@ package keeper
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	epochskeeper "github.com/dydxprotocol/v4/x/epochs/keeper"
-	"github.com/dydxprotocol/v4/x/perpetuals"
-	"github.com/dydxprotocol/v4/x/perpetuals/keeper"
-	"github.com/dydxprotocol/v4/x/perpetuals/types"
-	priceskeeper "github.com/dydxprotocol/v4/x/prices/keeper"
+	epochskeeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/stretchr/testify/require"
 )
 

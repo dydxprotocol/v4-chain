@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	assettypes "github.com/dydxprotocol/v4/x/assets/types"
-	perpetualsmoduletypes "github.com/dydxprotocol/v4/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type SubaccountsKeeper interface {

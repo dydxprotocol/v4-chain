@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.bridge;
 
-option go_package = "github.com/dydxprotocol/v4/x/bridge/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types";
 
 // BridgeEventInfo stores information about the most recently processed bridge
 // event.

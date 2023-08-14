@@ -3,8 +3,8 @@ package msgs_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/app/msgs"
-	"github.com/dydxprotocol/v4/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/stretchr/testify/require"
 )
 

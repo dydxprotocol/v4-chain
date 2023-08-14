@@ -2,7 +2,7 @@ package flags
 
 import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/dydxprotocol/v4/daemons/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/spf13/cobra"
 )
 

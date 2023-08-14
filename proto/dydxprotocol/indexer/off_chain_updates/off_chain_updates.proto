@@ -4,7 +4,7 @@ package dydxprotocol.indexer.off_chain_updates;
 import "dydxprotocol/indexer/shared/removal_reason.proto";
 import "dydxprotocol/indexer/protocol/v1/clob.proto";
 
-option go_package = "github.com/dydxprotocol/v4/indexer/off_chain_updates";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates";
 
 // Do not make any breaking changes to these protos, a new version should be
 // created if a breaking change is needed.

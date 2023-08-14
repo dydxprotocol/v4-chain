@@ -1,8 +1,8 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4/dtypes"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 var (

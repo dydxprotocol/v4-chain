@@ -3,11 +3,11 @@ package types
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
 // ExchangeToMarketPrices maintains price info for multiple exchanges. Each exchange can support

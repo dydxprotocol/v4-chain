@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/types"
-	"github.com/dydxprotocol/v4/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
 // MarketToPrice maintains multiple prices for different markets for the same exchange,

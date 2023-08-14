@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,11 +10,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	assetskeeper "github.com/dydxprotocol/v4/x/assets/keeper"
-	feetierskeeper "github.com/dydxprotocol/v4/x/feetiers/keeper"
-	priceskeeper "github.com/dydxprotocol/v4/x/prices/keeper"
-	rewardskeeper "github.com/dydxprotocol/v4/x/rewards/keeper"
-	"github.com/dydxprotocol/v4/x/rewards/types"
+	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
+	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	rewardskeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
 func createRewardsKeeper(

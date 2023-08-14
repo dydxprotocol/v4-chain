@@ -3,14 +3,14 @@ package perpetuals_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/dtypes"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/testutil/nullify"
-	"github.com/dydxprotocol/v4/x/perpetuals"
-	"github.com/dydxprotocol/v4/x/perpetuals/types"
-	"github.com/dydxprotocol/v4/x/prices"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	"github.com/stretchr/testify/require"
 )
 

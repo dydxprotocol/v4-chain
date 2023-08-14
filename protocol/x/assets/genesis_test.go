@@ -3,9 +3,9 @@ package assets_test
 import (
 	"testing"
 
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/x/assets"
-	"github.com/dydxprotocol/v4/x/assets/types"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/assets"
+	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/stretchr/testify/require"
 )
 

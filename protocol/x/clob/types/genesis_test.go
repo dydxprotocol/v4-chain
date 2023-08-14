@@ -3,12 +3,12 @@ package types_test
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"testing"
 
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
 

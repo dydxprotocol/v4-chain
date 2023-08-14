@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dydxprotocol/v4/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/stretchr/testify/require"
 )
 

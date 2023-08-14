@@ -2,8 +2,8 @@ package subaccounts
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/subaccounts/keeper"
-	"github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // InitGenesis initializes the subaccounts module's state from a provided genesis

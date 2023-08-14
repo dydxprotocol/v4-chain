@@ -14,11 +14,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/dydxprotocol/v4/dtypes"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/lib/metrics"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
-	"github.com/dydxprotocol/v4/x/rewards/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
 type (

@@ -2,11 +2,12 @@ package rate_limit
 
 import (
 	"fmt"
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	"sort"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 var _ RateLimiter[int] = (*multiBlockRateLimiter[int])(nil)

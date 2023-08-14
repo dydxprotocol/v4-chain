@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"math/big"
 	"testing"
 
@@ -13,13 +13,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/dydxprotocol/v4/dtypes"
-	"github.com/dydxprotocol/v4/lib"
-	asskeeper "github.com/dydxprotocol/v4/x/assets/keeper"
-	perpskeeper "github.com/dydxprotocol/v4/x/perpetuals/keeper"
-	priceskeeper "github.com/dydxprotocol/v4/x/prices/keeper"
-	"github.com/dydxprotocol/v4/x/subaccounts/keeper"
-	"github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	perpskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
+	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 func SubaccountsKeepers(

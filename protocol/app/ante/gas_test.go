@@ -9,10 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/dydxprotocol/v4/app/ante"
-	testante "github.com/dydxprotocol/v4/testutil/ante"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/ante"
+	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
 	"github.com/stretchr/testify/require"
 )

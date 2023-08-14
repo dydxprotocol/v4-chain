@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4/daemons/pricefeed/api"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

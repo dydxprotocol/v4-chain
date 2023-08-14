@@ -9,6 +9,10 @@ proto-format:
 proto-lint:
 	@$(protoImage) buf lint --error-format=json
 
+proto-gen:
+	@echo "Generating Protobuf files"
+	@$(protoImage) sh ./protocol/scripts/protocgen.sh
+
 proto-check-bc-breaking:
 	@rm -rf ./.proto-export
 	@$(protoImage) buf breaking --against .git#branch=$$(git merge-base HEAD origin/main)

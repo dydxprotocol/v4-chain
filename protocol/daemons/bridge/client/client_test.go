@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/dydxprotocol/v4/daemons/bridge/client"
-	d_constants "github.com/dydxprotocol/v4/daemons/constants"
-	"github.com/dydxprotocol/v4/daemons/flags"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/grpc"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client"
+	d_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	"github.com/stretchr/testify/require"
 )
 

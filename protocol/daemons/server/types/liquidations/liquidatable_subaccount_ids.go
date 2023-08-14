@@ -3,7 +3,7 @@ package types
 import (
 	"sync"
 
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // LiquidatableSubaccountIds maintains the list of subaccount ids to be liquidated

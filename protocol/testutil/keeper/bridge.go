@@ -9,10 +9,10 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	bridgeserver_types "github.com/dydxprotocol/v4/daemons/server/types/bridge"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/x/bridge/keeper"
-	"github.com/dydxprotocol/v4/x/bridge/types"
+	bridgeserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
 func BridgeKeepers(

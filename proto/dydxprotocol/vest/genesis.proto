@@ -4,7 +4,7 @@ package dydxprotocol.vest;
 import "gogoproto/gogo.proto";
 import "dydxprotocol/vest/vest_entry.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/vest/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vest/types";
 
 // GenesisState defines the vest module's genesis state.
 message GenesisState {

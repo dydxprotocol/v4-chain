@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	perptypes "github.com/dydxprotocol/v4/x/perpetuals/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
 // GetPricePremiumForPerpetual returns the price premium for a perpetual market,

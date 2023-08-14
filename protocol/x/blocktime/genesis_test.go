@@ -3,9 +3,9 @@ package blocktime_test
 import (
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4/testutil/app"
-	"github.com/dydxprotocol/v4/x/blocktime"
-	"github.com/dydxprotocol/v4/x/blocktime/types"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime"
+	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/stretchr/testify/require"
 )
 

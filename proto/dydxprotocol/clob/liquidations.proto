@@ -4,7 +4,7 @@ package dydxprotocol.clob;
 import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/clob/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // PerpetualLiquidationInfo holds information about a liquidation that occurred
 // for a position held by a subaccount.

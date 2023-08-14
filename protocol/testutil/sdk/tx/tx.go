@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/dydxprotocol/v4/app/basic_manager"
-	"github.com/dydxprotocol/v4/lib/encoding"
+	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 )
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.

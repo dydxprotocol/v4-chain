@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dydxprotocol/v4/app/flags"
-	"github.com/dydxprotocol/v4/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/dydxprotocol/v4/lib"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
-	"github.com/dydxprotocol/v4/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // getValidSubaccountUpdatesForTransfer generates subaccount updates and check

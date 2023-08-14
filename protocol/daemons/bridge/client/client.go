@@ -6,11 +6,11 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4/daemons/bridge/api"
-	"github.com/dydxprotocol/v4/daemons/flags"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/lib/metrics"
-	bridgetypes "github.com/dydxprotocol/v4/x/bridge/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 

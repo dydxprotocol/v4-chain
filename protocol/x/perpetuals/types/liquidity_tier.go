@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 // - Initial margin is less than or equal to 1.

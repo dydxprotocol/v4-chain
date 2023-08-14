@@ -9,11 +9,11 @@ import (
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
-	pricefeedmetrics "github.com/dydxprotocol/v4/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
 // ExchangeQueryHandlerImpl is the struct that implements the `ExchangeQueryHandler` interface.

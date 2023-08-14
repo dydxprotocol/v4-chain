@@ -3,9 +3,9 @@ package bridge_test
 import (
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4/testutil/app"
-	"github.com/dydxprotocol/v4/x/bridge"
-	"github.com/dydxprotocol/v4/x/bridge/types"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/require"
 )
 

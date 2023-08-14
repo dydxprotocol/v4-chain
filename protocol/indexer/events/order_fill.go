@@ -3,9 +3,9 @@ package events
 import (
 	"fmt"
 
-	v1 "github.com/dydxprotocol/v4/indexer/protocol/v1"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // NewOrderFillEvent creates a new OrderFillEvent proto message given the maker and taker orders along

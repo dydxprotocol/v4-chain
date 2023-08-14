@@ -2,8 +2,8 @@ package stats
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/stats/keeper"
-	"github.com/dydxprotocol/v4/x/stats/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
 // InitGenesis initializes the stat module's state from a provided genesis state.

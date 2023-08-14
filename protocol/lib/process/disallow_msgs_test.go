@@ -3,10 +3,10 @@ package process_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/app/msgs"
-	"github.com/dydxprotocol/v4/lib/maps"
-	"github.com/dydxprotocol/v4/lib/process"
-	clobtypes "github.com/dydxprotocol/v4/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/process"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
 

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/types"
-	"github.com/dydxprotocol/v4/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/require"
 )
 

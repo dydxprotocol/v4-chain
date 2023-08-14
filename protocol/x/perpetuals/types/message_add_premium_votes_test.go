@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/app/config"
-	"github.com/dydxprotocol/v4/x/perpetuals/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/config"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 
 	"github.com/stretchr/testify/require"
 )

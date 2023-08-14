@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/app/process"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/testutil/encoding"
-	testmsgs "github.com/dydxprotocol/v4/testutil/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
+	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 	"github.com/stretchr/testify/require"
 )
 

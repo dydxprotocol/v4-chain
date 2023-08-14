@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 const (

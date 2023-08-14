@@ -3,7 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
-	prices_types "github.com/dydxprotocol/v4/x/prices/types"
+	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 	"testing"

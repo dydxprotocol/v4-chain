@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/stretchr/testify/require"
 )
 

@@ -1,19 +1,19 @@
 package clob_test
 
 import (
-	"github.com/dydxprotocol/v4/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/x/clob"
-	"github.com/dydxprotocol/v4/x/clob/memclob"
-	"github.com/dydxprotocol/v4/x/clob/types"
-	"github.com/dydxprotocol/v4/x/perpetuals"
-	"github.com/dydxprotocol/v4/x/prices"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	"github.com/stretchr/testify/require"
 )
 

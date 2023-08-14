@@ -5,12 +5,12 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	indexerevents "github.com/dydxprotocol/v4/indexer/events"
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4/indexer/msgsender"
-	"github.com/dydxprotocol/v4/mocks"
-	"github.com/dydxprotocol/v4/testutil/constants"
-	"github.com/dydxprotocol/v4/testutil/sdk"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

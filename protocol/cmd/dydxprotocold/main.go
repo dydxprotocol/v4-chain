@@ -4,9 +4,9 @@ import (
 	"os"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/dydxprotocol/v4/app"
-	"github.com/dydxprotocol/v4/app/config"
-	"github.com/dydxprotocol/v4/cmd/dydxprotocold/cmd"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
+	"github.com/dydxprotocol/v4-chain/protocol/app/config"
+	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
 )
 
 func main() {

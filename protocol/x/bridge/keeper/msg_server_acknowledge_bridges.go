@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/bridge/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
 // AcknowledgeBridges acknowledges bridge events and sets them to complete

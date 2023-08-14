@@ -3,10 +3,10 @@ package subaccounts_test
 import (
 	"testing"
 
-	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
-	"github.com/dydxprotocol/v4/testutil/nullify"
-	"github.com/dydxprotocol/v4/x/subaccounts"
-	"github.com/dydxprotocol/v4/x/subaccounts/types"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 

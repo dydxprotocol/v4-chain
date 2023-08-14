@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // LiquidationsKeeper is an interface that encapsulates all reads and writes to the

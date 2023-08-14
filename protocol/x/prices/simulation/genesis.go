@@ -7,9 +7,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/dydxprotocol/v4/lib"
-	"github.com/dydxprotocol/v4/testutil/sim_helpers"
-	"github.com/dydxprotocol/v4/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // genNumMarkets returns randomized num markets.

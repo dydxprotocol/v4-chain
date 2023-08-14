@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 // These indices into the REST API response are defined in https://docs.bitfinex.com/reference/rest-public-tickers

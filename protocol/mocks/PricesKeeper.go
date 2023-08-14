@@ -6,7 +6,7 @@ import (
 	log "github.com/cometbft/cometbft/libs/log"
 	mock "github.com/stretchr/testify/mock"
 
-	pricestypes "github.com/dydxprotocol/v4/x/prices/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )

@@ -2,8 +2,8 @@ package types_test
 
 import (
 	"errors"
-	"github.com/dydxprotocol/v4/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

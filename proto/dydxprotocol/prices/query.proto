@@ -7,7 +7,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "dydxprotocol/prices/market_param.proto";
 import "dydxprotocol/prices/market_price.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/prices/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/prices/types";
 
 // Query defines the gRPC querier service.
 service Query {

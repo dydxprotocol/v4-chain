@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"sort"
 
-	satypes "github.com/dydxprotocol/v4/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 var _ MatchableOrder = &LiquidationOrder{}

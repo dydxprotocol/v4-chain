@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/dydxprotocol/v4/lib/metrics"
-	"github.com/dydxprotocol/v4/x/bridge/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
 // `CompleteBridge` processes a bridge event by minting the appropriate tokens

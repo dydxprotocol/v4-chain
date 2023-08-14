@@ -4,7 +4,7 @@ package dydxprotocol.daemons.bridge;
 import "gogoproto/gogo.proto";
 import "dydxprotocol/bridge/bridge_event.proto";
 
-option go_package = "github.com/dydxprotocol/v4/daemons/bridge/api";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api";
 
 // BridgeService defines the gRPC service used by bridge daemon.
 service BridgeService {

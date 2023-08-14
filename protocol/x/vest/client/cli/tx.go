@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/dydxprotocol/v4/x/vest/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
 
 var (

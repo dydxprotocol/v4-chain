@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/dydxprotocol/v4/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 func (m *EventParams) Validate() error {

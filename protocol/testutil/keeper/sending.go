@@ -3,8 +3,8 @@ package keeper
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,11 +12,11 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	assetskeeper "github.com/dydxprotocol/v4/x/assets/keeper"
-	perpkeeper "github.com/dydxprotocol/v4/x/perpetuals/keeper"
-	priceskeeper "github.com/dydxprotocol/v4/x/prices/keeper"
-	"github.com/dydxprotocol/v4/x/sending/keeper"
-	"github.com/dydxprotocol/v4/x/sending/types"
+	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
+	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
 func SendingKeepers(t testing.TB) (

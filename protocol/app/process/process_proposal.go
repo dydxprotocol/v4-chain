@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
 const ConsensusRound = sdk.ContextKey("consensus_round")

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	ante_types "github.com/dydxprotocol/v4/app/ante/types"
+	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
 	"github.com/stretchr/testify/require"
 )
 

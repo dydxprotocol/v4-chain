@@ -2,8 +2,8 @@ package blocktime
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4/x/blocktime/keeper"
-	"github.com/dydxprotocol/v4/x/blocktime/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 )
 
 // InitGenesis initializes the blocktime module's state from a provided genesis state.

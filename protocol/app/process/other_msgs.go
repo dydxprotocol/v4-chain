@@ -3,8 +3,8 @@ package process
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4/lib/ante"
-	libprocess "github.com/dydxprotocol/v4/lib/process"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	libprocess "github.com/dydxprotocol/v4-chain/protocol/lib/process"
 )
 
 // OtherMsgsTx represents tx msgs in the "other" category that can be validated.
