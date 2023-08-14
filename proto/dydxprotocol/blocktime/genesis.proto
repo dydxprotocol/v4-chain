@@ -10,3 +10,7 @@ import "dydxprotocol/blocktime/params.proto";
 message GenesisState {
   DowntimeParams params = 1 [ (gogoproto.nullable) = false ];
 }
+
+message Hello {
+  DowntimeParams params = 1 [ (gogoproto.nullable) = false ];
+}
