@@ -1,0 +1,31 @@
+syntax = "proto3";
+package dydxprotocol.perpetuals;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/dydxprotocol/v4/x/perpetuals/types";
+
+// Msg defines the Msg service.
+service Msg {
+  // AddPremiumVotes add new samples of the funding premiums to the
+  // application.
+  rpc AddPremiumVotes(MsgAddPremiumVotes) returns (MsgAddPremiumVotesResponse);
+}
+
+// FundingPremium represents a funding premium value for a perpetual
+// market. Can be used to represent a premium vote or a premium sample.
+message FundingPremium {
+  // The id of the perpetual market.
+  uint32 perpetual_id = 1;
+  // The sampled premium rate. In parts-per-million.
+  int32 premium_ppm = 2;
+}
+
+// MsgAddPremiumVotes is a request type for the AddPremiumVotes method.
+message MsgAddPremiumVotes {
+  repeated FundingPremium votes = 1 [ (gogoproto.nullable) = false ];
+}
+
+// MsgAddPremiumVotesResponse defines the AddPremiumVotes
+// response type.
+message MsgAddPremiumVotesResponse {}
