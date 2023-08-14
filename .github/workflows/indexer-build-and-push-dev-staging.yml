@@ -1,10 +1,10 @@
-name: Build & Push Images to AWS ECR for Dev / Staging branches
+name: Indexer Build & Push Images to AWS ECR for Dev / Staging branches
 
 on: # yamllint disable-line rule:truthy
   push:
     branches:
-      - master
-      - 'v[0-9]+.x' # e.g. v11.x
+      - main
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
       - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
     # TODO(DEC-837): Customize github build and push to ECR by service with paths
 
@@ -12,7 +12,7 @@ jobs:
   # Build and push to dev
   call-build-and-push-ecs-services-dev:
     name: (Dev) Build and Push ECS Services
-    uses: ./.github/workflows/build-and-push-all-ecr-images.yml
+    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev
     secrets: inherit
@@ -20,7 +20,7 @@ jobs:
   # Build and push to dev2
   call-build-and-push-ecs-services-dev2:
     name: (Dev2) Build and Push ECS Services
-    uses: ./.github/workflows/build-and-push-all-ecr-images.yml
+    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev2
     secrets: inherit
@@ -28,7 +28,7 @@ jobs:
   # Build and push to dev3
   call-build-and-push-ecs-services-dev3:
     name: (Dev3) Build and Push ECS Services
-    uses: ./.github/workflows/build-and-push-all-ecr-images.yml
+    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev3
     secrets: inherit
@@ -36,7 +36,7 @@ jobs:
   # Build and push to dev4
   call-build-and-push-ecs-services-dev4:
     name: (Dev4) Build and Push ECS Services
-    uses: ./.github/workflows/build-and-push-all-ecr-images.yml
+    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev4
     secrets: inherit
@@ -44,7 +44,7 @@ jobs:
   # Build and push to dev5
   call-build-and-push-ecs-services-dev5:
     name: (Dev5) Build and Push ECS Services
-    uses: ./.github/workflows/build-and-push-all-ecr-images.yml
+    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev5
     secrets: inherit
@@ -52,7 +52,7 @@ jobs:
   # Build and push to staging
   call-build-and-push-ecs-services-staging:
     name: (Staging) Build and Push ECS Services
-    uses: ./.github/workflows/build-and-push-all-ecr-images.yml
+    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: staging
     secrets: inherit

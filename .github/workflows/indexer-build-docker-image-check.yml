@@ -12,31 +12,31 @@ on:  # yamllint disable-line rule:truthy
 jobs:
   # Build and push
   call-build-ecs-service-ender:
-    uses: ./.github/workflows/indexer-reuseable-build-and-run-docker-image.yml
+    uses: ./.github/workflows/indexer-reusable-build-and-run-docker-image.yml
     with:
       SERVICE: ender
     secrets: inherit
 
   call-build-ecs-service-comlink:
-    uses: ./.github/workflows/indexer-reuseable-build-and-run-docker-image.yml
+    uses: ./.github/workflows/indexer-reusable-build-and-run-docker-image.yml
     with:
       SERVICE: comlink
     secrets: inherit
 
   call-build-ecs-service-socks:
-    uses: ./.github/workflows/indexer-reuseable-build-and-run-docker-image.yml
+    uses: ./.github/workflows/indexer-reusable-build-and-run-docker-image.yml
     with:
       SERVICE: socks
     secrets: inherit
 
   call-build-ecs-service-roundtable:
-    uses: ./.github/workflows/indexer-reuseable-build-and-run-docker-image.yml
+    uses: ./.github/workflows/indexer-reusable-build-and-run-docker-image.yml
     with:
       SERVICE: roundtable
     secrets: inherit
 
   call-build-ecs-service-vulcan:
-    uses: ./.github/workflows/indexer-reuseable-build-and-run-docker-image.yml
+    uses: ./.github/workflows/indexer-reusable-build-and-run-docker-image.yml
     with:
       SERVICE: vulcan
     secrets: inherit

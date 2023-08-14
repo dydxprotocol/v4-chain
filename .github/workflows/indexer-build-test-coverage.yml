@@ -17,14 +17,14 @@ concurrency:
 jobs:
   # Build and run tests
   test:
-    uses: ./.github/workflows/indexer-reuseable-build-and-run-with-pg-redis-kafka.yml
+    uses: ./.github/workflows/indexer-reusable-build-and-run-with-pg-redis-kafka.yml
     with:
       COMMAND: pnpm run test:all
     secrets: inherit
   # TODO(roy): Temporarily disabled. Doesn't run on CI for some reason.
   # Build and run coverage
   # coverage:
-  #   uses: ./.github/workflows/indexer-reuseable-build-and-run-with-pg-redis-kafka.yml
+  #   uses: ./.github/workflows/indexer-reusable-build-and-run-with-pg-redis-kafka.yml
   #   with:
   #     COMMAND: pnpm run coverage:all
   #   secrets: inherit
