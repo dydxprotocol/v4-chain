@@ -1,4 +1,4 @@
-name: Lint
+name: Protocol Lint
 # Lint runs all linting jobs.
 # This workflow is run on every pull request and push to the `main` / `release` branches.
 on:  # yamllint disable-line rule:truthy

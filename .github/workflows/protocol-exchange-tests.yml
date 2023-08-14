@@ -1,4 +1,4 @@
-name: Price Daemon Exchange Integration Tests
+name: Protocol Price Daemon Exchange Integration Tests
 on:  # yamllint disable-line rule:truthy
   pull_request:
     paths:
