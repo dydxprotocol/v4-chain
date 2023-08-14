@@ -1,0 +1,34 @@
+name: API Documentation Check
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+  push:
+    branches:
+      - master
+jobs:
+  run_command:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_REPO_READ_TOKEN }}
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install pnpm
+        run:
+          npm install -g pnpm@6.34.0
+
+      - name: Build and install
+        run: |
+          pnpm install --loglevel warn --frozen-lockfile
+          pnpm run build:all
+
+      - name: Compare API Documentation
+        run: |
+          cd services/comlink/
+          git diff --exit-code

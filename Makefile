@@ -13,4 +13,7 @@ proto-check-bc-breaking:
 	@rm -rf ./.proto-export
 	@$(protoImage) buf breaking --against .git#branch=$$(git merge-base HEAD origin/main)
 
+proto-export:
+	@rm -rf proto/.proto-export && cd proto && buf export --config ./buf.yaml --output ./.proto-export
+
 .PHONY: proto-format proto-lint proto-check-bc-breaking

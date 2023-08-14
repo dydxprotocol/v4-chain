@@ -1,0 +1,25 @@
+name: Build, Test & Coverage
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+  push:
+    branches:
+      - master
+# Ensure only a single instance of this workflow is running, and cancel any that are in-progress
+# before this workflow instance starts
+concurrency:
+  group: ${{ github.ref }}-build-test-coverage
+  cancel-in-progress: true
+
+jobs:
+  # Build and run tests
+  test:
+    uses: ./.github/workflows/reuseable-build-and-run-with-pg-redis-kafka.yml
+    with:
+      COMMAND: pnpm run test:all
+    secrets: inherit
+  # Build and run coverage
+  coverage:
+    uses: ./.github/workflows/reuseable-build-and-run-with-pg-redis-kafka.yml
+    with:
+      COMMAND: pnpm run coverage:all
+    secrets: inherit

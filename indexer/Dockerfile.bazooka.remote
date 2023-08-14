@@ -1,0 +1,33 @@
+# Lambda to run bazooka
+FROM public.ecr.aws/lambda/nodejs:16 as builder
+
+WORKDIR /usr/app
+
+# Copy pnpm lock and workspace and package.json from base directory
+COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
+
+# Copy bazooka and imported packages
+COPY ./packages/base/ ./packages/base/
+COPY ./packages/postgres/ ./packages/postgres/
+COPY ./packages/v4-protos/ ./packages/v4-protos/
+COPY ./packages/kafka/ ./packages/kafka/
+COPY ./packages/redis/ ./packages/redis/
+COPY ./services/bazooka/ ./services/bazooka/
+COPY ./packages/v4-proto-parser/ ./packages/v4-proto-parser/
+
+# Copy tsconfig in order to build typescript into javascript
+COPY tsconfig.json ./
+
+# Install pnpm
+RUN npm install -g pnpm@6
+
+# Install npm modules using pnpm
+RUN pnpm install --loglevel warn --frozen-lockfile
+RUN pnpm run build:prod:all
+
+FROM public.ecr.aws/lambda/nodejs:16
+WORKDIR ${LAMBDA_TASK_ROOT}
+ENV NODE_ENV=production
+COPY --from=builder /usr/app/ ./
+
+CMD ["services/bazooka/build/src/index.handler"]
