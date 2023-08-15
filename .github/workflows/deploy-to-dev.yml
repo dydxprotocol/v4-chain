@@ -1,10 +1,10 @@
 name: Deploy to Dev Environment
 
-on: workflow_dispatch # yamllint disable-line rule:truthy
-#  workflow_run:
-#    workflows: ["Build & Push Image to AWS ECR"]
-#    types:
-#      - completed
+on:  # yamllint disable-line rule:truthy
+  workflow_run:
+    workflows: ["Protocol Build & Push Image to AWS ECR"]
+    types:
+      - completed
 
 jobs:
   deploy-to-dev:
@@ -15,14 +15,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV }}
           aws-region: us-east-2
 
       - name: Get Commit Hash
@@ -37,8 +35,8 @@ jobs:
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV }}
           REGION: us-east-2
           FunctionName: orb_lambda_function
           Payload: |
@@ -46,7 +44,6 @@ jobs:
               "imageTag": "${{ env.git_hash }}",
               "options": {
                 "job": "deploy-network-service",
-                "serviceName": "v4-node",
                 "postToSlack": true,
                 "username": "Github",
                 "isCi": true
@@ -61,14 +58,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV2 }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV2 }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV2 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV2 }}
           aws-region: us-east-2
 
       - name: Get Commit Hash
@@ -83,8 +78,8 @@ jobs:
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_DEV2 }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV2 }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV2 }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV2 }}
           REGION: us-east-2
           FunctionName: orb_lambda_function
           Payload: |
@@ -92,7 +87,6 @@ jobs:
               "imageTag": "${{ env.git_hash }}",
               "options": {
                 "job": "deploy-network-service",
-                "serviceName": "v4-node",
                 "postToSlack": true,
                 "username": "Github",
                 "isCi": true
@@ -107,14 +101,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV3 }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV3 }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV3 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV3 }}
           aws-region: us-east-2
 
       - name: Get Commit Hash
@@ -129,8 +121,8 @@ jobs:
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_DEV3 }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV3 }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV3 }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV3 }}
           REGION: us-east-2
           FunctionName: orb_lambda_function
           Payload: |
@@ -138,7 +130,6 @@ jobs:
               "imageTag": "${{ env.git_hash }}",
               "options": {
                 "job": "deploy-network-service",
-                "serviceName": "v4-node",
                 "postToSlack": true,
                 "username": "Github",
                 "isCi": true
@@ -153,14 +144,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV4 }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV4 }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV4 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV4 }}
           aws-region: us-east-2
 
       - name: Get Commit Hash
@@ -175,8 +164,8 @@ jobs:
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_DEV4 }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV4 }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV4 }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV4 }}
           REGION: us-east-2
           FunctionName: orb_lambda_function
           Payload: |
@@ -184,7 +173,6 @@ jobs:
               "imageTag": "${{ env.git_hash }}",
               "options": {
                 "job": "deploy-network-service",
-                "serviceName": "v4-node",
                 "postToSlack": true,
                 "username": "Github",
                 "isCi": true
@@ -199,14 +187,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV5 }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV5 }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV5 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV5 }}
           aws-region: us-east-2
 
       - name: Get Commit Hash
@@ -221,8 +207,8 @@ jobs:
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_DEV5 }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV5 }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV5 }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV5 }}
           REGION: us-east-2
           FunctionName: orb_lambda_function
           Payload: |
@@ -230,7 +216,6 @@ jobs:
               "imageTag": "${{ env.git_hash }}",
               "options": {
                 "job": "deploy-network-service",
-                "serviceName": "v4-node",
                 "postToSlack": true,
                 "username": "Github",
                 "isCi": true
