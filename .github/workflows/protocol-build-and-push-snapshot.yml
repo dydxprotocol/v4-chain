@@ -1,29 +1,32 @@
-name: Build & Push Image to AWS ECR
+name: Protocol Build & Push Image to AWS ECR
 
 on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - 'protocol/**'
   push:
     branches:
       - main
-      - 'release/v[0-9]+.x'  # e.g. release/v1.x
-      - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/ibctestnet/v1.x
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
       - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
 
 jobs:
-  build-and-push-dev:
+  build-and-push-snapshot-dev:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV }}
           aws-region: us-east-2
 
       - name: Login to Amazon ECR
@@ -34,7 +37,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: dev-validator
+          ECR_REPOSITORY: dev-validator-snapshot
         run: |
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
@@ -44,24 +47,25 @@ jobs:
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
-            -f testing/testnet-dev/Dockerfile .
+            -f testing/snapshotting/Dockerfile.snapshot .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
 
-  build-and-push-dev2:
+  build-and-push-snapshot-dev2:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV2 }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV2 }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV2 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV2 }}
           aws-region: us-east-2
 
       - name: Login to Amazon ECR
@@ -72,7 +76,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: dev2-validator
+          ECR_REPOSITORY: dev2-validator-snapshot
         run: |
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
@@ -82,24 +86,25 @@ jobs:
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
-            -f testing/testnet-dev/Dockerfile .
+            -f testing/snapshotting/Dockerfile.snapshot .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
 
-  build-and-push-dev3:
+  build-and-push-snapshot-dev3:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV3 }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV3 }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV3 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV3 }}
           aws-region: us-east-2
 
       - name: Login to Amazon ECR
@@ -110,7 +115,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: dev3-validator
+          ECR_REPOSITORY: dev3-validator-snapshot
         run: |
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
@@ -120,24 +125,25 @@ jobs:
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
-            -f testing/testnet-dev/Dockerfile .
+            -f testing/snapshotting/Dockerfile.snapshot .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
 
-  build-and-push-dev4:
+  build-and-push-snapshot-dev4:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV4 }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV4 }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV4 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV4 }}
           aws-region: us-east-2
 
       - name: Login to Amazon ECR
@@ -148,7 +154,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: dev4-validator
+          ECR_REPOSITORY: dev4-validator-snapshot
         run: |
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
@@ -158,24 +164,25 @@ jobs:
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
-            -f testing/testnet-dev/Dockerfile .
+            -f testing/snapshotting/Dockerfile.snapshot .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
 
-  build-and-push-dev5:
+  build-and-push-snapshot-dev5:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV5 }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV5 }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV5 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV5 }}
           aws-region: us-east-2
 
       - name: Login to Amazon ECR
@@ -186,7 +193,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: dev5-validator
+          ECR_REPOSITORY: dev5-validator-snapshot
         run: |
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
@@ -196,24 +203,25 @@ jobs:
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
-            -f testing/testnet-dev/Dockerfile .
+            -f testing/snapshotting/Dockerfile.snapshot .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
 
-  build-and-push-staging:
+  build-and-push-snapshot-staging:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'  # without this, ignite fails.
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_STAGING }}
           aws-region: us-east-2
 
       - name: Login to Amazon ECR
@@ -224,7 +232,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: staging-validator
+          ECR_REPOSITORY: staging-validator-snapshot
         run: |
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
@@ -234,5 +242,5 @@ jobs:
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
-            -f testing/testnet-staging/Dockerfile .
+            -f testing/snapshotting/Dockerfile.snapshot .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
