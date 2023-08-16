@@ -25,6 +25,7 @@ import {
   FundingEventV1_Type,
   FundingEventV1,
   FundingUpdateV1,
+  AssetCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -78,6 +79,10 @@ export type EventProtoWithType = {
 } | {
   type: DydxIndexerSubtypes.FUNDING,
   eventProto: FundingEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+} | {
+  type: DydxIndexerSubtypes.ASSET,
+  eventProto: AssetCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
 });
 
