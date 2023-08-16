@@ -127,6 +127,16 @@ func addEvent(
 	store.Set([]byte(IndexerEventsKey), newEventsValueBytes)
 }
 
+// clearEvents clears events in the context's transient store of indexer events.
+func clearEvents(
+	ctx sdk.Context,
+	storeKey storetypes.StoreKey,
+) {
+	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
+	store := noGasCtx.TransientStore(storeKey)
+	store.Delete([]byte(IndexerEventsKey))
+}
+
 // produceBlock returns the block. It should only be called in EndBlocker when the
 // transient store contains all onchain events from a ready-to-be-committed block.
 func produceBlock(ctx sdk.Context, storeKey storetypes.StoreKey) *IndexerTendermintBlock {
