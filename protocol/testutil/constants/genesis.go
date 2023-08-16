@@ -238,7 +238,6 @@ const GenesisState = `{
         {
           "id": 0,
           "maker_fee_ppm": 200,
-          "min_order_base_quantums": 10,
           "perpetual_clob_metadata": {
             "perpetual_id": 0
           },
@@ -251,7 +250,6 @@ const GenesisState = `{
         {
           "id": 1,
           "maker_fee_ppm": 200,
-          "min_order_base_quantums": 1000,
           "perpetual_clob_metadata": {
             "perpetual_id": 1
           },

@@ -52,14 +52,6 @@ func genRandomClob(
 		sim_helpers.PickGenesisParameter(sim_helpers.MinStepBaseQuantums, isReasonableGenesis),
 		sim_helpers.PickGenesisParameter(sim_helpers.MaxStepBaseQuantums, isReasonableGenesis)+1,
 	))
-	clobPair.MinOrderBaseQuantums = alignToStepBaseQuantums(
-		clobPair.StepBaseQuantums,
-		uint64(simtypes.RandIntBetween(
-			r,
-			sim_helpers.PickGenesisParameter(sim_helpers.MinOrderBaseQuantums, isReasonableGenesis),
-			sim_helpers.PickGenesisParameter(sim_helpers.MaxOrderBaseQuantums, isReasonableGenesis)+1,
-		)),
-	)
 	clobPair.SubticksPerTick = uint32(simtypes.RandIntBetween(
 		r,
 		sim_helpers.PickGenesisParameter(sim_helpers.MinSubticksPerTick, isReasonableGenesis),
@@ -82,21 +74,6 @@ func genRandomClob(
 	clobPair.Status = types.ClobPair_STATUS_ACTIVE
 
 	return clobPair
-}
-
-// alignToStepBaseQuantums takes a value and aligns it such that `n % stepBaseQuantums == 0`.
-// It will do this by rounding towards the smallest multiple of `stepBaseQuantums` that is
-// greater than zero.
-func alignToStepBaseQuantums(
-	stepBaseQuantums uint64,
-	seedMinOrderBaseQuantums uint64,
-) uint64 {
-	// `MinOrderBaseQuantums` cannot be smaller than `StepBaseQuantums`.
-	if seedMinOrderBaseQuantums < stepBaseQuantums {
-		return stepBaseQuantums
-	}
-
-	return seedMinOrderBaseQuantums - (seedMinOrderBaseQuantums % stepBaseQuantums)
 }
 
 // createPerpetualClobMetadata returns a `PerpetualClobMetadata`.

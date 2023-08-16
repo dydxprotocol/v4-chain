@@ -4184,7 +4184,7 @@ func MustScaleOrder[
 	}
 
 	// Scale the order based upon the quantums and subticks passed in.
-	msgPlaceOrder.Order.Quantums = msgPlaceOrder.Order.Quantums * clobPair.MinOrderBaseQuantums
+	msgPlaceOrder.Order.Quantums = msgPlaceOrder.Order.Quantums * clobPair.StepBaseQuantums
 	msgPlaceOrder.Order.Subticks = msgPlaceOrder.Order.Subticks * uint64(clobPair.SubticksPerTick)
 
 	// Return a type that matches what the user passed in for the order type.

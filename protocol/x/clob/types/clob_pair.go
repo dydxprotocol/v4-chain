@@ -11,7 +11,7 @@ func (c *ClobPair) GetClobPairSubticksPerTick() SubticksPerTick {
 }
 
 func (c *ClobPair) GetClobPairMinOrderBaseQuantums() satypes.BaseQuantums {
-	return satypes.BaseQuantums(c.MinOrderBaseQuantums)
+	return satypes.BaseQuantums(c.StepBaseQuantums)
 }
 
 // Get fee rate in ppm. Returns the taker fee for taker orders, otherwise returns the maker fee.

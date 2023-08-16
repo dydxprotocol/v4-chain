@@ -251,7 +251,6 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
@@ -999,7 +998,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
@@ -1011,7 +1009,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
 				satypes.BaseQuantums(constants.ClobPair_Eth.StepBaseQuantums),
-				satypes.BaseQuantums(constants.ClobPair_Eth.MinOrderBaseQuantums),
 				constants.ClobPair_Eth.QuantumConversionExponent,
 				constants.ClobPair_Eth.SubticksPerTick,
 				constants.ClobPair_Eth.Status,
@@ -1838,7 +1835,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
@@ -1918,7 +1914,6 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 		ctx,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
 		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-		satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 		constants.ClobPair_Btc.QuantumConversionExponent,
 		constants.ClobPair_Btc.SubticksPerTick,
 		constants.ClobPair_Btc.Status,
@@ -3414,7 +3409,6 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
@@ -3822,7 +3816,6 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 					StepBaseQuantums:          3, // step size is 3
 					SubticksPerTick:           100,
-					MinOrderBaseQuantums:      12,
 					QuantumConversionExponent: -8,
 				},
 			},
@@ -3837,7 +3830,6 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				Status:                    types.ClobPair_STATUS_ACTIVE,
 				StepBaseQuantums:          3, // step size is 3
 				SubticksPerTick:           100,
-				MinOrderBaseQuantums:      12,
 				QuantumConversionExponent: -8,
 			},
 			expectedQuantums: new(big.Int).SetUint64(9), // result is rounded down
@@ -3989,10 +3981,9 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc,
 				{
-					StepBaseQuantums:     5,
-					Status:               types.ClobPair_STATUS_ACTIVE,
-					SubticksPerTick:      7,
-					MinOrderBaseQuantums: 10,
+					StepBaseQuantums: 5,
+					Status:           types.ClobPair_STATUS_ACTIVE,
+					SubticksPerTick:  7,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
 							PerpetualId: constants.PerpetualPosition_OneBTCLong.PerpetualId,
@@ -4019,10 +4010,9 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			//	The definition order matters here
 			clobPairs: []types.ClobPair{
 				{
-					StepBaseQuantums:     5,
-					Status:               types.ClobPair_STATUS_ACTIVE,
-					SubticksPerTick:      7,
-					MinOrderBaseQuantums: 10,
+					StepBaseQuantums: 5,
+					Status:           types.ClobPair_STATUS_ACTIVE,
+					SubticksPerTick:  7,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
 							PerpetualId: constants.PerpetualPosition_OneTenthEthLong.PerpetualId,
@@ -4034,11 +4024,10 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			},
 
 			expectedClobPair: types.ClobPair{
-				Id:                   0,
-				StepBaseQuantums:     5,
-				Status:               types.ClobPair_STATUS_ACTIVE,
-				SubticksPerTick:      7,
-				MinOrderBaseQuantums: 10,
+				Id:               0,
+				StepBaseQuantums: 5,
+				Status:           types.ClobPair_STATUS_ACTIVE,
+				SubticksPerTick:  7,
 				Metadata: &types.ClobPair_PerpetualClobMetadata{
 					PerpetualClobMetadata: &types.PerpetualClobMetadata{
 						PerpetualId: constants.PerpetualPosition_OneTenthEthLong.PerpetualId,
@@ -4130,7 +4119,6 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 					ks.Ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
@@ -4393,7 +4381,6 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
@@ -4662,7 +4649,6 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,

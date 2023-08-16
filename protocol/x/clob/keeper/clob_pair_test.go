@@ -37,7 +37,6 @@ func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Clob
 		items[i].SubticksPerTick = 5
 		items[i].StepBaseQuantums = 5
 		items[i].Status = types.ClobPair_STATUS_ACTIVE
-		items[i].MinOrderBaseQuantums = 10
 		items[i].MakerFeePpm = constants.MakerFeePpm
 		items[i].TakerFeePpm = constants.TakerFeePpm
 
@@ -45,7 +44,6 @@ func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Clob
 			ctx,
 			clobtest.MustPerpetualId(items[i]),
 			satypes.BaseQuantums(items[i].StepBaseQuantums),
-			satypes.BaseQuantums(items[i].MinOrderBaseQuantums),
 			items[i].QuantumConversionExponent,
 			items[i].SubticksPerTick,
 			items[i].Status,
@@ -80,20 +78,9 @@ func TestCreateClobPair(t *testing.T) {
 			)),
 			expectedErr: "has invalid perpetual.",
 		},
-		"CLOB pair is invalid when the minimum order size is 0": {
-			clobPair:    *clobtest.GenerateClobPair(clobtest.WithMinOrderBaseQuantums(0)),
-			expectedErr: "invalid ClobPair parameter: MinOrderBaseQuantums must be > 0.",
-		},
 		"CLOB pair is invalid when the step size is 0": {
 			clobPair:    *clobtest.GenerateClobPair(clobtest.WithStepBaseQuantums(0)),
 			expectedErr: "invalid ClobPair parameter: StepBaseQuantums must be > 0.",
-		},
-		"CLOB pair is invalid when minimum order size is not a multiple of step size": {
-			clobPair: *clobtest.GenerateClobPair(
-				clobtest.WithMinOrderBaseQuantums(satypes.BaseQuantums(21)),
-				clobtest.WithStepBaseQuantums(satypes.BaseQuantums(4)),
-			),
-			expectedErr: "must be divisible by StepBaseQuantums",
 		},
 		"CLOB pair is invalid when the subticks per tick is 0": {
 			clobPair:    *clobtest.GenerateClobPair(clobtest.WithSubticksPerTick(0)),
@@ -133,7 +120,6 @@ func TestCreateClobPair(t *testing.T) {
 				ks.Ctx,
 				clobtest.MustPerpetualId(tc.clobPair),
 				satypes.BaseQuantums(tc.clobPair.StepBaseQuantums),
-				satypes.BaseQuantums(tc.clobPair.MinOrderBaseQuantums),
 				tc.clobPair.QuantumConversionExponent,
 				tc.clobPair.SubticksPerTick,
 				tc.clobPair.Status,
@@ -260,7 +246,6 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 					ks.Ctx,
 					clobtest.MustPerpetualId(make.clobPair),
 					satypes.BaseQuantums(make.clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(make.clobPair.MinOrderBaseQuantums),
 					make.clobPair.QuantumConversionExponent,
 					make.clobPair.SubticksPerTick,
 					make.clobPair.Status,
