@@ -1,6 +1,6 @@
 import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { stopConsumer, startConsumer } from '@dydxprotocol-indexer/kafka';
-import { assetRefresher, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { assetRefresher, perpetualMarketRefresher, marketRefresher } from '@dydxprotocol-indexer/postgres';
 
 import { initializeAllCaches } from './caches/block-cache';
 import config from './config';
@@ -22,9 +22,11 @@ async function startKafka(): Promise<void> {
   await Promise.all([
     perpetualMarketRefresher.updatePerpetualMarkets(),
     assetRefresher.updateAssets(),
+    marketRefresher.updateMarkets(),
   ]);
   wrapBackgroundTask(perpetualMarketRefresher.start(), true, 'startUpdatePerpetualMarkets');
   wrapBackgroundTask(assetRefresher.start(), true, 'startUpdateAssets');
+  wrapBackgroundTask(marketRefresher.start(), true, 'startUpdateMarkets');
   await initializeAllCaches();
 
   await connect();
