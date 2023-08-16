@@ -3,9 +3,10 @@ package constants
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"sort"
 )
 
 var (
@@ -1034,8 +1035,8 @@ var (
 				},
 			},
 		},
-		exchange_common.EXCHANGE_ID_TEST_EXCHANGE: {
-			Id: exchange_common.EXCHANGE_ID_TEST_EXCHANGE,
+		exchange_common.EXCHANGE_ID_TEST_COINBASE_EXCHANGE: {
+			Id: exchange_common.EXCHANGE_ID_TEST_COINBASE_EXCHANGE,
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
 				exchange_common.MARKET_BTC_USD: {
 					Ticker: "BTC-USD",
@@ -1079,7 +1080,7 @@ func GenerateExchangeConfigJson(
 	// Generate the market-specific exchange config for each market, exchange.
 	for id, exchangeConfig := range exchangeToExchangeConfig {
 		// Skip config for the test exchange.
-		if id == exchange_common.EXCHANGE_ID_TEST_EXCHANGE {
+		if id == exchange_common.EXCHANGE_ID_TEST_COINBASE_EXCHANGE {
 			continue
 		}
 		for marketId, config := range exchangeConfig.MarketToMarketConfig {

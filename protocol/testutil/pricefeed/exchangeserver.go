@@ -3,14 +3,15 @@ package pricefeed
 import (
 	"context"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/testexchange"
-	pricefeed "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/test_coinbase_exchange"
+	pricefeed "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 )
 
 // This file implements an HTTP server that is used to fake price data from exchanges.
@@ -27,7 +28,7 @@ var (
 )
 
 func init() {
-	testExchangeConfig := constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_TEST_EXCHANGE]
+	testExchangeConfig := constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_TEST_COINBASE_EXCHANGE]
 	for marketId, config := range testExchangeConfig.MarketToMarketConfig {
 		testExchangeSymbolToMarketId[config.Ticker] = marketId
 	}
@@ -115,7 +116,7 @@ func (p *ExchangeServer) startFakeServer() {
 	addTestBitfinexExchangeHandler(mux, p)
 
 	p.fakeServer = &http.Server{
-		Addr:    fmt.Sprintf(":%s", testexchange.TestExchangePort),
+		Addr:    fmt.Sprintf(":%s", test_coinbase_exchange.TestCoinbaseExchangePort),
 		Handler: mux,
 	}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/testexchange"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/test_coinbase_exchange"
 	pricefeed "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
@@ -130,7 +130,7 @@ func (t *Testnet) initializeNode(moniker string) (*Node, error) {
 				persistentPeers,
 			},
 			ExtraHosts: []string{
-				fmt.Sprintf("%s:host-gateway", testexchange.TestExchangeHost),
+				fmt.Sprintf("%s:host-gateway", test_coinbase_exchange.TestCoinbaseExchangeHost),
 			},
 		},
 	)
