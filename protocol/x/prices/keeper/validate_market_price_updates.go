@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"math/big"
 	"time"
 
@@ -48,7 +49,10 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 			metrics.StatefulPriceUpdateValidation,
 			metrics.Error,
 		)
-		return sdkerrors.Wrap(err, "failed to get all market param prices")
+		return errorlib.WrapErrorWithSourceModuleContext(
+			sdkerrors.Wrap(err, "failed to get all market param prices"),
+			types.ModuleName,
+		)
 	}
 
 	if err := k.performDeterministicStatefulValidation(ctx, marketPriceUpdates, marketParamPrices); err != nil {
@@ -59,7 +63,7 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 			metrics.Deterministic,
 			metrics.Error,
 		)
-		return err
+		return errorlib.WrapErrorWithSourceModuleContext(err, types.ModuleName)
 	}
 
 	if performNonDeterministicValidation {
@@ -72,7 +76,7 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 				metrics.NonDeterministic,
 				metrics.Error,
 			)
-			return err
+			return errorlib.WrapErrorWithSourceModuleContext(err, types.ModuleName)
 		}
 	}
 
