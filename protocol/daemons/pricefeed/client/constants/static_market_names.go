@@ -45,5 +45,6 @@ var (
 		exchange_common.MARKET_ZRX_USD:   "ZRX-USD",
 		exchange_common.MARKET_YFI_USD:   "YFI-USD",
 		exchange_common.MARKET_USDT_USD:  "USDT-USD",
+		exchange_common.MARKET_TEST_USD:  "TEST-USD",
 	}
 )

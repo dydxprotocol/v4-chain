@@ -1,11 +1,12 @@
 package constants
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestStaticExchangeMarketConfigCache(t *testing.T) {
@@ -1064,6 +1065,15 @@ func TestStaticExchangeMarketConfigCache(t *testing.T) {
 			},
 			expectedFound: true,
 		},
+		"Test volatile exchange": {
+			id: "TestVolatileExchange",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_TEST_USD: {
+					Ticker: "TEST-USD",
+				},
+			},
+			expectedFound: true,
+		},
 		"unknown": {
 			id:            "unknown",
 			expectedFound: false,
@@ -1089,12 +1099,12 @@ func TestStaticExchangeMarketConfigCache(t *testing.T) {
 }
 
 func TestStaticExchangeMarketConfigCacheLen(t *testing.T) {
-	require.Len(t, StaticExchangeMarketConfig, 14)
+	require.Len(t, StaticExchangeMarketConfig, 15)
 }
 
 func TestGenerateExchangeConfigJsonLength(t *testing.T) {
 	configs := GenerateExchangeConfigJson(StaticExchangeMarketConfig)
-	require.Len(t, configs, 34)
+	require.Len(t, configs, 35)
 }
 
 func TestGenerateExchangeConfigJson(t *testing.T) {
@@ -1237,6 +1247,10 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 		"USDT exchange config": {
 			id:                             exchange_common.MARKET_USDT_USD,
 			expectedExchangeConfigJsonFile: "usdt_exchange_config.json",
+		},
+		"TEST exchange config": {
+			id:                             exchange_common.MARKET_TEST_USD,
+			expectedExchangeConfigJsonFile: "test_exchange_config.json",
 		},
 	}
 	for name, tc := range tests {

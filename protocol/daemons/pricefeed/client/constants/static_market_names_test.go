@@ -1,11 +1,12 @@
 package constants_test
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestStaticMarketNames(t *testing.T) {
@@ -49,5 +50,5 @@ func TestStaticMarketNames(t *testing.T) {
 }
 
 func TestStaticMarketNamesLength(t *testing.T) {
-	require.Len(t, constants.StaticMarketNames, 34)
+	require.Len(t, constants.StaticMarketNames, 35)
 }
