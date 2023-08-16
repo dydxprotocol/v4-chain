@@ -1144,6 +1144,8 @@ func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Res
 	}
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	initResponse := app.ModuleManager.InitGenesis(ctx, app.appCodec, genesisState)
+	block := app.IndexerEventManager.ProduceBlock(ctx)
+	app.IndexerEventManager.SendOnchainData(block)
 	app.IndexerEventManager.ClearEvents(ctx)
 
 	return initResponse
