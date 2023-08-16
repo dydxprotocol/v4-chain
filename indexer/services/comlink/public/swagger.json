@@ -1,0 +1,1832 @@
+{
+  "components": {
+    "examples": {},
+    "headers": {},
+    "parameters": {},
+    "requestBodies": {},
+    "responses": {},
+    "schemas": {
+      "PerpetualPositionStatus": {
+        "enum": [
+          "OPEN",
+          "CLOSED",
+          "LIQUIDATED"
+        ],
+        "type": "string"
+      },
+      "PositionSide": {
+        "enum": [
+          "LONG",
+          "SHORT"
+        ],
+        "type": "string"
+      },
+      "IsoString": {
+        "type": "string"
+      },
+      "PerpetualPositionResponseObject": {
+        "properties": {
+          "market": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PerpetualPositionStatus"
+          },
+          "side": {
+            "$ref": "#/components/schemas/PositionSide"
+          },
+          "size": {
+            "type": "string"
+          },
+          "maxSize": {
+            "type": "string"
+          },
+          "entryPrice": {
+            "type": "string"
+          },
+          "realizedPnl": {
+            "type": "string"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          },
+          "sumOpen": {
+            "type": "string"
+          },
+          "sumClose": {
+            "type": "string"
+          },
+          "netFunding": {
+            "type": "string"
+          },
+          "unrealizedPnl": {
+            "type": "string"
+          },
+          "closedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IsoString"
+              }
+            ],
+            "nullable": true
+          },
+          "exitPrice": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "market",
+          "status",
+          "side",
+          "size",
+          "maxSize",
+          "entryPrice",
+          "realizedPnl",
+          "createdAt",
+          "createdAtHeight",
+          "sumOpen",
+          "sumClose",
+          "netFunding",
+          "unrealizedPnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "PerpetualPositionsMap": {
+        "properties": {},
+        "additionalProperties": {
+          "$ref": "#/components/schemas/PerpetualPositionResponseObject"
+        },
+        "type": "object"
+      },
+      "AssetPositionResponseObject": {
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "side": {
+            "$ref": "#/components/schemas/PositionSide"
+          },
+          "size": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "side",
+          "size",
+          "assetId"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "AssetPositionsMap": {
+        "properties": {},
+        "additionalProperties": {
+          "$ref": "#/components/schemas/AssetPositionResponseObject"
+        },
+        "type": "object"
+      },
+      "SubaccountResponseObject": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
+          },
+          "equity": {
+            "type": "string"
+          },
+          "freeCollateral": {
+            "type": "string"
+          },
+          "openPerpetualPositions": {
+            "$ref": "#/components/schemas/PerpetualPositionsMap"
+          },
+          "assetPositions": {
+            "$ref": "#/components/schemas/AssetPositionsMap"
+          },
+          "marginEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "address",
+          "subaccountNumber",
+          "equity",
+          "freeCollateral",
+          "openPerpetualPositions",
+          "assetPositions",
+          "marginEnabled"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "AssetPositionResponse": {
+        "properties": {
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/AssetPositionResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "positions"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "CandleResolution": {
+        "enum": [
+          "1MIN",
+          "5MINS",
+          "15MINS",
+          "30MINS",
+          "1HOUR",
+          "4HOURS",
+          "1DAY"
+        ],
+        "type": "string"
+      },
+      "CandleResponseObject": {
+        "properties": {
+          "startedAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "ticker": {
+            "type": "string"
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/CandleResolution"
+          },
+          "low": {
+            "type": "string"
+          },
+          "high": {
+            "type": "string"
+          },
+          "open": {
+            "type": "string"
+          },
+          "close": {
+            "type": "string"
+          },
+          "baseTokenVolume": {
+            "type": "string"
+          },
+          "usdVolume": {
+            "type": "string"
+          },
+          "trades": {
+            "type": "number",
+            "format": "double"
+          },
+          "startingOpenInterest": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "startedAt",
+          "ticker",
+          "resolution",
+          "low",
+          "high",
+          "open",
+          "close",
+          "baseTokenVolume",
+          "usdVolume",
+          "trades",
+          "startingOpenInterest",
+          "id"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "CandleResponse": {
+        "properties": {
+          "candles": {
+            "items": {
+              "$ref": "#/components/schemas/CandleResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "candles"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "OrderSide": {
+        "enum": [
+          "BUY",
+          "SELL"
+        ],
+        "type": "string"
+      },
+      "Liquidity": {
+        "enum": [
+          "TAKER",
+          "MAKER"
+        ],
+        "type": "string"
+      },
+      "FillType": {
+        "enum": [
+          "MARKET",
+          "LIMIT",
+          "LIQUIDATED",
+          "LIQUIDATION"
+        ],
+        "type": "string"
+      },
+      "MarketType": {
+        "enum": [
+          "PERPETUAL",
+          "SPOT"
+        ],
+        "type": "string"
+      },
+      "FillResponseObject": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "side": {
+            "$ref": "#/components/schemas/OrderSide"
+          },
+          "liquidity": {
+            "$ref": "#/components/schemas/Liquidity"
+          },
+          "type": {
+            "$ref": "#/components/schemas/FillType"
+          },
+          "market": {
+            "type": "string"
+          },
+          "marketType": {
+            "$ref": "#/components/schemas/MarketType"
+          },
+          "price": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string"
+          },
+          "fee": {
+            "type": "string"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "clientMetadata": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "side",
+          "liquidity",
+          "type",
+          "market",
+          "marketType",
+          "price",
+          "size",
+          "fee",
+          "createdAt",
+          "createdAtHeight"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "FillResponse": {
+        "properties": {
+          "fills": {
+            "items": {
+              "$ref": "#/components/schemas/FillResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "fills"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "HeightResponse": {
+        "properties": {
+          "height": {
+            "type": "string"
+          },
+          "time": {
+            "$ref": "#/components/schemas/IsoString"
+          }
+        },
+        "required": [
+          "height",
+          "time"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "HistoricalFundingResponseObject": {
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "effectiveAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "effectiveAtHeight": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticker",
+          "rate",
+          "price",
+          "effectiveAt",
+          "effectiveAtHeight"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "HistoricalFundingResponse": {
+        "properties": {
+          "historicalFunding": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricalFundingResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "historicalFunding"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "PnlTicksResponseObject": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subaccountId": {
+            "type": "string"
+          },
+          "equity": {
+            "type": "string"
+          },
+          "totalPnl": {
+            "type": "string"
+          },
+          "netTransfers": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "blockHeight": {
+            "type": "string"
+          },
+          "blockTime": {
+            "$ref": "#/components/schemas/IsoString"
+          }
+        },
+        "required": [
+          "id",
+          "subaccountId",
+          "equity",
+          "totalPnl",
+          "netTransfers",
+          "createdAt",
+          "blockHeight",
+          "blockTime"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "HistoricalPnlResponse": {
+        "properties": {
+          "historicalPnl": {
+            "items": {
+              "$ref": "#/components/schemas/PnlTicksResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "historicalPnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "OrderbookResponsePriceLevel": {
+        "properties": {
+          "price": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "price",
+          "size"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "OrderbookResponseObject": {
+        "properties": {
+          "bids": {
+            "items": {
+              "$ref": "#/components/schemas/OrderbookResponsePriceLevel"
+            },
+            "type": "array"
+          },
+          "asks": {
+            "items": {
+              "$ref": "#/components/schemas/OrderbookResponsePriceLevel"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "bids",
+          "asks"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "APITimeInForce": {
+        "enum": [
+          "GTT",
+          "FOK",
+          "IOC"
+        ],
+        "type": "string"
+      },
+      "OrderStatus": {
+        "enum": [
+          "OPEN",
+          "FILLED",
+          "CANCELED",
+          "BEST_EFFORT_CANCELED",
+          "UNTRIGGERED"
+        ],
+        "type": "string"
+      },
+      "BestEffortOpenedStatus": {
+        "enum": [
+          "BEST_EFFORT_OPENED"
+        ],
+        "type": "string"
+      },
+      "APIOrderStatus": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          {
+            "$ref": "#/components/schemas/BestEffortOpenedStatus"
+          }
+        ]
+      },
+      "OrderType": {
+        "enum": [
+          "LIMIT",
+          "MARKET",
+          "STOP_LIMIT",
+          "STOP_MARKET",
+          "TRAILING_STOP",
+          "TAKE_PROFIT",
+          "TAKE_PROFIT_MARKET",
+          "HARD_TRADE",
+          "FAILED_HARD_TRADE",
+          "TRANSFER_PLACEHOLDER"
+        ],
+        "type": "string"
+      },
+      "OrderResponseObject": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subaccountId": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "clobPairId": {
+            "type": "string"
+          },
+          "side": {
+            "$ref": "#/components/schemas/OrderSide"
+          },
+          "size": {
+            "type": "string"
+          },
+          "totalFilled": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/OrderType"
+          },
+          "reduceOnly": {
+            "type": "boolean"
+          },
+          "orderFlags": {
+            "type": "string"
+          },
+          "goodTilBlock": {
+            "type": "string"
+          },
+          "goodTilBlockTime": {
+            "type": "string"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          },
+          "clientMetadata": {
+            "type": "string"
+          },
+          "timeInForce": {
+            "$ref": "#/components/schemas/APITimeInForce"
+          },
+          "status": {
+            "$ref": "#/components/schemas/APIOrderStatus"
+          },
+          "postOnly": {
+            "type": "boolean"
+          },
+          "ticker": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subaccountId",
+          "clientId",
+          "clobPairId",
+          "side",
+          "size",
+          "totalFilled",
+          "price",
+          "type",
+          "reduceOnly",
+          "orderFlags",
+          "clientMetadata",
+          "timeInForce",
+          "status",
+          "postOnly",
+          "ticker"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "PerpetualMarketStatus": {
+        "enum": [
+          "ACTIVE",
+          "PAUSED",
+          "CANCEL_ONLY",
+          "POST_ONLY"
+        ],
+        "type": "string"
+      },
+      "PerpetualMarketResponseObject": {
+        "properties": {
+          "clobPairId": {
+            "type": "string"
+          },
+          "ticker": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PerpetualMarketStatus"
+          },
+          "baseAsset": {
+            "type": "string"
+          },
+          "quoteAsset": {
+            "type": "string"
+          },
+          "lastPrice": {
+            "type": "string"
+          },
+          "oraclePrice": {
+            "type": "string"
+          },
+          "priceChange24H": {
+            "type": "string"
+          },
+          "volume24H": {
+            "type": "string"
+          },
+          "trades24H": {
+            "type": "number",
+            "format": "double"
+          },
+          "nextFundingRate": {
+            "type": "string"
+          },
+          "initialMarginFraction": {
+            "type": "string"
+          },
+          "maintenanceMarginFraction": {
+            "type": "string"
+          },
+          "basePositionNotional": {
+            "type": "string"
+          },
+          "basePositionSize": {
+            "type": "string"
+          },
+          "incrementalPositionSize": {
+            "type": "string"
+          },
+          "maxPositionSize": {
+            "type": "string"
+          },
+          "openInterest": {
+            "type": "string"
+          },
+          "atomicResolution": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantumConversionExponent": {
+            "type": "number",
+            "format": "double"
+          },
+          "tickSize": {
+            "type": "string"
+          },
+          "stepSize": {
+            "type": "string"
+          },
+          "stepBaseQuantums": {
+            "type": "number",
+            "format": "double"
+          },
+          "subticksPerTick": {
+            "type": "number",
+            "format": "double"
+          },
+          "minOrderBaseQuantums": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "clobPairId",
+          "ticker",
+          "status",
+          "baseAsset",
+          "quoteAsset",
+          "lastPrice",
+          "oraclePrice",
+          "priceChange24H",
+          "volume24H",
+          "trades24H",
+          "nextFundingRate",
+          "initialMarginFraction",
+          "maintenanceMarginFraction",
+          "basePositionNotional",
+          "basePositionSize",
+          "incrementalPositionSize",
+          "maxPositionSize",
+          "openInterest",
+          "atomicResolution",
+          "quantumConversionExponent",
+          "tickSize",
+          "stepSize",
+          "stepBaseQuantums",
+          "subticksPerTick",
+          "minOrderBaseQuantums"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "PerpetualMarketResponse": {
+        "properties": {
+          "markets": {
+            "properties": {},
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PerpetualMarketResponseObject"
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "markets"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "PerpetualPositionResponse": {
+        "properties": {
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/PerpetualPositionResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "positions"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "SparklineResponseObject": {
+        "properties": {},
+        "type": "object",
+        "additionalProperties": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "SparklineTimePeriod": {
+        "enum": [
+          "ONE_DAY",
+          "SEVEN_DAYS"
+        ],
+        "type": "string"
+      },
+      "TimeResponse": {
+        "properties": {
+          "iso": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "epoch": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "iso",
+          "epoch"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TradeResponseObject": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "side": {
+            "$ref": "#/components/schemas/OrderSide"
+          },
+          "size": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "side",
+          "size",
+          "price",
+          "createdAt",
+          "createdAtHeight"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TradeResponse": {
+        "properties": {
+          "trades": {
+            "items": {
+              "$ref": "#/components/schemas/TradeResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "trades"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TransferType": {
+        "enum": [
+          "TRANSFER_IN",
+          "TRANSFER_OUT",
+          "DEPOSIT",
+          "WITHDRAWAL"
+        ],
+        "type": "string"
+      },
+      "TransferResponseObject": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sender": {
+            "properties": {
+              "subaccountNumber": {
+                "type": "number",
+                "format": "double"
+              },
+              "address": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "address"
+            ],
+            "type": "object"
+          },
+          "recipient": {
+            "properties": {
+              "subaccountNumber": {
+                "type": "number",
+                "format": "double"
+              },
+              "address": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "address"
+            ],
+            "type": "object"
+          },
+          "size": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransferType"
+          }
+        },
+        "required": [
+          "id",
+          "sender",
+          "recipient",
+          "size",
+          "createdAt",
+          "createdAtHeight",
+          "symbol",
+          "type"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TransferResponse": {
+        "properties": {
+          "transfers": {
+            "items": {
+              "$ref": "#/components/schemas/TransferResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "transfers"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {}
+  },
+  "info": {
+    "title": "Indexer API",
+    "version": "v1.0.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/addresses/{address}": {
+      "get": {
+        "operationId": "GetAddress",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubaccountResponseObject"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/addresses/{address}/subaccountNumber/{subaccountNumber}": {
+      "get": {
+        "operationId": "GetSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubaccountResponseObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/assetPositions": {
+      "get": {
+        "operationId": "GetAssetPositions",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetPositionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/candles/perpetualMarkets/{ticker}": {
+      "get": {
+        "operationId": "GetCandles",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticker",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "resolution",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CandleResolution"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fromISO",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "toISO",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/fills": {
+      "get": {
+        "operationId": "GetFills",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FillResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "marketType",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MarketType"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/height": {
+      "get": {
+        "operationId": "GetHeight",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeightResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
+      }
+    },
+    "/historicalFunding/{ticker}": {
+      "get": {
+        "operationId": "GetHistoricalFunding",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricalFundingResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticker",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "effectiveBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "effectiveBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/historical-pnl": {
+      "get": {
+        "operationId": "GetHistoricalPnl",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricalPnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfterHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/orderbooks/perpetualMarket/{ticker}": {
+      "get": {
+        "operationId": "GetPerpetualMarket",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderbookResponseObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticker",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/orders": {
+      "get": {
+        "operationId": "ListOrders",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OrderResponseObject"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ticker",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "side",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderSide"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderType"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/APIOrderStatus"
+            }
+          },
+          {
+            "in": "query",
+            "name": "goodTilBlockBeforeOrAt",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "goodTilBlockTimeBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "returnLatestOrders",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ]
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "operationId": "GetOrder",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponseObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/perpetualMarkets": {
+      "get": {
+        "operationId": "ListPerpetualMarkets",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerpetualMarketResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ticker",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/perpetualPositions": {
+      "get": {
+        "operationId": "ListPositions",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerpetualPositionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/PerpetualPositionStatus"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/sparklines": {
+      "get": {
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SparklineResponseObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "timePeriod",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SparklineTimePeriod"
+            }
+          }
+        ]
+      }
+    },
+    "/time": {
+      "get": {
+        "operationId": "GetTime",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
+      }
+    },
+    "/trades/perpetualMarkets/{ticker}": {
+      "get": {
+        "operationId": "GetTrades",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticker",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/transfers": {
+      "get": {
+        "operationId": "GetTransfers",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://indexer.v4testnet2.dydx.exchange/v4",
+      "description": "Public Testnet"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "@dydxprotocol-indexer/v4-protos",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/index.js",
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@osmonauts/telescope": "0.80.0",
+    "@protobufs/cosmos": "^0.0.11",
+    "@protobufs/gogoproto": "^0.0.10",
+    "typescript": "^4.7.4"
+  },
+  "scripts": {
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "build": "pnpm run build:verify-proto && rm -rf build/ && tsc",
+    "build:prod": "rm -rf build/ && tsc",
+    "build:watch": "pnpm run build -- --watch",
+    "test": "echo \"Error: no test specified\"",
+    "build:proto": "(cd proto && make proto-export) && rm -rf src/codegen && telescope transpile --protoDirs ./proto/.proto-export --outPath ./src/codegen --no-includeAminos --includeLCDClients --includeRPCClients",
+    "build:verify-proto": "pnpm run build:proto && git diff --exit-code src/codegen/dydxprotocol"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dydxprotocol/indexer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
+  },
+  "homepage": "https://github.com/dydxprotocol/indexer#readme",
+  "dependencies": {
+    "@bufbuild/buf": "1.19.0-1",
+    "@cosmjs/amino": "^0.29.3",
+    "@cosmjs/proto-signing": "^0.29.3",
+    "@cosmjs/stargate": "^0.29.3",
+    "@cosmjs/tendermint-rpc": "^0.29.3",
+    "@osmonauts/lcd": "^0.6.0",
+    "bech32": "^2.0.0",
+    "dotenv-flow": "^3.2.0",
+    "long": "^5.2.1",
+    "protobufjs": "^7.2.3"
+  }
+}
