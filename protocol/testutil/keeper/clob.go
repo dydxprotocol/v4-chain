@@ -78,7 +78,14 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			epochsKeeper,
 			indexerEventsTransientStoreKey,
 		)
-		ks.AssetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, ks.PricesKeeper)
+		ks.AssetsKeeper, _ = createAssetsKeeper(
+			stateStore,
+			db,
+			cdc,
+			ks.PricesKeeper,
+			indexerEventsTransientStoreKey,
+			true,
+		)
 		ks.StatsKeeper, _ = createStatsKeeper(
 			stateStore,
 			epochsKeeper,
