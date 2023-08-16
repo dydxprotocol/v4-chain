@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4/lib/metrics"
 )
 
 const TypeMsgCancelOrder = "cancel_order"
@@ -40,8 +42,19 @@ func (msg *MsgCancelOrder) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgCancelOrder) ValidateBasic() error {
+func (msg *MsgCancelOrder) ValidateBasic() (err error) {
 	orderId := msg.GetOrderId()
+
+	defer func() {
+		if err != nil {
+			telemetry.IncrCounterWithLabels(
+				[]string{ModuleName, metrics.CancelOrder, metrics.ValidateBasic, metrics.Error, metrics.Count},
+				1,
+				msg.OrderId.GetOrderIdLabels(),
+			)
+		}
+	}()
+
 	if err := orderId.Validate(); err != nil {
 		return err
 	}

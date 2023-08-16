@@ -165,6 +165,7 @@ func TestBlockedAddresses(t *testing.T) {
 		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true,
 		"dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6": true,
 		"dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5": true,
+		"dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv": true, // `bridge` module account.
 		// `rewards_treasury` module account
 		"dydx16wrau2x4tsg033xfrrdpae6kxfn9kyuerr5jjp": true,
 		// `vester_treasury` module accoount
@@ -177,6 +178,7 @@ func TestMaccPerms(t *testing.T) {
 	maccPerms := app.GetMaccPerms()
 	expectedMaccPerms := map[string][]string{
 		"bonded_tokens_pool":     {"burner", "staking"},
+		"bridge":                 {"minter"},
 		"distribution":           []string(nil),
 		"fee_collector":          []string(nil),
 		"gov":                    {"burner"},

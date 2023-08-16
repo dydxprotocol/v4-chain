@@ -52,7 +52,7 @@ func (untriggeredOrders *UntriggeredConditionalOrders) IsEmpty() bool {
 
 // AddUntriggeredConditionalOrders takes in a list of newly-placed conditional order ids and adds them
 // to the in-memory UntriggeredConditionalOrders struct, filtering out orders that have been cancelled
-// or expired in the last block. This function is used in EndBlocker.
+// or expired in the last block. This function is used in EndBlocker and on application startup.
 func (k Keeper) AddUntriggeredConditionalOrders(
 	ctx sdk.Context,
 	placedConditionalOrderIds []types.OrderId,

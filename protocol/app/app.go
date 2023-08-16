@@ -178,6 +178,7 @@ var (
 	// module account permissions
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:        nil,
+		bridgemoduletypes.ModuleName:      {authtypes.Minter},
 		distrtypes.ModuleName:             nil,
 		stakingtypes.BondedPoolName:       {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName:    {authtypes.Burner, authtypes.Staking},
@@ -1051,7 +1052,7 @@ func (app *App) hydrateMemStores() {
 	// Create an `uncachedCtx` where the underlying MultiStore is the `rootMultiStore`.
 	// We use this to hydrate the `memStore` state with values from the underlying `rootMultiStore`.
 	uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-	// Initialize memstore in clobKeeper with order fill amounts.
+	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
 	app.ClobKeeper.InitMemStore(uncachedCtx)
 }
 
@@ -1077,6 +1078,9 @@ func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
 	// Initialize memclob with all existing stateful orders.
 	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
 	app.ClobKeeper.InitStatefulOrdersInMemClob(checkStateCtx)
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	app.ClobKeeper.HydrateUntriggeredConditionalOrders(checkStateCtx)
 }
 
 // GetBaseApp returns the base app of the application
@@ -1118,6 +1122,8 @@ func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Res
 	}
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	initResponse := app.ModuleManager.InitGenesis(ctx, app.appCodec, genesisState)
+	block := app.IndexerEventManager.ProduceBlock(ctx)
+	app.IndexerEventManager.SendOnchainData(block)
 
 	return initResponse
 }

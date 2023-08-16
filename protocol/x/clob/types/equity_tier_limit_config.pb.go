@@ -82,7 +82,7 @@ func (m *EquityTierLimitConfiguration) GetStatefulOrderEquityTiers() []EquityTie
 	return nil
 }
 
-// Defines a rate limit over a specific number of blocks.
+// Defines an equity tier limit.
 type EquityTierLimit struct {
 	// The absolute size of total net collateral in base quantums
 	// of equity required in USD equivalent.

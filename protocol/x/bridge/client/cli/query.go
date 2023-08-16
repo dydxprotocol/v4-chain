@@ -25,6 +25,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryProposeParams())
 	cmd.AddCommand(CmdQuerySafetyParams())
 	cmd.AddCommand(CmdQueryAcknowledgedEventInfo())
+	cmd.AddCommand(CmdQueryRecognizedEventInfo())
 
 	return cmd
 }
@@ -108,6 +109,29 @@ func CmdQueryAcknowledgedEventInfo() *cobra.Command {
 			res, err := queryClient.AcknowledgedEventInfo(
 				context.Background(),
 				&types.QueryAcknowledgedEventInfoRequest{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryRecognizedEventInfo() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-recognized-event-info",
+		Short: "get the RecognizedEventInfo",
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.RecognizedEventInfo(
+				context.Background(),
+				&types.QueryRecognizedEventInfoRequest{},
 			)
 			if err != nil {
 				return err

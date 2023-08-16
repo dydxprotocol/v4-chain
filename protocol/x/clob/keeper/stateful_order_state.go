@@ -6,6 +6,7 @@ import (
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
+	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -465,24 +466,35 @@ func (k Keeper) MustGetBlockTimeForLastCommittedBlock(
 // of orders, ordered by ascending time priority. Note that this only returns placed orders,
 // and therefore will not return untriggered conditional orders.
 func (k Keeper) GetAllPlacedStatefulOrders(ctx sdk.Context) []types.Order {
-	longTermOrderPlacementIterator := k.getPlacedOrdersIterator(ctx)
+	return k.getStatefulOrders(k.getPlacedOrdersIterator(ctx))
+}
 
-	defer longTermOrderPlacementIterator.Close()
+// GetAllUntriggeredConditionalOrders iterates over all untriggered conditional order placements
+// and returns a list of untriggered conditional orders, ordered by ascending time priority.
+func (k Keeper) GetAllUntriggeredConditionalOrders(ctx sdk.Context) []types.Order {
+	return k.getStatefulOrders(k.getUntriggeredConditionalOrdersIterator(ctx))
+}
 
-	longTermOrderPlacements := make([]types.LongTermOrderPlacement, 0)
+// getStatefulOrders takes an iterator and iterates over all stateful order placements in state.
+// It returns a list of stateful order placements ordered by ascending time priority. Note this
+// function handles closing the iterator.
+func (k Keeper) getStatefulOrders(statefulOrderIterator db.Iterator) []types.Order {
+	defer statefulOrderIterator.Close()
 
-	// Get all long term order placements from state in any order.
-	for ; longTermOrderPlacementIterator.Valid(); longTermOrderPlacementIterator.Next() {
-		longTermOrderPlacement := types.LongTermOrderPlacement{}
-		value := longTermOrderPlacementIterator.Value()
-		k.cdc.MustUnmarshal(value, &longTermOrderPlacement)
-		longTermOrderPlacements = append(longTermOrderPlacements, longTermOrderPlacement)
+	statefulOrderPlacements := make([]types.LongTermOrderPlacement, 0)
+
+	// Get all stateful order placements from state in any order.
+	for ; statefulOrderIterator.Valid(); statefulOrderIterator.Next() {
+		statefulOrderPlacement := types.LongTermOrderPlacement{}
+		value := statefulOrderIterator.Value()
+		k.cdc.MustUnmarshal(value, &statefulOrderPlacement)
+		statefulOrderPlacements = append(statefulOrderPlacements, statefulOrderPlacement)
 	}
 
 	// Sort all stateful order placements in ascending time priority and return the orders.
-	sort.Sort(types.SortedLongTermOrderPlacements(longTermOrderPlacements))
-	sortedOrders := make([]types.Order, 0, len(longTermOrderPlacements))
-	for _, orderPlacement := range longTermOrderPlacements {
+	sort.Sort(types.SortedLongTermOrderPlacements(statefulOrderPlacements))
+	sortedOrders := make([]types.Order, 0, len(statefulOrderPlacements))
+	for _, orderPlacement := range statefulOrderPlacements {
 		sortedOrders = append(sortedOrders, orderPlacement.Order)
 	}
 
@@ -538,6 +550,16 @@ func (k Keeper) getPlacedOrdersIterator(ctx sdk.Context) sdk.Iterator {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		types.KeyPrefix(types.PlacedStatefulOrderKeyPrefix),
+	)
+	return sdk.KVStorePrefixIterator(store, []byte{})
+}
+
+// getUntriggeredConditionalOrdersIterator returns an iterator over all untriggered conditional
+// orders.
+func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) sdk.Iterator {
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		types.KeyPrefix(types.UntriggeredConditionalOrderKeyPrefix),
 	)
 	return sdk.KVStorePrefixIterator(store, []byte{})
 }

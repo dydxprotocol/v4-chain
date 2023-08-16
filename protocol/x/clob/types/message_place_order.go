@@ -1,8 +1,10 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4/lib/metrics"
 )
 
 const TypeMsgPlaceOrder = "place_order"
@@ -23,8 +25,18 @@ func (msg *MsgPlaceOrder) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgPlaceOrder) ValidateBasic() error {
-	err := msg.Order.OrderId.SubaccountId.Validate()
+func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
+	defer func() {
+		if err != nil {
+			telemetry.IncrCounterWithLabels(
+				[]string{ModuleName, metrics.PlaceOrder, metrics.ValidateBasic, metrics.Error, metrics.Count},
+				1,
+				msg.Order.GetOrderLabels(),
+			)
+		}
+	}()
+
+	err = msg.Order.OrderId.SubaccountId.Validate()
 	if err != nil {
 		return err
 	}

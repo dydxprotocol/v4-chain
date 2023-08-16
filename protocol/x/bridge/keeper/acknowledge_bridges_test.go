@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
 	"github.com/dydxprotocol/v4/x/bridge/types"
@@ -49,7 +50,23 @@ func TestAcknowledgeBridges(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Initialize context and keeper.
-			ctx, bridgeKeeper, _, _, _, _ := keepertest.BridgeKeepers(t)
+			ctx, bridgeKeeper, _, _, _, mockBankKeeper := keepertest.BridgeKeepersWithMockBankKeeper(t)
+			// Mock minting and sending coin of each bridge event.
+			for _, bridgeEvent := range tc.bridgeEvents {
+				mockBankKeeper.On(
+					"MintCoins",
+					ctx,
+					types.ModuleName,
+					sdk.Coins{bridgeEvent.Coin},
+				).Return(nil).Once()
+				mockBankKeeper.On(
+					"SendCoinsFromModuleToAccount",
+					ctx,
+					types.ModuleName,
+					sdk.MustAccAddressFromBech32(bridgeEvent.Address),
+					sdk.Coins{bridgeEvent.Coin},
+				).Return(nil).Once()
+			}
 
 			err := bridgeKeeper.AcknowledgeBridges(ctx, tc.bridgeEvents)
 			require.NoError(t, err)
@@ -57,6 +74,9 @@ func TestAcknowledgeBridges(t *testing.T) {
 			// Assert expected AcknowledgedEventInfo.
 			aei := bridgeKeeper.GetAcknowledgedEventInfo(ctx)
 			require.Equal(t, tc.expectedAEI, aei)
+
+			// Assert mock expectations.
+			mockBankKeeper.AssertExpectations(t)
 		})
 	}
 }

@@ -2038,22 +2038,26 @@ func TestMustGetBlockTimeForLastCommittedBlock_Panics(t *testing.T) {
 	)
 }
 
-func TestGetAllPlacedStatefulOrders(t *testing.T) {
+// TODO(CLOB-786): Fix this test to verify sorting by transaction index works.
+func TestGetAllStatefulOrders(t *testing.T) {
 	tests := map[string]struct {
 		// State.
 		statefulOrderPlacements     []types.LongTermOrderPlacement
 		isTriggeredConditionalOrder map[types.OrderId]bool
 
 		// Expectations.
-		expectedStatefulOrders []types.Order
+		expectedPlacedStatefulOrders         []types.Order
+		expectedUntriggeredConditionalOrders []types.Order
 	}{
 		"Can read an empty state": {
 			statefulOrderPlacements:     []types.LongTermOrderPlacement{},
 			isTriggeredConditionalOrder: map[types.OrderId]bool{},
 
-			expectedStatefulOrders: []types.Order{},
+			expectedPlacedStatefulOrders:         []types.Order{},
+			expectedUntriggeredConditionalOrders: []types.Order{},
 		},
-		"Can read stateful orders from state and untriggered conditional orders aren't returned": {
+		`Can read stateful orders from state and untriggered conditional orders are returned separately
+			from other orders`: {
 			statefulOrderPlacements: []types.LongTermOrderPlacement{
 				{
 					Order: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
@@ -2082,9 +2086,13 @@ func TestGetAllPlacedStatefulOrders(t *testing.T) {
 			},
 			isTriggeredConditionalOrder: map[types.OrderId]bool{},
 
-			expectedStatefulOrders: []types.Order{
+			expectedPlacedStatefulOrders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
+			},
+			expectedUntriggeredConditionalOrders: []types.Order{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
 			},
 		},
 		"Can read stateful orders from state with same block height sorted in ascending order": {
@@ -2096,6 +2104,12 @@ func TestGetAllPlacedStatefulOrders(t *testing.T) {
 					},
 				},
 				{
+					Order: constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price25_GTBT15_StopLoss25,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 4,
+					},
+				},
+				{
 					Order: constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
 					PlacementIndex: types.TransactionOrdering{
 						BlockHeight: 8,
@@ -2113,17 +2127,27 @@ func TestGetAllPlacedStatefulOrders(t *testing.T) {
 						BlockHeight: 8,
 					},
 				},
+				{
+					Order: constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+					PlacementIndex: types.TransactionOrdering{
+						BlockHeight: 8,
+					},
+				},
 			},
 			isTriggeredConditionalOrder: map[types.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId: true,
 				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId:            true,
 			},
 
-			expectedStatefulOrders: []types.Order{
+			expectedPlacedStatefulOrders: []types.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
 				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
+			},
+			expectedUntriggeredConditionalOrders: []types.Order{
+				constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price25_GTBT15_StopLoss25,
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 		},
 		"Can read stateful orders from state with same transaction index sorted in ascending order": {
@@ -2158,12 +2182,13 @@ func TestGetAllPlacedStatefulOrders(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId:            true,
 			},
 
-			expectedStatefulOrders: []types.Order{
+			expectedPlacedStatefulOrders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25,
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
 				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
 			},
+			expectedUntriggeredConditionalOrders: []types.Order{},
 		},
 	}
 
@@ -2187,8 +2212,10 @@ func TestGetAllPlacedStatefulOrders(t *testing.T) {
 			}
 
 			// Verify the stateful order placements are correct.
-			statefulOrders := ks.ClobKeeper.GetAllPlacedStatefulOrders(ks.Ctx)
-			require.Equal(t, tc.expectedStatefulOrders, statefulOrders)
+			placedStatefulOrders := ks.ClobKeeper.GetAllPlacedStatefulOrders(ks.Ctx)
+			untriggeredConditionalOrders := ks.ClobKeeper.GetAllUntriggeredConditionalOrders(ks.Ctx)
+			require.Equal(t, tc.expectedPlacedStatefulOrders, placedStatefulOrders)
+			require.Equal(t, tc.expectedUntriggeredConditionalOrders, untriggeredConditionalOrders)
 		})
 	}
 }

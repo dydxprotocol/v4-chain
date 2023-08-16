@@ -115,3 +115,76 @@ func TestSafetyParams(t *testing.T) {
 		})
 	}
 }
+
+func TestAcknowledgedEventInfo(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.BridgeKeeper
+
+	for name, tc := range map[string]struct {
+		req *types.QueryAcknowledgedEventInfoRequest
+		res *types.QueryAcknowledgedEventInfoResponse
+		err error
+	}{
+		"Success": {
+			req: &types.QueryAcknowledgedEventInfoRequest{},
+			res: &types.QueryAcknowledgedEventInfoResponse{
+				Info: types.DefaultGenesis().AcknowledgedEventInfo,
+			},
+			err: nil,
+		},
+		"Nil": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			res, err := k.AcknowledgedEventInfo(ctx, tc.req)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+			}
+		})
+	}
+}
+
+func TestRecognizedEventInfo(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.BridgeKeeper
+
+	for name, tc := range map[string]struct {
+		req *types.QueryRecognizedEventInfoRequest
+		res *types.QueryRecognizedEventInfoResponse
+		err error
+	}{
+		"Success": {
+			req: &types.QueryRecognizedEventInfoRequest{},
+			res: &types.QueryRecognizedEventInfoResponse{
+				Info: types.BridgeEventInfo{
+					NextId:         0,
+					EthBlockHeight: 0,
+				},
+			},
+			err: nil,
+		},
+		"Nil": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			res, err := k.RecognizedEventInfo(ctx, tc.req)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+			}
+		})
+	}
+}

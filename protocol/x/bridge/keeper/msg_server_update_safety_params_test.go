@@ -1,0 +1,69 @@
+package keeper_test
+
+import (
+	"errors"
+	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/dydxprotocol/v4/mocks"
+	keepertest "github.com/dydxprotocol/v4/testutil/keeper"
+	"github.com/dydxprotocol/v4/x/bridge/keeper"
+	"github.com/dydxprotocol/v4/x/bridge/types"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+)
+
+func TestMsgServerUpdateSafetyParams(t *testing.T) {
+	testMsg := types.MsgUpdateSafetyParams{
+		Authority: "authority",
+		Params: types.SafetyParams{
+			IsDisabled:  false,
+			DelayBlocks: 10,
+		},
+	}
+
+	tests := map[string]struct {
+		setupMocks   func(ctx sdk.Context, mck *mocks.BridgeKeeper)
+		expectedResp *types.MsgUpdateSafetyParamsResponse
+		expectedErr  string
+	}{
+		"Success": {
+			setupMocks: func(ctx sdk.Context, mck *mocks.BridgeKeeper) {
+				mck.On("UpdateSafetyParams", mock.Anything, testMsg.Params).Return(nil)
+			},
+			expectedResp: &types.MsgUpdateSafetyParamsResponse{},
+		},
+		"Failure: keeper error is propagated": {
+			setupMocks: func(ctx sdk.Context, mck *mocks.BridgeKeeper) {
+				mck.On("UpdateSafetyParams", mock.Anything, testMsg.Params).Return(
+					errors.New("can't update event params"),
+				)
+			},
+			expectedErr: "can't update event params",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Initialize Mocks and Context.
+			mockKeeper := &mocks.BridgeKeeper{}
+			msgServer := keeper.NewMsgServerImpl(mockKeeper)
+			ctx, _, _, _, _, _ := keepertest.BridgeKeepers(t)
+			tc.setupMocks(ctx, mockKeeper)
+			goCtx := sdk.WrapSDKContext(ctx)
+
+			resp, err := msgServer.UpdateSafetyParams(goCtx, &testMsg)
+
+			// Assert msg server response.
+			require.Equal(t, tc.expectedResp, resp)
+			if tc.expectedErr != "" {
+				require.Equal(t, tc.expectedErr, err.Error())
+			}
+
+			// Assert mock expectations.
+			result := mockKeeper.AssertExpectations(t)
+			require.True(t, result)
+		})
+	}
+}

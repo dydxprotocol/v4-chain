@@ -1822,6 +1822,107 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 	}
 }
 
+func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
+	tests := map[string]struct {
+		// CLOB module state.
+		statefulOrdersInState       []types.Order
+		isConditionalOrderTriggered map[types.OrderId]bool
+	}{
+		`Can initialize untriggered conditional orders with 0 stateful orders in state`: {
+			statefulOrdersInState:       []types.Order{},
+			isConditionalOrderTriggered: map[types.OrderId]bool{},
+		},
+		`Can initialize untriggered conditional orders with both Long-Term and triggered
+			conditional orders in state`: {
+			statefulOrdersInState: []types.Order{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
+			},
+			isConditionalOrderTriggered: map[types.OrderId]bool{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005.
+					OrderId: true,
+			},
+		},
+		`Can initialize untriggered conditional orders with both Long-Term, untriggered conditional
+			orders, and triggered conditional orders in state`: {
+			statefulOrdersInState: []types.Order{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
+				constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_TakeProfit20,
+				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+			},
+			isConditionalOrderTriggered: map[types.OrderId]bool{
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005.
+					OrderId: true,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup state.
+			memClob := &mocks.MemClob{}
+			memClob.On("SetClobKeeper", mock.Anything).Return()
+
+			indexerEventManager := &mocks.IndexerEventManager{}
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+			// Create CLOB pair.
+			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+				ks.Ctx,
+				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.Status,
+				constants.ClobPair_Btc.MakerFeePpm,
+				constants.ClobPair_Btc.TakerFeePpm,
+			)
+			require.NoError(t, err)
+
+			// Create each stateful order placement in state.
+			expectedUntriggeredConditionalOrders := make(map[types.ClobPairId]*keeper.UntriggeredConditionalOrders)
+			for i, order := range tc.statefulOrdersInState {
+				require.True(t, order.IsStatefulOrder())
+
+				// Write the stateful order placement to state.
+				ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, uint32(i))
+
+				// No further state updates are required if this isn't a conditional order.
+				if !order.IsConditionalOrder() {
+					continue
+				}
+
+				// If it's a triggered conditional order, ensure it's triggered in state and skip
+				// updating the expected untriggered conditional orders.
+				if tc.isConditionalOrderTriggered[order.OrderId] {
+					ks.ClobKeeper.MustTriggerConditionalOrder(ks.Ctx, order.OrderId)
+					continue
+				}
+
+				// This is an untriggered conditional order and we expect it to be returned.
+				untriggeredConditionalOrders, exists := expectedUntriggeredConditionalOrders[order.GetClobPairId()]
+				if !exists {
+					untriggeredConditionalOrders = ks.ClobKeeper.NewUntriggeredConditionalOrders()
+					expectedUntriggeredConditionalOrders[order.GetClobPairId()] = untriggeredConditionalOrders
+				}
+				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
+			}
+
+			// Run the test and verify expectations.
+			ks.ClobKeeper.HydrateUntriggeredConditionalOrders(ks.Ctx)
+
+			require.Equal(t, expectedUntriggeredConditionalOrders, ks.ClobKeeper.UntriggeredConditionalOrders)
+		})
+	}
+}
+
 func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 	tests := map[string]struct {
 		orders []types.Order

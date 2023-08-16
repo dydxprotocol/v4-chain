@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4/indexer/common"
+	indexerevents "github.com/dydxprotocol/v4/indexer/events"
 	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4/mocks"
 	"math/big"
@@ -118,4 +120,31 @@ func CreateUsdcAssetUpdate(
 			BigQuantumsDelta: deltaQuoteBalance,
 		},
 	}
+}
+
+// GetSubaccountUpdateEventsFromIndexerBlock returns the subaccount update events in the
+// Indexer Block event Kafka message.
+func GetSubaccountUpdateEventsFromIndexerBlock(
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+) []*indexerevents.SubaccountUpdateEventV1 {
+	var subaccountUpdates []*indexerevents.SubaccountUpdateEventV1
+	block := keeper.GetIndexerEventManager().ProduceBlock(ctx)
+	if block == nil {
+		return subaccountUpdates
+	}
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeSubaccountUpdate {
+			continue
+		}
+		bytes := indexer_manager.GetBytesFromEventData(event.Data)
+		unmarshaler := common.UnmarshalerImpl{}
+		var subaccountUpdate indexerevents.SubaccountUpdateEventV1
+		err := unmarshaler.Unmarshal(bytes, &subaccountUpdate)
+		if err != nil {
+			panic(err)
+		}
+		subaccountUpdates = append(subaccountUpdates, &subaccountUpdate)
+	}
+	return subaccountUpdates
 }

@@ -20,5 +20,5 @@ const (
 	// an uninitialized prices cache, and failures to fetch market param updates due to a delay on the protocol side
 	// in starting the prices query service.
 	// If the protocol is not started within this grace period, the daemon will report these errors as true errors.
-	PriceDaemonStartupErrorGracePeriod = 60 * time.Second
+	PriceDaemonStartupErrorGracePeriod = 120 * time.Second
 )

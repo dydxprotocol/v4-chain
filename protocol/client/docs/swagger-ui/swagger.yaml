@@ -141,7 +141,9 @@ paths:
                            repeated Bar results = 1;
                            PageResponse page = 2;
                    }
-            description: QueryClobPairAllResponse is request type for the QueryRPC method.
+            description: >-
+              QueryClobPairAllResponse is response type for the ClobPairAll
+              method.
         default:
           description: An unexpected error response.
           schema:
@@ -330,7 +332,7 @@ paths:
                 description: |-
                   ClobPair represents a single CLOB pair for a given product
                   in state.
-            description: QueryClobPairResponse is response type for the QueryRPC method.
+            description: QueryClobPairResponse is response type for the ClobPair method.
         default:
           description: An unexpected error response.
           schema:
@@ -359,6 +361,571 @@ paths:
           required: true
           type: integer
           format: int64
+      tags:
+        - Query
+  /dydxprotocol/clob/equity_tier:
+    get:
+      summary: Queries EquityTierLimitConfiguration.
+      operationId: EquityTierLimitConfiguration
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              equity_tier_limit_config:
+                type: object
+                properties:
+                  short_term_order_equity_tiers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        usd_tnc_required:
+                          type: string
+                          format: byte
+                          description: >-
+                            The absolute size of total net collateral in base
+                            quantums
+
+                            of equity required in USD equivalent.
+                        limit:
+                          type: integer
+                          format: int64
+                          description: What the limit is for `usd_tnc_required`.
+                      description: Defines an equity tier limit.
+                    description: >-
+                      How many short term stateful orders are allowed per equity
+                      tier.
+
+                      Specifying 0 values disables this limit.
+                  stateful_order_equity_tiers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        usd_tnc_required:
+                          type: string
+                          format: byte
+                          description: >-
+                            The absolute size of total net collateral in base
+                            quantums
+
+                            of equity required in USD equivalent.
+                        limit:
+                          type: integer
+                          format: int64
+                          description: What the limit is for `usd_tnc_required`.
+                      description: Defines an equity tier limit.
+                    description: |-
+                      How many open stateful orders are allowed per equity tier.
+                      Specifying 0 values disables this limit.
+                description: |-
+                  Defines the set of equity tiers to limit how many open orders
+                  a subaccount is allowed to have.
+            description: >-
+              QueryEquityTierLimitConfigurationResponse is a response message
+              that contains
+
+              the EquityTierLimitConfiguration.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/clob/mev_node_to_node_calculation:
+    post:
+      summary: Runs the MEV node <> node calculation with the provided parameters.
+      operationId: MevNodeToNodeCalculation
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    clob_pair_id:
+                      type: integer
+                      format: int64
+                    mev:
+                      type: number
+                      format: float
+                    volume:
+                      type: string
+                      format: uint64
+                  description: >-
+                    MevAndVolumePerClob contains information about the MEV and
+                    volume per CLOB.
+            description: >-
+              MevNodeToNodeCalculationResponse is a response message that
+              contains the
+
+              MEV node <> node calculation result.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              block_proposer_matches:
+                description: >-
+                  Represents the matches on the "block proposer". Note that this
+                  field
+
+                  does not need to be the actual block proposer's matches for a
+                  block, since
+
+                  the MEV calculation logic is run with this nodes matches as
+                  the "block
+
+                  proposer" matches.
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        taker_order_subaccount_id:
+                          type: object
+                          properties:
+                            owner:
+                              type: string
+                              description: >-
+                                The address of the wallet that owns this
+                                subaccount.
+                            number:
+                              type: integer
+                              format: int64
+                              description: >-
+                                < 128 Since 128 should be enough to start and it
+                                fits within
+
+                                1 Byte (1 Bit needed to indicate that the first
+                                byte is the last).
+                          description: >-
+                            SubaccountId defines a unique identifier for a
+                            Subaccount.
+                        taker_fee_ppm:
+                          type: integer
+                          format: int32
+                        maker_order_subaccount_id:
+                          type: object
+                          properties:
+                            owner:
+                              type: string
+                              description: >-
+                                The address of the wallet that owns this
+                                subaccount.
+                            number:
+                              type: integer
+                              format: int64
+                              description: >-
+                                < 128 Since 128 should be enough to start and it
+                                fits within
+
+                                1 Byte (1 Bit needed to indicate that the first
+                                byte is the last).
+                          description: >-
+                            SubaccountId defines a unique identifier for a
+                            Subaccount.
+                        maker_order_subticks:
+                          type: string
+                          format: uint64
+                        maker_order_is_buy:
+                          type: boolean
+                        maker_fee_ppm:
+                          type: integer
+                          format: int32
+                        clob_pair_id:
+                          type: integer
+                          format: int64
+                        fill_amount:
+                          type: string
+                          format: uint64
+                      description: >-
+                        MEVMatch represents all necessary data to calculate MEV
+                        for a regular match.
+                  liquidation_matches:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        liquidated_subaccount_id:
+                          type: object
+                          properties:
+                            owner:
+                              type: string
+                              description: >-
+                                The address of the wallet that owns this
+                                subaccount.
+                            number:
+                              type: integer
+                              format: int64
+                              description: >-
+                                < 128 Since 128 should be enough to start and it
+                                fits within
+
+                                1 Byte (1 Bit needed to indicate that the first
+                                byte is the last).
+                          description: >-
+                            SubaccountId defines a unique identifier for a
+                            Subaccount.
+                        insurance_fund_delta_quote_quantums:
+                          type: string
+                          format: int64
+                        maker_order_subaccount_id:
+                          type: object
+                          properties:
+                            owner:
+                              type: string
+                              description: >-
+                                The address of the wallet that owns this
+                                subaccount.
+                            number:
+                              type: integer
+                              format: int64
+                              description: >-
+                                < 128 Since 128 should be enough to start and it
+                                fits within
+
+                                1 Byte (1 Bit needed to indicate that the first
+                                byte is the last).
+                          description: >-
+                            SubaccountId defines a unique identifier for a
+                            Subaccount.
+                        maker_order_subticks:
+                          type: string
+                          format: uint64
+                        maker_order_is_buy:
+                          type: boolean
+                        maker_fee_ppm:
+                          type: integer
+                          format: int32
+                        clob_pair_id:
+                          type: integer
+                          format: int64
+                        fill_amount:
+                          type: string
+                          format: uint64
+                      description: >-
+                        MEVLiquidationMatch represents all necessary data to
+                        calculate MEV for a
+
+                        liquidation.
+              validator_mev_metrics:
+                description: Represents the matches and mid-prices on the validator.
+                type: object
+                properties:
+                  validator_mev_matches:
+                    type: object
+                    properties:
+                      matches:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            taker_order_subaccount_id:
+                              type: object
+                              properties:
+                                owner:
+                                  type: string
+                                  description: >-
+                                    The address of the wallet that owns this
+                                    subaccount.
+                                number:
+                                  type: integer
+                                  format: int64
+                                  description: >-
+                                    < 128 Since 128 should be enough to start
+                                    and it fits within
+
+                                    1 Byte (1 Bit needed to indicate that the
+                                    first byte is the last).
+                              description: >-
+                                SubaccountId defines a unique identifier for a
+                                Subaccount.
+                            taker_fee_ppm:
+                              type: integer
+                              format: int32
+                            maker_order_subaccount_id:
+                              type: object
+                              properties:
+                                owner:
+                                  type: string
+                                  description: >-
+                                    The address of the wallet that owns this
+                                    subaccount.
+                                number:
+                                  type: integer
+                                  format: int64
+                                  description: >-
+                                    < 128 Since 128 should be enough to start
+                                    and it fits within
+
+                                    1 Byte (1 Bit needed to indicate that the
+                                    first byte is the last).
+                              description: >-
+                                SubaccountId defines a unique identifier for a
+                                Subaccount.
+                            maker_order_subticks:
+                              type: string
+                              format: uint64
+                            maker_order_is_buy:
+                              type: boolean
+                            maker_fee_ppm:
+                              type: integer
+                              format: int32
+                            clob_pair_id:
+                              type: integer
+                              format: int64
+                            fill_amount:
+                              type: string
+                              format: uint64
+                          description: >-
+                            MEVMatch represents all necessary data to calculate
+                            MEV for a regular match.
+                      liquidation_matches:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            liquidated_subaccount_id:
+                              type: object
+                              properties:
+                                owner:
+                                  type: string
+                                  description: >-
+                                    The address of the wallet that owns this
+                                    subaccount.
+                                number:
+                                  type: integer
+                                  format: int64
+                                  description: >-
+                                    < 128 Since 128 should be enough to start
+                                    and it fits within
+
+                                    1 Byte (1 Bit needed to indicate that the
+                                    first byte is the last).
+                              description: >-
+                                SubaccountId defines a unique identifier for a
+                                Subaccount.
+                            insurance_fund_delta_quote_quantums:
+                              type: string
+                              format: int64
+                            maker_order_subaccount_id:
+                              type: object
+                              properties:
+                                owner:
+                                  type: string
+                                  description: >-
+                                    The address of the wallet that owns this
+                                    subaccount.
+                                number:
+                                  type: integer
+                                  format: int64
+                                  description: >-
+                                    < 128 Since 128 should be enough to start
+                                    and it fits within
+
+                                    1 Byte (1 Bit needed to indicate that the
+                                    first byte is the last).
+                              description: >-
+                                SubaccountId defines a unique identifier for a
+                                Subaccount.
+                            maker_order_subticks:
+                              type: string
+                              format: uint64
+                            maker_order_is_buy:
+                              type: boolean
+                            maker_fee_ppm:
+                              type: integer
+                              format: int32
+                            clob_pair_id:
+                              type: integer
+                              format: int64
+                            fill_amount:
+                              type: string
+                              format: uint64
+                          description: >-
+                            MEVLiquidationMatch represents all necessary data to
+                            calculate MEV for a
+
+                            liquidation.
+                    description: >-
+                      ValidatorMevMatches contains all matches from the
+                      validator's local
+
+                      operations queue.
+                  clob_mid_prices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        clob_pair:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: int64
+                              description: >-
+                                ID of the orderbook that stores all resting
+                                liquidity for this CLOB.
+                            perpetual_clob_metadata:
+                              type: object
+                              properties:
+                                perpetual_id:
+                                  type: integer
+                                  format: int64
+                                  description: >-
+                                    Id of the Perpetual the CLOB allows trading
+                                    of.
+                              description: >-
+                                PerpetualClobMetadata contains metadata for a
+                                `ClobPair`
+
+                                representing a Perpetual product.
+                            spot_clob_metadata:
+                              type: object
+                              properties:
+                                base_asset_id:
+                                  type: integer
+                                  format: int64
+                                  description: Id of the base Asset in the trading pair.
+                                quote_asset_id:
+                                  type: integer
+                                  format: int64
+                                  description: Id of the quote Asset in the trading pair.
+                              description: >-
+                                PerpetualClobMetadata contains metadata for a
+                                `ClobPair`
+
+                                representing a Spot product.
+                            step_base_quantums:
+                              type: string
+                              format: uint64
+                              description: >-
+                                Minimum increment in the size of orders on the
+                                CLOB, in base quantums.
+                            subticks_per_tick:
+                              type: integer
+                              format: int64
+                              description: >-
+                                Defines the tick size of the orderbook by
+                                defining how many subticks
+
+                                are in one tick. That is, the subticks of any
+                                valid order must be a
+
+                                multiple of this value. Generally this value
+                                should start `>= 100`to
+
+                                allow room for decreasing it.
+                            quantum_conversion_exponent:
+                              type: integer
+                              format: int32
+                              description: >-
+                                `10^Exponent` gives the number of QuoteQuantums
+                                traded per BaseQuantum
+
+                                per Subtick.
+                            min_order_base_quantums:
+                              type: string
+                              format: uint64
+                              description: >-
+                                Minimum size of an order on the CLOB, in base
+                                quantums.
+                            status:
+                              type: string
+                              enum:
+                                - STATUS_UNSPECIFIED
+                                - STATUS_ACTIVE
+                                - STATUS_PAUSED
+                                - STATUS_CANCEL_ONLY
+                                - STATUS_POST_ONLY
+                              default: STATUS_UNSPECIFIED
+                              description: |-
+                                Status of the CLOB.
+
+                                 - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
+                                 - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+                                TODO(DEC-600): update this documentation.
+                                 - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+                                TODO(DEC-600): update this documentation.
+                                 - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+                                TODO(DEC-600): update this documentation.
+                                 - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+                                TODO(DEC-600): update this documentation.
+                            maker_fee_ppm:
+                              type: integer
+                              format: int64
+                              description: The maker fee in parts-per-million.
+                            taker_fee_ppm:
+                              type: integer
+                              format: int64
+                              description: The taker fee in parts-per-million.
+                          description: >-
+                            ClobPair represents a single CLOB pair for a given
+                            product
+
+                            in state.
+                        subticks:
+                          type: string
+                          format: uint64
+                      description: >-
+                        ClobMidPrice contains the mid price of a CLOB pair,
+                        represented by it's ID.
+            description: >-
+              MevNodeToNodeCalculationRequest is a request message used to run
+              the
+
+              MEV node <> node calculation.
       tags:
         - Query
   /dydxprotocol/v4/epochs/epoch_info:
@@ -693,7 +1260,9 @@ paths:
                     id:
                       type: integer
                       format: int64
-                      description: Unique, sequentially-generated.
+                      description: |-
+                        ==== Non-updatable fields. ====
+                        Unique, sequentially-generated.
                     ticker:
                       type: string
                       description: The name of the `Perpetual` (e.g. `BTC-USD`).
@@ -717,18 +1286,27 @@ paths:
                         equivalent to
 
                         a position size of one full coin.
-                    default_funding:
+                    default_funding_ppm:
                       type: integer
                       format: int32
                       description: >-
+                        ==== Governance-updatable fields. ====
+
                         The default funding payment if there is no price
                         premium. In
 
                         parts-per-million.
+                    liquidity_tier:
+                      type: integer
+                      format: int64
+                      description: >-
+                        The liquidity_tier that this perpetual is associated
+                        with.
                     funding_index:
                       type: string
                       format: byte
                       description: |-
+                        / ==== Regularly-updated fields. ====
                         The current index determined by the cumulative all-time
                         history of the funding mechanism. Starts at zero.
                     open_interest:
@@ -737,18 +1315,6 @@ paths:
                       description: |-
                         The total open-interest of the perpetual used for
                         bookkeeping purposes. In base quantums.
-                    initial_margin:
-                      type: integer
-                      format: int64
-                      description: |-
-                        The margin fraction needed to open a position. In
-                        parts-per-million.
-                    maintenance_margin:
-                      type: integer
-                      format: int64
-                      description: |-
-                        The margin fraction required to prevent liquidation. In
-                        parts-per-million.
                   description: Perpetual represents a perpetual on the dYdX exchange.
               pagination:
                 type: object
@@ -878,7 +1444,9 @@ paths:
                   id:
                     type: integer
                     format: int64
-                    description: Unique, sequentially-generated.
+                    description: |-
+                      ==== Non-updatable fields. ====
+                      Unique, sequentially-generated.
                   ticker:
                     type: string
                     description: The name of the `Perpetual` (e.g. `BTC-USD`).
@@ -901,18 +1469,25 @@ paths:
                       to
 
                       a position size of one full coin.
-                  default_funding:
+                  default_funding_ppm:
                     type: integer
                     format: int32
                     description: >-
+                      ==== Governance-updatable fields. ====
+
                       The default funding payment if there is no price premium.
                       In
 
                       parts-per-million.
+                  liquidity_tier:
+                    type: integer
+                    format: int64
+                    description: The liquidity_tier that this perpetual is associated with.
                   funding_index:
                     type: string
                     format: byte
                     description: |-
+                      / ==== Regularly-updated fields. ====
                       The current index determined by the cumulative all-time
                       history of the funding mechanism. Starts at zero.
                   open_interest:
@@ -921,18 +1496,6 @@ paths:
                     description: |-
                       The total open-interest of the perpetual used for
                       bookkeeping purposes. In base quantums.
-                  initial_margin:
-                    type: integer
-                    format: int64
-                    description: |-
-                      The margin fraction needed to open a position. In
-                      parts-per-million.
-                  maintenance_margin:
-                    type: integer
-                    format: int64
-                    description: |-
-                      The margin fraction required to prevent liquidation. In
-                      parts-per-million.
                 description: Perpetual represents a perpetual on the dYdX exchange.
             description: >-
               QueryPerpetualResponse is response type for the Perpetual RPC
@@ -969,15 +1532,15 @@ paths:
         - Query
   /dydxprotocol/prices/market:
     get:
-      summary: Queries a list of Market items.
-      operationId: AllMarkets
+      summary: Queries a list of MarketPrice items.
+      operationId: AllMarketPrices
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              market:
+              market_prices:
                 type: array
                 items:
                   type: object
@@ -985,47 +1548,17 @@ paths:
                     id:
                       type: integer
                       format: int64
-                      description: Unique, sequentially-generated value.
-                    pair:
-                      type: string
                       description: >-
-                        The human readable name of the market pair (e.g.
-                        `BTC-USD` or `BTC-ETH`).
+                        Unique, sequentially-generated value that matches
+                        `MarketParam`.
                     exponent:
                       type: integer
                       format: int32
                       description: >-
-                        Static value. The exponent of the price.
+                        Static value. The exponent of the price. See the comment
+                        on the duplicate
 
-                        For example if `Exponent == -5` then a `Value` of
-                        `1,000,000,000`
-
-                        represents ``$10,000`. Therefore `10 ^ Exponent`
-                        represents the smallest
-
-                        price step (in dollars) that can be recorded.
-                    exchanges:
-                      type: array
-                      items:
-                        type: integer
-                        format: int64
-                      description: The list of exchanges to query to determine the price.
-                    min_exchanges:
-                      type: integer
-                      format: int64
-                      description: >-
-                        The minimum number of exchanges that should be reporting
-                        a live price for
-
-                        a price update to be considered valid.
-                    min_price_change_ppm:
-                      type: integer
-                      format: int64
-                      description: >-
-                        The minimum allowable change in the `Price` value for a
-                        given update.
-
-                        Measured as `1e-6`.
+                        MarketParam field for more information.
                     price:
                       type: string
                       format: uint64
@@ -1035,10 +1568,8 @@ paths:
 
                         never been updated, `>0` otherwise.
                   description: >-
-                    Market defines the price configuration for a single market
-                    relative to
-
-                    quoteCurrency.
+                    MarketPrice is used by the application to store/retrieve
+                    oracle price.
               pagination:
                 type: object
                 properties:
@@ -1067,9 +1598,9 @@ paths:
                            repeated Bar results = 1;
                            PageResponse page = 2;
                    }
-            description: >-
-              QueryAllMarketsResponse is response type for the Query/Params RPC
-              method.
+            description: |-
+              QueryAllMarketPricesResponse is response type for the Query/Params
+              `AllMarketPrices` RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -1153,15 +1684,272 @@ paths:
         - Query
   /dydxprotocol/prices/market/{id}:
     get:
-      summary: Queries a Market by id.
-      operationId: Market
+      summary: Queries a MarketPrice by id.
+      operationId: MarketPrice
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              market:
+              market_price:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: >-
+                      Unique, sequentially-generated value that matches
+                      `MarketParam`.
+                  exponent:
+                    type: integer
+                    format: int32
+                    description: >-
+                      Static value. The exponent of the price. See the comment
+                      on the duplicate
+
+                      MarketParam field for more information.
+                  price:
+                    type: string
+                    format: uint64
+                    description: >-
+                      The variable value that is updated by oracle price
+                      updates. `0` if it has
+
+                      never been updated, `>0` otherwise.
+                description: >-
+                  MarketPrice is used by the application to store/retrieve
+                  oracle price.
+            description: >-
+              QueryMarketPriceResponse is response type for the Query/Params
+              `MarketPrice`
+
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+          format: int64
+      tags:
+        - Query
+  /dydxprotocol/prices/params/market:
+    get:
+      summary: Queries a list of MarketParam items.
+      operationId: AllMarketParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              market_params:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                      description: Unique, sequentially-generated value.
+                    pair:
+                      type: string
+                      description: >-
+                        The human-readable name of the market pair (e.g.
+                        `BTC-USD`).
+                    exponent:
+                      type: integer
+                      format: int32
+                      description: >-
+                        Static value. The exponent of the price.
+
+                        For example if `Exponent == -5` then a `Value` of
+                        `1,000,000,000`
+
+                        represents ``$10,000`. Therefore `10 ^ Exponent`
+                        represents the smallest
+
+                        price step (in dollars) that can be recorded.
+                    min_exchanges:
+                      type: integer
+                      format: int64
+                      description: >-
+                        The minimum number of exchanges that should be reporting
+                        a live price for
+
+                        a price update to be considered valid.
+                    min_price_change_ppm:
+                      type: integer
+                      format: int64
+                      description: >-
+                        The minimum allowable change in `price` value that would
+                        cause a price
+
+                        update on the network. Measured as `1e-6` (parts per
+                        million).
+                    exchange_config_json:
+                      type: string
+                      description: >-
+                        A string of json that encodes the configuration for
+                        resolving the price
+
+                        of this market on various exchanges.
+                  description: >-
+                    MarketParam represents the x/prices configuration for
+                    markets, including
+
+                    representing price values, resolving markets on individual
+                    exchanges, and
+
+                    generating price updates. This configuration is specific to
+                    the quote
+
+                    currency.
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+            description: |-
+              QueryAllMarketParamsResponse is response type for the Query/Params
+              `AllMarketParams` RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /dydxprotocol/prices/params/market/{id}:
+    get:
+      summary: Queries a MarketParam by id.
+      operationId: MarketParam
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              market_param:
                 type: object
                 properties:
                   id:
@@ -1171,8 +1959,8 @@ paths:
                   pair:
                     type: string
                     description: >-
-                      The human readable name of the market pair (e.g. `BTC-USD`
-                      or `BTC-ETH`).
+                      The human-readable name of the market pair (e.g.
+                      `BTC-USD`).
                   exponent:
                     type: integer
                     format: int32
@@ -1186,12 +1974,6 @@ paths:
                       represents the smallest
 
                       price step (in dollars) that can be recorded.
-                  exchanges:
-                    type: array
-                    items:
-                      type: integer
-                      format: int64
-                    description: The list of exchanges to query to determine the price.
                   min_exchanges:
                     type: integer
                     format: int64
@@ -1204,26 +1986,34 @@ paths:
                     type: integer
                     format: int64
                     description: >-
-                      The minimum allowable change in the `Price` value for a
-                      given update.
+                      The minimum allowable change in `price` value that would
+                      cause a price
 
-                      Measured as `1e-6`.
-                  price:
+                      update on the network. Measured as `1e-6` (parts per
+                      million).
+                  exchange_config_json:
                     type: string
-                    format: uint64
                     description: >-
-                      The variable value that is updated by oracle price
-                      updates. `0` if it has
+                      A string of json that encodes the configuration for
+                      resolving the price
 
-                      never been updated, `>0` otherwise.
+                      of this market on various exchanges.
                 description: >-
-                  Market defines the price configuration for a single market
-                  relative to
+                  MarketParam represents the x/prices configuration for markets,
+                  including
 
-                  quoteCurrency.
+                  representing price values, resolving markets on individual
+                  exchanges, and
+
+                  generating price updates. This configuration is specific to
+                  the quote
+
+                  currency.
             description: >-
-              QueryMarketResponse is response type for the Query/Params RPC
-              method.
+              QueryMarketParamResponse is response type for the Query/Params
+              `MarketParams`
+
+              RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -1914,6 +2704,65 @@ paths:
           description: >-
             hash (in hex format) or denom (full denom with ibc prefix) of the
             denomination trace information.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /ibc/apps/transfer/v1/denoms/{denom}/total_escrow:
+    get:
+      summary: >-
+        TotalEscrowForDenom returns the total amount of tokens in escrow based
+        on the denom.
+      operationId: TotalEscrowForDenom
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            description: >-
+              QueryTotalEscrowForDenomResponse is the response type for
+              TotalEscrowForDenom RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: denom
           in: path
           required: true
           type: string
@@ -16843,7 +17692,7 @@ paths:
             form from the metadata.
 
 
-            Since: cosmos-sdk 0.48
+            Since: cosmos-sdk 0.50
           in: query
           required: false
           type: boolean
@@ -17428,6 +18277,141 @@ paths:
           type: string
       tags:
         - Query
+  /cosmos/bank/v1beta1/denoms_metadata_by_query_string:
+    get:
+      summary: DenomsMetadata queries the client metadata of a given coin denomination.
+      operationId: DenomMetadataByQueryString
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              metadata:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  denom_units:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                          description: >-
+                            denom represents the string name of the given denom
+                            unit (e.g uatom).
+                        exponent:
+                          type: integer
+                          format: int64
+                          description: >-
+                            exponent represents power of 10 exponent that one
+                            must
+
+                            raise the base_denom to in order to equal the given
+                            DenomUnit's denom
+
+                            1 denom = 10^exponent base_denom
+
+                            (e.g. with a base_denom of uatom, one can create a
+                            DenomUnit of 'atom' with
+
+                            exponent = 6, thus: 1 atom = 10^6 uatom).
+                        aliases:
+                          type: array
+                          items:
+                            type: string
+                          title: >-
+                            aliases is a list of string aliases for the given
+                            denom
+                      description: |-
+                        DenomUnit represents a struct that describes a given
+                        denomination unit of the basic token.
+                    title: >-
+                      denom_units represents the list of DenomUnit's for a given
+                      coin
+                  base:
+                    type: string
+                    description: >-
+                      base represents the base denom (should be the DenomUnit
+                      with exponent = 0).
+                  display:
+                    type: string
+                    description: |-
+                      display indicates the suggested denom that should be
+                      displayed in clients.
+                  name:
+                    type: string
+                    description: 'Since: cosmos-sdk 0.43'
+                    title: 'name defines the name of the token (eg: Cosmos Atom)'
+                  symbol:
+                    type: string
+                    description: >-
+                      symbol is the token symbol usually shown on exchanges (eg:
+                      ATOM). This can
+
+                      be the same as the display.
+
+
+                      Since: cosmos-sdk 0.43
+                  uri:
+                    type: string
+                    description: >-
+                      URI to a document (on or off-chain) that contains
+                      additional information. Optional.
+
+
+                      Since: cosmos-sdk 0.46
+                  uri_hash:
+                    type: string
+                    description: >-
+                      URIHash is a sha256 hash of a document pointed by URI.
+                      It's used to verify that
+
+                      the document didn't change. Optional.
+
+
+                      Since: cosmos-sdk 0.46
+                description: |-
+                  Metadata represents a struct that describes
+                  a basic token.
+            description: >-
+              QueryDenomMetadataByQueryStringResponse is the response type for
+              the Query/DenomMetadata RPC
+
+              method. Identical with QueryDenomMetadataResponse but receives
+              denom as query string in request.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: denom
+          description: denom is the coin denom to query the metadata for.
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /cosmos/bank/v1beta1/params:
     get:
       summary: Params queries the parameters of x/bank module.
@@ -17439,6 +18423,7 @@ paths:
             type: object
             properties:
               params:
+                description: params provides the parameters of the bank module.
                 type: object
                 properties:
                   send_enabled:
@@ -17469,7 +18454,6 @@ paths:
                       compatibility of genesis files.
                   default_send_enabled:
                     type: boolean
-                description: Params defines the parameters for the bank module.
             description: >-
               QueryParamsResponse defines the response type for querying x/bank
               parameters.
@@ -19702,7 +20686,7 @@ paths:
         - Query
   /cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}:
     get:
-      summary: Allowance returns fee granted to the grantee by the granter.
+      summary: Allowance returns granted allwance to the grantee by the granter.
       operationId: Allowance
       responses:
         '200':
@@ -20010,7 +20994,7 @@ paths:
         - Query
   /cosmos/feegrant/v1beta1/allowances/{grantee}:
     get:
-      summary: Allowances returns all the grants for address.
+      summary: Allowances returns all the grants for the given grantee address.
       operationId: Allowances
       responses:
         '200':
@@ -22429,8 +23413,8 @@ paths:
   /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}:
     get:
       summary: >-
-        Deposit queries single deposit information based proposalID,
-        depositAddr.
+        Deposit queries single deposit information based on proposalID,
+        depositor address.
       operationId: Deposit
       responses:
         '200':
@@ -24185,13 +25169,13 @@ paths:
                         delegator_address:
                           type: string
                           description: >-
-                            delegator_address is the bech32-encoded address of
-                            the delegator.
+                            delegator_address is the encoded address of the
+                            delegator.
                         validator_address:
                           type: string
                           description: >-
-                            validator_address is the bech32-encoded address of
-                            the validator.
+                            validator_address is the encoded address of the
+                            validator.
                         shares:
                           type: string
                           description: shares define the delegation shares received.
@@ -24972,12 +25956,12 @@ paths:
                     delegator_address:
                       type: string
                       description: >-
-                        delegator_address is the bech32-encoded address of the
+                        delegator_address is the encoded address of the
                         delegator.
                     validator_address:
                       type: string
                       description: >-
-                        validator_address is the bech32-encoded address of the
+                        validator_address is the encoded address of the
                         validator.
                     entries:
                       type: array
@@ -28743,13 +29727,13 @@ paths:
                         delegator_address:
                           type: string
                           description: >-
-                            delegator_address is the bech32-encoded address of
-                            the delegator.
+                            delegator_address is the encoded address of the
+                            delegator.
                         validator_address:
                           type: string
                           description: >-
-                            validator_address is the bech32-encoded address of
-                            the validator.
+                            validator_address is the encoded address of the
+                            validator.
                         shares:
                           type: string
                           description: shares define the delegation shares received.
@@ -29078,12 +30062,12 @@ paths:
                       delegator_address:
                         type: string
                         description: >-
-                          delegator_address is the bech32-encoded address of the
+                          delegator_address is the encoded address of the
                           delegator.
                       validator_address:
                         type: string
                         description: >-
-                          validator_address is the bech32-encoded address of the
+                          validator_address is the encoded address of the
                           validator.
                       shares:
                         type: string
@@ -29341,14 +30325,10 @@ paths:
                 properties:
                   delegator_address:
                     type: string
-                    description: >-
-                      delegator_address is the bech32-encoded address of the
-                      delegator.
+                    description: delegator_address is the encoded address of the delegator.
                   validator_address:
                     type: string
-                    description: >-
-                      validator_address is the bech32-encoded address of the
-                      validator.
+                    description: validator_address is the encoded address of the validator.
                   entries:
                     type: array
                     items:
@@ -29627,12 +30607,12 @@ paths:
                     delegator_address:
                       type: string
                       description: >-
-                        delegator_address is the bech32-encoded address of the
+                        delegator_address is the encoded address of the
                         delegator.
                     validator_address:
                       type: string
                       description: >-
-                        validator_address is the bech32-encoded address of the
+                        validator_address is the encoded address of the
                         validator.
                     entries:
                       type: array
@@ -30935,8 +31915,7 @@ paths:
                         Event allows application developers to attach additional
                         information to
 
-                        ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx
-                        and ResponseDeliverTx.
+                        ResponseFinalizeBlock and ResponseCheckTx.
 
                         Later, transactions may be queried using these events.
                     description: >-
@@ -31644,7 +32623,7 @@ paths:
             TxSearch RPC method. The query must be valid.
 
 
-            Since Cosmos SDK 0.48
+            Since cosmos-sdk 0.50
           in: query
           required: false
           type: string
@@ -31957,8 +32936,7 @@ paths:
                         Event allows application developers to attach additional
                         information to
 
-                        ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx
-                        and ResponseDeliverTx.
+                        ResponseFinalizeBlock and ResponseCheckTx.
 
                         Later, transactions may be queried using these events.
                     description: >-
@@ -34504,9 +35482,32 @@ paths:
                                     signature:
                                       type: string
                                       format: byte
+                                      description: >-
+                                        Vote signature by the validator if they
+                                        participated in consensus for the
+
+                                        associated block.
+                                    extension:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension provided by the
+                                        application. Only valid for precommit
+
+                                        messages.
+                                    extension_signature:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension signature by the
+                                        validator if they participated in
+
+                                        consensus for the associated block.
+
+                                        Only valid for precommit messages.
                                   description: >-
-                                    Vote represents a prevote, precommit, or
-                                    commit vote from validators for
+                                    Vote represents a prevote or precommit vote
+                                    from validators for
 
                                     consensus.
                                 vote_b:
@@ -34561,9 +35562,32 @@ paths:
                                     signature:
                                       type: string
                                       format: byte
+                                      description: >-
+                                        Vote signature by the validator if they
+                                        participated in consensus for the
+
+                                        associated block.
+                                    extension:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension provided by the
+                                        application. Only valid for precommit
+
+                                        messages.
+                                    extension_signature:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension signature by the
+                                        validator if they participated in
+
+                                        consensus for the associated block.
+
+                                        Only valid for precommit messages.
                                   description: >-
-                                    Vote represents a prevote, precommit, or
-                                    commit vote from validators for
+                                    Vote represents a prevote or precommit vote
+                                    from validators for
 
                                     consensus.
                                 total_voting_power:
@@ -34709,7 +35733,7 @@ paths:
                                                       - BLOCK_ID_FLAG_NIL
                                                     default: BLOCK_ID_FLAG_UNKNOWN
                                                     title: >-
-                                                      BlockIdFlag indicates which BlcokID the
+                                                      BlockIdFlag indicates which BlockID the
                                                       signature is for
                                                   validator_address:
                                                     type: string
@@ -34862,7 +35886,7 @@ paths:
                                 - BLOCK_ID_FLAG_NIL
                               default: BLOCK_ID_FLAG_UNKNOWN
                               title: >-
-                                BlockIdFlag indicates which BlcokID the
+                                BlockIdFlag indicates which BlockID the
                                 signature is for
                             validator_address:
                               type: string
@@ -35049,9 +36073,32 @@ paths:
                                     signature:
                                       type: string
                                       format: byte
+                                      description: >-
+                                        Vote signature by the validator if they
+                                        participated in consensus for the
+
+                                        associated block.
+                                    extension:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension provided by the
+                                        application. Only valid for precommit
+
+                                        messages.
+                                    extension_signature:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension signature by the
+                                        validator if they participated in
+
+                                        consensus for the associated block.
+
+                                        Only valid for precommit messages.
                                   description: >-
-                                    Vote represents a prevote, precommit, or
-                                    commit vote from validators for
+                                    Vote represents a prevote or precommit vote
+                                    from validators for
 
                                     consensus.
                                 vote_b:
@@ -35106,9 +36153,32 @@ paths:
                                     signature:
                                       type: string
                                       format: byte
+                                      description: >-
+                                        Vote signature by the validator if they
+                                        participated in consensus for the
+
+                                        associated block.
+                                    extension:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension provided by the
+                                        application. Only valid for precommit
+
+                                        messages.
+                                    extension_signature:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension signature by the
+                                        validator if they participated in
+
+                                        consensus for the associated block.
+
+                                        Only valid for precommit messages.
                                   description: >-
-                                    Vote represents a prevote, precommit, or
-                                    commit vote from validators for
+                                    Vote represents a prevote or precommit vote
+                                    from validators for
 
                                     consensus.
                                 total_voting_power:
@@ -35254,7 +36324,7 @@ paths:
                                                       - BLOCK_ID_FLAG_NIL
                                                     default: BLOCK_ID_FLAG_UNKNOWN
                                                     title: >-
-                                                      BlockIdFlag indicates which BlcokID the
+                                                      BlockIdFlag indicates which BlockID the
                                                       signature is for
                                                   validator_address:
                                                     type: string
@@ -35407,7 +36477,7 @@ paths:
                                 - BLOCK_ID_FLAG_NIL
                               default: BLOCK_ID_FLAG_UNKNOWN
                               title: >-
-                                BlockIdFlag indicates which BlcokID the
+                                BlockIdFlag indicates which BlockID the
                                 signature is for
                             validator_address:
                               type: string
@@ -35815,9 +36885,32 @@ paths:
                                     signature:
                                       type: string
                                       format: byte
+                                      description: >-
+                                        Vote signature by the validator if they
+                                        participated in consensus for the
+
+                                        associated block.
+                                    extension:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension provided by the
+                                        application. Only valid for precommit
+
+                                        messages.
+                                    extension_signature:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension signature by the
+                                        validator if they participated in
+
+                                        consensus for the associated block.
+
+                                        Only valid for precommit messages.
                                   description: >-
-                                    Vote represents a prevote, precommit, or
-                                    commit vote from validators for
+                                    Vote represents a prevote or precommit vote
+                                    from validators for
 
                                     consensus.
                                 vote_b:
@@ -35872,9 +36965,32 @@ paths:
                                     signature:
                                       type: string
                                       format: byte
+                                      description: >-
+                                        Vote signature by the validator if they
+                                        participated in consensus for the
+
+                                        associated block.
+                                    extension:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension provided by the
+                                        application. Only valid for precommit
+
+                                        messages.
+                                    extension_signature:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension signature by the
+                                        validator if they participated in
+
+                                        consensus for the associated block.
+
+                                        Only valid for precommit messages.
                                   description: >-
-                                    Vote represents a prevote, precommit, or
-                                    commit vote from validators for
+                                    Vote represents a prevote or precommit vote
+                                    from validators for
 
                                     consensus.
                                 total_voting_power:
@@ -36020,7 +37136,7 @@ paths:
                                                       - BLOCK_ID_FLAG_NIL
                                                     default: BLOCK_ID_FLAG_UNKNOWN
                                                     title: >-
-                                                      BlockIdFlag indicates which BlcokID the
+                                                      BlockIdFlag indicates which BlockID the
                                                       signature is for
                                                   validator_address:
                                                     type: string
@@ -36173,7 +37289,7 @@ paths:
                                 - BLOCK_ID_FLAG_NIL
                               default: BLOCK_ID_FLAG_UNKNOWN
                               title: >-
-                                BlockIdFlag indicates which BlcokID the
+                                BlockIdFlag indicates which BlockID the
                                 signature is for
                             validator_address:
                               type: string
@@ -36360,9 +37476,32 @@ paths:
                                     signature:
                                       type: string
                                       format: byte
+                                      description: >-
+                                        Vote signature by the validator if they
+                                        participated in consensus for the
+
+                                        associated block.
+                                    extension:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension provided by the
+                                        application. Only valid for precommit
+
+                                        messages.
+                                    extension_signature:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension signature by the
+                                        validator if they participated in
+
+                                        consensus for the associated block.
+
+                                        Only valid for precommit messages.
                                   description: >-
-                                    Vote represents a prevote, precommit, or
-                                    commit vote from validators for
+                                    Vote represents a prevote or precommit vote
+                                    from validators for
 
                                     consensus.
                                 vote_b:
@@ -36417,9 +37556,32 @@ paths:
                                     signature:
                                       type: string
                                       format: byte
+                                      description: >-
+                                        Vote signature by the validator if they
+                                        participated in consensus for the
+
+                                        associated block.
+                                    extension:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension provided by the
+                                        application. Only valid for precommit
+
+                                        messages.
+                                    extension_signature:
+                                      type: string
+                                      format: byte
+                                      description: >-
+                                        Vote extension signature by the
+                                        validator if they participated in
+
+                                        consensus for the associated block.
+
+                                        Only valid for precommit messages.
                                   description: >-
-                                    Vote represents a prevote, precommit, or
-                                    commit vote from validators for
+                                    Vote represents a prevote or precommit vote
+                                    from validators for
 
                                     consensus.
                                 total_voting_power:
@@ -36565,7 +37727,7 @@ paths:
                                                       - BLOCK_ID_FLAG_NIL
                                                     default: BLOCK_ID_FLAG_UNKNOWN
                                                     title: >-
-                                                      BlockIdFlag indicates which BlcokID the
+                                                      BlockIdFlag indicates which BlockID the
                                                       signature is for
                                                   validator_address:
                                                     type: string
@@ -36718,7 +37880,7 @@ paths:
                                 - BLOCK_ID_FLAG_NIL
                               default: BLOCK_ID_FLAG_UNKNOWN
                               title: >-
-                                BlockIdFlag indicates which BlcokID the
+                                BlockIdFlag indicates which BlockID the
                                 signature is for
                             validator_address:
                               type: string
@@ -38512,6 +39674,112 @@ definitions:
       is_liquidatable:
         type: boolean
     description: Result returns whether a subaccount should be liquidated.
+  dydxprotocol.clob.ClobMidPrice:
+    type: object
+    properties:
+      clob_pair:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            description: >-
+              ID of the orderbook that stores all resting liquidity for this
+              CLOB.
+          perpetual_clob_metadata:
+            type: object
+            properties:
+              perpetual_id:
+                type: integer
+                format: int64
+                description: Id of the Perpetual the CLOB allows trading of.
+            description: |-
+              PerpetualClobMetadata contains metadata for a `ClobPair`
+              representing a Perpetual product.
+          spot_clob_metadata:
+            type: object
+            properties:
+              base_asset_id:
+                type: integer
+                format: int64
+                description: Id of the base Asset in the trading pair.
+              quote_asset_id:
+                type: integer
+                format: int64
+                description: Id of the quote Asset in the trading pair.
+            description: |-
+              PerpetualClobMetadata contains metadata for a `ClobPair`
+              representing a Spot product.
+          step_base_quantums:
+            type: string
+            format: uint64
+            description: >-
+              Minimum increment in the size of orders on the CLOB, in base
+              quantums.
+          subticks_per_tick:
+            type: integer
+            format: int64
+            description: >-
+              Defines the tick size of the orderbook by defining how many
+              subticks
+
+              are in one tick. That is, the subticks of any valid order must be
+              a
+
+              multiple of this value. Generally this value should start `>=
+              100`to
+
+              allow room for decreasing it.
+          quantum_conversion_exponent:
+            type: integer
+            format: int32
+            description: >-
+              `10^Exponent` gives the number of QuoteQuantums traded per
+              BaseQuantum
+
+              per Subtick.
+          min_order_base_quantums:
+            type: string
+            format: uint64
+            description: Minimum size of an order on the CLOB, in base quantums.
+          status:
+            type: string
+            enum:
+              - STATUS_UNSPECIFIED
+              - STATUS_ACTIVE
+              - STATUS_PAUSED
+              - STATUS_CANCEL_ONLY
+              - STATUS_POST_ONLY
+            default: STATUS_UNSPECIFIED
+            description: |-
+              Status of the CLOB.
+
+               - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
+               - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+              TODO(DEC-600): update this documentation.
+               - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+              TODO(DEC-600): update this documentation.
+               - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+              TODO(DEC-600): update this documentation.
+               - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+              TODO(DEC-600): update this documentation.
+          maker_fee_ppm:
+            type: integer
+            format: int64
+            description: The maker fee in parts-per-million.
+          taker_fee_ppm:
+            type: integer
+            format: int64
+            description: The taker fee in parts-per-million.
+        description: |-
+          ClobPair represents a single CLOB pair for a given product
+          in state.
+      subticks:
+        type: string
+        format: uint64
+    description: >-
+      ClobMidPrice contains the mid price of a CLOB pair, represented by it's
+      ID.
   dydxprotocol.clob.ClobPair:
     type: object
     properties:
@@ -38618,6 +39886,814 @@ definitions:
       TODO(DEC-600): update this documentation.
        - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
       TODO(DEC-600): update this documentation.
+  dydxprotocol.clob.EquityTierLimit:
+    type: object
+    properties:
+      usd_tnc_required:
+        type: string
+        format: byte
+        description: |-
+          The absolute size of total net collateral in base quantums
+          of equity required in USD equivalent.
+      limit:
+        type: integer
+        format: int64
+        description: What the limit is for `usd_tnc_required`.
+    description: Defines an equity tier limit.
+  dydxprotocol.clob.EquityTierLimitConfiguration:
+    type: object
+    properties:
+      short_term_order_equity_tiers:
+        type: array
+        items:
+          type: object
+          properties:
+            usd_tnc_required:
+              type: string
+              format: byte
+              description: |-
+                The absolute size of total net collateral in base quantums
+                of equity required in USD equivalent.
+            limit:
+              type: integer
+              format: int64
+              description: What the limit is for `usd_tnc_required`.
+          description: Defines an equity tier limit.
+        description: |-
+          How many short term stateful orders are allowed per equity tier.
+          Specifying 0 values disables this limit.
+      stateful_order_equity_tiers:
+        type: array
+        items:
+          type: object
+          properties:
+            usd_tnc_required:
+              type: string
+              format: byte
+              description: |-
+                The absolute size of total net collateral in base quantums
+                of equity required in USD equivalent.
+            limit:
+              type: integer
+              format: int64
+              description: What the limit is for `usd_tnc_required`.
+          description: Defines an equity tier limit.
+        description: |-
+          How many open stateful orders are allowed per equity tier.
+          Specifying 0 values disables this limit.
+    description: |-
+      Defines the set of equity tiers to limit how many open orders
+      a subaccount is allowed to have.
+  dydxprotocol.clob.MEVLiquidationMatch:
+    type: object
+    properties:
+      liquidated_subaccount_id:
+        type: object
+        properties:
+          owner:
+            type: string
+            description: The address of the wallet that owns this subaccount.
+          number:
+            type: integer
+            format: int64
+            description: |-
+              < 128 Since 128 should be enough to start and it fits within
+              1 Byte (1 Bit needed to indicate that the first byte is the last).
+        description: SubaccountId defines a unique identifier for a Subaccount.
+      insurance_fund_delta_quote_quantums:
+        type: string
+        format: int64
+      maker_order_subaccount_id:
+        type: object
+        properties:
+          owner:
+            type: string
+            description: The address of the wallet that owns this subaccount.
+          number:
+            type: integer
+            format: int64
+            description: |-
+              < 128 Since 128 should be enough to start and it fits within
+              1 Byte (1 Bit needed to indicate that the first byte is the last).
+        description: SubaccountId defines a unique identifier for a Subaccount.
+      maker_order_subticks:
+        type: string
+        format: uint64
+      maker_order_is_buy:
+        type: boolean
+      maker_fee_ppm:
+        type: integer
+        format: int32
+      clob_pair_id:
+        type: integer
+        format: int64
+      fill_amount:
+        type: string
+        format: uint64
+    description: |-
+      MEVLiquidationMatch represents all necessary data to calculate MEV for a
+      liquidation.
+  dydxprotocol.clob.MEVMatch:
+    type: object
+    properties:
+      taker_order_subaccount_id:
+        type: object
+        properties:
+          owner:
+            type: string
+            description: The address of the wallet that owns this subaccount.
+          number:
+            type: integer
+            format: int64
+            description: |-
+              < 128 Since 128 should be enough to start and it fits within
+              1 Byte (1 Bit needed to indicate that the first byte is the last).
+        description: SubaccountId defines a unique identifier for a Subaccount.
+      taker_fee_ppm:
+        type: integer
+        format: int32
+      maker_order_subaccount_id:
+        type: object
+        properties:
+          owner:
+            type: string
+            description: The address of the wallet that owns this subaccount.
+          number:
+            type: integer
+            format: int64
+            description: |-
+              < 128 Since 128 should be enough to start and it fits within
+              1 Byte (1 Bit needed to indicate that the first byte is the last).
+        description: SubaccountId defines a unique identifier for a Subaccount.
+      maker_order_subticks:
+        type: string
+        format: uint64
+      maker_order_is_buy:
+        type: boolean
+      maker_fee_ppm:
+        type: integer
+        format: int32
+      clob_pair_id:
+        type: integer
+        format: int64
+      fill_amount:
+        type: string
+        format: uint64
+    description: >-
+      MEVMatch represents all necessary data to calculate MEV for a regular
+      match.
+  dydxprotocol.clob.MevNodeToNodeCalculationRequest:
+    type: object
+    properties:
+      block_proposer_matches:
+        description: >-
+          Represents the matches on the "block proposer". Note that this field
+
+          does not need to be the actual block proposer's matches for a block,
+          since
+
+          the MEV calculation logic is run with this nodes matches as the "block
+
+          proposer" matches.
+        type: object
+        properties:
+          matches:
+            type: array
+            items:
+              type: object
+              properties:
+                taker_order_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                taker_fee_ppm:
+                  type: integer
+                  format: int32
+                maker_order_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                maker_order_subticks:
+                  type: string
+                  format: uint64
+                maker_order_is_buy:
+                  type: boolean
+                maker_fee_ppm:
+                  type: integer
+                  format: int32
+                clob_pair_id:
+                  type: integer
+                  format: int64
+                fill_amount:
+                  type: string
+                  format: uint64
+              description: >-
+                MEVMatch represents all necessary data to calculate MEV for a
+                regular match.
+          liquidation_matches:
+            type: array
+            items:
+              type: object
+              properties:
+                liquidated_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                insurance_fund_delta_quote_quantums:
+                  type: string
+                  format: int64
+                maker_order_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                maker_order_subticks:
+                  type: string
+                  format: uint64
+                maker_order_is_buy:
+                  type: boolean
+                maker_fee_ppm:
+                  type: integer
+                  format: int32
+                clob_pair_id:
+                  type: integer
+                  format: int64
+                fill_amount:
+                  type: string
+                  format: uint64
+              description: >-
+                MEVLiquidationMatch represents all necessary data to calculate
+                MEV for a
+
+                liquidation.
+      validator_mev_metrics:
+        description: Represents the matches and mid-prices on the validator.
+        type: object
+        properties:
+          validator_mev_matches:
+            type: object
+            properties:
+              matches:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    taker_order_subaccount_id:
+                      type: object
+                      properties:
+                        owner:
+                          type: string
+                          description: The address of the wallet that owns this subaccount.
+                        number:
+                          type: integer
+                          format: int64
+                          description: >-
+                            < 128 Since 128 should be enough to start and it
+                            fits within
+
+                            1 Byte (1 Bit needed to indicate that the first byte
+                            is the last).
+                      description: >-
+                        SubaccountId defines a unique identifier for a
+                        Subaccount.
+                    taker_fee_ppm:
+                      type: integer
+                      format: int32
+                    maker_order_subaccount_id:
+                      type: object
+                      properties:
+                        owner:
+                          type: string
+                          description: The address of the wallet that owns this subaccount.
+                        number:
+                          type: integer
+                          format: int64
+                          description: >-
+                            < 128 Since 128 should be enough to start and it
+                            fits within
+
+                            1 Byte (1 Bit needed to indicate that the first byte
+                            is the last).
+                      description: >-
+                        SubaccountId defines a unique identifier for a
+                        Subaccount.
+                    maker_order_subticks:
+                      type: string
+                      format: uint64
+                    maker_order_is_buy:
+                      type: boolean
+                    maker_fee_ppm:
+                      type: integer
+                      format: int32
+                    clob_pair_id:
+                      type: integer
+                      format: int64
+                    fill_amount:
+                      type: string
+                      format: uint64
+                  description: >-
+                    MEVMatch represents all necessary data to calculate MEV for
+                    a regular match.
+              liquidation_matches:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    liquidated_subaccount_id:
+                      type: object
+                      properties:
+                        owner:
+                          type: string
+                          description: The address of the wallet that owns this subaccount.
+                        number:
+                          type: integer
+                          format: int64
+                          description: >-
+                            < 128 Since 128 should be enough to start and it
+                            fits within
+
+                            1 Byte (1 Bit needed to indicate that the first byte
+                            is the last).
+                      description: >-
+                        SubaccountId defines a unique identifier for a
+                        Subaccount.
+                    insurance_fund_delta_quote_quantums:
+                      type: string
+                      format: int64
+                    maker_order_subaccount_id:
+                      type: object
+                      properties:
+                        owner:
+                          type: string
+                          description: The address of the wallet that owns this subaccount.
+                        number:
+                          type: integer
+                          format: int64
+                          description: >-
+                            < 128 Since 128 should be enough to start and it
+                            fits within
+
+                            1 Byte (1 Bit needed to indicate that the first byte
+                            is the last).
+                      description: >-
+                        SubaccountId defines a unique identifier for a
+                        Subaccount.
+                    maker_order_subticks:
+                      type: string
+                      format: uint64
+                    maker_order_is_buy:
+                      type: boolean
+                    maker_fee_ppm:
+                      type: integer
+                      format: int32
+                    clob_pair_id:
+                      type: integer
+                      format: int64
+                    fill_amount:
+                      type: string
+                      format: uint64
+                  description: >-
+                    MEVLiquidationMatch represents all necessary data to
+                    calculate MEV for a
+
+                    liquidation.
+            description: >-
+              ValidatorMevMatches contains all matches from the validator's
+              local
+
+              operations queue.
+          clob_mid_prices:
+            type: array
+            items:
+              type: object
+              properties:
+                clob_pair:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                      description: >-
+                        ID of the orderbook that stores all resting liquidity
+                        for this CLOB.
+                    perpetual_clob_metadata:
+                      type: object
+                      properties:
+                        perpetual_id:
+                          type: integer
+                          format: int64
+                          description: Id of the Perpetual the CLOB allows trading of.
+                      description: |-
+                        PerpetualClobMetadata contains metadata for a `ClobPair`
+                        representing a Perpetual product.
+                    spot_clob_metadata:
+                      type: object
+                      properties:
+                        base_asset_id:
+                          type: integer
+                          format: int64
+                          description: Id of the base Asset in the trading pair.
+                        quote_asset_id:
+                          type: integer
+                          format: int64
+                          description: Id of the quote Asset in the trading pair.
+                      description: |-
+                        PerpetualClobMetadata contains metadata for a `ClobPair`
+                        representing a Spot product.
+                    step_base_quantums:
+                      type: string
+                      format: uint64
+                      description: >-
+                        Minimum increment in the size of orders on the CLOB, in
+                        base quantums.
+                    subticks_per_tick:
+                      type: integer
+                      format: int64
+                      description: >-
+                        Defines the tick size of the orderbook by defining how
+                        many subticks
+
+                        are in one tick. That is, the subticks of any valid
+                        order must be a
+
+                        multiple of this value. Generally this value should
+                        start `>= 100`to
+
+                        allow room for decreasing it.
+                    quantum_conversion_exponent:
+                      type: integer
+                      format: int32
+                      description: >-
+                        `10^Exponent` gives the number of QuoteQuantums traded
+                        per BaseQuantum
+
+                        per Subtick.
+                    min_order_base_quantums:
+                      type: string
+                      format: uint64
+                      description: Minimum size of an order on the CLOB, in base quantums.
+                    status:
+                      type: string
+                      enum:
+                        - STATUS_UNSPECIFIED
+                        - STATUS_ACTIVE
+                        - STATUS_PAUSED
+                        - STATUS_CANCEL_ONLY
+                        - STATUS_POST_ONLY
+                      default: STATUS_UNSPECIFIED
+                      description: |-
+                        Status of the CLOB.
+
+                         - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
+                         - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+                        TODO(DEC-600): update this documentation.
+                         - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+                        TODO(DEC-600): update this documentation.
+                         - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+                        TODO(DEC-600): update this documentation.
+                         - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+                        TODO(DEC-600): update this documentation.
+                    maker_fee_ppm:
+                      type: integer
+                      format: int64
+                      description: The maker fee in parts-per-million.
+                    taker_fee_ppm:
+                      type: integer
+                      format: int64
+                      description: The taker fee in parts-per-million.
+                  description: |-
+                    ClobPair represents a single CLOB pair for a given product
+                    in state.
+                subticks:
+                  type: string
+                  format: uint64
+              description: >-
+                ClobMidPrice contains the mid price of a CLOB pair, represented
+                by it's ID.
+    description: |-
+      MevNodeToNodeCalculationRequest is a request message used to run the
+      MEV node <> node calculation.
+  dydxprotocol.clob.MevNodeToNodeCalculationResponse:
+    type: object
+    properties:
+      results:
+        type: array
+        items:
+          type: object
+          properties:
+            clob_pair_id:
+              type: integer
+              format: int64
+            mev:
+              type: number
+              format: float
+            volume:
+              type: string
+              format: uint64
+          description: >-
+            MevAndVolumePerClob contains information about the MEV and volume
+            per CLOB.
+    description: |-
+      MevNodeToNodeCalculationResponse is a response message that contains the
+      MEV node <> node calculation result.
+  dydxprotocol.clob.MevNodeToNodeCalculationResponse.MevAndVolumePerClob:
+    type: object
+    properties:
+      clob_pair_id:
+        type: integer
+        format: int64
+      mev:
+        type: number
+        format: float
+      volume:
+        type: string
+        format: uint64
+    description: >-
+      MevAndVolumePerClob contains information about the MEV and volume per
+      CLOB.
+  dydxprotocol.clob.MevNodeToNodeMetrics:
+    type: object
+    properties:
+      validator_mev_matches:
+        type: object
+        properties:
+          matches:
+            type: array
+            items:
+              type: object
+              properties:
+                taker_order_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                taker_fee_ppm:
+                  type: integer
+                  format: int32
+                maker_order_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                maker_order_subticks:
+                  type: string
+                  format: uint64
+                maker_order_is_buy:
+                  type: boolean
+                maker_fee_ppm:
+                  type: integer
+                  format: int32
+                clob_pair_id:
+                  type: integer
+                  format: int64
+                fill_amount:
+                  type: string
+                  format: uint64
+              description: >-
+                MEVMatch represents all necessary data to calculate MEV for a
+                regular match.
+          liquidation_matches:
+            type: array
+            items:
+              type: object
+              properties:
+                liquidated_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                insurance_fund_delta_quote_quantums:
+                  type: string
+                  format: int64
+                maker_order_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                maker_order_subticks:
+                  type: string
+                  format: uint64
+                maker_order_is_buy:
+                  type: boolean
+                maker_fee_ppm:
+                  type: integer
+                  format: int32
+                clob_pair_id:
+                  type: integer
+                  format: int64
+                fill_amount:
+                  type: string
+                  format: uint64
+              description: >-
+                MEVLiquidationMatch represents all necessary data to calculate
+                MEV for a
+
+                liquidation.
+        description: |-
+          ValidatorMevMatches contains all matches from the validator's local
+          operations queue.
+      clob_mid_prices:
+        type: array
+        items:
+          type: object
+          properties:
+            clob_pair:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  description: >-
+                    ID of the orderbook that stores all resting liquidity for
+                    this CLOB.
+                perpetual_clob_metadata:
+                  type: object
+                  properties:
+                    perpetual_id:
+                      type: integer
+                      format: int64
+                      description: Id of the Perpetual the CLOB allows trading of.
+                  description: |-
+                    PerpetualClobMetadata contains metadata for a `ClobPair`
+                    representing a Perpetual product.
+                spot_clob_metadata:
+                  type: object
+                  properties:
+                    base_asset_id:
+                      type: integer
+                      format: int64
+                      description: Id of the base Asset in the trading pair.
+                    quote_asset_id:
+                      type: integer
+                      format: int64
+                      description: Id of the quote Asset in the trading pair.
+                  description: |-
+                    PerpetualClobMetadata contains metadata for a `ClobPair`
+                    representing a Spot product.
+                step_base_quantums:
+                  type: string
+                  format: uint64
+                  description: >-
+                    Minimum increment in the size of orders on the CLOB, in base
+                    quantums.
+                subticks_per_tick:
+                  type: integer
+                  format: int64
+                  description: >-
+                    Defines the tick size of the orderbook by defining how many
+                    subticks
+
+                    are in one tick. That is, the subticks of any valid order
+                    must be a
+
+                    multiple of this value. Generally this value should start
+                    `>= 100`to
+
+                    allow room for decreasing it.
+                quantum_conversion_exponent:
+                  type: integer
+                  format: int32
+                  description: >-
+                    `10^Exponent` gives the number of QuoteQuantums traded per
+                    BaseQuantum
+
+                    per Subtick.
+                min_order_base_quantums:
+                  type: string
+                  format: uint64
+                  description: Minimum size of an order on the CLOB, in base quantums.
+                status:
+                  type: string
+                  enum:
+                    - STATUS_UNSPECIFIED
+                    - STATUS_ACTIVE
+                    - STATUS_PAUSED
+                    - STATUS_CANCEL_ONLY
+                    - STATUS_POST_ONLY
+                  default: STATUS_UNSPECIFIED
+                  description: |-
+                    Status of the CLOB.
+
+                     - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
+                     - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+                    TODO(DEC-600): update this documentation.
+                     - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+                    TODO(DEC-600): update this documentation.
+                     - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+                    TODO(DEC-600): update this documentation.
+                     - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+                    TODO(DEC-600): update this documentation.
+                maker_fee_ppm:
+                  type: integer
+                  format: int64
+                  description: The maker fee in parts-per-million.
+                taker_fee_ppm:
+                  type: integer
+                  format: int64
+                  description: The taker fee in parts-per-million.
+              description: |-
+                ClobPair represents a single CLOB pair for a given product
+                in state.
+            subticks:
+              type: string
+              format: uint64
+          description: >-
+            ClobMidPrice contains the mid price of a CLOB pair, represented by
+            it's ID.
+    description: |-
+      MevNodeToNodeMetrics is a data structure for encapsulating all MEV node <>
+      node metrics.
   dydxprotocol.clob.PerpetualClobMetadata:
     type: object
     properties:
@@ -38756,7 +40832,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-    description: QueryClobPairAllResponse is request type for the QueryRPC method.
+    description: QueryClobPairAllResponse is response type for the ClobPairAll method.
   dydxprotocol.clob.QueryClobPairResponse:
     type: object
     properties:
@@ -38857,7 +40933,59 @@ definitions:
         description: |-
           ClobPair represents a single CLOB pair for a given product
           in state.
-    description: QueryClobPairResponse is response type for the QueryRPC method.
+    description: QueryClobPairResponse is response type for the ClobPair method.
+  dydxprotocol.clob.QueryEquityTierLimitConfigurationResponse:
+    type: object
+    properties:
+      equity_tier_limit_config:
+        type: object
+        properties:
+          short_term_order_equity_tiers:
+            type: array
+            items:
+              type: object
+              properties:
+                usd_tnc_required:
+                  type: string
+                  format: byte
+                  description: |-
+                    The absolute size of total net collateral in base quantums
+                    of equity required in USD equivalent.
+                limit:
+                  type: integer
+                  format: int64
+                  description: What the limit is for `usd_tnc_required`.
+              description: Defines an equity tier limit.
+            description: |-
+              How many short term stateful orders are allowed per equity tier.
+              Specifying 0 values disables this limit.
+          stateful_order_equity_tiers:
+            type: array
+            items:
+              type: object
+              properties:
+                usd_tnc_required:
+                  type: string
+                  format: byte
+                  description: |-
+                    The absolute size of total net collateral in base quantums
+                    of equity required in USD equivalent.
+                limit:
+                  type: integer
+                  format: int64
+                  description: What the limit is for `usd_tnc_required`.
+              description: Defines an equity tier limit.
+            description: |-
+              How many open stateful orders are allowed per equity tier.
+              Specifying 0 values disables this limit.
+        description: |-
+          Defines the set of equity tiers to limit how many open orders
+          a subaccount is allowed to have.
+    description: >-
+      QueryEquityTierLimitConfigurationResponse is a response message that
+      contains
+
+      the EquityTierLimitConfiguration.
   dydxprotocol.clob.SpotClobMetadata:
     type: object
     properties:
@@ -38872,6 +41000,124 @@ definitions:
     description: |-
       PerpetualClobMetadata contains metadata for a `ClobPair`
       representing a Spot product.
+  dydxprotocol.clob.ValidatorMevMatches:
+    type: object
+    properties:
+      matches:
+        type: array
+        items:
+          type: object
+          properties:
+            taker_order_subaccount_id:
+              type: object
+              properties:
+                owner:
+                  type: string
+                  description: The address of the wallet that owns this subaccount.
+                number:
+                  type: integer
+                  format: int64
+                  description: >-
+                    < 128 Since 128 should be enough to start and it fits within
+
+                    1 Byte (1 Bit needed to indicate that the first byte is the
+                    last).
+              description: SubaccountId defines a unique identifier for a Subaccount.
+            taker_fee_ppm:
+              type: integer
+              format: int32
+            maker_order_subaccount_id:
+              type: object
+              properties:
+                owner:
+                  type: string
+                  description: The address of the wallet that owns this subaccount.
+                number:
+                  type: integer
+                  format: int64
+                  description: >-
+                    < 128 Since 128 should be enough to start and it fits within
+
+                    1 Byte (1 Bit needed to indicate that the first byte is the
+                    last).
+              description: SubaccountId defines a unique identifier for a Subaccount.
+            maker_order_subticks:
+              type: string
+              format: uint64
+            maker_order_is_buy:
+              type: boolean
+            maker_fee_ppm:
+              type: integer
+              format: int32
+            clob_pair_id:
+              type: integer
+              format: int64
+            fill_amount:
+              type: string
+              format: uint64
+          description: >-
+            MEVMatch represents all necessary data to calculate MEV for a
+            regular match.
+      liquidation_matches:
+        type: array
+        items:
+          type: object
+          properties:
+            liquidated_subaccount_id:
+              type: object
+              properties:
+                owner:
+                  type: string
+                  description: The address of the wallet that owns this subaccount.
+                number:
+                  type: integer
+                  format: int64
+                  description: >-
+                    < 128 Since 128 should be enough to start and it fits within
+
+                    1 Byte (1 Bit needed to indicate that the first byte is the
+                    last).
+              description: SubaccountId defines a unique identifier for a Subaccount.
+            insurance_fund_delta_quote_quantums:
+              type: string
+              format: int64
+            maker_order_subaccount_id:
+              type: object
+              properties:
+                owner:
+                  type: string
+                  description: The address of the wallet that owns this subaccount.
+                number:
+                  type: integer
+                  format: int64
+                  description: >-
+                    < 128 Since 128 should be enough to start and it fits within
+
+                    1 Byte (1 Bit needed to indicate that the first byte is the
+                    last).
+              description: SubaccountId defines a unique identifier for a Subaccount.
+            maker_order_subticks:
+              type: string
+              format: uint64
+            maker_order_is_buy:
+              type: boolean
+            maker_fee_ppm:
+              type: integer
+              format: int32
+            clob_pair_id:
+              type: integer
+              format: int64
+            fill_amount:
+              type: string
+              format: uint64
+          description: >-
+            MEVLiquidationMatch represents all necessary data to calculate MEV
+            for a
+
+            liquidation.
+    description: |-
+      ValidatorMevMatches contains all matches from the validator's local
+      operations queue.
   dydxprotocol.subaccounts.SubaccountId:
     type: object
     properties:
@@ -39465,7 +41711,9 @@ definitions:
       id:
         type: integer
         format: int64
-        description: Unique, sequentially-generated.
+        description: |-
+          ==== Non-updatable fields. ====
+          Unique, sequentially-generated.
       ticker:
         type: string
         description: The name of the `Perpetual` (e.g. `BTC-USD`).
@@ -39484,16 +41732,22 @@ definitions:
           to a full coin. For example, if `AtomicResolution = -8`
           then a `PerpetualPosition` with `size = 1e8` is equivalent to
           a position size of one full coin.
-      default_funding:
+      default_funding_ppm:
         type: integer
         format: int32
         description: |-
+          ==== Governance-updatable fields. ====
           The default funding payment if there is no price premium. In
           parts-per-million.
+      liquidity_tier:
+        type: integer
+        format: int64
+        description: The liquidity_tier that this perpetual is associated with.
       funding_index:
         type: string
         format: byte
         description: |-
+          / ==== Regularly-updated fields. ====
           The current index determined by the cumulative all-time
           history of the funding mechanism. Starts at zero.
       open_interest:
@@ -39502,18 +41756,6 @@ definitions:
         description: |-
           The total open-interest of the perpetual used for
           bookkeeping purposes. In base quantums.
-      initial_margin:
-        type: integer
-        format: int64
-        description: |-
-          The margin fraction needed to open a position. In
-          parts-per-million.
-      maintenance_margin:
-        type: integer
-        format: int64
-        description: |-
-          The margin fraction required to prevent liquidation. In
-          parts-per-million.
     description: Perpetual represents a perpetual on the dYdX exchange.
   dydxprotocol.perpetuals.QueryAllPerpetualsResponse:
     type: object
@@ -39526,7 +41768,9 @@ definitions:
             id:
               type: integer
               format: int64
-              description: Unique, sequentially-generated.
+              description: |-
+                ==== Non-updatable fields. ====
+                Unique, sequentially-generated.
             ticker:
               type: string
               description: The name of the `Perpetual` (e.g. `BTC-USD`).
@@ -39545,16 +41789,22 @@ definitions:
                 to a full coin. For example, if `AtomicResolution = -8`
                 then a `PerpetualPosition` with `size = 1e8` is equivalent to
                 a position size of one full coin.
-            default_funding:
+            default_funding_ppm:
               type: integer
               format: int32
               description: |-
+                ==== Governance-updatable fields. ====
                 The default funding payment if there is no price premium. In
                 parts-per-million.
+            liquidity_tier:
+              type: integer
+              format: int64
+              description: The liquidity_tier that this perpetual is associated with.
             funding_index:
               type: string
               format: byte
               description: |-
+                / ==== Regularly-updated fields. ====
                 The current index determined by the cumulative all-time
                 history of the funding mechanism. Starts at zero.
             open_interest:
@@ -39563,18 +41813,6 @@ definitions:
               description: |-
                 The total open-interest of the perpetual used for
                 bookkeeping purposes. In base quantums.
-            initial_margin:
-              type: integer
-              format: int64
-              description: |-
-                The margin fraction needed to open a position. In
-                parts-per-million.
-            maintenance_margin:
-              type: integer
-              format: int64
-              description: |-
-                The margin fraction required to prevent liquidation. In
-                parts-per-million.
           description: Perpetual represents a perpetual on the dYdX exchange.
       pagination:
         type: object
@@ -39614,7 +41852,9 @@ definitions:
           id:
             type: integer
             format: int64
-            description: Unique, sequentially-generated.
+            description: |-
+              ==== Non-updatable fields. ====
+              Unique, sequentially-generated.
           ticker:
             type: string
             description: The name of the `Perpetual` (e.g. `BTC-USD`).
@@ -39633,16 +41873,22 @@ definitions:
               to a full coin. For example, if `AtomicResolution = -8`
               then a `PerpetualPosition` with `size = 1e8` is equivalent to
               a position size of one full coin.
-          default_funding:
+          default_funding_ppm:
             type: integer
             format: int32
             description: |-
+              ==== Governance-updatable fields. ====
               The default funding payment if there is no price premium. In
               parts-per-million.
+          liquidity_tier:
+            type: integer
+            format: int64
+            description: The liquidity_tier that this perpetual is associated with.
           funding_index:
             type: string
             format: byte
             description: |-
+              / ==== Regularly-updated fields. ====
               The current index determined by the cumulative all-time
               history of the funding mechanism. Starts at zero.
           open_interest:
@@ -39651,21 +41897,9 @@ definitions:
             description: |-
               The total open-interest of the perpetual used for
               bookkeeping purposes. In base quantums.
-          initial_margin:
-            type: integer
-            format: int64
-            description: |-
-              The margin fraction needed to open a position. In
-              parts-per-million.
-          maintenance_margin:
-            type: integer
-            format: int64
-            description: |-
-              The margin fraction required to prevent liquidation. In
-              parts-per-million.
         description: Perpetual represents a perpetual on the dYdX exchange.
     description: QueryPerpetualResponse is response type for the Perpetual RPC method.
-  dydxprotocol.prices.Market:
+  dydxprotocol.prices.MarketParam:
     type: object
     properties:
       id:
@@ -39674,9 +41908,7 @@ definitions:
         description: Unique, sequentially-generated value.
       pair:
         type: string
-        description: >-
-          The human readable name of the market pair (e.g. `BTC-USD` or
-          `BTC-ETH`).
+        description: The human-readable name of the market pair (e.g. `BTC-USD`).
       exponent:
         type: integer
         format: int32
@@ -39689,12 +41921,6 @@ definitions:
           smallest
 
           price step (in dollars) that can be recorded.
-      exchanges:
-        type: array
-        items:
-          type: integer
-          format: int64
-        description: The list of exchanges to query to determine the price.
       min_exchanges:
         type: integer
         format: int64
@@ -39707,8 +41933,35 @@ definitions:
         type: integer
         format: int64
         description: |-
-          The minimum allowable change in the `Price` value for a given update.
-          Measured as `1e-6`.
+          The minimum allowable change in `price` value that would cause a price
+          update on the network. Measured as `1e-6` (parts per million).
+      exchange_config_json:
+        type: string
+        description: >-
+          A string of json that encodes the configuration for resolving the
+          price
+
+          of this market on various exchanges.
+    description: |-
+      MarketParam represents the x/prices configuration for markets, including
+      representing price values, resolving markets on individual exchanges, and
+      generating price updates. This configuration is specific to the quote
+      currency.
+  dydxprotocol.prices.MarketPrice:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Unique, sequentially-generated value that matches `MarketParam`.
+      exponent:
+        type: integer
+        format: int32
+        description: >-
+          Static value. The exponent of the price. See the comment on the
+          duplicate
+
+          MarketParam field for more information.
       price:
         type: string
         format: uint64
@@ -39717,13 +41970,11 @@ definitions:
           has
 
           never been updated, `>0` otherwise.
-    description: |-
-      Market defines the price configuration for a single market relative to
-      quoteCurrency.
-  dydxprotocol.prices.QueryAllMarketsResponse:
+    description: MarketPrice is used by the application to store/retrieve oracle price.
+  dydxprotocol.prices.QueryAllMarketParamsResponse:
     type: object
     properties:
-      market:
+      market_params:
         type: array
         items:
           type: object
@@ -39734,9 +41985,7 @@ definitions:
               description: Unique, sequentially-generated value.
             pair:
               type: string
-              description: >-
-                The human readable name of the market pair (e.g. `BTC-USD` or
-                `BTC-ETH`).
+              description: The human-readable name of the market pair (e.g. `BTC-USD`).
             exponent:
               type: integer
               format: int32
@@ -39750,12 +41999,6 @@ definitions:
                 smallest
 
                 price step (in dollars) that can be recorded.
-            exchanges:
-              type: array
-              items:
-                type: integer
-                format: int64
-              description: The list of exchanges to query to determine the price.
             min_exchanges:
               type: integer
               format: int64
@@ -39768,23 +42011,28 @@ definitions:
               type: integer
               format: int64
               description: >-
-                The minimum allowable change in the `Price` value for a given
-                update.
+                The minimum allowable change in `price` value that would cause a
+                price
 
-                Measured as `1e-6`.
-            price:
+                update on the network. Measured as `1e-6` (parts per million).
+            exchange_config_json:
               type: string
-              format: uint64
               description: >-
-                The variable value that is updated by oracle price updates. `0`
-                if it has
+                A string of json that encodes the configuration for resolving
+                the price
 
-                never been updated, `>0` otherwise.
+                of this market on various exchanges.
           description: >-
-            Market defines the price configuration for a single market relative
-            to
+            MarketParam represents the x/prices configuration for markets,
+            including
 
-            quoteCurrency.
+            representing price values, resolving markets on individual
+            exchanges, and
+
+            generating price updates. This configuration is specific to the
+            quote
+
+            currency.
       pagination:
         type: object
         properties:
@@ -39811,11 +42059,73 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-    description: QueryAllMarketsResponse is response type for the Query/Params RPC method.
-  dydxprotocol.prices.QueryMarketResponse:
+    description: |-
+      QueryAllMarketParamsResponse is response type for the Query/Params
+      `AllMarketParams` RPC method.
+  dydxprotocol.prices.QueryAllMarketPricesResponse:
     type: object
     properties:
-      market:
+      market_prices:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: Unique, sequentially-generated value that matches `MarketParam`.
+            exponent:
+              type: integer
+              format: int32
+              description: >-
+                Static value. The exponent of the price. See the comment on the
+                duplicate
+
+                MarketParam field for more information.
+            price:
+              type: string
+              format: uint64
+              description: >-
+                The variable value that is updated by oracle price updates. `0`
+                if it has
+
+                never been updated, `>0` otherwise.
+          description: >-
+            MarketPrice is used by the application to store/retrieve oracle
+            price.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: |-
+      QueryAllMarketPricesResponse is response type for the Query/Params
+      `AllMarketPrices` RPC method.
+  dydxprotocol.prices.QueryMarketParamResponse:
+    type: object
+    properties:
+      market_param:
         type: object
         properties:
           id:
@@ -39824,9 +42134,7 @@ definitions:
             description: Unique, sequentially-generated value.
           pair:
             type: string
-            description: >-
-              The human readable name of the market pair (e.g. `BTC-USD` or
-              `BTC-ETH`).
+            description: The human-readable name of the market pair (e.g. `BTC-USD`).
           exponent:
             type: integer
             format: int32
@@ -39839,12 +42147,6 @@ definitions:
               smallest
 
               price step (in dollars) that can be recorded.
-          exchanges:
-            type: array
-            items:
-              type: integer
-              format: int64
-            description: The list of exchanges to query to determine the price.
           min_exchanges:
             type: integer
             format: int64
@@ -39857,10 +42159,50 @@ definitions:
             type: integer
             format: int64
             description: >-
-              The minimum allowable change in the `Price` value for a given
-              update.
+              The minimum allowable change in `price` value that would cause a
+              price
 
-              Measured as `1e-6`.
+              update on the network. Measured as `1e-6` (parts per million).
+          exchange_config_json:
+            type: string
+            description: >-
+              A string of json that encodes the configuration for resolving the
+              price
+
+              of this market on various exchanges.
+        description: >-
+          MarketParam represents the x/prices configuration for markets,
+          including
+
+          representing price values, resolving markets on individual exchanges,
+          and
+
+          generating price updates. This configuration is specific to the quote
+
+          currency.
+    description: >-
+      QueryMarketParamResponse is response type for the Query/Params
+      `MarketParams`
+
+      RPC method.
+  dydxprotocol.prices.QueryMarketPriceResponse:
+    type: object
+    properties:
+      market_price:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            description: Unique, sequentially-generated value that matches `MarketParam`.
+          exponent:
+            type: integer
+            format: int32
+            description: >-
+              Static value. The exponent of the price. See the comment on the
+              duplicate
+
+              MarketParam field for more information.
           price:
             type: string
             format: uint64
@@ -39869,10 +42211,12 @@ definitions:
               it has
 
               never been updated, `>0` otherwise.
-        description: |-
-          Market defines the price configuration for a single market relative to
-          quoteCurrency.
-    description: QueryMarketResponse is response type for the Query/Params RPC method.
+        description: MarketPrice is used by the application to store/retrieve oracle price.
+    description: >-
+      QueryMarketPriceResponse is response type for the Query/Params
+      `MarketPrice`
+
+      RPC method.
   dydxprotocol.subaccounts.AssetPosition:
     type: object
     properties:
@@ -40211,6 +42555,18 @@ definitions:
     description: |-
       Subaccount defines a single sub-account for a given address.
       Subaccounts are uniquely indexed by a subaccountNumber/owner pair.
+  cosmos.base.v1beta1.Coin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      Coin defines a token with a denomination and an amount.
+
+      NOTE: The amount field is an Int which implements the custom method
+      signatures required by gogoproto.
   ibc.applications.transfer.v1.DenomTrace:
     type: object
     properties:
@@ -40367,6 +42723,24 @@ definitions:
 
               chain.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  ibc.applications.transfer.v1.QueryTotalEscrowForDenomResponse:
+    type: object
+    properties:
+      amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    description: >-
+      QueryTotalEscrowForDenomResponse is the response type for
+      TotalEscrowForDenom RPC method.
   ibc.core.client.v1.ConsensusStateWithHeight:
     type: object
     properties:
@@ -46970,6 +49344,99 @@ definitions:
     description: >-
       QueryBalanceResponse is the response type for the Query/Balance RPC
       method.
+  cosmos.bank.v1beta1.QueryDenomMetadataByQueryStringResponse:
+    type: object
+    properties:
+      metadata:
+        type: object
+        properties:
+          description:
+            type: string
+          denom_units:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                  description: >-
+                    denom represents the string name of the given denom unit
+                    (e.g uatom).
+                exponent:
+                  type: integer
+                  format: int64
+                  description: >-
+                    exponent represents power of 10 exponent that one must
+
+                    raise the base_denom to in order to equal the given
+                    DenomUnit's denom
+
+                    1 denom = 10^exponent base_denom
+
+                    (e.g. with a base_denom of uatom, one can create a DenomUnit
+                    of 'atom' with
+
+                    exponent = 6, thus: 1 atom = 10^6 uatom).
+                aliases:
+                  type: array
+                  items:
+                    type: string
+                  title: aliases is a list of string aliases for the given denom
+              description: |-
+                DenomUnit represents a struct that describes a given
+                denomination unit of the basic token.
+            title: denom_units represents the list of DenomUnit's for a given coin
+          base:
+            type: string
+            description: >-
+              base represents the base denom (should be the DenomUnit with
+              exponent = 0).
+          display:
+            type: string
+            description: |-
+              display indicates the suggested denom that should be
+              displayed in clients.
+          name:
+            type: string
+            description: 'Since: cosmos-sdk 0.43'
+            title: 'name defines the name of the token (eg: Cosmos Atom)'
+          symbol:
+            type: string
+            description: >-
+              symbol is the token symbol usually shown on exchanges (eg: ATOM).
+              This can
+
+              be the same as the display.
+
+
+              Since: cosmos-sdk 0.43
+          uri:
+            type: string
+            description: >-
+              URI to a document (on or off-chain) that contains additional
+              information. Optional.
+
+
+              Since: cosmos-sdk 0.46
+          uri_hash:
+            type: string
+            description: >-
+              URIHash is a sha256 hash of a document pointed by URI. It's used
+              to verify that
+
+              the document didn't change. Optional.
+
+
+              Since: cosmos-sdk 0.46
+        description: |-
+          Metadata represents a struct that describes
+          a basic token.
+    description: >-
+      QueryDenomMetadataByQueryStringResponse is the response type for the
+      Query/DenomMetadata RPC
+
+      method. Identical with QueryDenomMetadataResponse but receives denom as
+      query string in request.
   cosmos.bank.v1beta1.QueryDenomMetadataResponse:
     type: object
     properties:
@@ -47244,6 +49711,7 @@ definitions:
     type: object
     properties:
       params:
+        description: params provides the parameters of the bank module.
         type: object
         properties:
           send_enabled:
@@ -47274,7 +49742,6 @@ definitions:
               compatibility of genesis files.
           default_send_enabled:
             type: boolean
-        description: Params defines the parameters for the bank module.
     description: >-
       QueryParamsResponse defines the response type for querying x/bank
       parameters.
@@ -47461,18 +49928,6 @@ definitions:
     description: |-
       SendEnabled maps coin denom to a send_enabled status (whether a denom is
       sendable).
-  cosmos.base.v1beta1.Coin:
-    type: object
-    properties:
-      denom:
-        type: string
-      amount:
-        type: string
-    description: |-
-      Coin defines a token with a denomination and an amount.
-
-      NOTE: The amount field is an Int which implements the custom method
-      signatures required by gogoproto.
   cosmos.base.v1beta1.DecCoin:
     type: object
     properties:
@@ -50354,10 +52809,10 @@ definitions:
     properties:
       delegator_address:
         type: string
-        description: delegator_address is the bech32-encoded address of the delegator.
+        description: delegator_address is the encoded address of the delegator.
       validator_address:
         type: string
-        description: validator_address is the bech32-encoded address of the validator.
+        description: validator_address is the encoded address of the validator.
       shares:
         type: string
         description: shares define the delegation shares received.
@@ -50373,10 +52828,10 @@ definitions:
         properties:
           delegator_address:
             type: string
-            description: delegator_address is the bech32-encoded address of the delegator.
+            description: delegator_address is the encoded address of the delegator.
           validator_address:
             type: string
-            description: validator_address is the bech32-encoded address of the validator.
+            description: validator_address is the encoded address of the validator.
           shares:
             type: string
             description: shares define the delegation shares received.
@@ -50872,14 +53327,10 @@ definitions:
             properties:
               delegator_address:
                 type: string
-                description: >-
-                  delegator_address is the bech32-encoded address of the
-                  delegator.
+                description: delegator_address is the encoded address of the delegator.
               validator_address:
                 type: string
-                description: >-
-                  validator_address is the bech32-encoded address of the
-                  validator.
+                description: validator_address is the encoded address of the validator.
               shares:
                 type: string
                 description: shares define the delegation shares received.
@@ -50928,14 +53379,10 @@ definitions:
               properties:
                 delegator_address:
                   type: string
-                  description: >-
-                    delegator_address is the bech32-encoded address of the
-                    delegator.
+                  description: delegator_address is the encoded address of the delegator.
                 validator_address:
                   type: string
-                  description: >-
-                    validator_address is the bech32-encoded address of the
-                    validator.
+                  description: validator_address is the encoded address of the validator.
                 shares:
                   type: string
                   description: shares define the delegation shares received.
@@ -51001,14 +53448,10 @@ definitions:
           properties:
             delegator_address:
               type: string
-              description: >-
-                delegator_address is the bech32-encoded address of the
-                delegator.
+              description: delegator_address is the encoded address of the delegator.
             validator_address:
               type: string
-              description: >-
-                validator_address is the bech32-encoded address of the
-                validator.
+              description: validator_address is the encoded address of the validator.
             entries:
               type: array
               items:
@@ -52341,10 +54784,10 @@ definitions:
         properties:
           delegator_address:
             type: string
-            description: delegator_address is the bech32-encoded address of the delegator.
+            description: delegator_address is the encoded address of the delegator.
           validator_address:
             type: string
-            description: validator_address is the bech32-encoded address of the validator.
+            description: validator_address is the encoded address of the validator.
           entries:
             type: array
             items:
@@ -52401,14 +54844,10 @@ definitions:
               properties:
                 delegator_address:
                   type: string
-                  description: >-
-                    delegator_address is the bech32-encoded address of the
-                    delegator.
+                  description: delegator_address is the encoded address of the delegator.
                 validator_address:
                   type: string
-                  description: >-
-                    validator_address is the bech32-encoded address of the
-                    validator.
+                  description: validator_address is the encoded address of the validator.
                 shares:
                   type: string
                   description: shares define the delegation shares received.
@@ -52781,14 +55220,10 @@ definitions:
           properties:
             delegator_address:
               type: string
-              description: >-
-                delegator_address is the bech32-encoded address of the
-                delegator.
+              description: delegator_address is the encoded address of the delegator.
             validator_address:
               type: string
-              description: >-
-                validator_address is the bech32-encoded address of the
-                validator.
+              description: validator_address is the encoded address of the validator.
             entries:
               type: array
               items:
@@ -53462,10 +55897,10 @@ definitions:
     properties:
       delegator_address:
         type: string
-        description: delegator_address is the bech32-encoded address of the delegator.
+        description: delegator_address is the encoded address of the delegator.
       validator_address:
         type: string
-        description: validator_address is the bech32-encoded address of the validator.
+        description: validator_address is the encoded address of the validator.
       entries:
         type: array
         items:
@@ -54057,8 +56492,7 @@ definitions:
             Event allows application developers to attach additional information
             to
 
-            ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and
-            ResponseDeliverTx.
+            ResponseFinalizeBlock and ResponseCheckTx.
 
             Later, transactions may be queried using these events.
         description: >-
@@ -54536,8 +56970,7 @@ definitions:
             Event allows application developers to attach additional information
             to
 
-            ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and
-            ResponseDeliverTx.
+            ResponseFinalizeBlock and ResponseCheckTx.
 
             Later, transactions may be queried using these events.
         description: >-
@@ -55075,8 +57508,7 @@ definitions:
                 Event allows application developers to attach additional
                 information to
 
-                ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and
-                ResponseDeliverTx.
+                ResponseFinalizeBlock and ResponseCheckTx.
 
                 Later, transactions may be queried using these events.
             description: >-
@@ -55338,9 +57770,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         vote_b:
@@ -55395,9 +57850,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         total_voting_power:
@@ -55543,7 +58021,7 @@ definitions:
                                               - BLOCK_ID_FLAG_NIL
                                             default: BLOCK_ID_FLAG_UNKNOWN
                                             title: >-
-                                              BlockIdFlag indicates which BlcokID the
+                                              BlockIdFlag indicates which BlockID the
                                               signature is for
                                           validator_address:
                                             type: string
@@ -55693,7 +58171,7 @@ definitions:
                         - BLOCK_ID_FLAG_COMMIT
                         - BLOCK_ID_FLAG_NIL
                       default: BLOCK_ID_FLAG_UNKNOWN
-                      title: BlockIdFlag indicates which BlcokID the signature is for
+                      title: BlockIdFlag indicates which BlockID the signature is for
                     validator_address:
                       type: string
                       format: byte
@@ -56026,8 +58504,7 @@ definitions:
                 Event allows application developers to attach additional
                 information to
 
-                ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and
-                ResponseDeliverTx.
+                ResponseFinalizeBlock and ResponseCheckTx.
 
                 Later, transactions may be queried using these events.
             description: >-
@@ -56349,8 +58826,7 @@ definitions:
                   Event allows application developers to attach additional
                   information to
 
-                  ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and
-                  ResponseDeliverTx.
+                  ResponseFinalizeBlock and ResponseCheckTx.
 
                   Later, transactions may be queried using these events.
               description: >-
@@ -56876,8 +59352,7 @@ definitions:
                 Event allows application developers to attach additional
                 information to
 
-                ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and
-                ResponseDeliverTx.
+                ResponseFinalizeBlock and ResponseCheckTx.
 
                 Later, transactions may be queried using these events.
             description: >-
@@ -58342,12 +60817,9 @@ definitions:
             index:
               type: boolean
           description: EventAttribute is a single key-value pair, associated with an event.
-    description: >-
+    description: |-
       Event allows application developers to attach additional information to
-
-      ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and
-      ResponseDeliverTx.
-
+      ResponseFinalizeBlock and ResponseCheckTx.
       Later, transactions may be queried using these events.
   tendermint.abci.EventAttribute:
     type: object
@@ -58528,9 +61000,32 @@ definitions:
                         signature:
                           type: string
                           format: byte
+                          description: >-
+                            Vote signature by the validator if they participated
+                            in consensus for the
+
+                            associated block.
+                        extension:
+                          type: string
+                          format: byte
+                          description: >-
+                            Vote extension provided by the application. Only
+                            valid for precommit
+
+                            messages.
+                        extension_signature:
+                          type: string
+                          format: byte
+                          description: >-
+                            Vote extension signature by the validator if they
+                            participated in
+
+                            consensus for the associated block.
+
+                            Only valid for precommit messages.
                       description: >-
-                        Vote represents a prevote, precommit, or commit vote
-                        from validators for
+                        Vote represents a prevote or precommit vote from
+                        validators for
 
                         consensus.
                     vote_b:
@@ -58585,9 +61080,32 @@ definitions:
                         signature:
                           type: string
                           format: byte
+                          description: >-
+                            Vote signature by the validator if they participated
+                            in consensus for the
+
+                            associated block.
+                        extension:
+                          type: string
+                          format: byte
+                          description: >-
+                            Vote extension provided by the application. Only
+                            valid for precommit
+
+                            messages.
+                        extension_signature:
+                          type: string
+                          format: byte
+                          description: >-
+                            Vote extension signature by the validator if they
+                            participated in
+
+                            consensus for the associated block.
+
+                            Only valid for precommit messages.
                       description: >-
-                        Vote represents a prevote, precommit, or commit vote
-                        from validators for
+                        Vote represents a prevote or precommit vote from
+                        validators for
 
                         consensus.
                     total_voting_power:
@@ -58730,7 +61248,7 @@ definitions:
                                           - BLOCK_ID_FLAG_NIL
                                         default: BLOCK_ID_FLAG_UNKNOWN
                                         title: >-
-                                          BlockIdFlag indicates which BlcokID the
+                                          BlockIdFlag indicates which BlockID the
                                           signature is for
                                       validator_address:
                                         type: string
@@ -58880,7 +61398,7 @@ definitions:
                     - BLOCK_ID_FLAG_COMMIT
                     - BLOCK_ID_FLAG_NIL
                   default: BLOCK_ID_FLAG_UNKNOWN
-                  title: BlockIdFlag indicates which BlcokID the signature is for
+                  title: BlockIdFlag indicates which BlockID the signature is for
                 validator_address:
                   type: string
                   format: byte
@@ -58902,7 +61420,7 @@ definitions:
       - BLOCK_ID_FLAG_COMMIT
       - BLOCK_ID_FLAG_NIL
     default: BLOCK_ID_FLAG_UNKNOWN
-    title: BlockIdFlag indicates which BlcokID the signature is for
+    title: BlockIdFlag indicates which BlockID the signature is for
   tendermint.types.Commit:
     type: object
     properties:
@@ -58942,7 +61460,7 @@ definitions:
                 - BLOCK_ID_FLAG_COMMIT
                 - BLOCK_ID_FLAG_NIL
               default: BLOCK_ID_FLAG_UNKNOWN
-              title: BlockIdFlag indicates which BlcokID the signature is for
+              title: BlockIdFlag indicates which BlockID the signature is for
             validator_address:
               type: string
               format: byte
@@ -58967,7 +61485,7 @@ definitions:
           - BLOCK_ID_FLAG_COMMIT
           - BLOCK_ID_FLAG_NIL
         default: BLOCK_ID_FLAG_UNKNOWN
-        title: BlockIdFlag indicates which BlcokID the signature is for
+        title: BlockIdFlag indicates which BlockID the signature is for
       validator_address:
         type: string
         format: byte
@@ -59048,10 +61566,28 @@ definitions:
           signature:
             type: string
             format: byte
-        description: >-
-          Vote represents a prevote, precommit, or commit vote from validators
-          for
+            description: >-
+              Vote signature by the validator if they participated in consensus
+              for the
 
+              associated block.
+          extension:
+            type: string
+            format: byte
+            description: >-
+              Vote extension provided by the application. Only valid for
+              precommit
+
+              messages.
+          extension_signature:
+            type: string
+            format: byte
+            description: |-
+              Vote extension signature by the validator if they participated in
+              consensus for the associated block.
+              Only valid for precommit messages.
+        description: |-
+          Vote represents a prevote or precommit vote from validators for
           consensus.
       vote_b:
         type: object
@@ -59104,10 +61640,28 @@ definitions:
           signature:
             type: string
             format: byte
-        description: >-
-          Vote represents a prevote, precommit, or commit vote from validators
-          for
+            description: >-
+              Vote signature by the validator if they participated in consensus
+              for the
 
+              associated block.
+          extension:
+            type: string
+            format: byte
+            description: >-
+              Vote extension provided by the application. Only valid for
+              precommit
+
+              messages.
+          extension_signature:
+            type: string
+            format: byte
+            description: |-
+              Vote extension signature by the validator if they participated in
+              consensus for the associated block.
+              Only valid for precommit messages.
+        description: |-
+          Vote represents a prevote or precommit vote from validators for
           consensus.
       total_voting_power:
         type: string
@@ -59178,10 +61732,31 @@ definitions:
               signature:
                 type: string
                 format: byte
-            description: >-
-              Vote represents a prevote, precommit, or commit vote from
-              validators for
+                description: >-
+                  Vote signature by the validator if they participated in
+                  consensus for the
 
+                  associated block.
+              extension:
+                type: string
+                format: byte
+                description: >-
+                  Vote extension provided by the application. Only valid for
+                  precommit
+
+                  messages.
+              extension_signature:
+                type: string
+                format: byte
+                description: >-
+                  Vote extension signature by the validator if they participated
+                  in
+
+                  consensus for the associated block.
+
+                  Only valid for precommit messages.
+            description: |-
+              Vote represents a prevote or precommit vote from validators for
               consensus.
           vote_b:
             type: object
@@ -59234,10 +61809,31 @@ definitions:
               signature:
                 type: string
                 format: byte
-            description: >-
-              Vote represents a prevote, precommit, or commit vote from
-              validators for
+                description: >-
+                  Vote signature by the validator if they participated in
+                  consensus for the
 
+                  associated block.
+              extension:
+                type: string
+                format: byte
+                description: >-
+                  Vote extension provided by the application. Only valid for
+                  precommit
+
+                  messages.
+              extension_signature:
+                type: string
+                format: byte
+                description: >-
+                  Vote extension signature by the validator if they participated
+                  in
+
+                  consensus for the associated block.
+
+                  Only valid for precommit messages.
+            description: |-
+              Vote represents a prevote or precommit vote from validators for
               consensus.
           total_voting_power:
             type: string
@@ -59377,7 +61973,7 @@ definitions:
                                 - BLOCK_ID_FLAG_NIL
                               default: BLOCK_ID_FLAG_UNKNOWN
                               title: >-
-                                BlockIdFlag indicates which BlcokID the
+                                BlockIdFlag indicates which BlockID the
                                 signature is for
                             validator_address:
                               type: string
@@ -59549,9 +62145,32 @@ definitions:
                     signature:
                       type: string
                       format: byte
+                      description: >-
+                        Vote signature by the validator if they participated in
+                        consensus for the
+
+                        associated block.
+                    extension:
+                      type: string
+                      format: byte
+                      description: >-
+                        Vote extension provided by the application. Only valid
+                        for precommit
+
+                        messages.
+                    extension_signature:
+                      type: string
+                      format: byte
+                      description: >-
+                        Vote extension signature by the validator if they
+                        participated in
+
+                        consensus for the associated block.
+
+                        Only valid for precommit messages.
                   description: >-
-                    Vote represents a prevote, precommit, or commit vote from
-                    validators for
+                    Vote represents a prevote or precommit vote from validators
+                    for
 
                     consensus.
                 vote_b:
@@ -59606,9 +62225,32 @@ definitions:
                     signature:
                       type: string
                       format: byte
+                      description: >-
+                        Vote signature by the validator if they participated in
+                        consensus for the
+
+                        associated block.
+                    extension:
+                      type: string
+                      format: byte
+                      description: >-
+                        Vote extension provided by the application. Only valid
+                        for precommit
+
+                        messages.
+                    extension_signature:
+                      type: string
+                      format: byte
+                      description: >-
+                        Vote extension signature by the validator if they
+                        participated in
+
+                        consensus for the associated block.
+
+                        Only valid for precommit messages.
                   description: >-
-                    Vote represents a prevote, precommit, or commit vote from
-                    validators for
+                    Vote represents a prevote or precommit vote from validators
+                    for
 
                     consensus.
                 total_voting_power:
@@ -59749,7 +62391,7 @@ definitions:
                                       - BLOCK_ID_FLAG_NIL
                                     default: BLOCK_ID_FLAG_UNKNOWN
                                     title: >-
-                                      BlockIdFlag indicates which BlcokID the
+                                      BlockIdFlag indicates which BlockID the
                                       signature is for
                                   validator_address:
                                     type: string
@@ -59982,7 +62624,7 @@ definitions:
                         - BLOCK_ID_FLAG_COMMIT
                         - BLOCK_ID_FLAG_NIL
                       default: BLOCK_ID_FLAG_UNKNOWN
-                      title: BlockIdFlag indicates which BlcokID the signature is for
+                      title: BlockIdFlag indicates which BlockID the signature is for
                     validator_address:
                       type: string
                       format: byte
@@ -60174,7 +62816,7 @@ definitions:
                             - BLOCK_ID_FLAG_NIL
                           default: BLOCK_ID_FLAG_UNKNOWN
                           title: >-
-                            BlockIdFlag indicates which BlcokID the signature is
+                            BlockIdFlag indicates which BlockID the signature is
                             for
                         validator_address:
                           type: string
@@ -60400,7 +63042,7 @@ definitions:
                     - BLOCK_ID_FLAG_COMMIT
                     - BLOCK_ID_FLAG_NIL
                   default: BLOCK_ID_FLAG_UNKNOWN
-                  title: BlockIdFlag indicates which BlcokID the signature is for
+                  title: BlockIdFlag indicates which BlockID the signature is for
                 validator_address:
                   type: string
                   format: byte
@@ -60552,8 +63194,26 @@ definitions:
       signature:
         type: string
         format: byte
+        description: >-
+          Vote signature by the validator if they participated in consensus for
+          the
+
+          associated block.
+      extension:
+        type: string
+        format: byte
+        description: |-
+          Vote extension provided by the application. Only valid for precommit
+          messages.
+      extension_signature:
+        type: string
+        format: byte
+        description: |-
+          Vote extension signature by the validator if they participated in
+          consensus for the associated block.
+          Only valid for precommit messages.
     description: |-
-      Vote represents a prevote, precommit, or commit vote from validators for
+      Vote represents a prevote or precommit vote from validators for
       consensus.
   cosmos.upgrade.v1beta1.ModuleVersion:
     type: object
@@ -61290,9 +63950,32 @@ definitions:
                         signature:
                           type: string
                           format: byte
+                          description: >-
+                            Vote signature by the validator if they participated
+                            in consensus for the
+
+                            associated block.
+                        extension:
+                          type: string
+                          format: byte
+                          description: >-
+                            Vote extension provided by the application. Only
+                            valid for precommit
+
+                            messages.
+                        extension_signature:
+                          type: string
+                          format: byte
+                          description: >-
+                            Vote extension signature by the validator if they
+                            participated in
+
+                            consensus for the associated block.
+
+                            Only valid for precommit messages.
                       description: >-
-                        Vote represents a prevote, precommit, or commit vote
-                        from validators for
+                        Vote represents a prevote or precommit vote from
+                        validators for
 
                         consensus.
                     vote_b:
@@ -61347,9 +64030,32 @@ definitions:
                         signature:
                           type: string
                           format: byte
+                          description: >-
+                            Vote signature by the validator if they participated
+                            in consensus for the
+
+                            associated block.
+                        extension:
+                          type: string
+                          format: byte
+                          description: >-
+                            Vote extension provided by the application. Only
+                            valid for precommit
+
+                            messages.
+                        extension_signature:
+                          type: string
+                          format: byte
+                          description: >-
+                            Vote extension signature by the validator if they
+                            participated in
+
+                            consensus for the associated block.
+
+                            Only valid for precommit messages.
                       description: >-
-                        Vote represents a prevote, precommit, or commit vote
-                        from validators for
+                        Vote represents a prevote or precommit vote from
+                        validators for
 
                         consensus.
                     total_voting_power:
@@ -61492,7 +64198,7 @@ definitions:
                                           - BLOCK_ID_FLAG_NIL
                                         default: BLOCK_ID_FLAG_UNKNOWN
                                         title: >-
-                                          BlockIdFlag indicates which BlcokID the
+                                          BlockIdFlag indicates which BlockID the
                                           signature is for
                                       validator_address:
                                         type: string
@@ -61642,7 +64348,7 @@ definitions:
                     - BLOCK_ID_FLAG_COMMIT
                     - BLOCK_ID_FLAG_NIL
                   default: BLOCK_ID_FLAG_UNKNOWN
-                  title: BlockIdFlag indicates which BlcokID the signature is for
+                  title: BlockIdFlag indicates which BlockID the signature is for
                 validator_address:
                   type: string
                   format: byte
@@ -61839,9 +64545,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         vote_b:
@@ -61896,9 +64625,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         total_voting_power:
@@ -62044,7 +64796,7 @@ definitions:
                                               - BLOCK_ID_FLAG_NIL
                                             default: BLOCK_ID_FLAG_UNKNOWN
                                             title: >-
-                                              BlockIdFlag indicates which BlcokID the
+                                              BlockIdFlag indicates which BlockID the
                                               signature is for
                                           validator_address:
                                             type: string
@@ -62194,7 +64946,7 @@ definitions:
                         - BLOCK_ID_FLAG_COMMIT
                         - BLOCK_ID_FLAG_NIL
                       default: BLOCK_ID_FLAG_UNKNOWN
-                      title: BlockIdFlag indicates which BlcokID the signature is for
+                      title: BlockIdFlag indicates which BlockID the signature is for
                     validator_address:
                       type: string
                       format: byte
@@ -62375,9 +65127,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         vote_b:
@@ -62432,9 +65207,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         total_voting_power:
@@ -62580,7 +65378,7 @@ definitions:
                                               - BLOCK_ID_FLAG_NIL
                                             default: BLOCK_ID_FLAG_UNKNOWN
                                             title: >-
-                                              BlockIdFlag indicates which BlcokID the
+                                              BlockIdFlag indicates which BlockID the
                                               signature is for
                                           validator_address:
                                             type: string
@@ -62730,7 +65528,7 @@ definitions:
                         - BLOCK_ID_FLAG_COMMIT
                         - BLOCK_ID_FLAG_NIL
                       default: BLOCK_ID_FLAG_UNKNOWN
-                      title: BlockIdFlag indicates which BlcokID the signature is for
+                      title: BlockIdFlag indicates which BlockID the signature is for
                     validator_address:
                       type: string
                       format: byte
@@ -62930,9 +65728,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         vote_b:
@@ -62987,9 +65808,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         total_voting_power:
@@ -63135,7 +65979,7 @@ definitions:
                                               - BLOCK_ID_FLAG_NIL
                                             default: BLOCK_ID_FLAG_UNKNOWN
                                             title: >-
-                                              BlockIdFlag indicates which BlcokID the
+                                              BlockIdFlag indicates which BlockID the
                                               signature is for
                                           validator_address:
                                             type: string
@@ -63285,7 +66129,7 @@ definitions:
                         - BLOCK_ID_FLAG_COMMIT
                         - BLOCK_ID_FLAG_NIL
                       default: BLOCK_ID_FLAG_UNKNOWN
-                      title: BlockIdFlag indicates which BlcokID the signature is for
+                      title: BlockIdFlag indicates which BlockID the signature is for
                     validator_address:
                       type: string
                       format: byte
@@ -63466,9 +66310,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         vote_b:
@@ -63523,9 +66390,32 @@ definitions:
                             signature:
                               type: string
                               format: byte
+                              description: >-
+                                Vote signature by the validator if they
+                                participated in consensus for the
+
+                                associated block.
+                            extension:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension provided by the application. Only
+                                valid for precommit
+
+                                messages.
+                            extension_signature:
+                              type: string
+                              format: byte
+                              description: >-
+                                Vote extension signature by the validator if
+                                they participated in
+
+                                consensus for the associated block.
+
+                                Only valid for precommit messages.
                           description: >-
-                            Vote represents a prevote, precommit, or commit vote
-                            from validators for
+                            Vote represents a prevote or precommit vote from
+                            validators for
 
                             consensus.
                         total_voting_power:
@@ -63671,7 +66561,7 @@ definitions:
                                               - BLOCK_ID_FLAG_NIL
                                             default: BLOCK_ID_FLAG_UNKNOWN
                                             title: >-
-                                              BlockIdFlag indicates which BlcokID the
+                                              BlockIdFlag indicates which BlockID the
                                               signature is for
                                           validator_address:
                                             type: string
@@ -63821,7 +66711,7 @@ definitions:
                         - BLOCK_ID_FLAG_COMMIT
                         - BLOCK_ID_FLAG_NIL
                       default: BLOCK_ID_FLAG_UNKNOWN
-                      title: BlockIdFlag indicates which BlcokID the signature is for
+                      title: BlockIdFlag indicates which BlockID the signature is for
                     validator_address:
                       type: string
                       format: byte

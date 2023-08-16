@@ -8,9 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4/dtypes"
-	"github.com/dydxprotocol/v4/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4/indexer/events"
-	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4/lib"
 	big_testutil "github.com/dydxprotocol/v4/testutil/big"
 	"github.com/dydxprotocol/v4/testutil/constants"
@@ -39,41 +37,14 @@ func createNSubaccount(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Su
 	return items
 }
 
-// getSubaccountUpdateEventsFromIndexerBlock returns the subaccount update events in the
-// Indexer Block event Kafka message.
-func getSubaccountUpdateEventsFromIndexerBlock(
-	ctx sdk.Context,
-	keeper *keeper.Keeper,
-) []*indexerevents.SubaccountUpdateEventV1 {
-	var subaccountUpdates []*indexerevents.SubaccountUpdateEventV1
-	block := keeper.GetIndexerEventManager().ProduceBlock(ctx)
-	if block == nil {
-		return subaccountUpdates
-	}
-	for _, event := range block.Events {
-		if event.Subtype != indexerevents.SubtypeSubaccountUpdate {
-			continue
-		}
-		bytes := indexer_manager.GetBytesFromEventData(event.Data)
-		unmarshaler := common.UnmarshalerImpl{}
-		var subaccountUpdate indexerevents.SubaccountUpdateEventV1
-		err := unmarshaler.Unmarshal(bytes, &subaccountUpdate)
-		if err != nil {
-			panic(err)
-		}
-		subaccountUpdates = append(subaccountUpdates, &subaccountUpdate)
-	}
-	return subaccountUpdates
-}
-
 // assertSubaccountUpdateEventsNotInIndexerBlock checks that no subaccount update events were
 // included in the Indexer block kafka message
 func assertSubaccountUpdateEventsNotInIndexerBlock(
 	t *testing.T,
-	keeper *keeper.Keeper,
+	k *keeper.Keeper,
 	ctx sdk.Context,
 ) {
-	subaccountUpdates := getSubaccountUpdateEventsFromIndexerBlock(ctx, keeper)
+	subaccountUpdates := testutil.GetSubaccountUpdateEventsFromIndexerBlock(ctx, k)
 	require.Empty(t, subaccountUpdates)
 }
 
@@ -82,7 +53,7 @@ func assertSubaccountUpdateEventsNotInIndexerBlock(
 // the expected return values of the update subaccount function.
 func assertSubaccountUpdateEventsInIndexerBlock(
 	t *testing.T,
-	keeper *keeper.Keeper,
+	k *keeper.Keeper,
 	ctx sdk.Context,
 	expectedErr error,
 	expectedSuccess bool,
@@ -92,7 +63,7 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 	expectedSubaccoundIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
 	expectedUpdatedAssetPositions map[types.SubaccountId][]*types.AssetPosition,
 ) {
-	subaccountUpdates := getSubaccountUpdateEventsFromIndexerBlock(ctx, keeper)
+	subaccountUpdates := testutil.GetSubaccountUpdateEventsFromIndexerBlock(ctx, k)
 
 	// No subaccount update events included in the case of an error or failure to update subaccounts.
 	if expectedErr != nil || !expectedSuccess {

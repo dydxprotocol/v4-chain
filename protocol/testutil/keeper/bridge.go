@@ -43,6 +43,32 @@ func BridgeKeepers(
 	return ctx, keeper, storeKey, mockTimeProvider, bridgeEventManager, bankKeeper
 }
 
+func BridgeKeepersWithMockBankKeeper(
+	t testing.TB,
+) (
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+	storeKey storetypes.StoreKey,
+	mockTimeProvider *mocks.TimeProvider,
+	bridgeEventManager *bridgeserver_types.BridgeEventManager,
+	mockBankKeeper *mocks.BankKeeper,
+) {
+	ctx = initKeepers(t, func(
+		db *tmdb.MemDB,
+		registry codectypes.InterfaceRegistry,
+		cdc *codec.ProtoCodec,
+		stateStore storetypes.CommitMultiStore,
+		transientStoreKey storetypes.StoreKey,
+	) []GenesisInitializer {
+		mockBankKeeper = &mocks.BankKeeper{}
+		keeper, storeKey, mockTimeProvider, bridgeEventManager =
+			createBridgeKeeper(stateStore, db, cdc, transientStoreKey, mockBankKeeper)
+		return []GenesisInitializer{keeper}
+	})
+
+	return ctx, keeper, storeKey, mockTimeProvider, bridgeEventManager, mockBankKeeper
+}
+
 func createBridgeKeeper(
 	stateStore storetypes.CommitMultiStore,
 	db *tmdb.MemDB,

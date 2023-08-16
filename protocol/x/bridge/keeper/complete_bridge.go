@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/dydxprotocol/v4/lib/metrics"
 	"github.com/dydxprotocol/v4/x/bridge/types"
 )
@@ -25,9 +24,8 @@ func (k Keeper) CompleteBridge(
 	)
 
 	// Mint coin to bridge module account.
-	if err = k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{
-		bridge.Coin,
-	}); err != nil {
+	bridgedCoins := sdk.Coins{bridge.Coin}
+	if err = k.bankKeeper.MintCoins(ctx, types.ModuleName, bridgedCoins); err != nil {
 		return err
 	}
 
@@ -40,9 +38,9 @@ func (k Keeper) CompleteBridge(
 	// Send coin from bridge module account to specified account.
 	if err = k.bankKeeper.SendCoinsFromModuleToAccount(
 		ctx,
-		minttypes.ModuleName,
+		types.ModuleName,
 		bridgeAccAddress,
-		sdk.Coins{bridge.Coin},
+		bridgedCoins,
 	); err != nil {
 		return err
 	}

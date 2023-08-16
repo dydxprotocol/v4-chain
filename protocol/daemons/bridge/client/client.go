@@ -2,16 +2,25 @@ package client
 
 import (
 	"context"
+	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4/daemons/bridge/api"
+	"github.com/dydxprotocol/v4/daemons/bridge/client/types"
+	"github.com/dydxprotocol/v4/daemons/constants"
 	"github.com/dydxprotocol/v4/daemons/flags"
 	"github.com/dydxprotocol/v4/lib"
+
+	libeth "github.com/dydxprotocol/v4/lib/eth"
 	"github.com/dydxprotocol/v4/lib/metrics"
 	bridgetypes "github.com/dydxprotocol/v4/x/bridge/types"
+	eth "github.com/ethereum/go-ethereum"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 )
 
 // Start begins a job that periodically runs the RunBridgeDaemonTaskLoop function.
@@ -73,13 +82,13 @@ func Start(
 }
 
 // RunBridgeDaemonTaskLoop does the following:
-// 1) Fetches configuration information by querying the gRPC server. (TODO: CORE-318)
-// 2) Fetches Ethereum events from a configured node. (TODO: CORE-319)
-// 3) Sends newly-recognized bridge events to the gRPC server. (TODO: CORE-320)
+// 1) Fetches configuration information by querying the gRPC server.
+// 2) Fetches Ethereum events from a configured node.
+// 3) Sends newly-recognized bridge events to the gRPC server.
 func RunBridgeDaemonTaskLoop(
 	ctx context.Context,
 	logger log.Logger,
-	ethClient *ethclient.Client,
+	ethClient types.EthClient,
 	queryClient bridgetypes.QueryClient,
 	serviceClient api.BridgeServiceClient,
 ) error {
@@ -90,6 +99,88 @@ func RunBridgeDaemonTaskLoop(
 		metrics.Latency,
 	)
 
+	// Fetch parameters from x/bridge module.
+	eventParams, err := queryClient.EventParams(ctx, &bridgetypes.QueryEventParamsRequest{})
+	if err != nil {
+		return err
+	}
+	proposeParams, err := queryClient.ProposeParams(ctx, &bridgetypes.QueryProposeParamsRequest{})
+	if err != nil {
+		return err
+	}
+	recognizedEventInfo, err := queryClient.RecognizedEventInfo(ctx, &bridgetypes.QueryRecognizedEventInfoRequest{})
+	if err != nil {
+		return err
+	}
+
+	// Verify Chain ID.
+	chainId, err := ethClient.ChainID(ctx)
+	if err != nil {
+		return err
+	}
+	if chainId.Uint64() != eventParams.Params.EthChainId {
+		return fmt.Errorf(
+			"Expected chain ID %d but node has chain ID %d",
+			eventParams.Params.EthChainId,
+			chainId,
+		)
+	}
+
+	// Fetch logs from Ethereum Node.
+	filterQuery := getFilterQuery(
+		eventParams.Params.EthAddress,
+		recognizedEventInfo.Info.EthBlockHeight,
+		recognizedEventInfo.Info.NextId,
+		proposeParams.Params.MaxBridgesPerBlock,
+	)
+	logs, err := ethClient.FilterLogs(ctx, filterQuery)
+	if err != nil {
+		return err
+	}
+
+	// Parse logs into bridge events.
+	newBridgeEvents := []bridgetypes.BridgeEvent{}
+	for _, log := range logs {
+		newBridgeEvents = append(
+			newBridgeEvents,
+			libeth.BridgeLogToEvent(log, eventParams.Params.Denom),
+		)
+	}
+
+	// Send bridge events to bridge server.
+	if _, err = serviceClient.AddBridgeEvents(ctx, &api.AddBridgeEventsRequest{
+		BridgeEvents: newBridgeEvents,
+	}); err != nil {
+		return err
+	}
+
 	// Success
 	return nil
+}
+
+// getFilterQuery returns a FilterQuery for fetching logs for the next `numIds`
+// bridge events after block height `fromBlock` and before current finalized
+// block height.
+func getFilterQuery(
+	contractAddressHex string,
+	fromBlock uint64,
+	firstId uint32,
+	numIds uint32,
+) eth.FilterQuery {
+	// Generate bytes32 of the next x ids.
+	eventIdHashes := make([]ethcommon.Hash, numIds)
+	for i := uint32(0); i < numIds; i++ {
+		h := ethcommon.BigToHash(big.NewInt(int64(firstId + i)))
+		eventIdHashes = append(eventIdHashes, h)
+	}
+
+	return eth.FilterQuery{
+		FromBlock: new(big.Int).SetUint64(fromBlock),
+		ToBlock:   big.NewInt(ethrpc.FinalizedBlockNumber.Int64()),
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(contractAddressHex)},
+		Topics: [][]ethcommon.Hash{
+			{ethcommon.HexToHash(constants.BridgeEventSignature)},
+			eventIdHashes,
+		},
+	}
 }

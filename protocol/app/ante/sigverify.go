@@ -3,11 +3,14 @@ package ante
 import (
 	"fmt"
 
+	gometrics "github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	sdkante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/dydxprotocol/v4/lib/metrics"
 )
 
 // Verify all signatures for a tx and return an error if any are invalid. Note,
@@ -102,6 +105,18 @@ func (svd SigVerificationDecorator) AnteHandle(
 		// Skip individual sequence number validation since this transaction use
 		// `GoodTilBlock` for replay protection.
 		if !skipSequenceValidation && sig.Sequence != acc.GetSequence() {
+			labels := make([]gometrics.Label, 0)
+			if len(tx.GetMsgs()) > 0 {
+				labels = append(
+					labels,
+					metrics.GetLabelForStringValue(metrics.MessageType, fmt.Sprintf("%T", tx.GetMsgs()[0])),
+				)
+			}
+			telemetry.IncrCounterWithLabels(
+				[]string{metrics.SequenceNumber, metrics.Invalid, metrics.Count},
+				1,
+				labels,
+			)
 			return ctx, sdkerrors.Wrapf(
 				sdkerrors.ErrWrongSequence,
 				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,

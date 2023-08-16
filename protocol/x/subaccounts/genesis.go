@@ -2,6 +2,8 @@ package subaccounts
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4/indexer/events"
+	"github.com/dydxprotocol/v4/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4/x/subaccounts/keeper"
 	"github.com/dydxprotocol/v4/x/subaccounts/types"
 )
@@ -14,6 +16,18 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Set all the subaccounts
 	for _, elem := range genState.Subaccounts {
 		k.SetSubaccount(ctx, elem)
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeSubaccountUpdate,
+			indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.NewSubaccountUpdateEvent(
+					elem.Id,
+					elem.PerpetualPositions,
+					elem.AssetPositions,
+					nil,
+				),
+			),
+		)
 	}
 }
 
