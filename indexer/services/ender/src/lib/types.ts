@@ -44,6 +44,7 @@ export enum DydxIndexerSubtypes {
   MARKET = 'market',
   STATEFUL_ORDER = 'stateful_order',
   FUNDING = 'funding_values',
+  ASSET = 'asset',
 }
 
 // Generic interface used for creating the Handler objects
