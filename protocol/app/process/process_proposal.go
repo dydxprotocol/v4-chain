@@ -1,7 +1,8 @@
 package process
 
 import (
-	"fmt"
+	"cosmossdk.io/log"
+	error_lib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -56,25 +57,26 @@ func ProcessProposalHandler(
 			currentConsensusRound += 1
 		}
 		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
+		logger := ctx.Logger().With(log.ModuleKey, ModuleName)
 
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
 		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
 		// consensus round to do so.
 		if err := pricesKeeper.UpdateSmoothedPrices(ctx); err != nil {
 			recordErrorMetricsWithLabel(metrics.UpdateSmoothedPrices)
-			ctx.Logger().Error(fmt.Sprintf("UpdateSmoothedPrices failed, err = %v", err))
+			error_lib.LogErrorWithOptionalContext(logger, "UpdateSmoothedPrices failed", err)
 		}
 
 		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeper, pricesKeeper)
 		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("DecodeProcessProposalTxs failed: %v", err))
+			error_lib.LogErrorWithOptionalContext(logger, "DecodeProcessProposalTxs failed", err)
 			recordErrorMetricsWithLabel(metrics.Decode)
 			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}
 
 		err = txs.Validate()
 		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("DecodeProcessProposalTxs.Validate failed: %v", err))
+			error_lib.LogErrorWithOptionalContext(logger, "DecodeProcessProposalTxs.Validate failed", err)
 			recordErrorMetricsWithLabel(metrics.Validate)
 			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}
