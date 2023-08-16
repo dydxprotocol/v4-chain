@@ -8,8 +8,10 @@ option go_package = "github.com/dydxprotocol/v4/x/delaymsg/types";
 // GenesisState defines the delaymsg module's genesis state.
 message GenesisState {
   repeated DelayedMessage delayed_messages = 1;
-  // next_message_id is the next message ID to be used. Since we can delete
-  // messages and don't want to re-use message ids, we need to keep track of the
-  // next unused id.
-  uint32 next_message_id = 2;
+
+  // num_messages is the number of messages that have been created. It denotes
+  // the id to be assigned to the next message. This number may not match the
+  // number of messages currently stored on the chain because messages are
+  // deleted from the chain after they are executed.
+  uint32 num_messages = 2;
 }

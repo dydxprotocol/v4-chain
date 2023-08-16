@@ -14,6 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -76,6 +77,10 @@ var (
 		"/dydxprotocol.bridge.MsgUpdateProposeParamsResponse": nil,
 		"/dydxprotocol.bridge.MsgUpdateSafetyParams":          &bridge.MsgUpdateSafetyParams{},
 		"/dydxprotocol.bridge.MsgUpdateSafetyParamsResponse":  nil,
+
+		// delaymsg
+		"/dydxprotocol.delaymsg.MsgDelayMessage":         &delaymsg.MsgDelayMessage{},
+		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": nil,
 
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},

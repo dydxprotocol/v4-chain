@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
+	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
@@ -83,6 +84,7 @@ var (
 		clobmodule.AppModuleBasic{},
 		vestmodule.AppModuleBasic{},
 		rewardsmodule.AppModuleBasic{},
+		delaymsgmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
 	)

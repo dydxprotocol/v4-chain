@@ -42,7 +42,7 @@ message QueryMessageResponse { DelayedMessage message = 1; }
 
 // QueryBlockMessageIdsRequest is the request type for the BlockMessageIds
 // RPC method.
-message QueryBlockMessageIdsRequest { uint32 block_height = 1; }
+message QueryBlockMessageIdsRequest { sint64 block_height = 1; }
 
 // QueryGetBlockMessageIdsResponse is the response type for the BlockMessageIds
 // RPC method.
