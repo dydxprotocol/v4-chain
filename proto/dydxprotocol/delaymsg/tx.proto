@@ -1,0 +1,26 @@
+syntax = "proto3";
+package dydxprotocol.delaymsg;
+
+option go_package = "github.com/dydxprotocol/v4/x/delaymsg/types";
+
+// Msg defines the Msg service.
+service Msg {
+  // DelayMessage delays the execution of a message for a given number of
+  // blocks.
+  rpc DelayMessage(MsgDelayMessage) returns (MsgDelayMessageResponse);
+}
+
+// MsgDelayMessage is a request type for the DelayMessage method.
+message MsgDelayMessage {
+  // The message to be delayed.
+  bytes msg = 1;
+
+  // The number of blocks to delay the message for.
+  uint32 delay_blocks = 2;
+}
+
+// MsgDelayMessageResponse is a response type for the DelayMessage method.
+message MsgDelayMessageResponse {
+  // The id of the created delayed message.
+  uint64 id = 1;
+}

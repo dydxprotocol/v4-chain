@@ -1,0 +1,15 @@
+syntax = "proto3";
+package dydxprotocol.delaymsg;
+
+import "dydxprotocol/delaymsg/delayed_message.proto";
+
+option go_package = "github.com/dydxprotocol/v4/x/delaymsg/types";
+
+// GenesisState defines the delaymsg module's genesis state.
+message GenesisState {
+  repeated DelayedMessage delayed_messages = 1;
+  // next_message_id is the next message ID to be used. Since we can delete
+  // messages and don't want to re-use message ids, we need to keep track of the
+  // next unused id.
+  uint32 next_message_id = 2;
+}

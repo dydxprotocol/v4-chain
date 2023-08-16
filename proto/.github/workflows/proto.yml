@@ -1,0 +1,55 @@
+name: Protobuf
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'v[0-9]+.x'  # e.g. v11.x
+jobs:
+  # Verify protos were generated with `make proto-gen`
+  verify-proto-gen:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.13.3
+      options: --user root
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - run: make proto-gen-without-container
+  format:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.13.3
+      options: --user root
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - name: format
+        run: |
+          git config --global --add safe.directory /__w/v4-proto/v4-proto
+          find ./ -name "*.proto" -exec clang-format -i {} \;
+          git diff --exit-code
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.13.3
+      options: --user root
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - name: lint
+        run: buf lint --error-format=json
+  check-bc-breaking:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.13.3
+      options: --user root
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+        # For push and PR cases, there's a different way to fetch the branch to compare with
+      - name: check-bc-breaking
+        run: |
+          git config --global --add safe.directory /__w/v4-proto/v4-proto
+          git fetch origin ${{ github.event.pull_request.base.sha || github.event.before }}
+          buf breaking --against .git#branch=${{ github.event.pull_request.base.sha || github.event.before }}
