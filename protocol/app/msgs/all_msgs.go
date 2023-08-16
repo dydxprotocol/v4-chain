@@ -152,6 +152,10 @@ var (
 		"/dydxprotocol.clob.MsgProposedOperations":         {},
 		"/dydxprotocol.clob.MsgProposedOperationsResponse": {},
 
+		// delaymsg
+		"/dydxprotocol.delaymsg.MsgDelayMessage":         {},
+		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": {},
+
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         {},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},

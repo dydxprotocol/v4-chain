@@ -1,6 +1,6 @@
 import { DelayedMessage, DelayedMessageSDKType } from "./delayed_message";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial } from "../../helpers";
+import { DeepPartial, Long } from "../../helpers";
 /**
  * QueryNumMessagesRequest is the request type for the NumMessages RPC
  * method.
@@ -71,7 +71,7 @@ export interface QueryBlockMessageIdsRequest {
    * QueryBlockMessageIdsRequest is the request type for the BlockMessageIds
    * RPC method.
    */
-  blockHeight: number;
+  blockHeight: Long;
 }
 /**
  * QueryBlockMessageIdsRequest is the request type for the BlockMessageIds
@@ -83,7 +83,7 @@ export interface QueryBlockMessageIdsRequestSDKType {
    * QueryBlockMessageIdsRequest is the request type for the BlockMessageIds
    * RPC method.
    */
-  block_height: number;
+  block_height: Long;
 }
 /**
  * QueryGetBlockMessageIdsResponse is the response type for the BlockMessageIds
@@ -281,14 +281,14 @@ export const QueryMessageResponse = {
 
 function createBaseQueryBlockMessageIdsRequest(): QueryBlockMessageIdsRequest {
   return {
-    blockHeight: 0
+    blockHeight: Long.ZERO
   };
 }
 
 export const QueryBlockMessageIdsRequest = {
   encode(message: QueryBlockMessageIdsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.blockHeight !== 0) {
-      writer.uint32(8).uint32(message.blockHeight);
+    if (!message.blockHeight.isZero()) {
+      writer.uint32(8).sint64(message.blockHeight);
     }
 
     return writer;
@@ -304,7 +304,7 @@ export const QueryBlockMessageIdsRequest = {
 
       switch (tag >>> 3) {
         case 1:
-          message.blockHeight = reader.uint32();
+          message.blockHeight = (reader.sint64() as Long);
           break;
 
         default:
@@ -318,7 +318,7 @@ export const QueryBlockMessageIdsRequest = {
 
   fromPartial(object: DeepPartial<QueryBlockMessageIdsRequest>): QueryBlockMessageIdsRequest {
     const message = createBaseQueryBlockMessageIdsRequest();
-    message.blockHeight = object.blockHeight ?? 0;
+    message.blockHeight = object.blockHeight !== undefined && object.blockHeight !== null ? Long.fromValue(object.blockHeight) : Long.ZERO;
     return message;
   }
 

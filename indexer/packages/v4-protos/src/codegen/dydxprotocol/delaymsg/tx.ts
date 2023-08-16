@@ -3,7 +3,9 @@ import { DeepPartial, Long } from "../../helpers";
 /** MsgDelayMessage is a request type for the DelayMessage method. */
 
 export interface MsgDelayMessage {
+  authority: string;
   /** The message to be delayed. */
+
   msg: Uint8Array;
   /** The number of blocks to delay the message for. */
 
@@ -12,7 +14,9 @@ export interface MsgDelayMessage {
 /** MsgDelayMessage is a request type for the DelayMessage method. */
 
 export interface MsgDelayMessageSDKType {
+  authority: string;
   /** The message to be delayed. */
+
   msg: Uint8Array;
   /** The number of blocks to delay the message for. */
 
@@ -33,6 +37,7 @@ export interface MsgDelayMessageResponseSDKType {
 
 function createBaseMsgDelayMessage(): MsgDelayMessage {
   return {
+    authority: "",
     msg: new Uint8Array(),
     delayBlocks: 0
   };
@@ -40,12 +45,16 @@ function createBaseMsgDelayMessage(): MsgDelayMessage {
 
 export const MsgDelayMessage = {
   encode(message: MsgDelayMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
     if (message.msg.length !== 0) {
-      writer.uint32(10).bytes(message.msg);
+      writer.uint32(18).bytes(message.msg);
     }
 
     if (message.delayBlocks !== 0) {
-      writer.uint32(16).uint32(message.delayBlocks);
+      writer.uint32(24).uint32(message.delayBlocks);
     }
 
     return writer;
@@ -61,10 +70,14 @@ export const MsgDelayMessage = {
 
       switch (tag >>> 3) {
         case 1:
-          message.msg = reader.bytes();
+          message.authority = reader.string();
           break;
 
         case 2:
+          message.msg = reader.bytes();
+          break;
+
+        case 3:
           message.delayBlocks = reader.uint32();
           break;
 
@@ -79,6 +92,7 @@ export const MsgDelayMessage = {
 
   fromPartial(object: DeepPartial<MsgDelayMessage>): MsgDelayMessage {
     const message = createBaseMsgDelayMessage();
+    message.authority = object.authority ?? "";
     message.msg = object.msg ?? new Uint8Array();
     message.delayBlocks = object.delayBlocks ?? 0;
     return message;

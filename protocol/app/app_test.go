@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 	"reflect"
 	"strings"
 	"testing"
@@ -232,6 +233,7 @@ func TestModuleBasics(t *testing.T) {
 		vestmodule.AppModuleBasic{},
 		rewardsmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
+		delaymsgmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
 	)
 

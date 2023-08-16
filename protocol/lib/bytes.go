@@ -32,6 +32,17 @@ func Uint32ToBytesForState(id uint32) []byte {
 	return key
 }
 
+// Int64ToBytesForState converts the int64 to 8 bytes + '/' to be used as state key prefixes.
+func Int64ToBytesForState(id int64) []byte {
+	var key = make([]byte, 9)
+
+	// Since both uint64 and int64 are 8 bytes, we just use the same function. Casting to uint64
+	// does not convert the value, it just changes the type.
+	binary.LittleEndian.PutUint64(key, uint64(id))
+	key[8] = '/'
+	return key
+}
+
 func StringToUint32(s string) (uint32, error) {
 	result, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
