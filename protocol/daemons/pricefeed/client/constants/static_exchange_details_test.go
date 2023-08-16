@@ -17,6 +17,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/kucoin"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/mexc"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/okx"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/test_volatile_exchange"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/testexchange"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/stretchr/testify/require"
@@ -99,6 +100,11 @@ func TestStaticExchangeDetailsCache(t *testing.T) {
 		"Get test exchange exchangeDetails": {
 			exchangeId:    exchange_common.EXCHANGE_ID_TEST_EXCHANGE,
 			expectedValue: testexchange.TestExchangeDetails,
+			expectedFound: true,
+		},
+		"Get test volatile exchange exchangeDetails": {
+			exchangeId:    exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE,
+			expectedValue: test_volatile_exchange.TestVolatileExchangeDetails,
 			expectedFound: true,
 		},
 		"Get unknown exchangeDetails": {

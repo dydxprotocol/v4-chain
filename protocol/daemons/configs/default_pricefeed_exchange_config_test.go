@@ -97,7 +97,17 @@ const (
 	TimeoutMs = 3000
 	MaxQueries = 1
 	[[exchanges]]
+	[[exchanges]]
+	ExchangeId = "TestVolatileExchange"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
 	ExchangeId = "Okx"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Huobi"
 	IntervalMs = 2000
 	TimeoutMs = 3000
 	MaxQueries = 1

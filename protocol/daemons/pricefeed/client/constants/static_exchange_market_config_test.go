@@ -1,11 +1,12 @@
 package constants
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestStaticExchangeMarketConfigCache(t *testing.T) {
@@ -1060,6 +1061,15 @@ func TestStaticExchangeMarketConfigCache(t *testing.T) {
 				},
 				exchange_common.MARKET_USDT_USD: {
 					Ticker: "USDT-USD",
+				},
+			},
+			expectedFound: true,
+		},
+		"Test volatile exchange": {
+			id: "TestVolatileExchange",
+			marketToConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_TEST_USD: {
+					Ticker: "TEST-USD",
 				},
 			},
 			expectedFound: true,
