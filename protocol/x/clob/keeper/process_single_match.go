@@ -114,6 +114,10 @@ func (k Keeper) ProcessSingleMatch(
 	if takerMatchableOrder.IsLiquidation() {
 		// Liquidation orders do not take trading fees because they already pay a liquidation fee.
 		takerFeePpm = 0
+		// Temporarily cap maker rebates to 0 for liquidations. This is to prevent an issue where
+		// the fee collector has insufficient funds to pay the maker rebate.
+		// TODO(CLOB-812): find a longer term solution to handle maker rebates for liquidations.
+		makerFeePpm = lib.Max(makerFeePpm, 0)
 		takerInsuranceFundDelta, err = k.validateMatchedLiquidation(
 			ctx,
 			takerMatchableOrder,

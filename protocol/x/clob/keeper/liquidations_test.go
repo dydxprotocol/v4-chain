@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -17,6 +18,7 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	feetypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
@@ -32,7 +34,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 		// Subaccount state.
 		subaccounts []satypes.Subaccount
 		// CLOB state.
-		clobs          []types.ClobPair
+		clobs     []types.ClobPair
+		feeParams feetypes.PerpetualFeeParams
+
 		existingOrders []types.Order
 
 		// Parameters.
@@ -49,7 +53,8 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			subaccounts: []satypes.Subaccount{
 				constants.Dave_Num0_1BTC_Long_46000USD_Short,
 			},
-			clobs: []types.ClobPair{constants.ClobPair_Btc},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
 
@@ -64,7 +69,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				constants.Carl_Num0_1BTC_Short,
 				constants.Dave_Num0_1BTC_Long_46000USD_Short,
 			},
-			clobs: []types.ClobPair{constants.ClobPair_Btc},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParams,
+
 			existingOrders: []types.Order{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
 			},
@@ -102,10 +109,52 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				constants.Carl_Num0_1BTC_Short,
 				constants.Dave_Num0_1BTC_Long_46000USD_Short,
 			},
-			clobs: []types.ClobPair{constants.ClobPair_Btc},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParams,
+
 			existingOrders: []types.Order{
 				// Note this order will be removed when matching.
 				constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+			},
+
+			order: constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+
+			expectedPlacedOrders: []*types.MsgPlaceOrder{
+				{
+					Order: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				},
+			},
+			expectedMatchedOrders: []*types.ClobMatch{
+				types.NewClobMatchFromMatchPerpetualLiquidation(
+					&types.MatchPerpetualLiquidation{
+						ClobPairId:  constants.ClobPair_Btc.Id,
+						IsBuy:       false,
+						TotalSize:   100_000_000,
+						Liquidated:  constants.Dave_Num0,
+						PerpetualId: constants.ClobPair_Btc.GetPerpetualClobMetadata().PerpetualId,
+						Fills: []types.MakerFill{
+							{
+								MakerOrderId: types.OrderId{},
+								FillAmount:   100_000_000,
+							},
+						},
+					},
+				),
+			},
+		},
+		`Can place a liquidation that matches maker orders with maker rebates and empty fee collector`: {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_46000USD_Short,
+			},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParamsMakerRebate,
+
+			existingOrders: []types.Order{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
 			},
 
@@ -143,10 +192,25 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,
-				mock.Anything,
-				mock.Anything,
+				satypes.ModuleName,
+				authtypes.FeeCollectorName,
 				mock.Anything,
 			).Return(nil)
+			mockBankKeeper.On(
+				"SendCoinsFromModuleToModule",
+				mock.Anything,
+				satypes.ModuleName,
+				types.InsuranceFundName,
+				mock.Anything,
+			).Return(nil)
+			// Fee collector does not have any funds.
+			mockBankKeeper.On(
+				"SendCoinsFromModuleToModule",
+				mock.Anything,
+				authtypes.FeeCollectorName,
+				satypes.ModuleName,
+				mock.Anything,
+			).Return(sdkerrors.ErrInsufficientFunds)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
 
@@ -157,7 +221,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
 
-			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
 
 			// Set up USDC asset in assets module.
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
