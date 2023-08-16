@@ -3,7 +3,7 @@ package dydxprotocol.delaymsg;
 
 import "dydxprotocol/delaymsg/delayed_message.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/delaymsg/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types";
 
 // GenesisState defines the delaymsg module's genesis state.
 message GenesisState {

@@ -4,7 +4,7 @@ package dydxprotocol.delaymsg;
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/dydxprotocol/v4/x/delaymsg/types";
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types";
 
 // Msg defines the Msg service.
 service Msg {
