@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryGetClobPairRequest, QueryClobPairResponseSDKType, QueryAllClobPairRequest, QueryClobPairAllResponseSDKType } from "./query";
+import { QueryGetClobPairRequest, QueryClobPairResponseSDKType, QueryAllClobPairRequest, QueryClobPairAllResponseSDKType, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -12,6 +12,7 @@ export class LCDQueryClient {
     this.req = requestClient;
     this.clobPair = this.clobPair.bind(this);
     this.clobPairAll = this.clobPairAll.bind(this);
+    this.equityTierLimitConfiguration = this.equityTierLimitConfiguration.bind(this);
   }
   /* Queries a ClobPair by id. */
 
@@ -36,6 +37,13 @@ export class LCDQueryClient {
 
     const endpoint = `dydxprotocol/clob/clob_pair`;
     return await this.req.get<QueryClobPairAllResponseSDKType>(endpoint, options);
+  }
+  /* Queries EquityTierLimitConfiguration. */
+
+
+  async equityTierLimitConfiguration(_params: QueryEquityTierLimitConfigurationRequest = {}): Promise<QueryEquityTierLimitConfigurationResponseSDKType> {
+    const endpoint = `dydxprotocol/clob/equity_tier`;
+    return await this.req.get<QueryEquityTierLimitConfigurationResponseSDKType>(endpoint);
   }
 
 }

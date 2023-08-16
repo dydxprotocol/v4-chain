@@ -17,7 +17,7 @@
     "build:prod": "rm -rf build/ && tsc",
     "build:watch": "pnpm run build -- --watch",
     "test": "echo \"Error: no test specified\"",
-    "build:proto": "(cd proto && make proto-export) && rm -rf src/codegen && telescope transpile --protoDirs ./proto/.proto-export --outPath ./src/codegen --no-includeAminos --includeLCDClients --includeRPCClients",
+    "build:proto": "(cd ../../.. && make proto-export) && rm -rf src/codegen && telescope transpile --protoDirs ../../../proto/.proto-export --outPath ./src/codegen --no-includeAminos --includeLCDClients --includeRPCClients",
     "build:verify-proto": "pnpm run build:proto && git diff --exit-code src/codegen/dydxprotocol"
   },
   "repository": {

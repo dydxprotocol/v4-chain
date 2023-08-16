@@ -18,6 +18,9 @@ export const createLCDClient = async ({
       clob: new (await import("./clob/query.lcd")).LCDQueryClient({
         requestClient
       }),
+      delaymsg: new (await import("./delaymsg/query.lcd")).LCDQueryClient({
+        requestClient
+      }),
       epochs: new (await import("./epochs/query.lcd")).LCDQueryClient({
         requestClient
       }),

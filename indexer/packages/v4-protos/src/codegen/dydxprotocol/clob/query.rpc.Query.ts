@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, AreSubaccountsLiquidatableRequest, AreSubaccountsLiquidatableResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse } from "./query";
+import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, AreSubaccountsLiquidatableRequest, AreSubaccountsLiquidatableResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -16,6 +16,9 @@ export interface Query {
   /** Runs the MEV node <> node calculation with the provided parameters. */
 
   mevNodeToNodeCalculation(request: MevNodeToNodeCalculationRequest): Promise<MevNodeToNodeCalculationResponse>;
+  /** Queries EquityTierLimitConfiguration. */
+
+  equityTierLimitConfiguration(request?: QueryEquityTierLimitConfigurationRequest): Promise<QueryEquityTierLimitConfigurationResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -26,6 +29,7 @@ export class QueryClientImpl implements Query {
     this.clobPairAll = this.clobPairAll.bind(this);
     this.areSubaccountsLiquidatable = this.areSubaccountsLiquidatable.bind(this);
     this.mevNodeToNodeCalculation = this.mevNodeToNodeCalculation.bind(this);
+    this.equityTierLimitConfiguration = this.equityTierLimitConfiguration.bind(this);
   }
 
   clobPair(request: QueryGetClobPairRequest): Promise<QueryClobPairResponse> {
@@ -54,6 +58,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => MevNodeToNodeCalculationResponse.decode(new _m0.Reader(data)));
   }
 
+  equityTierLimitConfiguration(request: QueryEquityTierLimitConfigurationRequest = {}): Promise<QueryEquityTierLimitConfigurationResponse> {
+    const data = QueryEquityTierLimitConfigurationRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Query", "EquityTierLimitConfiguration", data);
+    return promise.then(data => QueryEquityTierLimitConfigurationResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -73,6 +83,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     mevNodeToNodeCalculation(request: MevNodeToNodeCalculationRequest): Promise<MevNodeToNodeCalculationResponse> {
       return queryService.mevNodeToNodeCalculation(request);
+    },
+
+    equityTierLimitConfiguration(request?: QueryEquityTierLimitConfigurationRequest): Promise<QueryEquityTierLimitConfigurationResponse> {
+      return queryService.equityTierLimitConfiguration(request);
     }
 
   };

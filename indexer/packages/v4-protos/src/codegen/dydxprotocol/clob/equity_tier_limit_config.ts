@@ -36,7 +36,7 @@ export interface EquityTierLimitConfigurationSDKType {
 
   stateful_order_equity_tiers: EquityTierLimitSDKType[];
 }
-/** Defines a rate limit over a specific number of blocks. */
+/** Defines an equity tier limit. */
 
 export interface EquityTierLimit {
   /**
@@ -48,7 +48,7 @@ export interface EquityTierLimit {
 
   limit: number;
 }
-/** Defines a rate limit over a specific number of blocks. */
+/** Defines an equity tier limit. */
 
 export interface EquityTierLimitSDKType {
   /**

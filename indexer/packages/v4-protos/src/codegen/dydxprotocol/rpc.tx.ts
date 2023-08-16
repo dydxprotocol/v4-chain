@@ -8,6 +8,7 @@ export const createRPCMsgClient = async ({
     blocktime: new (await import("./blocktime/tx.rpc.msg")).MsgClientImpl(rpc),
     bridge: new (await import("./bridge/tx.rpc.msg")).MsgClientImpl(rpc),
     clob: new (await import("./clob/tx.rpc.msg")).MsgClientImpl(rpc),
+    delaymsg: new (await import("./delaymsg/tx.rpc.msg")).MsgClientImpl(rpc),
     feetiers: new (await import("./feetiers/tx.rpc.msg")).MsgClientImpl(rpc),
     perpetuals: new (await import("./perpetuals/tx.rpc.msg")).MsgClientImpl(rpc),
     prices: new (await import("./prices/tx.rpc.msg")).MsgClientImpl(rpc),

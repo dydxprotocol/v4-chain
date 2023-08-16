@@ -13,6 +13,7 @@ export const createRPCQueryClient = async ({
       blocktime: (await import("./blocktime/query.rpc.Query")).createRpcQueryExtension(client),
       bridge: (await import("./bridge/query.rpc.Query")).createRpcQueryExtension(client),
       clob: (await import("./clob/query.rpc.Query")).createRpcQueryExtension(client),
+      delaymsg: (await import("./delaymsg/query.rpc.Query")).createRpcQueryExtension(client),
       epochs: (await import("./epochs/query.rpc.Query")).createRpcQueryExtension(client),
       feetiers: (await import("./feetiers/query.rpc.Query")).createRpcQueryExtension(client),
       perpetuals: (await import("./perpetuals/query.rpc.Query")).createRpcQueryExtension(client),

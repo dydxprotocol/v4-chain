@@ -636,6 +636,74 @@ export interface StatefulOrderEventV1_LongTermOrderPlacementV1 {
 export interface StatefulOrderEventV1_LongTermOrderPlacementV1SDKType {
   order?: IndexerOrderSDKType;
 }
+/**
+ * AssetCreateEventV1 message contains all the information about an new Asset on
+ * the v4 chain.
+ */
+
+export interface AssetCreateEventV1 {
+  /** Unique, sequentially-generated. */
+  id: number;
+  /**
+   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+   * Must be uppercase, unique and correspond to the canonical symbol of the
+   * full coin.
+   */
+
+  symbol: string;
+  /** `true` if this `Asset` has a valid `MarketId` value. */
+
+  hasMarket: boolean;
+  /**
+   * The `Id` of the `Market` associated with this `Asset`. It acts as the
+   * oracle price for the purposes of calculating collateral
+   * and margin requirements.
+   */
+
+  marketId: number;
+  /**
+   * The exponent for converting an atomic amount (1 'quantum')
+   * to a full coin. For example, if `atomic_resolution = -8`
+   * then an `asset_position` with `base_quantums = 1e8` is equivalent to
+   * a position size of one full coin.
+   */
+
+  atomicResolution: number;
+}
+/**
+ * AssetCreateEventV1 message contains all the information about an new Asset on
+ * the v4 chain.
+ */
+
+export interface AssetCreateEventV1SDKType {
+  /** Unique, sequentially-generated. */
+  id: number;
+  /**
+   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+   * Must be uppercase, unique and correspond to the canonical symbol of the
+   * full coin.
+   */
+
+  symbol: string;
+  /** `true` if this `Asset` has a valid `MarketId` value. */
+
+  has_market: boolean;
+  /**
+   * The `Id` of the `Market` associated with this `Asset`. It acts as the
+   * oracle price for the purposes of calculating collateral
+   * and margin requirements.
+   */
+
+  market_id: number;
+  /**
+   * The exponent for converting an atomic amount (1 'quantum')
+   * to a full coin. For example, if `atomic_resolution = -8`
+   * then an `asset_position` with `base_quantums = 1e8` is equivalent to
+   * a position size of one full coin.
+   */
+
+  atomic_resolution: number;
+}
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
   return {
@@ -1772,6 +1840,91 @@ export const StatefulOrderEventV1_LongTermOrderPlacementV1 = {
   fromPartial(object: DeepPartial<StatefulOrderEventV1_LongTermOrderPlacementV1>): StatefulOrderEventV1_LongTermOrderPlacementV1 {
     const message = createBaseStatefulOrderEventV1_LongTermOrderPlacementV1();
     message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseAssetCreateEventV1(): AssetCreateEventV1 {
+  return {
+    id: 0,
+    symbol: "",
+    hasMarket: false,
+    marketId: 0,
+    atomicResolution: 0
+  };
+}
+
+export const AssetCreateEventV1 = {
+  encode(message: AssetCreateEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.symbol !== "") {
+      writer.uint32(18).string(message.symbol);
+    }
+
+    if (message.hasMarket === true) {
+      writer.uint32(24).bool(message.hasMarket);
+    }
+
+    if (message.marketId !== 0) {
+      writer.uint32(32).uint32(message.marketId);
+    }
+
+    if (message.atomicResolution !== 0) {
+      writer.uint32(40).sint32(message.atomicResolution);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AssetCreateEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAssetCreateEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.symbol = reader.string();
+          break;
+
+        case 3:
+          message.hasMarket = reader.bool();
+          break;
+
+        case 4:
+          message.marketId = reader.uint32();
+          break;
+
+        case 5:
+          message.atomicResolution = reader.sint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AssetCreateEventV1>): AssetCreateEventV1 {
+    const message = createBaseAssetCreateEventV1();
+    message.id = object.id ?? 0;
+    message.symbol = object.symbol ?? "";
+    message.hasMarket = object.hasMarket ?? false;
+    message.marketId = object.marketId ?? 0;
+    message.atomicResolution = object.atomicResolution ?? 0;
     return message;
   }
 

@@ -2,47 +2,48 @@ import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } fr
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { ValidatorMevMatches, ValidatorMevMatchesSDKType, MevNodeToNodeMetrics, MevNodeToNodeMetricsSDKType } from "./mev";
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
+import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
-/** QueryGetClobPairRequest is request type for the QueryRPC method. */
+/** QueryGetClobPairRequest is request type for the ClobPair method. */
 
 export interface QueryGetClobPairRequest {
-  /** QueryGetClobPairRequest is request type for the QueryRPC method. */
+  /** QueryGetClobPairRequest is request type for the ClobPair method. */
   id: number;
 }
-/** QueryGetClobPairRequest is request type for the QueryRPC method. */
+/** QueryGetClobPairRequest is request type for the ClobPair method. */
 
 export interface QueryGetClobPairRequestSDKType {
-  /** QueryGetClobPairRequest is request type for the QueryRPC method. */
+  /** QueryGetClobPairRequest is request type for the ClobPair method. */
   id: number;
 }
-/** QueryClobPairResponse is response type for the QueryRPC method. */
+/** QueryClobPairResponse is response type for the ClobPair method. */
 
 export interface QueryClobPairResponse {
   clobPair?: ClobPair;
 }
-/** QueryClobPairResponse is response type for the QueryRPC method. */
+/** QueryClobPairResponse is response type for the ClobPair method. */
 
 export interface QueryClobPairResponseSDKType {
   clob_pair?: ClobPairSDKType;
 }
-/** QueryAllClobPairRequest is request type for the QueryRPC method. */
+/** QueryAllClobPairRequest is request type for the ClobPairAll method. */
 
 export interface QueryAllClobPairRequest {
   pagination?: PageRequest;
 }
-/** QueryAllClobPairRequest is request type for the QueryRPC method. */
+/** QueryAllClobPairRequest is request type for the ClobPairAll method. */
 
 export interface QueryAllClobPairRequestSDKType {
   pagination?: PageRequestSDKType;
 }
-/** QueryClobPairAllResponse is request type for the QueryRPC method. */
+/** QueryClobPairAllResponse is response type for the ClobPairAll method. */
 
 export interface QueryClobPairAllResponse {
   clobPair: ClobPair[];
   pagination?: PageResponse;
 }
-/** QueryClobPairAllResponse is request type for the QueryRPC method. */
+/** QueryClobPairAllResponse is response type for the ClobPairAll method. */
 
 export interface QueryClobPairAllResponseSDKType {
   clob_pair: ClobPairSDKType[];
@@ -157,6 +158,34 @@ export interface MevNodeToNodeCalculationResponse_MevAndVolumePerClobSDKType {
   clob_pair_id: number;
   mev: number;
   volume: Long;
+}
+/**
+ * QueryEquityTierLimitConfigurationRequest is a request message for
+ * EquityTierLimitConfiguration.
+ */
+
+export interface QueryEquityTierLimitConfigurationRequest {}
+/**
+ * QueryEquityTierLimitConfigurationRequest is a request message for
+ * EquityTierLimitConfiguration.
+ */
+
+export interface QueryEquityTierLimitConfigurationRequestSDKType {}
+/**
+ * QueryEquityTierLimitConfigurationResponse is a response message that contains
+ * the EquityTierLimitConfiguration.
+ */
+
+export interface QueryEquityTierLimitConfigurationResponse {
+  equityTierLimitConfig?: EquityTierLimitConfiguration;
+}
+/**
+ * QueryEquityTierLimitConfigurationResponse is a response message that contains
+ * the EquityTierLimitConfiguration.
+ */
+
+export interface QueryEquityTierLimitConfigurationResponseSDKType {
+  equity_tier_limit_config?: EquityTierLimitConfigurationSDKType;
 }
 
 function createBaseQueryGetClobPairRequest(): QueryGetClobPairRequest {
@@ -654,6 +683,85 @@ export const MevNodeToNodeCalculationResponse_MevAndVolumePerClob = {
     message.clobPairId = object.clobPairId ?? 0;
     message.mev = object.mev ?? 0;
     message.volume = object.volume !== undefined && object.volume !== null ? Long.fromValue(object.volume) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseQueryEquityTierLimitConfigurationRequest(): QueryEquityTierLimitConfigurationRequest {
+  return {};
+}
+
+export const QueryEquityTierLimitConfigurationRequest = {
+  encode(_: QueryEquityTierLimitConfigurationRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryEquityTierLimitConfigurationRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryEquityTierLimitConfigurationRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryEquityTierLimitConfigurationRequest>): QueryEquityTierLimitConfigurationRequest {
+    const message = createBaseQueryEquityTierLimitConfigurationRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryEquityTierLimitConfigurationResponse(): QueryEquityTierLimitConfigurationResponse {
+  return {
+    equityTierLimitConfig: undefined
+  };
+}
+
+export const QueryEquityTierLimitConfigurationResponse = {
+  encode(message: QueryEquityTierLimitConfigurationResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.equityTierLimitConfig !== undefined) {
+      EquityTierLimitConfiguration.encode(message.equityTierLimitConfig, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryEquityTierLimitConfigurationResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryEquityTierLimitConfigurationResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.equityTierLimitConfig = EquityTierLimitConfiguration.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryEquityTierLimitConfigurationResponse>): QueryEquityTierLimitConfigurationResponse {
+    const message = createBaseQueryEquityTierLimitConfigurationResponse();
+    message.equityTierLimitConfig = object.equityTierLimitConfig !== undefined && object.equityTierLimitConfig !== null ? EquityTierLimitConfiguration.fromPartial(object.equityTierLimitConfig) : undefined;
     return message;
   }
 
