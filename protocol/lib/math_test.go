@@ -69,6 +69,48 @@ func TestUint64LinearInterpolate(t *testing.T) {
 	}
 }
 
+func TestAddToUint32(t *testing.T) {
+	tests := map[string]struct {
+		a           int64
+		b           uint32
+		expected    int64
+		expectedErr error
+	}{
+		"success: smallest possible output": {
+			a:        math.MinInt64,
+			b:        0,
+			expected: math.MinInt64,
+		},
+		"a + b overflows int64: << b": {
+			a:           math.MaxInt64,
+			b:           1,
+			expectedErr: fmt.Errorf("int64 overflow: %d + %d", math.MaxInt64, 1),
+		},
+		"a + b overflows int64: smallest possible a": {
+			a:           math.MaxInt64 - math.MaxUint32 + 1,
+			b:           math.MaxUint32,
+			expectedErr: fmt.Errorf("int64 overflow: %d + %d", math.MaxInt64-math.MaxUint32+1, math.MaxUint32),
+		},
+		"success": {
+			a:        math.MaxUint32,
+			b:        1 << 20,
+			expected: math.MaxUint32 + 1<<20,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual, actualError := lib.AddUint32(tc.a, tc.b)
+			if tc.expectedErr == nil {
+				require.Nil(t, actualError)
+				require.Equal(t, tc.expected, actual)
+			} else {
+				require.EqualError(t, actualError, tc.expectedErr.Error())
+				require.Zero(t, actual)
+			}
+		})
+	}
+}
+
 func TestDivisionUint32RoundUp(t *testing.T) {
 	tests := map[string]struct {
 		x              uint32

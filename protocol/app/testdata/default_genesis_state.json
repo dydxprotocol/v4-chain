@@ -103,6 +103,10 @@
       "amount": "1000"
     }
   },
+  "delaymsg": {
+    "delayed_messages": [],
+    "num_messages": 0
+  },
   "distribution": {
     "params": {
       "community_tax": "0.020000000000000000",
