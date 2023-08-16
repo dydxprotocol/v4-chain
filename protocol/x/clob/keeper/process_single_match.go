@@ -114,6 +114,9 @@ func (k Keeper) ProcessSingleMatch(
 	if takerMatchableOrder.IsLiquidation() {
 		// Liquidation orders do not take trading fees because they already pay a liquidation fee.
 		takerFeePpm = 0
+		if makerFeePpm < 0 {
+			makerFeePpm = 0
+		}
 		takerInsuranceFundDelta, err = k.validateMatchedLiquidation(
 			ctx,
 			takerMatchableOrder,
