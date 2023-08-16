@@ -20,6 +20,7 @@ func (k msgServer) DelayMessage(
 ) (*types.MsgDelayMessageResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	authorities := k.GetAuthorities()
 	// TODO(CORE-437): Filter out non-authorized messages.
 
 	var sdkMsg sdk.Msg
