@@ -1,69 +1,58 @@
 package keeper_test
 
 import (
-	"errors"
+	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMsgServerUpdateSafetyParams(t *testing.T) {
-	testMsg := types.MsgUpdateSafetyParams{
-		Authority: "authority",
-		Params: types.SafetyParams{
-			IsDisabled:  false,
-			DelayBlocks: 10,
-		},
-	}
+	k, ms, ctx := setupMsgServer(t)
 
 	tests := map[string]struct {
-		setupMocks   func(ctx sdk.Context, mck *mocks.BridgeKeeper)
+		testMsg      types.MsgUpdateSafetyParams
 		expectedResp *types.MsgUpdateSafetyParamsResponse
 		expectedErr  string
 	}{
 		"Success": {
-			setupMocks: func(ctx sdk.Context, mck *mocks.BridgeKeeper) {
-				mck.On("UpdateSafetyParams", mock.Anything, testMsg.Params).Return(nil)
+			testMsg: types.MsgUpdateSafetyParams{
+				Authority: k.GetAuthority(),
+				Params: types.SafetyParams{
+					IsDisabled:  false,
+					DelayBlocks: 100,
+				},
 			},
 			expectedResp: &types.MsgUpdateSafetyParamsResponse{},
 		},
-		"Failure: keeper error is propagated": {
-			setupMocks: func(ctx sdk.Context, mck *mocks.BridgeKeeper) {
-				mck.On("UpdateSafetyParams", mock.Anything, testMsg.Params).Return(
-					errors.New("can't update event params"),
-				)
+		"Failure: invalid authority": {
+			testMsg: types.MsgUpdateSafetyParams{
+				Authority: "12345",
+				Params: types.SafetyParams{
+					IsDisabled:  false,
+					DelayBlocks: 100,
+				},
 			},
-			expectedErr: "can't update event params",
+			expectedErr: fmt.Sprintf(
+				"invalid authority: expected %s, got %s",
+				k.GetAuthority(),
+				"12345",
+			),
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Initialize Mocks and Context.
-			mockKeeper := &mocks.BridgeKeeper{}
-			msgServer := keeper.NewMsgServerImpl(mockKeeper)
-			ctx, _, _, _, _, _ := keepertest.BridgeKeepers(t)
-			tc.setupMocks(ctx, mockKeeper)
-			goCtx := sdk.WrapSDKContext(ctx)
-
-			resp, err := msgServer.UpdateSafetyParams(goCtx, &testMsg)
+			resp, err := ms.UpdateSafetyParams(ctx, &tc.testMsg)
 
 			// Assert msg server response.
 			require.Equal(t, tc.expectedResp, resp)
 			if tc.expectedErr != "" {
-				require.Equal(t, tc.expectedErr, err.Error())
+				require.ErrorContains(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
 			}
-
-			// Assert mock expectations.
-			result := mockKeeper.AssertExpectations(t)
-			require.True(t, result)
 		})
 	}
 }

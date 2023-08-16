@@ -1,67 +1,67 @@
 package keeper_test
 
 import (
-	"errors"
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMsgServerCompleteBridge(t *testing.T) {
-	testMsg := types.MsgCompleteBridge{
-		Authority: "authority",
-		Event:     constants.BridgeEvent_Id0_Height0,
-	}
+	k, ms, ctx := setupMsgServer(t)
 
 	tests := map[string]struct {
-		setupMocks   func(ctx sdk.Context, mck *mocks.BridgeKeeper)
+		testMsg      types.MsgCompleteBridge
 		expectedResp *types.MsgCompleteBridgeResponse
 		expectedErr  string
 	}{
 		"Success": {
-			setupMocks: func(ctx sdk.Context, mck *mocks.BridgeKeeper) {
-				mck.On("CompleteBridge", mock.Anything, testMsg.Event).Return(nil)
+			testMsg: types.MsgCompleteBridge{
+				Authority: k.GetSelfAuthority(),
+				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedResp: &types.MsgCompleteBridgeResponse{},
 		},
-		"Failure: keeper error is propagated": {
-			setupMocks: func(ctx sdk.Context, mck *mocks.BridgeKeeper) {
-				mck.On("CompleteBridge", mock.Anything, testMsg.Event).Return(
-					errors.New("can't complete bridge"),
-				)
+		"Failure: invalid address to mint to": {
+			testMsg: types.MsgCompleteBridge{
+				Authority: k.GetSelfAuthority(),
+				Event: types.BridgeEvent{
+					Id:             0,
+					Coin:           sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+					Address:        "invalid",
+					EthBlockHeight: 1,
+				},
 			},
-			expectedErr: "can't complete bridge",
+			expectedErr: "decoding bech32 failed",
+		},
+		"Failure: invalid authority": {
+			testMsg: types.MsgCompleteBridge{
+				Authority: "12345",
+				Event:     constants.BridgeEvent_Id0_Height0,
+			},
+			expectedErr: fmt.Sprintf(
+				"expected %s, got %s: Authority is invalid",
+				k.GetSelfAuthority(),
+				"12345",
+			),
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Initialize Mocks and Context.
-			mockKeeper := &mocks.BridgeKeeper{}
-			msgServer := keeper.NewMsgServerImpl(mockKeeper)
-			ctx, _, _, _, _, _ := keepertest.BridgeKeepers(t)
-			tc.setupMocks(ctx, mockKeeper)
-			goCtx := sdk.WrapSDKContext(ctx)
-
-			resp, err := msgServer.CompleteBridge(goCtx, &testMsg)
+			resp, err := ms.CompleteBridge(ctx, &tc.testMsg)
 
 			// Assert msg server response.
 			require.Equal(t, tc.expectedResp, resp)
 			if tc.expectedErr != "" {
-				require.Equal(t, tc.expectedErr, err.Error())
+				require.ErrorContains(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
 			}
-
-			// Assert mock expectations.
-			result := mockKeeper.AssertExpectations(t)
-			require.True(t, result)
 		})
 	}
 }

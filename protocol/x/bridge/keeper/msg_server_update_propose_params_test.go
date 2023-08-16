@@ -1,72 +1,63 @@
 package keeper_test
 
 import (
-	"errors"
+	"fmt"
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMsgServerUpdateProposeParams(t *testing.T) {
-	testMsg := types.MsgUpdateProposeParams{
-		Authority: "authority",
-		Params: types.ProposeParams{
-			MaxBridgesPerBlock:           2,
-			ProposeDelayDuration:         time.Second,
-			SkipRatePpm:                  800_000,
-			SkipIfBlockDelayedByDuration: time.Second,
-		},
-	}
+	k, ms, ctx := setupMsgServer(t)
 
 	tests := map[string]struct {
-		setupMocks   func(ctx sdk.Context, mck *mocks.BridgeKeeper)
+		testMsg      types.MsgUpdateProposeParams
 		expectedResp *types.MsgUpdateProposeParamsResponse
 		expectedErr  string
 	}{
 		"Success": {
-			setupMocks: func(ctx sdk.Context, mck *mocks.BridgeKeeper) {
-				mck.On("UpdateProposeParams", mock.Anything, testMsg.Params).Return(nil)
+			testMsg: types.MsgUpdateProposeParams{
+				Authority: k.GetAuthority(),
+				Params: types.ProposeParams{
+					MaxBridgesPerBlock:           3,
+					ProposeDelayDuration:         time.Second,
+					SkipRatePpm:                  600_000,
+					SkipIfBlockDelayedByDuration: time.Second,
+				},
 			},
 			expectedResp: &types.MsgUpdateProposeParamsResponse{},
 		},
-		"Failure: keeper error is propagated": {
-			setupMocks: func(ctx sdk.Context, mck *mocks.BridgeKeeper) {
-				mck.On("UpdateProposeParams", mock.Anything, testMsg.Params).Return(
-					errors.New("can't update event params"),
-				)
+		"Failure: invalid authority": {
+			testMsg: types.MsgUpdateProposeParams{
+				Authority: "12345",
+				Params: types.ProposeParams{
+					MaxBridgesPerBlock:           3,
+					ProposeDelayDuration:         time.Second,
+					SkipRatePpm:                  600_000,
+					SkipIfBlockDelayedByDuration: time.Second,
+				},
 			},
-			expectedErr: "can't update event params",
+			expectedErr: fmt.Sprintf(
+				"invalid authority: expected %s, got %s",
+				k.GetAuthority(),
+				"12345",
+			),
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Initialize Mocks and Context.
-			mockKeeper := &mocks.BridgeKeeper{}
-			msgServer := keeper.NewMsgServerImpl(mockKeeper)
-			ctx, _, _, _, _, _ := keepertest.BridgeKeepers(t)
-			tc.setupMocks(ctx, mockKeeper)
-			goCtx := sdk.WrapSDKContext(ctx)
-
-			resp, err := msgServer.UpdateProposeParams(goCtx, &testMsg)
+			resp, err := ms.UpdateProposeParams(ctx, &tc.testMsg)
 
 			// Assert msg server response.
 			require.Equal(t, tc.expectedResp, resp)
 			if tc.expectedErr != "" {
-				require.Equal(t, tc.expectedErr, err.Error())
+				require.ErrorContains(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
 			}
-
-			// Assert mock expectations.
-			result := mockKeeper.AssertExpectations(t)
-			require.True(t, result)
 		})
 	}
 }
