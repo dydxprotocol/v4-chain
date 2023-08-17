@@ -634,6 +634,38 @@ export async function expectFillSubaccountKafkaMessageFromLiquidationEvent(
   });
 }
 
+export function expectOrderSubaccountKafkaMessage(
+  producerSendMock: jest.SpyInstance,
+  subaccountIdProto: IndexerSubaccountId,
+  order: OrderFromDatabase,
+  blockHeight: string = '3',
+  transactionIndex: number = 0,
+  eventIndex: number = 0,
+  ticker: string = defaultPerpetualMarketTicker,
+): void {
+  const contents: SubaccountMessageContents = {
+    orders: [
+      {
+        ...order!,
+        timeInForce: apiTranslations.orderTIFToAPITIF(order!.timeInForce),
+        postOnly: apiTranslations.isOrderTIFPostOnly(order!.timeInForce),
+        goodTilBlock: order!.goodTilBlock,
+        goodTilBlockTime: order!.goodTilBlockTime,
+        ticker,
+      },
+    ],
+  };
+
+  expectSubaccountKafkaMessage({
+    producerSendMock,
+    blockHeight,
+    transactionIndex,
+    eventIndex,
+    contents: JSON.stringify(contents),
+    subaccountIdProto,
+  });
+}
+
 export async function expectOrderFillAndPositionSubaccountKafkaMessageFromIds(
   producerSendMock: jest.SpyInstance,
   subaccountIdProto: IndexerSubaccountId,

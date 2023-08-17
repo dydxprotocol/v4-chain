@@ -144,9 +144,32 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   }
 
   private validateConditionalOrderTriggered(
-    _conditionalOrderTriggered: StatefulOrderEventV1_ConditionalOrderTriggeredV1,
+    conditionalOrderTriggered: StatefulOrderEventV1_ConditionalOrderTriggeredV1,
   ): void {
-    // TODO(IND-334): Implement validation logic
+    if (conditionalOrderTriggered.triggeredOrderId === undefined) {
+      return this.logAndThrowParseMessageError(
+        'StatefulOrderEvent conditional order triggered must contain an orderId',
+        { event: this.event },
+      );
+    }
+
+    if (conditionalOrderTriggered.triggeredOrderId.orderFlags !== ORDER_FLAG_CONDITIONAL) {
+      return this.logAndThrowParseMessageError(
+        'StatefulOrderEvent conditional order triggered must have order flag ' +
+        `${ORDER_FLAG_CONDITIONAL}`,
+        { event: this.event },
+      );
+    }
+
+    const orderIdErrorMessage: string | undefined = validateOrderIdAndReturnErrorMessage(
+      conditionalOrderTriggered.triggeredOrderId,
+    );
+    if (orderIdErrorMessage !== undefined) {
+      return this.logAndThrowParseMessageError(
+        `StatefulOrderEvent conditional order triggered ${orderIdErrorMessage}`,
+        { event: this.event },
+      );
+    }
   }
 
   private validateLongTermOrderPlacement(
