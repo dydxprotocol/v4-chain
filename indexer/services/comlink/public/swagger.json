@@ -621,6 +621,9 @@
           "clientMetadata": {
             "type": "string"
           },
+          "triggerPrice": {
+            "type": "string"
+          },
           "timeInForce": {
             "$ref": "#/components/schemas/APITimeInForce"
           },

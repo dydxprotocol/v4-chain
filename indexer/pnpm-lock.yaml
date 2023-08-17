@@ -389,6 +389,7 @@ importers:
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
       '@dydxprotocol-indexer/redis': workspace:^0.0.1
+      '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
       '@tsoa/runtime': ^5.0.0
       '@types/big.js': ^6.1.5
@@ -435,6 +436,7 @@ importers:
       '@dydxprotocol-indexer/base': link:../../packages/base
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/redis': link:../../packages/redis
+      '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       '@tsoa/runtime': 5.0.0
       big.js: 6.2.1
