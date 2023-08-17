@@ -938,7 +938,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].price' -v '1000000000'          # $1 = 1 USDT.
 	# USDT Exchange Config
 	usdt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/usdt_exchange_config.json" | jq -c '.')
-	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].exchange_config_json' -v "$usdt_exchange_config_json"
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$usdt_exchange_config_json"
 
 	total_accounts_quote_balance=0
 	acct_idx=0
