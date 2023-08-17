@@ -246,7 +246,7 @@ func (k Keeper) setNumClobPairs(ctx sdk.Context, num uint32) {
 	store.Set(types.KeyPrefix(types.NumClobPairsKey), lib.Uint32ToBytes(num))
 }
 
-// GetClobPairForPerpetual gets the first CLOB pair ID associated with the provided perpetual ID.
+// GetClobPairIdForPerpetual gets the first CLOB pair ID associated with the provided perpetual ID.
 // It returns an error if there are no CLOB pair IDs associated with the perpetual ID.
 func (k Keeper) GetClobPairIdForPerpetual(
 	ctx sdk.Context,
@@ -265,7 +265,7 @@ func (k Keeper) GetClobPairIdForPerpetual(
 	}
 
 	if len(clobPairIds) == 0 {
-		panic("GetClobPairForPerpetual: Perpetual ID was created without a CLOB pair ID.")
+		panic("GetClobPairIdForPerpetual: Perpetual ID was created without a CLOB pair ID.")
 	}
 
 	return clobPairIds[0], nil

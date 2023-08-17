@@ -505,7 +505,7 @@ func TestGetClobPairIdForPerpetual_ErrorNoClobPair(t *testing.T) {
 	)
 }
 
-func TestGetClobPairForPerpetual_PanicsEmptyClobPair(t *testing.T) {
+func TestGetClobPairIdForPerpetual_PanicsEmptyClobPair(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
