@@ -28,7 +28,7 @@ type (
 
 		MemClob                      types.MemClob
 		UntriggeredConditionalOrders map[types.ClobPairId]*UntriggeredConditionalOrders
-		PerpetualIdToClobPairId	 map[uint32][]types.ClobPairId
+		PerpetualIdToClobPairId      map[uint32][]types.ClobPairId
 
 		subaccountsKeeper   types.SubaccountsKeeper
 		assetsKeeper        types.AssetsKeeper
