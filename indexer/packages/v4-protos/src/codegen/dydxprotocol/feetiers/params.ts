@@ -17,7 +17,7 @@ export interface PerpetualFeeParamsSDKType {
 export interface PerpetualFeeTier {
   /** Human-readable name of the tier, e.g. "Gold". */
   name: string;
-  /** The trader's absolute volume requirement. */
+  /** The trader's absolute volume requirement in quote quantums. */
 
   absoluteVolumeRequirement: Long;
   /** The total volume share requirement. */
@@ -38,7 +38,7 @@ export interface PerpetualFeeTier {
 export interface PerpetualFeeTierSDKType {
   /** Human-readable name of the tier, e.g. "Gold". */
   name: string;
-  /** The trader's absolute volume requirement. */
+  /** The trader's absolute volume requirement in quote quantums. */
 
   absolute_volume_requirement: Long;
   /** The total volume share requirement. */
