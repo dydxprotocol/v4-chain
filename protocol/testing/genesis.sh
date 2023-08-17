@@ -10,6 +10,9 @@ set -eo pipefail
 # Obtained from `authtypes.NewModuleAddress(subaccounttypes.ModuleName)`.
 SUBACCOUNTS_MODACC_ADDR="dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6"
 REWARDS_VESTER_ACCOUNT_ADDR="dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp"
+# Address of the `bridge` module account.
+# Obtained from `authtypes.NewModuleAddress(bridgetypes.ModuleName)`.
+BRIDGE_MODACC_ADDR="dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"
 USDC_DENOM="ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
 REWARD_TOKEN="testnet_reward_token"
 NATIVE_TOKEN="dv4tnt" # public testnet token
@@ -946,6 +949,14 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${REWARD_TOKEN}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "1000000000000" # 1e12
+	next_bank_idx=$(($next_bank_idx+1))
+
+	# Initialize bank balance of bridge module account.
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${BRIDGE_MODACC_ADDR}"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${NATIVE_TOKEN}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "1000000000" # 1e9
 
     # Use ATOM-USD as test oracle price of the reward token.
 	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v '13'

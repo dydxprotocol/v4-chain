@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/require"
@@ -26,7 +25,7 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 			},
 			expectedResp: &types.MsgCompleteBridgeResponse{},
 		},
-		"Failure: invalid address to mint to": {
+		"Failure: invalid address": {
 			testMsg: types.MsgCompleteBridge{
 				Authority: k.GetBridgeAuthority(),
 				Event: types.BridgeEvent{
