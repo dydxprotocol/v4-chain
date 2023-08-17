@@ -72,7 +72,7 @@ func (m *PerpetualFeeParams) GetTiers() []*PerpetualFeeTier {
 type PerpetualFeeTier struct {
 	// Human-readable name of the tier, e.g. "Gold".
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// The trader's absolute volume requirement.
+	// The trader's absolute volume requirement in USDC quantums.
 	AbsoluteVolumeRequirement uint64 `protobuf:"varint,2,opt,name=absolute_volume_requirement,json=absoluteVolumeRequirement,proto3" json:"absolute_volume_requirement,omitempty"`
 	// The total volume share requirement.
 	TotalVolumeShareRequirementPpm uint32 `protobuf:"varint,3,opt,name=total_volume_share_requirement_ppm,json=totalVolumeShareRequirementPpm,proto3" json:"total_volume_share_requirement_ppm,omitempty"`
