@@ -404,7 +404,7 @@ function edit_genesis() {
 
 	# Perpetual: TEST-USD
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.perpetuals.[]' -v "{}"
-	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33] .ticker' -v 'TEST-USD'
+	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].ticker' -v 'TEST-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].id' -v '33'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].market_id' -v '33'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].atomic_resolution' -v '-10'
