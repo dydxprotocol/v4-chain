@@ -21,12 +21,12 @@ import (
 )
 
 type testMemClobMethodArgs struct {
-	// Input args for `MemClob.GetClobPairForPerpetual`
+	// Input args for `MemClob.GetClobPairIdForPerpetual`
 	perpetualId uint32
 
-	// Return values from `MemClob.GetClobPairForPerpetual`
+	// Return values from `MemClob.GetClobPairIdForPerpetual`
 	clobPairId                 types.ClobPairId
-	getClobPairForPerpetualErr error
+	getClobPairIdForPerpetualErr error
 
 	// Input args for `MemClob.GetPricePremium`
 	clobPair              types.ClobPair
@@ -65,12 +65,12 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {
 				mck.On(
-					"GetClobPairForPerpetual",
+					"GetClobPairIdForPerpetual",
 					mock.Anything,
 					args.perpetualId,
 				).Return(
 					args.clobPairId,
-					args.getClobPairForPerpetualErr,
+					args.getClobPairIdForPerpetualErr,
 				)
 				mck.On(
 					"GetPricePremium",
@@ -89,23 +89,23 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 				)
 			},
 		},
-		"Failure: GetClobPairForPerpetual error": {
+		"Failure: GetClobPairIdForPerpetual error": {
 			args: testMemClobMethodArgs{
 				perpetualId:                0,
 				clobPair:                   constants.ClobPair_Btc,
-				getClobPairForPerpetualErr: errors.New("GetClobPairForPerpetual error"),
+				getClobPairIdForPerpetualErr: errors.New("GetClobPairIdForPerpetual error"),
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {
 				mck.On(
-					"GetClobPairForPerpetual",
+					"GetClobPairIdForPerpetual",
 					mock.Anything,
 					args.perpetualId,
 				).Return(
 					args.clobPairId,
-					args.getClobPairForPerpetualErr,
+					args.getClobPairIdForPerpetualErr,
 				)
 			},
-			expectedErr: errors.New("GetClobPairForPerpetual error"),
+			expectedErr: errors.New("GetClobPairIdForPerpetual error"),
 		},
 		"Failure: GetPricePremium failure": {
 			args: testMemClobMethodArgs{
@@ -124,12 +124,12 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {
 				mck.On(
-					"GetClobPairForPerpetual",
+					"GetClobPairIdForPerpetual",
 					mock.Anything,
 					args.perpetualId,
 				).Return(
 					args.clobPairId,
-					args.getClobPairForPerpetualErr,
+					args.getClobPairIdForPerpetualErr,
 				)
 				mck.On(
 					"GetPricePremium",
@@ -157,12 +157,12 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {
 				mck.On(
-					"GetClobPairForPerpetual",
+					"GetClobPairIdForPerpetual",
 					mock.Anything,
 					args.perpetualId,
 				).Return(
 					args.clobPairId,
-					args.getClobPairForPerpetualErr,
+					args.getClobPairIdForPerpetualErr,
 				)
 			},
 			expectedErr: sdkerrors.Wrapf(
