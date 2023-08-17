@@ -14,7 +14,7 @@ message PerpetualFeeTier {
   // Human-readable name of the tier, e.g. "Gold".
   string name = 1;
 
-  // The trader's absolute volume requirement in USDC quantums.
+  // The trader's absolute volume requirement in quote quantums.
   uint64 absolute_volume_requirement = 2;
 
   // The total volume share requirement.
