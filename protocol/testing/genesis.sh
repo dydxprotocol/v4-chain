@@ -20,6 +20,7 @@ DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 ETH_CHAIN_ID=11155111 # sepolia
 ETH_BRIDGE_ADDRESS="0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935"
+BRIDGE_MODACC_BALANCE=1000000000000000000000000000 # 1e27
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0 # TODO(CORE-329)
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=0 # TODO(CORE-329)
 
@@ -956,7 +957,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${BRIDGE_MODACC_ADDR}"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${NATIVE_TOKEN}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "1000000000" # 1e9
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "${BRIDGE_MODACC_BALANCE}"
 
     # Use ATOM-USD as test oracle price of the reward token.
 	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v '13'
