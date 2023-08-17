@@ -316,7 +316,6 @@ describe('stateful-order-validator', () => {
       ],
 
       // Conditional order triggered Validations
-      // Order Removal Validations
       [
         'conditional order triggered does not contain orderId',
         {
