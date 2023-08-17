@@ -110,7 +110,7 @@ func (p *PendingUpdates) AddPerpetualFill(
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	isBuy bool,
-	feePpm uint32,
+	feePpm int32,
 	bigFillBaseQuantums *big.Int,
 	bigFillQuoteQuantums *big.Int,
 ) {
@@ -168,7 +168,7 @@ func (p *PendingUpdates) AddPerpetualFill(
 		totalFee = big.NewInt(0)
 	}
 
-	bigFeeQuoteQuantums := lib.BigIntMulPpm(bigFillQuoteQuantums, feePpm)
+	bigFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, feePpm)
 
 	totalFee.Add(
 		totalFee,
