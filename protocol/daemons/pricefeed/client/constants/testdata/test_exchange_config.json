@@ -1,0 +1,9 @@
+{
+    "exchanges": [
+      {
+        "exchangeName": "TestVolatileExchange",
+        "ticker": "\"TEST-USD\""
+      }
+    ]
+  }
+  
