@@ -56,8 +56,8 @@ func (_m *BridgeKeeper) GetAcknowledgedEventInfo(ctx types.Context) bridgetypes.
 	return r0
 }
 
-// GetAuthority provides a mock function with given fields:
-func (_m *BridgeKeeper) GetAuthority() string {
+// GetBridgeAuthority provides a mock function with given fields:
+func (_m *BridgeKeeper) GetBridgeAuthority() string {
 	ret := _m.Called()
 
 	var r0 string
@@ -79,6 +79,20 @@ func (_m *BridgeKeeper) GetEventParams(ctx types.Context) bridgetypes.EventParam
 		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(bridgetypes.EventParams)
+	}
+
+	return r0
+}
+
+// GetGovAuthority provides a mock function with given fields:
+func (_m *BridgeKeeper) GetGovAuthority() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
 	}
 
 	return r0
@@ -121,20 +135,6 @@ func (_m *BridgeKeeper) GetSafetyParams(ctx types.Context) bridgetypes.SafetyPar
 		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(bridgetypes.SafetyParams)
-	}
-
-	return r0
-}
-
-// GetSelfAuthority provides a mock function with given fields:
-func (_m *BridgeKeeper) GetSelfAuthority() string {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
 	}
 
 	return r0

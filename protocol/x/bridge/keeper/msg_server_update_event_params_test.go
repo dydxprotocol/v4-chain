@@ -18,7 +18,7 @@ func TestMsgServerUpdateEventParams(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgUpdateEventParams{
-				Authority: k.GetAuthority(),
+				Authority: k.GetGovAuthority(),
 				Params: types.EventParams{
 					Denom:      "denom",
 					EthChainId: 1,
@@ -38,7 +38,7 @@ func TestMsgServerUpdateEventParams(t *testing.T) {
 			},
 			expectedErr: fmt.Sprintf(
 				"invalid authority: expected %s, got %s",
-				k.GetAuthority(),
+				k.GetGovAuthority(),
 				"12345",
 			),
 		},

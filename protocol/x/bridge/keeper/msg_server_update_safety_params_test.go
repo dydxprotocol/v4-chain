@@ -18,7 +18,7 @@ func TestMsgServerUpdateSafetyParams(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgUpdateSafetyParams{
-				Authority: k.GetAuthority(),
+				Authority: k.GetGovAuthority(),
 				Params: types.SafetyParams{
 					IsDisabled:  false,
 					DelayBlocks: 100,
@@ -36,7 +36,7 @@ func TestMsgServerUpdateSafetyParams(t *testing.T) {
 			},
 			expectedErr: fmt.Sprintf(
 				"invalid authority: expected %s, got %s",
-				k.GetAuthority(),
+				k.GetGovAuthority(),
 				"12345",
 			),
 		},

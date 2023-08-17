@@ -14,11 +14,11 @@ func (k msgServer) UpdateEventParams(
 	goCtx context.Context,
 	msg *types.MsgUpdateEventParams,
 ) (*types.MsgUpdateEventParamsResponse, error) {
-	if k.Keeper.GetAuthority() != msg.Authority {
+	if k.Keeper.GetGovAuthority() != msg.Authority {
 		return nil, errors.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority: expected %s, got %s",
-			k.Keeper.GetAuthority(),
+			k.Keeper.GetGovAuthority(),
 			msg.Authority,
 		)
 	}

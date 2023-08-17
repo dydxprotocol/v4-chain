@@ -21,14 +21,14 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: k.GetSelfAuthority(),
+				Authority: k.GetBridgeAuthority(),
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedResp: &types.MsgCompleteBridgeResponse{},
 		},
 		"Failure: invalid address to mint to": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: k.GetSelfAuthority(),
+				Authority: k.GetBridgeAuthority(),
 				Event: types.BridgeEvent{
 					Id:             0,
 					Coin:           sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
@@ -45,7 +45,7 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 			},
 			expectedErr: fmt.Sprintf(
 				"expected %s, got %s: Authority is invalid",
-				k.GetSelfAuthority(),
+				k.GetBridgeAuthority(),
 				"12345",
 			),
 		},

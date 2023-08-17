@@ -14,11 +14,11 @@ func (k msgServer) CompleteBridge(
 	msg *types.MsgCompleteBridge,
 ) (*types.MsgCompleteBridgeResponse, error) {
 	// MsgCompleteBridge's authority should be bridge module.
-	if k.Keeper.GetSelfAuthority() != msg.Authority {
+	if k.Keeper.GetBridgeAuthority() != msg.Authority {
 		return nil, errors.Wrapf(
 			types.ErrInvalidAuthority,
 			"expected %s, got %s",
-			k.Keeper.GetSelfAuthority(),
+			k.Keeper.GetBridgeAuthority(),
 			msg.Authority,
 		)
 	}

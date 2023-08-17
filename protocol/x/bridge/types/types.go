@@ -30,7 +30,7 @@ type BridgeKeeper interface {
 	UpdateSafetyParams(ctx sdk.Context, params SafetyParams) error
 
 	// Authority
-	GetAuthority() string
+	GetGovAuthority() string
 
-	GetSelfAuthority() string
+	GetBridgeAuthority() string
 }

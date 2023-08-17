@@ -24,10 +24,10 @@ type (
 
 		// The address capable of executing MsgUpdateEventParams, MsgUpdateProposeParams, and
 		// MsgUpdateSafetyParams messages. Typically, this should be the x/gov module account.
-		authority string
+		govAuthority string
 		// The address capable of executing a MsgCompleteBridge message. Typically, this
 		// should be the x/bridge module account.
-		selfAuthority string
+		bridgeAuthority string
 	}
 )
 
@@ -36,26 +36,26 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	bridgeEventManager *bridgeserver.BridgeEventManager,
 	bankKeeper types.BankKeeper,
-	authority string,
+	govAuthority string,
 ) *Keeper {
 	return &Keeper{
 		cdc:                cdc,
 		storeKey:           storeKey,
 		bridgeEventManager: bridgeEventManager,
 		bankKeeper:         bankKeeper,
-		authority:          authority,
-		selfAuthority:      authtypes.NewModuleAddress(types.ModuleName).String(),
+		govAuthority:       govAuthority,
+		bridgeAuthority:    authtypes.NewModuleAddress(types.ModuleName).String(),
 	}
 }
 
-// GetAuthority returns the x/bridge module's authority for updating parameters.
-func (k Keeper) GetAuthority() string {
-	return k.authority
+// GetGovAuthority returns the x/bridge module's authority for updating parameters.
+func (k Keeper) GetGovAuthority() string {
+	return k.govAuthority
 }
 
-// GetSelfAuthority returns the x/bridge module's authority for completing bridges.
-func (k Keeper) GetSelfAuthority() string {
-	return k.selfAuthority
+// GetBridgeAuthority returns the x/bridge module's authority for completing bridges.
+func (k Keeper) GetBridgeAuthority() string {
+	return k.bridgeAuthority
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
