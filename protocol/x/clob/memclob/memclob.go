@@ -41,11 +41,6 @@ type MemClobPriceTimePriority struct {
 	// A reference to an expected clob keeper.
 	clobKeeper types.MemClobKeeper
 
-	// ---- Fields for replicating state ----
-	// A map from a perpetual ID to a list of CLOB pair IDs that trade that perpetual. Used for
-	// determining which CLOB to place a liquidation order on, when liquidating a perpetual.
-	perpetualIdToClobPairId map[uint32][]types.ClobPairId
-
 	// ---- Fields for determining if off-chain update messages should be generated ----
 	generateOffchainUpdates bool
 }
@@ -62,7 +57,6 @@ func NewMemClobPriceTimePriority(
 		openOrders:              newMemclobOpenOrders(),
 		cancels:                 newMemclobCancels(),
 		operationsToPropose:     *types.NewOperationsToPropose(),
-		perpetualIdToClobPairId: make(map[uint32][]types.ClobPairId),
 		generateOffchainUpdates: generateOffchainUpdates,
 	}
 }
@@ -151,20 +145,6 @@ func (m *MemClobPriceTimePriority) CreateOrderbook(
 
 	// Create the in-memory orderbook for this `clobPairId`.
 	m.openOrders.createOrderbook(ctx, clobPairId, subticksPerTick, minOrderBaseQuantums)
-
-	// If this `ClobPair` is for a perpetual, add the `clobPairId` to the list of CLOB pair IDs
-	// that facilitate trading of this perpetual.
-	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {
-		perpetualId := perpetualClobMetadata.PerpetualId
-		clobPairIds, exists := m.perpetualIdToClobPairId[perpetualId]
-		if !exists {
-			clobPairIds = make([]types.ClobPairId, 0)
-		}
-		m.perpetualIdToClobPairId[perpetualId] = append(
-			clobPairIds,
-			clobPairId,
-		)
-	}
 }
 
 // GetOrder gets an order by ID and returns it.
@@ -825,31 +805,6 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	}
 
 	return takerOrderStatus, offchainUpdates, matchingErr
-}
-
-// GetClobPairForPerpetual gets the first CLOB pair ID associated with the provided perpetual ID.
-// It returns an error if there are no CLOB pair IDs associated with the perpetual ID.
-func (m *MemClobPriceTimePriority) GetClobPairForPerpetual(
-	ctx sdk.Context,
-	perpetualId uint32,
-) (
-	clobPairId types.ClobPairId,
-	err error,
-) {
-	clobPairIds, exists := m.perpetualIdToClobPairId[perpetualId]
-	if !exists {
-		return 0, sdkerrors.Wrapf(
-			types.ErrNoClobPairForPerpetual,
-			"Perpetual ID %d has no associated CLOB pairs",
-			perpetualId,
-		)
-	}
-
-	if len(clobPairIds) == 0 {
-		panic("GetClobPairForPerpetual: Perpetual ID was created without a CLOB pair ID.")
-	}
-
-	return clobPairIds[0], nil
 }
 
 // ReplayOperations will replay the provided operations onto the memclob.

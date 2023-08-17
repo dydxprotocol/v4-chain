@@ -49,6 +49,7 @@ func newTestHandlerOptions() HandlerOptions {
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(false)
 	untriggeredConditionalOrders := make(map[types.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
+	perpetualIdToClobPairId := make(map[uint32][]types.ClobPairId)
 	clobKeeper := clobmodulekeeper.NewKeeper(
 		appCodec,
 		nil,
@@ -56,6 +57,7 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		memClob,
 		untriggeredConditionalOrders,
+		perpetualIdToClobPairId,
 		nil,
 		nil,
 		bankKeeper,

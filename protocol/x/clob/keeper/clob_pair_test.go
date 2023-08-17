@@ -300,7 +300,7 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 	)
 
 	// Read a new `ClobPair` and make sure it does not exist.
-	_, err := memClob.GetClobPairForPerpetual(ks.Ctx, 1)
+	_, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 1)
 	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
 
 	// Write multiple `ClobPairs` to state, but don't call `MemClob.CreateOrderbook`.
@@ -319,17 +319,17 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 	), b)
 
 	// Read the new `ClobPairs` and make sure they do not exist.
-	_, err = memClob.GetClobPairForPerpetual(ks.Ctx, 1)
+	_, err = ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 1)
 	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
 
 	// Initialize the `ClobPairs` from Keeper state.
 	ks.ClobKeeper.InitMemClobOrderbooks(ks.Ctx)
 
 	// Read the new `ClobPairs` and make sure they exist.
-	_, err = memClob.GetClobPairForPerpetual(ks.Ctx, 0)
+	_, err = ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0)
 	require.NoError(t, err)
 
-	_, err = memClob.GetClobPairForPerpetual(ks.Ctx, 1)
+	_, err = ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 1)
 	require.NoError(t, err)
 }
 

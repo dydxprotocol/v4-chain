@@ -158,6 +158,11 @@ var (
 		32,
 		"Existing stateful order cancellation has higher-or-equal priority than the new one",
 	)
+	ErrClobPairAlreadyExists = sdkerrors.Register(
+		ModuleName,
+		33,
+		"ClobPair with id already exists",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(

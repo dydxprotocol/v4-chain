@@ -49,7 +49,7 @@ func (k Keeper) CreatePerpetualClobPair(
 		return clobPair, err
 	}
 
-	k.setClobPair(ctx, clobPair)
+	k.createClobPair(ctx, clobPair)
 	k.setNumClobPairs(ctx, nextId+1)
 
 	return clobPair, nil
@@ -172,16 +172,52 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 	return nil
 }
 
-// setClobPair sets a specific `ClobPair` in the store from its index, and additionally creates a new orderbook
-// to store all memclob orders.
+// createOrderbook creates a new orderbook in the memclob and stores the perpetualId to clobPairId mapping
+// in memory on the keeper.
+func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
+	// Create the corresponding orderbook in the memclob.
+	k.MemClob.CreateOrderbook(ctx, clobPair)
+
+	// If this `ClobPair` is for a perpetual, add the `clobPairId` to the list of CLOB pair IDs
+	// that facilitate trading of this perpetual.
+	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {
+		perpetualId := perpetualClobMetadata.PerpetualId
+		clobPairIds, exists := k.perpetualIdToClobPairId[perpetualId]
+		if !exists {
+			clobPairIds = make([]types.ClobPairId, 0)
+		}
+		k.perpetualIdToClobPairId[perpetualId] = append(
+			clobPairIds,
+			clobPair.GetClobPairId(),
+		)
+	}
+}
+
+// createClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
+// This function returns an error if a value for the ClobPair's id already exists in state.
+func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) error {
+	if _, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
+		return sdkerrors.Wrapf(
+			types.ErrClobPairAlreadyExists,
+			"ClobPairId %+v",
+			clobPair.GetClobPairId(),
+		)
+	}
+
+	// Write the `ClobPair` to state.
+	k.setClobPair(ctx, clobPair)
+
+	// Create the corresponding orderbook in the memclob.
+	k.createOrderbook(ctx, clobPair)
+	return nil
+}
+
+// setClobPair sets a specific `ClobPair` in the store from its index.
 func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 	b := k.cdc.MustMarshal(&clobPair)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
 	// Write the `ClobPair` to state.
 	store.Set(types.ClobPairKey(clobPair.GetClobPairId()), b)
-
-	// Create the corresponding orderbook in the memclob.
-	k.MemClob.CreateOrderbook(ctx, clobPair)
 }
 
 // InitMemClobOrderbooks initializes the memclob with `ClobPair`s from state.
@@ -190,7 +226,7 @@ func (k Keeper) InitMemClobOrderbooks(ctx sdk.Context) {
 	clobPairs := k.GetAllClobPair(ctx)
 	for _, clobPair := range clobPairs {
 		// Create the corresponding orderbook in the memclob.
-		k.MemClob.CreateOrderbook(
+		k.createOrderbook(
 			ctx,
 			clobPair,
 		)
@@ -204,6 +240,31 @@ func (k Keeper) setNumClobPairs(ctx sdk.Context, num uint32) {
 
 	// Set `numClobPairs`.
 	store.Set(types.KeyPrefix(types.NumClobPairsKey), lib.Uint32ToBytes(num))
+}
+
+// GetClobPairForPerpetual gets the first CLOB pair ID associated with the provided perpetual ID.
+// It returns an error if there are no CLOB pair IDs associated with the perpetual ID.
+func (k Keeper) GetClobPairIdForPerpetual(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (
+	clobPairId types.ClobPairId,
+	err error,
+) {
+	clobPairIds, exists := k.perpetualIdToClobPairId[perpetualId]
+	if !exists {
+		return 0, sdkerrors.Wrapf(
+			types.ErrNoClobPairForPerpetual,
+			"Perpetual ID %d has no associated CLOB pairs",
+			perpetualId,
+		)
+	}
+
+	if len(clobPairIds) == 0 {
+		panic("GetClobPairForPerpetual: Perpetual ID was created without a CLOB pair ID.")
+	}
+
+	return clobPairIds[0], nil
 }
 
 // Returns the total count of CLOB pairs, read from the store.

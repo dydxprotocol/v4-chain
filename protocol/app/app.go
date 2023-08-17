@@ -707,6 +707,7 @@ func New(
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
 	untriggeredConditionalOrders := make(map[clobmoduletypes.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
+	perpetualIdToClobPairId := make(map[uint32][]clobmoduletypes.ClobPairId)
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
 		keys[clobmoduletypes.StoreKey],
@@ -714,6 +715,7 @@ func New(
 		tkeys[clobmoduletypes.TransientStoreKey],
 		memClob,
 		untriggeredConditionalOrders,
+		perpetualIdToClobPairId,
 		app.SubaccountsKeeper,
 		app.AssetsKeeper,
 		app.BankKeeper,

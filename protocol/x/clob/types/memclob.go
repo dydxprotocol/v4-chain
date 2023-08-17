@@ -34,13 +34,6 @@ type MemClob interface {
 		ctx sdk.Context,
 		clobPair ClobPair,
 	)
-	GetClobPairForPerpetual(
-		ctx sdk.Context,
-		perpetualId uint32,
-	) (
-		clobPairId ClobPairId,
-		err error,
-	)
 	GetOperationsToReplay(
 		ctx sdk.Context,
 	) (

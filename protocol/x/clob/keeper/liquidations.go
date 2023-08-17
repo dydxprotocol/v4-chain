@@ -368,7 +368,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	insuranceFundDeltaQuoteQuantums *big.Int,
 	err error,
 ) {
-	clobPairId, err := k.MemClob.GetClobPairForPerpetual(ctx, perpetualId)
+	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
 	if err != nil {
 		panic(fmt.Errorf("GetLiquidationInsuranceFundDelta: CLOB pair not found for perpetual %d", perpetualId))
 	}
@@ -476,7 +476,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	perpetualPosition := subaccount.PerpetualPositions[0]
-	clobPairId, err := k.MemClob.GetClobPairForPerpetual(
+	clobPairId, err := k.GetClobPairIdForPerpetual(
 		ctx,
 		perpetualPosition.PerpetualId,
 	)
