@@ -145,7 +145,7 @@ describe('statefulOrderRemovalHandler', () => {
     expectTimingStats();
   });
 
-  it('throws error when attempting to cancel an order that does not exist', async () => {
+  it('throws error when attempting to trigger an order that does not exist', async () => {
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
     );
