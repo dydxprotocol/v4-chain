@@ -1099,12 +1099,12 @@ func TestStaticExchangeMarketConfigCache(t *testing.T) {
 }
 
 func TestStaticExchangeMarketConfigCacheLen(t *testing.T) {
-	require.Len(t, StaticExchangeMarketConfig, 14)
+	require.Len(t, StaticExchangeMarketConfig, 15)
 }
 
 func TestGenerateExchangeConfigJsonLength(t *testing.T) {
 	configs := GenerateExchangeConfigJson(StaticExchangeMarketConfig)
-	require.Len(t, configs, 34)
+	require.Len(t, configs, 35)
 }
 
 func TestGenerateExchangeConfigJson(t *testing.T) {
@@ -1247,6 +1247,10 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 		"USDT exchange config": {
 			id:                             exchange_common.MARKET_USDT_USD,
 			expectedExchangeConfigJsonFile: "usdt_exchange_config.json",
+		},
+		"TEST exchange config": {
+			id:                             exchange_common.MARKET_TEST_USD,
+			expectedExchangeConfigJsonFile: "test_exchange_config.json",
 		},
 	}
 	for name, tc := range tests {
