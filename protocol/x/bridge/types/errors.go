@@ -23,6 +23,11 @@ var (
 		3,
 		"Bridge event IDs are not consecutive",
 	)
+	ErrInvalidAuthority = sdkerrors.Register(
+		ModuleName,
+		4,
+		"Authority is invalid",
+	)
 
 	ErrNegativeDuration = sdkerrors.Register(
 		ModuleName,

@@ -56,6 +56,20 @@ func (_m *BridgeKeeper) GetAcknowledgedEventInfo(ctx types.Context) bridgetypes.
 	return r0
 }
 
+// GetBridgeAuthority provides a mock function with given fields:
+func (_m *BridgeKeeper) GetBridgeAuthority() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
 // GetEventParams provides a mock function with given fields: ctx
 func (_m *BridgeKeeper) GetEventParams(ctx types.Context) bridgetypes.EventParams {
 	ret := _m.Called(ctx)
@@ -65,6 +79,20 @@ func (_m *BridgeKeeper) GetEventParams(ctx types.Context) bridgetypes.EventParam
 		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(bridgetypes.EventParams)
+	}
+
+	return r0
+}
+
+// GetGovAuthority provides a mock function with given fields:
+func (_m *BridgeKeeper) GetGovAuthority() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
 	}
 
 	return r0
