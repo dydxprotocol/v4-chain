@@ -76,6 +76,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.bridge.MsgUpdateSafetyParams",
 		"/dydxprotocol.bridge.MsgUpdateSafetyParamsResponse",
 
+		// delaymsg
+		"/dydxprotocol.delaymsg.MsgDelayMessage",
+		"/dydxprotocol.delaymsg.MsgDelayMessageResponse",
+
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",

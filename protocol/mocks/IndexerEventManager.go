@@ -26,6 +26,11 @@ func (_m *IndexerEventManager) AddTxnEvent(ctx types.Context, subType string, da
 	_m.Called(ctx, subType, data)
 }
 
+// ClearEvents provides a mock function with given fields: ctx
+func (_m *IndexerEventManager) ClearEvents(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 // Enabled provides a mock function with given fields:
 func (_m *IndexerEventManager) Enabled() bool {
 	ret := _m.Called()

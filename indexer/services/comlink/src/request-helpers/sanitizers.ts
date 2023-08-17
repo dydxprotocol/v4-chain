@@ -1,3 +1,5 @@
+import { logger } from '@dydxprotocol-indexer/base';
+
 /**
  * @function sanitizeArray
  * @param input input value from query
@@ -7,7 +9,16 @@
 export function sanitizeArray(
   input: string,
 ): string[] | null {
-  return (
-    // eslint-disable-next-line no-mixed-operators
-    (input !== '') && input.toUpperCase().split(',') || null);
+  try {
+    return (
+      // eslint-disable-next-line no-mixed-operators
+      (input !== '') && input.toUpperCase().split(',') || null);
+  } catch (error) {
+    logger.error({
+      at: 'request-helpers#sanitizeArray',
+      message: 'Failed to sanitize array',
+      input,
+    });
+    throw error;
+  }
 }

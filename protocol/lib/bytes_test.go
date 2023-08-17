@@ -63,6 +63,37 @@ func TestUint32ToBytesForState(t *testing.T) {
 	}
 }
 
+func TestInt64ToBytesForState(t *testing.T) {
+	tests := map[string]struct {
+		value    int64
+		expected []byte
+	}{
+		"value of zero": {
+			value:    0,
+			expected: []byte{0, 0, 0, 0, 0, 0, 0, 0, '/'},
+		},
+		"value of 15": {
+			value:    15,
+			expected: []byte{0xf, 0, 0, 0, 0, 0, 0, 0, '/'},
+		},
+		"max int": {
+			value:    math.MaxInt64,
+			expected: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, '/'},
+		},
+		"min int": {
+			value:    math.MinInt64,
+			expected: []byte{0, 0, 0, 0, 0, 0, 0, 0x80, '/'},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := Int64ToBytesForState(tc.value)
+			require.Equal(t, tc.expected, result)
+		})
+	}
+}
+
 func TestInt32ToString(t *testing.T) {
 	i := int32(15)
 	require.Equal(t, "15", Int32ToString(i))

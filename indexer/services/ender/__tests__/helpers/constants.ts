@@ -24,6 +24,7 @@ import {
   TransferEventV1,
   IndexerOrder_ConditionType,
   OrderRemovalReason,
+  AssetCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -66,6 +67,14 @@ export const defaultFundingRateEvent: FundingEventMessage = {
       fundingIndex: bigIntToBytes(BigInt(10)),
     },
   ],
+};
+
+export const defaultAssetCreateEvent: AssetCreateEventV1 = {
+  id: 0,
+  symbol: 'BTC',
+  hasMarket: true,
+  marketId: 0,
+  atomicResolution: 6,
 };
 
 export const defaultMarketBase: MarketBaseEventV1 = {

@@ -128,6 +128,9 @@ import (
 	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	clobmodulememclob "github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
+	delaymsgmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	epochsmodule "github.com/dydxprotocol/v4-chain/protocol/x/epochs"
 	epochsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
 	epochsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -257,6 +260,8 @@ type App struct {
 
 	BridgeKeeper bridgemodulekeeper.Keeper
 
+	DelayMsgKeeper delaymsgmodulekeeper.Keeper
+
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
 	PerpetualsKeeper perpetualsmodulekeeper.Keeper
@@ -331,6 +336,7 @@ func New(
 		rewardsmoduletypes.StoreKey,
 		clobmoduletypes.StoreKey,
 		sendingmoduletypes.StoreKey,
+		delaymsgmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(
@@ -628,6 +634,17 @@ func New(
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
+	app.DelayMsgKeeper = *delaymsgmodulekeeper.NewKeeper(
+		appCodec,
+		keys[delaymsgmoduletypes.StoreKey],
+		// Permit delayed messages to be signed by the following modules.
+		[]string{
+			authtypes.NewModuleAddress(bridgemoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
+	)
+	delayMsgModule := delaymsgmodule.NewAppModule(appCodec, app.DelayMsgKeeper)
+
 	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[perpetualsmoduletypes.StoreKey],
@@ -798,6 +815,7 @@ func New(
 		subaccountsModule,
 		clobModule,
 		sendingModule,
+		delayMsgModule,
 		epochsModule,
 	)
 
@@ -834,6 +852,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		delaymsgmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderCommiters(
@@ -868,6 +887,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		epochsmoduletypes.ModuleName,
+		delaymsgmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
 
@@ -905,6 +925,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		delaymsgmoduletypes.ModuleName,
 	)
 
 	// NOTE: by default, set migration order here to be the same as init genesis order,
@@ -938,6 +959,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		delaymsgmoduletypes.ModuleName,
 
 		// Auth must be migrated after staking.
 		authtypes.ModuleName,
@@ -1126,6 +1148,7 @@ func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Res
 	initResponse := app.ModuleManager.InitGenesis(ctx, app.appCodec, genesisState)
 	block := app.IndexerEventManager.ProduceBlock(ctx)
 	app.IndexerEventManager.SendOnchainData(block)
+	app.IndexerEventManager.ClearEvents(ctx)
 
 	return initResponse
 }

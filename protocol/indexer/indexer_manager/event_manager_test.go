@@ -311,3 +311,29 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	require.Equal(t, BlockTime, block.Time)
 	require.Equal(t, ConsumedGas, ctx.GasMeter().GasConsumed())
 }
+
+func TestClearEvents(t *testing.T) {
+	ctx, stateStore, db := sdk.NewSdkContextWithMultistore()
+	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
+	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeTransient, db)
+	ctx = ctx.WithBlockTime(BlockTime).WithBlockHeight(BlockHeight).WithTxBytes(constants.TestTxBytes)
+	ctx.GasMeter().ConsumeGas(ConsumedGas, "beforeWrite")
+	require.NoError(t, stateStore.LoadLatestVersion())
+	mockMsgSender := &mocks.IndexerMessageSender{}
+	mockMsgSender.On("Enabled").Return(true)
+	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, true)
+	indexerEventManager.AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeOrderFill,
+		indexer_manager.GetB64EncodedEventMessage(
+			&OrderFillEvent,
+		),
+	)
+
+	block := indexerEventManager.ProduceBlock(ctx)
+	require.Len(t, block.Events, 1)
+	indexerEventManager.ClearEvents(ctx)
+	block = indexerEventManager.ProduceBlock(ctx)
+	require.Len(t, block.Events, 0)
+	require.Equal(t, ConsumedGas, ctx.GasMeter().GasConsumed())
+}
