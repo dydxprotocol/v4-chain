@@ -264,6 +264,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 							constants.ClobPair_Btc_No_Fee,
 						}
 						genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
+						genesisState.EquityTierLimitConfig = clobtypes.EquityTierLimitConfiguration{}
 					},
 				)
 				testapp.UpdateGenesisDocWithAppStateForModule(
@@ -505,6 +506,7 @@ func TestOrderRemoval(t *testing.T) {
 							constants.ClobPair_Btc_No_Fee,
 						}
 						genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
+						genesisState.EquityTierLimitConfig = clobtypes.EquityTierLimitConfiguration{}
 					},
 				)
 				testapp.UpdateGenesisDocWithAppStateForModule(

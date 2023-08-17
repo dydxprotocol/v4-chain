@@ -339,52 +339,6 @@ func (k Keeper) MustRemoveStatefulOrder(
 	k.DeleteLongTermOrderPlacement(ctx, orderId)
 }
 
-// MustAddUncommittedStatefulOrderPlacement adds a new order by `OrderId` to a transient store.
-//
-// This method will panic if the order already exists.
-func (k Keeper) MustAddUncommittedStatefulOrderPlacement(ctx sdk.Context, msg *types.MsgPlaceOrder) {
-	lib.AssertCheckTxMode(ctx)
-
-	orderId := msg.Order.OrderId
-	// If this is a Short-Term order, panic.
-	orderId.MustBeStatefulOrder()
-
-	if _, exists := k.GetUncommittedStatefulOrderPlacement(ctx, orderId); exists {
-		panic(fmt.Sprintf("MustAddUncommittedStatefulOrderPlacement: order %v already exists", orderId))
-	}
-
-	longTermOrderPlacement := types.LongTermOrderPlacement{
-		Order: msg.Order,
-	}
-
-	orderIdBytes := types.OrderIdKey(orderId)
-	b := k.cdc.MustMarshal(&longTermOrderPlacement)
-
-	store := k.GetUncommittedStatefulOrderPlacementTransientStore(ctx)
-	store.Set(orderIdBytes, b)
-}
-
-// MustAddUncommittedStatefulOrderCancellation adds a new order cancellation by `OrderId` to a transient store.
-//
-// This method will panic if the order cancellation already exists.
-func (k Keeper) MustAddUncommittedStatefulOrderCancellation(ctx sdk.Context, msg *types.MsgCancelOrder) {
-	lib.AssertCheckTxMode(ctx)
-
-	orderId := msg.OrderId
-	// If this is a Short-Term order, panic.
-	orderId.MustBeStatefulOrder()
-
-	if _, exists := k.GetUncommittedStatefulOrderCancellation(ctx, orderId); exists {
-		panic(fmt.Sprintf("MustAddUncommittedStatefulOrderPlacement: order cancellation %v already exists", orderId))
-	}
-
-	orderIdBytes := types.OrderIdKey(orderId)
-	b := k.cdc.MustMarshal(msg)
-
-	store := k.GetUncommittedStatefulOrderCancellationTransientStore(ctx)
-	store.Set(orderIdBytes, b)
-}
-
 // IsConditionalOrderTriggered checks if a given order ID is triggered or untriggered in state.
 // Note: If the given order ID is neither in triggered or untriggered state, function will return false.
 func (k Keeper) IsConditionalOrderTriggered(

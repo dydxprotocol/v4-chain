@@ -84,8 +84,7 @@ func (m *EquityTierLimitConfiguration) GetStatefulOrderEquityTiers() []EquityTie
 
 // Defines an equity tier limit.
 type EquityTierLimit struct {
-	// The absolute size of total net collateral in base quantums
-	// of equity required in USD equivalent.
+	// The total net collateral in USDC quote quantums of equity required.
 	UsdTncRequired github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,1,opt,name=usd_tnc_required,json=usdTncRequired,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"usd_tnc_required"`
 	// What the limit is for `usd_tnc_required`.
 	Limit uint32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`

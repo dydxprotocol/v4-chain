@@ -20,8 +20,7 @@ message EquityTierLimitConfiguration {
 
 // Defines an equity tier limit.
 message EquityTierLimit {
-  // The absolute size of total net collateral in base quantums
-  // of equity required in USD equivalent.
+  // The total net collateral in USDC quote quantums of equity required.
   bytes usd_tnc_required = 1 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",

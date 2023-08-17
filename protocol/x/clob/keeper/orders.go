@@ -161,11 +161,12 @@ func (k Keeper) CancelStatefulOrder(
 	return nil
 }
 
-// PlaceStatefulOrder performs order validation, a collateralization check and writes the
+// PlaceStatefulOrder performs order validation, equity tier limit check, a collateralization check and writes the
 // order to state and the memstore. The order will not be placed on the orderbook.
 //
 // An error will be returned if any of the following conditions are true:
 //   - Standard stateful validation fails.
+//   - Equity tier limit exceeded.
 //   - Collateralization check fails.
 //
 // Note that this method conditionally updates state depending on the context. This is needed
@@ -192,7 +193,12 @@ func (k Keeper) PlaceStatefulOrder(
 		return err
 	}
 
-	// 3. Perform a collateralization check for the full size of the order to mitigate spam.
+	// 3. Check that adding the order would not exceed the equity tier for the account.
+	if err := k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order); err != nil {
+		return err
+	}
+
+	// 4. Perform a collateralization check for the full size of the order to mitigate spam.
 	// TODO(CLOB-725): Consider using a pessimistic collateralization check.
 	_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
 		ctx,
@@ -219,7 +225,7 @@ func (k Keeper) PlaceStatefulOrder(
 		)
 	}
 
-	// 4. If we are in `deliverTx` then we write the order to committed state otherwise add the order to uncommitted
+	// 5. If we are in `deliverTx` then we write the order to committed state otherwise add the order to uncommitted
 	// state.
 	if lib.IsDeliverTxMode(ctx) {
 		// Write the stateful order to state and the memstore.

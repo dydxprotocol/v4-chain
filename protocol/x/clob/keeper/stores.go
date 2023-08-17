@@ -62,6 +62,16 @@ func (k Keeper) GetUncommittedStatefulOrderCancellationTransientStore(ctx sdk.Co
 	)
 }
 
+// GetUncommittedStatefulOrderCountTransientStore fetches a state store used for creating,
+// reading, updating, and deleting a stateful order count from transient state. This represents
+// the number of uncommitted `order placements - order cancellations`.
+func (k Keeper) GetUncommittedStatefulOrderCountTransientStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(
+		ctx.KVStore(k.transientStoreKey),
+		types.KeyPrefix(types.UncommittedStatefulOrderCountPrefix),
+	)
+}
+
 // GetTriggeredConditionalOrderPlacementStore fetches a state store used for creating,
 // reading, updating, and deleting a stateful order placement from state.
 func (k Keeper) GetTriggeredConditionalOrderPlacementStore(ctx sdk.Context) prefix.Store {
