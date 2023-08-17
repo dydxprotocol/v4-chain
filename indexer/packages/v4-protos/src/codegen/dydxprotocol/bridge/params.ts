@@ -49,8 +49,9 @@ export interface ProposeParams {
 
   proposeDelayDuration?: Duration;
   /**
-   * Do not propose any events if a random number generator
-   * (between 0 and 1_000_000) generates a number smaller than this number.
+   * Do not propose any events if a [0, 1_000_000) random number generator
+   * generates a number smaller than this number.
+   * Setting this parameter to 1_000_000 means always skipping proposing events.
    */
 
   skipRatePpm: number;
@@ -79,8 +80,9 @@ export interface ProposeParamsSDKType {
 
   propose_delay_duration?: DurationSDKType;
   /**
-   * Do not propose any events if a random number generator
-   * (between 0 and 1_000_000) generates a number smaller than this number.
+   * Do not propose any events if a [0, 1_000_000) random number generator
+   * generates a number smaller than this number.
+   * Setting this parameter to 1_000_000 means always skipping proposing events.
    */
 
   skip_rate_ppm: number;

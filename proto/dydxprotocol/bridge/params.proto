@@ -33,8 +33,9 @@ message ProposeParams {
   google.protobuf.Duration propose_delay_duration = 2
       [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 
-  // Do not propose any events if a random number generator
-  // (between 0 and 1_000_000) generates a number smaller than this number.
+  // Do not propose any events if a [0, 1_000_000) random number generator
+  // generates a number smaller than this number.
+  // Setting this parameter to 1_000_000 means always skipping proposing events.
   uint32 skip_rate_ppm = 3;
 
   // Do not propose any events if the timestamp of the proposal block is
