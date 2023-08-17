@@ -2,7 +2,7 @@
     "exchanges": [
       {
         "exchangeName": "TestVolatileExchange",
-        "ticker": "\"TEST-USD\""
+        "ticker": "TEST-USD"
       }
     ]
 }

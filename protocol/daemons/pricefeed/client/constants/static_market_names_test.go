@@ -50,5 +50,5 @@ func TestStaticMarketNames(t *testing.T) {
 }
 
 func TestStaticMarketNamesLength(t *testing.T) {
-	require.Len(t, constants.StaticMarketNames, 34)
+	require.Len(t, constants.StaticMarketNames, 35)
 }
