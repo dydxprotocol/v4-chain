@@ -34,12 +34,14 @@ import {
   binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
+  expectOrderSubaccountKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { getPrice, getSize, getTriggerPrice } from '../../../src/lib/helper';
 import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
+import { producer } from '@dydxprotocol-indexer/kafka';
 import { ConditionalOrderPlacementHandler } from '../../../src/handlers/stateful-order/conditional-order-placement-handler';
 
 describe('conditionalOrderPlacementHandler', () => {
@@ -54,6 +56,7 @@ describe('conditionalOrderPlacementHandler', () => {
     await testMocks.seedData();
     updateBlockCache(defaultPreviousHeight);
     await perpetualMarketRefresher.updatePerpetualMarkets();
+    producerSendMock = jest.spyOn(producer, 'send');
   });
 
   afterEach(async () => {
@@ -84,6 +87,7 @@ describe('conditionalOrderPlacementHandler', () => {
     },
   };
   const orderId: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
+  let producerSendMock: jest.SpyInstance;
 
   describe('getParallelizationIds', () => {
     it('returns the correct parallelization ids', () => {
@@ -137,7 +141,7 @@ describe('conditionalOrderPlacementHandler', () => {
       totalFilled: '0',
       price: getPrice(defaultOrder, testConstants.defaultPerpetualMarket),
       type: protocolTranslations.protocolConditionTypeToOrderType(defaultOrder.conditionType),
-      status: OrderStatus.OPEN,
+      status: OrderStatus.UNTRIGGERED,
       timeInForce: protocolTranslations.protocolOrderTIFToTIF(defaultOrder.timeInForce),
       reduceOnly: defaultOrder.reduceOnly,
       orderFlags: defaultOrder.orderId!.orderFlags.toString(),
@@ -148,6 +152,11 @@ describe('conditionalOrderPlacementHandler', () => {
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
     });
     expectTimingStats();
+    expectOrderSubaccountKafkaMessage(
+      producerSendMock,
+      defaultOrder.orderId!.subaccountId!,
+      order!,
+    );
   });
 
   it('successfully upserts order', async () => {
@@ -189,7 +198,7 @@ describe('conditionalOrderPlacementHandler', () => {
       totalFilled: '0',
       price: getPrice(defaultOrder, testConstants.defaultPerpetualMarket),
       type: protocolTranslations.protocolConditionTypeToOrderType(defaultOrder.conditionType),
-      status: OrderStatus.OPEN,
+      status: OrderStatus.UNTRIGGERED,
       timeInForce: protocolTranslations.protocolOrderTIFToTIF(defaultOrder.timeInForce),
       reduceOnly: defaultOrder.reduceOnly,
       orderFlags: defaultOrder.orderId!.orderFlags.toString(),
@@ -200,6 +209,11 @@ describe('conditionalOrderPlacementHandler', () => {
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
     });
     expectTimingStats();
+    expectOrderSubaccountKafkaMessage(
+      producerSendMock,
+      defaultOrder.orderId!.subaccountId!,
+      order!,
+    );
   });
 });
 

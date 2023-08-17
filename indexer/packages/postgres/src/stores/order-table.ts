@@ -218,7 +218,7 @@ function getOrderStatus(
   if (Big(orderToUpsert.size).lte(totalFilled)) {
     return OrderStatus.FILLED;
   }
-  return OrderStatus.OPEN;
+  return orderToUpsert.status;
 }
 
 export async function update(

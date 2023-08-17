@@ -3,16 +3,18 @@ import {
   OrderFromDatabase,
   OrderStatus,
   OrderTable,
+  orderTranslations,
   perpetualMarketRefresher,
   testConstants,
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  IndexerOrder,
+  IndexerOrderId,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   OffChainUpdateV1,
-  OrderRemovalReason,
-  OrderRemoveV1_OrderRemovalStatus,
+  OrderPlaceV1_OrderPlacementStatus,
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
@@ -29,10 +31,12 @@ import {
   createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
-import { StatefulOrderRemovalHandler } from '../../../src/handlers/stateful-order/stateful-order-removal-handler';
 import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
+import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ConditionalOrderTriggeredHandler } from '../../../src/handlers/stateful-order/conditional-order-triggered-handler';
+import { defaultPerpetualMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('statefulOrderRemovalHandler', () => {
   beforeAll(async () => {
@@ -59,14 +63,16 @@ describe('statefulOrderRemovalHandler', () => {
     jest.resetAllMocks();
   });
 
-  const reason: OrderRemovalReason = OrderRemovalReason.ORDER_REMOVAL_REASON_REPLACED;
+  const conditionalOrderId: IndexerOrderId = {
+    ...defaultOrderId,
+    orderFlags: ORDER_FLAG_CONDITIONAL,
+  };
   const defaultStatefulOrderEvent: StatefulOrderEventV1 = {
-    orderRemoval: {
-      removedOrderId: defaultOrderId,
-      reason,
+    conditionalOrderTriggered: {
+      triggeredOrderId: conditionalOrderId,
     },
   };
-  const orderId: string = OrderTable.orderIdToUuid(defaultOrderId);
+  const orderId: string = OrderTable.orderIdToUuid(conditionalOrderId);
   let producerSendMock: jest.SpyInstance;
 
   describe('getParallelizationIds', () => {
@@ -89,7 +95,7 @@ describe('statefulOrderRemovalHandler', () => {
         [defaultTxHash],
       );
 
-      const handler: StatefulOrderRemovalHandler = new StatefulOrderRemovalHandler(
+      const handler: ConditionalOrderTriggeredHandler = new ConditionalOrderTriggeredHandler(
         block,
         indexerTendermintEvent,
         0,
@@ -103,9 +109,12 @@ describe('statefulOrderRemovalHandler', () => {
     });
   });
 
-  it('successfully cancels and removes order', async () => {
+  it('successfully triggers order and sends to vulcan', async () => {
     await OrderTable.create({
-      ...testConstants.defaultOrder,
+      ...testConstants.defaultOrderGoodTilBlockTime,
+      orderFlags: conditionalOrderId.orderFlags.toString(),
+      status: OrderStatus.UNTRIGGERED,
+      triggerPrice: '1000',
       clientId: '0',
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
@@ -114,25 +123,29 @@ describe('statefulOrderRemovalHandler', () => {
 
     await onMessage(kafkaMessage);
     const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
+    const indexerOrder: IndexerOrder = await orderTranslations.convertToIndexerOrder(
+      order!,
+      defaultPerpetualMarket,
+    );
+
     expect(order).toBeDefined();
-    expect(order!.status).toEqual(OrderStatus.CANCELED);
-    expectTimingStats();
+    expect(order!.status).toEqual(OrderStatus.OPEN);
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {
-      orderRemove: {
-        removedOrderId: defaultOrderId,
-        reason,
-        removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED,
+      orderPlace: {
+        order: indexerOrder,
+        placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
       },
     };
     expectVulcanKafkaMessage({
       producerSendMock,
-      orderId: defaultOrderId,
+      orderId: conditionalOrderId,
       offchainUpdate: expectedOffchainUpdate,
     });
+    expectTimingStats();
   });
 
-  it('throws error when attempting to cancel an order that does not exist', async () => {
+  it('throws error when attempting to trigger an order that does not exist', async () => {
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
     );
@@ -144,13 +157,13 @@ describe('statefulOrderRemovalHandler', () => {
 });
 
 function expectTimingStats() {
-  expectTimingStat('cancel_order');
+  expectTimingStat('trigger_order');
 }
 
 function expectTimingStat(fnName: string) {
   expect(stats.timing).toHaveBeenCalledWith(
     `ender.${STATS_FUNCTION_NAME}.timing`,
     expect.any(Number),
-    { className: 'StatefulOrderRemovalHandler', eventType: 'StatefulOrderEvent', fnName },
+    { className: 'ConditionalOrderTriggeredHandler', eventType: 'StatefulOrderEvent', fnName },
   );
 }

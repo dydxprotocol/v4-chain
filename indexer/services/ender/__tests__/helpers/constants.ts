@@ -286,7 +286,10 @@ export const defaultConditionalOrderPlacementEvent: StatefulOrderEventV1 = {
 };
 export const defaultConditionalOrderTriggeredEvent: StatefulOrderEventV1 = {
   conditionalOrderTriggered: {
-    triggeredOrderId: defaultOrderId,
+    triggeredOrderId: {
+      ...defaultOrderId,
+      orderFlags: ORDER_FLAG_CONDITIONAL,
+    },
   },
 };
 export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
