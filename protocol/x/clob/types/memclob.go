@@ -34,6 +34,11 @@ type MemClob interface {
 		ctx sdk.Context,
 		clobPair ClobPair,
 	)
+	CountSubaccountOrders(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		filter func(OrderId) bool,
+	) uint32
 	GetClobPairForPerpetual(
 		ctx sdk.Context,
 		perpetualId uint32,

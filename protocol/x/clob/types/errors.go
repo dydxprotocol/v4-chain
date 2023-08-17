@@ -424,4 +424,9 @@ var (
 		10000,
 		"Proposed EquityTierLimitConfig is invalid",
 	)
+	ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit = sdkerrors.Register(
+		ModuleName,
+		10001,
+		"Subaccount cannot open more orders due to equity tier limit.",
+	)
 )

@@ -436,6 +436,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							constants.ClobPair_Eth_No_Fee,
 						}
 						genesisState.LiquidationsConfig = tc.liquidationConfig
+						genesisState.EquityTierLimitConfig = clobtypes.EquityTierLimitConfiguration{}
 					},
 				)
 				testapp.UpdateGenesisDocWithAppStateForModule(

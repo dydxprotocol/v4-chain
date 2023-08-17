@@ -26,6 +26,11 @@ const (
 	// Uncommitted cancelleations are cancellations that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
 	UncommittedStatefulOrderCancellationKeyPrefix = "StatefulOrderCancellation/Uncommitted/LongTerm/value/"
+	// UncommittedStatefulOrderCountPrefix is the key to retrieve an uncommitted stateful order count.
+	// Uncommitted orders are orders that this validator is aware of that have yet to be committed to a block and
+	// are stored in a transient store. This count represents the number of uncommitted stateful
+	// `placements - cancellations`.
+	UncommittedStatefulOrderCountPrefix = "StatefulOrderCount/Uncommitted/LongTerm/value/"
 	// UntriggeredConditionalOrderKeyPrefix is the key to retrieve an untriggered conditional order and
 	// information about when it was placed.
 	UntriggeredConditionalOrderKeyPrefix = "StatefulOrderPlacement/Untriggered/Conditional/value/"

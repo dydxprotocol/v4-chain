@@ -2624,9 +2624,10 @@ func TestAddOrderToOrderbook_ErrorPlaceNewFullyFilledOrder(t *testing.T) {
 
 	memClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
 		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
-
 	memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
 		Return(big.NewInt(0))
+	memClobKeeper.On("ValidateSubaccountEquityTierLimitForNewOrder", mock.Anything, mock.Anything).
+		Return(nil)
 
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	orderId := order.OrderId
@@ -2701,77 +2702,6 @@ func TestUpdateOrderbookStateWithMatchedMakerOrder_PanicsOnInvalidFillAmount(t *
 			types.Order{Quantums: 1},
 		)
 	})
-}
-
-func TestPlaceOrder_ErrOrderWouldExceedMaxOpenOrdersPerClobAndSide(t *testing.T) {
-	tests := map[string]struct {
-		offendingOrder types.Order
-	}{
-		"Short-Term order would exceed max open orders per clob and side": {
-			offendingOrder: constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
-		},
-		"Long-Term order would exceed max open orders per clob and side": {
-			offendingOrder: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-		},
-		"Conditional order would exceed max open orders per clob and side": {
-			offendingOrder: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-			ctx = ctx.WithIsCheckTx(true)
-
-			// Setup the memclob state.
-			memClobKeeper := testutil_memclob.NewFakeMemClobKeeper()
-			memclob := NewMemClobPriceTimePriority(false)
-			memclob.SetClobKeeper(memClobKeeper)
-
-			// Create a mixture of Short-Term and Stateful orders.
-			orderFlags := []uint32{
-				types.OrderIdFlags_ShortTerm,
-				types.OrderIdFlags_LongTerm,
-				types.OrderIdFlags_Conditional,
-			}
-
-			orders := make([]types.Order, 0, types.MaxSubaccountOrdersPerClobAndSide)
-			for i := 1; i <= types.MaxSubaccountOrdersPerClobAndSide; i++ {
-				order := types.Order{
-					OrderId: types.OrderId{
-						SubaccountId: constants.Alice_Num0,
-						ClientId:     uint32(i),
-						OrderFlags:   orderFlags[i%len(orderFlags)],
-						ClobPairId:   0,
-					},
-					Side:     types.Order_SIDE_BUY,
-					Quantums: 100,
-					Subticks: 5,
-				}
-				if order.IsShortTermOrder() {
-					order.GoodTilOneof = &types.Order_GoodTilBlock{GoodTilBlock: 10}
-				} else {
-					order.GoodTilOneof = &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10}
-				}
-				orders = append(orders, order)
-			}
-
-			// Create the orderbook.
-			memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
-
-			// Create all orders.
-			createAllOrders(
-				t,
-				ctx,
-				memclob,
-				orders,
-			)
-
-			// Place a new order on the same side and CLOB.
-			_, _, _, err := memclob.PlaceOrder(ctx, tc.offendingOrder)
-			require.ErrorIs(t, err, types.ErrOrderWouldExceedMaxOpenOrdersPerClobAndSide)
-		})
-	}
 }
 
 func TestPlaceOrder_PostOnly(t *testing.T) {
