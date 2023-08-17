@@ -28,7 +28,7 @@ type (
 
 		MemClob                      types.MemClob
 		UntriggeredConditionalOrders map[types.ClobPairId]*UntriggeredConditionalOrders
-		perpetualIdToClobPairId	 map[uint32][]types.ClobPairId
+		PerpetualIdToClobPairId	 map[uint32][]types.ClobPairId
 
 		subaccountsKeeper   types.SubaccountsKeeper
 		assetsKeeper        types.AssetsKeeper
@@ -87,7 +87,7 @@ func NewKeeper(
 		transientStoreKey:            liquidationsStoreKey,
 		MemClob:                      memClob,
 		UntriggeredConditionalOrders: untriggeredConditionalOrders,
-		perpetualIdToClobPairId:      perpetualIdToClobPairId,
+		PerpetualIdToClobPairId:      perpetualIdToClobPairId,
 		subaccountsKeeper:            subaccountsKeeper,
 		assetsKeeper:                 assetsKeeper,
 		bankKeeper:                   bankKeeper,

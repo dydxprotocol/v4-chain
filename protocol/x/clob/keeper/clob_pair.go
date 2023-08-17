@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -80,6 +82,16 @@ func (k Keeper) CreatePerpetualClobPair(
 // - TakerFeePpm:
 //   - Must be <= MaxFeePpm.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
+	// validate the given clob pair id is not already in use
+	if _, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
+		panic(
+			fmt.Sprintf(
+				"ClobPair with id %+v already exists in state",
+				clobPair.GetClobPairId(),
+			),
+		)
+	}
+
 	// TODO(DEC-1535): update this validation when we implement "spot"/"asset" clob pairs.
 	switch clobPair.Metadata.(type) {
 	case *types.ClobPair_PerpetualClobMetadata:
@@ -182,11 +194,11 @@ func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	// that facilitate trading of this perpetual.
 	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {
 		perpetualId := perpetualClobMetadata.PerpetualId
-		clobPairIds, exists := k.perpetualIdToClobPairId[perpetualId]
+		clobPairIds, exists := k.PerpetualIdToClobPairId[perpetualId]
 		if !exists {
 			clobPairIds = make([]types.ClobPairId, 0)
 		}
-		k.perpetualIdToClobPairId[perpetualId] = append(
+		k.PerpetualIdToClobPairId[perpetualId] = append(
 			clobPairIds,
 			clobPair.GetClobPairId(),
 		)
@@ -196,14 +208,6 @@ func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 // createClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
 // This function returns an error if a value for the ClobPair's id already exists in state.
 func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) error {
-	if _, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
-		return sdkerrors.Wrapf(
-			types.ErrClobPairAlreadyExists,
-			"ClobPairId %+v",
-			clobPair.GetClobPairId(),
-		)
-	}
-
 	// Write the `ClobPair` to state.
 	k.setClobPair(ctx, clobPair)
 
@@ -251,7 +255,7 @@ func (k Keeper) GetClobPairIdForPerpetual(
 	clobPairId types.ClobPairId,
 	err error,
 ) {
-	clobPairIds, exists := k.perpetualIdToClobPairId[perpetualId]
+	clobPairIds, exists := k.PerpetualIdToClobPairId[perpetualId]
 	if !exists {
 		return 0, sdkerrors.Wrapf(
 			types.ErrNoClobPairForPerpetual,

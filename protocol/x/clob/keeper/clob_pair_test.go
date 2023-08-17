@@ -8,6 +8,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -59,7 +60,92 @@ func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Clob
 	return items
 }
 
-func TestCreateClobPair(t *testing.T) {
+func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+	clobPairs := []types.ClobPair{
+		constants.ClobPair_Btc,
+		constants.ClobPair_Btc2,
+	}
+
+	for _, clobPair := range clobPairs {
+		// Perform the method under test.
+		ks.ClobKeeper.CreatePerpetualClobPair(
+			ks.Ctx,
+			clobtest.MustPerpetualId(clobPair),
+			satypes.BaseQuantums(clobPair.StepBaseQuantums),
+			satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
+			clobPair.QuantumConversionExponent,
+			clobPair.SubticksPerTick,
+			clobPair.Status,
+			clobPair.MakerFeePpm,
+			clobPair.TakerFeePpm,
+		)
+	}
+
+	require.Equal(
+		t,
+		ks.ClobKeeper.PerpetualIdToClobPairId,
+		map[uint32][]types.ClobPairId{
+			0: {types.ClobPairId(0), types.ClobPairId(1)},
+		},
+	)
+}
+
+func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	ks := keepertest.NewClobKeepersTestContext(
+		t,
+		memClob,
+		&mocks.BankKeeper{},
+		&mocks.IndexerEventManager{},
+	)
+
+	// Read a new `ClobPair` and make sure it does not exist.
+	_, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 1)
+	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
+
+	// Write multiple `ClobPairs` to state, but don't call `MemClob.CreateOrderbook`.
+	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+
+	// write clob pair to state with clob pair id 0
+	b := cdc.MustMarshal(&constants.ClobPair_Btc)
+	store.Set(types.ClobPairKey(
+		types.ClobPairId(constants.ClobPair_Btc.Id),
+	), b)
+
+	// set count back down to 0 to simulate error in num clob pairs store
+	store = prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.NumClobPairsKey))
+	store.Set(types.KeyPrefix(types.NumClobPairsKey), lib.Uint32ToBytes(0))
+
+	require.PanicsWithValuef(
+		t,
+		"ClobPair with id 0 already exists in state",
+		func() {
+			clobPair := *clobtest.GenerateClobPair()
+			ks.ClobKeeper.CreatePerpetualClobPair(
+				ks.Ctx,
+				clobtest.MustPerpetualId(clobPair),
+				satypes.BaseQuantums(clobPair.StepBaseQuantums),
+				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
+				clobPair.QuantumConversionExponent,
+				clobPair.SubticksPerTick,
+				clobPair.Status,
+				clobPair.MakerFeePpm,
+				clobPair.TakerFeePpm,
+			)
+		},
+		"Should panic when attempting to create clob pair with duplicate id",
+	)
+}
+
+func TestCreatePerpetualClobPair(t *testing.T) {
 	tests := map[string]struct {
 		// CLOB pair.
 		clobPair types.ClobPair
@@ -377,4 +463,57 @@ func TestClobPairGetAll(t *testing.T) {
 		nullify.Fill(items), //nolint:staticcheck
 		nullify.Fill(ks.ClobKeeper.GetAllClobPair(ks.Ctx)), //nolint:staticcheck
 	)
+}
+
+func TestGetClobPairIdForPerpetual_Success(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+	ks.ClobKeeper.PerpetualIdToClobPairId = map[uint32][]types.ClobPairId{
+		0: {types.ClobPairId(0)},
+	}
+
+	clobPairId, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0)
+	require.NoError(t, err)
+	require.Equal(t, types.ClobPairId(0), clobPairId)
+}
+
+func TestGetClobPairIdForPerpetual_SuccessMultipleClobPairIds(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+	ks.ClobKeeper.PerpetualIdToClobPairId = map[uint32][]types.ClobPairId{
+		0: {types.ClobPairId(0), types.ClobPairId(1)},
+	}
+
+	clobPairId, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0)
+	require.NoError(t, err)
+	// The first CLOB pair ID should be returned.
+	require.Equal(t, types.ClobPairId(0), clobPairId)
+}
+
+func TestGetClobPairIdForPerpetual_ErrorNoClobPair(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+	_, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0)
+	require.EqualError(
+		t,
+		err,
+		"Perpetual ID 0 has no associated CLOB pairs: The provided perpetual ID "+
+			"does not have any associated CLOB pairs",
+	)
+}
+
+func TestGetClobPairForPerpetual_PanicsEmptyClobPair(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+	ks.ClobKeeper.PerpetualIdToClobPairId = map[uint32][]types.ClobPairId{
+		0: {},
+	}
+
+	require.Panics(t, func() {
+		ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0)
+	})
 }
