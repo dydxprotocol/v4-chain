@@ -169,6 +169,15 @@ const GenesisState = `{
               "amount": "900000000000000000"
             }
           ]
+        },
+        {
+          "address": "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+          "coins": [
+            {
+              "denom": "dv4tnt",
+              "amount": "1000000000"
+            }
+          ]
         }
       ],
       "supply": [],
