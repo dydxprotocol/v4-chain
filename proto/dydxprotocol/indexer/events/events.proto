@@ -289,7 +289,7 @@ message PerpetualMarketCreateEventV1 {
   // Defined in clob.clob_pair
   uint32 clob_pair_id = 2;
 
-  // The name of the `Perpetual` (e.g. `BTC-USD`). 
+  // The name of the `Perpetual` (e.g. `BTC-USD`).
   // Defined in perpetuals.perpetual
   string ticker = 3;
 
