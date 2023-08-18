@@ -207,13 +207,12 @@ func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 
 // createClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
 // This function returns an error if a value for the ClobPair's id already exists in state.
-func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) error {
+func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 	// Write the `ClobPair` to state.
 	k.setClobPair(ctx, clobPair)
 
 	// Create the corresponding orderbook in the memclob.
 	k.createOrderbook(ctx, clobPair)
-	return nil
 }
 
 // setClobPair sets a specific `ClobPair` in the store from its index.

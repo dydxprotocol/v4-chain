@@ -74,6 +74,7 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 
 	for _, clobPair := range clobPairs {
 		// Perform the method under test.
+		//nolint: errcheck
 		ks.ClobKeeper.CreatePerpetualClobPair(
 			ks.Ctx,
 			clobtest.MustPerpetualId(clobPair),
@@ -129,6 +130,7 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 		"ClobPair with id 0 already exists in state",
 		func() {
 			clobPair := *clobtest.GenerateClobPair()
+			//nolint: errcheck
 			ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(clobPair),
@@ -514,6 +516,7 @@ func TestGetClobPairIdForPerpetual_PanicsEmptyClobPair(t *testing.T) {
 	}
 
 	require.Panics(t, func() {
+		//nolint: errcheck
 		ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0)
 	})
 }
