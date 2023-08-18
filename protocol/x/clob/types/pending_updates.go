@@ -105,7 +105,7 @@ func (p *PendingUpdates) ConvertToUpdates() []satypes.Update {
 }
 
 // AddPerpetualFill adds a new fill to the PendingUpdate object, by
-// updating quoteBalanceDelta, perpetualUpdate and fees paid for a subaccount.
+// updating quoteBalanceDelta, perpetualUpdate and fees paid or received by a subaccount.
 func (p *PendingUpdates) AddPerpetualFill(
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,

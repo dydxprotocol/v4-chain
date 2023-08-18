@@ -232,6 +232,60 @@ func TestPendingUpdates(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "multiple fill amounts for same account (with negative fees)",
+			perpetualFills: []perpetualFill{
+				{
+					subaccountId:         constants.Alice_Num0,
+					perpetualId:          uint32(0),
+					isBuy:                true,
+					feePpm:               -200,
+					bigFillBaseQuantums:  big.NewInt(100),
+					bigFillQuoteQuantums: big.NewInt(15_000), // fee = -3_000_000 / 1_000_000
+				},
+				{
+					subaccountId:         constants.Alice_Num0,
+					perpetualId:          uint32(1),
+					isBuy:                true,
+					feePpm:               -200,
+					bigFillBaseQuantums:  big.NewInt(200),
+					bigFillQuoteQuantums: big.NewInt(1_500), // fee = -300_000 / 1_000_000 (rounds to -1)
+				},
+				{
+					subaccountId:         constants.Alice_Num0,
+					perpetualId:          uint32(0),
+					isBuy:                false,
+					feePpm:               500,
+					bigFillBaseQuantums:  big.NewInt(50),
+					bigFillQuoteQuantums: big.NewInt(1_600), // fee = 800_000 / 1_000_000 (rounds to 0)
+				},
+				{
+					subaccountId:         constants.Alice_Num0,
+					perpetualId:          uint32(1),
+					isBuy:                false,
+					feePpm:               500,
+					bigFillBaseQuantums:  big.NewInt(100),
+					bigFillQuoteQuantums: big.NewInt(2_100), // fee = 1_050_000 / 1_000_000 (rounds to 1)
+				},
+			},
+			expectedUpdates: []satypes.Update{
+				{
+					SubaccountId: constants.Alice_Num0,
+					// - 15_000 - 1_500 + 1_600 + 2_100 + (fee) 3
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-12_797)),
+					PerpetualUpdates: []satypes.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(50),
+						},
+						{
+							PerpetualId:      uint32(1),
+							BigQuantumsDelta: big.NewInt(100),
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

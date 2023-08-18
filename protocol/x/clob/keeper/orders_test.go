@@ -166,7 +166,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 
-			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price10000QuoteQt,
+			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100000QuoteQt,
 
 			expectedOrderStatus: types.Success,
 			expectedFilledSize:  0,
@@ -184,9 +184,28 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			feeParams: constants.PerpetualFeeParams,
 
-			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price10000QuoteQt,
+			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100000QuoteQt,
 
 			expectedOrderStatus: types.Undercollateralized,
+			expectedFilledSize:  0,
+		},
+		"Can place an order on the orderbook if the account would be collateralized due to rebate": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			clobs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			// Same setup as the above two tests, but the order is for a slightly higher price that
+			// cannot be collateralized without the rebate.
+			feeParams: constants.PerpetualFeeParamsMakerRebate,
+
+			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100001QuoteQt,
+
+			expectedOrderStatus: types.Success,
 			expectedFilledSize:  0,
 		},
 		"Cannot open an order if it doesn't reference a valid CLOB": {
