@@ -972,6 +972,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders?address=string&subacco
     "goodTilBlockTime": "string",
     "createdAtHeight": "string",
     "clientMetadata": "string",
+    "triggerPrice": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -1008,6 +1009,7 @@ Status Code **200**
 |» goodTilBlockTime|string|false|none|none|
 |» createdAtHeight|string|false|none|none|
 |» clientMetadata|string|true|none|none|
+|» triggerPrice|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -1127,6 +1129,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}',
   "goodTilBlockTime": "string",
   "createdAtHeight": "string",
   "clientMetadata": "string",
+  "triggerPrice": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -2662,6 +2665,7 @@ or
   "goodTilBlockTime": "string",
   "createdAtHeight": "string",
   "clientMetadata": "string",
+  "triggerPrice": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -2689,6 +2693,7 @@ or
 |goodTilBlockTime|string|false|none|none|
 |createdAtHeight|string|false|none|none|
 |clientMetadata|string|true|none|none|
+|triggerPrice|string|false|none|none|
 |timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|

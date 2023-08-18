@@ -26,6 +26,7 @@
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
     "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
     "@dydxprotocol-indexer/redis": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
     "@tsoa/runtime": "^5.0.0",
     "big.js": "^6.2.1",
@@ -33,6 +34,7 @@
     "cors": "^2.8.5",
     "dd-trace": "^3.32.1",
     "dotenv-flow": "^3.2.0",
+    "dydx-widdershins": "^4.0.1",
     "express": "^4.18.1",
     "express-request-id": "^1.4.0",
     "express-validator": "^6.14.2",
@@ -44,8 +46,7 @@
     "response-time": "^2.3.2",
     "supertest": "^6.2.4",
     "swagger-ui-express": "^4.6.2",
-    "tsoa": "^5.1.1",
-    "dydx-widdershins": "^4.0.1"
+    "tsoa": "^5.1.1"
   },
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
