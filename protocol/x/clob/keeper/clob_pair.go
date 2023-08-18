@@ -69,7 +69,7 @@ func (k Keeper) CreatePerpetualClobPair(
 //   - Must be a multiple of StepBaseQuantums.
 //
 // - Status:
-//   - Must be a status other than ClobPair_STATUS_UNSPECIFIED.
+//   - Must be a supported status.
 //
 // - StepBaseQuantums:
 //   - Must be greater than zero.
@@ -80,14 +80,11 @@ func (k Keeper) CreatePerpetualClobPair(
 // - TakerFeePpm:
 //   - Must be <= MaxFeePpm.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
-	if clobPair.Status == types.ClobPair_STATUS_UNSPECIFIED {
-		return sdkerrors.Wrap(types.ErrInvalidClobPairParameter, "invalid ClobPair parameter: Status must be specified.")
-	}
-
 	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidClobPairParameter,
-			"CLOB pair status %+v not supported",
+			"CLOB pair (%+v) has unsupported status %+v",
+			clobPair,
 			clobPair.Status,
 		)
 	}

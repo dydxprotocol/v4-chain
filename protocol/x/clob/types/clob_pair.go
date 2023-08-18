@@ -20,19 +20,15 @@ var SupportedClobPairStatusTransitions = map[ClobPair_Status]map[ClobPair_Status
 // IsSupportedClobPairStatus returns true if the provided ClobPair_Status is in the list
 // of currently supported ClobPair_Status types. Else, returns false.
 func IsSupportedClobPairStatus(clobPairStatus ClobPair_Status) bool {
-	if _, exists := SupportedClobPairStatusTransitions[clobPairStatus]; exists {
-		return true
-	}
-	return false
+	_, exists := SupportedClobPairStatusTransitions[clobPairStatus]
+	return exists
 }
 
 // IsSupportedClobPairStatusTransition returns true if it is considered valid to transition from
 // the first provided ClobPair_Status to the second provided ClobPair_Status. Else, returns false.
 func IsSupportedClobPairStatusTransition(from ClobPair_Status, to ClobPair_Status) bool {
-	if _, exists := SupportedClobPairStatusTransitions[from][to]; exists {
-		return true
-	}
-	return false
+	_, exists := SupportedClobPairStatusTransitions[from][to]
+	return exists
 }
 
 func (c *ClobPair) GetClobPairSubticksPerTick() SubticksPerTick {
