@@ -2725,6 +2725,7 @@ or
 |*anonymous*|PAUSED|
 |*anonymous*|CANCEL_ONLY|
 |*anonymous*|POST_ONLY|
+|*anonymous*|INITIALIZING|
 
 ## PerpetualMarketResponseObject
 
