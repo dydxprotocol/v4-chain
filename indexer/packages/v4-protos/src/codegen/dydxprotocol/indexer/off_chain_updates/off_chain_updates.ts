@@ -131,9 +131,6 @@ export enum OrderRemoveV1_OrderRemovalStatus {
    * - the order is expired.
    */
   ORDER_REMOVAL_STATUS_CANCELED = 2,
-
-  /** ORDER_REMOVAL_STATUS_FILLED - An order was fully-filled. Only sent by the Indexer for stateful orders. */
-  ORDER_REMOVAL_STATUS_FILLED = 3,
   UNRECOGNIZED = -1,
 }
 /**
@@ -167,9 +164,6 @@ export enum OrderRemoveV1_OrderRemovalStatusSDKType {
    * - the order is expired.
    */
   ORDER_REMOVAL_STATUS_CANCELED = 2,
-
-  /** ORDER_REMOVAL_STATUS_FILLED - An order was fully-filled. Only sent by the Indexer for stateful orders. */
-  ORDER_REMOVAL_STATUS_FILLED = 3,
   UNRECOGNIZED = -1,
 }
 export function orderRemoveV1_OrderRemovalStatusFromJSON(object: any): OrderRemoveV1_OrderRemovalStatus {
@@ -185,10 +179,6 @@ export function orderRemoveV1_OrderRemovalStatusFromJSON(object: any): OrderRemo
     case 2:
     case "ORDER_REMOVAL_STATUS_CANCELED":
       return OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED;
-
-    case 3:
-    case "ORDER_REMOVAL_STATUS_FILLED":
-      return OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_FILLED;
 
     case -1:
     case "UNRECOGNIZED":
@@ -206,9 +196,6 @@ export function orderRemoveV1_OrderRemovalStatusToJSON(object: OrderRemoveV1_Ord
 
     case OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED:
       return "ORDER_REMOVAL_STATUS_CANCELED";
-
-    case OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_FILLED:
-      return "ORDER_REMOVAL_STATUS_FILLED";
 
     case OrderRemoveV1_OrderRemovalStatus.UNRECOGNIZED:
     default:

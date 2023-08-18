@@ -1,29 +1,29 @@
-import { VestEntry, VestEntrySDKType } from "./vest_entry";
+import { VestingEntry, VestingEntrySDKType } from "./vesting_entry";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** GenesisState defines the vest module's genesis state. */
+/** GenesisState defines the vesting module's genesis state. */
 
 export interface GenesisState {
-  /** The vest entries at genesis. */
-  vestEntries: VestEntry[];
+  /** The vesting entries at genesis. */
+  vestingEntries: VestingEntry[];
 }
-/** GenesisState defines the vest module's genesis state. */
+/** GenesisState defines the vesting module's genesis state. */
 
 export interface GenesisStateSDKType {
-  /** The vest entries at genesis. */
-  vest_entries: VestEntrySDKType[];
+  /** The vesting entries at genesis. */
+  vesting_entries: VestingEntrySDKType[];
 }
 
 function createBaseGenesisState(): GenesisState {
   return {
-    vestEntries: []
+    vestingEntries: []
   };
 }
 
 export const GenesisState = {
   encode(message: GenesisState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.vestEntries) {
-      VestEntry.encode(v!, writer.uint32(10).fork()).ldelim();
+    for (const v of message.vestingEntries) {
+      VestingEntry.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
     return writer;
@@ -39,7 +39,7 @@ export const GenesisState = {
 
       switch (tag >>> 3) {
         case 1:
-          message.vestEntries.push(VestEntry.decode(reader, reader.uint32()));
+          message.vestingEntries.push(VestingEntry.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -53,7 +53,7 @@ export const GenesisState = {
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
-    message.vestEntries = object.vestEntries?.map(e => VestEntry.fromPartial(e)) || [];
+    message.vestingEntries = object.vestingEntries?.map(e => VestingEntry.fromPartial(e)) || [];
     return message;
   }
 

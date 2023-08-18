@@ -25,6 +25,7 @@ import { onMessage } from '../../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
   defaultMakerOrder,
+  defaultOrderId,
   defaultPreviousHeight,
   defaultTime,
   defaultTxHash,
@@ -42,7 +43,6 @@ import { getPrice, getSize } from '../../../src/lib/helper';
 import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
-import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 
 describe('statefulOrderPlacementHandler', () => {
   beforeAll(async () => {
@@ -72,43 +72,26 @@ describe('statefulOrderPlacementHandler', () => {
   const goodTilBlockTime: number = 123;
   const defaultOrder: IndexerOrder = {
     ...defaultMakerOrder,
-    orderId: {
-      ...defaultMakerOrder.orderId!,
-      orderFlags: ORDER_FLAG_LONG_TERM,
-    },
     goodTilBlock: undefined,
     goodTilBlockTime,
   };
-  const defaultStatefulOrderLongTermEvent: StatefulOrderEventV1 = {
-    longTermOrderPlacement: {
-      order: defaultOrder,
-    },
-  };
-  // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
   const defaultStatefulOrderEvent: StatefulOrderEventV1 = {
     orderPlace: {
       order: defaultOrder,
     },
   };
-  const orderId: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
+  const orderId: string = OrderTable.orderIdToUuid(defaultOrderId);
   let producerSendMock: jest.SpyInstance;
 
   describe('getParallelizationIds', () => {
-    it.each([
-      // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-      ['stateful order placement', defaultStatefulOrderEvent],
-      ['stateful long term order placement', defaultStatefulOrderLongTermEvent],
-    ])('returns the correct parallelization ids for %s', (
-      _name: string,
-      statefulOrderEvent: StatefulOrderEventV1,
-    ) => {
+    it('returns the correct parallelization ids', () => {
       const transactionIndex: number = 0;
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.STATEFUL_ORDER,
         binaryToBase64String(
-          StatefulOrderEventV1.encode(statefulOrderEvent).finish(),
+          StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
         ),
         transactionIndex,
         eventIndex,
@@ -124,27 +107,20 @@ describe('statefulOrderPlacementHandler', () => {
         block,
         indexerTendermintEvent,
         0,
-        statefulOrderEvent,
+        defaultStatefulOrderEvent,
       );
 
       const orderUuid: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
       expect(handler.getParallelizationIds()).toEqual([
-        `${handler.eventType}_${orderUuid}`,
+        `${handler.eventType}_${orderId}`,
         `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
       ]);
     });
   });
 
-  it.each([
-    // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-    ['stateful order placement', defaultStatefulOrderEvent],
-    ['stateful long term order placement', defaultStatefulOrderLongTermEvent],
-  ])('successfully places order with %s', async (
-    _name: string,
-    statefulOrderEvent: StatefulOrderEventV1,
-  ) => {
+  it('successfully places order', async () => {
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
-      statefulOrderEvent,
+      defaultStatefulOrderEvent,
     );
 
     await onMessage(kafkaMessage);
@@ -184,14 +160,7 @@ describe('statefulOrderPlacementHandler', () => {
     });
   });
 
-  it.each([
-    // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-    ['stateful order placement', defaultStatefulOrderEvent],
-    ['stateful long term order placement', defaultStatefulOrderLongTermEvent],
-  ])('successfully upserts order with %s', async (
-    _name: string,
-    statefulOrderEvent: StatefulOrderEventV1,
-  ) => {
+  it('successfully upserts order', async () => {
     const subaccountId: string = SubaccountTable.subaccountIdToUuid(
       defaultOrder.orderId!.subaccountId!,
     );
@@ -215,7 +184,7 @@ describe('statefulOrderPlacementHandler', () => {
       clientMetadata: '0',
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
-      statefulOrderEvent,
+      defaultStatefulOrderEvent,
     );
 
     await onMessage(kafkaMessage);

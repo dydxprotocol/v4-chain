@@ -15,14 +15,13 @@ import {
   getStepSize,
   getTickSize,
   priceToSubticks,
-  protocolConditionTypeToOrderType,
   protocolOrderTIFToTIF,
   serializedQuantumsToAbsHumanFixedString,
   subticksToPrice,
   tifToProtocolOrderTIF,
 } from '../../src/lib/protocol-translations';
 import { defaultPerpetualMarket } from '../helpers/constants';
-import { OrderType, TimeInForce } from '../../src/types';
+import { TimeInForce } from '../../src/types';
 import Long from 'long';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 
@@ -205,24 +204,4 @@ describe('protocolTranslations', () => {
     });
   });
 
-  describe('protocolConditionTypeToOrderType', () => {
-    it.each([
-      ['UNSPECIFIED', IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED, OrderType.LIMIT],
-      ['UNRECOGNIZED', IndexerOrder_ConditionType.UNRECOGNIZED, OrderType.LIMIT],
-      ['STOP_LOSS', IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS, OrderType.STOP_LIMIT],
-      ['TAKE_PROFIT', IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT, OrderType.TAKE_PROFIT],
-    ])('successfully gets order type given protocol condition type: %s', (
-      _name: string,
-      conditionType: IndexerOrder_ConditionType,
-      orderType: OrderType,
-    ) => {
-      expect(protocolConditionTypeToOrderType(conditionType)).toEqual(orderType);
-    });
-
-    it('throws error if unrecognized ConditionType given', () => {
-      expect(() => {
-        protocolConditionTypeToOrderType(100 as IndexerOrder_ConditionType);
-      }).toThrow(new Error('Unexpected ConditionType: 100'));
-    });
-  });
 });

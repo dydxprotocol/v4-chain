@@ -4,6 +4,7 @@ import {
   BlockTable,
   dbHelpers,
   IsoString,
+  LiquidityTiersTable,
   MarketTable,
   perpetualMarketRefresher,
   PerpetualMarketTable,
@@ -12,7 +13,6 @@ import {
   testConstants,
   TransactionFromDatabase,
   TransactionTable,
-  LiquidityTiersTable,
 } from '@dydxprotocol-indexer/postgres';
 import {
   FundingEventV1,
@@ -116,8 +116,8 @@ describe('on-message', () => {
         owner: '',
         number: 0,
       },
-    // updatedPerpetualPositions: [],
-    // updatedAssetPositions: [],
+      // updatedPerpetualPositions: [],
+      // updatedAssetPositions: [],
     });
   const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
     SubaccountUpdateEventV1.encode(
@@ -129,17 +129,13 @@ describe('on-message', () => {
   ).toString('base64');
 
   const defaultTransferEvent: TransferEventV1 = TransferEventV1.fromPartial({
-    sender: {
-      subaccountId: {
-        owner: '',
-        number: 0,
-      },
+    senderSubaccountId: {
+      owner: '',
+      number: 0,
     },
-    recipient: {
-      subaccountId: {
-        owner: '',
-        number: 0,
-      },
+    recipientSubaccountId: {
+      owner: '',
+      number: 0,
     },
     assetId: 0,
     amount: Long.fromValue(100, true),
@@ -308,32 +304,6 @@ describe('on-message', () => {
     expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
     expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
       expect.any(Number), 1, { success: 'true' });
-  });
-
-  it('throws error while processing unparsable messages', async () => {
-    const transactionIndex: number = 0;
-    const eventIndex: number = 0;
-    // unparsable transfer event
-    const events: IndexerTendermintEvent[] = [
-      createIndexerTendermintEvent(
-        DydxIndexerSubtypes.TRANSFER,
-        defaultSubaccountUpdateEventData,
-        transactionIndex,
-        eventIndex,
-      ),
-    ];
-
-    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-      defaultHeight,
-      defaultTime,
-      events,
-      [defaultTxHash],
-    );
-    const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
-    const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
-    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new Error('Could not parse message TransferEvent must have either a sender subaccount id or sender wallet address'),
-    );
   });
 
   it('skips over unknown events while processing', async () => {

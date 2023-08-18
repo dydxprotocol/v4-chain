@@ -1,11 +1,6 @@
 import { SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION } from '@dydxprotocol-indexer/kafka';
 import { testConstants, TradeContent } from '@dydxprotocol-indexer/postgres';
-import {
-  bigIntToBytes,
-  ORDER_FLAG_LONG_TERM,
-  ORDER_FLAG_SHORT_TERM,
-  ORDER_FLAG_CONDITIONAL,
-} from '@dydxprotocol-indexer/v4-proto-parser';
+import { bigIntToBytes, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   FundingEventV1_Type,
   LiquidationOrderV1,
@@ -24,7 +19,6 @@ import {
   TransferEventV1,
   IndexerOrder_ConditionType,
   OrderRemovalReason,
-  AssetCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -67,14 +61,6 @@ export const defaultFundingRateEvent: FundingEventMessage = {
       fundingIndex: bigIntToBytes(BigInt(10)),
     },
   ],
-};
-
-export const defaultAssetCreateEvent: AssetCreateEventV1 = {
-  id: 0,
-  symbol: 'BTC',
-  hasMarket: true,
-  marketId: 0,
-  atomicResolution: 6,
 };
 
 export const defaultMarketBase: MarketBaseEventV1 = {
@@ -188,7 +174,6 @@ export const defaultEmptySubaccountUpdateEvent: SubaccountUpdateEventV1 = {
   updatedAssetPositions: [],
 };
 
-export const defaultWalletAddress: string = 'defaultWalletAddress';
 export const defaultSenderSubaccountId: IndexerSubaccountId = {
   owner: 'sender',
   number: 0,
@@ -198,34 +183,10 @@ export const defaultRecipientSubaccountId: IndexerSubaccountId = {
   number: 0,
 };
 export const defaultTransferEvent: TransferEventV1 = {
+  senderSubaccountId: defaultSenderSubaccountId,
+  recipientSubaccountId: defaultRecipientSubaccountId,
   assetId: 0,
   amount: Long.fromValue(100),
-  sender: {
-    subaccountId: defaultSenderSubaccountId,
-  },
-  recipient: {
-    subaccountId: defaultRecipientSubaccountId,
-  },
-};
-export const defaultDepositEvent: TransferEventV1 = {
-  assetId: 0,
-  amount: Long.fromValue(100),
-  sender: {
-    address: defaultWalletAddress,
-  },
-  recipient: {
-    subaccountId: defaultRecipientSubaccountId,
-  },
-};
-export const defaultWithdrawalEvent: TransferEventV1 = {
-  assetId: 0,
-  amount: Long.fromValue(100),
-  sender: {
-    subaccountId: defaultSenderSubaccountId,
-  },
-  recipient: {
-    address: defaultWalletAddress,
-  },
 };
 
 export const defaultSubaccountMessage: SubaccountMessage = {
@@ -256,10 +217,6 @@ export const defaultStatefulOrderPlacementEvent: StatefulOrderEventV1 = {
   orderPlace: {
     order: {
       ...defaultMakerOrder,
-      orderId: {
-        ...defaultMakerOrder.orderId!,
-        orderFlags: ORDER_FLAG_LONG_TERM,
-      },
       goodTilBlockTime: 123,
     },
   },
@@ -268,39 +225,5 @@ export const defaultStatefulOrderRemovalEvent: StatefulOrderEventV1 = {
   orderRemoval: {
     removedOrderId: defaultOrderId,
     reason: OrderRemovalReason.ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
-  },
-};
-export const defaultConditionalOrderPlacementEvent: StatefulOrderEventV1 = {
-  conditionalOrderPlacement: {
-    order: {
-      ...defaultMakerOrder,
-      orderId: {
-        ...defaultMakerOrder.orderId!,
-        orderFlags: ORDER_FLAG_CONDITIONAL,
-      },
-      conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS,
-      conditionalOrderTriggerSubticks: Long.fromValue(1000000, true),
-      goodTilBlockTime: 123,
-    },
-  },
-};
-export const defaultConditionalOrderTriggeredEvent: StatefulOrderEventV1 = {
-  conditionalOrderTriggered: {
-    triggeredOrderId: {
-      ...defaultOrderId,
-      orderFlags: ORDER_FLAG_CONDITIONAL,
-    },
-  },
-};
-export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
-  longTermOrderPlacement: {
-    order: {
-      ...defaultMakerOrder,
-      orderId: {
-        ...defaultMakerOrder.orderId!,
-        orderFlags: ORDER_FLAG_LONG_TERM,
-      },
-      goodTilBlockTime: 123,
-    },
   },
 };

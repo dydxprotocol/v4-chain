@@ -3,25 +3,40 @@ import { seed } from '../../../src/db/seeds/01_genesis_seeds';
 import { clearData, migrate, teardown } from '../../../src/helpers/db-helpers';
 import {
   AssetFromDatabase,
-  LiquidityTiersFromDatabase,
+  AssetPositionFromDatabase,
   MarketFromDatabase,
+  Ordering,
   PerpetualMarketFromDatabase,
+  SubaccountColumns,
+  SubaccountFromDatabase,
+  LiquidityTiersFromDatabase,
 } from '../../../src/types';
 import * as AssetTable from '../../../src/stores/asset-table';
+import * as AssetPositionTable from '../../../src/stores/asset-position-table';
 import * as PerpetualMarketTable from '../../../src/stores/perpetual-market-table';
 import * as MarketTable from '../../../src/stores/market-table';
+import * as SubaccountTable from '../../../src/stores/subaccount-table';
 import * as LiquidityTiersTable from '../../../src/stores/liquidity-tiers-table';
 import {
-  expectAsset, expectLiquidityTier, expectMarketParamAndPrice, expectPerpetualMarket,
+  expectAsset,
+  expectAssetPosition,
+  expectLiquidityTier,
+  expectMarketParamAndPrice,
+  expectPerpetualMarket,
+  expectSubaccount,
 } from '../helpers';
 import {
+  getAssetPositionsFromGenesis,
   getAssetsFromGenesis,
   getClobPairsFromGenesis,
   getLiquidityTiersFromGenesis,
   getMarketParamsFromGenesis,
   getMarketPricesFromGenesis,
   getPerpetualsFromGenesis,
+  getSubaccountCreateObjectsFromGenesis,
+  SubaccountCreateObjectWithId,
 } from '../../../src/db/helpers';
+import _ from 'lodash';
 import {
   defaultLiquidityTier,
   defaultLiquidityTier2,
@@ -65,6 +80,18 @@ describe('seed', () => {
       { readReplica: true },
     );
 
+    const assetPositions: AssetPositionFromDatabase[] = await AssetPositionTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
+      {},
+      [],
+      { readReplica: true, orderBy: [[SubaccountColumns.id, Ordering.ASC]] },
+    );
+
     expect(perpetualMarkets).toHaveLength(33);
     perpetualMarkets.forEach((perpetualMarket: PerpetualMarketFromDatabase, index: number) => {
       expectPerpetualMarket(
@@ -94,6 +121,24 @@ describe('seed', () => {
       expectLiquidityTier(
         liquidityTier,
         getLiquidityTiersFromGenesis()[index],
+      );
+    });
+
+    expect(assetPositions).toHaveLength(13);
+    assetPositions.forEach((assetPosition: AssetPositionFromDatabase, index: number) => {
+      expectAssetPosition(
+        assetPosition,
+        Object.values(getAssetPositionsFromGenesis())[index][0],
+        assets[0].atomicResolution,
+      );
+    });
+
+    expect(subaccounts).toHaveLength(13);
+    const subaccountCreateObjects: SubaccountCreateObjectWithId[] = _.orderBy(getSubaccountCreateObjectsFromGenesis(), 'id', 'asc');
+    subaccounts.forEach((subaccount: SubaccountFromDatabase, index: number) => {
+      expectSubaccount(
+        subaccount,
+        subaccountCreateObjects[index],
       );
     });
 

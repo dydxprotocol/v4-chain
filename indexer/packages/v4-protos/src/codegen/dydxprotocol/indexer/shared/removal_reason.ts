@@ -63,18 +63,6 @@ export enum OrderRemovalReason {
 
   /** ORDER_REMOVAL_REASON_REPLACED - The order has been replaced. */
   ORDER_REMOVAL_REASON_REPLACED = 11,
-
-  /**
-   * ORDER_REMOVAL_REASON_FULLY_FILLED - The order has been fully-filled. Only sent by the Indexer for stateful
-   * orders.
-   */
-  ORDER_REMOVAL_REASON_FULLY_FILLED = 12,
-
-  /**
-   * ORDER_REMOVAL_REASON_EQUITY_TIER - The order has been removed since the subaccount does not satisfy the
-   * equity tier requirements.
-   */
-  ORDER_REMOVAL_REASON_EQUITY_TIER = 13,
   UNRECOGNIZED = -1,
 }
 /** OrderRemovalReason is an enum of all the reasons an order was removed. */
@@ -143,18 +131,6 @@ export enum OrderRemovalReasonSDKType {
 
   /** ORDER_REMOVAL_REASON_REPLACED - The order has been replaced. */
   ORDER_REMOVAL_REASON_REPLACED = 11,
-
-  /**
-   * ORDER_REMOVAL_REASON_FULLY_FILLED - The order has been fully-filled. Only sent by the Indexer for stateful
-   * orders.
-   */
-  ORDER_REMOVAL_REASON_FULLY_FILLED = 12,
-
-  /**
-   * ORDER_REMOVAL_REASON_EQUITY_TIER - The order has been removed since the subaccount does not satisfy the
-   * equity tier requirements.
-   */
-  ORDER_REMOVAL_REASON_EQUITY_TIER = 13,
   UNRECOGNIZED = -1,
 }
 export function orderRemovalReasonFromJSON(object: any): OrderRemovalReason {
@@ -207,14 +183,6 @@ export function orderRemovalReasonFromJSON(object: any): OrderRemovalReason {
     case "ORDER_REMOVAL_REASON_REPLACED":
       return OrderRemovalReason.ORDER_REMOVAL_REASON_REPLACED;
 
-    case 12:
-    case "ORDER_REMOVAL_REASON_FULLY_FILLED":
-      return OrderRemovalReason.ORDER_REMOVAL_REASON_FULLY_FILLED;
-
-    case 13:
-    case "ORDER_REMOVAL_REASON_EQUITY_TIER":
-      return OrderRemovalReason.ORDER_REMOVAL_REASON_EQUITY_TIER;
-
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -258,12 +226,6 @@ export function orderRemovalReasonToJSON(object: OrderRemovalReason): string {
 
     case OrderRemovalReason.ORDER_REMOVAL_REASON_REPLACED:
       return "ORDER_REMOVAL_REASON_REPLACED";
-
-    case OrderRemovalReason.ORDER_REMOVAL_REASON_FULLY_FILLED:
-      return "ORDER_REMOVAL_REASON_FULLY_FILLED";
-
-    case OrderRemovalReason.ORDER_REMOVAL_REASON_EQUITY_TIER:
-      return "ORDER_REMOVAL_REASON_EQUITY_TIER";
 
     case OrderRemovalReason.UNRECOGNIZED:
     default:

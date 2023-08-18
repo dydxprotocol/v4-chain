@@ -22,7 +22,6 @@ import {
   CURRENCY_DECIMAL_PRECISION,
   PerpetualPositionFromDatabase,
   AssetPositionSubaccountMessageContents,
-  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import { SubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -215,37 +214,26 @@ export function convertPerpetualPosition(
  * subaccount kafka channel.
  *
  * @param contents
- * @param transfer
- * @param asset associated with the asset id in transfer
- * @param subaccountId to generate the websocket message for
  * @param senderSubaccountId
  * @param recipientSubaccountId
+ * @param transfer
+ * @param asset associated with the asset id in transfer
  */
 export function generateTransferContents(
+  senderSubaccountId: SubaccountId,
+  recipientSubaccountId: SubaccountId,
   transfer: TransferFromDatabase,
   asset: AssetFromDatabase,
-  subaccountId: SubaccountId,
-  senderSubaccountId?: SubaccountId,
-  recipientSubaccountId?: SubaccountId,
 ): SubaccountMessageContents {
   return {
     transfers: {
-      sender: {
-        address: transfer.senderWalletAddress ?? senderSubaccountId!.owner,
-        subaccountNumber: transfer.senderWalletAddress ? undefined
-          : senderSubaccountId!.number,
-      },
-      recipient: {
-        address: transfer.recipientWalletAddress ?? recipientSubaccountId!.owner,
-        subaccountNumber: transfer.recipientWalletAddress ? undefined
-          : recipientSubaccountId!.number,
-      },
+      senderAddress: senderSubaccountId.owner,
+      senderSubaccountNumber: senderSubaccountId.number,
+      recipientAddress: recipientSubaccountId.owner,
+      recipientSubaccountNumber: recipientSubaccountId.number,
       symbol: asset.symbol,
+      assetId: transfer.assetId,
       size: transfer.size,
-      type: helpers.getTransferType(
-        transfer,
-        SubaccountTable.uuid(subaccountId.owner, subaccountId.number),
-      ),
     },
   };
 }

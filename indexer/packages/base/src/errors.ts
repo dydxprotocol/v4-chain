@@ -37,3 +37,12 @@ export class ParseMessageError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+export class UnprocessableError extends Error {
+  constructor(message: string) {
+    super(`Could not process message ${message}`);
+    Object.setPrototypeOf(this, UnprocessableError.prototype);
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}

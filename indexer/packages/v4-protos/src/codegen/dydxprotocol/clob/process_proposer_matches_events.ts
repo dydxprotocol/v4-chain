@@ -1,83 +1,78 @@
-import { OrderId, OrderIdSDKType } from "./order";
+import { Order, OrderSDKType, OrderId, OrderIdSDKType } from "./order";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
  * ProcessProposerMatchesEvents is used for communicating which events occurred
  * in the last block that require updating the state of the memclob in the
  * Commit blocker. It contains information about the following state updates:
- * - Long term order IDs that were placed in the last block.
+ * - Stateful orders that were placed in the last block.
  * - Stateful order IDs that were expired in the last block.
  * - Order IDs that were filled in the last block.
- * - Stateful cancellations order IDs that were placed in the last block.
- * - Stateful order IDs forcefully removed in the last block.
- * - Conditional order IDs triggered in the last block.
- * - Conditional order IDs placed, but not triggered in the last block.
+ * - Stateful cancellations that were placed in the last block.
+ * - Stateful order removals in the last block.
+ * - Conditional order ids triggered in the last block.
  * - The height of the block in which the events occurred.
  */
 
 export interface ProcessProposerMatchesEvents {
-  placedLongTermOrderIds: OrderId[];
+  placedStatefulOrders: Order[];
   expiredStatefulOrderIds: OrderId[];
-  orderIdsFilledInLastBlock: OrderId[];
-  placedStatefulCancellationOrderIds: OrderId[];
+  ordersIdsFilledInLastBlock: OrderId[];
+  placedStatefulCancellations: OrderId[];
   removedStatefulOrderIds: OrderId[];
   conditionalOrderIdsTriggeredInLastBlock: OrderId[];
-  placedConditionalOrderIds: OrderId[];
   blockHeight: number;
 }
 /**
  * ProcessProposerMatchesEvents is used for communicating which events occurred
  * in the last block that require updating the state of the memclob in the
  * Commit blocker. It contains information about the following state updates:
- * - Long term order IDs that were placed in the last block.
+ * - Stateful orders that were placed in the last block.
  * - Stateful order IDs that were expired in the last block.
  * - Order IDs that were filled in the last block.
- * - Stateful cancellations order IDs that were placed in the last block.
- * - Stateful order IDs forcefully removed in the last block.
- * - Conditional order IDs triggered in the last block.
- * - Conditional order IDs placed, but not triggered in the last block.
+ * - Stateful cancellations that were placed in the last block.
+ * - Stateful order removals in the last block.
+ * - Conditional order ids triggered in the last block.
  * - The height of the block in which the events occurred.
  */
 
 export interface ProcessProposerMatchesEventsSDKType {
-  placed_long_term_order_ids: OrderIdSDKType[];
+  placed_stateful_orders: OrderSDKType[];
   expired_stateful_order_ids: OrderIdSDKType[];
-  order_ids_filled_in_last_block: OrderIdSDKType[];
-  placed_stateful_cancellation_order_ids: OrderIdSDKType[];
+  orders_ids_filled_in_last_block: OrderIdSDKType[];
+  placed_stateful_cancellations: OrderIdSDKType[];
   removed_stateful_order_ids: OrderIdSDKType[];
   conditional_order_ids_triggered_in_last_block: OrderIdSDKType[];
-  placed_conditional_order_ids: OrderIdSDKType[];
   block_height: number;
 }
 
 function createBaseProcessProposerMatchesEvents(): ProcessProposerMatchesEvents {
   return {
-    placedLongTermOrderIds: [],
+    placedStatefulOrders: [],
     expiredStatefulOrderIds: [],
-    orderIdsFilledInLastBlock: [],
-    placedStatefulCancellationOrderIds: [],
+    ordersIdsFilledInLastBlock: [],
+    placedStatefulCancellations: [],
     removedStatefulOrderIds: [],
     conditionalOrderIdsTriggeredInLastBlock: [],
-    placedConditionalOrderIds: [],
     blockHeight: 0
   };
 }
 
 export const ProcessProposerMatchesEvents = {
   encode(message: ProcessProposerMatchesEvents, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.placedLongTermOrderIds) {
-      OrderId.encode(v!, writer.uint32(10).fork()).ldelim();
+    for (const v of message.placedStatefulOrders) {
+      Order.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
     for (const v of message.expiredStatefulOrderIds) {
       OrderId.encode(v!, writer.uint32(18).fork()).ldelim();
     }
 
-    for (const v of message.orderIdsFilledInLastBlock) {
+    for (const v of message.ordersIdsFilledInLastBlock) {
       OrderId.encode(v!, writer.uint32(26).fork()).ldelim();
     }
 
-    for (const v of message.placedStatefulCancellationOrderIds) {
+    for (const v of message.placedStatefulCancellations) {
       OrderId.encode(v!, writer.uint32(34).fork()).ldelim();
     }
 
@@ -89,12 +84,8 @@ export const ProcessProposerMatchesEvents = {
       OrderId.encode(v!, writer.uint32(50).fork()).ldelim();
     }
 
-    for (const v of message.placedConditionalOrderIds) {
-      OrderId.encode(v!, writer.uint32(58).fork()).ldelim();
-    }
-
     if (message.blockHeight !== 0) {
-      writer.uint32(64).uint32(message.blockHeight);
+      writer.uint32(56).uint32(message.blockHeight);
     }
 
     return writer;
@@ -110,7 +101,7 @@ export const ProcessProposerMatchesEvents = {
 
       switch (tag >>> 3) {
         case 1:
-          message.placedLongTermOrderIds.push(OrderId.decode(reader, reader.uint32()));
+          message.placedStatefulOrders.push(Order.decode(reader, reader.uint32()));
           break;
 
         case 2:
@@ -118,11 +109,11 @@ export const ProcessProposerMatchesEvents = {
           break;
 
         case 3:
-          message.orderIdsFilledInLastBlock.push(OrderId.decode(reader, reader.uint32()));
+          message.ordersIdsFilledInLastBlock.push(OrderId.decode(reader, reader.uint32()));
           break;
 
         case 4:
-          message.placedStatefulCancellationOrderIds.push(OrderId.decode(reader, reader.uint32()));
+          message.placedStatefulCancellations.push(OrderId.decode(reader, reader.uint32()));
           break;
 
         case 5:
@@ -134,10 +125,6 @@ export const ProcessProposerMatchesEvents = {
           break;
 
         case 7:
-          message.placedConditionalOrderIds.push(OrderId.decode(reader, reader.uint32()));
-          break;
-
-        case 8:
           message.blockHeight = reader.uint32();
           break;
 
@@ -152,13 +139,12 @@ export const ProcessProposerMatchesEvents = {
 
   fromPartial(object: DeepPartial<ProcessProposerMatchesEvents>): ProcessProposerMatchesEvents {
     const message = createBaseProcessProposerMatchesEvents();
-    message.placedLongTermOrderIds = object.placedLongTermOrderIds?.map(e => OrderId.fromPartial(e)) || [];
+    message.placedStatefulOrders = object.placedStatefulOrders?.map(e => Order.fromPartial(e)) || [];
     message.expiredStatefulOrderIds = object.expiredStatefulOrderIds?.map(e => OrderId.fromPartial(e)) || [];
-    message.orderIdsFilledInLastBlock = object.orderIdsFilledInLastBlock?.map(e => OrderId.fromPartial(e)) || [];
-    message.placedStatefulCancellationOrderIds = object.placedStatefulCancellationOrderIds?.map(e => OrderId.fromPartial(e)) || [];
+    message.ordersIdsFilledInLastBlock = object.ordersIdsFilledInLastBlock?.map(e => OrderId.fromPartial(e)) || [];
+    message.placedStatefulCancellations = object.placedStatefulCancellations?.map(e => OrderId.fromPartial(e)) || [];
     message.removedStatefulOrderIds = object.removedStatefulOrderIds?.map(e => OrderId.fromPartial(e)) || [];
     message.conditionalOrderIdsTriggeredInLastBlock = object.conditionalOrderIdsTriggeredInLastBlock?.map(e => OrderId.fromPartial(e)) || [];
-    message.placedConditionalOrderIds = object.placedConditionalOrderIds?.map(e => OrderId.fromPartial(e)) || [];
     message.blockHeight = object.blockHeight ?? 0;
     return message;
   }

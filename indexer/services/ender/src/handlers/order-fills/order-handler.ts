@@ -14,10 +14,8 @@ import {
   storeHelpers,
   SubaccountTable,
   USDC_ASSET_ID,
-  OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
 import { CanceledOrdersCache } from '@dydxprotocol-indexer/redis';
-import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OrderFillEventV1, IndexerOrderId, IndexerSubaccountId, IndexerOrder,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -64,7 +62,6 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillEventWithLiq
     const transactionIndex: number = indexerTendermintEventToTransactionIndex(
       this.indexerTendermintEvent,
     );
-    const kafkaEvents: ConsolidatedKafkaEvent[] = [];
 
     const castedOrderFillEventMessage: OrderFillEventWithOrder = (
       this.event.event as OrderFillEventWithOrder);
@@ -115,44 +112,38 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillEventWithLiq
     } else {
       subaccountId = castedOrderFillEventMessage.order.orderId!.subaccountId!;
     }
-    kafkaEvents.push(
-      this.generateConsolidatedKafkaEvent(
-        subaccountId,
-        order,
-        convertPerpetualPosition(position),
-        fill,
-        perpetualMarket,
-      ),
+    const subaccountConsolidatedKafkaEvent:
+    ConsolidatedKafkaEvent = this.generateConsolidatedKafkaEvent(
+      subaccountId,
+      order,
+      convertPerpetualPosition(position),
+      fill,
+      perpetualMarket,
     );
 
     // Update vulcan with the total filled amount of the order.
-    kafkaEvents.push(
-      this.getOrderUpdateKafkaEvent(
-        orderProto.orderId!,
-        this.getTotalFilled(castedOrderFillEventMessage),
-      ),
+    const vulcanConsolidatedKafkaEvent: ConsolidatedKafkaEvent = this.getOrderUpdateKafkaEvent(
+      orderProto.orderId!,
+      this.getTotalFilled(castedOrderFillEventMessage),
     );
 
-    // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
-    // for stateful orders as we are guaranteed a stateful order cannot be replaced until the next
-    // block.
-    if (order.status === OrderStatus.FILLED && isStatefulOrder(order.orderFlags)) {
-      kafkaEvents.push(this.getOrderRemoveKafkaEvent(orderProto.orderId!));
-    }
-
     if (this.event.liquidity === Liquidity.TAKER) {
-      kafkaEvents.push(this.generateTradeKafkaEventFromTakerOrderFill(fill));
-      return kafkaEvents;
+      return [
+        subaccountConsolidatedKafkaEvent,
+        vulcanConsolidatedKafkaEvent,
+        this.generateTradeKafkaEventFromTakerOrderFill(
+          fill,
+        ),
+      ];
     }
 
-    return kafkaEvents;
+    return [subaccountConsolidatedKafkaEvent, vulcanConsolidatedKafkaEvent];
   }
 
   public async handleViaKnexQueries(): Promise<ConsolidatedKafkaEvent[]> {
     // OrderFillHandler already makes sure the event has 'takerOrder' as the oneofKind.
     const castedOrderFillEventMessage:
     OrderFillEventWithOrder = this.event.event as OrderFillEventWithOrder;
-    const kafkaEvents: ConsolidatedKafkaEvent[] = [];
 
     const clobPairId:
     string = castedOrderFillEventMessage.makerOrder.orderId!.clobPairId.toString();
@@ -204,37 +195,32 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillEventWithLiq
     } else {
       subaccountId = castedOrderFillEventMessage.order.orderId!.subaccountId!;
     }
-    kafkaEvents.push(
-      this.generateConsolidatedKafkaEvent(
-        subaccountId,
-        order,
-        convertPerpetualPosition(position),
-        fill,
-        perpetualMarket,
-      ),
+    const subaccountConsolidatedKafkaEvent:
+    ConsolidatedKafkaEvent = this.generateConsolidatedKafkaEvent(
+      subaccountId,
+      order,
+      convertPerpetualPosition(position),
+      fill,
+      perpetualMarket,
     );
 
     // Update vulcan with the total filled amount of the order.
-    kafkaEvents.push(
-      this.getOrderUpdateKafkaEvent(
-        orderProto.orderId!,
-        this.getTotalFilled(castedOrderFillEventMessage),
-      ),
+    const vulcanConsolidatedKafkaEvent: ConsolidatedKafkaEvent = this.getOrderUpdateKafkaEvent(
+      orderProto.orderId!,
+      this.getTotalFilled(castedOrderFillEventMessage),
     );
 
-    // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
-    // for stateful orders as we are guaranteed a stateful order cannot be replaced until the next
-    // block.
-    if (order.status === OrderStatus.FILLED && isStatefulOrder(order.orderFlags)) {
-      kafkaEvents.push(this.getOrderRemoveKafkaEvent(orderProto.orderId!));
-    }
-
     if (this.event.liquidity === Liquidity.TAKER) {
-      kafkaEvents.push(this.generateTradeKafkaEventFromTakerOrderFill(fill));
-      return kafkaEvents;
+      return [
+        subaccountConsolidatedKafkaEvent,
+        vulcanConsolidatedKafkaEvent,
+        this.generateTradeKafkaEventFromTakerOrderFill(
+          fill,
+        ),
+      ];
     }
 
-    return kafkaEvents;
+    return [subaccountConsolidatedKafkaEvent, vulcanConsolidatedKafkaEvent];
   }
 
   protected getTotalFilled(castedOrderFillEventMessage: OrderFillEventWithOrder): Long {

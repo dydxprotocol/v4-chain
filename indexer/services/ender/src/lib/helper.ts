@@ -162,23 +162,6 @@ export function getPrice(
 }
 
 /**
- * Returns the trigger price of an order in human readable form.
- *
- * @param order
- * @param perpetualMarket
- * @returns
- */
-export function getTriggerPrice(
-  order: IndexerOrder,
-  perpetualMarket: PerpetualMarketFromDatabase,
-): string {
-  return protocolTranslations.subticksToPrice(
-    order.conditionalOrderTriggerSubticks.toString(10),
-    perpetualMarket,
-  );
-}
-
-/**
  * Returns the weighted average between two prices
  * @param firstPrice
  * @param firstWeight

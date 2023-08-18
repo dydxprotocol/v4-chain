@@ -621,9 +621,6 @@
           "clientMetadata": {
             "type": "string"
           },
-          "triggerPrice": {
-            "type": "string"
-          },
           "timeInForce": {
             "$ref": "#/components/schemas/APITimeInForce"
           },
@@ -893,49 +890,19 @@
         "type": "object",
         "additionalProperties": false
       },
-      "TransferType": {
-        "enum": [
-          "TRANSFER_IN",
-          "TRANSFER_OUT",
-          "DEPOSIT",
-          "WITHDRAWAL"
-        ],
-        "type": "string"
-      },
       "TransferResponseObject": {
         "properties": {
           "id": {
             "type": "string"
           },
-          "sender": {
-            "properties": {
-              "subaccountNumber": {
-                "type": "number",
-                "format": "double"
-              },
-              "address": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "address"
-            ],
-            "type": "object"
+          "senderSubaccountId": {
+            "type": "string"
           },
-          "recipient": {
-            "properties": {
-              "subaccountNumber": {
-                "type": "number",
-                "format": "double"
-              },
-              "address": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "address"
-            ],
-            "type": "object"
+          "recipientSubaccountId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
           },
           "size": {
             "type": "string"
@@ -948,20 +915,17 @@
           },
           "symbol": {
             "type": "string"
-          },
-          "type": {
-            "$ref": "#/components/schemas/TransferType"
           }
         },
         "required": [
           "id",
-          "sender",
-          "recipient",
+          "senderSubaccountId",
+          "recipientSubaccountId",
+          "assetId",
           "size",
           "createdAt",
           "createdAtHeight",
-          "symbol",
-          "type"
+          "symbol"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1828,7 +1792,7 @@
   },
   "servers": [
     {
-      "url": "https://indexer.v4testnet2.dydx.exchange/v4",
+      "url": "https://indexer.v4testnet1.dydx.exchange/v4",
       "description": "Public Testnet"
     }
   ]

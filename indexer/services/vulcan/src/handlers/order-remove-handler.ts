@@ -414,15 +414,9 @@ export class OrderRemoveHandler extends Handler {
   protected orderRemovalStatusToOrderStatus(
     orderRemovalStatus: OrderRemoveV1_OrderRemovalStatus,
   ): OrderStatus {
-    switch (orderRemovalStatus) {
-      case OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED:
-        return OrderStatus.CANCELED;
-      case OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_FILLED:
-        return OrderStatus.FILLED;
-      case OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED:
-      default:
-        return OrderStatus.BEST_EFFORT_CANCELED;
-    }
+    return orderRemovalStatus === OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED
+      ? OrderStatus.CANCELED
+      : OrderStatus.BEST_EFFORT_CANCELED;
   }
 
   /**
@@ -581,7 +575,6 @@ export class OrderRemoveHandler extends Handler {
    * Determine if a subaccount message should be sent for an order removal. Do not send messages if:
    * - best effort cancelling orders that are optimistically fully filled for user cancelations
    * - indexer expired cancelations
-   * - orders that are removed due to being fully filled
    * @param orderRemove
    * @param removeOrderResult
    * @param redisOrder
@@ -608,8 +601,6 @@ export class OrderRemoveHandler extends Handler {
       status === OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED &&
       reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED
     ) {
-      return false;
-    } else if (reason === OrderRemovalReason.ORDER_REMOVAL_REASON_FULLY_FILLED) {
       return false;
     }
     return true;

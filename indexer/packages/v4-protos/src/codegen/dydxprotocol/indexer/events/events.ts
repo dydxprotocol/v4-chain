@@ -312,26 +312,15 @@ export interface MarketModifyEventV1SDKType {
    */
   base?: MarketBaseEventV1SDKType;
 }
-/** SourceOfFunds is the source of funds in a transfer event. */
-
-export interface SourceOfFunds {
-  subaccountId?: IndexerSubaccountId;
-  address?: string;
-}
-/** SourceOfFunds is the source of funds in a transfer event. */
-
-export interface SourceOfFundsSDKType {
-  subaccount_id?: IndexerSubaccountIdSDKType;
-  address?: string;
-}
 /**
- * TransferEvent message contains all the information about a transfer,
- * deposit-to-subaccount, or withdraw-from-subaccount on the V4 chain.
- * When a subaccount is involved, a SubaccountUpdateEvent message will
- * be produced with the updated asset positions.
+ * TransferEvent message contains all the information about a transfer on
+ * the V4 chain. A transfer also produces 2 separate SubaccountUpdateEvent
+ * messages, 1 for recipient and 1 for sender, with the updated asset
+ * positions.
  */
 
 export interface TransferEventV1 {
+  /** The sender subaccount ID. */
   senderSubaccountId?: IndexerSubaccountId;
   recipientSubaccountId?: IndexerSubaccountId;
   /** Id of the asset transfered. */
@@ -340,29 +329,16 @@ export interface TransferEventV1 {
   /** The amount of asset in quantums to transfer. */
 
   amount: Long;
-  /**
-   * The sender is one of below
-   * - a subaccount ID (in transfer and withdraw events).
-   * - a wallet address (in deposit events).
-   */
-
-  sender?: SourceOfFunds;
-  /**
-   * The recipient is one of below
-   * - a subaccount ID (in transfer and deposit events).
-   * - a wallet address (in withdraw events).
-   */
-
-  recipient?: SourceOfFunds;
 }
 /**
- * TransferEvent message contains all the information about a transfer,
- * deposit-to-subaccount, or withdraw-from-subaccount on the V4 chain.
- * When a subaccount is involved, a SubaccountUpdateEvent message will
- * be produced with the updated asset positions.
+ * TransferEvent message contains all the information about a transfer on
+ * the V4 chain. A transfer also produces 2 separate SubaccountUpdateEvent
+ * messages, 1 for recipient and 1 for sender, with the updated asset
+ * positions.
  */
 
 export interface TransferEventV1SDKType {
+  /** The sender subaccount ID. */
   sender_subaccount_id?: IndexerSubaccountIdSDKType;
   recipient_subaccount_id?: IndexerSubaccountIdSDKType;
   /** Id of the asset transfered. */
@@ -371,20 +347,6 @@ export interface TransferEventV1SDKType {
   /** The amount of asset in quantums to transfer. */
 
   amount: Long;
-  /**
-   * The sender is one of below
-   * - a subaccount ID (in transfer and withdraw events).
-   * - a wallet address (in deposit events).
-   */
-
-  sender?: SourceOfFundsSDKType;
-  /**
-   * The recipient is one of below
-   * - a subaccount ID (in transfer and deposit events).
-   * - a wallet address (in withdraw events).
-   */
-
-  recipient?: SourceOfFundsSDKType;
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
@@ -540,31 +502,23 @@ export interface SubaccountUpdateEventV1SDKType {
 }
 /**
  * StatefulOrderEvent message contains information about a change to a stateful
- * order. Currently, this is either the placement of a long-term order, the
- * placement or triggering of a conditional order, or the removal of a
- * stateful order.
+ * order. Currently, this is either the placement or removal of a stateful
+ * order.
  */
 
 export interface StatefulOrderEventV1 {
   orderPlace?: StatefulOrderEventV1_StatefulOrderPlacementV1;
   orderRemoval?: StatefulOrderEventV1_StatefulOrderRemovalV1;
-  conditionalOrderPlacement?: StatefulOrderEventV1_ConditionalOrderPlacementV1;
-  conditionalOrderTriggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1;
-  longTermOrderPlacement?: StatefulOrderEventV1_LongTermOrderPlacementV1;
 }
 /**
  * StatefulOrderEvent message contains information about a change to a stateful
- * order. Currently, this is either the placement of a long-term order, the
- * placement or triggering of a conditional order, or the removal of a
- * stateful order.
+ * order. Currently, this is either the placement or removal of a stateful
+ * order.
  */
 
 export interface StatefulOrderEventV1SDKType {
   order_place?: StatefulOrderEventV1_StatefulOrderPlacementV1SDKType;
   order_removal?: StatefulOrderEventV1_StatefulOrderRemovalV1SDKType;
-  conditional_order_placement?: StatefulOrderEventV1_ConditionalOrderPlacementV1SDKType;
-  conditional_order_triggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1SDKType;
-  long_term_order_placement?: StatefulOrderEventV1_LongTermOrderPlacementV1SDKType;
 }
 /** A stateful order placement contains an order. */
 
@@ -577,7 +531,7 @@ export interface StatefulOrderEventV1_StatefulOrderPlacementV1SDKType {
   order?: IndexerOrderSDKType;
 }
 /**
- * A stateful order removal contains the id of an order that was already
+ * A stateful order removal containts the id of an order that was already
  * placed and is now removed and the reason for the removal.
  */
 
@@ -586,123 +540,13 @@ export interface StatefulOrderEventV1_StatefulOrderRemovalV1 {
   reason: OrderRemovalReason;
 }
 /**
- * A stateful order removal contains the id of an order that was already
+ * A stateful order removal containts the id of an order that was already
  * placed and is now removed and the reason for the removal.
  */
 
 export interface StatefulOrderEventV1_StatefulOrderRemovalV1SDKType {
   removed_order_id?: IndexerOrderIdSDKType;
   reason: OrderRemovalReasonSDKType;
-}
-/**
- * A conditional order placement contains an order. The order is newly-placed
- * and untriggered when this event is emitted.
- */
-
-export interface StatefulOrderEventV1_ConditionalOrderPlacementV1 {
-  order?: IndexerOrder;
-}
-/**
- * A conditional order placement contains an order. The order is newly-placed
- * and untriggered when this event is emitted.
- */
-
-export interface StatefulOrderEventV1_ConditionalOrderPlacementV1SDKType {
-  order?: IndexerOrderSDKType;
-}
-/**
- * A conditional order trigger event contains an order id and is emitted when
- * an order is triggered.
- */
-
-export interface StatefulOrderEventV1_ConditionalOrderTriggeredV1 {
-  triggeredOrderId?: IndexerOrderId;
-}
-/**
- * A conditional order trigger event contains an order id and is emitted when
- * an order is triggered.
- */
-
-export interface StatefulOrderEventV1_ConditionalOrderTriggeredV1SDKType {
-  triggered_order_id?: IndexerOrderIdSDKType;
-}
-/** A long term order placement contains an order. */
-
-export interface StatefulOrderEventV1_LongTermOrderPlacementV1 {
-  order?: IndexerOrder;
-}
-/** A long term order placement contains an order. */
-
-export interface StatefulOrderEventV1_LongTermOrderPlacementV1SDKType {
-  order?: IndexerOrderSDKType;
-}
-/**
- * AssetCreateEventV1 message contains all the information about an new Asset on
- * the v4 chain.
- */
-
-export interface AssetCreateEventV1 {
-  /** Unique, sequentially-generated. */
-  id: number;
-  /**
-   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
-   * Must be uppercase, unique and correspond to the canonical symbol of the
-   * full coin.
-   */
-
-  symbol: string;
-  /** `true` if this `Asset` has a valid `MarketId` value. */
-
-  hasMarket: boolean;
-  /**
-   * The `Id` of the `Market` associated with this `Asset`. It acts as the
-   * oracle price for the purposes of calculating collateral
-   * and margin requirements.
-   */
-
-  marketId: number;
-  /**
-   * The exponent for converting an atomic amount (1 'quantum')
-   * to a full coin. For example, if `atomic_resolution = -8`
-   * then an `asset_position` with `base_quantums = 1e8` is equivalent to
-   * a position size of one full coin.
-   */
-
-  atomicResolution: number;
-}
-/**
- * AssetCreateEventV1 message contains all the information about an new Asset on
- * the v4 chain.
- */
-
-export interface AssetCreateEventV1SDKType {
-  /** Unique, sequentially-generated. */
-  id: number;
-  /**
-   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
-   * Must be uppercase, unique and correspond to the canonical symbol of the
-   * full coin.
-   */
-
-  symbol: string;
-  /** `true` if this `Asset` has a valid `MarketId` value. */
-
-  has_market: boolean;
-  /**
-   * The `Id` of the `Market` associated with this `Asset`. It acts as the
-   * oracle price for the purposes of calculating collateral
-   * and margin requirements.
-   */
-
-  market_id: number;
-  /**
-   * The exponent for converting an atomic amount (1 'quantum')
-   * to a full coin. For example, if `atomic_resolution = -8`
-   * then an `asset_position` with `base_quantums = 1e8` is equivalent to
-   * a position size of one full coin.
-   */
-
-  atomic_resolution: number;
 }
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
@@ -1100,69 +944,12 @@ export const MarketModifyEventV1 = {
 
 };
 
-function createBaseSourceOfFunds(): SourceOfFunds {
-  return {
-    subaccountId: undefined,
-    address: undefined
-  };
-}
-
-export const SourceOfFunds = {
-  encode(message: SourceOfFunds, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.subaccountId !== undefined) {
-      IndexerSubaccountId.encode(message.subaccountId, writer.uint32(10).fork()).ldelim();
-    }
-
-    if (message.address !== undefined) {
-      writer.uint32(18).string(message.address);
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): SourceOfFunds {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSourceOfFunds();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.subaccountId = IndexerSubaccountId.decode(reader, reader.uint32());
-          break;
-
-        case 2:
-          message.address = reader.string();
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<SourceOfFunds>): SourceOfFunds {
-    const message = createBaseSourceOfFunds();
-    message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? IndexerSubaccountId.fromPartial(object.subaccountId) : undefined;
-    message.address = object.address ?? undefined;
-    return message;
-  }
-
-};
-
 function createBaseTransferEventV1(): TransferEventV1 {
   return {
     senderSubaccountId: undefined,
     recipientSubaccountId: undefined,
     assetId: 0,
-    amount: Long.UZERO,
-    sender: undefined,
-    recipient: undefined
+    amount: Long.UZERO
   };
 }
 
@@ -1182,14 +969,6 @@ export const TransferEventV1 = {
 
     if (!message.amount.isZero()) {
       writer.uint32(32).uint64(message.amount);
-    }
-
-    if (message.sender !== undefined) {
-      SourceOfFunds.encode(message.sender, writer.uint32(42).fork()).ldelim();
-    }
-
-    if (message.recipient !== undefined) {
-      SourceOfFunds.encode(message.recipient, writer.uint32(50).fork()).ldelim();
     }
 
     return writer;
@@ -1220,14 +999,6 @@ export const TransferEventV1 = {
           message.amount = (reader.uint64() as Long);
           break;
 
-        case 5:
-          message.sender = SourceOfFunds.decode(reader, reader.uint32());
-          break;
-
-        case 6:
-          message.recipient = SourceOfFunds.decode(reader, reader.uint32());
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -1243,8 +1014,6 @@ export const TransferEventV1 = {
     message.recipientSubaccountId = object.recipientSubaccountId !== undefined && object.recipientSubaccountId !== null ? IndexerSubaccountId.fromPartial(object.recipientSubaccountId) : undefined;
     message.assetId = object.assetId ?? 0;
     message.amount = object.amount !== undefined && object.amount !== null ? Long.fromValue(object.amount) : Long.UZERO;
-    message.sender = object.sender !== undefined && object.sender !== null ? SourceOfFunds.fromPartial(object.sender) : undefined;
-    message.recipient = object.recipient !== undefined && object.recipient !== null ? SourceOfFunds.fromPartial(object.recipient) : undefined;
     return message;
   }
 
@@ -1528,10 +1297,7 @@ export const SubaccountUpdateEventV1 = {
 function createBaseStatefulOrderEventV1(): StatefulOrderEventV1 {
   return {
     orderPlace: undefined,
-    orderRemoval: undefined,
-    conditionalOrderPlacement: undefined,
-    conditionalOrderTriggered: undefined,
-    longTermOrderPlacement: undefined
+    orderRemoval: undefined
   };
 }
 
@@ -1543,18 +1309,6 @@ export const StatefulOrderEventV1 = {
 
     if (message.orderRemoval !== undefined) {
       StatefulOrderEventV1_StatefulOrderRemovalV1.encode(message.orderRemoval, writer.uint32(34).fork()).ldelim();
-    }
-
-    if (message.conditionalOrderPlacement !== undefined) {
-      StatefulOrderEventV1_ConditionalOrderPlacementV1.encode(message.conditionalOrderPlacement, writer.uint32(42).fork()).ldelim();
-    }
-
-    if (message.conditionalOrderTriggered !== undefined) {
-      StatefulOrderEventV1_ConditionalOrderTriggeredV1.encode(message.conditionalOrderTriggered, writer.uint32(50).fork()).ldelim();
-    }
-
-    if (message.longTermOrderPlacement !== undefined) {
-      StatefulOrderEventV1_LongTermOrderPlacementV1.encode(message.longTermOrderPlacement, writer.uint32(58).fork()).ldelim();
     }
 
     return writer;
@@ -1577,18 +1331,6 @@ export const StatefulOrderEventV1 = {
           message.orderRemoval = StatefulOrderEventV1_StatefulOrderRemovalV1.decode(reader, reader.uint32());
           break;
 
-        case 5:
-          message.conditionalOrderPlacement = StatefulOrderEventV1_ConditionalOrderPlacementV1.decode(reader, reader.uint32());
-          break;
-
-        case 6:
-          message.conditionalOrderTriggered = StatefulOrderEventV1_ConditionalOrderTriggeredV1.decode(reader, reader.uint32());
-          break;
-
-        case 7:
-          message.longTermOrderPlacement = StatefulOrderEventV1_LongTermOrderPlacementV1.decode(reader, reader.uint32());
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -1602,9 +1344,6 @@ export const StatefulOrderEventV1 = {
     const message = createBaseStatefulOrderEventV1();
     message.orderPlace = object.orderPlace !== undefined && object.orderPlace !== null ? StatefulOrderEventV1_StatefulOrderPlacementV1.fromPartial(object.orderPlace) : undefined;
     message.orderRemoval = object.orderRemoval !== undefined && object.orderRemoval !== null ? StatefulOrderEventV1_StatefulOrderRemovalV1.fromPartial(object.orderRemoval) : undefined;
-    message.conditionalOrderPlacement = object.conditionalOrderPlacement !== undefined && object.conditionalOrderPlacement !== null ? StatefulOrderEventV1_ConditionalOrderPlacementV1.fromPartial(object.conditionalOrderPlacement) : undefined;
-    message.conditionalOrderTriggered = object.conditionalOrderTriggered !== undefined && object.conditionalOrderTriggered !== null ? StatefulOrderEventV1_ConditionalOrderTriggeredV1.fromPartial(object.conditionalOrderTriggered) : undefined;
-    message.longTermOrderPlacement = object.longTermOrderPlacement !== undefined && object.longTermOrderPlacement !== null ? StatefulOrderEventV1_LongTermOrderPlacementV1.fromPartial(object.longTermOrderPlacement) : undefined;
     return message;
   }
 
@@ -1705,226 +1444,6 @@ export const StatefulOrderEventV1_StatefulOrderRemovalV1 = {
     const message = createBaseStatefulOrderEventV1_StatefulOrderRemovalV1();
     message.removedOrderId = object.removedOrderId !== undefined && object.removedOrderId !== null ? IndexerOrderId.fromPartial(object.removedOrderId) : undefined;
     message.reason = object.reason ?? 0;
-    return message;
-  }
-
-};
-
-function createBaseStatefulOrderEventV1_ConditionalOrderPlacementV1(): StatefulOrderEventV1_ConditionalOrderPlacementV1 {
-  return {
-    order: undefined
-  };
-}
-
-export const StatefulOrderEventV1_ConditionalOrderPlacementV1 = {
-  encode(message: StatefulOrderEventV1_ConditionalOrderPlacementV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.order !== undefined) {
-      IndexerOrder.encode(message.order, writer.uint32(10).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): StatefulOrderEventV1_ConditionalOrderPlacementV1 {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseStatefulOrderEventV1_ConditionalOrderPlacementV1();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.order = IndexerOrder.decode(reader, reader.uint32());
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<StatefulOrderEventV1_ConditionalOrderPlacementV1>): StatefulOrderEventV1_ConditionalOrderPlacementV1 {
-    const message = createBaseStatefulOrderEventV1_ConditionalOrderPlacementV1();
-    message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
-    return message;
-  }
-
-};
-
-function createBaseStatefulOrderEventV1_ConditionalOrderTriggeredV1(): StatefulOrderEventV1_ConditionalOrderTriggeredV1 {
-  return {
-    triggeredOrderId: undefined
-  };
-}
-
-export const StatefulOrderEventV1_ConditionalOrderTriggeredV1 = {
-  encode(message: StatefulOrderEventV1_ConditionalOrderTriggeredV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.triggeredOrderId !== undefined) {
-      IndexerOrderId.encode(message.triggeredOrderId, writer.uint32(10).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): StatefulOrderEventV1_ConditionalOrderTriggeredV1 {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseStatefulOrderEventV1_ConditionalOrderTriggeredV1();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.triggeredOrderId = IndexerOrderId.decode(reader, reader.uint32());
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<StatefulOrderEventV1_ConditionalOrderTriggeredV1>): StatefulOrderEventV1_ConditionalOrderTriggeredV1 {
-    const message = createBaseStatefulOrderEventV1_ConditionalOrderTriggeredV1();
-    message.triggeredOrderId = object.triggeredOrderId !== undefined && object.triggeredOrderId !== null ? IndexerOrderId.fromPartial(object.triggeredOrderId) : undefined;
-    return message;
-  }
-
-};
-
-function createBaseStatefulOrderEventV1_LongTermOrderPlacementV1(): StatefulOrderEventV1_LongTermOrderPlacementV1 {
-  return {
-    order: undefined
-  };
-}
-
-export const StatefulOrderEventV1_LongTermOrderPlacementV1 = {
-  encode(message: StatefulOrderEventV1_LongTermOrderPlacementV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.order !== undefined) {
-      IndexerOrder.encode(message.order, writer.uint32(10).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): StatefulOrderEventV1_LongTermOrderPlacementV1 {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseStatefulOrderEventV1_LongTermOrderPlacementV1();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.order = IndexerOrder.decode(reader, reader.uint32());
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<StatefulOrderEventV1_LongTermOrderPlacementV1>): StatefulOrderEventV1_LongTermOrderPlacementV1 {
-    const message = createBaseStatefulOrderEventV1_LongTermOrderPlacementV1();
-    message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
-    return message;
-  }
-
-};
-
-function createBaseAssetCreateEventV1(): AssetCreateEventV1 {
-  return {
-    id: 0,
-    symbol: "",
-    hasMarket: false,
-    marketId: 0,
-    atomicResolution: 0
-  };
-}
-
-export const AssetCreateEventV1 = {
-  encode(message: AssetCreateEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.id !== 0) {
-      writer.uint32(8).uint32(message.id);
-    }
-
-    if (message.symbol !== "") {
-      writer.uint32(18).string(message.symbol);
-    }
-
-    if (message.hasMarket === true) {
-      writer.uint32(24).bool(message.hasMarket);
-    }
-
-    if (message.marketId !== 0) {
-      writer.uint32(32).uint32(message.marketId);
-    }
-
-    if (message.atomicResolution !== 0) {
-      writer.uint32(40).sint32(message.atomicResolution);
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): AssetCreateEventV1 {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseAssetCreateEventV1();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.id = reader.uint32();
-          break;
-
-        case 2:
-          message.symbol = reader.string();
-          break;
-
-        case 3:
-          message.hasMarket = reader.bool();
-          break;
-
-        case 4:
-          message.marketId = reader.uint32();
-          break;
-
-        case 5:
-          message.atomicResolution = reader.sint32();
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<AssetCreateEventV1>): AssetCreateEventV1 {
-    const message = createBaseAssetCreateEventV1();
-    message.id = object.id ?? 0;
-    message.symbol = object.symbol ?? "";
-    message.hasMarket = object.hasMarket ?? false;
-    message.marketId = object.marketId ?? 0;
-    message.atomicResolution = object.atomicResolution ?? 0;
     return message;
   }
 

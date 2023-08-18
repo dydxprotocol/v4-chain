@@ -15,8 +15,6 @@ export enum QueryableField {
   SUBACCOUNT_ID = 'subaccountId',
   SENDER_SUBACCOUNT_ID = 'senderSubaccountId',
   RECIPIENT_SUBACCOUNT_ID = 'recipientSubaccountId',
-  SENDER_WALLET_ADDRESS = 'senderWalletAddress',
-  RECIPIENT_WALLET_ADDRESS = 'recipientWalletAddress',
   CLIENT_ID = 'clientId',
   CLOB_PAIR_ID = 'clobPairId',
   SIDE = 'side',
@@ -77,10 +75,6 @@ export interface SubaccountQueryConfig extends QueryConfig {
   [QueryableField.ID]?: string[];
   [QueryableField.ADDRESS]?: string;
   [QueryableField.SUBACCOUNT_NUMBER]?: number;
-}
-
-export interface WalletQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string;
 }
 
 export interface PerpetualPositionQueryConfig extends QueryConfig {
@@ -173,8 +167,6 @@ export interface TransferQueryConfig extends QueryConfig {
   [QueryableField.ID]?: string[];
   [QueryableField.SENDER_SUBACCOUNT_ID]?: string[];
   [QueryableField.RECIPIENT_SUBACCOUNT_ID]?: string[];
-  [QueryableField.SENDER_WALLET_ADDRESS]?: string[];
-  [QueryableField.RECIPIENT_WALLET_ADDRESS]?: string[];
   [QueryableField.ASSET_ID]?: string[];
   [QueryableField.SIZE]?: string;
   [QueryableField.EVENT_ID]?: Buffer[];

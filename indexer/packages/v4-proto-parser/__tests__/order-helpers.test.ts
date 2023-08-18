@@ -1,6 +1,5 @@
 import { IndexerOrderId } from '@dydxprotocol-indexer/v4-protos';
-import { getOrderIdHash, isStatefulOrder } from '../src/order-helpers';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '../src';
+import { getOrderIdHash } from '../src/order-helpers';
 
 describe('getOrderIdHash', () => {
   // Test cases match test cases in V4
@@ -43,25 +42,5 @@ describe('getOrderIdHash', () => {
       0x56, 0x04,
     ]);
     expect(hash).toEqual(expectedHash);
-  });
-});
-
-describe('isStatefulOrder', () => {
-  it.each([
-    [ORDER_FLAG_SHORT_TERM.toString(), 'string', false],
-    ['4', 'string', false],
-    [ORDER_FLAG_CONDITIONAL.toString(), 'string', true],
-    [ORDER_FLAG_LONG_TERM.toString(), 'string', true],
-    [ORDER_FLAG_SHORT_TERM, 'number', false],
-    [3, 'number', false],
-    [ORDER_FLAG_CONDITIONAL, 'number', true],
-    [ORDER_FLAG_LONG_TERM, 'number', true],
-    ['abc', 'string', false],
-  ])('Checks if flag %s with type %s is a stateful order', (
-    flag: number | string,
-    _type: string,
-    isStateful: boolean,
-  ) => {
-    expect(isStatefulOrder(flag)).toEqual(isStateful);
   });
 });

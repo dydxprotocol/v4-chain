@@ -23,10 +23,6 @@ export interface SubaccountFromDatabase extends IdBasedModelFromDatabase {
   updatedAtHeight: string,
 }
 
-export interface WalletFromDatabase {
-  address: string,
-}
-
 export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase {
   id: string;
   subaccountId: string;
@@ -66,7 +62,6 @@ export interface OrderFromDatabase extends IdBasedModelFromDatabase {
   goodTilBlockTime?: string;
   createdAtHeight?: string;
   clientMetadata: string;
-  triggerPrice?: string;
 }
 
 export interface PerpetualMarketFromDatabase {
@@ -149,10 +144,8 @@ export interface AssetPositionFromDatabase {
 }
 
 export interface TransferFromDatabase extends IdBasedModelFromDatabase {
-  senderSubaccountId?: string;
-  recipientSubaccountId?: string;
-  senderWalletAddress?: string;
-  recipientWalletAddress?: string;
+  senderSubaccountId: string;
+  recipientSubaccountId: string;
   assetId: string;
   size: string;
   eventId: Buffer;

@@ -1,20 +1,11 @@
 import { bytesToBigInt } from '@dydxprotocol-indexer/v4-proto-parser';
-import {
-  IndexerOrder,
-  IndexerOrder_Side,
-  IndexerOrder_TimeInForce,
-  IndexerOrder_ConditionType,
-} from '@dydxprotocol-indexer/v4-protos';
+import { IndexerOrder, IndexerOrder_Side, IndexerOrder_TimeInForce } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
 
+import { FUNDING_RATE_FROM_PROTOCOL_IN_HOURS, PPM_EXPONENT, QUOTE_CURRENCY_ATOMIC_RESOLUTION } from '../constants';
 import {
-  FUNDING_RATE_FROM_PROTOCOL_IN_HOURS,
-  PPM_EXPONENT,
-  QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-} from '../constants';
-import {
-  IsoString, OrderSide, OrderType, PerpetualMarketFromDatabase, TimeInForce,
+  IsoString, OrderSide, PerpetualMarketFromDatabase, TimeInForce,
 } from '../types';
 
 // Mapping from the TimeInForce enum from the protocol to the TimeInForce enum in the Indexer
@@ -33,14 +24,6 @@ const INDEXER_TIF_TO_PROTOCOL_TIF_MAP: Record<TimeInForce, IndexerOrder_TimeInFo
   [TimeInForce.IOC]: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
   [TimeInForce.GTT]: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
   [TimeInForce.POST_ONLY]: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
-};
-
-const CONDITION_TYPE_TO_ORDER_TYPE_MAP: Record<IndexerOrder_ConditionType, OrderType> = {
-  // Default behavior with UNSPECIFIED / UNRECOGNIZED = Limit Order
-  [IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED]: OrderType.LIMIT,
-  [IndexerOrder_ConditionType.UNRECOGNIZED]: OrderType.LIMIT,
-  [IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS]: OrderType.STOP_LIMIT,
-  [IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT]: OrderType.TAKE_PROFIT,
 };
 
 /**
@@ -283,22 +266,4 @@ export function getGoodTilBlockTime(order: IndexerOrder): IsoString | undefined 
     return DateTime.fromSeconds(order.goodTilBlockTime).toUTC().toISO();
   }
   return undefined;
-}
-
-/**
- * Converts ConditionType enum from an IndexerOrder proto to an OrderType in the Indexer.
- * Special cased:
- * - UNSPECIFIED -> LIMIT
- * Throw an error if the input ConditionType is not in the known enum values for ConditionType.
- * @param protocolConditionType
- * @returns
- */
-export function protocolConditionTypeToOrderType(
-  protocolConditionType: IndexerOrder_ConditionType,
-): OrderType {
-  if (!(protocolConditionType in CONDITION_TYPE_TO_ORDER_TYPE_MAP)) {
-    throw new Error(`Unexpected ConditionType: ${protocolConditionType}`);
-  }
-
-  return CONDITION_TYPE_TO_ORDER_TYPE_MAP[protocolConditionType];
 }

@@ -33,7 +33,6 @@ import {
   IndexerSubaccountId,
   LiquidationOrderV1,
   IndexerOrderId, OffChainUpdateV1,
-  OrderRemovalReason, OrderRemoveV1_OrderRemovalStatus,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import Long from 'long';
@@ -408,28 +407,6 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
     return this.generateConsolidatedVulcanKafkaEvent(
       getOrderIdHash(orderId),
       offChainUpdate,
-    );
-  }
-
-  /**
-   * Get a ConsolidatedKafkaEvent containing an order remove to be sent to vulcan to remove a fully
-   * filled order.
-   * @param orderId
-   * @returns
-   */
-  protected getOrderRemoveKafkaEvent(
-    orderId: IndexerOrderId,
-  ): ConsolidatedKafkaEvent {
-    const offchainUpdate: OffChainUpdateV1 = OffChainUpdateV1.fromPartial({
-      orderRemove: {
-        removedOrderId: orderId,
-        reason: OrderRemovalReason.ORDER_REMOVAL_REASON_FULLY_FILLED,
-        removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_FILLED,
-      },
-    });
-    return this.generateConsolidatedVulcanKafkaEvent(
-      getOrderIdHash(orderId),
-      offchainUpdate,
     );
   }
 }

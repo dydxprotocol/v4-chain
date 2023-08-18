@@ -1,23 +1,21 @@
 import {
-  APIOrderStatus,
-  APITimeInForce,
-  AssetFromDatabase,
-  CandleColumns,
-  CandleFromDatabase,
-  CandleResolution,
-  FillType,
   IsoString,
   Liquidity,
-  OrderFromDatabase,
   OrderSide,
-  OrderStatus,
   OrderType,
+  FillType,
   PerpetualMarketStatus,
-  PerpetualPositionFromDatabase,
-  PerpetualPositionStatus,
   PositionSide,
-  SubaccountFromDatabase,
-  TransferType,
+  PerpetualPositionStatus,
+  AssetFromDatabase,
+  OrderFromDatabase,
+  APITimeInForce,
+  CandleResolution,
+  CandleColumns,
+  CandleFromDatabase,
+  OrderStatus,
+  APIOrderStatus,
+  PerpetualPositionFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -47,8 +45,6 @@ export interface SubaccountResponseObject {
   assetPositions: AssetPositionsMap,
   marginEnabled: boolean,
 }
-
-export type SubaccountById = {[id: string]: SubaccountFromDatabase};
 
 /* ------- TIME TYPES ------- */
 
@@ -130,19 +126,13 @@ export interface TransferResponse {
 
 export interface TransferResponseObject {
   id: string,
-  sender: {
-    address: string,
-    subaccountNumber?: number,
-  },
-  recipient: {
-    address: string,
-    subaccountNumber?: number,
-  },
+  senderSubaccountId: string,
+  recipientSubaccountId: string,
+  assetId: string,
   size: string,
   createdAt: string,
   createdAtHeight: string,
   symbol: string,
-  type: TransferType,
 }
 
 /* ------- PNL TICKS TYPES ------- */

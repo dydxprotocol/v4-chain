@@ -25,10 +25,14 @@ import {
 } from '../lib/errors';
 import { protocolPriceToHuman, quantumsToHuman, quantumsToHumanFixedString } from '../lib/protocol-translations';
 import * as AssetPositionTable from '../stores/asset-position-table';
+import * as AssetTable from '../stores/asset-table';
 import * as SubaccountTable from '../stores/subaccount-table';
 import {
   AssetColumns,
   AssetCreateObject,
+  AssetFromDatabase,
+  AssetPositionColumns,
+  AssetsMap,
   BlockColumns,
   BlockCreateObject,
   FundingIndexMap,
@@ -43,8 +47,7 @@ import {
   PerpetualMarketFromDatabase,
   PerpetualMarketStatus,
   PerpetualPositionFromDatabase,
-  TransferFromDatabase,
-  TransferType,
+  SubaccountColumns,
   UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '../types';
 import genesis from './genesis.json';
@@ -362,9 +365,7 @@ export function getSeedLiquidityTiersSql(): string {
 export function getSeedBlocksSql() {
   const blockCreateObjects:
   BlockCreateObject[] = [{
-    // Setting block height to -1, so the genesis.json initialized structs from the full node will
-    // be block 0
-    blockHeight: '-1',
+    blockHeight: '0',
     time: DateTime.utc().toISO(),
   }];
 
@@ -383,6 +384,96 @@ export function getSeedBlocksSql() {
 
   return `INSERT INTO BLOCKS (${blockColumns.map((col) => `"${col}"`).join(',')})
           VALUES ${blockRows.map((block) => `(${block})`).join(', ')}
+          ON CONFLICT DO NOTHING`;
+}
+
+/**
+ * @description Gets the SQL to seed the `subaccounts` table, using the `genesis.json` file
+ * from the V4 network.
+ *
+ * This needs to be run before the seeding of any tables that have subaccountId foreign key.
+ *
+ * @returns SQL statement for seeding the `subaccounts` table. The SQL statement will do
+ * nothing if the rows in the `subaccounts` table already exist.
+ */
+export function getSeedSubaccountsSql() {
+  const subaccountCreateObjects:
+  SubaccountCreateObjectWithId[] = getSubaccountCreateObjectsFromGenesis();
+
+  const subaccountColumns = _.keys(subaccountCreateObjects[0]) as SubaccountColumns[];
+
+  const subaccountRows: string[] = setBulkRowsForUpdate<SubaccountColumns>({
+    objectArray: subaccountCreateObjects,
+    columns: subaccountColumns,
+    stringColumns: [
+      SubaccountColumns.address,
+      SubaccountColumns.id,
+    ],
+    numericColumns: [
+      SubaccountColumns.subaccountNumber,
+      SubaccountColumns.updatedAtHeight,
+    ],
+    timestampColumns: [
+      SubaccountColumns.updatedAt,
+    ],
+    booleanColumns: [],
+  });
+
+  return `INSERT INTO SUBACCOUNTS (${subaccountColumns.map((col) => `"${col}"`).join(',')})
+          VALUES ${subaccountRows.map((subaccount) => `(${subaccount})`).join(', ')}
+          ON CONFLICT DO NOTHING`;
+}
+
+/**
+ * @description Gets the SQL to seed the `asset_positions` table, using the `genesis.json` file
+ * from the V4 network.
+ *
+ * This needs to run after subaccounts and assets tables are created, because of foreign key
+ * dependencies.
+ *
+ * @returns SQL statement for seeding the `asset_positions` table. The SQL statement will do
+ * nothing if the rows in the `asset_positions` table already exist.
+ */
+export async function getSeedAssetPositionsSql() {
+  // Get `AssetPosition` objects from the genesis app state
+  const assetPositionMapping: _.Dictionary<AssetPosition[]> = getAssetPositionsFromGenesis();
+
+  const assets: AssetFromDatabase[] = await AssetTable.findAll(
+    {},
+    [],
+  );
+
+  const assetMapping: AssetsMap = _.keyBy(assets, AssetColumns.id);
+
+  const assetPositionCreateObjects: AssetPositionCreateObjectWithId[] = [];
+  _.each(assetPositionMapping, (assetPositions: AssetPosition[], subaccountId: string) => {
+    assetPositions.forEach((assetPosition) => {
+      assetPositionCreateObjects.push(
+        getAssetPositionCreateObject(subaccountId, assetPosition,
+          assetMapping[assetPosition.assetId.toString()].atomicResolution));
+    });
+  });
+
+  const assetPositionColumns = _.keys(assetPositionCreateObjects[0]) as AssetPositionColumns[];
+
+  const assetPositionRows: string[] = setBulkRowsForUpdate<AssetPositionColumns>({
+    objectArray: assetPositionCreateObjects,
+    columns: assetPositionColumns,
+    stringColumns: [
+      AssetPositionColumns.subaccountId,
+      AssetPositionColumns.assetId,
+      AssetPositionColumns.id,
+    ],
+    numericColumns: [
+      AssetPositionColumns.size,
+    ],
+    booleanColumns: [
+      AssetPositionColumns.isLong,
+    ],
+  });
+
+  return `INSERT INTO ASSET_POSITIONS (${assetPositionColumns.map((col) => `"${col}"`).join(',')})
+          VALUES ${assetPositionRows.map((assetPosition) => `(${assetPosition})`).join(', ')}
           ON CONFLICT DO NOTHING`;
 }
 
@@ -888,33 +979,4 @@ export function getUnrealizedPnl(
       Big(marketsMap[perpetualMarket.marketId].oraclePrice!).minus(position.entryPrice),
     )
   ).toFixed(CURRENCY_DECIMAL_PRECISION);
-}
-
-/**
- * Gets the transfer type for a subaccount.
- *
- * If sender/recipient are both subaccounts, then it is a transfer_in/transfer_out.
- * If sender/recipient are wallet addresses, then it is a deposit/withdrawal.
- *
- * @param transfer
- * @param subaccountId
- */
-export function getTransferType(
-  transfer: TransferFromDatabase,
-  subaccountId: string,
-): TransferType {
-  if (transfer.senderSubaccountId === subaccountId) {
-    if (transfer.recipientSubaccountId) {
-      return TransferType.TRANSFER_OUT;
-    } else {
-      return TransferType.WITHDRAWAL;
-    }
-  } else if (transfer.recipientSubaccountId === subaccountId) {
-    if (transfer.senderSubaccountId) {
-      return TransferType.TRANSFER_IN;
-    } else {
-      return TransferType.DEPOSIT;
-    }
-  }
-  throw new Error(`Transfer ${transfer.id} does not involve subaccount ${subaccountId}`);
 }

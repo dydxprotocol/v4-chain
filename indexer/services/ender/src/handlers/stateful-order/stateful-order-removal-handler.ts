@@ -1,6 +1,5 @@
 import {
   OrderTable,
-  OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -26,7 +25,7 @@ export class StatefulOrderRemovalHandler extends
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
     const orderIdProto: IndexerOrderId = this.event.orderRemoval!.removedOrderId!;
     await this.runFuncWithTimingStatAndErrorLogging(
-      this.updateOrderStatus(orderIdProto, OrderStatus.CANCELED),
+      this.cancelOrder(orderIdProto),
       this.generateTimingStatsOptions('cancel_order'),
     );
 

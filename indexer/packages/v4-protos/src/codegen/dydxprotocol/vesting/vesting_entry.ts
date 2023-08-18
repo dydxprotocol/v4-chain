@@ -2,14 +2,14 @@ import { Timestamp } from "../../google/protobuf/timestamp";
 import * as _m0 from "protobufjs/minimal";
 import { toTimestamp, fromTimestamp, DeepPartial } from "../../helpers";
 /**
- * VestEntry specifies a Vester Account and the rate at which tokens are
+ * VestingEntry specifies a Vester Account and the rate at which tokens are
  * dripped into the corresponding Treasury Account.
  */
 
-export interface VestEntry {
+export interface VestingEntry {
   /**
    * The module account to vest tokens from.
-   * This is also the key to this `VestEntry` in state.
+   * This is also the key to this `VestingEntry` in state.
    */
   vesterAccount: string;
   /** The module account to vest tokens to. */
@@ -18,25 +18,25 @@ export interface VestEntry {
   /** The denom of the token to vest. */
 
   denom: string;
-  /** The start time of vest. Before this time, no vest will occur. */
+  /** The start time of vesting. Before this time, no vesting will occur. */
 
   startTime?: Date;
   /**
-   * The end time of vest. At this target date, all funds should be in the
+   * The end time of vesting. At this target date, all funds should be in the
    * Treasury Account and none left in the Vester Account.
    */
 
   endTime?: Date;
 }
 /**
- * VestEntry specifies a Vester Account and the rate at which tokens are
+ * VestingEntry specifies a Vester Account and the rate at which tokens are
  * dripped into the corresponding Treasury Account.
  */
 
-export interface VestEntrySDKType {
+export interface VestingEntrySDKType {
   /**
    * The module account to vest tokens from.
-   * This is also the key to this `VestEntry` in state.
+   * This is also the key to this `VestingEntry` in state.
    */
   vester_account: string;
   /** The module account to vest tokens to. */
@@ -45,18 +45,18 @@ export interface VestEntrySDKType {
   /** The denom of the token to vest. */
 
   denom: string;
-  /** The start time of vest. Before this time, no vest will occur. */
+  /** The start time of vesting. Before this time, no vesting will occur. */
 
   start_time?: Date;
   /**
-   * The end time of vest. At this target date, all funds should be in the
+   * The end time of vesting. At this target date, all funds should be in the
    * Treasury Account and none left in the Vester Account.
    */
 
   end_time?: Date;
 }
 
-function createBaseVestEntry(): VestEntry {
+function createBaseVestingEntry(): VestingEntry {
   return {
     vesterAccount: "",
     treasuryAccount: "",
@@ -66,8 +66,8 @@ function createBaseVestEntry(): VestEntry {
   };
 }
 
-export const VestEntry = {
-  encode(message: VestEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const VestingEntry = {
+  encode(message: VestingEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.vesterAccount !== "") {
       writer.uint32(10).string(message.vesterAccount);
     }
@@ -91,10 +91,10 @@ export const VestEntry = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): VestEntry {
+  decode(input: _m0.Reader | Uint8Array, length?: number): VestingEntry {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseVestEntry();
+    const message = createBaseVestingEntry();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -129,8 +129,8 @@ export const VestEntry = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<VestEntry>): VestEntry {
-    const message = createBaseVestEntry();
+  fromPartial(object: DeepPartial<VestingEntry>): VestingEntry {
+    const message = createBaseVestingEntry();
     message.vesterAccount = object.vesterAccount ?? "";
     message.treasuryAccount = object.treasuryAccount ?? "";
     message.denom = object.denom ?? "";

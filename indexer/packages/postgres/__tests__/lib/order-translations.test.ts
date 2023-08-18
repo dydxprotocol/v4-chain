@@ -45,8 +45,8 @@ describe('orderTranslations', () => {
           orderFlags: ORDER_FLAG_LONG_TERM,
         },
         side: IndexerOrder_Side.SIDE_BUY,
-        quantums: Long.fromValue(250_000_000_000, true),  // 25 / 1e-10 = 250_000_000_000
-        subticks: Long.fromValue(200_000_000, true),  // 20_000 * 1e-10 / 1e-6 / 1e-8 = 200_000_000
+        quantums: Long.fromValue(250_000_000_000),  // 25 / 1e-10 = 250_000_000_000
+        subticks: Long.fromValue(200_000_000),  // 20_000 * 1e-10 / 1e-6 / 1e-8 = 200_000_000
         goodTilBlockTime: 1674345600,  // 2023-01-22T00:00:00.000Z
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
         reduceOnly: false,

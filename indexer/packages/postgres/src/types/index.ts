@@ -19,5 +19,4 @@ export * from './candle-types';
 export * from './pnl-ticks-types';
 export * from './funding-index-updates-types';
 export * from './liquidity-tiers-types';
-export * from './wallet-types';
 export { PositionSide } from './position-types';

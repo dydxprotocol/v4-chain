@@ -1,7 +1,6 @@
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_config";
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
-import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** GenesisState defines the clob module's genesis state. */
@@ -10,7 +9,6 @@ export interface GenesisState {
   clobPairs: ClobPair[];
   liquidationsConfig?: LiquidationsConfig;
   blockRateLimitConfig?: BlockRateLimitConfiguration;
-  equityTierLimitConfig?: EquityTierLimitConfiguration;
 }
 /** GenesisState defines the clob module's genesis state. */
 
@@ -18,15 +16,13 @@ export interface GenesisStateSDKType {
   clob_pairs: ClobPairSDKType[];
   liquidations_config?: LiquidationsConfigSDKType;
   block_rate_limit_config?: BlockRateLimitConfigurationSDKType;
-  equity_tier_limit_config?: EquityTierLimitConfigurationSDKType;
 }
 
 function createBaseGenesisState(): GenesisState {
   return {
     clobPairs: [],
     liquidationsConfig: undefined,
-    blockRateLimitConfig: undefined,
-    equityTierLimitConfig: undefined
+    blockRateLimitConfig: undefined
   };
 }
 
@@ -42,10 +38,6 @@ export const GenesisState = {
 
     if (message.blockRateLimitConfig !== undefined) {
       BlockRateLimitConfiguration.encode(message.blockRateLimitConfig, writer.uint32(26).fork()).ldelim();
-    }
-
-    if (message.equityTierLimitConfig !== undefined) {
-      EquityTierLimitConfiguration.encode(message.equityTierLimitConfig, writer.uint32(34).fork()).ldelim();
     }
 
     return writer;
@@ -72,10 +64,6 @@ export const GenesisState = {
           message.blockRateLimitConfig = BlockRateLimitConfiguration.decode(reader, reader.uint32());
           break;
 
-        case 4:
-          message.equityTierLimitConfig = EquityTierLimitConfiguration.decode(reader, reader.uint32());
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -90,7 +78,6 @@ export const GenesisState = {
     message.clobPairs = object.clobPairs?.map(e => ClobPair.fromPartial(e)) || [];
     message.liquidationsConfig = object.liquidationsConfig !== undefined && object.liquidationsConfig !== null ? LiquidationsConfig.fromPartial(object.liquidationsConfig) : undefined;
     message.blockRateLimitConfig = object.blockRateLimitConfig !== undefined && object.blockRateLimitConfig !== null ? BlockRateLimitConfiguration.fromPartial(object.blockRateLimitConfig) : undefined;
-    message.equityTierLimitConfig = object.equityTierLimitConfig !== undefined && object.equityTierLimitConfig !== null ? EquityTierLimitConfiguration.fromPartial(object.equityTierLimitConfig) : undefined;
     return message;
   }
 

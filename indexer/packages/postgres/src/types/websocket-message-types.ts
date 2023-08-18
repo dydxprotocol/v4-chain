@@ -7,7 +7,6 @@ import {
 import { PerpetualMarketStatus } from './perpetual-market-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
-import { TransferType } from './transfer-types';
 import { IsoString } from './utility-types';
 
 /**
@@ -114,7 +113,6 @@ export interface OrderSubaccountMessageContents {
   totalOptimisticFilled?: string;
   goodTilBlock?: string;
   goodTilBlockTime?: string;
-  triggerPrice?: string;
 
   // This will only be filled if the order was removed
   removalReason?: string;
@@ -143,17 +141,13 @@ export interface FillSubaccountMessageContents {
 }
 
 export interface TransferSubaccountMessageContents {
-  sender: {
-    address: string,
-    subaccountNumber?: number,
-  },
-  recipient: {
-    address: string,
-    subaccountNumber?: number,
-  },
+  senderAddress: string,
+  senderSubaccountNumber: number,
+  recipientAddress: string,
+  recipientSubaccountNumber: number,
   symbol: string,
+  assetId: string,
   size: string,
-  type: TransferType,
 }
 
 /* ------- TradeMessageContents ------- */

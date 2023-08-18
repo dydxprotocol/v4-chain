@@ -4,8 +4,6 @@ import {
   testMocks,
   TransferCreateObject,
   TransferTable,
-  TransferType,
-  WalletTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod, TransferResponseObject } from '../../../../src/types';
 import request from 'supertest';
@@ -25,7 +23,7 @@ describe('transfers-controller#V4', () => {
       await dbHelpers.clearData();
     });
 
-    it('Get /transfers returns transfers/deposits/withdrawals', async () => {
+    it('Get /transfers', async () => {
       await testMocks.seedData();
       const transfer2: TransferCreateObject = {
         senderSubaccountId: testConstants.defaultSubaccountId2,
@@ -37,14 +35,9 @@ describe('transfers-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         createdAtHeight: testConstants.createdHeight,
       };
-      await WalletTable.create({
-        address: testConstants.defaultWalletAddress,
-      });
       await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),
         TransferTable.create(transfer2),
-        TransferTable.create(testConstants.defaultWithdrawal),
-        TransferTable.create(testConstants.defaultDeposit),
       ]);
 
       const response: request.Response = await sendRequest({
@@ -55,75 +48,29 @@ describe('transfers-controller#V4', () => {
 
       const expectedTransferResponse: TransferResponseObject = {
         id: testConstants.defaultTransferId,
-        sender: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
-        },
-        recipient: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
-        },
+        senderSubaccountId: testConstants.defaultTransfer.senderSubaccountId,
+        recipientSubaccountId: testConstants.defaultTransfer.recipientSubaccountId,
+        assetId: testConstants.defaultTransfer.assetId,
         size: testConstants.defaultTransfer.size,
         createdAt: testConstants.defaultTransfer.createdAt,
         createdAtHeight: testConstants.defaultTransfer.createdAtHeight,
         symbol: testConstants.defaultAsset.symbol,
-        type: TransferType.TRANSFER_OUT,
       };
 
       const expectedTransfer2Response: TransferResponseObject = {
         id: TransferTable.uuid(
-          transfer2.eventId,
-          transfer2.assetId,
           transfer2.senderSubaccountId,
           transfer2.recipientSubaccountId,
-          transfer2.senderWalletAddress,
-          transfer2.recipientWalletAddress,
+          transfer2.eventId,
+          transfer2.assetId,
         ),
-        sender: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
-        },
-        recipient: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
-        },
+        senderSubaccountId: transfer2.senderSubaccountId,
+        recipientSubaccountId: transfer2.recipientSubaccountId,
+        assetId: transfer2.assetId,
         size: transfer2.size,
         createdAt: transfer2.createdAt,
         createdAtHeight: transfer2.createdAtHeight,
         symbol: testConstants.defaultAsset2.symbol,
-        type: TransferType.TRANSFER_IN,
-      };
-
-      const expectedDepositResponse: TransferResponseObject = {
-        id: testConstants.defaultDepositId,
-        sender: {
-          address: testConstants.defaultWalletAddress,
-        },
-        recipient: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
-        },
-        size: testConstants.defaultDeposit.size,
-        createdAt: testConstants.defaultDeposit.createdAt,
-        createdAtHeight: testConstants.defaultDeposit.createdAtHeight,
-        symbol: testConstants.defaultAsset.symbol,
-        type: TransferType.DEPOSIT,
-      };
-
-      const expectedWithdrawalResponse: TransferResponseObject = {
-        id: testConstants.defaultWithdrawalId,
-        sender: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
-        },
-        recipient: {
-          address: testConstants.defaultWalletAddress,
-        },
-        size: testConstants.defaultWithdrawal.size,
-        createdAt: testConstants.defaultWithdrawal.createdAt,
-        createdAtHeight: testConstants.defaultWithdrawal.createdAtHeight,
-        symbol: testConstants.defaultAsset.symbol,
-        type: TransferType.WITHDRAWAL,
       };
 
       expect(response.body.transfers).toEqual(
@@ -133,12 +80,6 @@ describe('transfers-controller#V4', () => {
           }),
           expect.objectContaining({
             ...expectedTransfer2Response,
-          }),
-          expect.objectContaining({
-            ...expectedWithdrawalResponse,
-          }),
-          expect.objectContaining({
-            ...expectedDepositResponse,
           }),
         ]),
       );
@@ -171,26 +112,18 @@ describe('transfers-controller#V4', () => {
 
       const expectedTransfer2Response: TransferResponseObject = {
         id: TransferTable.uuid(
-          transfer2.eventId,
-          transfer2.assetId,
           transfer2.senderSubaccountId,
           transfer2.recipientSubaccountId,
-          transfer2.senderWalletAddress,
-          transfer2.recipientWalletAddress,
+          transfer2.eventId,
+          transfer2.assetId,
         ),
-        sender: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
-        },
-        recipient: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
-        },
+        senderSubaccountId: transfer2.senderSubaccountId,
+        recipientSubaccountId: transfer2.recipientSubaccountId,
+        assetId: transfer2.assetId,
         size: transfer2.size,
         createdAt,
         createdAtHeight: transfer2.createdAtHeight,
         symbol: testConstants.defaultAsset2.symbol,
-        type: TransferType.TRANSFER_IN,
       };
 
       expect(response.body.transfers).toEqual(
@@ -229,19 +162,13 @@ describe('transfers-controller#V4', () => {
 
       const expectedTransferResponse: TransferResponseObject = {
         id: testConstants.defaultTransferId,
-        sender: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
-        },
-        recipient: {
-          address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
-        },
+        senderSubaccountId: testConstants.defaultTransfer.senderSubaccountId,
+        recipientSubaccountId: testConstants.defaultTransfer.recipientSubaccountId,
+        assetId: testConstants.defaultTransfer.assetId,
         size: testConstants.defaultTransfer.size,
         createdAt: testConstants.defaultTransfer.createdAt,
         createdAtHeight: testConstants.defaultTransfer.createdAtHeight,
         symbol: testConstants.defaultAsset.symbol,
-        type: TransferType.TRANSFER_OUT,
       };
 
       expect(response.body.transfers).toEqual(

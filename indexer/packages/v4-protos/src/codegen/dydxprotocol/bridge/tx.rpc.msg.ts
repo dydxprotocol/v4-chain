@@ -1,14 +1,14 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgAcknowledgeBridges, MsgAcknowledgeBridgesResponse, MsgCompleteBridge, MsgCompleteBridgeResponse, MsgUpdateEventParams, MsgUpdateEventParamsResponse, MsgUpdateProposeParams, MsgUpdateProposeParamsResponse, MsgUpdateSafetyParams, MsgUpdateSafetyParamsResponse } from "./tx";
+import { MsgAcknowledgeBridge, MsgAcknowledgeBridgeResponse, MsgCompleteBridge, MsgCompleteBridgeResponse, MsgUpdateEventParams, MsgUpdateEventParamsResponse, MsgUpdateProposeParams, MsgUpdateProposeParamsResponse, MsgUpdateSafetyParams, MsgUpdateSafetyParamsResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
   /**
-   * AcknowledgeBridges acknowledges bridges and sets them to complete at a
-   * later block.
+   * AcknowledgeBridge acknowledges a bridge and sets it to complete at a later
+   * block.
    */
-  acknowledgeBridges(request: MsgAcknowledgeBridges): Promise<MsgAcknowledgeBridgesResponse>;
+  acknowledgeBridge(request: MsgAcknowledgeBridge): Promise<MsgAcknowledgeBridgeResponse>;
   /** CompleteBridge finalizes a bridge by minting coins to an address. */
 
   completeBridge(request: MsgCompleteBridge): Promise<MsgCompleteBridgeResponse>;
@@ -27,17 +27,17 @@ export class MsgClientImpl implements Msg {
 
   constructor(rpc: Rpc) {
     this.rpc = rpc;
-    this.acknowledgeBridges = this.acknowledgeBridges.bind(this);
+    this.acknowledgeBridge = this.acknowledgeBridge.bind(this);
     this.completeBridge = this.completeBridge.bind(this);
     this.updateEventParams = this.updateEventParams.bind(this);
     this.updateProposeParams = this.updateProposeParams.bind(this);
     this.updateSafetyParams = this.updateSafetyParams.bind(this);
   }
 
-  acknowledgeBridges(request: MsgAcknowledgeBridges): Promise<MsgAcknowledgeBridgesResponse> {
-    const data = MsgAcknowledgeBridges.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.bridge.Msg", "AcknowledgeBridges", data);
-    return promise.then(data => MsgAcknowledgeBridgesResponse.decode(new _m0.Reader(data)));
+  acknowledgeBridge(request: MsgAcknowledgeBridge): Promise<MsgAcknowledgeBridgeResponse> {
+    const data = MsgAcknowledgeBridge.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.bridge.Msg", "AcknowledgeBridge", data);
+    return promise.then(data => MsgAcknowledgeBridgeResponse.decode(new _m0.Reader(data)));
   }
 
   completeBridge(request: MsgCompleteBridge): Promise<MsgCompleteBridgeResponse> {

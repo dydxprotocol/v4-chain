@@ -18,9 +18,6 @@ export const createLCDClient = async ({
       clob: new (await import("./clob/query.lcd")).LCDQueryClient({
         requestClient
       }),
-      delaymsg: new (await import("./delaymsg/query.lcd")).LCDQueryClient({
-        requestClient
-      }),
       epochs: new (await import("./epochs/query.lcd")).LCDQueryClient({
         requestClient
       }),
@@ -42,7 +39,7 @@ export const createLCDClient = async ({
       subaccounts: new (await import("./subaccounts/query.lcd")).LCDQueryClient({
         requestClient
       }),
-      vest: new (await import("./vest/query.lcd")).LCDQueryClient({
+      vesting: new (await import("./vesting/query.lcd")).LCDQueryClient({
         requestClient
       })
     }

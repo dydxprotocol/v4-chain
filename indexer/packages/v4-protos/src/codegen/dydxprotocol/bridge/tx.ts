@@ -2,30 +2,30 @@ import { BridgeEvent, BridgeEventSDKType } from "./bridge_event";
 import { EventParams, EventParamsSDKType, ProposeParams, ProposeParamsSDKType, SafetyParams, SafetyParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** MsgAcknowledgeBridges is the Msg/AcknowledgeBridges request type. */
+/** MsgAcknowledgeBridge is the Msg/AcknowledgeBridge request type. */
 
-export interface MsgAcknowledgeBridges {
-  /** The events to acknowledge. */
-  events: BridgeEvent[];
+export interface MsgAcknowledgeBridge {
+  /** The event to acknowledge. */
+  event?: BridgeEvent;
 }
-/** MsgAcknowledgeBridges is the Msg/AcknowledgeBridges request type. */
+/** MsgAcknowledgeBridge is the Msg/AcknowledgeBridge request type. */
 
-export interface MsgAcknowledgeBridgesSDKType {
-  /** The events to acknowledge. */
-  events: BridgeEventSDKType[];
+export interface MsgAcknowledgeBridgeSDKType {
+  /** The event to acknowledge. */
+  event?: BridgeEventSDKType;
 }
 /**
- * MsgAcknowledgeBridgesResponse is the Msg/AcknowledgeBridgesResponse response
+ * MsgAcknowledgeBridgeResponse is the Msg/AcknowledgeBridgeResponse response
  * type.
  */
 
-export interface MsgAcknowledgeBridgesResponse {}
+export interface MsgAcknowledgeBridgeResponse {}
 /**
- * MsgAcknowledgeBridgesResponse is the Msg/AcknowledgeBridgesResponse response
+ * MsgAcknowledgeBridgeResponse is the Msg/AcknowledgeBridgeResponse response
  * type.
  */
 
-export interface MsgAcknowledgeBridgesResponseSDKType {}
+export interface MsgAcknowledgeBridgeResponseSDKType {}
 /** MsgCompleteBridge is the Msg/CompleteBridgeResponse request type. */
 
 export interface MsgCompleteBridge {
@@ -115,32 +115,32 @@ export interface MsgUpdateSafetyParamsResponse {}
 
 export interface MsgUpdateSafetyParamsResponseSDKType {}
 
-function createBaseMsgAcknowledgeBridges(): MsgAcknowledgeBridges {
+function createBaseMsgAcknowledgeBridge(): MsgAcknowledgeBridge {
   return {
-    events: []
+    event: undefined
   };
 }
 
-export const MsgAcknowledgeBridges = {
-  encode(message: MsgAcknowledgeBridges, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.events) {
-      BridgeEvent.encode(v!, writer.uint32(10).fork()).ldelim();
+export const MsgAcknowledgeBridge = {
+  encode(message: MsgAcknowledgeBridge, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.event !== undefined) {
+      BridgeEvent.encode(message.event, writer.uint32(10).fork()).ldelim();
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgAcknowledgeBridges {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgAcknowledgeBridge {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgAcknowledgeBridges();
+    const message = createBaseMsgAcknowledgeBridge();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.events.push(BridgeEvent.decode(reader, reader.uint32()));
+          message.event = BridgeEvent.decode(reader, reader.uint32());
           break;
 
         default:
@@ -152,27 +152,27 @@ export const MsgAcknowledgeBridges = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<MsgAcknowledgeBridges>): MsgAcknowledgeBridges {
-    const message = createBaseMsgAcknowledgeBridges();
-    message.events = object.events?.map(e => BridgeEvent.fromPartial(e)) || [];
+  fromPartial(object: DeepPartial<MsgAcknowledgeBridge>): MsgAcknowledgeBridge {
+    const message = createBaseMsgAcknowledgeBridge();
+    message.event = object.event !== undefined && object.event !== null ? BridgeEvent.fromPartial(object.event) : undefined;
     return message;
   }
 
 };
 
-function createBaseMsgAcknowledgeBridgesResponse(): MsgAcknowledgeBridgesResponse {
+function createBaseMsgAcknowledgeBridgeResponse(): MsgAcknowledgeBridgeResponse {
   return {};
 }
 
-export const MsgAcknowledgeBridgesResponse = {
-  encode(_: MsgAcknowledgeBridgesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgAcknowledgeBridgeResponse = {
+  encode(_: MsgAcknowledgeBridgeResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgAcknowledgeBridgesResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgAcknowledgeBridgeResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgAcknowledgeBridgesResponse();
+    const message = createBaseMsgAcknowledgeBridgeResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -187,8 +187,8 @@ export const MsgAcknowledgeBridgesResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<MsgAcknowledgeBridgesResponse>): MsgAcknowledgeBridgesResponse {
-    const message = createBaseMsgAcknowledgeBridgesResponse();
+  fromPartial(_: DeepPartial<MsgAcknowledgeBridgeResponse>): MsgAcknowledgeBridgeResponse {
+    const message = createBaseMsgAcknowledgeBridgeResponse();
     return message;
   }
 

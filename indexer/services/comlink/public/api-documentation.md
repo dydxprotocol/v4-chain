@@ -5,7 +5,7 @@
 
 Base URLs:
 
-* <a href="https://indexer.v4testnet2.dydx.exchange/v4">https://indexer.v4testnet2.dydx.exchange/v4</a>
+* <a href="https://indexer.v4testnet1.dydx.exchange/v4">https://indexer.v4testnet1.dydx.exchange/v4</a>
 
 # Authentication
 
@@ -23,7 +23,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}', headers = headers)
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/addresses/{address}', headers = headers)
 
 print(r.json())
 
@@ -35,7 +35,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/addresses/{address}',
 {
   method: 'GET',
 
@@ -193,7 +193,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
 
 print(r.json())
 
@@ -205,7 +205,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}',
 {
   method: 'GET',
 
@@ -314,7 +314,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/assetPositions', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/assetPositions', params={
   'address': 'string',  'subaccountNumber': '0'
 }, headers = headers)
 
@@ -328,7 +328,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/assetPositions?address=string&subaccountNumber=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/assetPositions?address=string&subaccountNumber=0',
 {
   method: 'GET',
 
@@ -390,7 +390,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/candles/perpetualMarkets/{ticker}', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/candles/perpetualMarkets/{ticker}', params={
   'resolution': '1MIN',  'limit': '0'
 }, headers = headers)
 
@@ -404,7 +404,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN&limit=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN&limit=0',
 {
   method: 'GET',
 
@@ -489,7 +489,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/fills', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/fills', params={
   'address': 'string',  'subaccountNumber': '0',  'market': 'string',  'marketType': 'PERPETUAL',  'limit': '0'
 }, headers = headers)
 
@@ -503,7 +503,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/fills?address=string&subaccountNumber=0&market=string&marketType=PERPETUAL&limit=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/fills?address=string&subaccountNumber=0&market=string&marketType=PERPETUAL&limit=0',
 {
   method: 'GET',
 
@@ -586,7 +586,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/height', headers = headers)
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/height', headers = headers)
 
 print(r.json())
 
@@ -598,7 +598,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/height',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/height',
 {
   method: 'GET',
 
@@ -647,7 +647,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/historicalFunding/{ticker}', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/historicalFunding/{ticker}', params={
   'limit': '0'
 }, headers = headers)
 
@@ -661,7 +661,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/historicalFunding/{ticker}?limit=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/historicalFunding/{ticker}?limit=0',
 {
   method: 'GET',
 
@@ -726,7 +726,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/historical-pnl', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/historical-pnl', params={
   'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
@@ -740,7 +740,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/historical-pnl?address=string&subaccountNumber=0&limit=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/historical-pnl?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -811,7 +811,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}', headers = headers)
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}', headers = headers)
 
 print(r.json())
 
@@ -823,7 +823,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}',
 {
   method: 'GET',
 
@@ -888,7 +888,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/orders', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/orders', params={
   'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
@@ -902,7 +902,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders?address=string&subaccountNumber=0&limit=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/orders?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -972,7 +972,6 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders?address=string&subacco
     "goodTilBlockTime": "string",
     "createdAtHeight": "string",
     "clientMetadata": "string",
-    "triggerPrice": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -1009,7 +1008,6 @@ Status Code **200**
 |» goodTilBlockTime|string|false|none|none|
 |» createdAtHeight|string|false|none|none|
 |» clientMetadata|string|true|none|none|
-|» triggerPrice|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -1074,7 +1072,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}', headers = headers)
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/orders/{orderId}', headers = headers)
 
 print(r.json())
 
@@ -1086,7 +1084,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/orders/{orderId}',
 {
   method: 'GET',
 
@@ -1129,7 +1127,6 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}',
   "goodTilBlockTime": "string",
   "createdAtHeight": "string",
   "clientMetadata": "string",
-  "triggerPrice": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -1159,7 +1156,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/perpetualMarkets', params={
   'limit': '0'
 }, headers = headers)
 
@@ -1173,7 +1170,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/perpetualMarkets?limit=0',
 {
   method: 'GET',
 
@@ -1283,7 +1280,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/perpetualPositions', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/perpetualPositions', params={
   'address': 'string',  'subaccountNumber': '0',  'status': [
   "OPEN"
 ],  'limit': '0'
@@ -1299,7 +1296,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualPositions?address=string&subaccountNumber=0&status=OPEN&limit=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/perpetualPositions?address=string&subaccountNumber=0&status=OPEN&limit=0',
 {
   method: 'GET',
 
@@ -1384,7 +1381,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/sparklines', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/sparklines', params={
   'timePeriod': 'ONE_DAY'
 }, headers = headers)
 
@@ -1398,7 +1395,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/sparklines?timePeriod=ONE_DAY',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/sparklines?timePeriod=ONE_DAY',
 {
   method: 'GET',
 
@@ -1464,7 +1461,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/time', headers = headers)
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/time', headers = headers)
 
 print(r.json())
 
@@ -1476,7 +1473,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/time',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/time',
 {
   method: 'GET',
 
@@ -1525,7 +1522,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/trades/perpetualMarkets/{ticker}', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/trades/perpetualMarkets/{ticker}', params={
   'limit': '0'
 }, headers = headers)
 
@@ -1539,7 +1536,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/trades/perpetualMarkets/{ticker}?limit=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/trades/perpetualMarkets/{ticker}?limit=0',
 {
   method: 'GET',
 
@@ -1605,7 +1602,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/transfers', params={
+r = requests.get('https://indexer.v4testnet1.dydx.exchange/v4/transfers', params={
   'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
@@ -1619,7 +1616,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/transfers?address=string&subaccountNumber=0&limit=0',
+fetch('https://indexer.v4testnet1.dydx.exchange/v4/transfers?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -1654,19 +1651,13 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/transfers?address=string&suba
   "transfers": [
     {
       "id": "string",
-      "sender": {
-        "subaccountNumber": 0,
-        "address": "string"
-      },
-      "recipient": {
-        "subaccountNumber": 0,
-        "address": "string"
-      },
+      "senderSubaccountId": "string",
+      "recipientSubaccountId": "string",
+      "assetId": "string",
       "size": "string",
       "createdAt": "string",
       "createdAtHeight": "string",
-      "symbol": "string",
-      "type": "TRANSFER_IN"
+      "symbol": "string"
     }
   ]
 }
@@ -2665,7 +2656,6 @@ or
   "goodTilBlockTime": "string",
   "createdAtHeight": "string",
   "clientMetadata": "string",
-  "triggerPrice": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -2693,7 +2683,6 @@ or
 |goodTilBlockTime|string|false|none|none|
 |createdAtHeight|string|false|none|none|
 |clientMetadata|string|true|none|none|
-|triggerPrice|string|false|none|none|
 |timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|
@@ -3039,33 +3028,6 @@ or
 |---|---|---|---|---|
 |trades|[[TradeResponseObject](#schematraderesponseobject)]|true|none|none|
 
-## TransferType
-
-<a id="schematransfertype"></a>
-<a id="schema_TransferType"></a>
-<a id="tocStransfertype"></a>
-<a id="tocstransfertype"></a>
-
-```json
-"TRANSFER_IN"
-
-```
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|string|false|none|none|
-
-#### Enumerated Values
-
-|Property|Value|
-|---|---|
-|*anonymous*|TRANSFER_IN|
-|*anonymous*|TRANSFER_OUT|
-|*anonymous*|DEPOSIT|
-|*anonymous*|WITHDRAWAL|
-
 ## TransferResponseObject
 
 <a id="schematransferresponseobject"></a>
@@ -3076,19 +3038,13 @@ or
 ```json
 {
   "id": "string",
-  "sender": {
-    "subaccountNumber": 0,
-    "address": "string"
-  },
-  "recipient": {
-    "subaccountNumber": 0,
-    "address": "string"
-  },
+  "senderSubaccountId": "string",
+  "recipientSubaccountId": "string",
+  "assetId": "string",
   "size": "string",
   "createdAt": "string",
   "createdAtHeight": "string",
-  "symbol": "string",
-  "type": "TRANSFER_IN"
+  "symbol": "string"
 }
 
 ```
@@ -3098,17 +3054,13 @@ or
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |id|string|true|none|none|
-|sender|object|true|none|none|
-|» subaccountNumber|number(double)|false|none|none|
-|» address|string|true|none|none|
-|recipient|object|true|none|none|
-|» subaccountNumber|number(double)|false|none|none|
-|» address|string|true|none|none|
+|senderSubaccountId|string|true|none|none|
+|recipientSubaccountId|string|true|none|none|
+|assetId|string|true|none|none|
 |size|string|true|none|none|
 |createdAt|string|true|none|none|
 |createdAtHeight|string|true|none|none|
 |symbol|string|true|none|none|
-|type|[TransferType](#schematransfertype)|true|none|none|
 
 ## TransferResponse
 
@@ -3122,19 +3074,13 @@ or
   "transfers": [
     {
       "id": "string",
-      "sender": {
-        "subaccountNumber": 0,
-        "address": "string"
-      },
-      "recipient": {
-        "subaccountNumber": 0,
-        "address": "string"
-      },
+      "senderSubaccountId": "string",
+      "recipientSubaccountId": "string",
+      "assetId": "string",
       "size": "string",
       "createdAt": "string",
       "createdAtHeight": "string",
-      "symbol": "string",
-      "type": "TRANSFER_IN"
+      "symbol": "string"
     }
   ]
 }

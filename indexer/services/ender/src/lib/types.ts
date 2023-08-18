@@ -44,7 +44,6 @@ export enum DydxIndexerSubtypes {
   MARKET = 'market',
   STATEFUL_ORDER = 'stateful_order',
   FUNDING = 'funding_values',
-  ASSET = 'asset',
 }
 
 // Generic interface used for creating the Handler objects
@@ -167,9 +166,3 @@ export type ConsolidatedKafkaEvent = {
   topic: KafkaTopics.TO_VULCAN,
   message: VulcanMessage,
 };
-
-export enum TransferEventType {
-  DEPOSIT = 'deposit',
-  WITHDRAWAL = 'withdrawal',
-  TRANSFER = 'transfer',
-}

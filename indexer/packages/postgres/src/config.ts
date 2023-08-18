@@ -33,7 +33,6 @@ export const postgresConfigSchema = {
   PG_ACQUIRE_CONNECTION_TIMEOUT_MS: parseInteger({ default: 10_000 }),
   PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes
   ASSET_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes
-  MARKET_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes
   LIQUIDITY_TIER_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes
 
   // Optional environment variables.

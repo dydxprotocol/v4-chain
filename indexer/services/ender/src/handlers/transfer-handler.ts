@@ -8,13 +8,12 @@ import {
   TransferCreateObject,
   TransferFromDatabase,
   TransferTable,
-  WalletTable,
 } from '@dydxprotocol-indexer/postgres';
 import { TransferEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { generateTransferContents } from '../helpers/kafka-helper';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
-import { ConsolidatedKafkaEvent, TransferEventType } from '../lib/types';
+import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
 
 export class TransferHandler extends Handler<TransferEventV1> {
@@ -29,12 +28,21 @@ export class TransferHandler extends Handler<TransferEventV1> {
 
   public async internalHandle(
   ): Promise<ConsolidatedKafkaEvent[]> {
+    // This is a temporary fix for the fact that protocol is sending transfer events for
+    // withdrawals/deposits but Indexer is not yet ready to handle them.
+    if (
+      this.event.senderSubaccountId === undefined || this.event.recipientSubaccountId === undefined
+    ) {
+      return [];
+    }
     await this.runFuncWithTimingStatAndErrorLogging(
       Promise.all([
         this.upsertRecipientSubaccount(),
-        this.upsertWallets(),
+        // This is a temporary fix for the fact that protocol is sending transfer events for
+        // withdrawals/deposits but Indexer is not yet ready to handle them.
+        this.upsertSenderSubaccount(),
       ]),
-      this.generateTimingStatsOptions('upsert_recipient_subaccount_and_wallets'),
+      this.generateTimingStatsOptions('upsert_subaccounts'),
     );
 
     const asset: AssetFromDatabase = assetRefresher.getAssetFromId(
@@ -57,14 +65,12 @@ export class TransferHandler extends Handler<TransferEventV1> {
       indexerTendermintEventToTransactionIndex(this.indexerTendermintEvent),
       this.indexerTendermintEvent.eventIndex,
     );
-    const senderWalletAddress: string | undefined = this.event.sender!.address;
-    const recipientWalletAddress: string | undefined = this.event.recipient!.address;
-    const senderSubaccountId: string | undefined = this.event.sender!.subaccountId
-      ? SubaccountTable.subaccountIdToUuid(this.event.sender!.subaccountId!)
-      : undefined;
-    const recipientSubaccountId: string | undefined = this.event.recipient!.subaccountId
-      ? SubaccountTable.subaccountIdToUuid(this.event.recipient!.subaccountId!)
-      : undefined;
+    const senderSubaccountId: string = SubaccountTable.subaccountIdToUuid(
+      this.event.senderSubaccountId!,
+    );
+    const recipientSubaccountId: string = SubaccountTable.subaccountIdToUuid(
+      this.event.recipientSubaccountId!,
+    );
 
     const size: string = protocolTranslations.quantumsToHumanFixedString(
       this.event.amount.toString(),
@@ -77,8 +83,6 @@ export class TransferHandler extends Handler<TransferEventV1> {
     const transferToCreate: TransferCreateObject = {
       senderSubaccountId,
       recipientSubaccountId,
-      senderWalletAddress,
-      recipientWalletAddress,
       assetId: this.event.assetId.toString(),
       size,
       eventId,
@@ -96,51 +100,26 @@ export class TransferHandler extends Handler<TransferEventV1> {
   }
 
   protected async upsertRecipientSubaccount(): Promise<void> {
-    if (this.event!.recipient!.subaccountId) {
-      await SubaccountTable.upsert({
-        address: this.event!.recipient!.subaccountId!.owner,
-        subaccountNumber: this.event!.recipient!.subaccountId!.number,
-        updatedAt: this.timestamp.toISO(),
-        updatedAtHeight: this.block.height.toString(),
-      }, { txId: this.txId });
-    }
+    await SubaccountTable.upsert({
+      address: this.event!.recipientSubaccountId!.owner,
+      subaccountNumber: this.event!.recipientSubaccountId!.number,
+      updatedAt: this.timestamp.toISO(),
+      updatedAtHeight: this.block.height.toString(),
+    }, { txId: this.txId });
   }
 
-  protected async upsertWallets(): Promise<void> {
-    const promises = [];
-    if (this.event!.sender!.address) {
-      promises.push(
-        WalletTable.upsert({
-          address: this.event!.sender!.address,
-        }, { txId: this.txId }),
-      );
-    }
-    if (this.event!.recipient!.address) {
-      promises.push(
-        WalletTable.upsert({
-          address: this.event!.recipient!.address,
-        }, { txId: this.txId }),
-      );
-    }
-    await Promise.all(promises);
+  // This is a temporary fix for the fact that protocol is sending transfer events for
+  // withdrawals/deposits but Indexer is not yet ready to handle them.
+  protected async upsertSenderSubaccount(): Promise<void> {
+    await SubaccountTable.upsert({
+      address: this.event!.senderSubaccountId!.owner,
+      subaccountNumber: this.event!.senderSubaccountId!.number,
+      updatedAt: this.timestamp.toISO(),
+      updatedAtHeight: this.block.height.toString(),
+    }, { txId: this.txId });
   }
 
-  protected getTransferType(): TransferEventType {
-    if (this.event!.sender!.address) {
-      return TransferEventType.DEPOSIT;
-    }
-    if (this.event!.recipient!.address) {
-      return TransferEventType.WITHDRAWAL;
-    }
-    return TransferEventType.TRANSFER;
-  }
-
-  /** Generates a kafka websocket event for each subaccount involved in the transfer.
-   *
-   * If the transfer is between 2 subaccounts, 1 event for the sender subaccount and another
-   * for the recipient will be generated.
-   *
-   * If the transfer is between a subaccount and a wallet, 1 event will be generated for the
+  /** Generates 2 kafka websocket events, 1 for the sender subaccount and another for the recipient
    * subaccount.
    *
    * @param transfer
@@ -151,46 +130,22 @@ export class TransferHandler extends Handler<TransferEventV1> {
     transfer: TransferFromDatabase,
     asset: AssetFromDatabase,
   ): ConsolidatedKafkaEvent[] {
-    let senderContents: SubaccountMessageContents = {};
-    let recipientContents: SubaccountMessageContents = {};
-    if (this.event.sender!.subaccountId) {
-      senderContents = generateTransferContents(
-        transfer,
-        asset,
-        this.event.sender!.subaccountId!,
-        this.event.sender!.subaccountId,
-        this.event.recipient!.subaccountId,
-      );
-    }
-    if (this.event.recipient!.subaccountId) {
-      recipientContents = generateTransferContents(
-        transfer,
-        asset,
-        this.event.recipient!.subaccountId!,
-        this.event.sender!.subaccountId,
-        this.event.recipient!.subaccountId,
-      );
-    }
+    const contents: SubaccountMessageContents = generateTransferContents(
+      this.event.senderSubaccountId!,
+      this.event.recipientSubaccountId!,
+      transfer,
+      asset,
+    );
 
-    const kafkaEvents: ConsolidatedKafkaEvent[] = [];
-
-    if (Object.keys(senderContents).length > 0) {
-      kafkaEvents.push(
-        this.generateConsolidatedSubaccountKafkaEvent(
-          JSON.stringify(senderContents),
-          this.event.sender!.subaccountId!,
-        ),
-      );
-    }
-
-    if (Object.keys(recipientContents).length > 0) {
-      kafkaEvents.push(
-        this.generateConsolidatedSubaccountKafkaEvent(
-          JSON.stringify(recipientContents),
-          this.event.recipient!.subaccountId!,
-        ),
-      );
-    }
-    return kafkaEvents;
+    return [
+      this.generateConsolidatedSubaccountKafkaEvent(
+        JSON.stringify(contents),
+        this.event.senderSubaccountId!,
+      ),
+      this.generateConsolidatedSubaccountKafkaEvent(
+        JSON.stringify(contents),
+        this.event.recipientSubaccountId!,
+      ),
+    ];
   }
 }

@@ -1,49 +1,47 @@
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
-import { ValidatorMevMatches, ValidatorMevMatchesSDKType, MevNodeToNodeMetrics, MevNodeToNodeMetricsSDKType } from "./mev";
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
-import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial, Long } from "../../helpers";
-/** QueryGetClobPairRequest is request type for the ClobPair method. */
+import { DeepPartial } from "../../helpers";
+/** QueryGetClobPairRequest is request type for the QueryRPC method. */
 
 export interface QueryGetClobPairRequest {
-  /** QueryGetClobPairRequest is request type for the ClobPair method. */
+  /** QueryGetClobPairRequest is request type for the QueryRPC method. */
   id: number;
 }
-/** QueryGetClobPairRequest is request type for the ClobPair method. */
+/** QueryGetClobPairRequest is request type for the QueryRPC method. */
 
 export interface QueryGetClobPairRequestSDKType {
-  /** QueryGetClobPairRequest is request type for the ClobPair method. */
+  /** QueryGetClobPairRequest is request type for the QueryRPC method. */
   id: number;
 }
-/** QueryClobPairResponse is response type for the ClobPair method. */
+/** QueryClobPairResponse is response type for the QueryRPC method. */
 
 export interface QueryClobPairResponse {
   clobPair?: ClobPair;
 }
-/** QueryClobPairResponse is response type for the ClobPair method. */
+/** QueryClobPairResponse is response type for the QueryRPC method. */
 
 export interface QueryClobPairResponseSDKType {
   clob_pair?: ClobPairSDKType;
 }
-/** QueryAllClobPairRequest is request type for the ClobPairAll method. */
+/** QueryAllClobPairRequest is request type for the QueryRPC method. */
 
 export interface QueryAllClobPairRequest {
   pagination?: PageRequest;
 }
-/** QueryAllClobPairRequest is request type for the ClobPairAll method. */
+/** QueryAllClobPairRequest is request type for the QueryRPC method. */
 
 export interface QueryAllClobPairRequestSDKType {
   pagination?: PageRequestSDKType;
 }
-/** QueryClobPairAllResponse is response type for the ClobPairAll method. */
+/** QueryClobPairAllResponse is request type for the QueryRPC method. */
 
 export interface QueryClobPairAllResponse {
   clobPair: ClobPair[];
   pagination?: PageResponse;
 }
-/** QueryClobPairAllResponse is response type for the ClobPairAll method. */
+/** QueryClobPairAllResponse is request type for the QueryRPC method. */
 
 export interface QueryClobPairAllResponseSDKType {
   clob_pair: ClobPairSDKType[];
@@ -94,98 +92,6 @@ export interface AreSubaccountsLiquidatableResponse_Result {
 export interface AreSubaccountsLiquidatableResponse_ResultSDKType {
   subaccount_id?: SubaccountIdSDKType;
   is_liquidatable: boolean;
-}
-/**
- * MevNodeToNodeCalculationRequest is a request message used to run the
- * MEV node <> node calculation.
- */
-
-export interface MevNodeToNodeCalculationRequest {
-  /**
-   * Represents the matches on the "block proposer". Note that this field
-   * does not need to be the actual block proposer's matches for a block, since
-   * the MEV calculation logic is run with this nodes matches as the "block
-   * proposer" matches.
-   */
-  blockProposerMatches?: ValidatorMevMatches;
-  /** Represents the matches and mid-prices on the validator. */
-
-  validatorMevMetrics?: MevNodeToNodeMetrics;
-}
-/**
- * MevNodeToNodeCalculationRequest is a request message used to run the
- * MEV node <> node calculation.
- */
-
-export interface MevNodeToNodeCalculationRequestSDKType {
-  /**
-   * Represents the matches on the "block proposer". Note that this field
-   * does not need to be the actual block proposer's matches for a block, since
-   * the MEV calculation logic is run with this nodes matches as the "block
-   * proposer" matches.
-   */
-  block_proposer_matches?: ValidatorMevMatchesSDKType;
-  /** Represents the matches and mid-prices on the validator. */
-
-  validator_mev_metrics?: MevNodeToNodeMetricsSDKType;
-}
-/**
- * MevNodeToNodeCalculationResponse is a response message that contains the
- * MEV node <> node calculation result.
- */
-
-export interface MevNodeToNodeCalculationResponse {
-  results: MevNodeToNodeCalculationResponse_MevAndVolumePerClob[];
-}
-/**
- * MevNodeToNodeCalculationResponse is a response message that contains the
- * MEV node <> node calculation result.
- */
-
-export interface MevNodeToNodeCalculationResponseSDKType {
-  results: MevNodeToNodeCalculationResponse_MevAndVolumePerClobSDKType[];
-}
-/** MevAndVolumePerClob contains information about the MEV and volume per CLOB. */
-
-export interface MevNodeToNodeCalculationResponse_MevAndVolumePerClob {
-  clobPairId: number;
-  mev: number;
-  volume: Long;
-}
-/** MevAndVolumePerClob contains information about the MEV and volume per CLOB. */
-
-export interface MevNodeToNodeCalculationResponse_MevAndVolumePerClobSDKType {
-  clob_pair_id: number;
-  mev: number;
-  volume: Long;
-}
-/**
- * QueryEquityTierLimitConfigurationRequest is a request message for
- * EquityTierLimitConfiguration.
- */
-
-export interface QueryEquityTierLimitConfigurationRequest {}
-/**
- * QueryEquityTierLimitConfigurationRequest is a request message for
- * EquityTierLimitConfiguration.
- */
-
-export interface QueryEquityTierLimitConfigurationRequestSDKType {}
-/**
- * QueryEquityTierLimitConfigurationResponse is a response message that contains
- * the EquityTierLimitConfiguration.
- */
-
-export interface QueryEquityTierLimitConfigurationResponse {
-  equityTierLimitConfig?: EquityTierLimitConfiguration;
-}
-/**
- * QueryEquityTierLimitConfigurationResponse is a response message that contains
- * the EquityTierLimitConfiguration.
- */
-
-export interface QueryEquityTierLimitConfigurationResponseSDKType {
-  equity_tier_limit_config?: EquityTierLimitConfigurationSDKType;
 }
 
 function createBaseQueryGetClobPairRequest(): QueryGetClobPairRequest {
@@ -518,250 +424,6 @@ export const AreSubaccountsLiquidatableResponse_Result = {
     const message = createBaseAreSubaccountsLiquidatableResponse_Result();
     message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
     message.isLiquidatable = object.isLiquidatable ?? false;
-    return message;
-  }
-
-};
-
-function createBaseMevNodeToNodeCalculationRequest(): MevNodeToNodeCalculationRequest {
-  return {
-    blockProposerMatches: undefined,
-    validatorMevMetrics: undefined
-  };
-}
-
-export const MevNodeToNodeCalculationRequest = {
-  encode(message: MevNodeToNodeCalculationRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.blockProposerMatches !== undefined) {
-      ValidatorMevMatches.encode(message.blockProposerMatches, writer.uint32(10).fork()).ldelim();
-    }
-
-    if (message.validatorMevMetrics !== undefined) {
-      MevNodeToNodeMetrics.encode(message.validatorMevMetrics, writer.uint32(18).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): MevNodeToNodeCalculationRequest {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMevNodeToNodeCalculationRequest();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.blockProposerMatches = ValidatorMevMatches.decode(reader, reader.uint32());
-          break;
-
-        case 2:
-          message.validatorMevMetrics = MevNodeToNodeMetrics.decode(reader, reader.uint32());
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<MevNodeToNodeCalculationRequest>): MevNodeToNodeCalculationRequest {
-    const message = createBaseMevNodeToNodeCalculationRequest();
-    message.blockProposerMatches = object.blockProposerMatches !== undefined && object.blockProposerMatches !== null ? ValidatorMevMatches.fromPartial(object.blockProposerMatches) : undefined;
-    message.validatorMevMetrics = object.validatorMevMetrics !== undefined && object.validatorMevMetrics !== null ? MevNodeToNodeMetrics.fromPartial(object.validatorMevMetrics) : undefined;
-    return message;
-  }
-
-};
-
-function createBaseMevNodeToNodeCalculationResponse(): MevNodeToNodeCalculationResponse {
-  return {
-    results: []
-  };
-}
-
-export const MevNodeToNodeCalculationResponse = {
-  encode(message: MevNodeToNodeCalculationResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.results) {
-      MevNodeToNodeCalculationResponse_MevAndVolumePerClob.encode(v!, writer.uint32(10).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): MevNodeToNodeCalculationResponse {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMevNodeToNodeCalculationResponse();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.results.push(MevNodeToNodeCalculationResponse_MevAndVolumePerClob.decode(reader, reader.uint32()));
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<MevNodeToNodeCalculationResponse>): MevNodeToNodeCalculationResponse {
-    const message = createBaseMevNodeToNodeCalculationResponse();
-    message.results = object.results?.map(e => MevNodeToNodeCalculationResponse_MevAndVolumePerClob.fromPartial(e)) || [];
-    return message;
-  }
-
-};
-
-function createBaseMevNodeToNodeCalculationResponse_MevAndVolumePerClob(): MevNodeToNodeCalculationResponse_MevAndVolumePerClob {
-  return {
-    clobPairId: 0,
-    mev: 0,
-    volume: Long.UZERO
-  };
-}
-
-export const MevNodeToNodeCalculationResponse_MevAndVolumePerClob = {
-  encode(message: MevNodeToNodeCalculationResponse_MevAndVolumePerClob, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.clobPairId !== 0) {
-      writer.uint32(8).uint32(message.clobPairId);
-    }
-
-    if (message.mev !== 0) {
-      writer.uint32(21).float(message.mev);
-    }
-
-    if (!message.volume.isZero()) {
-      writer.uint32(24).uint64(message.volume);
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): MevNodeToNodeCalculationResponse_MevAndVolumePerClob {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMevNodeToNodeCalculationResponse_MevAndVolumePerClob();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.clobPairId = reader.uint32();
-          break;
-
-        case 2:
-          message.mev = reader.float();
-          break;
-
-        case 3:
-          message.volume = (reader.uint64() as Long);
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<MevNodeToNodeCalculationResponse_MevAndVolumePerClob>): MevNodeToNodeCalculationResponse_MevAndVolumePerClob {
-    const message = createBaseMevNodeToNodeCalculationResponse_MevAndVolumePerClob();
-    message.clobPairId = object.clobPairId ?? 0;
-    message.mev = object.mev ?? 0;
-    message.volume = object.volume !== undefined && object.volume !== null ? Long.fromValue(object.volume) : Long.UZERO;
-    return message;
-  }
-
-};
-
-function createBaseQueryEquityTierLimitConfigurationRequest(): QueryEquityTierLimitConfigurationRequest {
-  return {};
-}
-
-export const QueryEquityTierLimitConfigurationRequest = {
-  encode(_: QueryEquityTierLimitConfigurationRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryEquityTierLimitConfigurationRequest {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryEquityTierLimitConfigurationRequest();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(_: DeepPartial<QueryEquityTierLimitConfigurationRequest>): QueryEquityTierLimitConfigurationRequest {
-    const message = createBaseQueryEquityTierLimitConfigurationRequest();
-    return message;
-  }
-
-};
-
-function createBaseQueryEquityTierLimitConfigurationResponse(): QueryEquityTierLimitConfigurationResponse {
-  return {
-    equityTierLimitConfig: undefined
-  };
-}
-
-export const QueryEquityTierLimitConfigurationResponse = {
-  encode(message: QueryEquityTierLimitConfigurationResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.equityTierLimitConfig !== undefined) {
-      EquityTierLimitConfiguration.encode(message.equityTierLimitConfig, writer.uint32(10).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryEquityTierLimitConfigurationResponse {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryEquityTierLimitConfigurationResponse();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.equityTierLimitConfig = EquityTierLimitConfiguration.decode(reader, reader.uint32());
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<QueryEquityTierLimitConfigurationResponse>): QueryEquityTierLimitConfigurationResponse {
-    const message = createBaseQueryEquityTierLimitConfigurationResponse();
-    message.equityTierLimitConfig = object.equityTierLimitConfig !== undefined && object.equityTierLimitConfig !== null ? EquityTierLimitConfiguration.fromPartial(object.equityTierLimitConfig) : undefined;
     return message;
   }
 

@@ -145,14 +145,14 @@ describe('marketCreateHandler', () => {
     expect(producerSendMock.mock.calls.length).toEqual(0);
   });
 
-  it('does not error when attempting to create an existing market for block height 0', async () => {
+  it('does not error when attempting to create an existing market for block height 1', async () => {
     const marketTableMock: jest.SpyInstance = jest.spyOn(MarketTable, 'create');
     const transactionIndex: number = 0;
 
     const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
       marketEvent: defaultMarketCreate,
       transactionIndex,
-      height: 0,
+      height: 1,
       time: defaultTime,
       txHash: defaultTxHash,
     });

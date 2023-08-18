@@ -54,11 +54,11 @@ export async function convertToIndexerOrder(
     quantums: Long.fromString(humanToQuantums(
       order.size,
       perpetualMarket.atomicResolution,
-    ).toFixed(), true),
+    ).toFixed()),
     subticks: Long.fromString(priceToSubticks(
       order.price,
       perpetualMarket,
-    ), true),
+    )),
     goodTilBlockTime: blockTimeFromIsoString(order.goodTilBlockTime!),
     timeInForce: tifToProtocolOrderTIF(order.timeInForce),
     reduceOnly: order.reduceOnly,

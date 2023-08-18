@@ -1,10 +1,7 @@
 import {
   logger,
   stats,
-  ParseMessageError,
-  wrapBackgroundTask,
-  STATS_NO_SAMPLING,
-  runFuncWithTimingStat,
+  ParseMessageError, UnprocessableError, wrapBackgroundTask, STATS_NO_SAMPLING,
 } from '@dydxprotocol-indexer/base';
 import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
@@ -73,26 +70,22 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   try {
     validateIndexerTendermintBlock(indexerTendermintBlock);
 
-    await runFuncWithTimingStat(
-      Promise.all([
-        BlockTable.create({
-          blockHeight,
-          time: indexerTendermintBlock.time!.toISOString(),
-        }, { txId }),
-        ...createTransactions(
-          indexerTendermintBlock.txHashes,
-          blockHeight,
-          txId,
-        ),
-        ...createTendermintEvents(
-          indexerTendermintBlock.events,
-          blockHeight,
-          txId,
-        ),
-      ]),
-      {},
-      'create_initial_rows',
-    );
+    await Promise.all([
+      BlockTable.create({
+        blockHeight,
+        time: indexerTendermintBlock.time!.toISOString(),
+      }, { txId }),
+      ...createTransactions(
+        indexerTendermintBlock.txHashes,
+        blockHeight,
+        txId,
+      ),
+      ...createTendermintEvents(
+        indexerTendermintBlock.events,
+        blockHeight,
+        txId,
+      ),
+    ]);
     const blockProcessor: BlockProcessor = new BlockProcessor(
       indexerTendermintBlock,
       txId,
@@ -131,6 +124,14 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       logger.crit({
         at: 'onMessage#onMessage',
         message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
+        offset,
+        indexerTendermintBlock,
+        error,
+      });
+    } else if (error instanceof UnprocessableError) {
+      logger.crit({
+        at: 'onMessage#onMessage',
+        message: 'Error: Unable to process',
         offset,
         indexerTendermintBlock,
         error,
@@ -196,7 +197,6 @@ function getIndexerTendermintBlock(
       message: 'Parsed message',
       offset: message.offset,
       height: block.height,
-      block,
     });
 
     return block;

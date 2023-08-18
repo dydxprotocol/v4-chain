@@ -3,7 +3,6 @@ import { IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-in
 import _ from 'lodash';
 
 import { Handler } from '../handlers/handler';
-import { AssetValidator } from '../validators/asset-validator';
 import { FundingValidator } from '../validators/funding-validator';
 import { MarketValidator } from '../validators/market-validator';
 import { OrderFillValidator } from '../validators/order-fill-validator';
@@ -24,7 +23,6 @@ const TXN_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitialize
   [DydxIndexerSubtypes.TRANSFER.toString()]: TransferValidator,
   [DydxIndexerSubtypes.MARKET.toString()]: MarketValidator,
   [DydxIndexerSubtypes.STATEFUL_ORDER.toString()]: StatefulOrderValidator,
-  [DydxIndexerSubtypes.ASSET.toString()]: AssetValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {

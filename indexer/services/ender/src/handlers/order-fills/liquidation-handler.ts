@@ -8,9 +8,7 @@ import {
   perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   SubaccountTable,
-  OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
-import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1, IndexerOrderId,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -117,7 +115,7 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillEventW
     );
 
     if (this.event.liquidity === Liquidity.MAKER) {
-      const kafkaEvents: ConsolidatedKafkaEvent[] = [
+      return [
         this.generateConsolidatedKafkaEvent(
           castedLiquidationFillEventMessage.makerOrder.orderId!.subaccountId!,
           makerOrder,
@@ -131,16 +129,6 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillEventW
           castedLiquidationFillEventMessage.totalFilledMaker,
         ),
       ];
-
-      // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
-      // for stateful orders as we are guaranteed a stateful order cannot be replaced until the next
-      // block.
-      if (makerOrder?.status === OrderStatus.FILLED && isStatefulOrder(makerOrder?.orderFlags)) {
-        kafkaEvents.push(
-          this.getOrderRemoveKafkaEvent(castedLiquidationFillEventMessage.makerOrder!.orderId!),
-        );
-      }
-      return kafkaEvents;
     } else {
       return [
         this.generateConsolidatedKafkaEvent(

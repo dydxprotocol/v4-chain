@@ -1,21 +1,16 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
-import {
-  IndexerTendermintBlock,
-  IndexerTendermintEvent,
-  TransferEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+import { logger } from '@dydxprotocol-indexer/base';
+import { IndexerTendermintBlock, IndexerTendermintEvent, TransferEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import { TransferValidator } from '../../src/validators/transfer-validator';
 import {
-  defaultHeight,
-  defaultSubaccountId,
-  defaultTime,
-  defaultTransferEvent,
-  defaultTxHash,
-  defaultWalletAddress,
+  defaultHeight, defaultTime, defaultTransferEvent, defaultTxHash,
 } from '../helpers/constants';
-import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
-import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
+import {
+  binaryToBase64String,
+  createIndexerTendermintBlock,
+  createIndexerTendermintEvent,
+} from '../helpers/indexer-proto-helpers';
+import { expectDidntLogError } from '../helpers/validator-helpers';
 
 describe('transfer-validator', () => {
   beforeEach(() => {
@@ -37,70 +32,39 @@ describe('transfer-validator', () => {
       expectDidntLogError();
     });
 
+    // This is testing a temporary fix for the fact that protocol is sending transfer events for
+    // withdrawals/deposits but Indexer is not yet ready to handle them.
     it.each([
       [
-        'does not contain sender',
+        'does not contain senderSubaccountId',
         {
           ...defaultTransferEvent,
-          sender: undefined,
+          senderSubaccountId: undefined,
         },
-        'TransferEvent must have either a sender subaccount id or sender wallet address',
       ],
       [
-        'contains 2 senders',
+        'does not contain recipientSubaccountId',
         {
           ...defaultTransferEvent,
-          sender: {
-            address: 'defaultAddress',
-            subaccountId: defaultSubaccountId,
-          },
+          recipientSubaccountId: undefined,
         },
-        'TransferEvent must have either a sender subaccount id or sender wallet address',
       ],
       [
-        'does not contain recipient',
+        'does not contain recipientSubaccountId or senderSubaccountId',
         {
           ...defaultTransferEvent,
-          recipient: undefined,
+          recipientSubaccountId: undefined,
+          senderSubaccountId: undefined,
         },
-        'TransferEvent must have either a recipient subaccount id or recipient wallet address',
       ],
-      [
-        'contains 2 recipients',
-        {
-          ...defaultTransferEvent,
-          recipient: {
-            address: 'defaultAddress',
-            subaccountId: defaultSubaccountId,
-          },
-        },
-        'TransferEvent must have either a recipient subaccount id or recipient wallet address',
-      ],
-      [
-        'contains both a sender and recipient wallet address',
-        {
-          ...defaultTransferEvent,
-          sender: {
-            address: defaultWalletAddress,
-          },
-          recipient: {
-            address: defaultWalletAddress,
-          },
-        },
-        'TransferEvent cannot have both a sender and recipient wallet address',
-      ],
-    ])('throws error if event %s', (_message: string, event: TransferEventV1, message: string) => {
+    ])('doesnt throw error if event %s', (_message: string, event: TransferEventV1) => {
       const validator: TransferValidator = new TransferValidator(
         event,
         createBlock(event),
       );
 
-      expect(() => validator.validate()).toThrow(new ParseMessageError(message));
-      expectLoggedParseMessageError(
-        TransferValidator.name,
-        message,
-        { event },
-      );
+      validator.validate();
+      expectDidntLogError();
     });
   });
 });

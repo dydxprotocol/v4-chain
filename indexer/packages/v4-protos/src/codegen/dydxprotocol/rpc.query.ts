@@ -13,7 +13,6 @@ export const createRPCQueryClient = async ({
       blocktime: (await import("./blocktime/query.rpc.Query")).createRpcQueryExtension(client),
       bridge: (await import("./bridge/query.rpc.Query")).createRpcQueryExtension(client),
       clob: (await import("./clob/query.rpc.Query")).createRpcQueryExtension(client),
-      delaymsg: (await import("./delaymsg/query.rpc.Query")).createRpcQueryExtension(client),
       epochs: (await import("./epochs/query.rpc.Query")).createRpcQueryExtension(client),
       feetiers: (await import("./feetiers/query.rpc.Query")).createRpcQueryExtension(client),
       perpetuals: (await import("./perpetuals/query.rpc.Query")).createRpcQueryExtension(client),
@@ -22,7 +21,7 @@ export const createRPCQueryClient = async ({
       sending: (await import("./sending/query.rpc.Query")).createRpcQueryExtension(client),
       stats: (await import("./stats/query.rpc.Query")).createRpcQueryExtension(client),
       subaccounts: (await import("./subaccounts/query.rpc.Query")).createRpcQueryExtension(client),
-      vest: (await import("./vest/query.rpc.Query")).createRpcQueryExtension(client)
+      vesting: (await import("./vesting/query.rpc.Query")).createRpcQueryExtension(client)
     }
   };
 };

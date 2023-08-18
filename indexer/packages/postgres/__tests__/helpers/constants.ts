@@ -39,7 +39,6 @@ import {
   PnlTicksCreateObject,
   FundingIndexUpdatesCreateObject,
   LiquidityTiersCreateObject,
-  WalletCreateObject,
 } from '../../src/types';
 
 export const createdDateTime: DateTime = DateTime.utc();
@@ -70,8 +69,6 @@ export const defaultSubaccount3: SubaccountCreateObject = {
   updatedAtHeight: createdHeight,
 };
 
-export const defaultWalletAddress: string = 'defaultWalletAddress';
-
 export const defaultSubaccountId: string = SubaccountTable.uuid(
   defaultAddress,
   defaultSubaccount.subaccountNumber,
@@ -84,11 +81,6 @@ export const defaultSubaccountId3: string = SubaccountTable.uuid(
   defaultAddress,
   defaultSubaccount3.subaccountNumber,
 );
-
-// ============== Wallets ==============
-export const defaultWallet: WalletCreateObject = {
-  address: defaultAddress,
-};
 
 // ============== Assets ==============
 
@@ -353,52 +345,10 @@ export const defaultTransfer3: TransferCreateObject = {
 };
 
 export const defaultTransferId: string = TransferTable.uuid(
-  defaultTransfer.eventId,
-  defaultTransfer.assetId,
   defaultTransfer.senderSubaccountId,
   defaultTransfer.recipientSubaccountId,
-  defaultTransfer.senderWalletAddress,
-  defaultTransfer.recipientWalletAddress,
-);
-
-export const defaultWithdrawal: TransferCreateObject = {
-  senderSubaccountId: defaultSubaccountId,
-  recipientWalletAddress: defaultWalletAddress,
-  assetId: defaultAsset.id,
-  size: '10',
-  eventId: defaultTendermintEventId,
-  transactionHash: '', // TODO: Add a real transaction Hash
-  createdAt: createdDateTime.toISO(),
-  createdAtHeight: createdHeight,
-};
-
-export const defaultWithdrawalId: string = TransferTable.uuid(
-  defaultWithdrawal.eventId,
-  defaultWithdrawal.assetId,
-  defaultWithdrawal.senderSubaccountId,
-  defaultWithdrawal.recipientSubaccountId,
-  defaultWithdrawal.senderWalletAddress,
-  defaultWithdrawal.recipientWalletAddress,
-);
-
-export const defaultDeposit: TransferCreateObject = {
-  senderWalletAddress: defaultWalletAddress,
-  recipientSubaccountId: defaultSubaccountId,
-  assetId: defaultAsset.id,
-  size: '10',
-  eventId: defaultTendermintEventId,
-  transactionHash: '', // TODO: Add a real transaction Hash
-  createdAt: createdDateTime.toISO(),
-  createdAtHeight: createdHeight,
-};
-
-export const defaultDepositId: string = TransferTable.uuid(
-  defaultDeposit.eventId,
-  defaultDeposit.assetId,
-  defaultDeposit.senderSubaccountId,
-  defaultDeposit.recipientSubaccountId,
-  defaultDeposit.senderWalletAddress,
-  defaultDeposit.recipientWalletAddress,
+  defaultTransfer.eventId,
+  defaultTransfer.assetId,
 );
 
 // ============== Markets ==============

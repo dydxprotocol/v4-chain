@@ -18,22 +18,17 @@ import {
   TransferFromDatabase,
   PerpetualPositionTable,
   UpdatedPerpetualPositionSubaccountKafkaObject,
-  TransferType,
-  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import { DateTime } from 'luxon';
 import {
-  addPositionsToContents,
-  annotateWithPnl,
-  convertPerpetualPosition,
+  addPositionsToContents, annotateWithPnl, convertPerpetualPosition,
   generateOraclePriceContents,
-  generateTransferContents,
-  getPnl,
+  generateTransferContents, getPnl,
 } from '../../src/helpers/kafka-helper';
 import { stats } from '@dydxprotocol-indexer/base';
 import { updateBlockCache } from '../../src/caches/block-cache';
-import { defaultPreviousHeight, defaultWalletAddress } from './constants';
+import { defaultPreviousHeight } from './constants';
 
 describe('kafka-helper', () => {
   describe('addPositionsToContents', () => {
@@ -284,23 +279,11 @@ describe('kafka-helper', () => {
     const defaultAsset: AssetFromDatabase = {
       ...testConstants.defaultAsset,
     };
-    const senderSubaccountId: IndexerSubaccountId = IndexerSubaccountId.fromPartial({
-      owner: 'sender',
-      number: 1,
-    });
-
-    const recipientSubaccountId: IndexerSubaccountId = IndexerSubaccountId.fromPartial({
-      owner: 'recipient',
-      number: 1,
-    });
 
     const transfer: TransferFromDatabase = {
       id: '',
-      senderSubaccountId: SubaccountTable.uuid(senderSubaccountId.owner, senderSubaccountId.number),
-      recipientSubaccountId: SubaccountTable.uuid(
-        recipientSubaccountId.owner,
-        recipientSubaccountId.number,
-      ),
+      senderSubaccountId: testConstants.defaultSubaccountId,
+      recipientSubaccountId: testConstants.defaultSubaccountId2,
       assetId: defaultAsset.id,
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
@@ -309,124 +292,31 @@ describe('kafka-helper', () => {
       createdAtHeight: '1',
     };
 
-    const deposit: TransferFromDatabase = {
-      id: '',
-      senderWalletAddress: defaultWalletAddress,
-      recipientSubaccountId: SubaccountTable.uuid(
-        recipientSubaccountId.owner,
-        recipientSubaccountId.number,
-      ),
-      assetId: defaultAsset.id,
-      size: '10',
-      eventId: testConstants.defaultTendermintEventId,
-      transactionHash: '',
-      createdAt: DateTime.utc().toISO(),
-      createdAtHeight: '1',
-    };
+    it('successfully adds a transfer', () => {
+      const senderSubaccountId: IndexerSubaccountId = IndexerSubaccountId.fromPartial({
+        owner: 'sender',
+        number: 1,
+      });
 
-    const withdrawal: TransferFromDatabase = {
-      id: '',
-      senderSubaccountId: SubaccountTable.uuid(senderSubaccountId.owner, senderSubaccountId.number),
-      recipientWalletAddress: defaultWalletAddress,
-      assetId: defaultAsset.id,
-      size: '10',
-      eventId: testConstants.defaultTendermintEventId,
-      transactionHash: '',
-      createdAt: DateTime.utc().toISO(),
-      createdAtHeight: '1',
-    };
-
-    it('successfully adds a transfer_out', () => {
+      const recipientSubaccountId: IndexerSubaccountId = IndexerSubaccountId.fromPartial({
+        owner: 'recipient',
+        number: 1,
+      });
       const contents: SubaccountMessageContents = generateTransferContents(
+        senderSubaccountId,
+        recipientSubaccountId,
         transfer,
         defaultAsset,
-        senderSubaccountId,
-        senderSubaccountId,
-        recipientSubaccountId,
       );
 
       expect(contents.transfers).toEqual({
-        sender: {
-          address: senderSubaccountId.owner,
-          subaccountNumber: senderSubaccountId.number,
-        },
-        recipient: {
-          address: recipientSubaccountId.owner,
-          subaccountNumber: recipientSubaccountId.number,
-        },
+        senderAddress: senderSubaccountId.owner,
+        senderSubaccountNumber: senderSubaccountId.number,
+        recipientAddress: recipientSubaccountId.owner,
+        recipientSubaccountNumber: recipientSubaccountId.number,
         symbol: defaultAsset.symbol,
+        assetId: transfer.assetId,
         size: transfer.size,
-        type: TransferType.TRANSFER_OUT,
-      });
-    });
-
-    it('successfully adds a transfer_in', () => {
-      const contents: SubaccountMessageContents = generateTransferContents(
-        transfer,
-        defaultAsset,
-        recipientSubaccountId,
-        senderSubaccountId,
-        recipientSubaccountId,
-      );
-
-      expect(contents.transfers).toEqual({
-        sender: {
-          address: senderSubaccountId.owner,
-          subaccountNumber: senderSubaccountId.number,
-        },
-        recipient: {
-          address: recipientSubaccountId.owner,
-          subaccountNumber: recipientSubaccountId.number,
-        },
-        symbol: defaultAsset.symbol,
-        size: transfer.size,
-        type: TransferType.TRANSFER_IN,
-      });
-    });
-
-    it('successfully adds a deposit', () => {
-      const contents: SubaccountMessageContents = generateTransferContents(
-        deposit,
-        defaultAsset,
-        recipientSubaccountId,
-        undefined,
-        recipientSubaccountId,
-      );
-
-      expect(contents.transfers).toEqual({
-        sender: {
-          address: defaultWalletAddress,
-        },
-        recipient: {
-          address: recipientSubaccountId.owner,
-          subaccountNumber: recipientSubaccountId.number,
-        },
-        symbol: defaultAsset.symbol,
-        size: deposit.size,
-        type: TransferType.DEPOSIT,
-      });
-    });
-
-    it('successfully adds a withdrawal', () => {
-      const contents: SubaccountMessageContents = generateTransferContents(
-        withdrawal,
-        defaultAsset,
-        senderSubaccountId,
-        senderSubaccountId,
-        undefined,
-      );
-
-      expect(contents.transfers).toEqual({
-        sender: {
-          address: senderSubaccountId.owner,
-          subaccountNumber: senderSubaccountId.number,
-        },
-        recipient: {
-          address: defaultWalletAddress,
-        },
-        symbol: defaultAsset.symbol,
-        size: deposit.size,
-        type: TransferType.WITHDRAWAL,
       });
     });
   });

@@ -220,17 +220,6 @@ describe('Order store', () => {
     expect(order).toEqual(expect.objectContaining(createOrder));
   });
 
-  it('Successfully upserts a new Order with UNTRIGGERED', async () => {
-    const createOrder: OrderCreateObject = {
-      ...defaultOrder,
-      status: OrderStatus.UNTRIGGERED,
-      createdAtHeight: '2',
-    };
-    const order: OrderFromDatabase = await OrderTable.upsert(createOrder);
-
-    expect(order).toEqual(expect.objectContaining(createOrder));
-  });
-
   it('Successfully upserts a new Order and updates status', async () => {
     const createOrder: OrderCreateObject = {
       ...defaultOrder,
@@ -344,21 +333,6 @@ describe('Order store', () => {
         status: OrderStatus.BEST_EFFORT_CANCELED,
       }));
     });
-
-  it('Successfully upserts an existing Order with UNTRIGGRERED status', async () => {
-    await OrderTable.create(defaultOrder);
-
-    const upsertOrder: OrderCreateObject = {
-      ...defaultOrder,
-      status: OrderStatus.UNTRIGGERED,
-    };
-    const order: OrderFromDatabase = await OrderTable.upsert(upsertOrder);
-
-    expect(order).toEqual(expect.objectContaining({
-      ...upsertOrder,
-      status: OrderStatus.UNTRIGGERED,
-    }));
-  });
 
   it('Successfully upserts an existing Order, with fixed-decimal notation', async () => {
     await OrderTable.create(defaultOrder);

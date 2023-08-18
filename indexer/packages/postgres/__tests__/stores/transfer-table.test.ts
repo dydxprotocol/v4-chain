@@ -7,7 +7,6 @@ import {
 } from '../../src/types';
 import * as TransferTable from '../../src/stores/transfer-table';
 import { AssetTransferMap } from '../../src/stores/transfer-table';
-import * as WalletTable from '../../src/stores/wallet-table';
 import * as SubaccountTable from '../../src/stores/subaccount-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
@@ -16,7 +15,6 @@ import {
   createdHeight,
   defaultAsset,
   defaultAsset2,
-  defaultDeposit,
   defaultSubaccount3,
   defaultSubaccountId,
   defaultSubaccountId2,
@@ -26,11 +24,8 @@ import {
   defaultTransfer,
   defaultTransfer2,
   defaultTransfer3,
-  defaultWalletAddress,
-  defaultWithdrawal,
 } from '../helpers/constants';
 import Big from 'big.js';
-import { CheckViolationError } from 'objection';
 
 describe('Transfer store', () => {
   beforeEach(async () => {
@@ -74,8 +69,8 @@ describe('Transfer store', () => {
     });
 
     expect(transfers.length).toEqual(2);
-    expect(transfers[0]).toEqual(expect.objectContaining(defaultTransfer));
-    expect(transfers[1]).toEqual(expect.objectContaining(transfer2));
+    expect(transfers[0]).toEqual(expect.objectContaining(transfer2));
+    expect(transfers[1]).toEqual(expect.objectContaining(defaultTransfer));
   });
 
   it('Successfully finds all Transfers', async () => {
@@ -92,11 +87,11 @@ describe('Transfer store', () => {
     });
 
     expect(transfers.length).toEqual(2);
-    expect(transfers[0]).toEqual(expect.objectContaining(defaultTransfer));
-    expect(transfers[1]).toEqual(expect.objectContaining({
+    expect(transfers[0]).toEqual(expect.objectContaining({
       ...defaultTransfer,
       eventId: defaultTendermintEventId2,
     }));
+    expect(transfers[1]).toEqual(expect.objectContaining(defaultTransfer));
   });
 
   it('Successfully finds all transfers to and from subaccount', async () => {
@@ -122,8 +117,8 @@ describe('Transfer store', () => {
       });
 
     expect(transfers.length).toEqual(2);
-    expect(transfers[0]).toEqual(expect.objectContaining(defaultTransfer));
-    expect(transfers[1]).toEqual(expect.objectContaining(transfer2));
+    expect(transfers[0]).toEqual(expect.objectContaining(transfer2));
+    expect(transfers[1]).toEqual(expect.objectContaining(defaultTransfer));
   });
 
   it('Successfully finds all transfers to and from subaccount w/ event id', async () => {
@@ -252,102 +247,13 @@ describe('Transfer store', () => {
 
     const transfer: TransferFromDatabase | undefined = await TransferTable.findById(
       TransferTable.uuid(
-        defaultTransfer.eventId,
-        defaultTransfer.assetId,
         defaultTransfer.senderSubaccountId,
         defaultTransfer.recipientSubaccountId,
-        defaultTransfer.senderWalletAddress,
-        defaultTransfer.recipientWalletAddress,
-      ),
+        defaultTransfer.eventId,
+        defaultTransfer.assetId),
     );
 
     expect(transfer).toEqual(expect.objectContaining(defaultTransfer));
-  });
-
-  it('Recipient/sender must exist', async () => {
-    await WalletTable.create({
-      address: defaultWalletAddress,
-    });
-    const invalidDeposit: TransferCreateObject = {
-      ...defaultDeposit,
-      recipientWalletAddress: defaultWalletAddress,
-    };
-
-    await expect(TransferTable.create(invalidDeposit)).rejects.toBeInstanceOf(CheckViolationError);
-    const invalidWithdrawal: TransferCreateObject = {
-      ...defaultWithdrawal,
-      senderWalletAddress: defaultWalletAddress,
-    };
-
-    await expect(TransferTable.create(invalidWithdrawal))
-      .rejects.toBeInstanceOf(CheckViolationError);
-
-    const invalidTfer: TransferCreateObject = {
-      recipientWalletAddress: defaultWalletAddress,
-      assetId: defaultAsset.id,
-      size: '10',
-      eventId: defaultTendermintEventId,
-      transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
-      createdAtHeight: createdHeight,
-    };
-    await expect(TransferTable.create(invalidTfer)).rejects.toBeInstanceOf(CheckViolationError);
-  });
-
-  it('Successfully creates/finds a transfer/deposit/withdrawal', async () => {
-    await WalletTable.create({
-      address: defaultWalletAddress,
-    });
-    await Promise.all([
-      TransferTable.create(defaultTransfer),
-      TransferTable.create(defaultDeposit),
-      TransferTable.create(defaultWithdrawal),
-    ]);
-
-    const [
-      transfer,
-      deposit,
-      withdrawal,
-    ]: [
-      TransferFromDatabase | undefined,
-      TransferFromDatabase | undefined,
-      TransferFromDatabase | undefined,
-    ] = await Promise.all([
-      TransferTable.findById(
-        TransferTable.uuid(
-          defaultTransfer.eventId,
-          defaultTransfer.assetId,
-          defaultTransfer.senderSubaccountId,
-          defaultTransfer.recipientSubaccountId,
-          defaultTransfer.senderWalletAddress,
-          defaultTransfer.recipientWalletAddress,
-        ),
-      ),
-      TransferTable.findById(
-        TransferTable.uuid(
-          defaultDeposit.eventId,
-          defaultDeposit.assetId,
-          defaultDeposit.senderSubaccountId,
-          defaultDeposit.recipientSubaccountId,
-          defaultDeposit.senderWalletAddress,
-          defaultDeposit.recipientWalletAddress,
-        ),
-      ),
-      TransferTable.findById(
-        TransferTable.uuid(
-          defaultWithdrawal.eventId,
-          defaultWithdrawal.assetId,
-          defaultWithdrawal.senderSubaccountId,
-          defaultWithdrawal.recipientSubaccountId,
-          defaultWithdrawal.senderWalletAddress,
-          defaultWithdrawal.recipientWalletAddress,
-        ),
-      ),
-    ]);
-
-    expect(transfer).toEqual(expect.objectContaining(defaultTransfer));
-    expect(deposit).toEqual(expect.objectContaining(defaultDeposit));
-    expect(withdrawal).toEqual(expect.objectContaining(defaultWithdrawal));
   });
 
   it('Successfully gets total transfers per subaccount', async () => {

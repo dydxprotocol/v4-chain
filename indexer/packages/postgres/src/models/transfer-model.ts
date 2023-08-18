@@ -31,22 +31,6 @@ export default class TransferModel extends Model {
         to: 'subaccounts.id',
       },
     },
-    recipientWallet: {
-      relation: Model.BelongsToOneRelation,
-      modelClass: path.join(__dirname, 'wallet-model'),
-      join: {
-        from: 'transfers.recipientWalletAddress',
-        to: 'wallets.address',
-      },
-    },
-    senderWallet: {
-      relation: Model.BelongsToOneRelation,
-      modelClass: path.join(__dirname, 'wallet-model'),
-      join: {
-        from: 'transfers.senderWalletAddress',
-        to: 'wallets.address',
-      },
-    },
     asset: {
       relation: Model.BelongsToOneRelation,
       modelClass: path.join(__dirname, 'asset-model'),
@@ -80,8 +64,6 @@ export default class TransferModel extends Model {
         'id',
         'senderSubaccountId',
         'recipientSubaccountId',
-        'senderWalletAddress',
-        'recipientWalletAddress',
         'assetId',
         'size',
         'eventId',
@@ -91,10 +73,8 @@ export default class TransferModel extends Model {
       ],
       properties: {
         id: { type: 'string', format: 'uuid' },
-        senderSubaccountId: { type: ['string', 'null'], default: null, format: 'uuid' },
-        recipientSubaccountId: { type: ['string', 'null'], default: null, format: 'uuid' },
-        senderWalletAddress: { type: ['string', 'null'], default: null },
-        recipientWalletAddress: { type: ['string', 'null'], default: null },
+        senderSubaccountId: { type: 'string', format: 'uuid' },
+        recipientSubaccountId: { type: 'string', format: 'uuid' },
         assetId: { type: 'string', pattern: IntegerPattern },
         size: { type: 'string', pattern: NonNegativeNumericPattern },
         transactionHash: { type: 'string' },
@@ -106,13 +86,9 @@ export default class TransferModel extends Model {
 
   id!: string;
 
-  senderSubaccountId?: string;
+  senderSubaccountId!: string;
 
-  recipientSubaccountId?: string;
-
-  senderWalletAddress?: string;
-
-  recipientWalletAddress?: string;
+  recipientSubaccountId!: string;
 
   assetId!: string;
 

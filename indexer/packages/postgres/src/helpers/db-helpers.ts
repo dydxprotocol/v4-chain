@@ -22,7 +22,6 @@ const layer1Tables = [
   'assets',
   'candles',
   'liquidity_tiers',
-  'wallets',
 ];
 
 /**
@@ -129,19 +128,15 @@ $do$;`);
 
 export async function clearData() {
   for (const table of layer1Tables) {
-    const tableExists = await knexPrimary.schema.hasTable(table);
-    if (tableExists) {
-      await knexPrimary.raw(`truncate table "${table}" cascade`);
-    }
+    await knexPrimary.raw(`truncate table "${table}" cascade`);
   }
 
   await Promise.all(
-    layer2Tables.map(async (table) => {
-      const tableExists = await knexPrimary.schema.hasTable(table);
-      if (tableExists) {
+    layer2Tables.map(
+      async (table) => {
         return knexPrimary.raw(`truncate table "${table}" cascade`);
-      }
-    }),
+      },
+    ),
   );
 }
 

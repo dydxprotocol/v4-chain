@@ -1,28 +1,28 @@
 import {
-  apiTranslations,
   AssetPositionFromDatabase,
-  BestEffortOpenedStatus,
-  CandleColumns,
-  CandleFromDatabase,
-  CURRENCY_DECIMAL_PRECISION,
   FillFromDatabase,
-  FundingIndexUpdatesFromDatabase,
-  helpers,
-  LiquidityTiersFromDatabase,
-  MarketFromDatabase,
-  MarketsMap,
   OrderFromDatabase,
   OrderType,
-  PerpetualMarketFromDatabase,
-  perpetualMarketRefresher,
   PerpetualMarketsMap,
+  PerpetualMarketFromDatabase,
   PnlTicksFromDatabase,
   PositionSide,
+  perpetualMarketRefresher,
   protocolTranslations,
   SubaccountFromDatabase,
   SubaccountTable,
-  TimeInForce,
   TransferFromDatabase,
+  MarketFromDatabase,
+  MarketsMap,
+  apiTranslations,
+  TimeInForce,
+  CandleFromDatabase,
+  CandleColumns,
+  BestEffortOpenedStatus,
+  FundingIndexUpdatesFromDatabase,
+  helpers,
+  CURRENCY_DECIMAL_PRECISION,
+  LiquidityTiersFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
@@ -33,25 +33,24 @@ import {
   AssetById,
   AssetPositionResponseObject,
   AssetPositionsMap,
-  CandleResponseObject,
   FillResponseObject,
-  HistoricalFundingResponseObject,
+  TransferResponseObject,
   MarketAndTypeByClobPairId,
-  OrderbookResponseObject,
-  OrderbookResponsePriceLevel,
-  OrderResponseObject,
   PerpetualMarketResponseObject,
   PerpetualPositionResponseObject,
   PerpetualPositionsMap,
-  PerpetualPositionWithFunding,
-  PnlTicksResponseObject,
-  PostgresOrderMap,
-  RedisOrderMap,
-  SparklineResponseObject,
-  SubaccountById,
   SubaccountResponseObject,
   TradeResponseObject,
-  TransferResponseObject,
+  OrderbookResponseObject,
+  OrderbookResponsePriceLevel,
+  OrderResponseObject,
+  PostgresOrderMap,
+  RedisOrderMap,
+  CandleResponseObject,
+  PnlTicksResponseObject,
+  HistoricalFundingResponseObject,
+  PerpetualPositionWithFunding,
+  SparklineResponseObject,
 } from '../types';
 
 /**
@@ -183,41 +182,19 @@ export function fillToTradeResponseObject(
   };
 }
 
-/**
- * Converts transfer from the database into API response.
- *
- * @param transfer
- * @param assetMap map of assetId to symbol.
- * @param subaccountMap map of subaccountId to subaccounts for all subaccounts involved in
- * transfers.
- * @param subaccountId represents the subaccountId in the query. This is used to determine the
- * transfer type.
- */
 export function transferToResponseObject(
   transfer: TransferFromDatabase,
   assetMap: AssetById,
-  subaccountMap: SubaccountById,
-  subaccountId: string,
 ): TransferResponseObject {
   return {
     id: transfer.id,
-    sender: {
-      address: transfer.senderWalletAddress ?? subaccountMap[transfer.senderSubaccountId!].address,
-      subaccountNumber: transfer.senderWalletAddress ? undefined
-        : subaccountMap[transfer.senderSubaccountId!].subaccountNumber,
-    },
-    recipient: {
-      address: transfer.recipientWalletAddress ?? subaccountMap[
-        transfer.recipientSubaccountId!
-      ].address,
-      subaccountNumber: transfer.recipientWalletAddress ? undefined
-        : subaccountMap[transfer.recipientSubaccountId!].subaccountNumber,
-    },
+    senderSubaccountId: transfer.senderSubaccountId,
+    recipientSubaccountId: transfer.recipientSubaccountId,
+    assetId: transfer.assetId,
     size: transfer.size,
     createdAt: transfer.createdAt,
     createdAtHeight: transfer.createdAtHeight,
     symbol: assetMap[transfer.assetId].symbol,
-    type: helpers.getTransferType(transfer, subaccountId),
   };
 }
 

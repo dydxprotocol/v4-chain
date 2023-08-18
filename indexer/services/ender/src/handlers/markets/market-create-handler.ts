@@ -27,7 +27,7 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
       marketCreate.marketId,
     );
     // TODO(DEC-1752): Removed the height check once database seeding comes from V4 events.
-    if (market !== undefined && this.block.height !== 0) {
+    if (market !== undefined && this.block.height !== 1) {
       this.logAndThrowParseMessageError(
         'Market in MarketCreate already exists',
         { marketCreate },

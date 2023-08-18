@@ -6,7 +6,6 @@ import {
   IsoString,
   Ordering,
   QueryableField,
-  SubaccountColumns,
   SubaccountFromDatabase,
   SubaccountTable,
   TransferColumns,
@@ -29,12 +28,7 @@ import { CheckLimitAndCreatedBeforeOrAtSchema, CheckSubaccountSchema } from '../
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { transferToResponseObject } from '../../../request-helpers/request-transformer';
-import {
-  AssetById,
-  SubaccountById,
-  TransferRequest,
-  TransferResponse,
-} from '../../../types';
+import { AssetById, TransferRequest, TransferResponse } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'transfers-controller';
@@ -88,33 +82,6 @@ class TransfersController extends Controller {
         `No subaccount found with address ${address} and subaccountNumber ${subaccountNumber}`,
       );
     }
-    const recipientSubaccountIds: string[] = _
-      .map(transfers, TransferColumns.recipientSubaccountId)
-      .filter(
-        (recipientSubaccountId: string | undefined) => recipientSubaccountId !== undefined,
-      ) as string[];
-    const senderSubaccountIds: string[] = _
-      .map(transfers, TransferColumns.senderSubaccountId)
-      .filter(
-        (senderSubaccountId: string | undefined) => senderSubaccountId !== undefined,
-      ) as string[];
-
-    const subaccountIds: string[] = _.uniq([
-      ...recipientSubaccountIds,
-      ...senderSubaccountIds,
-    ]);
-    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
-      {
-        id: subaccountIds,
-      },
-      [],
-      { readReplica: true },
-    );
-    const idToSubaccount: SubaccountById = _.keyBy(
-      subaccounts,
-      SubaccountColumns.id,
-    );
-
     const idToAsset: AssetById = _.keyBy(
       assets,
       AssetColumns.id,
@@ -122,7 +89,7 @@ class TransfersController extends Controller {
 
     return {
       transfers: transfers.map((transfer: TransferFromDatabase) => {
-        return transferToResponseObject(transfer, idToAsset, idToSubaccount, subaccountId);
+        return transferToResponseObject(transfer, idToAsset);
       }),
     };
   }

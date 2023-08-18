@@ -24,16 +24,14 @@ import {
 } from '../types';
 
 export function uuid(
+  senderSubaccountId: string,
+  recipientSubaccountId: string,
   eventId: Buffer,
   assetId: string,
-  senderSubaccountId?: string,
-  recipientSubaccountId?: string,
-  senderWalletAddress?: string,
-  recipientWalletAddress?: string,
 ): string {
   return getUuid(
     Buffer.from(
-      `${senderSubaccountId}-${recipientSubaccountId}-${senderWalletAddress}-${recipientWalletAddress}-${eventId.toString('hex')}-${assetId}`,
+      `${senderSubaccountId}-${recipientSubaccountId}-${eventId.toString('hex')}-${assetId}`,
       BUFFER_ENCODING_UTF_8),
   );
 }
@@ -50,8 +48,6 @@ export async function findAll(
     id,
     senderSubaccountId,
     recipientSubaccountId,
-    senderWalletAddress,
-    recipientWalletAddress,
     assetId,
     size,
     eventId,
@@ -72,8 +68,6 @@ export async function findAll(
       id,
       senderSubaccountId,
       recipientSubaccountId,
-      senderWalletAddress,
-      recipientWalletAddress,
       assetId,
       size,
       eventId,
@@ -103,14 +97,6 @@ export async function findAll(
 
   if (recipientSubaccountId !== undefined) {
     baseQuery = baseQuery.whereIn(TransferColumns.recipientSubaccountId, recipientSubaccountId);
-  }
-
-  if (senderWalletAddress !== undefined) {
-    baseQuery = baseQuery.whereIn(TransferColumns.senderWalletAddress, senderWalletAddress);
-  }
-
-  if (recipientWalletAddress !== undefined) {
-    baseQuery = baseQuery.whereIn(TransferColumns.recipientWalletAddress, recipientWalletAddress);
   }
 
   if (assetId !== undefined) {
@@ -405,14 +391,8 @@ export async function create(
   return TransferModel.query(
     Transaction.get(options.txId),
   ).insert({
-    id: uuid(
-      transferToCreate.eventId,
-      transferToCreate.assetId,
-      transferToCreate.senderSubaccountId,
-      transferToCreate.recipientSubaccountId,
-      transferToCreate.senderWalletAddress,
-      transferToCreate.recipientWalletAddress,
-    ),
+    id: uuid(transferToCreate.senderSubaccountId, transferToCreate.recipientSubaccountId,
+      transferToCreate.eventId, transferToCreate.assetId),
     ...transferToCreate,
   }).returning('*');
 }
