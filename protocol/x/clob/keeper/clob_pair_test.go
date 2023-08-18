@@ -118,6 +118,12 @@ func TestCreateClobPair(t *testing.T) {
 			),
 			expectedErr: "must be <= TakerFeePpm",
 		},
+		"CLOB pair status is not supported": {
+			clobPair: *clobtest.GenerateClobPair(
+				clobtest.WithStatus(types.ClobPair_STATUS_PAUSED),
+			),
+			expectedErr: "CLOB pair status STATUS_PAUSED not supported",
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

@@ -80,6 +80,18 @@ func (k Keeper) CreatePerpetualClobPair(
 // - TakerFeePpm:
 //   - Must be <= MaxFeePpm.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
+	if clobPair.Status == types.ClobPair_STATUS_UNSPECIFIED {
+		return sdkerrors.Wrap(types.ErrInvalidClobPairParameter, "invalid ClobPair parameter: Status must be specified.")
+	}
+
+	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairParameter,
+			"CLOB pair status %+v not supported",
+			clobPair.Status,
+		)
+	}
+
 	// TODO(DEC-1535): update this validation when we implement "spot"/"asset" clob pairs.
 	switch clobPair.Metadata.(type) {
 	case *types.ClobPair_PerpetualClobMetadata:
@@ -142,10 +154,6 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 			"invalid ClobPair parameter: SubticksPerTick must be > 0. Got %v",
 			clobPair.SubticksPerTick,
 		)
-	}
-
-	if clobPair.Status == types.ClobPair_STATUS_UNSPECIFIED {
-		return sdkerrors.Wrap(types.ErrInvalidClobPairParameter, "invalid ClobPair parameter: Status must be specified.")
 	}
 
 	if clobPair.MakerFeePpm > types.MaxFeePpm || clobPair.TakerFeePpm > types.MaxFeePpm {
