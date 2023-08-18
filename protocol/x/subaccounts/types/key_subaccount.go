@@ -7,6 +7,9 @@ var _ binary.ByteOrder
 const (
 	// SubaccountKeyPrefix is the prefix to retrieve all Subaccount
 	SubaccountKeyPrefix = "Subaccount/value/"
+	// SubaccountWithDecreasedNetCollateralKeyPrefix is the prefix to retrieve all subaccounts with decreased
+	// net collateral.
+	SubaccountWithDecreasedNetCollateralKeyPrefix = "SubaccountWithDecreasedNetCollateral/value/"
 )
 
 // SubaccountKey returns the store key to retrieve a Subaccount from the index fields

@@ -77,6 +77,9 @@ func EndBlocker(
 		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
 	)
 
+	// Enforce equity tier limits per subaccount by removing orders based upon the users new equity tier.
+	keeper.EnforceEquityTierLimits(ctx)
+
 	// Update the memstore with expired order ids.
 	// These expired stateful order ids will be purged from the memclob in `Commit`.
 	processProposerMatchesEvents.ExpiredStatefulOrderIds = expiredStatefulOrderIds

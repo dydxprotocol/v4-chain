@@ -342,9 +342,10 @@ func New(
 	tkeys := sdk.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
 		clobmoduletypes.TransientStoreKey,
-		statsmoduletypes.TransientStoreKey,
-		rewardsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
+		rewardsmoduletypes.TransientStoreKey,
+		satypes.TransientStoreKey,
+		statsmoduletypes.TransientStoreKey,
 	)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
 
@@ -696,6 +697,7 @@ func New(
 	app.SubaccountsKeeper = *subaccountsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[satypes.StoreKey],
+		tkeys[satypes.TransientStoreKey],
 		app.AssetsKeeper,
 		app.BankKeeper,
 		app.PerpetualsKeeper,

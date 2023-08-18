@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -18,14 +17,11 @@ import (
 // OrderId can be conditional or long term.
 func (k Keeper) GetToBeCommittedStatefulOrderCount(
 	ctx sdk.Context,
-	orderId types.OrderId,
+	subaccountId satypes.SubaccountId,
 ) int32 {
-	// If this is a Short-Term order, panic.
-	orderId.MustBeStatefulOrder()
-
 	store := k.GetToBeCommittedStatefulOrderCountTransientStore(ctx)
 
-	b := store.Get(satypes.SubaccountKey(orderId.SubaccountId))
+	b := store.Get(satypes.SubaccountKey(subaccountId))
 	if b == nil {
 		return 0
 	}
@@ -40,15 +36,12 @@ func (k Keeper) GetToBeCommittedStatefulOrderCount(
 // OrderId can be conditional or long term.
 func (k Keeper) SetToBeCommittedStatefulOrderCount(
 	ctx sdk.Context,
-	orderId types.OrderId,
+	subaccountId satypes.SubaccountId,
 	count int32,
 ) {
-	// If this is a Short-Term order, panic.
-	orderId.MustBeStatefulOrder()
-
 	store := k.GetToBeCommittedStatefulOrderCountTransientStore(ctx)
 	store.Set(
-		satypes.SubaccountKey(orderId.SubaccountId),
+		satypes.SubaccountKey(subaccountId),
 		lib.Int32ToBytes(count),
 	)
 }

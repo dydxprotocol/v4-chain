@@ -62,14 +62,11 @@ func (k Keeper) GetUncommittedStatefulOrderCancellation(
 // OrderId can be conditional or long term.
 func (k Keeper) GetUncommittedStatefulOrderCount(
 	ctx sdk.Context,
-	orderId types.OrderId,
+	subaccountId satypes.SubaccountId,
 ) int32 {
-	// If this is a Short-Term order, panic.
-	orderId.MustBeStatefulOrder()
-
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
 
-	b := store.Get(satypes.SubaccountKey(orderId.SubaccountId))
+	b := store.Get(satypes.SubaccountKey(subaccountId))
 	if b == nil {
 		return 0
 	}
@@ -84,15 +81,12 @@ func (k Keeper) GetUncommittedStatefulOrderCount(
 // OrderId can be conditional or long term.
 func (k Keeper) SetUncommittedStatefulOrderCount(
 	ctx sdk.Context,
-	orderId types.OrderId,
+	subaccountId satypes.SubaccountId,
 	count int32,
 ) {
-	// If this is a Short-Term order, panic.
-	orderId.MustBeStatefulOrder()
-
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
 	store.Set(
-		satypes.SubaccountKey(orderId.SubaccountId),
+		satypes.SubaccountKey(subaccountId),
 		lib.Int32ToBytes(count),
 	)
 }
@@ -124,8 +118,8 @@ func (k Keeper) MustAddUncommittedStatefulOrderPlacement(ctx sdk.Context, msg *t
 
 	k.SetUncommittedStatefulOrderCount(
 		ctx,
-		orderId,
-		k.GetUncommittedStatefulOrderCount(ctx, orderId)+1,
+		orderId.SubaccountId,
+		k.GetUncommittedStatefulOrderCount(ctx, orderId.SubaccountId)+1,
 	)
 }
 
@@ -152,7 +146,7 @@ func (k Keeper) MustAddUncommittedStatefulOrderCancellation(ctx sdk.Context, msg
 
 	k.SetUncommittedStatefulOrderCount(
 		ctx,
-		orderId,
-		k.GetUncommittedStatefulOrderCount(ctx, orderId)-1,
+		orderId.SubaccountId,
+		k.GetUncommittedStatefulOrderCount(ctx, orderId.SubaccountId)-1,
 	)
 }

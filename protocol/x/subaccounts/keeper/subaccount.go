@@ -174,6 +174,9 @@ func (k Keeper) getSettledUpdates(
 // valid state-transition for all subaccounts involved. All `updates` are made atomically, meaning that
 // all state-changes will either succeed or all will fail.
 //
+// Any subaccounts which decreased in net collateral will be marked. They can be fetched via
+// GetAllSubaccountsWithDecreasedNetCollateral.
+//
 // Returns a boolean indicating whether the update was successfully applied or not. If `false`, then no
 // updates to any subaccount were made. A second return value returns an array of `UpdateResult` which map
 // to the `updates` to indicate which of the updates caused a failure, if any.
@@ -193,6 +196,25 @@ func (k Keeper) UpdateSubaccounts(
 		metrics.UpdateSubaccounts,
 		metrics.Latency,
 	)
+
+	// Store which subaccounts have decreased their net collateral by computing before and after any updates
+	// would be applied.
+	for _, update := range updates {
+		netCollateralBefore, _, _, err := k.GetNetCollateralAndMarginRequirements(
+			ctx,
+			types.Update{SubaccountId: update.SubaccountId},
+		)
+		if err != nil {
+			return false, nil, err
+		}
+		netCollateralAfter, _, _, err := k.GetNetCollateralAndMarginRequirements(ctx, update)
+		if err != nil {
+			return false, nil, err
+		}
+		if netCollateralBefore.Cmp(netCollateralAfter) < 0 {
+			k.MarkNetCollateralDecreasedForSubaccount(ctx, update.SubaccountId)
+		}
+	}
 
 	settledUpdates, subaccoundIdToFundingPayments, err := k.getSettledUpdates(ctx, updates, true)
 	if err != nil {

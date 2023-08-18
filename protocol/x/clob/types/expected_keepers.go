@@ -41,6 +41,9 @@ type SubaccountsKeeper interface {
 	) (
 		list []satypes.Subaccount,
 	)
+	GetAllSubaccountsWithDecreasedNetCollateral(
+		ctx sdk.Context,
+	) []satypes.SubaccountId
 	ForEachSubaccount(
 		ctx sdk.Context,
 		callback func(satypes.Subaccount) (finished bool),

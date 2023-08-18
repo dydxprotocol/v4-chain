@@ -18,6 +18,7 @@ type (
 	Keeper struct {
 		cdc                 codec.BinaryCodec
 		storeKey            storetypes.StoreKey
+		transientStoreKey   storetypes.StoreKey
 		assetsKeeper        types.AssetsKeeper
 		bankKeeper          types.BankKeeper
 		perpetualsKeeper    types.PerpetualsKeeper
@@ -28,6 +29,7 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	transientStoreKey storetypes.StoreKey,
 	assetsKeeper types.AssetsKeeper,
 	bankKeeper types.BankKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
@@ -36,6 +38,7 @@ func NewKeeper(
 	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
+		transientStoreKey:   transientStoreKey,
 		assetsKeeper:        assetsKeeper,
 		bankKeeper:          bankKeeper,
 		perpetualsKeeper:    perpetualsKeeper,

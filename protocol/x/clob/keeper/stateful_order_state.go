@@ -62,8 +62,8 @@ func (k Keeper) SetLongTermOrderPlacement(
 		// Increment the `to be committed` stateful order count.
 		k.SetToBeCommittedStatefulOrderCount(
 			ctx,
-			order.OrderId,
-			k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId)+1,
+			order.OrderId.SubaccountId,
+			k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId.SubaccountId)+1,
 		)
 
 		telemetry.IncrCounterWithLabels(
@@ -349,8 +349,8 @@ func (k Keeper) MustRemoveStatefulOrder(
 	// Decrement the `to be committed` stateful order count.
 	k.SetToBeCommittedStatefulOrderCount(
 		ctx,
-		orderId,
-		k.GetToBeCommittedStatefulOrderCount(ctx, orderId)-1,
+		orderId.SubaccountId,
+		k.GetToBeCommittedStatefulOrderCount(ctx, orderId.SubaccountId)-1,
 	)
 }
 

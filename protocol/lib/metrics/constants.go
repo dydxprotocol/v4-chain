@@ -93,6 +93,7 @@ const (
 	Conditional                                  = "conditional"
 	ConditionalOrderTriggered                    = "conditional_order_triggered"
 	ConditionalOrderUntriggered                  = "conditional_order_untriggered"
+	EquityTier                                   = "equity_tier"
 	Expired                                      = "expired"
 	GetFillQuoteQuantums                         = "get_fill_quote_quantums"
 	Hydrate                                      = "hydrate"

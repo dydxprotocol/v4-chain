@@ -82,8 +82,9 @@ func createSubaccountsKeeper(
 	msgSenderEnabled bool,
 ) (*keeper.Keeper, storetypes.StoreKey) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	subaccountTransientStoreKey := sdk.NewTransientStoreKey(types.TransientStoreKey)
+	stateStore.MountStoreWithDB(subaccountTransientStoreKey, storetypes.StoreTypeTransient, db)
 
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(msgSenderEnabled)
@@ -92,6 +93,7 @@ func createSubaccountsKeeper(
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
+		subaccountTransientStoreKey,
 		ak,
 		bk,
 		pk,

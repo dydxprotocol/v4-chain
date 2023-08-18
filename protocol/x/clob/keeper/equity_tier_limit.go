@@ -7,6 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"math/big"
 )
 
 // GetEquityTierLimitConfiguration gets the equity tier limit configuration from state.
@@ -68,44 +69,27 @@ func (k *Keeper) InitializeEquityTierLimit(
 // orders exist outside of the MemClob. For `deliverState` we use the `ProcessProposerMatchesEvents`
 // to find out how many orders (minus removals) exists outside of the `MemClob`.
 func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, order types.Order) error {
-	var equityTierLimits []types.EquityTierLimit
-	var filter func(types.OrderId) bool
-	if order.IsShortTermOrder() {
-		equityTierLimits = k.GetEquityTierLimitConfiguration(ctx).ShortTermOrderEquityTiers
-		filter = func(id types.OrderId) bool {
-			return id.IsShortTermOrder()
-		}
-	} else if order.IsStatefulOrder() {
-		equityTierLimits = k.GetEquityTierLimitConfiguration(ctx).StatefulOrderEquityTiers
-		filter = func(id types.OrderId) bool {
-			return id.IsStatefulOrder()
-		}
-	} else {
+	if !order.IsShortTermOrder() && !order.IsStatefulOrder() {
 		panic(fmt.Sprintf("Unsupported order type for equity tiers. Order: %+v", order))
 	}
-	if len(equityTierLimits) == 0 {
-		return nil
-	}
 
-	subaccountId := order.GetSubaccountId()
+	// Compute the net collateral for the subaccount.
 	netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
-			SubaccountId: subaccountId,
+			SubaccountId: order.GetSubaccountId(),
 		},
 	)
 	if err != nil {
 		return err
 	}
 
-	equityTierLimit := types.EquityTierLimit{}
-	for _, limit := range equityTierLimits {
-		if netCollateral.Cmp(limit.UsdTncRequired.BigInt()) >= 0 {
-			equityTierLimit = limit
-		} else {
-			break
-		}
+	// Get the equity tier limit for the subaccount.
+	equityTierLimit := k.getEquityTierLimitForOrderTypeAndNetCollateral(ctx, order.IsShortTermOrder(), *netCollateral)
+	if equityTierLimit == nil {
+		return nil
 	}
+
 	// Return immediately if the amount the subaccount can open is 0.
 	if equityTierLimit.Limit == 0 {
 		return sdkerrors.Wrapf(
@@ -116,24 +100,11 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 		)
 	}
 
-	// Count all the open orders that are on the `MemClob`.
-	equityTierCount := int32(k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter))
-
-	// Include the number of stateful orders that exist outside of the `MemClob`. During `DeliverTx` we use
-	// the count of to be committed stateful orders while in `CheckTx` we use the count of uncommitted stateful orders.
-	if order.IsStatefulOrder() {
-		if lib.IsDeliverTxMode(ctx) {
-			equityTierCount += k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId)
-		} else {
-			equityTierCount += k.GetUncommittedStatefulOrderCount(ctx, order.OrderId)
-		}
-	}
-
 	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.
 	// Note that once we combine the count of orders on the memclob with how many `uncommitted` or `to be committed`
 	// stateful orders on the memclob we should always have a negative number since we only count order
 	// cancellations/removals for orders that exist.
-	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
+	if k.getNumberOfOpenOrdersForSubaccount(ctx, order.OrderId.SubaccountId, order.IsShortTermOrder()) >= equityTierLimit.Limit {
 		return sdkerrors.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
 			"Opening order would exceed equity tier limit of %d. Order id: %+v",
@@ -142,4 +113,104 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 		)
 	}
 	return nil
+}
+
+// getEquityTierLimitForOrderTypeAndNetCollateral returns the equity tier limit for the specified order type
+// and net collateral. If `nil` is returned then there are no equity tier limits defined and no equity
+// tier limit enforcement should occur for this order type.
+func (k Keeper) getEquityTierLimitForOrderTypeAndNetCollateral(ctx sdk.Context, shortTermOrder bool, netCollateral big.Int) *types.EquityTierLimit {
+	var equityTierLimits []types.EquityTierLimit
+	if shortTermOrder {
+		equityTierLimits = k.GetEquityTierLimitConfiguration(ctx).ShortTermOrderEquityTiers
+	} else {
+		equityTierLimits = k.GetEquityTierLimitConfiguration(ctx).StatefulOrderEquityTiers
+	}
+	// If there are no equity tier limits defined then we return nil representing that the equity tier limit
+	// should not be enforced.
+	if len(equityTierLimits) == 0 {
+		return nil
+	}
+
+	for _, limit := range equityTierLimits {
+		if netCollateral.Cmp(limit.UsdTncRequired.BigInt()) >= 0 {
+			return &limit
+		}
+	}
+
+	// If equity tier limits are defined and we couldn't find one then return a default with a limit of 0.
+	return &types.EquityTierLimit{}
+}
+
+// getNumberOfOpenOrdersForSubaccount returns the number of open orders for the provided subaccount.
+func (k Keeper) getNumberOfOpenOrdersForSubaccount(ctx sdk.Context, subaccountId satypes.SubaccountId, shortTermOrder bool) uint32 {
+	var filter func(types.OrderId) bool
+	if shortTermOrder {
+		filter = func(id types.OrderId) bool {
+			return id.IsShortTermOrder()
+		}
+	} else {
+		filter = func(id types.OrderId) bool {
+			return id.IsStatefulOrder()
+		}
+	}
+
+	// Count all the open orders that are on the `MemClob`.
+	count := int32(k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter))
+
+	// Include the number of stateful orders that exist outside of the `MemClob`. During `DeliverTx` we use
+	// the count of to be committed stateful orders while in `CheckTx` we use the count of uncommitted stateful orders.
+	if !shortTermOrder {
+		if lib.IsDeliverTxMode(ctx) {
+			count += k.GetToBeCommittedStatefulOrderCount(ctx, subaccountId)
+		} else {
+			count += k.GetUncommittedStatefulOrderCount(ctx, subaccountId)
+		}
+	}
+	return lib.MustConvertIntegerToUint32(count)
+}
+
+// EnforceEquityTierLimits removes orders for each subaccount which had their net collateral decrease during
+// block processing.
+func (k Keeper) EnforceEquityTierLimits(ctx sdk.Context) {
+	subaccountIds := k.subaccountsKeeper.GetAllSubaccountsWithDecreasedNetCollateral(ctx)
+
+	for _, subaccountId := range subaccountIds {
+		netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+			ctx,
+			satypes.Update{
+				SubaccountId: subaccountId,
+			},
+		)
+		if err != nil {
+			continue
+		}
+
+		// Handle closing short term orders if necessary.
+		{
+			equityTierLimit := k.getEquityTierLimitForOrderTypeAndNetCollateral(ctx, true, *netCollateral)
+			if equityTierLimit == nil {
+				continue
+			}
+
+			numOpenOrders := k.getNumberOfOpenOrdersForSubaccount(ctx, subaccountId, true)
+			numOrdersToClose := int(numOpenOrders) - int(equityTierLimit.Limit)
+			if numOrdersToClose > 0 {
+				// TODO: Close short term orders
+			}
+		}
+
+		// Handle closing stateful orders if necessary.
+		{
+			equityTierLimit := k.getEquityTierLimitForOrderTypeAndNetCollateral(ctx, true, *netCollateral)
+			if equityTierLimit == nil {
+				continue
+			}
+
+			numOpenOrders := k.getNumberOfOpenOrdersForSubaccount(ctx, subaccountId, true)
+			numOrdersToClose := int(numOpenOrders) - int(equityTierLimit.Limit)
+			if numOrdersToClose > 0 {
+				// TODO: Close stateful orders
+			}
+		}
+	}
 }

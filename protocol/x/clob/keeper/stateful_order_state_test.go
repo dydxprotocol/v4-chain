@@ -191,7 +191,7 @@ func TestMustTriggerConditionalOrder(t *testing.T) {
 		longTermOrderPlacement.PlacementIndex.BlockHeight,
 	)
 	require.Equal(t,
-		ks.ClobKeeper.GetToBeCommittedStatefulOrderCount(ks.Ctx, conditionalOrder.OrderId),
+		ks.ClobKeeper.GetToBeCommittedStatefulOrderCount(ks.Ctx, conditionalOrder.OrderId.SubaccountId),
 		int32(1),
 	)
 
@@ -577,7 +577,7 @@ func TestGetSetDeleteLongTermOrderState_Replacements(t *testing.T) {
 		t,
 		ks.ClobKeeper.GetToBeCommittedStatefulOrderCount(
 			ks.Ctx,
-			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.SubaccountId,
 		),
 		int32(1),
 	)
