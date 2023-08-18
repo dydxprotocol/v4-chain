@@ -937,18 +937,18 @@ function edit_genesis() {
 
 	# Market: USDT-USD
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
-	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].pair' -v 'USDT-USD'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].id' -v '34'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_exchanges' -v '3'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_price_change_ppm' -v '250'  # 0.025%
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.last().pair' -v 'USDT-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().id' -v '34'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().exponent' -v '-9'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().min_price_change_ppm' -v '250'  # 0.025%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].id' -v '34'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].price' -v '1000000000'          # $1 = 1 USDT.
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().id' -v '34'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().exponent' -v '-9'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().price' -v '1000000000'          # $1 = 1 USDT.
 	# USDT Exchange Config
 	usdt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/usdt_exchange_config.json" | jq -c '.')
-	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$usdt_exchange_config_json"
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.last().exchange_config_json' -v "$usdt_exchange_config_json"
 
 	total_accounts_quote_balance=0
 	acct_idx=0
