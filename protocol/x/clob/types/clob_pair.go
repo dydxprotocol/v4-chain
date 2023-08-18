@@ -6,6 +6,35 @@ import (
 
 const MaxFeePpm = 100000 // 10%
 
+// SupportedClobPairStatusTransitions has keys corresponding to currently-supported
+// ClobPair_Status types with values equal to the set of ClobPair_Status types that
+// may be transitioned to from this state. Note the keys of this map may be
+// a subset of the types defined in the proto for ClobPair_Status.
+var SupportedClobPairStatusTransitions = map[ClobPair_Status]map[ClobPair_Status]struct{}{
+	ClobPair_STATUS_ACTIVE: {},
+	ClobPair_STATUS_POST_ONLY: {
+		ClobPair_STATUS_ACTIVE: struct{}{},
+	},
+}
+
+// IsSupportedClobPairStatus returns true if the provided ClobPair_Status is in the list
+// of currently supported ClobPair_Status types. Else, returns false.
+func IsSupportedClobPairStatus(clobPairStatus ClobPair_Status) bool {
+	if _, exists := SupportedClobPairStatusTransitions[clobPairStatus]; exists {
+		return true
+	}
+	return false
+}
+
+// IsSupportedClobPairStatusTransition returns true if it is considered valid to transition from
+// the first provided ClobPair_Status to the second provided ClobPair_Status. Else, returns false.
+func IsSupportedClobPairStatusTransition(from ClobPair_Status, to ClobPair_Status) bool {
+	if _, exists := SupportedClobPairStatusTransitions[from][to]; exists {
+		return true
+	}
+	return false
+}
+
 func (c *ClobPair) GetClobPairSubticksPerTick() SubticksPerTick {
 	return SubticksPerTick(c.SubticksPerTick)
 }

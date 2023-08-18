@@ -50,3 +50,36 @@ func TestGetPerpetualId(t *testing.T) {
 	require.Equal(t, uint32(0), perpetualId)
 	require.ErrorIs(t, types.ErrAssetOrdersNotImplemented, err)
 }
+
+func TestIsSupportedClobPairStatus(t *testing.T) {
+	// out of bounds of the clob pair status enum
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_Status(100)))
+
+	// each value in the clob pair status enum
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_UNSPECIFIED))
+	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_ACTIVE))
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_PAUSED))
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_CANCEL_ONLY))
+	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_POST_ONLY))
+}
+
+func TestIsSupportedClobPairStatusTransition(t *testing.T) {
+	// out of bounds of the clob pair status enum
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_Status(100), types.ClobPair_Status(100)))
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_ACTIVE, types.ClobPair_Status(100)))
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_Status(100), types.ClobPair_STATUS_ACTIVE))
+
+	// each supported value in the clob pair status enum
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_ACTIVE, types.ClobPair_STATUS_UNSPECIFIED))
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_ACTIVE, types.ClobPair_STATUS_ACTIVE))
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_ACTIVE, types.ClobPair_STATUS_PAUSED))
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_ACTIVE, types.ClobPair_STATUS_CANCEL_ONLY))
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_ACTIVE, types.ClobPair_STATUS_POST_ONLY))
+
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_POST_ONLY, types.ClobPair_STATUS_UNSPECIFIED))
+	// only supported transition
+	require.True(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_POST_ONLY, types.ClobPair_STATUS_ACTIVE))
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_POST_ONLY, types.ClobPair_STATUS_PAUSED))
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_POST_ONLY, types.ClobPair_STATUS_CANCEL_ONLY))
+	require.False(t, types.IsSupportedClobPairStatusTransition(types.ClobPair_STATUS_POST_ONLY, types.ClobPair_STATUS_POST_ONLY))
+}
