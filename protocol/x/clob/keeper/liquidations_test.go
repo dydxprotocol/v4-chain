@@ -4212,8 +4212,7 @@ func TestGetPerpetualPositionToLiquidate_PanicsClobPairNotInState(t *testing.T) 
 	}
 	ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 
-	// Create the orderbook in the memclob.
-	memClob.CreateOrderbook(ks.Ctx, constants.ClobPair_Btc)
+	ks.ClobKeeper.PerpetualIdToClobPairId[0] = []types.ClobPairId{0}
 
 	require.PanicsWithError(
 		t,
