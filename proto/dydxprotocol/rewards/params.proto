@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.rewards;
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types";
+option go_package = "github.com/dydxprotocol/v4/x/rewards/types";
 
 // Params defines the parameters for x/rewards module.
 message Params {

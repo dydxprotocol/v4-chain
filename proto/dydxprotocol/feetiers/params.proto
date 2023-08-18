@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.feetiers;
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types";
+option go_package = "github.com/dydxprotocol/v4/x/feetiers/types";
 
 // PerpetualFeeParams defines the parameters for perpetual fees.
 message PerpetualFeeParams {
@@ -14,7 +14,7 @@ message PerpetualFeeTier {
   // Human-readable name of the tier, e.g. "Gold".
   string name = 1;
 
-  // The trader's absolute volume requirement in quote quantums.
+  // The trader's absolute volume requirement.
   uint64 absolute_volume_requirement = 2;
 
   // The total volume share requirement.

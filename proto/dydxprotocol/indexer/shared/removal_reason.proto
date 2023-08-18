@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.indexer.shared;
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/shared";
+option go_package = "github.com/dydxprotocol/v4/indexer/shared";
 
 // TODO(DEC-869): Update reasons/statuses for Advanced Orders.
 
@@ -45,10 +45,4 @@ enum OrderRemovalReason {
   ORDER_REMOVAL_REASON_INDEXER_EXPIRED = 10;
   // The order has been replaced.
   ORDER_REMOVAL_REASON_REPLACED = 11;
-  // The order has been fully-filled. Only sent by the Indexer for stateful
-  // orders.
-  ORDER_REMOVAL_REASON_FULLY_FILLED = 12;
-  // The order has been removed since the subaccount does not satisfy the
-  // equity tier requirements.
-  ORDER_REMOVAL_REASON_EQUITY_TIER = 13;
 }

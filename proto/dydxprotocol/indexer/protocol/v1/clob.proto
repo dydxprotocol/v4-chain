@@ -4,7 +4,7 @@ package dydxprotocol.indexer.protocol.v1;
 import "dydxprotocol/indexer/protocol/v1/subaccount.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1";
+option go_package = "github.com/dydxprotocol/v4/indexer/protocol/v1";
 
 // Initial copy of protos from V4 application state protos for the clob module
 // for use to send Indexer specific messages. Do not make any breaking changes

@@ -4,7 +4,7 @@ package dydxprotocol.clob;
 import "gogoproto/gogo.proto";
 import "dydxprotocol/clob/order.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
+option go_package = "github.com/dydxprotocol/v4/x/clob/types";
 
 // OrderRemoval is a request type used for forced removal of stateful orders.
 message OrderRemoval {

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.prices;
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/prices/types";
+option go_package = "github.com/dydxprotocol/v4/x/prices/types";
 
 // Msg defines the Msg service.
 service Msg {

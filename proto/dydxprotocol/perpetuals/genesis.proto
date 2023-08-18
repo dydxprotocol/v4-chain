@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "dydxprotocol/perpetuals/perpetual.proto";
 import "dydxprotocol/perpetuals/params.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types";
+option go_package = "github.com/dydxprotocol/v4/x/perpetuals/types";
 
 // GenesisState defines the perpetuals module's genesis state.
 message GenesisState {

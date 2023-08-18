@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "dydxprotocol/stats/params.proto";
 import "dydxprotocol/stats/stats.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/stats/types";
+option go_package = "github.com/dydxprotocol/v4/x/stats/types";
 
 // Query defines the gRPC querier service.
 service Query {

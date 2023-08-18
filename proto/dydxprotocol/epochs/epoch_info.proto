@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.epochs;
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types";
+option go_package = "github.com/dydxprotocol/v4/x/epochs/types";
 
 // EpochInfo stores metadata of an epoch timer.
 message EpochInfo {

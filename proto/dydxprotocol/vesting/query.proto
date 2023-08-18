@@ -1,0 +1,22 @@
+syntax = "proto3";
+package dydxprotocol.vesting;
+
+import "google/api/annotations.proto";
+import "dydxprotocol/vesting/vesting_entry.proto";
+
+option go_package = "github.com/dydxprotocol/v4/x/vesting/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Queries the VestingEntry.
+  rpc VestingEntry(QueryVestingEntryRequest)
+      returns (QueryVestingEntryResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/vesting/vesting_entry";
+  }
+}
+
+// QueryVestingEntryRequest is a request type for the VestingEntry RPC method.
+message QueryVestingEntryRequest { string vester_account = 1; }
+
+// QueryVestingEntryResponse is a response type for the VestingEntry RPC method.
+message QueryVestingEntryResponse { VestingEntry entry = 1; }

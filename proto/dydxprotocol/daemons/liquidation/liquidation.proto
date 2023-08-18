@@ -4,7 +4,7 @@ package dydxprotocol.daemons.liquidation;
 import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api";
+option go_package = "github.com/dydxprotocol/v4/daemons/liquidation/api";
 
 // LiquidationService defines the gRPC service used by liquidation daemon.
 service LiquidationService {

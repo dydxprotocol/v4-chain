@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "dydxprotocol/bridge/bridge_event_info.proto";
 import "dydxprotocol/bridge/params.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types";
+option go_package = "github.com/dydxprotocol/v4/x/bridge/types";
 
 // Query defines the gRPC querier service.
 service Query {

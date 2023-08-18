@@ -7,14 +7,14 @@ import "dydxprotocol/bridge/bridge_event.proto";
 import "dydxprotocol/bridge/params.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types";
+option go_package = "github.com/dydxprotocol/v4/x/bridge/types";
 
 // Msg defines the Msg service.
 service Msg {
-  // AcknowledgeBridges acknowledges bridges and sets them to complete at a
-  // later block.
-  rpc AcknowledgeBridges(MsgAcknowledgeBridges)
-      returns (MsgAcknowledgeBridgesResponse);
+  // AcknowledgeBridge acknowledges a bridge and sets it to complete at a later
+  // block.
+  rpc AcknowledgeBridge(MsgAcknowledgeBridge)
+      returns (MsgAcknowledgeBridgeResponse);
 
   // CompleteBridge finalizes a bridge by minting coins to an address.
   rpc CompleteBridge(MsgCompleteBridge) returns (MsgCompleteBridgeResponse);
@@ -32,15 +32,15 @@ service Msg {
       returns (MsgUpdateSafetyParamsResponse);
 }
 
-// MsgAcknowledgeBridges is the Msg/AcknowledgeBridges request type.
-message MsgAcknowledgeBridges {
-  // The events to acknowledge.
-  repeated BridgeEvent events = 1 [ (gogoproto.nullable) = false ];
+// MsgAcknowledgeBridge is the Msg/AcknowledgeBridge request type.
+message MsgAcknowledgeBridge {
+  // The event to acknowledge.
+  BridgeEvent event = 1 [ (gogoproto.nullable) = false ];
 }
 
-// MsgAcknowledgeBridgesResponse is the Msg/AcknowledgeBridgesResponse response
+// MsgAcknowledgeBridgeResponse is the Msg/AcknowledgeBridgeResponse response
 // type.
-message MsgAcknowledgeBridgesResponse {}
+message MsgAcknowledgeBridgeResponse {}
 
 // MsgCompleteBridge is the Msg/CompleteBridgeResponse request type.
 message MsgCompleteBridge {

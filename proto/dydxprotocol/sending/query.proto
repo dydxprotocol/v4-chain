@@ -3,7 +3,7 @@ package dydxprotocol.sending;
 
 // this line is used by starport scaffolding # 1
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/sending/types";
+option go_package = "github.com/dydxprotocol/v4/x/sending/types";
 
 // Query defines the gRPC querier service.
 service Query {

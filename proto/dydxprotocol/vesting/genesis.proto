@@ -1,0 +1,13 @@
+syntax = "proto3";
+package dydxprotocol.vesting;
+
+import "gogoproto/gogo.proto";
+import "dydxprotocol/vesting/vesting_entry.proto";
+
+option go_package = "github.com/dydxprotocol/v4/x/vesting/types";
+
+// GenesisState defines the vesting module's genesis state.
+message GenesisState {
+  // The vesting entries at genesis.
+  repeated VestingEntry vesting_entries = 1 [ (gogoproto.nullable) = false ];
+}
