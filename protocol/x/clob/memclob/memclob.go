@@ -1285,7 +1285,8 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 // - `Order.Side` is a valid side.
 // - The order is a valid order for the referenced `ClobPair` (where `Order.ClobPairId == ClobPair.Id`). Specifically:
 //   - `Order.Subticks` is a multiple of `ClobPair.SubticksPerTick`.
-//   - `Order.Quantums` is a multiple of `ClobPair.MinOrderBaseQuantums`.
+//   - `Order.Quantums` is greater than orderbook's MinOrderBaseQuantums (equal to `ClobPair.StepBaseQuantums`)
+//   - `Order.Quantums` is a multiple of `ClobPair.StepBaseQuantums`.
 func (m *MemClobPriceTimePriority) validateNewOrder(
 	ctx sdk.Context,
 	order types.Order,

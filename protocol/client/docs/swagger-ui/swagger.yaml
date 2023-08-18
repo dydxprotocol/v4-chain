@@ -54,7 +54,7 @@ paths:
                       format: uint64
                       description: >-
                         Minimum increment in the size of orders on the CLOB, in
-                        base quantums.
+                        base quantums. This also defines the minimum size of an order.
                     subticks_per_tick:
                       type: integer
                       format: int64
@@ -77,10 +77,6 @@ paths:
                         per BaseQuantum
 
                         per Subtick.
-                    min_order_base_quantums:
-                      type: string
-                      format: uint64
-                      description: Minimum size of an order on the CLOB, in base quantums.
                     status:
                       type: string
                       enum:
@@ -273,7 +269,7 @@ paths:
                     format: uint64
                     description: >-
                       Minimum increment in the size of orders on the CLOB, in
-                      base quantums.
+                      base quantums. This also defines the minimum size of an order.
                   subticks_per_tick:
                     type: integer
                     format: int64
@@ -296,10 +292,6 @@ paths:
                       BaseQuantum
 
                       per Subtick.
-                  min_order_base_quantums:
-                    type: string
-                    format: uint64
-                    description: Minimum size of an order on the CLOB, in base quantums.
                   status:
                     type: string
                     enum:
@@ -39814,7 +39806,9 @@ definitions:
       step_base_quantums:
         type: string
         format: uint64
-        description: Minimum increment in the size of orders on the CLOB, in base quantums.
+        description: |-
+          Minimum increment in the size of orders on the CLOB, in base quantums.
+          This also defines the minimum size of an order.
       subticks_per_tick:
         type: integer
         format: int64
@@ -39829,10 +39823,6 @@ definitions:
         description: |-
           `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
           per Subtick.
-      min_order_base_quantums:
-        type: string
-        format: uint64
-        description: Minimum size of an order on the CLOB, in base quantums.
       status:
         type: string
         enum:
@@ -40747,7 +40737,7 @@ definitions:
               format: uint64
               description: >-
                 Minimum increment in the size of orders on the CLOB, in base
-                quantums.
+                quantums. This also defines the minimum size of an order.
             subticks_per_tick:
               type: integer
               format: int64
@@ -40770,10 +40760,6 @@ definitions:
                 BaseQuantum
 
                 per Subtick.
-            min_order_base_quantums:
-              type: string
-              format: uint64
-              description: Minimum size of an order on the CLOB, in base quantums.
             status:
               type: string
               enum:
@@ -40874,7 +40860,7 @@ definitions:
             format: uint64
             description: >-
               Minimum increment in the size of orders on the CLOB, in base
-              quantums.
+              quantums. This also defines the minimum size of an order.
           subticks_per_tick:
             type: integer
             format: int64
@@ -40897,10 +40883,6 @@ definitions:
               BaseQuantum
 
               per Subtick.
-          min_order_base_quantums:
-            type: string
-            format: uint64
-            description: Minimum size of an order on the CLOB, in base quantums.
           status:
             type: string
             enum:

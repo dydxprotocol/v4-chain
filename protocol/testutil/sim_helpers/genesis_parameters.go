@@ -41,10 +41,6 @@ var (
 		Valid:      math.MaxUint32,
 	}
 
-	MinOrderBaseQuantums = GenesisParameters[int]{
-		Reasonable: 10,
-		Valid:      1,
-	}
 	MaxOrderBaseQuantums = GenesisParameters[int]{
 		Reasonable: 10_000_000,
 		Valid:      math.MaxUint32,
