@@ -35,11 +35,11 @@ type testMemClobMethodArgs struct {
 }
 
 type testCase map[string]struct {
-	setUpMockMemClob func(mck *mocks.MemClob, args testMemClobMethodArgs)
-	args             testMemClobMethodArgs
-	perpetualId uint32
+	setUpMockMemClob        func(mck *mocks.MemClob, args testMemClobMethodArgs)
+	args                    testMemClobMethodArgs
+	perpetualId             uint32
 	perpetualIdToClobPairId map[uint32][]types.ClobPairId
-	expectedErr      error
+	expectedErr             error
 }
 
 func TestGetPricePremiumForPerpetual(t *testing.T) {
@@ -47,7 +47,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 		"Success": {
 			perpetualId: 0,
 			args: testMemClobMethodArgs{
-				clobPair:    constants.ClobPair_Btc,
+				clobPair: constants.ClobPair_Btc,
 				marketPrice: pricestypes.MarketPrice{
 					Price:    1_000_000_000, // $10_000
 					Exponent: -5,
@@ -76,20 +76,20 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			},
 		},
 		"Failure: GetClobPairIdForPerpetual error": {
-			perpetualId:                1,
+			perpetualId: 1,
 			args: testMemClobMethodArgs{
-				clobPair:                   constants.ClobPair_Btc,
+				clobPair: constants.ClobPair_Btc,
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {},
 			expectedErr: errors.New(
 				"Perpetual ID 1 has no associated CLOB pairs: " +
-				"The provided perpetual ID does not have any associated CLOB pairs",
+					"The provided perpetual ID does not have any associated CLOB pairs",
 			),
 		},
 		"Failure: GetPricePremium failure": {
 			perpetualId: 0,
 			args: testMemClobMethodArgs{
-				clobPair:    constants.ClobPair_Btc,
+				clobPair: constants.ClobPair_Btc,
 				marketPrice: pricestypes.MarketPrice{
 					Price:    1_000_000_000, // $10_000
 					Exponent: -5,
@@ -122,7 +122,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 		"Failure, clob pair not found": {
 			perpetualId: 0,
 			args: testMemClobMethodArgs{
-				clobPair:    constants.ClobPair_Btc, // clobPairId = 1000
+				clobPair: constants.ClobPair_Btc, // clobPairId = 1000
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {},
 			// clob pair is created with id 0, but we override in-memory datastructure with 1 to cause error
