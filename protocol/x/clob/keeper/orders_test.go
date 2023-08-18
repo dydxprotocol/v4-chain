@@ -1125,20 +1125,6 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			},
 			expectedErr: "must be a multiple of the ClobPair's SubticksPerTick",
 		},
-		"Fails if Quantums < StepBaseQuantums": {
-			order: types.Order{
-				OrderId: types.OrderId{
-					ClientId:     0,
-					SubaccountId: constants.Alice_Num0,
-					ClobPairId:   uint32(0),
-				},
-				Side:         types.Order_SIDE_BUY,
-				Quantums:     11,
-				Subticks:     78,
-				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
-			},
-			expectedErr: "must be greater than or equal to the ClobPair's StepBaseQuantums",
-		},
 		"Fails if Quantums is not a multiple of StepBaseQuantums": {
 			order: types.Order{
 				OrderId: types.OrderId{

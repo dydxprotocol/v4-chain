@@ -639,15 +639,6 @@ func (k Keeper) PerformStatefulOrderValidation(
 		)
 	}
 
-	if order.Quantums < clobPair.StepBaseQuantums {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidPlaceOrder,
-			"Order Quantums %v must be greater than or equal to the ClobPair's StepBaseQuantums %v",
-			order.Quantums,
-			clobPair.StepBaseQuantums,
-		)
-	}
-
 	if order.Quantums%clobPair.StepBaseQuantums != 0 {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPlaceOrder,
