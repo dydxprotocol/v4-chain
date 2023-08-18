@@ -2,8 +2,6 @@ package assets
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
@@ -26,23 +24,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		if err != nil {
 			panic(err)
 		}
-		id, err := k.GetIdByDenom(ctx, asset.Denom)
-		if err != nil {
-			panic(err)
-		}
-		k.GetIndexerEventManager().AddTxnEvent(
-			ctx,
-			indexerevents.SubtypeAsset,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewAssetCreateEvent(
-					id,
-					asset.Symbol,
-					asset.HasMarket,
-					asset.MarketId,
-					asset.AtomicResolution,
-				),
-			),
-		)
 	}
 }
 

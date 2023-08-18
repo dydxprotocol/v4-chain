@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"math/big"
 	"testing"
 
@@ -549,6 +550,18 @@ func TestConvertAssetToCoin_Success(t *testing.T) {
 			// Check if the converted quantums and denom amount are as expected
 			require.Equal(t, tc.expectedConvertedQuantums, convertedQuantums)
 			require.Equal(t, tc.expectedCoin, coin)
+
+			assetEvents := keepertest.GetAssetCreateEventsFromIndexerBlock(ctx, keeper)
+			require.Len(t, assetEvents, 1)
+
+			expectedEvent := indexerevents.NewAssetCreateEvent(
+				asset.Id,
+				testSymbol,
+				false,
+				0,
+				tc.atomicResolution,
+			)
+			require.Contains(t, assetEvents, expectedEvent)
 		})
 	}
 }

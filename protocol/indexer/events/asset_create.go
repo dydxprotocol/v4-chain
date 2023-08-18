@@ -7,7 +7,6 @@ func NewAssetCreateEvent(
 	hasMarket bool,
 	marketId uint32,
 	atomicResolution int32,
-
 ) *AssetCreateEventV1 {
 	return &AssetCreateEventV1{
 		Id:               id,

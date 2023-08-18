@@ -131,7 +131,7 @@ describe('transferHandler', () => {
         defaultTransferEvent,
       );
 
-      expect(handler.getParallelizationIds()).toEqual([]);
+      expect(handler.getParallelizationIds()).toEqual(['AssetCreateEvent_0']);
     });
   });
 

@@ -16,6 +16,7 @@ import {
   marketRefresher,
   BlockTable,
   TendermintEventTable,
+  assetRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
@@ -94,7 +95,7 @@ describe('assetHandler', () => {
         defaultAssetCreateEvent,
       );
 
-      expect(handler.getParallelizationIds()).toEqual([]);
+      expect(handler.getParallelizationIds()).toEqual(['AssetCreateEvent_0']);
     });
   });
 
@@ -140,6 +141,8 @@ describe('assetHandler', () => {
     expect(newAssets.length).toEqual(1);
     expectAssetMatchesEvent(assetEvent, newAssets[0]);
     expectTimingStats();
+    const asset: AssetFromDatabase = assetRefresher.getAssetFromId('0');
+    expect(asset).toBeDefined();
   });
 });
 
