@@ -665,6 +665,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			} {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -676,6 +677,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
@@ -688,6 +690,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Eth).Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				constants.ClobPair_Eth.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
 				satypes.BaseQuantums(constants.ClobPair_Eth.StepBaseQuantums),
 				constants.ClobPair_Eth.QuantumConversionExponent,
@@ -1303,6 +1306,7 @@ func TestPrepareCheckState(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -1321,6 +1325,7 @@ func TestPrepareCheckState(t *testing.T) {
 			for _, clobPair := range tc.clobs {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
+					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,

@@ -22,6 +22,7 @@ type ClobKeeper interface {
 	CancelStatefulOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CreatePerpetualClobPair(
 		ctx sdk.Context,
+		clobPairId uint32,
 		perpetualId uint32,
 		stepSizeInBaseQuantums satypes.BaseQuantums,
 		quantumConversionExponent int32,

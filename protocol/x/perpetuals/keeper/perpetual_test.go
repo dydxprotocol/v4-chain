@@ -59,6 +59,7 @@ func createNPerpetuals(
 
 		perpetual, err := keeper.CreatePerpetual(
 			ctx,
+			uint32(i),                        // PerpetualId
 			fmt.Sprintf("%v", i),             // Ticker
 			uint32(i),                        // MarketId
 			int32(i),                         // AtomicResolution
@@ -223,6 +224,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			_, err := keeper.CreatePerpetual(
 				ctx,
+				tc.id,
 				tc.ticker,
 				tc.marketId,
 				tc.atomicResolution,
@@ -617,6 +619,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
 				ctx,
+				uint32(0),                       // PerpetualId
 				"getMarginRequirementsTicker",   // Ticker
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
@@ -824,6 +827,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
 				ctx,
+				uint32(0),                       // PerpetualId
 				"GetNetNotionalTicker",          // Ticker
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
@@ -989,6 +993,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
 				ctx,
+				uint32(0),                       // PerpetualId
 				"GetNetNotionalTicker",          // Ticker
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
@@ -1155,6 +1160,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
 				ctx,
+				uint32(0),                       // PerpetualId
 				"GetNetCollateralTicker",        // Ticker
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
@@ -1871,6 +1877,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			for i, p := range tc.testPerpetuals {
 				perp, err := perpsKeeper.CreatePerpetual(
 					ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,

@@ -23,23 +23,23 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CreatePerpetual creates a new perpetual in the store.
+// CreatePerpetual creates a new perpetual in the store. It will store the perpetual keyed
+// on the PerpetualId passed in. It will overwrite any perpetual already existing.
 // Returns an error if any of the perpetual fields fail validation,
 // or if the `marketId` does not exist.
 func (k Keeper) CreatePerpetual(
 	ctx sdk.Context,
+	perpetualId uint32,
 	ticker string,
 	marketId uint32,
 	atomicResolution int32,
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 ) (types.Perpetual, error) {
-	// Get the `nextId`.
-	nextId := k.GetNumPerpetuals(ctx)
 
 	// Create the perpetual.
 	perpetual := types.Perpetual{
-		Id:                nextId,
+		Id:                perpetualId,
 		Ticker:            ticker,
 		MarketId:          marketId,
 		AtomicResolution:  atomicResolution,
@@ -58,9 +58,6 @@ func (k Keeper) CreatePerpetual(
 
 	// Store the new perpetual.
 	k.setPerpetual(ctx, perpetual)
-
-	// Store the new `numPerpetuals`.
-	k.setNumPerpetuals(ctx, nextId+1)
 
 	k.SetEmptyPremiumSamples(ctx)
 	k.SetEmptyPremiumVotes(ctx)

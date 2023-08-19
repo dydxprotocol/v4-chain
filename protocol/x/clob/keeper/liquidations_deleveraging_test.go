@@ -499,6 +499,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			} {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -886,6 +887,7 @@ func TestProcessDeleveraging(t *testing.T) {
 			} {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,

@@ -135,6 +135,7 @@ func TestAreSubaccountsLiquidatable(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,

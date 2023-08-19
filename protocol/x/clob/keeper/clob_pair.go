@@ -10,6 +10,8 @@ import (
 )
 
 // CreatePerpetualClobPair creates a new perpetual CLOB pair in the store.
+// It stores the perpetual clob pair based off of the clob pair id, and will overwrite
+// any previous clobPairs stored with the same Id.
 // Additionally, it creates an order book matching the ID of the newly created CLOB pair.
 //
 // An error will occur if any of the fields fail validation (see validateClobPair for details),
@@ -19,6 +21,7 @@ import (
 // Returns the newly created CLOB pair and an error if one occurs.
 func (k Keeper) CreatePerpetualClobPair(
 	ctx sdk.Context,
+	clobPairId uint32,
 	perpetualId uint32,
 	stepSizeBaseQuantums satypes.BaseQuantums,
 	quantumConversionExponent int32,
@@ -27,7 +30,6 @@ func (k Keeper) CreatePerpetualClobPair(
 	makerFeePpm uint32,
 	takerFeePpm uint32,
 ) (types.ClobPair, error) {
-	nextId := k.GetNumClobPairs(ctx)
 
 	clobPair := types.ClobPair{
 		Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -35,7 +37,7 @@ func (k Keeper) CreatePerpetualClobPair(
 				PerpetualId: perpetualId,
 			},
 		},
-		Id:                        nextId,
+		Id:                        clobPairId,
 		StepBaseQuantums:          stepSizeBaseQuantums.ToUint64(),
 		QuantumConversionExponent: quantumConversionExponent,
 		SubticksPerTick:           subticksPerTick,
@@ -48,7 +50,6 @@ func (k Keeper) CreatePerpetualClobPair(
 	}
 
 	k.setClobPair(ctx, clobPair)
-	k.setNumClobPairs(ctx, nextId+1)
 
 	return clobPair, nil
 }

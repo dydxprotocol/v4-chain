@@ -188,6 +188,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
+				tc.args.clobPair.Id,
 				clobtest.MustPerpetualId(tc.args.clobPair),
 				satypes.BaseQuantums(tc.args.clobPair.StepBaseQuantums),
 				tc.args.clobPair.QuantumConversionExponent,

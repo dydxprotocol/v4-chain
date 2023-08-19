@@ -42,6 +42,7 @@ func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Clob
 
 		_, err := keeper.CreatePerpetualClobPair(
 			ctx,
+			items[i].Id,
 			clobtest.MustPerpetualId(items[i]),
 			satypes.BaseQuantums(items[i].StepBaseQuantums),
 			items[i].QuantumConversionExponent,
@@ -118,6 +119,7 @@ func TestCreateClobPair(t *testing.T) {
 			// Perform the method under test.
 			createdClobPair, actualErr := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
+				tc.clobPair.Id,
 				clobtest.MustPerpetualId(tc.clobPair),
 				satypes.BaseQuantums(tc.clobPair.StepBaseQuantums),
 				tc.clobPair.QuantumConversionExponent,
@@ -244,6 +246,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 			for _, make := range tc.clobPairs {
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
+					make.clobPair.Id,
 					clobtest.MustPerpetualId(make.clobPair),
 					satypes.BaseQuantums(make.clobPair.StepBaseQuantums),
 					make.clobPair.QuantumConversionExponent,

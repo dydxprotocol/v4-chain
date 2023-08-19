@@ -619,6 +619,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -637,6 +638,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			for _, clobPair := range tc.clobs {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
+					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
@@ -873,6 +875,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -891,6 +894,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			for _, clobPair := range tc.clobs {
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
+					clobPair.Id,
 					clobPair.GetPerpetualClobMetadata().PerpetualId,
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
@@ -994,6 +998,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
 	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ctx,
+		constants.ClobPair_Btc.Id,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
 		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 		constants.ClobPair_Btc.QuantumConversionExponent,
@@ -1027,6 +1032,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	memClob.On("CreateOrderbook", ks.Ctx, constants.ClobPair_Btc).Return()
 	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ks.Ctx,
+		constants.ClobPair_Btc.Id,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
 		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 		constants.ClobPair_Btc.QuantumConversionExponent,
@@ -1547,6 +1553,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 			for _, cp := range clobPairs {
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
+					cp.Id,
 					clobtest.MustPerpetualId(cp),
 					satypes.BaseQuantums(cp.StepBaseQuantums),
 					cp.QuantumConversionExponent,
@@ -1742,6 +1749,7 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
+				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
@@ -1853,6 +1861,7 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
+				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
@@ -2006,6 +2015,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
@@ -2133,6 +2143,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,

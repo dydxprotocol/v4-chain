@@ -2011,6 +2011,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			for i, p := range tc.perpetuals {
 				perp, err := perpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -2572,6 +2573,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := perpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
@@ -2995,6 +2997,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := perpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Id,
 					p.Ticker,
 					p.MarketId,
 					p.AtomicResolution,
