@@ -287,14 +287,24 @@ func (k Keeper) PersistMatchLiquidationToState(
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	fills := matchLiquidation.GetFills()
+	isLiquidatable, err := k.IsLiquidatable(ctx, matchLiquidation.Liquidated)
+	if err != nil {
+		return err
+	}
+	if !isLiquidatable {
+		return sdkerrors.Wrapf(
+			types.ErrSubaccountNotLiquidatable,
+			"PersistMatchLiquidationToState: Subaccount %s is not liquidatable",
+			matchLiquidation.Liquidated,
+		)
+	}
 
 	takerOrder, err := k.ConstructTakerOrderFromMatchPerpetualLiquidation(ctx, matchLiquidation)
 	if err != nil {
 		return err
 	}
 
-	for _, fill := range fills {
+	for _, fill := range matchLiquidation.GetFills() {
 		makerOrderId := fill.GetMakerOrderId()
 		makerOrder := k.MustFetchOrderFromOrderId(ctx, makerOrderId, ordersMap)
 
