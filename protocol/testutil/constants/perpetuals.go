@@ -110,6 +110,7 @@ var Perpetuals_GenesisState_ParamsOnly = perptypes.GenesisState{
 // Perpetual objects.
 var (
 	BtcUsd_InvalidMarketId = perptypes.Perpetual{
+		Id:                0,
 		Ticker:            "BTC-USD invalid market Id",
 		MarketId:          uint32(9999),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -118,6 +119,7 @@ var (
 		LiquidityTier:     uint32(0),
 	}
 	BtcUsd_0DefaultFunding_0AtomicResolution = perptypes.Perpetual{
+		Id:                1,
 		Ticker:            "BTC-USD 0 percent default funding, 0 atomic resolution",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -126,6 +128,7 @@ var (
 		LiquidityTier:     uint32(2),
 	}
 	BtcUsd_NegativeDefaultFunding_10AtomicResolution = perptypes.Perpetual{
+		Id:                2,
 		Ticker:            "BTC-USD -0.001 percent percent default funding",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -134,6 +137,7 @@ var (
 		LiquidityTier:     uint32(1),
 	}
 	BtcUsd_0DefaultFunding_10AtomicResolution = perptypes.Perpetual{
+		Id:                3,
 		Ticker:            "BTC-USD 0 percent default funding",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -142,6 +146,7 @@ var (
 		LiquidityTier:     uint32(1),
 	}
 	BtcUsd_0DefaultFunding_10AtomicResolution_20IM_18MM = perptypes.Perpetual{
+		Id:                4,
 		Ticker:            "BTC-USD 0 percent default funding, 20% IM, 18% MM",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -150,6 +155,7 @@ var (
 		LiquidityTier:     uint32(6),
 	}
 	BtcUsd_0_001Percent_DefaultFunding_10AtomicResolution = perptypes.Perpetual{
+		Id:                5,
 		Ticker:            "BTC-USD 0.001 percent default funding",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -158,6 +164,7 @@ var (
 		LiquidityTier:     uint32(1),
 	}
 	BtcUsd_SmallMarginRequirement = perptypes.Perpetual{
+		Id:                6,
 		Ticker:            "BTC-USD small margin requirement",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -166,6 +173,7 @@ var (
 		LiquidityTier:     uint32(8),
 	}
 	BtcUsd_100PercentMarginRequirement = perptypes.Perpetual{
+		Id:                7,
 		Ticker:            "BTC-USD 100% margin requirement",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -174,6 +182,7 @@ var (
 		LiquidityTier:     uint32(0),
 	}
 	BtcUsd_50PercentInitial_40PercentMaintenance = perptypes.Perpetual{
+		Id:                8,
 		Ticker:            "BTC-USD 50/40 margin requirements",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -182,6 +191,7 @@ var (
 		LiquidityTier:     uint32(4),
 	}
 	BtcUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
+		Id:                9,
 		Ticker:            "BTC-USD 20/10 margin requirements",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -190,6 +200,7 @@ var (
 		LiquidityTier:     uint32(3),
 	}
 	BtcUsd_NoMarginRequirement = perptypes.Perpetual{
+		Id:                10,
 		Ticker:            "BTC-USD no margin requirement",
 		MarketId:          uint32(0),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -198,6 +209,7 @@ var (
 		LiquidityTier:     uint32(7),
 	}
 	EthUsd_0DefaultFunding_9AtomicResolution = perptypes.Perpetual{
+		Id:                11,
 		Ticker:            "ETH-USD default fundingm, -9 atomic resolution",
 		MarketId:          uint32(1),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -206,6 +218,7 @@ var (
 		LiquidityTier:     uint32(5),
 	}
 	EthUsd_NoMarginRequirement = perptypes.Perpetual{
+		Id:                12,
 		Ticker:            "ETH-USD no margin requirement",
 		MarketId:          uint32(1),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -214,6 +227,7 @@ var (
 		LiquidityTier:     uint32(7),
 	}
 	EthUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
+		Id:                13,
 		Ticker:            "ETH-USD 20/10 margin requirements",
 		MarketId:          uint32(1),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -222,6 +236,7 @@ var (
 		LiquidityTier:     uint32(3),
 	}
 	EthUsd_100PercentMarginRequirement = perptypes.Perpetual{
+		Id:                14,
 		Ticker:            "ETH-USD 100/100 margin requirements",
 		MarketId:          uint32(1),
 		FundingIndex:      dtypes.ZeroInt(),
@@ -230,6 +245,7 @@ var (
 		LiquidityTier:     uint32(0),
 	}
 	SolUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
+		Id:                15,
 		Ticker:            "SOL-USD 20/10 margin requirements",
 		MarketId:          uint32(2),
 		FundingIndex:      dtypes.ZeroInt(),

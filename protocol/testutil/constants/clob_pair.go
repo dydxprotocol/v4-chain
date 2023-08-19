@@ -40,7 +40,7 @@ var (
 		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
 	}
 	ClobPair_Btc_No_Fee = clobtypes.ClobPair{
-		Id: 0,
+		Id: 1,
 		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
 				PerpetualId: 0,
@@ -52,7 +52,7 @@ var (
 		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
 	}
 	ClobPair_Eth = clobtypes.ClobPair{
-		Id: 1,
+		Id: 2,
 		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
 				PerpetualId: 1,
@@ -66,7 +66,7 @@ var (
 		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
 	}
 	ClobPair_Eth_No_Fee = clobtypes.ClobPair{
-		Id: 1,
+		Id: 3,
 		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
 				PerpetualId: 1,
@@ -107,7 +107,7 @@ var (
 		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
 	}
 	ClobPair_Btc3 = clobtypes.ClobPair{
-		Id: 0,
+		Id: 103,
 		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
 				PerpetualId: 0,
