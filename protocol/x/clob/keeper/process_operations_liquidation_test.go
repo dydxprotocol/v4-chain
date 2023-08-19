@@ -2028,6 +2028,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			},
 			expectedError: errors.New("Minimum initial order quantums exceeds fill amount"),
 		},
+		// TODO(CLOB-816): validate liquidation order size against liquidation config
+		// position limit.
 		// "Position limit: fails when liquidation order size is greater than" +
 		// 	" max portion of the position that can be liquidated": {
 		// 	perpetuals: []*perptypes.Perpetual{
