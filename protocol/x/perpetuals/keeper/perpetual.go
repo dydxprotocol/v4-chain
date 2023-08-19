@@ -36,7 +36,6 @@ func (k Keeper) CreatePerpetual(
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 ) (types.Perpetual, error) {
-
 	// Create the perpetual.
 	perpetual := types.Perpetual{
 		Id:                perpetualId,

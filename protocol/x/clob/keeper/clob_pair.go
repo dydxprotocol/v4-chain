@@ -30,7 +30,6 @@ func (k Keeper) CreatePerpetualClobPair(
 	makerFeePpm uint32,
 	takerFeePpm uint32,
 ) (types.ClobPair, error) {
-
 	clobPair := types.ClobPair{
 		Metadata: &types.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &types.PerpetualClobMetadata{
