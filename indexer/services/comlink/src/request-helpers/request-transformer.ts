@@ -394,6 +394,7 @@ export function postgresOrderToResponseObject(
     goodTilBlockTime: order.goodTilBlockTime ?? undefined,
     createdAtHeight: order.createdAtHeight ?? undefined,
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(order.clobPairId)!,
+    triggerPrice: order.triggerPrice ?? undefined,
   };
 }
 
