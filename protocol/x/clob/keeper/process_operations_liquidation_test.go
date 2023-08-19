@@ -167,6 +167,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			perpetualFeeParams:         &constants.PerpetualFeeParams,
 			setupMockBankKeeper:        func(bk *mocks.BankKeeper) {},
 			rawOperations:              []types.OperationRaw{},
+			expectedFillAmounts:        map[types.OrderId]satypes.BaseQuantums{},
 			expectedQuoteBalances:      map[satypes.SubaccountId]int64{},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
@@ -224,6 +225,9 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				),
 			},
 
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 100_000_000,
+			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $4,749, no taker fees, pays $250 insurance fee
 				constants.Carl_Num0: 4_999_000_000 - 250_000_000,
@@ -306,6 +310,9 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					},
 				),
 			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId: 100_000_000,
+			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// The subaccount had $50,499 initially, bought 1BTC at $50,500
 				// to cover the short position, and received $1 from insurance fund.
@@ -387,6 +394,10 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 						},
 					},
 				),
+			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.OrderId: 25_000_000,
+				constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12.OrderId: 25_000_000,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $29874, no taker fees, pays $125 insurance fee
@@ -487,6 +498,10 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 						},
 					},
 				),
+			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11.OrderId: 25_000_000,
+				constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId: 25_000_000,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// The subaccount had $50,499 initially, bought 0.5BTC at $50,500
@@ -599,6 +614,10 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					},
 				),
 			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10.OrderId:   75_000_000,
+				constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId: 25_000_000,
+			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// The subaccount had $50,499 initially, bought 0.75BTC at $50,498
 				// and 0.25BTC at $50,500.
@@ -708,6 +727,10 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					},
 				),
 			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10.OrderId:   75_000_000,
+				constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId: 25_000_000,
+			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// The subaccount had $50,499 initially, bought 0.75BTC at $50,498
 				// and 0.25BTC at $50,500.
@@ -794,6 +817,9 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 						},
 					},
 				),
+			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 100_000_000,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $29874, no taker fees, pays $125 insurance fee
@@ -889,6 +915,9 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 		// 			},
 		// 		),
 		// 	},
+		//  expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+		//  	constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.OrderId: 20_000_000,
+		//  },
 		// 	expectedQuoteBalances: map[satypes.SubaccountId]int64{
 		// 		// $44949, no taker fees, pays $50 insurance fee
 		// 		constants.Carl_Num0: 44_999_000_000 - 50_000_000,
@@ -1003,6 +1032,13 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					},
 				),
 			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				{
+					SubaccountId: constants.Dave_Num0,
+					ClientId:     1,
+					ClobPairId:   0,
+				}: satypes.BaseQuantums(10),
+			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				OrderIdsFilledInLastBlock: []types.OrderId{
 					{
@@ -1071,6 +1107,9 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 		// 			},
 		// 		),
 		// 	},
+		// expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+		// 	constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO.OrderId: 50_000_000,
+		// },
 		// 	expectedQuoteBalances: map[satypes.SubaccountId]int64{
 		// 		// $29874, no taker fees, pays $125 insurance fee
 		// 		constants.Carl_Num0: 29_999_000_000 - 125_000_000,

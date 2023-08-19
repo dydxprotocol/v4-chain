@@ -54,6 +54,7 @@ type processProposerOperationsTestCase struct {
 	// the operations field above.
 	expectedProcessProposerMatchesEvents types.ProcessProposerMatchesEvents
 	expectedMatches                      []*MatchWithOrdersForTesting
+	expectedFillAmounts                  map[types.OrderId]satypes.BaseQuantums
 	expectedQuoteBalances                map[satypes.SubaccountId]int64
 	expectedPerpetualPositions           map[satypes.SubaccountId][]*satypes.PerpetualPosition
 	expectedSubaccountLiquidationInfo    map[satypes.SubaccountId]types.SubaccountLiquidationInfo
@@ -1560,6 +1561,11 @@ func runProcessProposerOperationsTestCase(
 
 	// Verify subaccount state.
 	assertSubaccountState(t, ctx, ks.SubaccountsKeeper, tc.expectedQuoteBalances, tc.expectedPerpetualPositions)
+
+	for orderId, fillAmount := range tc.expectedFillAmounts {
+		_, actualFillAmount, _ := ks.ClobKeeper.GetOrderFillAmount(ctx, orderId)
+		require.Equal(t, fillAmount, actualFillAmount)
+	}
 
 	mockIndexerEventManager.AssertExpectations(t)
 
