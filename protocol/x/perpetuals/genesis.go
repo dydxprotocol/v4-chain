@@ -45,6 +45,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.Perpetuals {
 		_, err := k.CreatePerpetual(
 			ctx,
+			elem.Id,
 			elem.Ticker,
 			elem.MarketId,
 			elem.AtomicResolution,
