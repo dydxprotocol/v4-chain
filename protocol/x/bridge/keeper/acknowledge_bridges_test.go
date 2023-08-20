@@ -51,7 +51,8 @@ func TestAcknowledgeBridges(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Initialize context and keeper.
 			ctx, bridgeKeeper, _, _, _, mockBankKeeper := keepertest.BridgeKeepersWithMockBankKeeper(t)
-			// Mock sending coin of each bridge event.
+			// TODO: remove below mockings once integrated with x/delaymsg (CORE-453)
+			// Mock sending coin of each bridge event and get bridge module account balance.
 			for _, bridgeEvent := range tc.bridgeEvents {
 				mockBankKeeper.On(
 					"SendCoinsFromModuleToAccount",
@@ -60,6 +61,12 @@ func TestAcknowledgeBridges(t *testing.T) {
 					sdk.MustAccAddressFromBech32(bridgeEvent.Address),
 					sdk.Coins{bridgeEvent.Coin},
 				).Return(nil).Once()
+				mockBankKeeper.On(
+					"GetBalance",
+					ctx,
+					sdk.MustAccAddressFromBech32(bridgeKeeper.GetBridgeAuthority()),
+					bridgeEvent.Coin.Denom,
+				).Return(sdk.NewCoin(bridgeEvent.Coin.Denom, sdk.NewInt(100))).Once()
 			}
 
 			err := bridgeKeeper.AcknowledgeBridges(ctx, tc.bridgeEvents)
