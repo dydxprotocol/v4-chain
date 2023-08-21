@@ -28,6 +28,27 @@ func (_m *ProcessBridgeKeeper) GetAcknowledgedEventInfo(ctx types.Context) bridg
 	return r0
 }
 
+// GetBridgeEvent provides a mock function with given fields: ctx, id
+func (_m *ProcessBridgeKeeper) GetBridgeEvent(ctx types.Context, id uint32) (bridgetypes.BridgeEvent, bool) {
+	ret := _m.Called(ctx, id)
+
+	var r0 bridgetypes.BridgeEvent
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) bridgetypes.BridgeEvent); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(bridgetypes.BridgeEvent)
+	}
+
+	var r1 bool
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) bool); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetRecognizedEventInfo provides a mock function with given fields: ctx
 func (_m *ProcessBridgeKeeper) GetRecognizedEventInfo(ctx types.Context) bridgetypes.BridgeEventInfo {
 	ret := _m.Called(ctx)

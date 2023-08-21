@@ -11,7 +11,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -82,14 +81,19 @@ func TestDecodeAcknowledgeBridgesTx(t *testing.T) {
 
 func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 	tests := map[string]struct {
-		txBytes               []byte
+		txBytes []byte // tx bytes.
+
+		// Mocking.
+		bridgeEventsInServer  []types.BridgeEvent // events in bridge server that a bridge tx is validated against.
 		acknowledgedEventInfo types.BridgeEventInfo
 		recognizedEventInfo   types.BridgeEventInfo
 
+		// Expectations.
 		expectedErr error
 	}{
 		"Error: bridge event ID not next to be acknowledged": {
-			txBytes: constants.MsgAcknowledgeBridges_Id55_Height15_TxBytes,
+			txBytes:              constants.MsgAcknowledgeBridges_Id55_Height15_TxBytes,
+			bridgeEventsInServer: constants.MsgAcknowledgeBridges_Id55_Height15.Events,
 			acknowledgedEventInfo: types.BridgeEventInfo{
 				NextId:         54,
 				EthBlockHeight: 12,
@@ -97,7 +101,8 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 			expectedErr: types.ErrBridgeIdNotNextToAcknowledge,
 		},
 		"Error: bridge event ID next to be acknowledged but not recognized": {
-			txBytes: constants.MsgAcknowledgeBridges_Id55_Height15_TxBytes,
+			txBytes:              constants.MsgAcknowledgeBridges_Id55_Height15_TxBytes,
+			bridgeEventsInServer: constants.MsgAcknowledgeBridges_Id55_Height15.Events,
 			acknowledgedEventInfo: types.BridgeEventInfo{
 				NextId:         55,
 				EthBlockHeight: 12,
@@ -110,6 +115,7 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 		},
 		"Error: bridge event IDs not consecutive": {
 			txBytes:               constants.MsgAcknowledgeBridges_Ids0_55_Height0_TxBytes,
+			bridgeEventsInServer:  constants.MsgAcknowledgeBridges_Ids0_55_Height0.Events,
 			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
 			recognizedEventInfo: types.BridgeEventInfo{
 				NextId:         56,
@@ -117,18 +123,63 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 			},
 			expectedErr: types.ErrBridgeIdsNotConsecutive,
 		},
+		"Error: bridge event has mismatched block height": {
+			txBytes: constants.MsgAcknowledgeBridges_Id55_Height15_TxBytes,
+			bridgeEventsInServer: []types.BridgeEvent{
+				func(event types.BridgeEvent) types.BridgeEvent {
+					return types.BridgeEvent{
+						Id:             event.Id,
+						Coin:           event.Coin,
+						Address:        event.Address,
+						EthBlockHeight: 14, // mismatched block height.
+					}
+				}(constants.BridgeEvent_Id55_Height15),
+			},
+			acknowledgedEventInfo: types.BridgeEventInfo{
+				NextId:         55,
+				EthBlockHeight: 12,
+			},
+			recognizedEventInfo: types.BridgeEventInfo{
+				NextId:         56,
+				EthBlockHeight: 14,
+			},
+			expectedErr: types.ErrBridgeEventContentMismatch,
+		},
+		"Error: second bridge event has incorrect amount": {
+			txBytes: constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes,
+			bridgeEventsInServer: []types.BridgeEvent{
+				constants.BridgeEvent_Id0_Height0,
+				func(event types.BridgeEvent) types.BridgeEvent {
+					return types.BridgeEvent{
+						Id: event.Id,
+						Coin: sdk.NewCoin(
+							event.Coin.Denom,
+							sdk.NewInt(1000000000000000000), // incorrect amount.
+						),
+						Address:        event.Address,
+						EthBlockHeight: event.EthBlockHeight,
+					}
+				}(constants.BridgeEvent_Id1_Height0),
+			},
+			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
+			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
+			expectedErr:           types.ErrBridgeEventContentMismatch,
+		},
 		"Valid: empty events": {
 			txBytes:               constants.MsgAcknowledgeBridges_NoEvents_TxBytes,
+			bridgeEventsInServer:  constants.MsgAcknowledgeBridges_NoEvents.Events,
 			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
 			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
 		},
 		"Valid: one event": {
 			txBytes:               constants.MsgAcknowledgeBridges_Id0_Height0_TxBytes,
+			bridgeEventsInServer:  constants.MsgAcknowledgeBridges_Id0_Height0.Events,
 			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
 			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
 		},
 		"Valid: two events": {
 			txBytes:               constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes,
+			bridgeEventsInServer:  constants.MsgAcknowledgeBridges_Ids0_1_Height0.Events,
 			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
 			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
 		},
@@ -139,8 +190,11 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 			// Setup.
 			ctx, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
-			mockBridgeKeeper.On("GetAcknowledgedEventInfo", mock.Anything).Return(tc.acknowledgedEventInfo)
-			mockBridgeKeeper.On("GetRecognizedEventInfo", mock.Anything).Return(tc.recognizedEventInfo)
+			mockBridgeKeeper.On("GetAcknowledgedEventInfo", ctx).Return(tc.acknowledgedEventInfo)
+			mockBridgeKeeper.On("GetRecognizedEventInfo", ctx).Return(tc.recognizedEventInfo)
+			for _, event := range tc.bridgeEventsInServer {
+				mockBridgeKeeper.On("GetBridgeEvent", ctx, event.Id).Return(event, true)
+			}
 
 			abt, err := process.DecodeAcknowledgeBridgesTx(
 				ctx,
