@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"math/big"
+	"math/rand"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -85,8 +86,11 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
+	s := rand.NewSource(k.MustGetBlockTimeForLastCommittedBlock(ctx).Unix())
+	rand := rand.New(s)
+
 	// TODO(DEC-1487): Determine how offsetting subaccounts should be selected.
-	k.subaccountsKeeper.ForEachSubaccount(
+	k.subaccountsKeeper.ForEachSubaccountFromRandomStart(
 		ctx,
 		func(offsettingSubaccount satypes.Subaccount) (finished bool) {
 			numSubaccountsIterated++
@@ -133,6 +137,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			}
 			return deltaQuantumsRemaining.Sign() == 0
 		},
+		rand,
 	)
 
 	telemetry.ModuleSetGauge(

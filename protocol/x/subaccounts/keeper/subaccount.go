@@ -95,6 +95,55 @@ func (k Keeper) ForEachSubaccount(ctx sdk.Context, callback func(types.Subaccoun
 	}
 }
 
+// ForEachSubaccountFromRandomStart performs a callback across all subaccounts.
+// The callback function should return a boolean if we should end iteration or not.
+// This function starts a at random subaccount and iterates from there.
+func (k Keeper) ForEachSubaccountFromRandomStart(
+	ctx sdk.Context,
+	callback func(types.Subaccount) (finished bool),
+	rand *rand.Rand,
+) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
+	forwardItr := store.Iterator(nil, nil)
+	defer forwardItr.Close()
+	if !forwardItr.Valid() {
+		return
+	}
+
+	reverseItr := store.ReverseIterator(nil, nil)
+	defer reverseItr.Close()
+
+	firstKey := forwardItr.Key()
+	lastKey := reverseItr.Key()
+	prefix := lib.RandomBytesBetween(firstKey, lastKey, rand)
+
+	// Iterate over subaccounts from the random prefix (inclusive) to the end.
+	firstIterator := store.Iterator(prefix, nil)
+	defer firstIterator.Close()
+
+	for ; firstIterator.Valid(); firstIterator.Next() {
+		var subaccount types.Subaccount
+		k.cdc.MustUnmarshal(firstIterator.Value(), &subaccount)
+		done := callback(subaccount)
+		if done {
+			return
+		}
+	}
+
+	// Iterator over subaccounts from the start to the random prefix (exclusive).
+	secondIterator := store.Iterator(nil, prefix)
+	defer secondIterator.Close()
+
+	for ; secondIterator.Valid(); secondIterator.Next() {
+		var subaccount types.Subaccount
+		k.cdc.MustUnmarshal(secondIterator.Value(), &subaccount)
+		done := callback(subaccount)
+		if done {
+			return
+		}
+	}
+}
+
 // GetRandomSubaccount returns a random subaccount. Will return an error if there are no subaccounts.
 func (k Keeper) GetRandomSubaccount(ctx sdk.Context, rand *rand.Rand) (types.Subaccount, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))

@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -511,6 +512,8 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			for _, subaccount := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 			}
+
+			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ks.Ctx.WithBlockTime(time.Unix(5, 0)))
 
 			fills, deltaQuantumsRemaining := ks.ClobKeeper.OffsetSubaccountPerpetualPosition(
 				ks.Ctx,
