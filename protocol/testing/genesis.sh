@@ -10,6 +10,9 @@ set -eo pipefail
 # Obtained from `authtypes.NewModuleAddress(subaccounttypes.ModuleName)`.
 SUBACCOUNTS_MODACC_ADDR="dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6"
 REWARDS_VESTER_ACCOUNT_ADDR="dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp"
+# Address of the `bridge` module account.
+# Obtained from `authtypes.NewModuleAddress(bridgetypes.ModuleName)`.
+BRIDGE_MODACC_ADDR="dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"
 USDC_DENOM="ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
 REWARD_TOKEN="testnet_reward_token"
 NATIVE_TOKEN="dv4tnt" # public testnet token
@@ -17,6 +20,7 @@ DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 ETH_CHAIN_ID=11155111 # sepolia
 ETH_BRIDGE_ADDRESS="0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935"
+BRIDGE_MODACC_BALANCE=1000000000000000000000000000 # 1e27
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0 # TODO(CORE-329)
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=0 # TODO(CORE-329)
 
@@ -946,6 +950,14 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${REWARD_TOKEN}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "1000000000000" # 1e12
+	next_bank_idx=$(($next_bank_idx+1))
+
+	# Initialize bank balance of bridge module account.
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${BRIDGE_MODACC_ADDR}"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${NATIVE_TOKEN}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "${BRIDGE_MODACC_BALANCE}"
 
     # Use ATOM-USD as test oracle price of the reward token.
 	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v '13'
@@ -958,7 +970,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].perpetual_clob_metadata.perpetual_id' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].subticks_per_tick' -v '10000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].quantum_conversion_exponent' -v '-8'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].taker_fee_ppm' -v '500'
@@ -970,7 +981,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].perpetual_clob_metadata.perpetual_id' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].subticks_per_tick' -v '100000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].quantum_conversion_exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].taker_fee_ppm' -v '500'
@@ -982,7 +992,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].perpetual_clob_metadata.perpetual_id' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].taker_fee_ppm' -v '500'
@@ -994,7 +1003,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].perpetual_clob_metadata.perpetual_id' -v '3'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].subticks_per_tick' -v '100000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].quantum_conversion_exponent' -v '-12'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].taker_fee_ppm' -v '500'
@@ -1006,7 +1014,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].perpetual_clob_metadata.perpetual_id' -v '4'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].subticks_per_tick' -v '100000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].quantum_conversion_exponent' -v '-12'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].taker_fee_ppm' -v '500'
@@ -1018,7 +1025,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].perpetual_clob_metadata.perpetual_id' -v '5'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].taker_fee_ppm' -v '500'
@@ -1030,7 +1036,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].perpetual_clob_metadata.perpetual_id' -v '6'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].min_order_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].quantum_conversion_exponent' -v '-13'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].taker_fee_ppm' -v '500'
@@ -1042,7 +1047,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].perpetual_clob_metadata.perpetual_id' -v '7'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].subticks_per_tick' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].taker_fee_ppm' -v '500'
@@ -1054,7 +1058,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].perpetual_clob_metadata.perpetual_id' -v '8'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].subticks_per_tick' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].taker_fee_ppm' -v '500'
@@ -1066,7 +1069,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].perpetual_clob_metadata.perpetual_id' -v '9'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].subticks_per_tick' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].quantum_conversion_exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].taker_fee_ppm' -v '500'
@@ -1078,7 +1080,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].perpetual_clob_metadata.perpetual_id' -v '10'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].subticks_per_tick' -v '100000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].quantum_conversion_exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].taker_fee_ppm' -v '500'
@@ -1090,7 +1091,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].perpetual_clob_metadata.perpetual_id' -v '11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].subticks_per_tick' -v '100000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].quantum_conversion_exponent' -v '-13'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].taker_fee_ppm' -v '500'
@@ -1102,7 +1102,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].perpetual_clob_metadata.perpetual_id' -v '12'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].subticks_per_tick' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].taker_fee_ppm' -v '500'
@@ -1114,7 +1113,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].perpetual_clob_metadata.perpetual_id' -v '13'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].taker_fee_ppm' -v '500'
@@ -1126,7 +1124,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].perpetual_clob_metadata.perpetual_id' -v '14'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].subticks_per_tick' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].taker_fee_ppm' -v '500'
@@ -1138,7 +1135,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].perpetual_clob_metadata.perpetual_id' -v '15'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].quantum_conversion_exponent' -v '-12'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].taker_fee_ppm' -v '500'
@@ -1150,7 +1146,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].perpetual_clob_metadata.perpetual_id' -v '16'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].taker_fee_ppm' -v '500'
@@ -1162,7 +1157,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].perpetual_clob_metadata.perpetual_id' -v '17'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].subticks_per_tick' -v '100000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].quantum_conversion_exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].taker_fee_ppm' -v '500'
@@ -1174,7 +1168,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].perpetual_clob_metadata.perpetual_id' -v '18'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].quantum_conversion_exponent' -v '-12'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].taker_fee_ppm' -v '500'
@@ -1186,7 +1179,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].perpetual_clob_metadata.perpetual_id' -v '19'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].subticks_per_tick' -v '100000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].quantum_conversion_exponent' -v '-13'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].taker_fee_ppm' -v '500'
@@ -1198,7 +1190,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].perpetual_clob_metadata.perpetual_id' -v '20'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].subticks_per_tick' -v '100000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].min_order_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].quantum_conversion_exponent' -v '-13'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].taker_fee_ppm' -v '500'
@@ -1210,7 +1201,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].perpetual_clob_metadata.perpetual_id' -v '21'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].min_order_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].quantum_conversion_exponent' -v '-12'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].taker_fee_ppm' -v '500'
@@ -1222,7 +1212,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].perpetual_clob_metadata.perpetual_id' -v '22'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].min_order_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].quantum_conversion_exponent' -v '-12'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].taker_fee_ppm' -v '500'
@@ -1234,7 +1223,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].perpetual_clob_metadata.perpetual_id' -v '23'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].subticks_per_tick' -v '10000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].quantum_conversion_exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].taker_fee_ppm' -v '500'
@@ -1246,7 +1234,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].perpetual_clob_metadata.perpetual_id' -v '24'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].min_order_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].quantum_conversion_exponent' -v '-12'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].taker_fee_ppm' -v '500'
@@ -1258,7 +1245,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].perpetual_clob_metadata.perpetual_id' -v '25'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].subticks_per_tick' -v '100000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].quantum_conversion_exponent' -v '-13'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].taker_fee_ppm' -v '500'
@@ -1270,7 +1256,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].perpetual_clob_metadata.perpetual_id' -v '26'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].subticks_per_tick' -v '100000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].quantum_conversion_exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].taker_fee_ppm' -v '500'
@@ -1282,7 +1267,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].perpetual_clob_metadata.perpetual_id' -v '27'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].subticks_per_tick' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].taker_fee_ppm' -v '500'
@@ -1294,7 +1278,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].perpetual_clob_metadata.perpetual_id' -v '28'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].min_order_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].quantum_conversion_exponent' -v '-13'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].taker_fee_ppm' -v '500'
@@ -1306,7 +1289,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].perpetual_clob_metadata.perpetual_id' -v '29'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].subticks_per_tick' -v '100000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].min_order_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].taker_fee_ppm' -v '500'
@@ -1318,7 +1300,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].perpetual_clob_metadata.perpetual_id' -v '30'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].subticks_per_tick' -v '100000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].min_order_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].quantum_conversion_exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].taker_fee_ppm' -v '500'
@@ -1330,7 +1311,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].perpetual_clob_metadata.perpetual_id' -v '31'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].subticks_per_tick' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].min_order_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].quantum_conversion_exponent' -v '-13'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].taker_fee_ppm' -v '500'
@@ -1342,7 +1322,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].perpetual_clob_metadata.perpetual_id' -v '32'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].subticks_per_tick' -v '10000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].quantum_conversion_exponent' -v '-8'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].maker_fee_ppm' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].taker_fee_ppm' -v '500'

@@ -105,12 +105,12 @@ func (p *PendingUpdates) ConvertToUpdates() []satypes.Update {
 }
 
 // AddPerpetualFill adds a new fill to the PendingUpdate object, by
-// updating quoteBalanceDelta, perpetualUpdate and fees paid for a subaccount.
+// updating quoteBalanceDelta, perpetualUpdate and fees paid or received by a subaccount.
 func (p *PendingUpdates) AddPerpetualFill(
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	isBuy bool,
-	feePpm uint32,
+	feePpm int32,
 	bigFillBaseQuantums *big.Int,
 	bigFillQuoteQuantums *big.Int,
 ) {
@@ -168,7 +168,7 @@ func (p *PendingUpdates) AddPerpetualFill(
 		totalFee = big.NewInt(0)
 	}
 
-	bigFeeQuoteQuantums := lib.BigIntMulPpm(bigFillQuoteQuantums, feePpm)
+	bigFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, feePpm)
 
 	totalFee.Add(
 		totalFee,

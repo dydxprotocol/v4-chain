@@ -5,7 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
@@ -68,12 +70,14 @@ func (b *BridgeEventManager) AddBridgeEvents(
 	// Validate events are contiguous and in-order.
 	for i, event := range events {
 		if event.Id != events[0].Id+uint32(i) {
+			telemetry.IncrCounter(1, metrics.BridgeServer, metrics.AddBridgeEvents, metrics.EventIdNotSequential)
 			return fmt.Errorf("AddBridgeEvents: Events must be contiguous and in-order")
 		}
 	}
 
 	// Event IDs cannot be skipped.
 	if events[0].Id > b.recognizedEventInfo.NextId {
+		telemetry.IncrCounter(1, metrics.BridgeServer, metrics.AddBridgeEvents, metrics.EventIdNotNextExpected)
 		return fmt.Errorf(
 			"AddBridgeEvents: Event ID %d is greater than the Next Id %d.",
 			events[0].Id,
@@ -85,6 +89,7 @@ func (b *BridgeEventManager) AddBridgeEvents(
 	for _, event := range events {
 		// Ignore stale events which may be the result of a race condition.
 		if event.Id < b.recognizedEventInfo.NextId {
+			telemetry.IncrCounter(1, metrics.BridgeServer, metrics.AddBridgeEvents, metrics.EventIdAlreadyRecognized)
 			continue
 		}
 
@@ -108,6 +113,20 @@ func (b *BridgeEventManager) AddBridgeEvents(
 			EthBlockHeight: event.EthBlockHeight,
 		}
 	}
+
+	// Emit metrics on updated recognized event info.
+	telemetry.SetGauge(
+		float32(b.recognizedEventInfo.NextId),
+		metrics.BridgeServer,
+		metrics.RecognizedEventInfo,
+		metrics.NextId,
+	)
+	telemetry.SetGauge(
+		float32(b.recognizedEventInfo.EthBlockHeight),
+		metrics.BridgeServer,
+		metrics.RecognizedEventInfo,
+		metrics.EthBlockHeight,
+	)
 
 	return nil
 }

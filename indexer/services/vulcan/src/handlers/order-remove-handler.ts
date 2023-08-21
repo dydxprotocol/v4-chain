@@ -6,7 +6,6 @@ import {
   OrderFromDatabase,
   OrderStatus,
   OrderTable,
-  OrderType,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   protocolTranslations,
@@ -23,7 +22,7 @@ import {
   removeOrder,
   CanceledOrdersCache,
 } from '@dydxprotocol-indexer/redis';
-import { ORDER_FLAG_SHORT_TERM, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_SHORT_TERM, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
   IndexerOrder,
@@ -39,6 +38,7 @@ import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendWebsocketWrapper } from '../lib/send-websocket-helper';
 import { Handler } from './handler';
+import { getTriggerPrice } from './helpers';
 
 /**
  * Handler for OrderRemove messages.
@@ -500,7 +500,9 @@ export class OrderRemoveHandler extends Handler {
             perpetualMarket.atomicResolution,
           ),
           price: redisOrder.price,
-          type: OrderType.LIMIT,
+          type: protocolTranslations.protocolConditionTypeToOrderType(
+            redisOrder.order!.conditionType,
+          ),
           status: this.orderRemovalStatusToOrderStatus(orderRemove.removalStatus),
           timeInForce: apiTranslations.orderTIFToAPITIF(orderTIF),
           postOnly: apiTranslations.isOrderTIFPostOnly(orderTIF),
@@ -512,6 +514,7 @@ export class OrderRemoveHandler extends Handler {
           ticker: redisOrder.ticker,
           removalReason: OrderRemovalReason[orderRemove.reason],
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
+          triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
       ],
     };
@@ -543,7 +546,7 @@ export class OrderRemoveHandler extends Handler {
           size: order.size,
           totalFilled: order.totalFilled,
           price: order.price,
-          type: OrderType.LIMIT,
+          type: order.type,
           status: this.orderRemovalStatusToOrderStatus(orderRemove.removalStatus),
           timeInForce: apiTranslations.orderTIFToAPITIF(order.timeInForce),
           postOnly: apiTranslations.isOrderTIFPostOnly(order.timeInForce),
@@ -554,6 +557,7 @@ export class OrderRemoveHandler extends Handler {
           ticker: orderTicker,
           removalReason: OrderRemovalReason[orderRemove.reason],
           clientMetadata: order.clientMetadata,
+          triggerPrice: order.triggerPrice ?? undefined,
         },
       ],
     };
@@ -571,7 +575,7 @@ export class OrderRemoveHandler extends Handler {
     orderRemove: OrderRemoveV1,
   ): boolean {
     return (
-      orderRemove.removedOrderId!.orderFlags === ORDER_FLAG_LONG_TERM &&
+      isStatefulOrder(orderRemove.removedOrderId!.orderFlags) &&
       orderRemove.reason === OrderRemovalReason.ORDER_REMOVAL_REASON_USER_CANCELED &&
       orderRemove.removalStatus === OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED
     );

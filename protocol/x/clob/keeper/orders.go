@@ -595,7 +595,6 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 // This validation ensures:
 //   - The `ClobPairId` on the order is for a valid CLOB.
 //   - The `Subticks` of the order is a multiple of the ClobPair's `SubticksPerTick`.
-//   - The `Quantums` of the order is greater than the ClobPair's `MinOrderBaseQuantums`.
 //   - The `Quantums` of the order is a multiple of the ClobPair's `StepBaseQuantums`.
 //
 // For short term orders it also ensures:
@@ -637,15 +636,6 @@ func (k Keeper) PerformStatefulOrderValidation(
 			"Order subticks %v must be a multiple of the ClobPair's SubticksPerTick %v",
 			order.Subticks,
 			clobPair.SubticksPerTick,
-		)
-	}
-
-	if order.Quantums < clobPair.MinOrderBaseQuantums {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidPlaceOrder,
-			"Order Quantums %v must be greater than the ClobPair's MinOrderBaseQuantums %v",
-			order.Quantums,
-			clobPair.MinOrderBaseQuantums,
 		)
 	}
 
@@ -874,8 +864,6 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 		panic(types.ErrInvalidClob)
 	}
 
-	makerFee := clobPair.GetFeePpm(false)
-
 	pendingUpdates := types.NewPendingUpdates()
 
 	// Retrieve the associated `PerpetualId` for the `ClobPair`.
@@ -893,6 +881,8 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 			metrics.SubaccountPendingMatches,
 			metrics.Count,
 		)
+
+		makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(ctx, subaccountId.Owner, false)
 		// For each subaccount ID, create the update from all of its existing open orders for the clob and side.
 		for _, openOrder := range openOrders {
 			if openOrder.ClobPairId != clobPairId {
@@ -947,7 +937,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 				subaccountId,
 				perpetualId,
 				openOrder.IsBuy,
-				makerFee,
+				makerFeePpm,
 				bigFillAmount,
 				bigFillQuoteQuantums,
 			)

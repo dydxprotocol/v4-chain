@@ -1251,7 +1251,6 @@ func TestProcessProposerOperations(t *testing.T) {
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,

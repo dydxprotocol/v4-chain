@@ -169,6 +169,15 @@ const GenesisState = `{
               "amount": "900000000000000000"
             }
           ]
+        },
+        {
+          "address": "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+          "coins": [
+            {
+              "denom": "dv4tnt",
+              "amount": "1000000000"
+            }
+          ]
         }
       ],
       "supply": [],
@@ -238,7 +247,6 @@ const GenesisState = `{
         {
           "id": 0,
           "maker_fee_ppm": 200,
-          "min_order_base_quantums": 10,
           "perpetual_clob_metadata": {
             "perpetual_id": 0
           },
@@ -251,7 +259,6 @@ const GenesisState = `{
         {
           "id": 1,
           "maker_fee_ppm": 200,
-          "min_order_base_quantums": 1000,
           "perpetual_clob_metadata": {
             "perpetual_id": 1
           },
@@ -405,7 +412,7 @@ const GenesisState = `{
           },
           {
             "name": "2",
-            "absolute_volume_requirement": "1000000",
+            "absolute_volume_requirement": "1000000000000",
             "total_volume_share_requirement_ppm": 0,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
@@ -413,7 +420,7 @@ const GenesisState = `{
           },
           {
             "name": "3",
-            "absolute_volume_requirement": "5000000",
+            "absolute_volume_requirement": "5000000000000",
             "total_volume_share_requirement_ppm": 0,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
@@ -421,7 +428,7 @@ const GenesisState = `{
           },
           {
             "name": "4",
-            "absolute_volume_requirement": "25000000",
+            "absolute_volume_requirement": "25000000000000",
             "total_volume_share_requirement_ppm": 0,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
@@ -429,7 +436,7 @@ const GenesisState = `{
           },
           {
             "name": "5",
-            "absolute_volume_requirement": "125000000",
+            "absolute_volume_requirement": "125000000000000",
             "total_volume_share_requirement_ppm": 0,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
@@ -437,33 +444,33 @@ const GenesisState = `{
           },
           {
             "name": "6",
-            "absolute_volume_requirement": "125000000",
-            "total_volume_share_requirement_ppm": 10000,
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
             "taker_fee_ppm": 250
           },
           {
             "name": "7",
-            "absolute_volume_requirement": "125000000",
-            "total_volume_share_requirement_ppm": 10000,
-            "maker_volume_share_requirement_ppm": 20000,
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 10000,
             "maker_fee_ppm": -110,
             "taker_fee_ppm": 250
           },
           {
             "name": "8",
-            "absolute_volume_requirement": "125000000",
-            "total_volume_share_requirement_ppm": 10000,
-            "maker_volume_share_requirement_ppm": 50000,
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 20000,
             "maker_fee_ppm": -110,
             "taker_fee_ppm": 250
           },
           {
             "name": "9",
-            "absolute_volume_requirement": "125000000",
-            "total_volume_share_requirement_ppm": 10000,
-            "maker_volume_share_requirement_ppm": 100000,
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 40000,
             "maker_fee_ppm": -110,
             "taker_fee_ppm": 250
           }

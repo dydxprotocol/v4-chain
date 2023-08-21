@@ -28,12 +28,6 @@ func WithStepBaseQuantums(bq satypes.BaseQuantums) ClobModifierOption {
 	}
 }
 
-func WithMinOrderBaseQuantums(bq satypes.BaseQuantums) ClobModifierOption {
-	return func(cp *clobtypes.ClobPair) {
-		cp.MinOrderBaseQuantums = bq.ToUint64()
-	}
-}
-
 func WithStatus(status clobtypes.ClobPair_Status) ClobModifierOption {
 	return func(cp *clobtypes.ClobPair) {
 		cp.Status = status
@@ -97,7 +91,6 @@ func GenerateClobPair(optionalModifications ...ClobModifierOption) *clobtypes.Cl
 		StepBaseQuantums:          5,
 		SubticksPerTick:           10,
 		QuantumConversionExponent: -8,
-		MinOrderBaseQuantums:      20,
 		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
 		MakerFeePpm:               200,
 		TakerFeePpm:               500,

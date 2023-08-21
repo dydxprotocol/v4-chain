@@ -20,7 +20,7 @@ const (
 	VesterAccountName = "rewards_vester"
 
 	// RewardShareKeyPrefix is the prefix to retrieve reward shares for all addresses.
-	RewardShareKeyPrefix = "reward_shares"
+	RewardShareKeyPrefix = "reward_shares/"
 )
 
 func KeyPrefix(p string) []byte {

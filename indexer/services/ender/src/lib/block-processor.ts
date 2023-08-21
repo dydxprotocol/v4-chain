@@ -7,6 +7,7 @@ import { AssetValidator } from '../validators/asset-validator';
 import { FundingValidator } from '../validators/funding-validator';
 import { MarketValidator } from '../validators/market-validator';
 import { OrderFillValidator } from '../validators/order-fill-validator';
+import { PerpetualMarketValidator } from '../validators/perpetual-market-validator';
 import { StatefulOrderValidator } from '../validators/stateful-order-validator';
 import { SubaccountUpdateValidator } from '../validators/subaccount-update-validator';
 import { TransferValidator } from '../validators/transfer-validator';
@@ -26,6 +27,7 @@ const TXN_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitialize
   [DydxIndexerSubtypes.MARKET.toString()]: MarketValidator,
   [DydxIndexerSubtypes.STATEFUL_ORDER.toString()]: StatefulOrderValidator,
   [DydxIndexerSubtypes.ASSET.toString()]: AssetValidator,
+  [DydxIndexerSubtypes.PERPETUAL_MARKET.toString()]: PerpetualMarketValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {

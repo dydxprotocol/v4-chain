@@ -112,7 +112,7 @@ func SimulateMsgPlaceOrder(
 
 		bigMinOrderQuoteQuantums := types.FillAmountToQuoteQuantums(
 			types.Subticks(clobPair.SubticksPerTick),
-			satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
+			satypes.BaseQuantums(clobPair.StepBaseQuantums),
 			clobPair.QuantumConversionExponent,
 		)
 
@@ -150,7 +150,7 @@ func SimulateMsgPlaceOrder(
 			subaccountId,
 			currentPositionSizeQuantums,
 			uint64(clobPair.SubticksPerTick),
-			clobPair.MinOrderBaseQuantums,
+			clobPair.StepBaseQuantums,
 			bigMinOrderQuoteQuantums,
 			bigSubaccountMaxOrderQuoteQuantums,
 		)

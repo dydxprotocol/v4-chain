@@ -23,6 +23,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	feetypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
@@ -40,6 +41,8 @@ func TestPlaceShortTermOrder(t *testing.T) {
 		// CLOB state.
 		clobs          []types.ClobPair
 		existingOrders []types.Order
+		// Fee tier params.
+		feeParams feetypes.PerpetualFeeParams
 
 		// Parameters.
 		order types.Order
@@ -57,7 +60,8 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
 			},
-			clobs: []types.ClobPair{constants.ClobPair_Btc},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: constants.Order_Carl_Num0_Id1_Clob0_Buy1BTC_Price49999,
 
@@ -76,6 +80,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc,
 				constants.ClobPair_Eth,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: constants.Order_Carl_Num0_Id2_Clob1_Buy10ETH_Price3000,
 
@@ -96,6 +101,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			existingOrders: []types.Order{
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
 
@@ -110,6 +116,9 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				"Subaccount/value/\n+" + constants.Dave_Num0.Owner + "/",
 				// Indexer event
 				indexer_manager.IndexerEventsKey,
+				// Update rewards
+				"reward_shares/" + constants.Carl_Num0.Owner,
+				"reward_shares/" + constants.Dave_Num0.Owner,
 				// Update block stats
 				"BlockStats/value",
 				// Update prunable block height for taker fill amount
@@ -138,6 +147,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc,
 				constants.ClobPair_Eth,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: constants.Order_Carl_Num0_Id3_Clob1_Buy1ETH_Price3000,
 
@@ -154,8 +164,9 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc_No_Fee,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 
-			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price10000QuoteQt,
+			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100000QuoteQt,
 
 			expectedOrderStatus: types.Success,
 			expectedFilledSize:  0,
@@ -171,10 +182,30 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// Exact same set-up as the previous test, except the clob pair has fees.
 				constants.ClobPair_Btc,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
-			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price10000QuoteQt,
+			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100000QuoteQt,
 
 			expectedOrderStatus: types.Undercollateralized,
+			expectedFilledSize:  0,
+		},
+		"Can place an order on the orderbook if the account would be collateralized due to rebate": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			clobs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			// Same setup as the above two tests, but the order is for a slightly higher price that
+			// cannot be collateralized without the rebate.
+			feeParams: constants.PerpetualFeeParamsMakerRebate,
+
+			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100001QuoteQt,
+
+			expectedOrderStatus: types.Success,
 			expectedFilledSize:  0,
 		},
 		"Cannot open an order if it doesn't reference a valid CLOB": {
@@ -188,6 +219,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: constants.Order_Carl_Num0_Id3_Clob1_Buy1ETH_Price3000,
 
@@ -204,6 +236,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: types.Order{
 				OrderId: types.OrderId{
@@ -225,6 +258,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: types.Order{
 				OrderId: types.OrderId{
@@ -246,6 +280,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: types.Order{
 				OrderId:  types.OrderId{},
@@ -265,6 +300,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: types.Order{
 				OrderId:      types.OrderId{},
@@ -285,6 +321,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc,
 			},
+			feeParams: constants.PerpetualFeeParams,
 
 			order: types.Order{
 				OrderId:      types.OrderId{},
@@ -320,6 +357,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// The taker subaccount places an order which fully fills the previous order.
 				constants.Order_Carl_Num0_Id0_Clob0_Sell1kQtBTC_Price50000,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			// The maker subaccount places a second order identical to the first.
 			// This should fail, because the maker subaccount currently has a balance of $0 USDC, and a perpetual of size
 			// 0.01 BTC ($500), and the perpetual has a 100% margin requirement.
@@ -349,6 +387,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// The subaccount from the above order now places an order which is added to the book.
 				constants.Order_Carl_Num0_Id1_Clob0_Sell1kQtBTC_Price50000,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			// The maker subaccount places a second order identical to the first.
 			// This should fail, because the maker during matching, because subaccount currently has a balance of $0 USDC,
 			// and a perpetual of size 0.01 BTC ($500), and the perpetual has a 100% margin requirement.
@@ -377,6 +416,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// Alice places another sell order for $500 worth of BTC which now rests on the book.
 				constants.Order_Carl_Num0_Id1_Clob0_Sell1kQtBTC_Price50000,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			// Bob places a second order at a lower price than his first.
 			// This should succeed, because Bob currently has a balance of $0 USDC,
 			// and a perpetual of size 0.01 BTC ($500), and the perpetual has a 50% margin requirement.
@@ -438,7 +478,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 					StepBaseQuantums:          10,
 					SubticksPerTick:           100,
-					MinOrderBaseQuantums:      10,
 					QuantumConversionExponent: -1,
 				},
 				constants.ClobPair_Eth_No_Fee,
@@ -450,6 +489,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// This completely fills Alice's order at the maker price of $3,000.
 				constants.Order_Dave_Num0_Id3_Clob1_Sell1ETH_Price3000,
 			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
 			// Bob places a second buy order at a the same price as the first.
 			// This should bring his total initial margin requirement to $3,300 * 20%, or $660
 			// which is exactly equal to the quote balance.
@@ -468,6 +508,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc_No_Fee,
 			},
 			existingOrders:           []types.Order{},
+			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price5subticks_GTB10,
 			expectedOrderStatus:      types.Undercollateralized,
 			expectedFilledSize:       0,
@@ -482,6 +523,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc_No_Fee,
 			},
 			existingOrders:           []types.Order{},
+			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price500000_GTB10,
 			expectedOrderStatus:      types.Undercollateralized,
 			expectedFilledSize:       0,
@@ -502,6 +544,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc_No_Fee,
 			},
 			existingOrders:           []types.Order{},
+			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price5subticks_GTB10,
 			expectedOrderStatus:      types.Undercollateralized,
 			expectedFilledSize:       0,
@@ -517,6 +560,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc_No_Fee,
 			},
 			existingOrders:           []types.Order{},
+			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10,
 			expectedOrderStatus:      types.Undercollateralized,
 			expectedFilledSize:       0,
@@ -531,6 +575,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc_No_Fee,
 			},
 			existingOrders:           []types.Order{},
+			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price5subticks_GTB10,
 			expectedOrderStatus:      types.Success,
 			expectedFilledSize:       0,
@@ -552,6 +597,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc_No_Fee,
 			},
 			existingOrders:           []types.Order{},
+			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price500000_GTB10,
 			expectedOrderStatus:      types.Undercollateralized,
 			expectedFilledSize:       0,
@@ -567,6 +613,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc_No_Fee,
 			},
 			existingOrders:           []types.Order{},
+			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price5000_GTB10,
 			expectedOrderStatus:      types.Undercollateralized,
 			expectedFilledSize:       0,
@@ -581,6 +628,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.ClobPair_Btc_No_Fee,
 			},
 			existingOrders:           []types.Order{},
+			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price500000_GTB10,
 			expectedOrderStatus:      types.Success,
 			expectedFilledSize:       0,
@@ -610,7 +658,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
 
-			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParamsNoFee))
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
 
 			// Set up USDC asset in assets module.
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
@@ -640,7 +688,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
@@ -895,7 +942,6 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 					ctx,
 					clobPair.GetPerpetualClobMetadata().PerpetualId,
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
@@ -999,7 +1045,6 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 		ctx,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
 		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-		satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 		constants.ClobPair_Btc.QuantumConversionExponent,
 		constants.ClobPair_Btc.SubticksPerTick,
 		constants.ClobPair_Btc.Status,
@@ -1033,7 +1078,6 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 		ks.Ctx,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
 		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-		satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 		constants.ClobPair_Btc.QuantumConversionExponent,
 		constants.ClobPair_Btc.SubticksPerTick,
 		constants.ClobPair_Btc.Status,
@@ -1129,20 +1173,6 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
 			},
 			expectedErr: "must be a multiple of the ClobPair's SubticksPerTick",
-		},
-		"Fails if Quantums < MinOrderBaseQuantums": {
-			order: types.Order{
-				OrderId: types.OrderId{
-					ClientId:     0,
-					SubaccountId: constants.Alice_Num0,
-					ClobPairId:   uint32(0),
-				},
-				Side:         types.Order_SIDE_BUY,
-				Quantums:     24,
-				Subticks:     78,
-				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
-			},
-			expectedErr: "must be greater than the ClobPair's MinOrderBaseQuantums",
 		},
 		"Fails if Quantums is not a multiple of StepBaseQuantums": {
 			order: types.Order{
@@ -1460,10 +1490,9 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 									PerpetualId: 0,
 								},
 							},
-							Status:               types.ClobPair_STATUS_ACTIVE,
-							StepBaseQuantums:     12,
-							SubticksPerTick:      39,
-							MinOrderBaseQuantums: 204,
+							Status:           types.ClobPair_STATUS_ACTIVE,
+							StepBaseQuantums: 12,
+							SubticksPerTick:  39,
 						},
 					}
 				})
@@ -1569,7 +1598,6 @@ func TestGetStatePosition_Success(t *testing.T) {
 					ks.Ctx,
 					clobtest.MustPerpetualId(cp),
 					satypes.BaseQuantums(cp.StepBaseQuantums),
-					satypes.BaseQuantums(cp.MinOrderBaseQuantums),
 					cp.QuantumConversionExponent,
 					cp.SubticksPerTick,
 					cp.Status,
@@ -1765,7 +1793,6 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
@@ -1877,7 +1904,6 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
@@ -2031,7 +2057,6 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
@@ -2159,7 +2184,6 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,

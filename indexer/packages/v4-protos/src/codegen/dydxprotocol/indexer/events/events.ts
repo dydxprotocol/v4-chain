@@ -97,6 +97,124 @@ export function fundingEventV1_TypeToJSON(object: FundingEventV1_Type): string {
   }
 }
 /**
+ * Status of the CLOB.
+ * Defined in clob.clob_pair
+ */
+
+export enum ClobPairStatus {
+  /** CLOB_PAIR_STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
+  CLOB_PAIR_STATUS_UNSPECIFIED = 0,
+
+  /**
+   * CLOB_PAIR_STATUS_ACTIVE - CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_ACTIVE = 1,
+
+  /**
+   * CLOB_PAIR_STATUS_PAUSED - CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_PAUSED = 2,
+
+  /**
+   * CLOB_PAIR_STATUS_CANCEL_ONLY - CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_CANCEL_ONLY = 3,
+
+  /**
+   * CLOB_PAIR_STATUS_POST_ONLY - CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_POST_ONLY = 4,
+  UNRECOGNIZED = -1,
+}
+/**
+ * Status of the CLOB.
+ * Defined in clob.clob_pair
+ */
+
+export enum ClobPairStatusSDKType {
+  /** CLOB_PAIR_STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
+  CLOB_PAIR_STATUS_UNSPECIFIED = 0,
+
+  /**
+   * CLOB_PAIR_STATUS_ACTIVE - CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_ACTIVE = 1,
+
+  /**
+   * CLOB_PAIR_STATUS_PAUSED - CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_PAUSED = 2,
+
+  /**
+   * CLOB_PAIR_STATUS_CANCEL_ONLY - CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_CANCEL_ONLY = 3,
+
+  /**
+   * CLOB_PAIR_STATUS_POST_ONLY - CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_POST_ONLY = 4,
+  UNRECOGNIZED = -1,
+}
+export function clobPairStatusFromJSON(object: any): ClobPairStatus {
+  switch (object) {
+    case 0:
+    case "CLOB_PAIR_STATUS_UNSPECIFIED":
+      return ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED;
+
+    case 1:
+    case "CLOB_PAIR_STATUS_ACTIVE":
+      return ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE;
+
+    case 2:
+    case "CLOB_PAIR_STATUS_PAUSED":
+      return ClobPairStatus.CLOB_PAIR_STATUS_PAUSED;
+
+    case 3:
+    case "CLOB_PAIR_STATUS_CANCEL_ONLY":
+      return ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY;
+
+    case 4:
+    case "CLOB_PAIR_STATUS_POST_ONLY":
+      return ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY;
+
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return ClobPairStatus.UNRECOGNIZED;
+  }
+}
+export function clobPairStatusToJSON(object: ClobPairStatus): string {
+  switch (object) {
+    case ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED:
+      return "CLOB_PAIR_STATUS_UNSPECIFIED";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE:
+      return "CLOB_PAIR_STATUS_ACTIVE";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_PAUSED:
+      return "CLOB_PAIR_STATUS_PAUSED";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY:
+      return "CLOB_PAIR_STATUS_CANCEL_ONLY";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY:
+      return "CLOB_PAIR_STATUS_POST_ONLY";
+
+    case ClobPairStatus.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+/**
  * FundingUpdate is used for funding update events and includes a funding
  * value and an optional funding index that correspond to a perpetual market.
  */
@@ -703,6 +821,158 @@ export interface AssetCreateEventV1SDKType {
    */
 
   atomic_resolution: number;
+}
+/**
+ * PerpetualMarketCreateEventV1 message contains all the information about a
+ * new Perpetual Market on the v4 chain.
+ */
+
+export interface PerpetualMarketCreateEventV1 {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * Unique clob pair Id associated with this perpetual market
+   * Defined in clob.clob_pair
+   */
+
+  clobPairId: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  marketId: number;
+  /** Status of the CLOB */
+
+  status: ClobPairStatus;
+  /**
+   * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+   * per Subtick.
+   * Defined in clob.clob_pair
+   */
+
+  quantumConversionExponent: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomicResolution: number;
+  /**
+   * Defines the tick size of the orderbook by defining how many subticks
+   * are in one tick. That is, the subticks of any valid order must be a
+   * multiple of this value. Generally this value should start `>= 100`to
+   * allow room for decreasing it.
+   * Defined in clob.clob_pair
+   */
+
+  subticksPerTick: number;
+  /**
+   * Minimum size of an order on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  minOrderBaseQuantums: Long;
+  /**
+   * Minimum increment in the size of orders on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  stepBaseQuantums: Long;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidityTier: number;
+}
+/**
+ * PerpetualMarketCreateEventV1 message contains all the information about a
+ * new Perpetual Market on the v4 chain.
+ */
+
+export interface PerpetualMarketCreateEventV1SDKType {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * Unique clob pair Id associated with this perpetual market
+   * Defined in clob.clob_pair
+   */
+
+  clob_pair_id: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  market_id: number;
+  /** Status of the CLOB */
+
+  status: ClobPairStatusSDKType;
+  /**
+   * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+   * per Subtick.
+   * Defined in clob.clob_pair
+   */
+
+  quantum_conversion_exponent: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomic_resolution: number;
+  /**
+   * Defines the tick size of the orderbook by defining how many subticks
+   * are in one tick. That is, the subticks of any valid order must be a
+   * multiple of this value. Generally this value should start `>= 100`to
+   * allow room for decreasing it.
+   * Defined in clob.clob_pair
+   */
+
+  subticks_per_tick: number;
+  /**
+   * Minimum size of an order on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  min_order_base_quantums: Long;
+  /**
+   * Minimum increment in the size of orders on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  step_base_quantums: Long;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidity_tier: number;
 }
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
@@ -1925,6 +2195,151 @@ export const AssetCreateEventV1 = {
     message.hasMarket = object.hasMarket ?? false;
     message.marketId = object.marketId ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
+    return message;
+  }
+
+};
+
+function createBasePerpetualMarketCreateEventV1(): PerpetualMarketCreateEventV1 {
+  return {
+    id: 0,
+    clobPairId: 0,
+    ticker: "",
+    marketId: 0,
+    status: 0,
+    quantumConversionExponent: 0,
+    atomicResolution: 0,
+    subticksPerTick: 0,
+    minOrderBaseQuantums: Long.UZERO,
+    stepBaseQuantums: Long.UZERO,
+    liquidityTier: 0
+  };
+}
+
+export const PerpetualMarketCreateEventV1 = {
+  encode(message: PerpetualMarketCreateEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.clobPairId !== 0) {
+      writer.uint32(16).uint32(message.clobPairId);
+    }
+
+    if (message.ticker !== "") {
+      writer.uint32(26).string(message.ticker);
+    }
+
+    if (message.marketId !== 0) {
+      writer.uint32(32).uint32(message.marketId);
+    }
+
+    if (message.status !== 0) {
+      writer.uint32(40).int32(message.status);
+    }
+
+    if (message.quantumConversionExponent !== 0) {
+      writer.uint32(48).sint32(message.quantumConversionExponent);
+    }
+
+    if (message.atomicResolution !== 0) {
+      writer.uint32(56).sint32(message.atomicResolution);
+    }
+
+    if (message.subticksPerTick !== 0) {
+      writer.uint32(64).uint32(message.subticksPerTick);
+    }
+
+    if (!message.minOrderBaseQuantums.isZero()) {
+      writer.uint32(72).uint64(message.minOrderBaseQuantums);
+    }
+
+    if (!message.stepBaseQuantums.isZero()) {
+      writer.uint32(80).uint64(message.stepBaseQuantums);
+    }
+
+    if (message.liquidityTier !== 0) {
+      writer.uint32(88).uint32(message.liquidityTier);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PerpetualMarketCreateEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePerpetualMarketCreateEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 3:
+          message.ticker = reader.string();
+          break;
+
+        case 4:
+          message.marketId = reader.uint32();
+          break;
+
+        case 5:
+          message.status = (reader.int32() as any);
+          break;
+
+        case 6:
+          message.quantumConversionExponent = reader.sint32();
+          break;
+
+        case 7:
+          message.atomicResolution = reader.sint32();
+          break;
+
+        case 8:
+          message.subticksPerTick = reader.uint32();
+          break;
+
+        case 9:
+          message.minOrderBaseQuantums = (reader.uint64() as Long);
+          break;
+
+        case 10:
+          message.stepBaseQuantums = (reader.uint64() as Long);
+          break;
+
+        case 11:
+          message.liquidityTier = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<PerpetualMarketCreateEventV1>): PerpetualMarketCreateEventV1 {
+    const message = createBasePerpetualMarketCreateEventV1();
+    message.id = object.id ?? 0;
+    message.clobPairId = object.clobPairId ?? 0;
+    message.ticker = object.ticker ?? "";
+    message.marketId = object.marketId ?? 0;
+    message.status = object.status ?? 0;
+    message.quantumConversionExponent = object.quantumConversionExponent ?? 0;
+    message.atomicResolution = object.atomicResolution ?? 0;
+    message.subticksPerTick = object.subticksPerTick ?? 0;
+    message.minOrderBaseQuantums = object.minOrderBaseQuantums !== undefined && object.minOrderBaseQuantums !== null ? Long.fromValue(object.minOrderBaseQuantums) : Long.UZERO;
+    message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
+    message.liquidityTier = object.liquidityTier ?? 0;
     return message;
   }
 

@@ -3,7 +3,10 @@ package process
 import (
 	"reflect"
 
+	gometrics "github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
@@ -60,6 +63,16 @@ func DecodeAcknowledgeBridgesTx(
 func (abt *AcknowledgeBridgesTx) Validate() error {
 	// `ValidateBasic` validates that bridge event IDs are consecutive.
 	if err := abt.msg.ValidateBasic(); err != nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{
+				ModuleName,
+				metrics.AcknowledgeBridgesTx,
+				metrics.Validate,
+				metrics.Error,
+			},
+			1,
+			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.Error, metrics.ValidateBasic)},
+		)
 		return getValidateBasicError(abt.msg, err)
 	}
 
@@ -71,12 +84,32 @@ func (abt *AcknowledgeBridgesTx) Validate() error {
 	// Validate that first bridge event ID is the one to be next acknowledged.
 	acknowledgedEventInfo := abt.bridgeKeeper.GetAcknowledgedEventInfo(abt.ctx)
 	if acknowledgedEventInfo.NextId != abt.msg.Events[0].Id {
+		telemetry.IncrCounterWithLabels(
+			[]string{
+				ModuleName,
+				metrics.AcknowledgeBridgesTx,
+				metrics.Validate,
+				metrics.Error,
+			},
+			1,
+			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.Error, types.ErrBridgeIdNotNextToAcknowledge.Error())},
+		)
 		return types.ErrBridgeIdNotNextToAcknowledge
 	}
 
 	// Validate that last bridge event ID has been recognized.
 	recognizedEventInfo := abt.bridgeKeeper.GetRecognizedEventInfo(abt.ctx)
 	if recognizedEventInfo.NextId <= abt.msg.Events[len(abt.msg.Events)-1].Id {
+		telemetry.IncrCounterWithLabels(
+			[]string{
+				ModuleName,
+				metrics.AcknowledgeBridgesTx,
+				metrics.Validate,
+				metrics.Error,
+			},
+			1,
+			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.Error, types.ErrBridgeIdNotRecognized.Error())},
+		)
 		return types.ErrBridgeIdNotRecognized
 	}
 
