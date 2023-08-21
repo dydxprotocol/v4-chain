@@ -51,6 +51,7 @@ func TestAcknowledgeBridges(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Initialize context and keeper.
 			ctx, bridgeKeeper, _, _, _, mockBankKeeper := keepertest.BridgeKeepersWithMockBankKeeper(t)
+			// TODO: remove below mockings once integrated with x/delaymsg (CORE-453)
 			// Mock sending coin of each bridge event.
 			for _, bridgeEvent := range tc.bridgeEvents {
 				mockBankKeeper.On(

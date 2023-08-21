@@ -31,6 +31,13 @@ func (k Keeper) GetAcknowledgeBridges(
 		}
 	}
 
+	// Measure latency if not skipping proposing bridge events.
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.GetAcknowledgeBridges,
+		metrics.Latency,
+	)
 	acknowledgedEventInfo := k.GetAcknowledgedEventInfo(ctx)
 	recognizedCutoffTime := wallClock.Add(-proposeParams.ProposeDelayDuration)
 	events := make([]types.BridgeEvent, 0)
