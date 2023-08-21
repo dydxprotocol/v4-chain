@@ -8,7 +8,7 @@ export class AssetCreationHandler extends Handler<AssetCreateEventV1> {
   eventType: string = 'AssetCreateEvent';
 
   public getParallelizationIds(): string[] {
-    return [`${this.eventType}_${this.event.id.toString()}`];
+    return [];
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await

@@ -22,7 +22,7 @@ export class TransferHandler extends Handler<TransferEventV1> {
 
   public getParallelizationIds(): string[] {
     // Must be handled sequentially with asset create events
-    return [`AssetCreateEvent_${this.event.assetId.toString()}`];
+    return [];
   }
 
   public async internalHandle(

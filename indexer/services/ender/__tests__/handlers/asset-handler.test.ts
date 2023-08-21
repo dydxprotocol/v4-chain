@@ -95,7 +95,7 @@ describe('assetHandler', () => {
         defaultAssetCreateEvent,
       );
 
-      expect(handler.getParallelizationIds()).toEqual(['AssetCreateEvent_0']);
+      expect(handler.getParallelizationIds()).toEqual([]);
     });
   });
 
