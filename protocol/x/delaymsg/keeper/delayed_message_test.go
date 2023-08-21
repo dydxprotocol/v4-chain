@@ -2,27 +2,13 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
 	"testing"
-)
-
-var (
-	msg1Bytes = []byte("\n\x0f\x2ftestpb.TestMsg\x12\x05\n\x03meh")
-	msg2Bytes = []byte("\n\x0f\x2ftestpb.TestMsg\x12\x06\n\x04blah")
-	msg3Bytes = []byte("\n\x0f\x2ftestpb.TestMsg\x12\x06\n\x04nerp")
-
-	testMsg1 = &testdata.TestMsg{Signers: []string{"meh"}}
-	testMsg2 = &testdata.TestMsg{Signers: []string{"blah"}}
-	testMsg3 = &testdata.TestMsg{Signers: []string{"nerp"}}
-
-	testMsgAuthorities = []string{"meh", "blah", "nerp"}
-
-	allMsgs = []sdk.Msg{testMsg1, testMsg2, testMsg3}
 )
 
 func TestDelayMessageByBlocks(t *testing.T) {
@@ -41,9 +27,27 @@ func TestDelayMessageByBlocks(t *testing.T) {
 				msgBytes []byte
 			}{
 				{
-					msg:      testMsg1,
+					msg:      constants.TestMsg1,
 					delay:    blockDelay1,
-					msgBytes: msg1Bytes,
+					msgBytes: constants.Msg1Bytes,
+				},
+			},
+			expectedBlockToMessageIds: map[int64]types.BlockMessageIds{
+				int64(blockDelay1): {
+					Ids: []uint32{0},
+				},
+			},
+		},
+		"single message from bridge": {
+			testDelayedMsgs: []struct {
+				msg      sdk.Msg
+				delay    uint32
+				msgBytes []byte
+			}{
+				{
+					msg:      constants.TestMsg4,
+					delay:    blockDelay1,
+					msgBytes: constants.Msg4Bytes,
 				},
 			},
 			expectedBlockToMessageIds: map[int64]types.BlockMessageIds{
@@ -59,14 +63,14 @@ func TestDelayMessageByBlocks(t *testing.T) {
 				msgBytes []byte
 			}{
 				{
-					msg:      testMsg1,
+					msg:      constants.TestMsg1,
 					delay:    blockDelay1,
-					msgBytes: msg1Bytes,
+					msgBytes: constants.Msg1Bytes,
 				},
 				{
-					msg:      testMsg2,
+					msg:      constants.TestMsg2,
 					delay:    blockDelay2,
-					msgBytes: msg2Bytes,
+					msgBytes: constants.Msg2Bytes,
 				},
 			},
 			expectedBlockToMessageIds: map[int64]types.BlockMessageIds{
@@ -85,19 +89,19 @@ func TestDelayMessageByBlocks(t *testing.T) {
 				msgBytes []byte
 			}{
 				{
-					msg:      testMsg1,
+					msg:      constants.TestMsg1,
 					delay:    blockDelay1,
-					msgBytes: msg1Bytes,
+					msgBytes: constants.Msg1Bytes,
 				},
 				{
-					msg:      testMsg2,
+					msg:      constants.TestMsg2,
 					delay:    blockDelay2,
-					msgBytes: msg2Bytes,
+					msgBytes: constants.Msg2Bytes,
 				},
 				{
-					msg:      testMsg3,
+					msg:      constants.TestMsg3,
 					delay:    blockDelay1,
-					msgBytes: msg3Bytes,
+					msgBytes: constants.Msg3Bytes,
 				},
 			},
 			expectedBlockToMessageIds: map[int64]types.BlockMessageIds{
@@ -113,7 +117,7 @@ func TestDelayMessageByBlocks(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsg, _ := keepertest.DelayMsgKeepersWithAuthorities(t, testMsgAuthorities)
+			ctx, delaymsg, _ := keepertest.DelayMsgKeepersWithAuthorities(t, constants.TestMsgAuthorities)
 
 			// Act - add messages.
 			for i, testDelayedMsg := range tc.testDelayedMsgs {
@@ -152,9 +156,9 @@ func TestDeleteMessage_NotFound(t *testing.T) {
 
 func TestDeleteMessage(t *testing.T) {
 	// Setup - add a message.
-	ctx, delaymsg, _ := keepertest.DelayMsgKeepersWithAuthorities(t, testMsgAuthorities)
+	ctx, delaymsg, _ := keepertest.DelayMsgKeepersWithAuthorities(t, constants.TestMsgAuthorities)
 
-	id, err := delaymsg.DelayMessageByBlocks(ctx, testMsg1, 10)
+	id, err := delaymsg.DelayMessageByBlocks(ctx, constants.TestMsg1, 10)
 	require.Equal(t, uint32(0), id)
 	require.NoError(t, err)
 
@@ -206,13 +210,13 @@ func expectDelayedMessagesAndBlockIds(
 }
 
 func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
-	ctx, delaymsg, _ := keepertest.DelayMsgKeepersWithAuthorities(t, testMsgAuthorities)
+	ctx, delaymsg, _ := keepertest.DelayMsgKeepersWithAuthorities(t, constants.TestMsgAuthorities)
 
 	// No messages.
 	require.Equal(t, uint32(0), delaymsg.GetNumMessages(ctx))
 
 	// Add a message, then delete it.
-	_, err := delaymsg.DelayMessageByBlocks(ctx, testMsg1, 10)
+	_, err := delaymsg.DelayMessageByBlocks(ctx, constants.TestMsg1, 10)
 	require.NoError(t, err)
 
 	expectDelayedMessagesAndBlockIds(
@@ -221,7 +225,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 		delaymsg,
 		map[uint32]types.DelayedMessage{
 			0: {
-				Msg:         msg1Bytes,
+				Msg:         constants.Msg1Bytes,
 				BlockHeight: 10,
 			},
 		},
@@ -247,7 +251,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 	)
 
 	// Add another message - expect an incremented id.
-	_, err = delaymsg.DelayMessageByBlocks(ctx, testMsg1, 10)
+	_, err = delaymsg.DelayMessageByBlocks(ctx, constants.TestMsg1, 10)
 	require.NoError(t, err)
 
 	// Expect a single delayed message with id 1.
@@ -257,7 +261,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 		delaymsg,
 		map[uint32]types.DelayedMessage{
 			1: { // Id incremented.
-				Msg:         msg1Bytes,
+				Msg:         constants.Msg1Bytes,
 				BlockHeight: 10,
 			},
 		},
@@ -286,7 +290,7 @@ func TestSetDelayedMessage_Errors(t *testing.T) {
 		"invalid block height": {
 			msg: types.DelayedMessage{
 				Id:          0,
-				Msg:         msg1Bytes,
+				Msg:         constants.Msg1Bytes,
 				BlockHeight: -1,
 			},
 			expErr: fmt.Errorf("failed to delay message: block height -1 is in the past: Invalid input"),

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"testing"
@@ -40,6 +41,9 @@ func DelayMsgKeepers(
 
 		cdc.InterfaceRegistry().RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 
+		// Register bridge messages for encoding / decoding.
+		bridgetypes.RegisterInterfaces(cdc.InterfaceRegistry())
+
 		return []GenesisInitializer{delayMsgKeeper}
 	})
 	return ctx, delayMsgKeeper, storeKey, authorities
@@ -68,6 +72,9 @@ func DelayMsgKeepersWithAuthorities(
 		)
 
 		cdc.InterfaceRegistry().RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+
+		// Register bridge messages for encoding / decoding.
+		bridgetypes.RegisterInterfaces(cdc.InterfaceRegistry())
 
 		return []GenesisInitializer{delayMsgKeeper}
 	})
