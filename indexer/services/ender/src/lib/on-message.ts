@@ -32,7 +32,6 @@ import {
 } from '../caches/block-cache';
 import { updateCandleCacheWithCandle } from '../caches/candle-cache';
 import config from '../config';
-import { BatchedHandlers } from './batched-handlers';
 import { BlockProcessor } from './block-processor';
 import { CandlesGenerator } from './candles-generator';
 import {
@@ -40,7 +39,6 @@ import {
   indexerTendermintEventToTransactionIndex,
 } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
-import { SyncHandlers } from './sync-handlers';
 
 /**
  * @function onMessage
