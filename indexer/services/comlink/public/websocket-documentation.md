@@ -272,6 +272,7 @@ export interface TransferSubaccountMessageContents {
   symbol: string,
   size: string,
   type: TransferType,
+  transactionHash: string,
 }
 
 export enum TransferType {

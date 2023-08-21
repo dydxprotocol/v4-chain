@@ -154,6 +154,7 @@ export interface TransferSubaccountMessageContents {
   symbol: string,
   size: string,
   type: TransferType,
+  transactionHash: string,
 }
 
 /* ------- TradeMessageContents ------- */
