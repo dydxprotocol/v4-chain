@@ -8,10 +8,10 @@ import { ConsolidatedKafkaEvent, DydxIndexerSubtypes, EventMessage } from './typ
 
 // type alias for an array of handlers.
 type HandlerBatch = Handler<EventMessage>[];
-type HandlerBatchMap = Partial<{ [indexerSubtype in DydxIndexerSubtypes]: HandlerBatch}>;
 export const SyncSubtypes: DydxIndexerSubtypes[] = [
   DydxIndexerSubtypes.MARKET,
   DydxIndexerSubtypes.ASSET,
+  DydxIndexerSubtypes.PERPETUAL_MARKET,
 ];
 
 /**
@@ -21,11 +21,11 @@ export const SyncSubtypes: DydxIndexerSubtypes[] = [
  * It is used for processing asset and market events.
  */
 export class SyncHandlers {
-  syncHandlers: HandlerBatchMap;
+  handlerBatch: HandlerBatch;
   initializationTime: number;
 
   constructor() {
-    this.syncHandlers = {};
+    this.handlerBatch = [];
     this.initializationTime = Date.now();
   }
 
@@ -48,11 +48,8 @@ export class SyncHandlers {
       });
       return;
     }
-    if (!this.syncHandlers[indexerSubtype]) {
-      this.syncHandlers[indexerSubtype] = [];
-    }
     // @ts-ignore
-    this.syncHandlers[indexerSubtype].push(handler);
+    this.handlerBatch.push(handler);
   }
 
   /**
@@ -64,30 +61,20 @@ export class SyncHandlers {
   ): Promise<void> {
     const start: number = Date.now();
     const handlerCountMapping: { [key: string]: number } = {};
-    for (const indexerSubtype of SyncSubtypes) {
-      if (this.syncHandlers[indexerSubtype]) {
-        const handlerBatch: HandlerBatch = this.syncHandlers[indexerSubtype] as HandlerBatch;
-        const consolidatedKafkaEventGroup: ConsolidatedKafkaEvent[][] = [];
-        for (const handler of handlerBatch) {
-          const handlerName: string = handler.constructor.name;
-          if (!(handlerName in handlerCountMapping)) {
-            handlerCountMapping[handlerName] = 0;
-          }
-          handlerCountMapping[handlerName] += 1;
-          const events: ConsolidatedKafkaEvent[] = await handler.handle();
-          consolidatedKafkaEventGroup.push(events);
-        }
-        stats.timing(
-          `${config.SERVICE_NAME}.synch_handlers.processing_delay.timing`,
-          Date.now() - this.initializationTime,
-          { eventType: indexerSubtype },
-        );
-
-        _.forEach(consolidatedKafkaEventGroup, (events: ConsolidatedKafkaEvent[]) => {
-          kafkaPublisher.addEvents(events);
-        });
+    const consolidatedKafkaEventGroup: ConsolidatedKafkaEvent[][] = [];
+    for (const handler of this.handlerBatch) {
+      const handlerName: string = handler.constructor.name;
+      if (!(handlerName in handlerCountMapping)) {
+        handlerCountMapping[handlerName] = 0;
       }
+      handlerCountMapping[handlerName] += 1;
+      const events: ConsolidatedKafkaEvent[] = await handler.handle();
+      consolidatedKafkaEventGroup.push(events);
     }
+
+    _.forEach(consolidatedKafkaEventGroup, (events: ConsolidatedKafkaEvent[]) => {
+      kafkaPublisher.addEvents(events);
+    });
     logger.info({
       at: 'SyncHandlers#process',
       message: 'Finished processing synchronous handlers',

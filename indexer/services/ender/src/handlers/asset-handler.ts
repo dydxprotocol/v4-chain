@@ -20,7 +20,7 @@ export class AssetCreationHandler extends Handler<AssetCreateEventV1> {
     return [];
   }
 
-  public async createAsset(): Promise<void> {
+  private async createAsset(): Promise<void> {
     if (this.event.hasMarket) {
       marketRefresher.getMarketFromId(
         this.event.marketId,

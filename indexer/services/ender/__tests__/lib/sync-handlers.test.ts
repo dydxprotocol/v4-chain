@@ -108,10 +108,9 @@ describe('syncHandler', () => {
         txId,
         defaultMarketCreate,
       );
-      // assets has a dependency on markets, but syncHandlers should handle the order
-      // correctly.
-      synchHandlers.addHandler(DydxIndexerSubtypes.ASSET, assetHandler);
+      // handlers are processed in the order in which they are received.
       synchHandlers.addHandler(DydxIndexerSubtypes.MARKET, marketHandler);
+      synchHandlers.addHandler(DydxIndexerSubtypes.ASSET, assetHandler);
       // should be ignored, because transfers are not handled by syncHandlers
       synchHandlers.addHandler(DydxIndexerSubtypes.TRANSFER, assetHandler);
 

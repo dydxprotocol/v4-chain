@@ -42,7 +42,7 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
     return [];
   }
 
-  public async createMarket(marketCreate: MarketCreateEventMessage): Promise<void> {
+  private async createMarket(marketCreate: MarketCreateEventMessage): Promise<void> {
     await MarketTable.create({
       id: marketCreate.marketId,
       pair: marketCreate.marketCreate.base!.pair,
