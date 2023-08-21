@@ -282,19 +282,19 @@ message AssetCreateEventV1 {
 // Defined in clob.clob_pair
 enum ClobPairStatus {
   // Default value. This value is invalid and unused.
-  STATUS_UNSPECIFIED = 0;
-  // STATUS_ACTIVE behavior is unfinalized.
+  CLOB_PAIR_STATUS_UNSPECIFIED = 0;
+  // CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
   // TODO(DEC-600): update this documentation.
-  STATUS_ACTIVE = 1;
-  // STATUS_PAUSED behavior is unfinalized.
+  CLOB_PAIR_STATUS_ACTIVE = 1;
+  // CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
   // TODO(DEC-600): update this documentation.
-  STATUS_PAUSED = 2;
-  // STATUS_CANCEL_ONLY behavior is unfinalized.
+  CLOB_PAIR_STATUS_PAUSED = 2;
+  // CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
   // TODO(DEC-600): update this documentation.
-  STATUS_CANCEL_ONLY = 3;
-  // STATUS_POST_ONLY behavior is unfinalized.
+  CLOB_PAIR_STATUS_CANCEL_ONLY = 3;
+  // CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
   // TODO(DEC-600): update this documentation.
-  STATUS_POST_ONLY = 4;
+  CLOB_PAIR_STATUS_POST_ONLY = 4;
 }
 
 // PerpetualMarketCreateEventV1 message contains all the information about a

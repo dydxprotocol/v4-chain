@@ -102,32 +102,32 @@ export function fundingEventV1_TypeToJSON(object: FundingEventV1_Type): string {
  */
 
 export enum ClobPairStatus {
-  /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
-  STATUS_UNSPECIFIED = 0,
+  /** CLOB_PAIR_STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
+  CLOB_PAIR_STATUS_UNSPECIFIED = 0,
 
   /**
-   * STATUS_ACTIVE - STATUS_ACTIVE behavior is unfinalized.
+   * CLOB_PAIR_STATUS_ACTIVE - CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_ACTIVE = 1,
+  CLOB_PAIR_STATUS_ACTIVE = 1,
 
   /**
-   * STATUS_PAUSED - STATUS_PAUSED behavior is unfinalized.
+   * CLOB_PAIR_STATUS_PAUSED - CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_PAUSED = 2,
+  CLOB_PAIR_STATUS_PAUSED = 2,
 
   /**
-   * STATUS_CANCEL_ONLY - STATUS_CANCEL_ONLY behavior is unfinalized.
+   * CLOB_PAIR_STATUS_CANCEL_ONLY - CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_CANCEL_ONLY = 3,
+  CLOB_PAIR_STATUS_CANCEL_ONLY = 3,
 
   /**
-   * STATUS_POST_ONLY - STATUS_POST_ONLY behavior is unfinalized.
+   * CLOB_PAIR_STATUS_POST_ONLY - CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_POST_ONLY = 4,
+  CLOB_PAIR_STATUS_POST_ONLY = 4,
   UNRECOGNIZED = -1,
 }
 /**
@@ -136,55 +136,55 @@ export enum ClobPairStatus {
  */
 
 export enum ClobPairStatusSDKType {
-  /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
-  STATUS_UNSPECIFIED = 0,
+  /** CLOB_PAIR_STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
+  CLOB_PAIR_STATUS_UNSPECIFIED = 0,
 
   /**
-   * STATUS_ACTIVE - STATUS_ACTIVE behavior is unfinalized.
+   * CLOB_PAIR_STATUS_ACTIVE - CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_ACTIVE = 1,
+  CLOB_PAIR_STATUS_ACTIVE = 1,
 
   /**
-   * STATUS_PAUSED - STATUS_PAUSED behavior is unfinalized.
+   * CLOB_PAIR_STATUS_PAUSED - CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_PAUSED = 2,
+  CLOB_PAIR_STATUS_PAUSED = 2,
 
   /**
-   * STATUS_CANCEL_ONLY - STATUS_CANCEL_ONLY behavior is unfinalized.
+   * CLOB_PAIR_STATUS_CANCEL_ONLY - CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_CANCEL_ONLY = 3,
+  CLOB_PAIR_STATUS_CANCEL_ONLY = 3,
 
   /**
-   * STATUS_POST_ONLY - STATUS_POST_ONLY behavior is unfinalized.
+   * CLOB_PAIR_STATUS_POST_ONLY - CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_POST_ONLY = 4,
+  CLOB_PAIR_STATUS_POST_ONLY = 4,
   UNRECOGNIZED = -1,
 }
 export function clobPairStatusFromJSON(object: any): ClobPairStatus {
   switch (object) {
     case 0:
-    case "STATUS_UNSPECIFIED":
-      return ClobPairStatus.STATUS_UNSPECIFIED;
+    case "CLOB_PAIR_STATUS_UNSPECIFIED":
+      return ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED;
 
     case 1:
-    case "STATUS_ACTIVE":
-      return ClobPairStatus.STATUS_ACTIVE;
+    case "CLOB_PAIR_STATUS_ACTIVE":
+      return ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE;
 
     case 2:
-    case "STATUS_PAUSED":
-      return ClobPairStatus.STATUS_PAUSED;
+    case "CLOB_PAIR_STATUS_PAUSED":
+      return ClobPairStatus.CLOB_PAIR_STATUS_PAUSED;
 
     case 3:
-    case "STATUS_CANCEL_ONLY":
-      return ClobPairStatus.STATUS_CANCEL_ONLY;
+    case "CLOB_PAIR_STATUS_CANCEL_ONLY":
+      return ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY;
 
     case 4:
-    case "STATUS_POST_ONLY":
-      return ClobPairStatus.STATUS_POST_ONLY;
+    case "CLOB_PAIR_STATUS_POST_ONLY":
+      return ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY;
 
     case -1:
     case "UNRECOGNIZED":
@@ -194,20 +194,20 @@ export function clobPairStatusFromJSON(object: any): ClobPairStatus {
 }
 export function clobPairStatusToJSON(object: ClobPairStatus): string {
   switch (object) {
-    case ClobPairStatus.STATUS_UNSPECIFIED:
-      return "STATUS_UNSPECIFIED";
+    case ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED:
+      return "CLOB_PAIR_STATUS_UNSPECIFIED";
 
-    case ClobPairStatus.STATUS_ACTIVE:
-      return "STATUS_ACTIVE";
+    case ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE:
+      return "CLOB_PAIR_STATUS_ACTIVE";
 
-    case ClobPairStatus.STATUS_PAUSED:
-      return "STATUS_PAUSED";
+    case ClobPairStatus.CLOB_PAIR_STATUS_PAUSED:
+      return "CLOB_PAIR_STATUS_PAUSED";
 
-    case ClobPairStatus.STATUS_CANCEL_ONLY:
-      return "STATUS_CANCEL_ONLY";
+    case ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY:
+      return "CLOB_PAIR_STATUS_CANCEL_ONLY";
 
-    case ClobPairStatus.STATUS_POST_ONLY:
-      return "STATUS_POST_ONLY";
+    case ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY:
+      return "CLOB_PAIR_STATUS_POST_ONLY";
 
     case ClobPairStatus.UNRECOGNIZED:
     default:
