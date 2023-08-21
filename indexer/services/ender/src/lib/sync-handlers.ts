@@ -15,7 +15,8 @@ export const SyncSubtypes: DydxIndexerSubtypes[] = [
 ];
 
 /**
- * A class that processes handlers sequentially in the order specified in SyncSubtypes.
+ * A class that processes handlers sequentially.
+ *
  * During genesis, these events should be handled prior to any events in BatchedHandlers.
  * After genesis block, these events should be handled after events in BatchedHandlers.
  * It is used for processing asset and market events.
@@ -31,8 +32,7 @@ export class SyncHandlers {
 
   /**
    * Adds a handler which contains an event to be processed. This function should be called in the
-   * order in which the events should be processed. The handlers will be processed sequentially
-   * by event subtype.
+   * order in which the events should be processed. The handlers will be processed sequentially.
    *
    * @param indexerSubtype The event subtype
    * @param handler The handler to add to the batched handlers
@@ -53,8 +53,8 @@ export class SyncHandlers {
   }
 
   /**
-   * Processes all handlers that were passed in through `addHandler` sequentially
-   * in the order specified in SyncSubtypes. Adds events to the kafkaPublisher.
+   * Processes all handlers that were passed in through `addHandler` sequentially.
+   * Adds events to the kafkaPublisher.
    */
   public async process(
     kafkaPublisher: KafkaPublisher,
