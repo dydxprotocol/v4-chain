@@ -1495,7 +1495,10 @@
             "name": "status",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/APIOrderStatus"
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/APIOrderStatus"
+              }
             }
           },
           {

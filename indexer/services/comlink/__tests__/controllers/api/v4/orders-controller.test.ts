@@ -503,8 +503,36 @@ describe('orders-controller#V4', () => {
         })}`,
       });
 
-      // Best effort opened order should be only order in response.
+      // Untriggered order should be only order in response.
       expect(response.body).toEqual([
+        postgresOrderToResponseObject({
+          ...untriggeredOrder,
+          id: OrderTable.uuid(
+            untriggeredOrder.subaccountId,
+            untriggeredOrder.clientId,
+            untriggeredOrder.clobPairId,
+            untriggeredOrder.orderFlags,
+          ),
+        }),
+      ]);
+
+      response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders?${getQueryString({
+          ...defaultQueryParams,
+          status: [APIOrderStatusEnum.UNTRIGGERED, APIOrderStatusEnum.OPEN],
+        })}`,
+      });
+
+      // Untriggered order and open order should be in response.
+      expect(response.body).toEqual([
+        postgresAndRedisOrderToResponseObject(
+          {
+            ...testConstants.defaultOrder,
+            id: testConstants.defaultOrderId,
+          },
+          redisTestConstants.defaultRedisOrder,
+        ),
         postgresOrderToResponseObject({
           ...untriggeredOrder,
           id: OrderTable.uuid(
