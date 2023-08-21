@@ -3,7 +3,6 @@ package keeper
 import (
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -39,23 +38,6 @@ func (k Keeper) CompleteBridge(
 	); err != nil {
 		return err
 	}
-
-	// Emit metric on unbridged balance.
-	unbridged := k.bankKeeper.GetBalance(
-		ctx,
-		sdk.MustAccAddressFromBech32(k.GetBridgeAuthority()),
-		bridge.Coin.Denom,
-	)
-	telemetry.SetGaugeWithLabels(
-		[]string{
-			types.ModuleName,
-			metrics.UnbridgedBalance,
-		},
-		float32(unbridged.Amount.Int64()),
-		[]gometrics.Label{
-			metrics.GetLabelForStringValue(metrics.BridgeTokenDenom, unbridged.Denom),
-		},
-	)
 
 	// Emit metric on last completed bridge id.
 	telemetry.SetGauge(
