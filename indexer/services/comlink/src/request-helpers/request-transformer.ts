@@ -218,6 +218,7 @@ export function transferToResponseObject(
     createdAtHeight: transfer.createdAtHeight,
     symbol: assetMap[transfer.assetId].symbol,
     type: helpers.getTransferType(transfer, subaccountId),
+    transactionHash: transfer.transactionHash,
   };
 }
 

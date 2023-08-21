@@ -143,6 +143,7 @@ export interface TransferResponseObject {
   createdAtHeight: string,
   symbol: string,
   type: TransferType,
+  transactionHash: string,
 }
 
 /* ------- PNL TICKS TYPES ------- */

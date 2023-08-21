@@ -68,6 +68,7 @@ describe('transfers-controller#V4', () => {
         createdAtHeight: testConstants.defaultTransfer.createdAtHeight,
         symbol: testConstants.defaultAsset.symbol,
         type: TransferType.TRANSFER_OUT,
+        transactionHash: testConstants.defaultTransfer.transactionHash,
       };
 
       const expectedTransfer2Response: TransferResponseObject = {
@@ -92,6 +93,7 @@ describe('transfers-controller#V4', () => {
         createdAtHeight: transfer2.createdAtHeight,
         symbol: testConstants.defaultAsset2.symbol,
         type: TransferType.TRANSFER_IN,
+        transactionHash: transfer2.transactionHash,
       };
 
       const expectedDepositResponse: TransferResponseObject = {
@@ -108,6 +110,7 @@ describe('transfers-controller#V4', () => {
         createdAtHeight: testConstants.defaultDeposit.createdAtHeight,
         symbol: testConstants.defaultAsset.symbol,
         type: TransferType.DEPOSIT,
+        transactionHash: testConstants.defaultDeposit.transactionHash,
       };
 
       const expectedWithdrawalResponse: TransferResponseObject = {
@@ -124,6 +127,7 @@ describe('transfers-controller#V4', () => {
         createdAtHeight: testConstants.defaultWithdrawal.createdAtHeight,
         symbol: testConstants.defaultAsset.symbol,
         type: TransferType.WITHDRAWAL,
+        transactionHash: testConstants.defaultWithdrawal.transactionHash,
       };
 
       expect(response.body.transfers).toEqual(
@@ -191,6 +195,7 @@ describe('transfers-controller#V4', () => {
         createdAtHeight: transfer2.createdAtHeight,
         symbol: testConstants.defaultAsset2.symbol,
         type: TransferType.TRANSFER_IN,
+        transactionHash: transfer2.transactionHash,
       };
 
       expect(response.body.transfers).toEqual(
@@ -242,6 +247,7 @@ describe('transfers-controller#V4', () => {
         createdAtHeight: testConstants.defaultTransfer.createdAtHeight,
         symbol: testConstants.defaultAsset.symbol,
         type: TransferType.TRANSFER_OUT,
+        transactionHash: testConstants.defaultTransfer.transactionHash,
       };
 
       expect(response.body.transfers).toEqual(

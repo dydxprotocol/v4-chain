@@ -1666,7 +1666,8 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/transfers?address=string&suba
       "createdAt": "string",
       "createdAtHeight": "string",
       "symbol": "string",
-      "type": "TRANSFER_IN"
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
     }
   ]
 }
@@ -3088,7 +3089,8 @@ or
   "createdAt": "string",
   "createdAtHeight": "string",
   "symbol": "string",
-  "type": "TRANSFER_IN"
+  "type": "TRANSFER_IN",
+  "transactionHash": "string"
 }
 
 ```
@@ -3109,6 +3111,7 @@ or
 |createdAtHeight|string|true|none|none|
 |symbol|string|true|none|none|
 |type|[TransferType](#schematransfertype)|true|none|none|
+|transactionHash|string|true|none|none|
 
 ## TransferResponse
 
@@ -3134,7 +3137,8 @@ or
       "createdAt": "string",
       "createdAtHeight": "string",
       "symbol": "string",
-      "type": "TRANSFER_IN"
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
     }
   ]
 }
