@@ -36,18 +36,16 @@ export class BlockProcessor {
   block: IndexerTendermintBlock;
   txId: number;
   batchedHandlers: BatchedHandlers;
-  syncHandler: SyncHandlers;
+  syncHandlers: SyncHandlers;
 
   constructor(
     block: IndexerTendermintBlock,
     txId: number,
-    batchedHandlers: BatchedHandlers,
-    syncHandlers: SyncHandlers,
   ) {
     this.block = block;
     this.txId = txId;
-    this.batchedHandlers = batchedHandlers;
-    this.syncHandler = syncHandlers;
+    this.batchedHandlers = new BatchedHandlers();
+    this.syncHandlers = new SyncHandlers();
   }
 
   /**
@@ -159,7 +157,7 @@ export class BlockProcessor {
 
     _.map(handlers, (handler: Handler<EventMessage>) => {
       if (Object.values(SyncSubtypes).includes(eventProtoWithType.type as DydxIndexerSubtypes)) {
-        this.syncHandler.addHandler(eventProtoWithType.type, handler);
+        this.syncHandlers.addHandler(eventProtoWithType.type, handler);
       } else {
         this.batchedHandlers.addHandler(handler);
       }
@@ -171,11 +169,11 @@ export class BlockProcessor {
     // in genesis, handle sync events first, then batched events.
     // in other blocks, handle batched events first, then sync events.
     if (this.block.height === 0) {
-      await this.syncHandler.process(kafkaPublisher);
+      await this.syncHandlers.process(kafkaPublisher);
       await this.batchedHandlers.process(kafkaPublisher);
     } else {
       await this.batchedHandlers.process(kafkaPublisher);
-      await this.syncHandler.process(kafkaPublisher);
+      await this.syncHandlers.process(kafkaPublisher);
     }
     return kafkaPublisher;
   }

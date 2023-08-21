@@ -98,8 +98,6 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     const blockProcessor: BlockProcessor = new BlockProcessor(
       indexerTendermintBlock,
       txId,
-      new BatchedHandlers(),
-      new SyncHandlers(),
     );
     const kafkaPublisher: KafkaPublisher = await blockProcessor.process();
 

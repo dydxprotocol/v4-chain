@@ -128,9 +128,9 @@ describe('block-processor', () => {
     const blockProcessor: BlockProcessor = new BlockProcessor(
       block,
       txId,
-      batchedHandlers,
-      syncHandlers,
     );
+    blockProcessor.batchedHandlers = batchedHandlers;
+    blockProcessor.syncHandlers = syncHandlers;
     await blockProcessor.process();
     await Transaction.commit(txId);
     expect(syncHandlers.addHandler).toHaveBeenCalledTimes(2);
@@ -156,9 +156,9 @@ describe('block-processor', () => {
     const blockProcessor: BlockProcessor = new BlockProcessor(
       block,
       txId,
-      batchedHandlers,
-      syncHandlers,
     );
+    blockProcessor.batchedHandlers = batchedHandlers;
+    blockProcessor.syncHandlers = syncHandlers;
     await blockProcessor.process();
     await Transaction.commit(txId);
     expect(syncHandlers.addHandler).toHaveBeenCalledTimes(2);
