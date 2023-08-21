@@ -19,7 +19,6 @@ import {
   OrderbookMessageContents,
   OrderFromDatabase,
   OrderTable,
-  OrderType,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   protocolTranslations,
@@ -54,7 +53,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
-import { convertToRedisOrder } from '../../src/handlers/helpers';
+import { convertToRedisOrder, getTriggerPrice } from '../../src/handlers/helpers';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrdersCacheEmpty, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
@@ -89,12 +88,23 @@ describe('order-place-handler', () => {
       goodTilBlock: undefined,
       goodTilBlockTime: 1_300_000_000,
     };
+    const replacementOrderConditional: IndexerOrder = {
+      ...redisTestConstants.defaultConditionalOrder,
+      quantums: Long.fromValue(500_000, true),
+      subticks: Long.fromValue(1_000_000, true),
+      goodTilBlock: undefined,
+      goodTilBlockTime: 1_300_000_000,
+    };
     const replacedOrder: RedisOrder = convertToRedisOrder(
       replacementOrder,
       testConstants.defaultPerpetualMarket,
     );
     const replacedOrderGoodTilBlockTime: RedisOrder = convertToRedisOrder(
       replacementOrderGoodTilBlockTime,
+      testConstants.defaultPerpetualMarket,
+    );
+    const replacedOrderConditional: RedisOrder = convertToRedisOrder(
+      replacementOrderConditional,
       testConstants.defaultPerpetualMarket,
     );
     const replacementUpdate: OffChainUpdateV1 = {
@@ -111,12 +121,24 @@ describe('order-place-handler', () => {
           OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
+    const replacementUpdateConditional: OffChainUpdateV1 = {
+      orderPlace: {
+        order: replacementOrderConditional,
+        placementStatus:
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+      },
+    };
     const replacementMessage: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdate).finish())),
     );
     const replacementMessageGoodTilBlockTime: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(
         OffChainUpdateV1.encode(replacementUpdateGoodTilBlockTime).finish(),
+      )),
+    );
+    const replacementMessageConditional: KafkaMessage = createKafkaMessage(
+      Buffer.from(Uint8Array.from(
+        OffChainUpdateV1.encode(replacementUpdateConditional).finish(),
       )),
     );
     const dbDefaultOrder: OrderFromDatabase = {
@@ -127,6 +149,11 @@ describe('order-place-handler', () => {
       ...testConstants.defaultOrderGoodTilBlockTime,
       id: testConstants.defaultOrderGoodTilBlockTimeId,
       createdAtHeight: '2',
+    };
+    const dbConditionalOrder: OrderFromDatabase = {
+      ...testConstants.defaultConditionalOrder,
+      id: testConstants.defaultConditionalOrderId,
+      createdAtHeight: '3',
     };
 
     beforeAll(async () => {
@@ -139,6 +166,7 @@ describe('order-place-handler', () => {
       await Promise.all([
         OrderTable.create(dbDefaultOrder),
         OrderTable.create(dbOrderGoodTilBlockTime),
+        OrderTable.create(dbConditionalOrder),
       ]);
       jest.spyOn(stats, 'timing');
       jest.spyOn(OrderbookLevelsCache, 'updatePriceLevel');
@@ -173,6 +201,14 @@ describe('order-place-handler', () => {
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         // Subaccount messages should not be sent for best-effort-opened for long-term orders
+        false,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        // Subaccount messages should not be sent for best-effort-opened for conditional orders
         false,
       ],
     ])('handles order place for new order (with %s)', async (
@@ -243,6 +279,17 @@ describe('order-place-handler', () => {
         false,
       ],
       [
+        'conditional',
+        redisTestConstants.defaultConditionalOrder,
+        replacementMessageConditional,
+        redisTestConstants.defaultRedisOrderConditional,
+        dbConditionalOrder,
+        redisTestConstants.defaultOrderUuidConditional,
+        replacedOrderConditional,
+        false,
+        false,
+      ],
+      [
         'goodTilBlock and canceled order',
         redisTestConstants.defaultOrder,
         replacementMessage,
@@ -261,6 +308,17 @@ describe('order-place-handler', () => {
         dbOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         replacedOrderGoodTilBlockTime,
+        false,
+        true,
+      ],
+      [
+        'conditional and canceled order',
+        redisTestConstants.defaultConditionalOrder,
+        replacementMessageConditional,
+        redisTestConstants.defaultRedisOrderConditional,
+        dbConditionalOrder,
+        redisTestConstants.defaultOrderUuidConditional,
+        replacedOrderConditional,
         false,
         true,
       ],
@@ -352,6 +410,16 @@ describe('order-place-handler', () => {
         dbOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         replacedOrderGoodTilBlockTime,
+        false,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultConditionalOrder,
+        replacementMessageConditional,
+        redisTestConstants.defaultRedisOrderConditional,
+        dbConditionalOrder,
+        redisTestConstants.defaultOrderUuidConditional,
+        replacedOrderConditional,
         false,
       ],
     ])('handles order place for replacing order (with %s), resting on book', async (
@@ -497,6 +565,16 @@ describe('order-place-handler', () => {
         replacedOrderGoodTilBlockTime,
         false,
       ],
+      [
+        'conditional',
+        redisTestConstants.defaultConditionalOrder,
+        replacementMessageConditional,
+        redisTestConstants.defaultRedisOrderConditional,
+        dbConditionalOrder,
+        redisTestConstants.defaultOrderUuidConditional,
+        replacedOrderConditional,
+        false,
+      ],
     ])('handles order place for replacing order (with %s), resting on book, 0 remaining quantums',
       async (
         _name: string,
@@ -560,52 +638,94 @@ describe('order-place-handler', () => {
       },
     );
 
-    it('handles order place with OPEN placement status, does not exist initially', async () => {
+    it.each([
+      [
+        'good-til-block-time',
+        redisTestConstants.defaultOrderGoodTilBlockTime,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        dbOrderGoodTilBlockTime,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        dbConditionalOrder,
+      ],
+    ])('handles order place with OPEN placement status, does not exist initially (with %s)', async (
+      _name: string,
+      orderToPlace: IndexerOrder,
+      expectedRedisOrder: RedisOrder,
+      expectedOrderUuid: string,
+      placedOrder: OrderFromDatabase,
+    ) => {
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
       await handleInitialOrderPlace({
         ...redisTestConstants.orderPlace,
         orderPlace: {
-          order: redisTestConstants.defaultOrderGoodTilBlockTime,
+          order: orderToPlace,
           placementStatus:
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
         },
       });
       expectWebsocketMessagesSent(
         producerSendSpy,
-        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
-        dbOrderGoodTilBlockTime,
+        expectedRedisOrder,
+        placedOrder,
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.OPEN,
         // Subaccount message should be sent for stateful order if status is OPEN
         true,
       );
       await checkOrderPlace(
-        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        expectedOrderUuid,
         redisTestConstants.defaultSubaccountUuid,
-        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        expectedRedisOrder,
       );
 
       expect(logger.error).not.toHaveBeenCalled();
       expectStats();
     });
 
-    it('handles order place with OPEN placement status, exists initially', async () => {
+    it.each([
+      [
+        'good-til-block-time',
+        redisTestConstants.defaultOrderGoodTilBlockTime,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        dbOrderGoodTilBlockTime,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        dbConditionalOrder,
+      ],
+    ])('handles order place with OPEN placement status, exists initially (with %s)', async (
+      _name: string,
+      orderToPlace: IndexerOrder,
+      expectedRedisOrder: RedisOrder,
+      expectedOrderUuid: string,
+      placedOrder: OrderFromDatabase,
+    ) => {
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
       // Handle the order place event for the initial order with BEST_EFFORT_OPENED
       await handleInitialOrderPlace({
         ...redisTestConstants.orderPlace,
         orderPlace: {
-          order: redisTestConstants.defaultOrderGoodTilBlockTime,
+          order: orderToPlace,
           placementStatus:
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
         },
       });
       expectWebsocketMessagesSent(
         producerSendSpy,
-        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
-        dbOrderGoodTilBlockTime,
+        expectedRedisOrder,
+        placedOrder,
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         // Subaccount message should not be sent for BEST_EFFORT_OPEN
@@ -619,15 +739,15 @@ describe('order-place-handler', () => {
       await handleInitialOrderPlace({
         ...redisTestConstants.orderPlace,
         orderPlace: {
-          order: redisTestConstants.defaultOrderGoodTilBlockTime,
+          order: orderToPlace,
           placementStatus:
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
         },
       });
       expectWebsocketMessagesSent(
         producerSendSpy,
-        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
-        dbOrderGoodTilBlockTime,
+        expectedRedisOrder,
+        placedOrder,
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.OPEN,
         // Subaccount messages should be sent for stateful order with OPEN status
@@ -873,7 +993,9 @@ function expectWebsocketMessagesSent(
           size: redisOrder.size,
           price: redisOrder.price,
           status: placementStatus,
-          type: OrderType.LIMIT,
+          type: protocolTranslations.protocolConditionTypeToOrderType(
+            redisOrder.order!.conditionType,
+          ),
           timeInForce: apiTranslations.orderTIFToAPITIF(orderTIF),
           postOnly: apiTranslations.isOrderTIFPostOnly(orderTIF),
           reduceOnly: redisOrder.order!.reduceOnly,
@@ -884,6 +1006,7 @@ function expectWebsocketMessagesSent(
           ticker: redisOrder.ticker,
           ...(dbOrder.createdAtHeight && { createdAtHeight: dbOrder.createdAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
+          triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
       ],
     };

@@ -1,7 +1,7 @@
 import {
   OrderTable, protocolTranslations, SubaccountTable, testConstants,
 } from '@dydxprotocol-indexer/postgres';
-import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   IndexerOrderId,
@@ -52,6 +52,12 @@ export const defaultOrderIdGoodTilBlockTime: IndexerOrderId = {
   clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
   orderFlags: ORDER_FLAG_LONG_TERM,
 };
+export const defaultOrderIdConditional: IndexerOrderId = {
+  subaccountId: defaultSubaccountId,
+  clientId: 3,
+  clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
+  orderFlags: ORDER_FLAG_CONDITIONAL,
+};
 
 export const defaultSubaccountUuid: string = SubaccountTable.uuid(
   defaultSubaccountId.owner,
@@ -79,9 +85,19 @@ export const defaultOrderGoodTilBlockTime: IndexerOrder = {
   goodTilBlockTime: 1_200_000_000,
   goodTilBlock: undefined,
 };
+export const defaultConditionalOrder: IndexerOrder = {
+  ...defaultOrderGoodTilBlockTime,
+  orderId: defaultOrderIdConditional,
+  conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS,
+  conditionalOrderTriggerSubticks: Long.fromValue(190_000_000, true),
+};
+
 export const defaultOrderUuid: string = OrderTable.orderIdToUuid(defaultOrderId);
 export const defaultOrderUuidGoodTilBlockTime: string = OrderTable.orderIdToUuid(
   defaultOrderIdGoodTilBlockTime,
+);
+export const defaultOrderUuidConditional: string = OrderTable.orderIdToUuid(
+  defaultOrderIdConditional,
 );
 
 export const defaultPrice = protocolTranslations.subticksToPrice(
@@ -104,6 +120,11 @@ export const defaultRedisOrderGoodTilBlockTime: RedisOrder = {
   ...defaultRedisOrder,
   id: defaultOrderUuidGoodTilBlockTime,
   order: defaultOrderGoodTilBlockTime,
+};
+export const defaultRedisOrderConditional: RedisOrder = {
+  ...defaultRedisOrder,
+  id: defaultOrderUuidConditional,
+  order: defaultConditionalOrder,
 };
 
 export const orderPlace: OffChainUpdateOrderPlaceUpdateMessage = {

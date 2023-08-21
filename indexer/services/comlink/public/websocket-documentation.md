@@ -180,6 +180,7 @@ export interface OrderSubaccountMessageContents {
   removalReason?: string;
   createdAtHeight?: string;
   clientMetadata: string;
+  triggerPrice?: string;
 }
 
 export enum OrderSide {
