@@ -432,7 +432,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					&genesis,
 					func(genesisState *clobtypes.GenesisState) {
 						genesisState.ClobPairs = []clobtypes.ClobPair{
-							constants.ClobPair_Btc_No_Fee,
+							constants.ClobPair_Btc,
 							constants.ClobPair_Eth_No_Fee,
 						}
 						genesisState.LiquidationsConfig = tc.liquidationConfig

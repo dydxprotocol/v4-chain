@@ -971,8 +971,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].subticks_per_tick' -v '10000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].quantum_conversion_exponent' -v '-8'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].taker_fee_ppm' -v '500'
 
 	# Clob: ETH-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -982,8 +980,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].subticks_per_tick' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].quantum_conversion_exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].taker_fee_ppm' -v '500'
 
 	# Clob: LINK-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -993,8 +989,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].taker_fee_ppm' -v '500'
 
 	# Clob: MATIC-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1004,8 +998,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].subticks_per_tick' -v '100000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].quantum_conversion_exponent' -v '-12'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].taker_fee_ppm' -v '500'
 
 	# Clob: CRV-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1015,8 +1007,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].subticks_per_tick' -v '100000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].quantum_conversion_exponent' -v '-12'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].taker_fee_ppm' -v '500'
 
 	# Clob: SOL-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1026,8 +1016,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].taker_fee_ppm' -v '500'
 
 	# Clob: ADA-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1037,8 +1025,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].quantum_conversion_exponent' -v '-13'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].taker_fee_ppm' -v '500'
 
 	# Clob: AVAX-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1048,8 +1034,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].subticks_per_tick' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].taker_fee_ppm' -v '500'
 
 	# Clob: FIL-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1059,8 +1043,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].subticks_per_tick' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].taker_fee_ppm' -v '500'
 
 	# Clob: AAVE-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1070,8 +1052,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].subticks_per_tick' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].quantum_conversion_exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].taker_fee_ppm' -v '500'
 
 	# Clob: LTC-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1081,8 +1061,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].subticks_per_tick' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].quantum_conversion_exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].taker_fee_ppm' -v '500'
 
 	# Clob: DOGE-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1092,8 +1070,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].subticks_per_tick' -v '100000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].quantum_conversion_exponent' -v '-13'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].taker_fee_ppm' -v '500'
 
 	# Clob: ICP-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1103,8 +1079,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].subticks_per_tick' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].taker_fee_ppm' -v '500'
 
 	# Clob: ATOM-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1114,8 +1088,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].taker_fee_ppm' -v '500'
 
 	# Clob: DOT-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1125,8 +1097,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].subticks_per_tick' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].taker_fee_ppm' -v '500'
 
 	# Clob: XTZ-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1136,8 +1106,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].quantum_conversion_exponent' -v '-12'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].taker_fee_ppm' -v '500'
 
 	# Clob: UNI-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1147,8 +1115,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].taker_fee_ppm' -v '500'
 
 	# Clob: BCH-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1158,8 +1124,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].subticks_per_tick' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].quantum_conversion_exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].taker_fee_ppm' -v '500'
 
 	# Clob: EOS-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1169,8 +1133,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].quantum_conversion_exponent' -v '-12'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].taker_fee_ppm' -v '500'
 
 	# Clob: TRX-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1180,8 +1142,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].subticks_per_tick' -v '100000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].quantum_conversion_exponent' -v '-13'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].taker_fee_ppm' -v '500'
 
 	# Clob: ALGO-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1191,8 +1151,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].subticks_per_tick' -v '100000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].quantum_conversion_exponent' -v '-13'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].taker_fee_ppm' -v '500'
 
 	# Clob: NEAR-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1202,8 +1160,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].quantum_conversion_exponent' -v '-12'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].taker_fee_ppm' -v '500'
 
 	# Clob: SNX-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1213,8 +1169,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].quantum_conversion_exponent' -v '-12'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].taker_fee_ppm' -v '500'
 
 	# Clob: MKR-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1224,8 +1178,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].subticks_per_tick' -v '10000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].quantum_conversion_exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].taker_fee_ppm' -v '500'
 
 	# Clob: SUSHI-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1235,8 +1187,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].quantum_conversion_exponent' -v '-12'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].taker_fee_ppm' -v '500'
 
 	# Clob: XLM-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1246,8 +1196,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].subticks_per_tick' -v '100000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].quantum_conversion_exponent' -v '-13'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].taker_fee_ppm' -v '500'
 
 	# Clob: XMR-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1257,8 +1205,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].subticks_per_tick' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].quantum_conversion_exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].taker_fee_ppm' -v '500'
 
 	# Clob: ETC-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1268,8 +1214,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].subticks_per_tick' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].taker_fee_ppm' -v '500'
 
 	# Clob: 1INCH-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1279,8 +1223,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].quantum_conversion_exponent' -v '-13'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].taker_fee_ppm' -v '500'
 
 	# Clob: COMP-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1290,8 +1232,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].subticks_per_tick' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].taker_fee_ppm' -v '500'
 
 	# Clob: ZEC-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1301,8 +1241,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].subticks_per_tick' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].quantum_conversion_exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].taker_fee_ppm' -v '500'
 
 	# Clob: ZRX-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1312,8 +1250,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].step_base_quantums' -v '100000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].subticks_per_tick' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].quantum_conversion_exponent' -v '-13'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].taker_fee_ppm' -v '500'
 
 	# Clob: YFI-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
@@ -1323,8 +1259,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].subticks_per_tick' -v '10000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].quantum_conversion_exponent' -v '-8'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].maker_fee_ppm' -v '200'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].taker_fee_ppm' -v '500'
 
 	# Liquidations
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.max_liquidation_fee_ppm' -v '5000'

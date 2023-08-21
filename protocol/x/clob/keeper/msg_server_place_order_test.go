@@ -113,8 +113,6 @@ func TestPlaceOrder_Error(t *testing.T) {
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,
 				clobPair.Status,
-				clobPair.MakerFeePpm,
-				clobPair.TakerFeePpm,
 			)
 			require.NoError(t, err)
 
@@ -227,8 +225,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,
 				clobPair.Status,
-				clobPair.MakerFeePpm,
-				clobPair.TakerFeePpm,
 			)
 			require.NoError(t, err)
 
