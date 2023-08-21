@@ -31,6 +31,11 @@ const (
 	// are stored in a transient store. This count represents the number of uncommitted stateful
 	// `placements - cancellations`.
 	UncommittedStatefulOrderCountPrefix = "StatefulOrderCount/Uncommitted/LongTerm/value/"
+	// ToBeCommittedStatefulOrderCountPrefix is the key to retrieve the to be committed stateful order count.
+	// To be committed orders are orders that this validator is aware of during `DeliverTx` that are in the process
+	// or being committed to a block and are stored in a transient store. This count represents the number of to
+	// be committed stateful `placements - removals`.
+	ToBeCommittedStatefulOrderCountPrefix = "StatefulOrderCount/ToBeCommitted/LongTerm/value/"
 	// UntriggeredConditionalOrderKeyPrefix is the key to retrieve an untriggered conditional order and
 	// information about when it was placed.
 	UntriggeredConditionalOrderKeyPrefix = "StatefulOrderPlacement/Untriggered/Conditional/value/"

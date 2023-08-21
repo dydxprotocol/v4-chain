@@ -120,40 +120,19 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 	equityTierCount := int32(k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter))
 
 	// Include the number of stateful orders that exist outside of the `MemClob`. During `DeliverTx` we use
-	// the `ProcessProposerMatchesEvents` to figure out the delta in how many orders will exist on
-	// the `MemClob` while in `CheckTx` we use the count of uncommitted stateful orders.
+	// the count of to be committed stateful orders while in `CheckTx` we use the count of uncommitted stateful orders.
 	if order.IsStatefulOrder() {
 		if lib.IsDeliverTxMode(ctx) {
-			processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
-			// Increment the count for every order that would be added to the order book for this subaccount.
-			for _, newOrders := range [][]types.OrderId{
-				processProposerMatchesEvents.PlacedLongTermOrderIds,
-				processProposerMatchesEvents.PlacedConditionalOrderIds,
-			} {
-				for _, orderId := range newOrders {
-					if subaccountId == orderId.SubaccountId && filter(orderId) {
-						equityTierCount++
-					}
-				}
-			}
-			// Decrement the count for every order that would be removed from the order book for this subaccount
-			for _, removedOrders := range [][]types.OrderId{
-				processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
-				processProposerMatchesEvents.ExpiredStatefulOrderIds,
-				processProposerMatchesEvents.OrderIdsFilledInLastBlock,
-			} {
-				for _, orderId := range removedOrders {
-					if subaccountId == orderId.SubaccountId && filter(orderId) {
-						equityTierCount--
-					}
-				}
-			}
+			equityTierCount += k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId)
 		} else {
 			equityTierCount += k.GetUncommittedStatefulOrderCount(ctx, order.OrderId)
 		}
 	}
 
 	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.
+	// Note that once we combine the count of orders on the memclob with how many `uncommitted` or `to be committed`
+	// stateful orders on the memclob we should always have a negative number since we only count order
+	// cancellations/removals for orders that exist.
 	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
 		return sdkerrors.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,

@@ -71,6 +71,25 @@ func (k Keeper) GetUncommittedStatefulOrderCount(
 	return lib.BytesToInt32(b)
 }
 
+// SetUncommittedStatefulOrderCount sets a count of uncommitted stateful orders for the associated subaccount.
+// This represents the number of stateful order `placements - cancellations`. Note that this value
+// can be negative (for example if the stateful order is already on the book and the cancellation is uncommitted).
+// OrderId can be conditional or long term.
+func (k Keeper) SetUncommittedStatefulOrderCount(
+	ctx sdk.Context,
+	orderId types.OrderId,
+	count int32,
+) {
+	// If this is a Short-Term order, panic.
+	orderId.MustBeStatefulOrder()
+
+	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
+	store.Set(
+		satypes.SubaccountKey(orderId.SubaccountId),
+		lib.Int32ToBytes(count),
+	)
+}
+
 // MustAddUncommittedStatefulOrderPlacement adds a new order placemenet by `OrderId` to a transient store and
 // increments the per subaccount uncommitted stateful order count.
 //
@@ -96,11 +115,10 @@ func (k Keeper) MustAddUncommittedStatefulOrderPlacement(ctx sdk.Context, msg *t
 	store := k.GetUncommittedStatefulOrderPlacementTransientStore(ctx)
 	store.Set(orderIdBytes, b)
 
-	count := k.GetUncommittedStatefulOrderCount(ctx, orderId)
-	countStore := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
-	countStore.Set(
-		satypes.SubaccountKey(orderId.SubaccountId),
-		lib.Int32ToBytes(count+1),
+	k.SetUncommittedStatefulOrderCount(
+		ctx,
+		orderId,
+		k.GetUncommittedStatefulOrderCount(ctx, orderId)+1,
 	)
 }
 
@@ -125,10 +143,9 @@ func (k Keeper) MustAddUncommittedStatefulOrderCancellation(ctx sdk.Context, msg
 	store := k.GetUncommittedStatefulOrderCancellationTransientStore(ctx)
 	store.Set(orderIdBytes, b)
 
-	count := k.GetUncommittedStatefulOrderCount(ctx, orderId)
-	countStore := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
-	countStore.Set(
-		satypes.SubaccountKey(orderId.SubaccountId),
-		lib.Int32ToBytes(count-1),
+	k.SetUncommittedStatefulOrderCount(
+		ctx,
+		orderId,
+		k.GetUncommittedStatefulOrderCount(ctx, orderId)-1,
 	)
 }

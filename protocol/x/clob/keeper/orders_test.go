@@ -907,7 +907,9 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 
 			// Set the block height and last committed block time.
 			blockHeight := uint32(2)
-			ctx = ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(time.Unix(5, 0))
+			ctx = ctx.WithIsCheckTx(false).
+				WithBlockHeight(int64(blockHeight)).
+				WithBlockTime(time.Unix(5, 0))
 			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
 
 			// Create all existing orders.
@@ -1072,9 +1074,9 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 	blockHeight := uint32(5)
 
 	tests := map[string]struct {
-		setupState  func(ctx sdk.Context, k *keeper.Keeper)
-		order       types.Order
-		expectedErr string
+		setupDeliverTxState func(ctx sdk.Context, k *keeper.Keeper)
+		order               types.Order
+		expectedErr         string
 	}{
 		"Succeeds with a GoodTilBlock of blockHeight": {
 			order: types.Order{
@@ -1223,7 +1225,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			expectedErr: types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow.Error(),
 		},
 		`Stateful: Returns error when order already exists in state`: {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
@@ -1254,7 +1256,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			expectedErr: types.ErrStatefulOrderAlreadyExists.Error(),
 		},
 		`Stateful: Returns error when order with same order id but higher priority exists in state`: {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
@@ -1285,7 +1287,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			expectedErr: types.ErrStatefulOrderAlreadyExists.Error(),
 		},
 		`Stateful: Returns error when order with same order id but lower priority exists in state`: {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
@@ -1356,7 +1358,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			expectedErr: types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow.Error(),
 		},
 		`Conditional: Returns error when order already exists in state`: {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
@@ -1391,7 +1393,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			expectedErr: types.ErrStatefulOrderAlreadyExists.Error(),
 		},
 		`Conditional: Returns error when order with same order id but lower priority exists in state`: {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					types.Order{
@@ -1476,8 +1478,8 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				testapp.AdvanceToBlockOptions{BlockTime: time.Unix(5, 0)},
 			)
 
-			if tc.setupState != nil {
-				tc.setupState(ctx, tApp.App.ClobKeeper)
+			if tc.setupDeliverTxState != nil {
+				tc.setupDeliverTxState(ctx.WithIsCheckTx(false), tApp.App.ClobKeeper)
 			}
 
 			resp := tApp.CheckTx(testapp.MustMakeCheckTxsWithClobMsg(
@@ -2044,7 +2046,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			for i, order := range tc.orders {
 				require.True(t, order.IsStatefulOrder())
 
-				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, uint32(i))
+				ks.ClobKeeper.SetLongTermOrderPlacement(ctx.WithIsCheckTx(false), order, uint32(i))
 			}
 
 			// Assert expected order placement memclob calls.

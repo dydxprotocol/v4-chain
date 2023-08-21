@@ -21,6 +21,7 @@ import (
 // it was placed. The placed order can either be a conditional order or a long term order.
 // If the order is conditional, it will be placed into the Untriggered Conditional Orders state store.
 // If it is a long term order, it will be placed in the Long Term Order state store.
+// If the `OrderId` doesn't exist then the `to be committed` stateful order count is incremented.
 // Note the following:
 // - If a stateful order placement already exists in state with `order.OrderId`, this function will overwrite it.
 // - The `TransactionIndex` field will be set to the next unused transaction index for this block.
@@ -58,6 +59,13 @@ func (k Keeper) SetLongTermOrderPlacement(
 	memStore.Set(orderIdBytes, longTermOrderPlacementBytes)
 
 	if !found {
+		// Increment the `to be committed` stateful order count.
+		k.SetToBeCommittedStatefulOrderCount(
+			ctx,
+			order.OrderId,
+			k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId)+1,
+		)
+
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.StatefulOrder, metrics.Count},
 			1,
@@ -285,10 +293,10 @@ func (k Keeper) MustAddOrderToStatefulOrdersTimeSlice(
 	k.setStatefulOrdersTimeSliceInState(ctx, goodTilBlockTime, longTermOrdersExpiringAtTime)
 }
 
-// MustRemoveStatefulOrder removes an order by `OrderId` from an existing time slice.
-// If the time slice is empty after removing the `OrderId`, then the time slice is pruned from state.
-// For the `OrderId` which is removed, this method also calls `DeleteStatefulOrderPlacement` to remove
-// the order placement from state.
+// MustRemoveStatefulOrder removes an order by `OrderId` from an existing time slice and decrements
+// the `to be committed` stateful order count. If the time slice is empty after removing the `OrderId`,
+// then the time slice is pruned from state. For the `OrderId` which is removed, this method also calls
+// `DeleteStatefulOrderPlacement` to remove the order placement from state.
 func (k Keeper) MustRemoveStatefulOrder(
 	ctx sdk.Context,
 	orderId types.OrderId,
@@ -337,6 +345,13 @@ func (k Keeper) MustRemoveStatefulOrder(
 
 	// Delete the Stateful order placement from state.
 	k.DeleteLongTermOrderPlacement(ctx, orderId)
+
+	// Decrement the `to be committed` stateful order count.
+	k.SetToBeCommittedStatefulOrderCount(
+		ctx,
+		orderId,
+		k.GetToBeCommittedStatefulOrderCount(ctx, orderId)-1,
+	)
 }
 
 // IsConditionalOrderTriggered checks if a given order ID is triggered or untriggered in state.
