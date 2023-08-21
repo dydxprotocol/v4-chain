@@ -222,6 +222,7 @@ export enum APIOrderStatus {
   CANCELED = 'CANCELED',
   BEST_EFFORT_CANCELED = 'BEST_EFFORT_CANCELED',
   BEST_EFFORT_OPENED = 'BEST_EFFORT_OPENED',
+  UNTRIGGERED = 'UNTRIGGERED',
 }
 
 export interface FillSubaccountMessageContents {
