@@ -21,7 +21,7 @@ func TestGetClobPairSubticksPerTick(t *testing.T) {
 
 func TestGetClobPairMinOrderBaseQuantums(t *testing.T) {
 	clobPair := types.ClobPair{
-		MinOrderBaseQuantums: uint64(100),
+		StepBaseQuantums: uint64(100),
 	}
 
 	minOrderBaseQuantums := clobPair.GetClobPairMinOrderBaseQuantums()

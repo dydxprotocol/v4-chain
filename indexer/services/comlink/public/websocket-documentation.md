@@ -222,7 +222,7 @@ export enum APIOrderStatus {
   CANCELED = 'CANCELED',
   BEST_EFFORT_CANCELED = 'BEST_EFFORT_CANCELED',
   BEST_EFFORT_OPENED = 'BEST_EFFORT_OPENED',
-  UNTRIGGERED = 'UNTRIGGERED',
+  UNTRIGGERED = "UNTRIGGERED"
 }
 
 export interface FillSubaccountMessageContents {
@@ -261,13 +261,24 @@ export enum FillType {
 }
 
 export interface TransferSubaccountMessageContents {
-  senderAddress: string,
-  senderSubaccountNumber: number,
-  recipientAddress: string,
-  recipientSubaccountNumber: number,
+  sender: {
+    address: string,
+    subaccountNumber?: number,
+  },
+  recipient: {
+    address: string,
+    subaccountNumber?: number,
+  },
   symbol: string,
-  assetId: string,
   size: string,
+  type: TransferType,
+}
+
+export enum TransferType {
+  TRANSFER_IN = 'TRANSFER_IN',
+  TRANSFER_OUT = 'TRANSFER_OUT',
+  DEPOSIT = 'DEPOSIT',
+  WITHDRAWAL = 'WITHDRAWAL',
 }
 
 ```
@@ -286,9 +297,6 @@ export interface TransferSubaccountMessageContents {
     "orders": [
       {
         "id": "64fe30a2-006d-5108-a156-cb0c8443546c",
-        "subaccountId": "db535c19-b298-5ee8-bb59-e96c659a8bd4",
-        "clientId": "320611130",
-        "clobPairId": "1",
         "side": "BUY",
         "size": "1",
         "totalFilled": "1",

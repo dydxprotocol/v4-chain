@@ -555,9 +555,9 @@ func createOrderbooks(
 	// Create all unique orderbooks.
 	for clobPairId := uint32(0); clobPairId < uint32(maxOrderbooks); clobPairId++ {
 		clobPair := types.ClobPair{
-			Id:                   clobPairId,
-			SubticksPerTick:      5,
-			MinOrderBaseQuantums: 5,
+			Id:               clobPairId,
+			SubticksPerTick:  5,
+			StepBaseQuantums: 5,
 			Metadata: &types.ClobPair_PerpetualClobMetadata{
 				PerpetualClobMetadata: &types.PerpetualClobMetadata{
 					// Set the `PerpetualId` field to be the same as the CLOB pair ID.
@@ -584,9 +584,9 @@ func createAllOrderbooksForMatchableOrders(
 		// Note the for-loop is necessary due to the auto-incrementing ID after creating CLOB pairs.
 		if _, exists := createdOrderbooks[order.GetClobPairId()]; !exists {
 			clobPair := types.ClobPair{
-				Id:                   order.GetClobPairId().ToUint32(),
-				SubticksPerTick:      5,
-				MinOrderBaseQuantums: 5,
+				Id:               order.GetClobPairId().ToUint32(),
+				SubticksPerTick:  5,
+				StepBaseQuantums: 5,
 				Metadata: &types.ClobPair_PerpetualClobMetadata{
 					PerpetualClobMetadata: &types.PerpetualClobMetadata{
 						PerpetualId: 0,
@@ -612,9 +612,9 @@ func createAllOrderbooksForOrders(
 	for _, order := range orders {
 		if _, exists := createdOrderbooks[order.GetClobPairId()]; !exists {
 			clobPair := types.ClobPair{
-				Id:                   order.GetClobPairId().ToUint32(),
-				SubticksPerTick:      5,
-				MinOrderBaseQuantums: 1,
+				Id:               order.GetClobPairId().ToUint32(),
+				SubticksPerTick:  5,
+				StepBaseQuantums: 1,
 				Metadata: &types.ClobPair_PerpetualClobMetadata{
 					PerpetualClobMetadata: &types.PerpetualClobMetadata{
 						PerpetualId: 0,

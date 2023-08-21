@@ -21,7 +21,6 @@ func (k Keeper) CreatePerpetualClobPair(
 	ctx sdk.Context,
 	perpetualId uint32,
 	stepSizeBaseQuantums satypes.BaseQuantums,
-	minOrderBaseQuantums satypes.BaseQuantums,
 	quantumConversionExponent int32,
 	subticksPerTick uint32,
 	status types.ClobPair_Status,
@@ -38,7 +37,6 @@ func (k Keeper) CreatePerpetualClobPair(
 		},
 		Id:                        nextId,
 		StepBaseQuantums:          stepSizeBaseQuantums.ToUint64(),
-		MinOrderBaseQuantums:      minOrderBaseQuantums.ToUint64(),
 		QuantumConversionExponent: quantumConversionExponent,
 		SubticksPerTick:           subticksPerTick,
 		Status:                    status,
@@ -63,10 +61,6 @@ func (k Keeper) CreatePerpetualClobPair(
 //
 // - Metadata:
 //   - Must be a perpetual CLOB pair with a perpetualId matching a perpetual in the store.
-//
-// - MinOrderBaseQuantums:
-//   - Must be greater than zero.
-//   - Must be a multiple of StepBaseQuantums.
 //
 // - Status:
 //   - Must be a status other than ClobPair_STATUS_UNSPECIFIED.
@@ -108,28 +102,10 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 		)
 	}
 
-	if clobPair.MinOrderBaseQuantums <= 0 {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"invalid ClobPair parameter: MinOrderBaseQuantums must be > 0. Got %v",
-			clobPair.MinOrderBaseQuantums,
-		)
-	}
-
 	if clobPair.StepBaseQuantums <= 0 {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidClobPairParameter,
 			"invalid ClobPair parameter: StepBaseQuantums must be > 0. Got %v",
-			clobPair.StepBaseQuantums,
-		)
-	}
-
-	// The minimum order size must be a multiple of the step size.
-	if clobPair.MinOrderBaseQuantums%clobPair.StepBaseQuantums != 0 {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"invalid ClobPair parameter: MinOrderBaseQuantums (%v) must be divisible by StepBaseQuantums (%v).",
-			clobPair.MinOrderBaseQuantums,
 			clobPair.StepBaseQuantums,
 		)
 	}
