@@ -193,8 +193,6 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 				tc.args.clobPair.QuantumConversionExponent,
 				tc.args.clobPair.SubticksPerTick,
 				tc.args.clobPair.Status,
-				tc.args.clobPair.MakerFeePpm,
-				tc.args.clobPair.TakerFeePpm,
 			)
 			require.NoError(t, err)
 

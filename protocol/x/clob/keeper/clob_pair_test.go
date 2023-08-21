@@ -37,8 +37,6 @@ func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Clob
 		items[i].SubticksPerTick = 5
 		items[i].StepBaseQuantums = 5
 		items[i].Status = types.ClobPair_STATUS_ACTIVE
-		items[i].MakerFeePpm = constants.MakerFeePpm
-		items[i].TakerFeePpm = constants.TakerFeePpm
 
 		_, err := keeper.CreatePerpetualClobPair(
 			ctx,
@@ -47,8 +45,6 @@ func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Clob
 			items[i].QuantumConversionExponent,
 			items[i].SubticksPerTick,
 			items[i].Status,
-			items[i].MakerFeePpm,
-			items[i].TakerFeePpm,
 		)
 		if err != nil {
 			panic(err)
@@ -90,21 +86,6 @@ func TestCreateClobPair(t *testing.T) {
 			clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
 			expectedErr: "invalid ClobPair parameter: Status must be specified.",
 		},
-		"CLOB pair is invalid when the maker fee is greater than the max fee": {
-			clobPair:    *clobtest.GenerateClobPair(clobtest.WithMakerFeePpm(1000000)),
-			expectedErr: "be <= MaxFeePpm",
-		},
-		"CLOB pair is invalid when the taker fee is greater than the max fee": {
-			clobPair:    *clobtest.GenerateClobPair(clobtest.WithTakerFeePpm(1000000)),
-			expectedErr: "be <= MaxFeePpm",
-		},
-		"CLOB pair is invalid when the maker fee is higher than the taker fee": {
-			clobPair: *clobtest.GenerateClobPair(
-				clobtest.WithMakerFeePpm(100),
-				clobtest.WithTakerFeePpm(10),
-			),
-			expectedErr: "must be <= TakerFeePpm",
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -123,8 +104,6 @@ func TestCreateClobPair(t *testing.T) {
 				tc.clobPair.QuantumConversionExponent,
 				tc.clobPair.SubticksPerTick,
 				tc.clobPair.Status,
-				tc.clobPair.MakerFeePpm,
-				tc.clobPair.TakerFeePpm,
 			)
 			storedClobPair, found := ks.ClobKeeper.GetClobPair(ks.Ctx, types.ClobPairId(tc.clobPair.Id))
 			numClobPairs := ks.ClobKeeper.GetNumClobPairs(ks.Ctx)
@@ -249,8 +228,6 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 					make.clobPair.QuantumConversionExponent,
 					make.clobPair.SubticksPerTick,
 					make.clobPair.Status,
-					make.clobPair.MakerFeePpm,
-					make.clobPair.TakerFeePpm,
 				)
 				if make.expectedErr == "" {
 					require.NoError(t, err)

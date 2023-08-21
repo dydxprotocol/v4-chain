@@ -42,11 +42,6 @@ func genRandomClob(
 		sim_helpers.PickGenesisParameter(sim_helpers.MinQuantumConversionExponent, isReasonableGenesis),
 		sim_helpers.PickGenesisParameter(sim_helpers.MaxQuantumConversionExponent, isReasonableGenesis)+1,
 	))
-	clobPair.TakerFeePpm = uint32(simtypes.RandIntBetween(
-		r,
-		sim_helpers.PickGenesisParameter(sim_helpers.MinFeePpm, isReasonableGenesis),
-		sim_helpers.PickGenesisParameter(sim_helpers.MaxFeePpm, isReasonableGenesis)+1,
-	))
 	clobPair.StepBaseQuantums = uint64(simtypes.RandIntBetween(
 		r,
 		sim_helpers.PickGenesisParameter(sim_helpers.MinStepBaseQuantums, isReasonableGenesis),
@@ -59,13 +54,6 @@ func genRandomClob(
 	))
 
 	clobPair.Id = clobPairId.ToUint32()
-	clobPair.MakerFeePpm = uint32(
-		simtypes.RandIntBetween(
-			r,
-			sim_helpers.PickGenesisParameter(sim_helpers.MinFeePpm, isReasonableGenesis),
-			int(clobPair.TakerFeePpm)+1,
-		),
-	)
 
 	perpetualClobMetadata := createPerpetualClobMetadata(perpetualId)
 	clobPair.Metadata = &perpetualClobMetadata

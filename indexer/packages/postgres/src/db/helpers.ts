@@ -552,8 +552,6 @@ export function getClobPairsFromGenesis(): ClobPair[] {
         // No status is set for the clob pairs in V4, so default to `ACTIVE` for now
         // TODO(DEC-600): Update this when clob pair statuses are fleshed out alongside governance
         status: ClobPair_Status.STATUS_ACTIVE,
-        makerFeePpm: 0,
-        takerFeePpm: 0,
       };
     },
   );

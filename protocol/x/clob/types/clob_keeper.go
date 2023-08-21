@@ -27,8 +27,6 @@ type ClobKeeper interface {
 		quantumConversionExponent int32,
 		subticksPerTick uint32,
 		status ClobPair_Status,
-		makerFeePpm uint32,
-		takerFeePpm uint32,
 	) (
 		ClobPair,
 		error,

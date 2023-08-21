@@ -68,10 +68,4 @@ message ClobPair {
   }
 
   Status status = 8;
-
-  // The maker fee in parts-per-million.
-  uint32 maker_fee_ppm = 9;
-
-  // The taker fee in parts-per-million.
-  uint32 taker_fee_ppm = 10;
 }
