@@ -246,27 +246,23 @@ const GenesisState = `{
       "clob_pairs": [
         {
           "id": 0,
-          "maker_fee_ppm": 200,
           "perpetual_clob_metadata": {
             "perpetual_id": 0
           },
           "quantum_conversion_exponent": -8,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 10,
-          "subticks_per_tick": 10000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000
         },
         {
           "id": 1,
-          "maker_fee_ppm": 200,
           "perpetual_clob_metadata": {
             "perpetual_id": 1
           },
           "quantum_conversion_exponent": -9,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000,
-          "subticks_per_tick": 100000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000
         }
       ],
       "equity_tier_limit_config": {

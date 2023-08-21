@@ -162,7 +162,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.Carl_Num0_1BTC_Short,
 			},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 
@@ -347,7 +347,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.Carl_Num0_10000USD,
 			},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders: []types.Order{
 				// The maker subaccount places an order which is a maker order to buy $500 worth of BTC.
@@ -374,7 +374,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.Carl_Num0_10000USD,
 			},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders: []types.Order{
 				// The maker subaccount places an order which is a maker order to buy $500 worth of BTC.
@@ -404,7 +404,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.Carl_Num0_10000USD,
 			},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders: []types.Order{
 				// Alice places sell order for $500 worth of BTC.
@@ -505,7 +505,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{constants.Carl_Num0_0USD},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
@@ -520,7 +520,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{constants.Carl_Num0_0USD},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
@@ -541,7 +541,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{constants.Carl_Num0_10000USD},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
@@ -557,7 +557,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{constants.Carl_Num0_100000USD},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
@@ -572,7 +572,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{constants.Carl_Num0_100000USD},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
@@ -594,7 +594,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{constants.Carl_Num0_10000USD},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
@@ -610,7 +610,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{constants.Carl_Num0_50000USD},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
@@ -625,7 +625,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{constants.Carl_Num0_50000USD},
 			clobs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
@@ -691,8 +691,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
-					clobPair.MakerFeePpm,
-					clobPair.TakerFeePpm,
 				)
 				require.NoError(t, err)
 			}
@@ -945,8 +943,6 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
-					clobPair.MakerFeePpm,
-					clobPair.TakerFeePpm,
 				)
 				require.NoError(t, err)
 			}
@@ -1048,8 +1044,6 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 		constants.ClobPair_Btc.QuantumConversionExponent,
 		constants.ClobPair_Btc.SubticksPerTick,
 		constants.ClobPair_Btc.Status,
-		constants.ClobPair_Btc.MakerFeePpm,
-		constants.ClobPair_Btc.TakerFeePpm,
 	)
 	require.NoError(t, err)
 
@@ -1081,8 +1075,6 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 		constants.ClobPair_Btc.QuantumConversionExponent,
 		constants.ClobPair_Btc.SubticksPerTick,
 		constants.ClobPair_Btc.Status,
-		constants.ClobPair_Btc.MakerFeePpm,
-		constants.ClobPair_Btc.TakerFeePpm,
 	)
 	require.NoError(t, err)
 	ctx := ks.Ctx.WithBlockHeight(int64(100)).WithBlockTime(time.Unix(5, 0))
@@ -1601,8 +1593,6 @@ func TestGetStatePosition_Success(t *testing.T) {
 					cp.QuantumConversionExponent,
 					cp.SubticksPerTick,
 					cp.Status,
-					cp.MakerFeePpm,
-					cp.TakerFeePpm,
 				)
 				require.NoError(t, err)
 			}
@@ -1796,8 +1786,6 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.MakerFeePpm,
-				constants.ClobPair_Btc.TakerFeePpm,
 			)
 			require.NoError(t, err)
 
@@ -1907,8 +1895,6 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.MakerFeePpm,
-				constants.ClobPair_Btc.TakerFeePpm,
 			)
 			require.NoError(t, err)
 
@@ -2060,8 +2046,6 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.MakerFeePpm,
-				constants.ClobPair_Btc.TakerFeePpm,
 			)
 			require.NoError(t, err)
 
@@ -2187,8 +2171,6 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.MakerFeePpm,
-				constants.ClobPair_Btc.TakerFeePpm,
 			)
 			require.NoError(t, err)
 

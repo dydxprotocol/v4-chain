@@ -89,7 +89,7 @@ func TestMevNodeToNodeCalculation(t *testing.T) {
 					},
 					ClobMidPrices: []types.ClobMidPrice{
 						{
-							ClobPair: constants.ClobPair_Btc_No_Fee,
+							ClobPair: constants.ClobPair_Btc,
 							Subticks: 50_000_000_000, // $50,000 / BTC
 						},
 					},

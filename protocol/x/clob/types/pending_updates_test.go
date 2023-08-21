@@ -79,7 +79,7 @@ func TestPendingUpdates(t *testing.T) {
 					subaccountId:         constants.Alice_Num0,
 					perpetualId:          uint32(0),
 					isBuy:                true,
-					feePpm:               int32(constants.TakerFeePpm),
+					feePpm:               500,
 					bigFillBaseQuantums:  big.NewInt(100),
 					bigFillQuoteQuantums: big.NewInt(10_000), // fee = 5_000_000 / 1_000_000
 				},
@@ -87,7 +87,7 @@ func TestPendingUpdates(t *testing.T) {
 					subaccountId:         constants.Alice_Num1,
 					perpetualId:          uint32(1),
 					isBuy:                false,
-					feePpm:               int32(constants.MakerFeePpm),
+					feePpm:               200,
 					bigFillBaseQuantums:  big.NewInt(200),
 					bigFillQuoteQuantums: big.NewInt(20_000), // fee = 4_000_000 / 1_000_000
 				},
@@ -95,7 +95,7 @@ func TestPendingUpdates(t *testing.T) {
 					subaccountId:         constants.Bob_Num0,
 					perpetualId:          uint32(0),
 					isBuy:                true,
-					feePpm:               int32(constants.TakerFeePpm),
+					feePpm:               500,
 					bigFillBaseQuantums:  big.NewInt(100),
 					bigFillQuoteQuantums: big.NewInt(10_050), // 5_025_000 / 1_000_000) (round to 5)
 				},
@@ -185,7 +185,7 @@ func TestPendingUpdates(t *testing.T) {
 					subaccountId:         constants.Alice_Num0,
 					perpetualId:          uint32(0),
 					isBuy:                true,
-					feePpm:               int32(constants.MakerFeePpm),
+					feePpm:               200,
 					bigFillBaseQuantums:  big.NewInt(100),
 					bigFillQuoteQuantums: big.NewInt(15_000), // fee = 3_000_000 / 1_000_000
 				},
@@ -193,7 +193,7 @@ func TestPendingUpdates(t *testing.T) {
 					subaccountId:         constants.Alice_Num0,
 					perpetualId:          uint32(1),
 					isBuy:                true,
-					feePpm:               int32(constants.MakerFeePpm),
+					feePpm:               200,
 					bigFillBaseQuantums:  big.NewInt(200),
 					bigFillQuoteQuantums: big.NewInt(1_500), // fee = 300_000 / 1_000_000 (rounds to 0)
 				},
@@ -201,7 +201,7 @@ func TestPendingUpdates(t *testing.T) {
 					subaccountId:         constants.Alice_Num0,
 					perpetualId:          uint32(0),
 					isBuy:                false,
-					feePpm:               int32(constants.TakerFeePpm),
+					feePpm:               500,
 					bigFillBaseQuantums:  big.NewInt(50),
 					bigFillQuoteQuantums: big.NewInt(1_600), // fee = 800_000 / 1_000_000 (rounds to 0)
 				},
@@ -209,7 +209,7 @@ func TestPendingUpdates(t *testing.T) {
 					subaccountId:         constants.Alice_Num0,
 					perpetualId:          uint32(1),
 					isBuy:                false,
-					feePpm:               int32(constants.TakerFeePpm),
+					feePpm:               500,
 					bigFillBaseQuantums:  big.NewInt(100),
 					bigFillQuoteQuantums: big.NewInt(2_100), // fee = 1_050_000 / 1_000_000 (rounds to 1)
 				},

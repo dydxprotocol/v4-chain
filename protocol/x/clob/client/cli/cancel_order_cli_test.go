@@ -363,8 +363,8 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 
 	// Assert that both Subaccounts have the appropriate state.
 	// Order could be maker or taker after Uncross, so assert that account could have been either.
-	takerFee := fillSizeQuoteQuantums * int64(constants.TakerFeePpm) / int64(lib.OneMillion)
-	makerFee := fillSizeQuoteQuantums * int64(constants.MakerFeePpm) / int64(lib.OneMillion)
+	takerFee := fillSizeQuoteQuantums * int64(constants.PerpetualFeeParams.Tiers[0].TakerFeePpm) / int64(lib.OneMillion)
+	makerFee := fillSizeQuoteQuantums * int64(constants.PerpetualFeeParams.Tiers[0].MakerFeePpm) / int64(lib.OneMillion)
 
 	s.Require().Contains(
 		[]*big.Int{

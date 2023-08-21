@@ -241,8 +241,8 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	).Int64()
 
 	// Assert that both Subaccounts have the appropriate state.
-	makerFee := fillSizeQuoteQuantums * int64(constants.MakerFeePpm) / int64(lib.OneMillion)
-	takerFee := fillSizeQuoteQuantums * int64(constants.TakerFeePpm) / int64(lib.OneMillion)
+	takerFee := fillSizeQuoteQuantums * int64(constants.PerpetualFeeParams.Tiers[0].TakerFeePpm) / int64(lib.OneMillion)
+	makerFee := fillSizeQuoteQuantums * int64(constants.PerpetualFeeParams.Tiers[0].MakerFeePpm) / int64(lib.OneMillion)
 	subaccountZeroInitialQuoteBalance := constants.Usdc_Asset_100_000.GetBigQuantums().Int64()
 	s.Require().Contains(
 		[]*big.Int{

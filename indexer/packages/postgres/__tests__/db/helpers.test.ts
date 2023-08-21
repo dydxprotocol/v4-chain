@@ -306,8 +306,6 @@ describe('helpers', () => {
       quantumConversionExponent: -8,
       minOrderBaseQuantums: Long.fromValue(10_000),
       status: ClobPair_Status.STATUS_ACTIVE,
-      makerFeePpm: 0,
-      takerFeePpm: 0,
     };
 
     const defaultClobPair2: ClobPair = {
