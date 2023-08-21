@@ -57,6 +57,7 @@ const ORDER_TYPE_TO_CONDITION_TYPE_MAP: Record<OrderType, IndexerOrder_Condition
   [OrderType.TAKE_PROFIT]: IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT,
   [OrderType.TAKE_PROFIT_MARKET]: IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT,
 
+  // TODO(IND-356): Remove irrelevant order types
   // Unused order types
   [OrderType.HARD_TRADE]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   [OrderType.FAILED_HARD_TRADE]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
