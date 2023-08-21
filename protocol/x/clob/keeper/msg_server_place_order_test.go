@@ -90,6 +90,8 @@ func TestPlaceOrder_Error(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ks.Ctx, constants.PerpetualFeeParams))
+
 			// Create Perpetual.
 			perpetual := constants.BtcUsd_100PercentMarginRequirement
 			_, err := ks.PerpetualsKeeper.CreatePerpetual(
@@ -201,6 +203,8 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
 
 			// Create Perpetual.
 			perpetual := constants.BtcUsd_100PercentMarginRequirement

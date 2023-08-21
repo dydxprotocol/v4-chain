@@ -864,8 +864,6 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 		panic(types.ErrInvalidClob)
 	}
 
-	makerFee := clobPair.GetFeePpm(false)
-
 	pendingUpdates := types.NewPendingUpdates()
 
 	// Retrieve the associated `PerpetualId` for the `ClobPair`.
@@ -883,6 +881,8 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 			metrics.SubaccountPendingMatches,
 			metrics.Count,
 		)
+
+		makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(ctx, subaccountId.Owner, false)
 		// For each subaccount ID, create the update from all of its existing open orders for the clob and side.
 		for _, openOrder := range openOrders {
 			if openOrder.ClobPairId != clobPairId {
@@ -937,7 +937,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 				subaccountId,
 				perpetualId,
 				openOrder.IsBuy,
-				makerFee,
+				makerFeePpm,
 				bigFillAmount,
 				bigFillQuoteQuantums,
 			)
