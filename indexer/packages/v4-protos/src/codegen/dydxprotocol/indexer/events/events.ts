@@ -101,7 +101,7 @@ export function fundingEventV1_TypeToJSON(object: FundingEventV1_Type): string {
  * Defined in clob.clob_pair
  */
 
-export enum PerpetualMarketCreateEventV1_Status {
+export enum ClobPairStatus {
   /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
   STATUS_UNSPECIFIED = 0,
 
@@ -135,7 +135,7 @@ export enum PerpetualMarketCreateEventV1_Status {
  * Defined in clob.clob_pair
  */
 
-export enum PerpetualMarketCreateEventV1_StatusSDKType {
+export enum ClobPairStatusSDKType {
   /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
   STATUS_UNSPECIFIED = 0,
 
@@ -164,52 +164,52 @@ export enum PerpetualMarketCreateEventV1_StatusSDKType {
   STATUS_POST_ONLY = 4,
   UNRECOGNIZED = -1,
 }
-export function perpetualMarketCreateEventV1_StatusFromJSON(object: any): PerpetualMarketCreateEventV1_Status {
+export function clobPairStatusFromJSON(object: any): ClobPairStatus {
   switch (object) {
     case 0:
     case "STATUS_UNSPECIFIED":
-      return PerpetualMarketCreateEventV1_Status.STATUS_UNSPECIFIED;
+      return ClobPairStatus.STATUS_UNSPECIFIED;
 
     case 1:
     case "STATUS_ACTIVE":
-      return PerpetualMarketCreateEventV1_Status.STATUS_ACTIVE;
+      return ClobPairStatus.STATUS_ACTIVE;
 
     case 2:
     case "STATUS_PAUSED":
-      return PerpetualMarketCreateEventV1_Status.STATUS_PAUSED;
+      return ClobPairStatus.STATUS_PAUSED;
 
     case 3:
     case "STATUS_CANCEL_ONLY":
-      return PerpetualMarketCreateEventV1_Status.STATUS_CANCEL_ONLY;
+      return ClobPairStatus.STATUS_CANCEL_ONLY;
 
     case 4:
     case "STATUS_POST_ONLY":
-      return PerpetualMarketCreateEventV1_Status.STATUS_POST_ONLY;
+      return ClobPairStatus.STATUS_POST_ONLY;
 
     case -1:
     case "UNRECOGNIZED":
     default:
-      return PerpetualMarketCreateEventV1_Status.UNRECOGNIZED;
+      return ClobPairStatus.UNRECOGNIZED;
   }
 }
-export function perpetualMarketCreateEventV1_StatusToJSON(object: PerpetualMarketCreateEventV1_Status): string {
+export function clobPairStatusToJSON(object: ClobPairStatus): string {
   switch (object) {
-    case PerpetualMarketCreateEventV1_Status.STATUS_UNSPECIFIED:
+    case ClobPairStatus.STATUS_UNSPECIFIED:
       return "STATUS_UNSPECIFIED";
 
-    case PerpetualMarketCreateEventV1_Status.STATUS_ACTIVE:
+    case ClobPairStatus.STATUS_ACTIVE:
       return "STATUS_ACTIVE";
 
-    case PerpetualMarketCreateEventV1_Status.STATUS_PAUSED:
+    case ClobPairStatus.STATUS_PAUSED:
       return "STATUS_PAUSED";
 
-    case PerpetualMarketCreateEventV1_Status.STATUS_CANCEL_ONLY:
+    case ClobPairStatus.STATUS_CANCEL_ONLY:
       return "STATUS_CANCEL_ONLY";
 
-    case PerpetualMarketCreateEventV1_Status.STATUS_POST_ONLY:
+    case ClobPairStatus.STATUS_POST_ONLY:
       return "STATUS_POST_ONLY";
 
-    case PerpetualMarketCreateEventV1_Status.UNRECOGNIZED:
+    case ClobPairStatus.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
   }
@@ -851,7 +851,9 @@ export interface PerpetualMarketCreateEventV1 {
    */
 
   marketId: number;
-  status: PerpetualMarketCreateEventV1_Status;
+  /** Status of the CLOB */
+
+  status: ClobPairStatus;
   /**
    * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
    * per Subtick.
@@ -925,7 +927,9 @@ export interface PerpetualMarketCreateEventV1SDKType {
    */
 
   market_id: number;
-  status: PerpetualMarketCreateEventV1_StatusSDKType;
+  /** Status of the CLOB */
+
+  status: ClobPairStatusSDKType;
   /**
    * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
    * per Subtick.

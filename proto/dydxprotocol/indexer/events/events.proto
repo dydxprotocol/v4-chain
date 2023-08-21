@@ -278,6 +278,25 @@ message AssetCreateEventV1 {
   sint32 atomic_resolution = 5;
 }
 
+// Status of the CLOB.
+// Defined in clob.clob_pair
+enum ClobPairStatus {
+  // Default value. This value is invalid and unused.
+  STATUS_UNSPECIFIED = 0;
+  // STATUS_ACTIVE behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  STATUS_ACTIVE = 1;
+  // STATUS_PAUSED behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  STATUS_PAUSED = 2;
+  // STATUS_CANCEL_ONLY behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  STATUS_CANCEL_ONLY = 3;
+  // STATUS_POST_ONLY behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  STATUS_POST_ONLY = 4;
+}
+
 // PerpetualMarketCreateEventV1 message contains all the information about a
 // new Perpetual Market on the v4 chain.
 message PerpetualMarketCreateEventV1 {
@@ -297,25 +316,8 @@ message PerpetualMarketCreateEventV1 {
   // Defined in perpetuals.perpetual
   uint32 market_id = 4;
 
-  // Status of the CLOB.
-  // Defined in clob.clob_pair
-  enum Status {
-    // Default value. This value is invalid and unused.
-    STATUS_UNSPECIFIED = 0;
-    // STATUS_ACTIVE behavior is unfinalized.
-    // TODO(DEC-600): update this documentation.
-    STATUS_ACTIVE = 1;
-    // STATUS_PAUSED behavior is unfinalized.
-    // TODO(DEC-600): update this documentation.
-    STATUS_PAUSED = 2;
-    // STATUS_CANCEL_ONLY behavior is unfinalized.
-    // TODO(DEC-600): update this documentation.
-    STATUS_CANCEL_ONLY = 3;
-    // STATUS_POST_ONLY behavior is unfinalized.
-    // TODO(DEC-600): update this documentation.
-    STATUS_POST_ONLY = 4;
-  }
-  Status status = 5;
+  // Status of the CLOB
+  ClobPairStatus status = 5;
 
   // `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
   // per Subtick.
