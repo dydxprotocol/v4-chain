@@ -27,7 +27,6 @@ import { protocolPriceToHuman, quantumsToHuman, quantumsToHumanFixedString } fro
 import * as AssetPositionTable from '../stores/asset-position-table';
 import * as SubaccountTable from '../stores/subaccount-table';
 import {
-  AssetColumns,
   AssetCreateObject,
   BlockColumns,
   BlockCreateObject,
@@ -275,43 +274,6 @@ export function getSeedMarketsSql(): string {
 
   return `INSERT INTO MARKETS (${marketColumns.map((col) => `"${col}"`).join(',')})
           VALUES ${marketRows.map((market) => `(${market})`).join(', ')}
-          ON CONFLICT DO NOTHING`;
-}
-
-/**
- * @description Gets the SQL to seed the `assets` table, using the `genesis.json` file
- * from the V4 network.
- * @returns SQL statement for seeding the `assets` table. The SQL statement will do
- * nothing if the rows in the `assets` table already exist.
- */
-export function getSeedAssetsSql(): string {
-  // Get `Asset` objects from the genesis app state
-  const assets: Asset[] = getAssetsFromGenesis();
-
-  const assetCreateObjects: AssetCreateObject[] = assets.map((asset: Asset) => {
-    return getAssetCreateObject(asset);
-  });
-
-  const assetColumns = _.keys(assetCreateObjects[0]) as AssetColumns[];
-
-  const assetRows: string[] = setBulkRowsForUpdate<AssetColumns>({
-    objectArray: assetCreateObjects,
-    columns: assetColumns,
-    stringColumns: [
-      AssetColumns.symbol,
-      AssetColumns.id,
-    ],
-    numericColumns: [
-      AssetColumns.atomicResolution,
-      AssetColumns.marketId,
-    ],
-    booleanColumns: [
-      AssetColumns.hasMarket,
-    ],
-  });
-
-  return `INSERT INTO ASSETS (${assetColumns.map((col) => `"${col}"`).join(',')})
-          VALUES ${assetRows.map((asset) => `(${asset})`).join(', ')}
           ON CONFLICT DO NOTHING`;
 }
 

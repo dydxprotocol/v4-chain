@@ -60,7 +60,14 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 			epochsKeeper,
 			transientStoreKey,
 		)
-		assetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, pricesKeeper)
+		assetsKeeper, _ = createAssetsKeeper(
+			stateStore,
+			db,
+			cdc,
+			pricesKeeper,
+			transientStoreKey,
+			true,
+		)
 		accountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ := createBankKeeper(stateStore, db, cdc, accountKeeper)
 		if saKeeper == nil {

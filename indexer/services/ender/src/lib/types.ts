@@ -25,6 +25,7 @@ import {
   FundingEventV1_Type,
   FundingEventV1,
   FundingUpdateV1,
+  AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
@@ -80,6 +81,10 @@ export type EventProtoWithType = {
 } | {
   type: DydxIndexerSubtypes.FUNDING,
   eventProto: FundingEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+} | {
+  type: DydxIndexerSubtypes.ASSET,
+  eventProto: AssetCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
 } | {
   type: DydxIndexerSubtypes.PERPETUAL_MARKET,
