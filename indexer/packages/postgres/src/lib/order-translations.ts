@@ -45,7 +45,7 @@ export async function convertToIndexerOrder(
     });
     throw new Error(`Subaccount for order not found: ${order.subaccountId}`);
   }
-  const triggerSubticks: Long = order.triggerPrice === undefined
+  const triggerSubticks: Long = (order.triggerPrice === undefined || order.triggerPrice === null)
     ? Long.fromValue(0, true)
     : Long.fromString(priceToSubticks(order.triggerPrice, perpetualMarket), true);
   const indexerOrder: IndexerOrder = {
