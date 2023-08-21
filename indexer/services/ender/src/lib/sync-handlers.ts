@@ -67,16 +67,16 @@ export class SyncHandlers {
     for (const indexerSubtype of SyncSubtypes) {
       if (this.syncHandlers[indexerSubtype]) {
         const handlerBatch: HandlerBatch = this.syncHandlers[indexerSubtype] as HandlerBatch;
-        const consolidatedKafkaEventGroup: ConsolidatedKafkaEvent[][] = await Promise.all(
-          _.map(handlerBatch, (handler: Handler<EventMessage>) => {
-            const handlerName: string = handler.constructor.name;
-            if (!(handlerName in handlerCountMapping)) {
-              handlerCountMapping[handlerName] = 0;
-            }
-            handlerCountMapping[handlerName] += 1;
-            return handler.handle();
-          }),
-        );
+        const consolidatedKafkaEventGroup: ConsolidatedKafkaEvent[][] = [];
+        for (const handler of handlerBatch) {
+          const handlerName: string = handler.constructor.name;
+          if (!(handlerName in handlerCountMapping)) {
+            handlerCountMapping[handlerName] = 0;
+          }
+          handlerCountMapping[handlerName] += 1;
+          const events: ConsolidatedKafkaEvent[] = await handler.handle();
+          consolidatedKafkaEventGroup.push(events);
+        }
         stats.timing(
           `${config.SERVICE_NAME}.synch_handlers.processing_delay.timing`,
           Date.now() - this.initializationTime,
