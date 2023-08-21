@@ -1,5 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { MarketFromDatabase, MarketTable } from '@dydxprotocol-indexer/postgres';
+import { MarketFromDatabase, MarketTable, marketRefresher } from '@dydxprotocol-indexer/postgres';
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { ConsolidatedKafkaEvent, MarketCreateEventMessage } from '../../lib/types';
@@ -35,15 +35,20 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
     }
     if (market === undefined) {
       await this.runFuncWithTimingStatAndErrorLogging(
-        MarketTable.create({
-          id: marketCreate.marketId,
-          pair: marketCreate.marketCreate.base!.pair,
-          exponent: marketCreate.marketCreate.exponent,
-          minPriceChangePpm: marketCreate.marketCreate.base!.minPriceChangePpm,
-        }),
+        this.createMarket(marketCreate),
         this.generateTimingStatsOptions('create_market'),
       );
     }
     return [];
+  }
+
+  public async createMarket(marketCreate: MarketCreateEventMessage): Promise<void> {
+    await MarketTable.create({
+      id: marketCreate.marketId,
+      pair: marketCreate.marketCreate.base!.pair,
+      exponent: marketCreate.marketCreate.exponent,
+      minPriceChangePpm: marketCreate.marketCreate.base!.minPriceChangePpm,
+    });
+    await marketRefresher.updateMarkets();
   }
 }

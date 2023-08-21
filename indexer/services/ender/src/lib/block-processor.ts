@@ -14,7 +14,7 @@ import { Validator, ValidatorInitializer } from '../validators/validator';
 import { BatchedHandlers } from './batched-handlers';
 import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
-import { SyncHandlers } from './synch-handlers';
+import { SyncHandlers, SyncSubtypes } from './sync-handlers';
 import {
   DydxIndexerSubtypes, EventMessage, EventProtoWithType, GroupedEvents,
 } from './types';
@@ -41,11 +41,13 @@ export class BlockProcessor {
   constructor(
     block: IndexerTendermintBlock,
     txId: number,
+    batchedHandlers: BatchedHandlers,
+    syncHandlers: SyncHandlers,
   ) {
     this.block = block;
     this.txId = txId;
-    this.batchedHandlers = new BatchedHandlers();
-    this.syncHandler = new SyncHandlers();
+    this.batchedHandlers = batchedHandlers;
+    this.syncHandler = syncHandlers;
   }
 
   /**
@@ -156,15 +158,25 @@ export class BlockProcessor {
     );
 
     _.map(handlers, (handler: Handler<EventMessage>) => {
-      this.syncHandler.addHandler(eventProtoWithType.type, handler);
-      this.batchedHandlers.addHandler(handler);
+      if (Object.values(SyncSubtypes).includes(eventProtoWithType.type as DydxIndexerSubtypes)) {
+        this.syncHandler.addHandler(eventProtoWithType.type, handler);
+      } else {
+        this.batchedHandlers.addHandler(handler);
+      }
     });
   }
 
   private async processEvents(): Promise<KafkaPublisher> {
     const kafkaPublisher: KafkaPublisher = new KafkaPublisher();
-    await this.syncHandler.process(kafkaPublisher);
-    await this.batchedHandlers.process(kafkaPublisher);
+    // in genesis, handle sync events first, then batched events.
+    // in other blocks, handle batched events first, then sync events.
+    if (this.block.height === 0) {
+      await this.syncHandler.process(kafkaPublisher);
+      await this.batchedHandlers.process(kafkaPublisher);
+    } else {
+      await this.batchedHandlers.process(kafkaPublisher);
+      await this.syncHandler.process(kafkaPublisher);
+    }
     return kafkaPublisher;
   }
 }

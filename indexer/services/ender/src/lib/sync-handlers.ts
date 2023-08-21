@@ -9,15 +9,16 @@ import { ConsolidatedKafkaEvent, DydxIndexerSubtypes, EventMessage } from './typ
 // type alias for an array of handlers.
 type HandlerBatch = Handler<EventMessage>[];
 type HandlerBatchMap = Partial<{ [indexerSubtype in DydxIndexerSubtypes]: HandlerBatch}>;
-const SynchSubtypes = [
+export const SyncSubtypes: DydxIndexerSubtypes[] = [
   DydxIndexerSubtypes.MARKET,
   DydxIndexerSubtypes.ASSET,
 ];
 
 /**
- * A class that processes handlers sequentially in the order specified in SynchSubtypes.
- * These events should be handled prior to any events in BatchedHandlers, and are used for
- * processing asset and market events.
+ * A class that processes handlers sequentially in the order specified in SyncSubtypes.
+ * During genesis, these events should be handled prior to any events in BatchedHandlers.
+ * After genesis block, these events should be handled after events in BatchedHandlers.
+ * It is used for processing asset and market events.
  */
 export class SyncHandlers {
   syncHandlers: HandlerBatchMap;
@@ -40,7 +41,11 @@ export class SyncHandlers {
     indexerSubtype: DydxIndexerSubtypes,
     handler: Handler<EventMessage>,
   ): void {
-    if (!SynchSubtypes.includes(indexerSubtype)) {
+    if (!SyncSubtypes.includes(indexerSubtype)) {
+      logger.error({
+        at: 'SyncHandlers#addHandler',
+        message: `Invalid indexerSubtype: ${indexerSubtype}`,
+      });
       return;
     }
     if (!this.syncHandlers[indexerSubtype]) {
@@ -52,14 +57,14 @@ export class SyncHandlers {
 
   /**
    * Processes all handlers that were passed in through `addHandler` sequentially
-   * in the order specified in SynchSubtypes. Adds events to the kafkaPublisher.
+   * in the order specified in SyncSubtypes. Adds events to the kafkaPublisher.
    */
   public async process(
     kafkaPublisher: KafkaPublisher,
   ): Promise<void> {
     const start: number = Date.now();
     const handlerCountMapping: { [key: string]: number } = {};
-    for (const indexerSubtype of SynchSubtypes) {
+    for (const indexerSubtype of SyncSubtypes) {
       if (this.syncHandlers[indexerSubtype]) {
         const handlerBatch: HandlerBatch = this.syncHandlers[indexerSubtype] as HandlerBatch;
         const consolidatedKafkaEventGroup: ConsolidatedKafkaEvent[][] = await Promise.all(
