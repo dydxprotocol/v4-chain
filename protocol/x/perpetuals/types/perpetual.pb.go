@@ -83,7 +83,8 @@ func (m *Perpetual) GetOpenInterest() uint64 {
 	return 0
 }
 
-// PerpetualParams represents the parameters of a perpetual on the dYdX exchange.
+// PerpetualParams represents the parameters of a perpetual on the dYdX
+// exchange.
 type PerpetualParams struct {
 	// Unique, sequentially-generated.
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`

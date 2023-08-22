@@ -36,7 +36,10 @@ export interface PerpetualSDKType {
 
   open_interest: Long;
 }
-/** PerpetualParams represents the parameters of a perpetual on the dYdX exchange. */
+/**
+ * PerpetualParams represents the parameters of a perpetual on the dYdX
+ * exchange.
+ */
 
 export interface PerpetualParams {
   /** Unique, sequentially-generated. */
@@ -69,7 +72,10 @@ export interface PerpetualParams {
 
   liquidityTier: number;
 }
-/** PerpetualParams represents the parameters of a perpetual on the dYdX exchange. */
+/**
+ * PerpetualParams represents the parameters of a perpetual on the dYdX
+ * exchange.
+ */
 
 export interface PerpetualParamsSDKType {
   /** Unique, sequentially-generated. */

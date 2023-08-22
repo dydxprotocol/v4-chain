@@ -23,7 +23,8 @@ message Perpetual {
   uint64 open_interest = 3;
 }
 
-// PerpetualParams represents the parameters of a perpetual on the dYdX exchange.
+// PerpetualParams represents the parameters of a perpetual on the dYdX
+// exchange.
 message PerpetualParams {
   // Unique, sequentially-generated.
   uint32 id = 1;
