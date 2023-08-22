@@ -95,7 +95,7 @@ create_validators() {
 		cat <<<"$new_file" >"$VAL_CONFIG_DIR"/node_key.json
 
 		edit_config "$VAL_CONFIG_DIR"
-		ADD_TESTING_MARKETS="false"
+		ADD_TESTING_MARKETS="true"
 
 		# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 		# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
