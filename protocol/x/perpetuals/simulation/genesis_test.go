@@ -58,15 +58,15 @@ func TestRandomizedGenState(t *testing.T) {
 		}
 
 		for _, perp := range perpetualsGenesis.Perpetuals {
-			require.True(t, len(perp.Ticker) >= 1)
+			require.True(t, len(perp.Params.Ticker) >= 1)
 
-			require.True(t, perp.MarketId <= 1_000)
+			require.True(t, perp.Params.MarketId <= 1_000)
 
-			require.True(t, perp.AtomicResolution >= -10)
-			require.True(t, perp.AtomicResolution <= 10)
+			require.True(t, perp.Params.AtomicResolution >= -10)
+			require.True(t, perp.Params.AtomicResolution <= 10)
 
-			require.True(t, perp.DefaultFundingPpm > -int32(lib.OneMillion))
-			require.True(t, perp.DefaultFundingPpm < int32(lib.OneMillion))
+			require.True(t, perp.Params.DefaultFundingPpm > -int32(lib.OneMillion))
+			require.True(t, perp.Params.DefaultFundingPpm < int32(lib.OneMillion))
 
 			require.True(t, perp.FundingIndex.BigInt().Sign() == 0)
 

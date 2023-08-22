@@ -39,14 +39,16 @@ func (k Keeper) CreatePerpetual(
 
 	// Create the perpetual.
 	perpetual := types.Perpetual{
-		Id:                nextId,
-		Ticker:            ticker,
-		MarketId:          marketId,
-		AtomicResolution:  atomicResolution,
-		DefaultFundingPpm: defaultFundingPpm,
-		FundingIndex:      dtypes.ZeroInt(),
-		OpenInterest:      types.DefaultOpenInterest,
-		LiquidityTier:     liquidityTier,
+		Params: types.PerpetualParams{
+			Id:                nextId,
+			Ticker:            ticker,
+			MarketId:          marketId,
+			AtomicResolution:  atomicResolution,
+			DefaultFundingPpm: defaultFundingPpm,
+			LiquidityTier:     liquidityTier,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: types.DefaultOpenInterest,
 	}
 
 	if err := k.validatePerpetual(
@@ -83,10 +85,10 @@ func (k Keeper) ModifyPerpetual(
 	}
 
 	// Modify perpetual.
-	perpetual.Ticker = ticker
-	perpetual.MarketId = marketId
-	perpetual.DefaultFundingPpm = defaultFundingPpm
-	perpetual.LiquidityTier = liquidityTier
+	perpetual.Params.Ticker = ticker
+	perpetual.Params.MarketId = marketId
+	perpetual.Params.DefaultFundingPpm = defaultFundingPpm
+	perpetual.Params.LiquidityTier = liquidityTier
 
 	// Validate updates to perpetual.
 	if err = k.validatePerpetual(
@@ -351,9 +353,9 @@ func (k Keeper) getFundingIndexDelta(
 	fundingIndexDelta *big.Int,
 	err error,
 ) {
-	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.MarketId)
+	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get market price for perpetual %v, err = %w", perp.Id, err)
+		return nil, fmt.Errorf("failed to get market price for perpetual %v, err = %w", perp.Params.Id, err)
 	}
 
 	// Get pro-rated funding rate adjusted by time delta.
@@ -370,7 +372,7 @@ func (k Keeper) getFundingIndexDelta(
 
 	bigFundingIndexDelta := lib.FundingRateToIndex(
 		proratedFundingRate,
-		perp.GetAtomicResolution(),
+		perp.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
@@ -438,25 +440,25 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 	)
 
 	for _, perp := range allPerpetuals {
-		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.MarketId)
+		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
 		if err != nil {
 			panic(err)
 		}
 
 		// Get impact notional corresponding to this perpetual market (panic if its liquidity tier doesn't exist).
-		liquidityTier := lib.MustGetValue(allLiquidityTiers, uint(perp.LiquidityTier))
+		liquidityTier := lib.MustGetValue(allLiquidityTiers, uint(perp.Params.LiquidityTier))
 		bigImpactNotionalQuoteQuantums := new(big.Int).SetUint64(liquidityTier.ImpactNotional)
 
 		premiumPpm, err := k.pricePremiumGetter.GetPricePremiumForPerpetual(
 			ctx,
-			perp.Id,
+			perp.Params.Id,
 			types.GetPricePremiumParams{
 				MarketPrice:                 marketPrice,
-				BaseAtomicResolution:        perp.AtomicResolution,
+				BaseAtomicResolution:        perp.Params.AtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: bigImpactNotionalQuoteQuantums,
 				// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-				MaxAbsPremiumVotePpm: lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perp.LiquidityTier)),
+				MaxAbsPremiumVotePpm: lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perp.Params.LiquidityTier)),
 			},
 		)
 		if err != nil {
@@ -468,7 +470,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			k.Logger(ctx).Debug(
 				fmt.Sprintf(
 					"Perpetual (%d) has zero sampled premium. Not including in AddPremiumVotes message",
-					perp.Id,
+					perp.Params.Id,
 				))
 			continue
 		}
@@ -476,7 +478,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		samples = append(
 			samples,
 			*types.NewFundingPremium(
-				perp.Id,
+				perp.Params.Id,
 				premiumPpm,
 			),
 		)
@@ -575,13 +577,13 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 	newFundingRatesAndIndicesForEvent := []indexerevents.FundingUpdateV1{}
 
 	for _, perp := range allPerps {
-		premiumPpm, found := perpIdToPremiumPpm[perp.Id]
+		premiumPpm, found := perpIdToPremiumPpm[perp.Params.Id]
 
 		if !found {
 			k.Logger(ctx).Info(
 				fmt.Sprintf(
 					"MaybeProcessNewFundingTickEpoch: No samples found for perpetual (%v) during `funding-tick` epoch\n",
-					perp.Id,
+					perp.Params.Id,
 				),
 			)
 
@@ -593,10 +595,10 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 		// funding rate = premium + default funding
 		bigFundingRatePpm.Add(
 			bigFundingRatePpm,
-			new(big.Int).SetInt64(int64(perp.DefaultFundingPpm)),
+			new(big.Int).SetInt64(int64(perp.Params.DefaultFundingPpm)),
 		)
 
-		liquidityTier, err := k.GetLiquidityTier(ctx, perp.LiquidityTier)
+		liquidityTier, err := k.GetLiquidityTier(ctx, perp.Params.LiquidityTier)
 		if err != nil {
 			panic(err)
 		}
@@ -606,7 +608,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			panic(sdkerrors.Wrapf(
 				types.ErrMaintenanceFractionPpmExceedsMax,
 				"perpetual Id = (%d), liquidity tier Id = (%d), maintenance fraction ppm = (%v)",
-				perp.Id, perp.LiquidityTier, liquidityTier.MaintenanceFractionPpm,
+				perp.Params.Id, perp.Params.LiquidityTier, liquidityTier.MaintenanceFractionPpm,
 			))
 		}
 
@@ -629,7 +631,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(
 					metrics.PerpetualId,
-					int(perp.Id),
+					int(perp.Params.Id),
 				),
 				// TODO(DEC-1071): Add epoch number as label.
 			},
@@ -639,7 +641,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			panic(sdkerrors.Wrapf(
 				types.ErrFundingRateInt32Overflow,
 				"perpetual Id = (%d), funding rate = (%v)",
-				perp.Id, bigFundingRatePpm,
+				perp.Params.Id, bigFundingRatePpm,
 			))
 		}
 
@@ -657,18 +659,18 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 				panic(err)
 			}
 
-			if err := k.ModifyFundingIndex(ctx, perp.Id, fundingIndexDelta); err != nil {
+			if err := k.ModifyFundingIndex(ctx, perp.Params.Id, fundingIndexDelta); err != nil {
 				panic(err)
 			}
 		}
 
 		// Get perpetual object with updated funding index.
-		perp, err = k.GetPerpetual(ctx, perp.Id)
+		perp, err = k.GetPerpetual(ctx, perp.Params.Id)
 		if err != nil {
 			panic(err)
 		}
 		newFundingRatesAndIndicesForEvent = append(newFundingRatesAndIndicesForEvent, indexerevents.FundingUpdateV1{
-			PerpetualId:     perp.Id,
+			PerpetualId:     perp.Params.Id,
 			FundingValuePpm: int32(bigFundingRatePpm.Int64()),
 			FundingIndex:    perp.FundingIndex,
 		})
@@ -690,7 +692,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 // GetNetNotional returns the net notional in quote quantums, which can be represented by the following equation:
 // `quantums / 10^baseAtomicResolution * marketPrice * 10^marketExponent * 10^quoteAtomicResolution`.
 // Note that longs are positive, and shorts are negative.
-// Returns an error if a perpetual with `id` does not exist or if the `Perpetual.MarketId` does
+// Returns an error if a perpetual with `id` does not exist or if the `perpetual.Params.MarketId` does
 // not exist.
 func (k Keeper) GetNetNotional(
 	ctx sdk.Context,
@@ -714,7 +716,7 @@ func (k Keeper) GetNetNotional(
 
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigQuantums,
-		perpetual.AtomicResolution,
+		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
@@ -726,7 +728,7 @@ func (k Keeper) GetNetNotional(
 // by the following equation:
 // `quoteQuantums * 10^baseAtomicResolution / (marketPrice * 10^marketExponent * 10^quoteAtomicResolution)`.
 // Note that longs are positive, and shorts are negative.
-// Returns an error if a perpetual with `id` does not exist or if the `Perpetual.MarketId` does
+// Returns an error if a perpetual with `id` does not exist or if the `perpetual.Params.MarketId` does
 // not exist.
 func (k Keeper) GetNotionalInBaseQuantums(
 	ctx sdk.Context,
@@ -750,7 +752,7 @@ func (k Keeper) GetNotionalInBaseQuantums(
 
 	bigBaseQuantums = lib.QuoteToBaseQuantums(
 		bigQuoteQuantums,
-		perpetual.AtomicResolution,
+		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
@@ -761,7 +763,7 @@ func (k Keeper) GetNotionalInBaseQuantums(
 // the net open notional, which can be represented by the following equation:
 // `quantums / 10^baseAtomicResolution * marketPrice * 10^marketExponent * 10^quoteAtomicResolution`.
 // Note that longs are positive, and shorts are negative.
-// Returns an error if a perpetual with `id` does not exist or if the `Perpetual.MarketId` does
+// Returns an error if a perpetual with `id` does not exist or if the `perpetual.Params.MarketId` does
 // not exist.
 func (k Keeper) GetNetCollateral(
 	ctx sdk.Context,
@@ -786,7 +788,7 @@ func (k Keeper) GetNetCollateral(
 // `notionalValue` is determined by multiplying the size of the position by the oracle price of the position.
 // Maintenance margin requirement is then simply a fraction (`maintenanceFractionPpm`) of initial margin requirement.
 //
-// Returns an error if a perpetual with `id`, `Perpetual.MarketId`, or `Perpetual.LiquidityTier` does not exist.
+// Returns an error if a perpetual with `id`, `perpetual.Params.MarketId`, or `perpetual.Params.LiquidityTier` does not exist.
 func (k Keeper) GetMarginRequirements(
 	ctx sdk.Context,
 	id uint32,
@@ -808,7 +810,7 @@ func (k Keeper) GetMarginRequirements(
 		return nil, nil, err
 	}
 	// Get perpetual's liquidity tier.
-	liquidityTier, err := k.GetLiquidityTier(ctx, perpetual.LiquidityTier)
+	liquidityTier, err := k.GetLiquidityTier(ctx, perpetual.Params.LiquidityTier)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -818,7 +820,7 @@ func (k Keeper) GetMarginRequirements(
 
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigAbsQuantums,
-		perpetual.AtomicResolution,
+		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
@@ -1049,7 +1051,7 @@ func (k Keeper) setPerpetual(
 ) {
 	b := k.cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(perpetual.Id), b)
+	perpetualStore.Set(types.PerpetualKey(perpetual.Params.Id), b)
 }
 
 // setUint32InStore sets a uint32 value in store for a given key.
@@ -1092,15 +1094,15 @@ func (k Keeper) GetPerpetualAndMarketPrice(
 	}
 
 	// Get market price.
-	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.MarketId)
+	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId)
 	if err != nil {
 		if sdkerrors.IsOf(err, pricestypes.ErrMarketPriceDoesNotExist) {
 			return perpetual, marketPrice, sdkerrors.Wrap(
 				types.ErrMarketDoesNotExist,
 				fmt.Sprintf(
 					"Market ID %d does not exist on perpetual ID %d",
-					perpetual.MarketId,
-					perpetual.Id,
+					perpetual.Params.MarketId,
+					perpetual.Params.Id,
 				),
 			)
 		} else {
@@ -1123,12 +1125,12 @@ func (k Keeper) validatePerpetual(
 		return err
 	}
 	// Validate `marketId`.
-	if _, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.MarketId); err != nil {
+	if _, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId); err != nil {
 		return err
 	}
 	// Validate `liquidityTier`.
-	if perpetual.LiquidityTier >= k.GetNumLiquidityTiers(ctx) {
-		return sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.LiquidityTier))
+	if perpetual.Params.LiquidityTier >= k.GetNumLiquidityTiers(ctx) {
+		return sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.Params.LiquidityTier))
 	}
 
 	return nil
@@ -1139,14 +1141,14 @@ func (k Keeper) validatePerpetual(
 // - Ticker is a non-empty string.
 func (k Keeper) validatePerpetualStateless(perpetual *types.Perpetual) error {
 	// Validate `ticker`.
-	if len(perpetual.Ticker) == 0 {
+	if len(perpetual.Params.Ticker) == 0 {
 		return errors.WithStack(types.ErrTickerEmptyString)
 	}
 
 	// Validate `defaultFundingPpm`
-	defaultFundingPpm := lib.AbsInt32(perpetual.DefaultFundingPpm)
+	defaultFundingPpm := lib.AbsInt32(perpetual.Params.DefaultFundingPpm)
 	if defaultFundingPpm > types.MaxDefaultFundingPpmAbs {
-		return sdkerrors.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, lib.Int32ToString(perpetual.DefaultFundingPpm))
+		return sdkerrors.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, lib.Int32ToString(perpetual.Params.DefaultFundingPpm))
 	}
 
 	return nil
@@ -1209,7 +1211,7 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 			return err
 		}
 		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-		maxAbsPremiumVotePpm := lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perpetual.LiquidityTier))
+		maxAbsPremiumVotePpm := lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perpetual.Params.LiquidityTier))
 		// Check premium vote value is within bounds.
 		bigAbsPremiumPpm := new(big.Int).SetUint64(uint64(
 			lib.AbsInt32(vote.PremiumPpm),

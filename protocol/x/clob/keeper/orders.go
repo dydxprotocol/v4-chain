@@ -996,7 +996,7 @@ func (k Keeper) GetOraclePriceSubticksRat(ctx sdk.Context, clobPair types.ClobPa
 	oraclePriceSubticksRat := types.PriceToSubticks(
 		marketPrice,
 		clobPair,
-		perpetual.AtomicResolution,
+		perpetual.Params.AtomicResolution,
 		lib.QuoteCurrencyAtomicResolution,
 	)
 	if oraclePriceSubticksRat.Cmp(big.NewRat(0, 1)) == 0 {

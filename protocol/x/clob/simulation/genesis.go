@@ -76,7 +76,7 @@ func createPerpetualClobMetadata(perpetualId uint32) types.ClobPair_PerpetualClo
 }
 
 // genClobPairToPerpetualSlice returns a slice of length `numClobPairs`, where each index
-// corresponds to a `ClobPair.Id` and entry is the `Perpetual.Id` that should be assigned to the
+// corresponds to a `ClobPair.Id` and entry is the `perpetual.Params.Id` that should be assigned to the
 // CLOB pair.
 func genClobPairToPerpetualSlice(r *rand.Rand, numClobPairs, numPerpetuals int) []uint32 {
 	perpetuals := sim_helpers.MakeRange(uint32(numPerpetuals))
