@@ -3,12 +3,12 @@ import { bigIntToBytes, bytesToBigInt, getPositionIsLong } from '@dydxprotocol-i
 import {
   Asset,
   AssetPosition,
-  ClobPair,
-  ClobPair_Status,
+  ClobPairStatus,
   LiquidityTier,
   MarketParam,
   MarketPrice,
   Perpetual,
+  PerpetualMarketCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
@@ -17,12 +17,7 @@ import { DateTime } from 'luxon';
 
 import { CURRENCY_DECIMAL_PRECISION, ONE_MILLION, QUOTE_CURRENCY_ATOMIC_RESOLUTION } from '../constants';
 import { setBulkRowsForUpdate } from '../helpers/stores-helpers';
-import {
-  InvalidClobPairStatusError,
-  LiquidityTierDoesNotExistError,
-  MarketDoesNotExistError,
-  PerpetualDoesNotExistError,
-} from '../lib/errors';
+import { InvalidClobPairStatusError } from '../lib/errors';
 import { protocolPriceToHuman, quantumsToHuman, quantumsToHumanFixedString } from '../lib/protocol-translations';
 import * as AssetPositionTable from '../stores/asset-position-table';
 import * as SubaccountTable from '../stores/subaccount-table';
@@ -37,7 +32,6 @@ import {
   MarketColumns,
   MarketCreateObject,
   MarketsMap,
-  PerpetualMarketColumns,
   PerpetualMarketCreateObject,
   PerpetualMarketFromDatabase,
   PerpetualMarketStatus,
@@ -64,14 +58,15 @@ export interface SubaccountCreateObjectWithId {
   updatedAtHeight: string,
 }
 
-type SpecifiedClobPairStatus = Exclude<ClobPair_Status, ClobPair_Status.STATUS_UNSPECIFIED> &
-Exclude<ClobPair_Status, ClobPair_Status.UNRECOGNIZED>;
+type SpecifiedClobPairStatus =
+  Exclude<ClobPairStatus, ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED> &
+  Exclude<ClobPairStatus, ClobPairStatus.UNRECOGNIZED>;
 
 const CLOB_STATUS_TO_MARKET_STATUS: Record<SpecifiedClobPairStatus, PerpetualMarketStatus> = {
-  [ClobPair_Status.STATUS_ACTIVE]: PerpetualMarketStatus.ACTIVE,
-  [ClobPair_Status.STATUS_CANCEL_ONLY]: PerpetualMarketStatus.CANCEL_ONLY,
-  [ClobPair_Status.STATUS_PAUSED]: PerpetualMarketStatus.PAUSED,
-  [ClobPair_Status.STATUS_POST_ONLY]: PerpetualMarketStatus.POST_ONLY,
+  [ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE]: PerpetualMarketStatus.ACTIVE,
+  [ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY]: PerpetualMarketStatus.CANCEL_ONLY,
+  [ClobPairStatus.CLOB_PAIR_STATUS_PAUSED]: PerpetualMarketStatus.PAUSED,
+  [ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY]: PerpetualMarketStatus.POST_ONLY,
 };
 
 /**
@@ -116,28 +111,6 @@ export function getPerpetualMarketMarginRestoreSql(): string[] {
 }
 
 /**
- * @description Gets the SQL to update the liquidityTierId column in `perpetual_markets` table,
- * using the `genesis.json` file from the V4 network.
- *
- * @param marketId
- * @param liquidityTierId
- */
-export function updatePerpetualMarketLiquidityTier(id: string, liquidityTierId: number): string {
-  return `UPDATE PERPETUAL_MARKETS
-          SET "liquidityTierId" = ${liquidityTierId}
-          WHERE "id" = '${id}'`;
-}
-
-function getPerpetualMarketToLiquidityTierMapping(): Record<string, number> {
-  const liquidityTierMap: Record<string, number> = {};
-  const perpetuals: Perpetual[] = getPerpetualsFromGenesis();
-  perpetuals.forEach((perpetual: Perpetual) => {
-    liquidityTierMap[perpetual.id.toString()] = perpetual.liquidityTier;
-  });
-  return liquidityTierMap;
-}
-
-/**
  * Gets a map of perpetual market IDs to margin fractions.
  *
  * @param liquidityTiersMap
@@ -167,77 +140,6 @@ function getPerpetualMarketToMarginMapping(
     };
   });
   return marginMap;
-}
-
-export function getPerpetualMarketLiquidityTierUpdateSql(): string[] {
-  const liquidityTierMap: Record<string, number> = getPerpetualMarketToLiquidityTierMapping();
-  const sql: string[] = [];
-  Object.keys(liquidityTierMap).forEach((id: string) => {
-    sql.push(updatePerpetualMarketLiquidityTier(id, liquidityTierMap[id]));
-  });
-  return sql;
-}
-
-/**
- * @description Gets the SQL to seed the `perpetual_markets` table, using the `genesis.json` file
- * from the V4 network.
- * @returns SQL statement for seeding the `perpetual_markets` table. The SQL statement will do
- * nothing if the rows in the `perpetual_markets` table already exist.
- */
-export function getSeedPerpetualMarketsSql(): string {
-  // Get `Perpetual` objects from the genesis app state
-  const perpetuals: Perpetual[] = getPerpetualsFromGenesis();
-
-  // Get `ClobPair` objects from the genesis app state
-  const clobPairs: ClobPair[] = getClobPairsFromGenesis();
-
-  // Get `MarketParam` objects from the genesis app state
-  const marketParams: MarketParam[] = getMarketParamsFromGenesis();
-
-  const liquidityTiers: LiquidityTier[] = getLiquidityTiersFromGenesis();
-
-  const perpetualMarkets: PerpetualMarketCreateObject[] = getPerpetualMarketCreateObjects(
-    clobPairs,
-    perpetuals,
-    marketParams,
-    liquidityTiers,
-  );
-  const perpetualMarketColumns = _.keys(perpetualMarkets[0]) as PerpetualMarketColumns[];
-
-  const marketRows: string[] = setBulkRowsForUpdate<PerpetualMarketColumns>({
-    objectArray: perpetualMarkets,
-    columns: perpetualMarketColumns,
-    stringColumns: [
-      PerpetualMarketColumns.status,
-      PerpetualMarketColumns.ticker,
-      PerpetualMarketColumns.marketId,
-      PerpetualMarketColumns.baseAsset,
-      PerpetualMarketColumns.quoteAsset,
-    ],
-    numericColumns: [
-      PerpetualMarketColumns.atomicResolution,
-      PerpetualMarketColumns.basePositionSize,
-      PerpetualMarketColumns.clobPairId,
-      PerpetualMarketColumns.id,
-      PerpetualMarketColumns.incrementalPositionSize,
-      PerpetualMarketColumns.lastPrice,
-      PerpetualMarketColumns.maxPositionSize,
-      PerpetualMarketColumns.minOrderBaseQuantums,
-      PerpetualMarketColumns.nextFundingRate,
-      PerpetualMarketColumns.openInterest,
-      PerpetualMarketColumns.priceChange24H,
-      PerpetualMarketColumns.quantumConversionExponent,
-      PerpetualMarketColumns.stepBaseQuantums,
-      PerpetualMarketColumns.subticksPerTick,
-      PerpetualMarketColumns.trades24H,
-      PerpetualMarketColumns.volume24H,
-      PerpetualMarketColumns.liquidityTierId,
-    ],
-  });
-
-  return `INSERT INTO PERPETUAL_MARKETS (${perpetualMarketColumns.map((col) => `"${col}"`).join(',')})
-          VALUES ${marketRows.map((market) => `(${market})`).join(', ')}
-          ON CONFLICT DO NOTHING`;
 }
 
 /**
@@ -494,33 +396,6 @@ export function getAssetPositionCreateObject(
   };
 }
 
-/**
- * Get `ClobPairs` from genesis.
- * @returns
- */
-export function getClobPairsFromGenesis(): ClobPair[] {
-  const clobPairs: ClobPair[] = genesis.app_state.clob.clob_pairs.map(
-    (genesisClobpair): ClobPair => {
-      return {
-        ...genesisClobpair,
-        subticksPerTick: genesisClobpair.subticks_per_tick,
-        quantumConversionExponent: genesisClobpair.quantum_conversion_exponent,
-        // Since the field in the proto is a uint64, this corresponds to a `BigInt` and not `number`
-        stepBaseQuantums: Long.fromValue(genesisClobpair.step_base_quantums),
-        minOrderBaseQuantums: Long.fromValue(genesisClobpair.min_order_base_quantums),
-        perpetualClobMetadata: {
-          perpetualId: genesisClobpair.perpetual_clob_metadata.perpetual_id,
-        },
-        // No status is set for the clob pairs in V4, so default to `ACTIVE` for now
-        // TODO(DEC-600): Update this when clob pair statuses are fleshed out alongside governance
-        status: ClobPair_Status.STATUS_ACTIVE,
-      };
-    },
-  );
-
-  return clobPairs;
-}
-
 export function getMarketParamsFromGenesis(): MarketParam[] {
   const markets: MarketParam[] = genesis.app_state.prices.market_params.map(
     (genesisMarketParam, index: number): MarketParam => {
@@ -572,139 +447,18 @@ export function getLiquidityTiersFromGenesis(): LiquidityTier[] {
 }
 
 /**
- * @description Given the initial `ClobPair` and `Perpetual` objects, generate a list of
- * `PerpetualMarketCreateObjects`.
- * @param clobPairs Initial `ClobPair` objects.
- * @param perpetuals Initial `Perpetual` objects.
- * @param marketParams Initial `MarketParam` objects.
- * @returns `PerpetualMarketCreateObjects` corresponding to each `ClobPair`, `Perpetual` and
- * `MarketParam`.
- * @throws `InvalidClobPairError` or `PerpetualDoesNotExist` error if the passed in `ClobPair` and
- * `Perpetual` objects are invalid.
- */
-export function getPerpetualMarketCreateObjects(
-  clobPairs: ClobPair[],
-  perpetuals: Perpetual[],
-  marketParams: MarketParam[],
-  liquidityTiers: LiquidityTier[],
-): PerpetualMarketCreateObject[] {
-  const perpetualsById: { [id: number]: Perpetual } = _.keyBy(perpetuals, 'id');
-  const marketParamsById: { [id: number]: MarketParam } = _.keyBy(marketParams, 'id');
-  const liquidityTiersById: { [id: number]: LiquidityTier } = _.keyBy(liquidityTiers, 'id');
-
-  // For each ClobPair, either create a `PerpetualMarketCreateObject` or return undefined if it's
-  // not a perpetual ClobPair.
-  const perpetualMarketsOrUndefined: (PerpetualMarketCreateObject | undefined)[] = clobPairs.map(
-    (clobPair: ClobPair): PerpetualMarketCreateObject | undefined => {
-      const perpetualForClobPair: Perpetual | undefined = getPerpetualForClobPair(
-        clobPair, perpetualsById,
-      );
-
-      // If the ClobPair doesn't contain a reference to a perpetual, `undefined` is returned by
-      // `getPerpetualForClobPair`
-      if (perpetualForClobPair === undefined) {
-        // Skip any ClobPairs that do not contain a reference to a perpetual
-        return undefined;
-      }
-
-      const marketForPerpetual: MarketParam = getMarketParamForPerpetual(
-        perpetualForClobPair, marketParamsById,
-      );
-
-      if (!(perpetualForClobPair.liquidityTier in liquidityTiersById)) {
-        throw new LiquidityTierDoesNotExistError(
-          perpetualForClobPair.liquidityTier,
-          perpetualForClobPair.id,
-        );
-      }
-
-      return getPerpetualMarketCreateObject(
-        clobPair,
-        perpetualForClobPair,
-        marketForPerpetual,
-      );
-    },
-  );
-
-  // Filter out any undefined objects in the list.
-  const perpetualMarkets: PerpetualMarketCreateObject[] = perpetualMarketsOrUndefined.filter(
-    (
-      perpetualMarket: PerpetualMarketCreateObject | undefined,
-    ): perpetualMarket is PerpetualMarketCreateObject => {
-      return perpetualMarket !== undefined;
-    },
-  );
-
-  return perpetualMarkets;
-}
-
-/**
- * @description Get the `Perpetual` object referenced by a `ClobPair` object.
- * @param clobPair `ClobPair` object to get a `Perpetual` object for.
- * @param perpetualsById Map of `Perpetual` objects to their id.
- * @returns `Perpetual` referenced by the `ClobPair` or `undefined` if the `ClobPair` does not
- * reference a `Perpetual`.
- * @throws `PerpetualDoesNotExistError` if the `Perpetual` referenced by a `ClobPair` does not exist
- * in the passed in map of `Perpetual` objects.
- */
-function getPerpetualForClobPair(
-  clobPair: ClobPair,
-  perpetualsById: { [id: number]: Perpetual },
-): Perpetual | undefined {
-  if (clobPair.perpetualClobMetadata !== undefined) {
-    const perpetualIdForClobPair: number = clobPair.perpetualClobMetadata.perpetualId;
-
-    if (!(perpetualIdForClobPair in perpetualsById)) {
-      throw new PerpetualDoesNotExistError(perpetualIdForClobPair, clobPair.id);
-    }
-
-    return perpetualsById[perpetualIdForClobPair];
-  } else {
-    // TODO(DEC-689) Add support for spot markets with assets metadata
-    return undefined;
-  }
-}
-
-/**
- * @description Get the `MarketParam` object referenced by a `Perpetual` object.
- * @param perpetual `Perpetual` object to get a `MarketParam` object for.
- * @param marketParamsById Map of market ids to `MarketParam` objects.
- * @returns `MarketParam` referenced by the given `Perpetual`.
- */
-function getMarketParamForPerpetual(
-  perpetual: Perpetual,
-  marketParamsById: { [id: number]: MarketParam },
-): MarketParam {
-  if (!(perpetual.marketId in marketParamsById)) {
-    throw new MarketDoesNotExistError(perpetual.marketId, perpetual.id);
-  }
-
-  return marketParamsById[perpetual.marketId];
-}
-
-/**
- * @description Given a clob pair and it's corresponding perpetual, generate the `PerpetualMarket`
+ * @description Given a PerpetualMarketCreateEventV1 event, generate the `PerpetualMarket`
  * to create.
- * @param clobPair `ClobPair` for the `PerpetualMarket`.
- * @param perpetual `Perpetual` for the `PerpetualMarket`.
- * @param marketParam: `MarketParam` for the `Perpetual`.
- * @param liquidityTier `LiquidityTier` for the perpetual.
- * @returns `PerpetualMarketCreateObject` corresponding to the `Perpetual`, ClobPair` and
- * `MarketParam` passed in.
- * Note: This function assumes the passed in `Perpetual`, `ClobPair` and `MarketParam` match, and
- * does no validation for this.
  */
-function getPerpetualMarketCreateObject(
-  clobPair: ClobPair,
-  perpetual: Perpetual,
-  marketParam: MarketParam,
+export function getPerpetualMarketCreateObject(
+  perpetualMarketCreateEventV1: PerpetualMarketCreateEventV1,
 ): PerpetualMarketCreateObject {
   return {
-    id: perpetual.id.toString(),
-    clobPairId: clobPair.id.toString(),
-    ticker: perpetual.ticker,
-    marketId: marketParam.id,
-    status: clobStatusToMarketStatus(clobPair.status),
+    id: perpetualMarketCreateEventV1.id.toString(),
+    clobPairId: perpetualMarketCreateEventV1.clobPairId.toString(),
+    ticker: perpetualMarketCreateEventV1.ticker,
+    marketId: perpetualMarketCreateEventV1.marketId,
+    status: clobStatusToMarketStatus(perpetualMarketCreateEventV1.status),
     // TODO(DEC-744): Remove base asset, quote asset.
     baseAsset: '',
     quoteAsset: '',
@@ -719,16 +473,13 @@ function getPerpetualMarketCreateObject(
     basePositionSize: '0',
     incrementalPositionSize: '0',
     maxPositionSize: '0',
-    openInterest: quantumsToHuman(
-      perpetual.openInterest.toString(),
-      perpetual.atomicResolution,
-    ).toFixed(6),
-    quantumConversionExponent: clobPair.quantumConversionExponent,
-    atomicResolution: perpetual.atomicResolution,
-    subticksPerTick: clobPair.subticksPerTick,
-    minOrderBaseQuantums: Number(clobPair.minOrderBaseQuantums),
-    stepBaseQuantums: Number(clobPair.stepBaseQuantums),
-    liquidityTierId: perpetual.liquidityTier,
+    openInterest: '0',
+    quantumConversionExponent: perpetualMarketCreateEventV1.quantumConversionExponent,
+    atomicResolution: perpetualMarketCreateEventV1.atomicResolution,
+    subticksPerTick: perpetualMarketCreateEventV1.subticksPerTick,
+    minOrderBaseQuantums: Number(perpetualMarketCreateEventV1.minOrderBaseQuantums),
+    stepBaseQuantums: Number(perpetualMarketCreateEventV1.stepBaseQuantums),
+    liquidityTierId: perpetualMarketCreateEventV1.liquidityTier,
   };
 }
 
@@ -778,10 +529,10 @@ export function getMaintenanceMarginPpm(
   return Big(initialMarginPpm).times(maintenanceFractionPpm).div(ONE_MILLION).toNumber();
 }
 
-function clobStatusToMarketStatus(clobPairStatus: ClobPair_Status): PerpetualMarketStatus {
+function clobStatusToMarketStatus(clobPairStatus: ClobPairStatus): PerpetualMarketStatus {
   if (
-    clobPairStatus !== ClobPair_Status.STATUS_UNSPECIFIED &&
-    clobPairStatus !== ClobPair_Status.UNRECOGNIZED &&
+    clobPairStatus !== ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED &&
+    clobPairStatus !== ClobPairStatus.UNRECOGNIZED &&
     clobPairStatus in CLOB_STATUS_TO_MARKET_STATUS
   ) {
     return CLOB_STATUS_TO_MARKET_STATUS[clobPairStatus];

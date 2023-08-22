@@ -2,11 +2,10 @@ import { bytesToBigInt, getPositionIsLong } from '@dydxprotocol-indexer/v4-proto
 import {
   Asset,
   AssetPosition,
-  ClobPair,
   LiquidityTier,
   MarketParam,
   MarketPrice,
-  Perpetual,
+  PerpetualMarketCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 
 import { QUOTE_CURRENCY_ATOMIC_RESOLUTION } from '../../src';
@@ -37,6 +36,7 @@ export const HARDCODED_PERPETUAL_MARKET_VALUES: Object = {
   incrementalPositionSize: '0',
   maxPositionSize: '0',
   status: PerpetualMarketStatus.ACTIVE,
+  openInterest: '0',
 };
 
 export function expectMarketParamAndPrice(
@@ -55,25 +55,20 @@ export function expectMarketParamAndPrice(
 
 export function expectPerpetualMarket(
   perpetualMarket: PerpetualMarketFromDatabase,
-  perpetual: Perpetual,
-  clobPair: ClobPair,
+  perpetual: PerpetualMarketCreateEventV1,
 ): void {
   // TODO(IND-219): Set initialMarginFraction/maintenanceMarginFraction using LiquidityTier
   expect(perpetualMarket).toEqual(expect.objectContaining({
     ...HARDCODED_PERPETUAL_MARKET_VALUES,
     id: perpetual.id.toString(),
-    clobPairId: clobPair.id.toString(),
+    clobPairId: perpetual.clobPairId.toString(),
     ticker: perpetual.ticker,
     marketId: perpetual.marketId,
-    openInterest: quantumsToHuman(
-      perpetual.openInterest.toString(),
-      perpetual.atomicResolution,
-    ).toFixed(6),
-    quantumConversionExponent: clobPair.quantumConversionExponent,
+    quantumConversionExponent: perpetual.quantumConversionExponent,
     atomicResolution: perpetual.atomicResolution,
-    subticksPerTick: clobPair.subticksPerTick,
-    minOrderBaseQuantums: Number(clobPair.minOrderBaseQuantums),
-    stepBaseQuantums: Number(clobPair.stepBaseQuantums),
+    subticksPerTick: perpetual.subticksPerTick,
+    minOrderBaseQuantums: Number(perpetual.minOrderBaseQuantums),
+    stepBaseQuantums: Number(perpetual.stepBaseQuantums),
     liquidityTierId: perpetual.liquidityTier,
   }));
 }
