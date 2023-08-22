@@ -3,10 +3,43 @@ import { Long, DeepPartial } from "../../helpers";
 /** Perpetual represents a perpetual on the dYdX exchange. */
 
 export interface Perpetual {
+  /** PerpetualParams is the parameters of the perpetual. */
+  params?: PerpetualParams;
   /**
-   * ==== Non-updatable fields. ====
-   * Unique, sequentially-generated.
+   * The current index determined by the cumulative all-time
+   * history of the funding mechanism. Starts at zero.
    */
+
+  fundingIndex: Uint8Array;
+  /**
+   * The total open-interest of the perpetual used for
+   * bookkeeping purposes. In base quantums.
+   */
+
+  openInterest: Long;
+}
+/** Perpetual represents a perpetual on the dYdX exchange. */
+
+export interface PerpetualSDKType {
+  /** PerpetualParams is the parameters of the perpetual. */
+  params?: PerpetualParamsSDKType;
+  /**
+   * The current index determined by the cumulative all-time
+   * history of the funding mechanism. Starts at zero.
+   */
+
+  funding_index: Uint8Array;
+  /**
+   * The total open-interest of the perpetual used for
+   * bookkeeping purposes. In base quantums.
+   */
+
+  open_interest: Long;
+}
+/** PerpetualParams represents the parameters of a perpetual on the dYdX exchange. */
+
+export interface PerpetualParams {
+  /** Unique, sequentially-generated. */
   id: number;
   /** The name of the `Perpetual` (e.g. `BTC-USD`). */
 
@@ -27,7 +60,6 @@ export interface Perpetual {
 
   atomicResolution: number;
   /**
-   * ==== Governance-updatable fields. ====
    * The default funding payment if there is no price premium. In
    * parts-per-million.
    */
@@ -36,27 +68,11 @@ export interface Perpetual {
   /** The liquidity_tier that this perpetual is associated with. */
 
   liquidityTier: number;
-  /**
-   * ==== Regularly-updated fields. ====
-   * The current index determined by the cumulative all-time
-   * history of the funding mechanism. Starts at zero.
-   */
-
-  fundingIndex: Uint8Array;
-  /**
-   * The total open-interest of the perpetual used for
-   * bookkeeping purposes. In base quantums.
-   */
-
-  openInterest: Long;
 }
-/** Perpetual represents a perpetual on the dYdX exchange. */
+/** PerpetualParams represents the parameters of a perpetual on the dYdX exchange. */
 
-export interface PerpetualSDKType {
-  /**
-   * ==== Non-updatable fields. ====
-   * Unique, sequentially-generated.
-   */
+export interface PerpetualParamsSDKType {
+  /** Unique, sequentially-generated. */
   id: number;
   /** The name of the `Perpetual` (e.g. `BTC-USD`). */
 
@@ -77,7 +93,6 @@ export interface PerpetualSDKType {
 
   atomic_resolution: number;
   /**
-   * ==== Governance-updatable fields. ====
    * The default funding payment if there is no price premium. In
    * parts-per-million.
    */
@@ -86,19 +101,6 @@ export interface PerpetualSDKType {
   /** The liquidity_tier that this perpetual is associated with. */
 
   liquidity_tier: number;
-  /**
-   * ==== Regularly-updated fields. ====
-   * The current index determined by the cumulative all-time
-   * history of the funding mechanism. Starts at zero.
-   */
-
-  funding_index: Uint8Array;
-  /**
-   * The total open-interest of the perpetual used for
-   * bookkeeping purposes. In base quantums.
-   */
-
-  open_interest: Long;
 }
 /** MarketPremiums stores a list of premiums for a single perpetual market. */
 
@@ -259,12 +261,7 @@ export interface LiquidityTierSDKType {
 
 function createBasePerpetual(): Perpetual {
   return {
-    id: 0,
-    ticker: "",
-    marketId: 0,
-    atomicResolution: 0,
-    defaultFundingPpm: 0,
-    liquidityTier: 0,
+    params: undefined,
     fundingIndex: new Uint8Array(),
     openInterest: Long.UZERO
   };
@@ -272,6 +269,74 @@ function createBasePerpetual(): Perpetual {
 
 export const Perpetual = {
   encode(message: Perpetual, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.params !== undefined) {
+      PerpetualParams.encode(message.params, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.fundingIndex.length !== 0) {
+      writer.uint32(18).bytes(message.fundingIndex);
+    }
+
+    if (!message.openInterest.isZero()) {
+      writer.uint32(24).uint64(message.openInterest);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): Perpetual {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePerpetual();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.params = PerpetualParams.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.fundingIndex = reader.bytes();
+          break;
+
+        case 3:
+          message.openInterest = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<Perpetual>): Perpetual {
+    const message = createBasePerpetual();
+    message.params = object.params !== undefined && object.params !== null ? PerpetualParams.fromPartial(object.params) : undefined;
+    message.fundingIndex = object.fundingIndex ?? new Uint8Array();
+    message.openInterest = object.openInterest !== undefined && object.openInterest !== null ? Long.fromValue(object.openInterest) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBasePerpetualParams(): PerpetualParams {
+  return {
+    id: 0,
+    ticker: "",
+    marketId: 0,
+    atomicResolution: 0,
+    defaultFundingPpm: 0,
+    liquidityTier: 0
+  };
+}
+
+export const PerpetualParams = {
+  encode(message: PerpetualParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.id !== 0) {
       writer.uint32(8).uint32(message.id);
     }
@@ -296,21 +361,13 @@ export const Perpetual = {
       writer.uint32(48).uint32(message.liquidityTier);
     }
 
-    if (message.fundingIndex.length !== 0) {
-      writer.uint32(58).bytes(message.fundingIndex);
-    }
-
-    if (!message.openInterest.isZero()) {
-      writer.uint32(64).uint64(message.openInterest);
-    }
-
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): Perpetual {
+  decode(input: _m0.Reader | Uint8Array, length?: number): PerpetualParams {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePerpetual();
+    const message = createBasePerpetualParams();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -340,14 +397,6 @@ export const Perpetual = {
           message.liquidityTier = reader.uint32();
           break;
 
-        case 7:
-          message.fundingIndex = reader.bytes();
-          break;
-
-        case 8:
-          message.openInterest = (reader.uint64() as Long);
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -357,16 +406,14 @@ export const Perpetual = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<Perpetual>): Perpetual {
-    const message = createBasePerpetual();
+  fromPartial(object: DeepPartial<PerpetualParams>): PerpetualParams {
+    const message = createBasePerpetualParams();
     message.id = object.id ?? 0;
     message.ticker = object.ticker ?? "";
     message.marketId = object.marketId ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
     message.defaultFundingPpm = object.defaultFundingPpm ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
-    message.fundingIndex = object.fundingIndex ?? new Uint8Array();
-    message.openInterest = object.openInterest !== undefined && object.openInterest !== null ? Long.fromValue(object.openInterest) : Long.UZERO;
     return message;
   }
 
