@@ -28,17 +28,6 @@ func (k Keeper) CreateMarket(
 		return types.MarketParam{}, err
 	}
 
-	// Validate param uses the `nextId`.
-	nextId := k.GetNumMarkets(ctx)
-	if marketParam.Id != nextId {
-		return types.MarketParam{}, sdkerrors.Wrapf(
-			types.ErrInvalidInput,
-			"expected market param with id %d, got %d",
-			nextId,
-			marketParam.Id,
-		)
-	}
-
 	paramBytes := k.cdc.MustMarshal(&marketParam)
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
 
@@ -47,9 +36,6 @@ func (k Keeper) CreateMarket(
 
 	marketPriceStore := k.newMarketPriceStore(ctx)
 	marketPriceStore.Set(types.MarketKey(marketPrice.Id), priceBytes)
-
-	// Store the new `numMarkets`.
-	k.setNumMarkets(ctx, nextId+1)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
