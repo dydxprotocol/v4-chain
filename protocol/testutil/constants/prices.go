@@ -41,7 +41,7 @@ const (
 	BitfinexExchangeName  = "Bitfinex"
 	KrakenExchangeName    = "Kraken"
 
-	FiveBillion  = uint64(5_000_000_000)
+	FiveBillion  = uint64(4_999_999_937)
 	ThreeBillion = uint64(3_000_000_000)
 	FiveMillion  = uint64(5_000_000)
 	OneMillion   = uint64(1_000_000)
