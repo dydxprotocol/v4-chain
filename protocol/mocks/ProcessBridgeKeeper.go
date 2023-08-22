@@ -28,8 +28,8 @@ func (_m *ProcessBridgeKeeper) GetAcknowledgedEventInfo(ctx types.Context) bridg
 	return r0
 }
 
-// GetBridgeEvent provides a mock function with given fields: ctx, id
-func (_m *ProcessBridgeKeeper) GetBridgeEvent(ctx types.Context, id uint32) (bridgetypes.BridgeEvent, bool) {
+// GetBridgeEventFromServer provides a mock function with given fields: ctx, id
+func (_m *ProcessBridgeKeeper) GetBridgeEventFromServer(ctx types.Context, id uint32) (bridgetypes.BridgeEvent, bool) {
 	ret := _m.Called(ctx, id)
 
 	var r0 bridgetypes.BridgeEvent

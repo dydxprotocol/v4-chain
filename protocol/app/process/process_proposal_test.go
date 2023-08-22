@@ -245,7 +245,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", mock.Anything).Return(constants.AcknowledgedEventInfo_Id0_Height0)
 			mockBridgeKeeper.On("GetRecognizedEventInfo", mock.Anything).Return(constants.RecognizedEventInfo_Id2_Height0)
 			for _, bridgeEvent := range tc.bridgeEventsInServer {
-				mockBridgeKeeper.On("GetBridgeEvent", mock.Anything, bridgeEvent.Id).Return(bridgeEvent, true).Once()
+				mockBridgeKeeper.On("GetBridgeEventFromServer", mock.Anything, bridgeEvent.Id).Return(bridgeEvent, true).Once()
 			}
 
 			handler := process.ProcessProposalHandler(

@@ -193,7 +193,7 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", ctx).Return(tc.acknowledgedEventInfo)
 			mockBridgeKeeper.On("GetRecognizedEventInfo", ctx).Return(tc.recognizedEventInfo)
 			for _, event := range tc.bridgeEventsInServer {
-				mockBridgeKeeper.On("GetBridgeEvent", ctx, event.Id).Return(event, true)
+				mockBridgeKeeper.On("GetBridgeEventFromServer", ctx, event.Id).Return(event, true)
 			}
 
 			abt, err := process.DecodeAcknowledgeBridgesTx(

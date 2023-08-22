@@ -319,7 +319,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				constants.RecognizedEventInfo_Id2_Height0,
 			)
 			for _, bridgeEvent := range validAcknowledgeBridgesMsg.Events {
-				mockBridgeKeeper.On("GetBridgeEvent", mock.Anything, bridgeEvent.Id).Return(bridgeEvent, true).Once()
+				mockBridgeKeeper.On("GetBridgeEventFromServer", mock.Anything, bridgeEvent.Id).Return(bridgeEvent, true).Once()
 			}
 
 			ppt, err := process.DecodeProcessProposalTxs(
@@ -408,7 +408,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 				constants.RecognizedEventInfo_Id2_Height0,
 			)
 			for _, bridgeEvent := range validAcknowledgeBridgesMsg.Events {
-				mockBridgeKeeper.On("GetBridgeEvent", mock.Anything, bridgeEvent.Id).Return(bridgeEvent, true).Once()
+				mockBridgeKeeper.On("GetBridgeEventFromServer", mock.Anything, bridgeEvent.Id).Return(bridgeEvent, true).Once()
 			}
 
 			ppt, err := process.DecodeProcessProposalTxs(

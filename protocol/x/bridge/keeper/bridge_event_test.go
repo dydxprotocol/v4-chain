@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetBridgeEvent(t *testing.T) {
+func TestGetBridgeEventFromServer(t *testing.T) {
 	tests := map[string]struct {
 		// Bridge event to add to server.
 		bridgeEvent types.BridgeEvent
@@ -43,7 +43,7 @@ func TestGetBridgeEvent(t *testing.T) {
 			require.NoError(t, err)
 
 			// Complete bridge.
-			event, found := bridgeKeeper.GetBridgeEvent(ctx, tc.bridgeEventId)
+			event, found := bridgeKeeper.GetBridgeEventFromServer(ctx, tc.bridgeEventId)
 
 			// Assert expectations.
 			require.Equal(t, tc.expectedEvent, event)

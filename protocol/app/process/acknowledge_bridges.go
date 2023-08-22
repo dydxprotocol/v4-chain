@@ -117,11 +117,11 @@ func (abt *AcknowledgeBridgesTx) Validate() error {
 
 	// Validate that bridge events' content is the same as in server state.
 	for _, event := range abt.msg.Events {
-		eventInState, found := abt.bridgeKeeper.GetBridgeEvent(abt.ctx, event.Id)
+		eventInState, found := abt.bridgeKeeper.GetBridgeEventFromServer(abt.ctx, event.Id)
 		if !found {
 			return types.ErrBridgeEventNotFound
 		}
-		if !reflect.DeepEqual(eventInState, event) {
+		if !eventInState.Equal(event) {
 			return types.ErrBridgeEventContentMismatch
 		}
 	}
