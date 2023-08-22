@@ -41,7 +41,7 @@ type (
 		memStoreInitialized *atomic.Bool
 
 		// mev telemetry config
-		mevTelemetryHost       string
+		mevTelemetryHosts      []string
 		mevTelemetryIdentifier string
 
 		// txValidation decoder and antehandler
@@ -54,8 +54,10 @@ type (
 	}
 )
 
-var _ types.ClobKeeper = &Keeper{}
-var _ types.MemClobKeeper = &Keeper{}
+var (
+	_ types.ClobKeeper    = &Keeper{}
+	_ types.MemClobKeeper = &Keeper{}
+)
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
@@ -73,7 +75,7 @@ func NewKeeper(
 	rewardsKeeper types.RewardsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	txDecoder sdk.TxDecoder,
-	mevTelemetryHost string,
+	mevTelemetryHosts []string,
 	mevTelemetryIdentifier string,
 	placeOrderRateLimiter rate_limit.RateLimiter[*types.MsgPlaceOrder],
 	cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder],
@@ -95,7 +97,7 @@ func NewKeeper(
 		indexerEventManager:          indexerEventManager,
 		memStoreInitialized:          &atomic.Bool{},
 		txDecoder:                    txDecoder,
-		mevTelemetryHost:             mevTelemetryHost,
+		mevTelemetryHosts:            mevTelemetryHosts,
 		mevTelemetryIdentifier:       mevTelemetryIdentifier,
 		placeOrderRateLimiter:        placeOrderRateLimiter,
 		cancelOrderRateLimiter:       cancelOrderRateLimiter,

@@ -291,7 +291,7 @@ func (k Keeper) RecordMevMetrics(
 		mevPerMarket[clobPairId] = mev
 	}
 
-	if k.mevTelemetryHost != "" {
+	if len(k.mevTelemetryHosts) != 0 {
 		mevClobMidPrices := make([]types.ClobMidPrice, 0, len(clobPairs))
 		for _, clobPair := range clobPairs {
 			mevClobMidPrices = append(
@@ -304,7 +304,7 @@ func (k Keeper) RecordMevMetrics(
 		}
 		go mev_telemetry.SendDatapoints(
 			ctx,
-			k.mevTelemetryHost,
+			k.mevTelemetryHosts,
 			types.MevMetrics{
 				MevDatapoint: types.MEVDatapoint{
 					Height:              lib.MustConvertIntegerToUint32(ctx.BlockHeight()),

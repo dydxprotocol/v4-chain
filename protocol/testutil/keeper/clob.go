@@ -188,7 +188,7 @@ func createClobKeeper(
 		rewardsKeeper,
 		indexerEventManager,
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
-		"",
+		[]string{},
 		"",
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
 		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),

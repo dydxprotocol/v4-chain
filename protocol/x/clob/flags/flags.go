@@ -1,25 +1,28 @@
 package flags
 
 import (
+	"strings"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cobra"
 )
 
 // A struct containing the values of all flags.
 type ClobFlags struct {
-	MevTelemetryHost       string
+	MevTelemetryHosts      []string
 	MevTelemetryIdentifier string
 }
 
 // List of CLI flags.
 const (
-	MevTelemetryHost       = "mev-telemetry-host"
+	MevTelemetryHosts      = "mev-telemetry-hosts"
 	MevTelemetryIdentifier = "mev-telemetry-identifier"
 )
 
 // Default values.
+
 const (
-	DefaultMevTelemetryHost       = ""
+	DefaultMevTelemetryHosts      = ""
 	DefaultMevTelemetryIdentifier = ""
 )
 
@@ -28,14 +31,14 @@ const (
 // E.g. `dydxprotocold start --non-validating-full-node true`.
 func AddClobFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(
-		MevTelemetryHost,
-		DefaultMevTelemetryHost,
-		"Sets the address to connect to for the MEV Telemetry collection agent.",
+		MevTelemetryHosts,
+		DefaultMevTelemetryHosts,
+		"Sets the addresses (comma-delimited) to connect to the MEV Telemetry collection agents.",
 	)
 	cmd.Flags().String(
 		MevTelemetryIdentifier,
 		DefaultMevTelemetryIdentifier,
-		"Sets the identifier to use for MEV Telemetry collection agent.",
+		"Sets the identifier to use for MEV Telemetry collection agents.",
 	)
 }
 
@@ -46,14 +49,22 @@ func GetClobFlagValuesFromOptions(
 ) ClobFlags {
 	// Create default result.
 	result := ClobFlags{
-		MevTelemetryHost:       DefaultMevTelemetryHost,
+		MevTelemetryHosts:      []string{},
 		MevTelemetryIdentifier: DefaultMevTelemetryIdentifier,
 	}
 
 	// Populate the flags if they exist.
-	if v, ok := appOpts.Get(MevTelemetryHost).(string); ok {
-		result.MevTelemetryHost = v
+	mevTelemetryHostString, ok := appOpts.Get(MevTelemetryHosts).(string)
+
+	if !ok {
+		return result
 	}
+
+	if mevTelemetryHostString == "" {
+		return result
+	}
+
+	result.MevTelemetryHosts = strings.Split(mevTelemetryHostString, ",")
 
 	if v, ok := appOpts.Get(MevTelemetryIdentifier).(string); ok {
 		result.MevTelemetryIdentifier = v

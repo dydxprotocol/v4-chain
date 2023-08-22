@@ -65,7 +65,7 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		nil,
 		nil,
-		"",
+		[]string{},
 		"",
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
 		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
