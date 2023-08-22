@@ -39,7 +39,6 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
     );
     await Promise.all([
       perpetualMarketRefresher.updatePerpetualMarkets({ txId: this.txId }),
-      liquidityTierRefresher.updateLiquidityTiers({ txId: this.txId }),
     ]);
   }
 }

@@ -1,10 +1,8 @@
-import { stats, delay, logger } from '@dydxprotocol-indexer/base';
+import { delay, logger, stats } from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import * as LiquidityTiersTable from '../stores/liquidity-tiers-table';
-import {
-  LiquidityTiersFromDatabase, LiquidityTiersMap, MarketFromDatabase, Options,
-} from '../types';
+import { LiquidityTiersFromDatabase, LiquidityTiersMap, Options } from '../types';
 
 let idToLiquidityTier: LiquidityTiersMap = {};
 
@@ -12,7 +10,7 @@ let idToLiquidityTier: LiquidityTiersMap = {};
  * Refresh loop to cache the list of all liquidity tiers from the database in-memory.
  */
 export async function start(): Promise<void> {
-  for (;;) {
+  for (; ;) {
     await updateLiquidityTiers();
     await delay(config.LIQUIDITY_TIER_REFRESHER_INTERVAL_MS);
   }
