@@ -12,7 +12,6 @@ message MarketPrice {
   // MarketParam field for more information.
   sint32 exponent = 2;
 
-  // The variable value that is updated by oracle price updates. `0` if it has
-  // never been updated, `>0` otherwise.
+  // The variable value that is updated by oracle price updates.
   uint64 price = 3;
 }
