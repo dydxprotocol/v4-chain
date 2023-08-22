@@ -51,7 +51,6 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-	return
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
