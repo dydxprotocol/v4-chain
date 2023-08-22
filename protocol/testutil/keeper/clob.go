@@ -145,6 +145,10 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		}
 	})
 
+	if err := ks.ClobKeeper.InitializeEquityTierLimit(ks.Ctx, types.EquityTierLimitConfiguration{}); err != nil {
+		panic(err)
+	}
+
 	return ks
 }
 
