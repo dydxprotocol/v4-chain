@@ -167,7 +167,7 @@ func (m *MemClobPriceTimePriority) CreateOrderbook(
 	}
 }
 
-// CountSubaccountOrders will count all orders for a given subaccount that match the provided filter.
+// CountSubaccountOrders will count all open orders for a given subaccount that match the provided filter.
 func (m *MemClobPriceTimePriority) CountSubaccountOrders(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
