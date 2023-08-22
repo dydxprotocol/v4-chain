@@ -591,7 +591,8 @@ export function getPerpetualMarketCreateObjects(
   marketParams: MarketParam[],
   liquidityTiers: LiquidityTier[],
 ): PerpetualMarketCreateObject[] {
-  const perpetualsById: { [id: number]: Perpetual } = _.keyBy(perpetuals, 'id');
+  const perpetualsById: { [id: number]: Perpetual } = _.keyBy(
+    perpetuals, (perpetual) => perpetual.params!.id);
   const marketParamsById: { [id: number]: MarketParam } = _.keyBy(marketParams, 'id');
   const liquidityTiersById: { [id: number]: LiquidityTier } = _.keyBy(liquidityTiers, 'id');
 
