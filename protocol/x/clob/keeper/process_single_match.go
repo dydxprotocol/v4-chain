@@ -210,7 +210,7 @@ func (k Keeper) ProcessSingleMatch(
 	}
 
 	// Update both subaccounts in the matched order atomically.
-	success, takerUpdateResult, makerUpdateResult, err = k.persistMatchedOrders(
+	takerUpdateResult, makerUpdateResult, err = k.persistMatchedOrders(
 		ctx,
 		matchWithOrders,
 		perpetualId,
@@ -222,10 +222,6 @@ func (k Keeper) ProcessSingleMatch(
 
 	if err != nil {
 		return false, takerUpdateResult, makerUpdateResult, nil, err
-	}
-
-	if !success {
-		panic("persistMatchedOrders did not return success but error was nil")
 	}
 
 	// Update subaccount total quantums liquidated and total insurance fund lost for liquidation orders.
@@ -276,7 +272,6 @@ func (k Keeper) persistMatchedOrders(
 	bigFillQuoteQuantums *big.Int,
 	insuranceFundDelta *big.Int,
 ) (
-	success bool,
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
 	err error,
@@ -368,7 +363,7 @@ func (k Keeper) persistMatchedOrders(
 		updates,
 	)
 	if err != nil {
-		return false, satypes.UpdateCausedError, satypes.UpdateCausedError, err
+		return satypes.UpdateCausedError, satypes.UpdateCausedError, err
 	}
 
 	takerUpdateResult = successPerUpdate[0]
@@ -376,11 +371,15 @@ func (k Keeper) persistMatchedOrders(
 
 	// If not successful, return error indicating why.
 	if err := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); err != nil {
-		return success, takerUpdateResult, makerUpdateResult, err
+		return takerUpdateResult, makerUpdateResult, err
+	}
+
+	if !success {
+		panic("Err != nil but success was false")
 	}
 
 	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta); err != nil {
-		return success, takerUpdateResult, makerUpdateResult, err
+		return takerUpdateResult, makerUpdateResult, err
 	}
 
 	// Transfer the fee amount from subacounts module to fee collector module account.
@@ -390,7 +389,7 @@ func (k Keeper) persistMatchedOrders(
 		lib.UsdcAssetId,
 		bigTotalFeeQuoteQuantums,
 	); err != nil {
-		return false, takerUpdateResult, makerUpdateResult, sdkerrors.Wrapf(
+		return takerUpdateResult, makerUpdateResult, sdkerrors.Wrapf(
 			types.ErrSubaccountFeeTransferFailed,
 			"persistMatchedOrders: subaccounts (%v, %v) updated, but fee transfer (bigFeeQuoteQuantums: %v)"+
 				" to fee-collector failed. Err: %v",
@@ -401,26 +400,26 @@ func (k Keeper) persistMatchedOrders(
 		)
 	}
 
-	// Process fill in x/stats and x/rewards
-	if success {
-		k.rewardsKeeper.AddRewardSharesForFill(
-			ctx,
-			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
-			matchWithOrders.MakerOrder.GetSubaccountId().Owner,
-			bigFillQuoteQuantums,
-			bigTakerFeeQuoteQuantums,
-			bigMakerFeeQuoteQuantums,
-		)
+	// Process fill in x/stats and x/rewards.
+	k.rewardsKeeper.AddRewardSharesForFill(
+		ctx,
+		matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+		bigFillQuoteQuantums,
+		bigTakerFeeQuoteQuantums,
+		bigMakerFeeQuoteQuantums,
+	)
 
-		k.statsKeeper.RecordFill(
-			ctx,
-			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
-			matchWithOrders.MakerOrder.GetSubaccountId().Owner,
-			bigFillQuoteQuantums,
-		)
-	}
+	k.statsKeeper.RecordFill(
+		ctx,
+		matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+		bigFillQuoteQuantums,
+	)
 
-	return success, takerUpdateResult, makerUpdateResult, nil
+	// Emit an event indicating the
+
+	return takerUpdateResult, makerUpdateResult, nil
 }
 
 func (k Keeper) setOrderFillAmountsAndPruning(
