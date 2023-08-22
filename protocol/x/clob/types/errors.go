@@ -3,8 +3,6 @@ package types
 // DONTCOVER
 
 import (
-	"fmt"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -77,10 +75,7 @@ var (
 	ErrOrderWouldExceedMaxOpenOrdersPerClobAndSide = sdkerrors.Register(
 		ModuleName,
 		17,
-		fmt.Sprintf(
-			"Subaccount cannot open more than %d orders on a given CLOB and side",
-			MaxSubaccountOrdersPerClobAndSide,
-		),
+		"Subaccount cannot open more than 20 orders on a given CLOB and side",
 	)
 	ErrFillAmountNotDivisibleByStepSize = sdkerrors.Register(
 		ModuleName,
