@@ -2,7 +2,7 @@ import { stats, delay, NodeEnv } from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import * as PerpetualMarketTable from '../stores/perpetual-market-table';
-import { PerpetualMarketFromDatabase, PerpetualMarketsMap } from '../types';
+import { Options, PerpetualMarketFromDatabase, PerpetualMarketsMap } from '../types';
 
 let clobPairIdToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
 let tickerToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
@@ -22,14 +22,24 @@ export async function start(): Promise<void> {
 }
 
 /**
+ * Clears the in-memory map of perpetual market clob pair ids to tickers and tickers to clob pair.
+ * Used for testing.
+ */
+export function clear(): void {
+  clobPairIdToPerpetualMarket = {};
+  tickerToPerpetualMarket = {};
+  idToPerpetualMarket = {};
+}
+
+/**
  * Updates in-memory map of perpetual market clob pair ids to tickers and tickers to clob pair ids.
  */
-export async function updatePerpetualMarkets(): Promise<void> {
+export async function updatePerpetualMarkets(options?: Options): Promise<void> {
   const startTime: number = Date.now();
   const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
     {},
     [],
-    { readReplica: true },
+    options || { readReplica: true },
   );
 
   const tmpClobPairIdToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};

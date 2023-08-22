@@ -1,8 +1,10 @@
-import { stats, delay } from '@dydxprotocol-indexer/base';
+import { stats, delay, logger } from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import * as LiquidityTiersTable from '../stores/liquidity-tiers-table';
-import { LiquidityTiersFromDatabase, LiquidityTiersMap } from '../types';
+import {
+  LiquidityTiersFromDatabase, LiquidityTiersMap, MarketFromDatabase, Options,
+} from '../types';
 
 let idToLiquidityTier: LiquidityTiersMap = {};
 
@@ -19,12 +21,12 @@ export async function start(): Promise<void> {
 /**
  * Updates in-memory map of liquidity tiers.
  */
-export async function updateLiquidityTiers(): Promise<void> {
+export async function updateLiquidityTiers(options?: Options): Promise<void> {
   const startTime: number = Date.now();
   const liquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
     {},
     [],
-    { readReplica: true },
+    options || { readReplica: true },
   );
 
   const tmpIdToLiquidityTier: Record<string, LiquidityTiersFromDatabase> = {};
@@ -42,7 +44,16 @@ export async function updateLiquidityTiers(): Promise<void> {
  * Gets the liquidity tier for a given id.
  */
 export function getLiquidityTierFromId(id: number): LiquidityTiersFromDatabase | undefined {
-  return idToLiquidityTier[id];
+  const tier: LiquidityTiersFromDatabase | undefined = idToLiquidityTier[id];
+  if (tier === undefined) {
+    const message: string = `Unable to find liquidity tier with id: ${id}`;
+    logger.error({
+      at: 'liquidity-tier-refresher#getLiquidityTierFromId',
+      message,
+    });
+    throw new Error(message);
+  }
+  return tier;
 }
 
 export function getLiquidityTiersMap(): LiquidityTiersMap {

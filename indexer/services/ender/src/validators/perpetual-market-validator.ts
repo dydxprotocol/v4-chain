@@ -1,5 +1,6 @@
 import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import { PerpetualMarketCreateEventV1, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
+import Long from 'long';
 
 import { Handler } from '../handlers/handler';
 import { PerpetualMarketCreationHandler } from '../handlers/perpetual-market-handler';
@@ -10,6 +11,32 @@ export class PerpetualMarketValidator extends Validator<PerpetualMarketCreateEve
     if (perpetualMarketRefresher.getPerpetualMarketFromId(this.event.id.toString()) !== undefined) {
       return this.logAndThrowParseMessageError(
         'PerpetualMarketCreateEvent id already exists',
+        { event: this.event },
+      );
+    }
+    if (!this.event.ticker) {
+      return this.logAndThrowParseMessageError(
+        'PerpetualMarketCreateEvent ticker is not populated',
+        { event: this.event },
+      );
+    }
+    if (!this.event.subticksPerTick) {
+      return this.logAndThrowParseMessageError(
+        'PerpetualMarketCreateEvent subticksPerTick is not populated',
+        { event: this.event },
+      );
+    }
+
+    if (this.event.minOrderBaseQuantums.eq(Long.fromValue(0))) {
+      return this.logAndThrowParseMessageError(
+        'PerpetualMarketCreateEvent minOrderBaseQuantums is not populated',
+        { event: this.event },
+      );
+    }
+
+    if (this.event.stepBaseQuantums.eq(Long.fromValue(0))) {
+      return this.logAndThrowParseMessageError(
+        'PerpetualMarketCreateEvent stepBaseQuantums is not populated',
         { event: this.event },
       );
     }
