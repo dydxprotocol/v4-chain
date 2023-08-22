@@ -27,7 +27,7 @@ func TestBridgeLogToEvent(t *testing.T) {
 					"dv4tnt",
 					sdk.NewInt(42),
 				),
-				Address:        "dydx1qy352euf40x77qfrg4ncn27dauqjx3t83x4ummcpydzk0zdtehhse25p74",
+				Address:        "dydx1qy352euf40x77qfrg4ncn27dauqjx3t83x4ummcpydzk0zdtehhse25p74", // TODO: fix
 				EthBlockHeight: 3872013,
 			},
 		},
@@ -40,10 +40,11 @@ func TestBridgeLogToEvent(t *testing.T) {
 					"test-token",
 					sdk.NewInt(222),
 				),
-				Address:        "dydx1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsnpjqx",
+				Address:        "dydx1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsnpjqx", // TODO: fix
 				EthBlockHeight: 3969937,
 			},
 		},
+		// TODO: add more tests with addresses of different lengths, for example 0, 20, 32, < 20, > 32
 	}
 
 	for name, tc := range tests {

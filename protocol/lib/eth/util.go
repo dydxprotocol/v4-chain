@@ -42,12 +42,16 @@ func BridgeLogToEvent(
 		panic(err)
 	}
 	amount := bridgeEventData[0].(*big.Int)
-	address := bridgeEventData[1].([32]byte)
+	address := bridgeEventData[2].([]byte)
+
+	// Unused daemon fields.
+	// bridgeEventData[1] is the Ethereum address that sent the tokens
+	// bridgeEventData[3] is the user-supplied memo
 
 	return bridgetypes.BridgeEvent{
 		Id:             id,
 		Coin:           sdk.NewCoin(denom, sdk.NewIntFromBigInt(amount)),
-		Address:        sdk.MustBech32ifyAddressBytes(config.Bech32PrefixAccAddr, address[:]),
+		Address:        sdk.MustBech32ifyAddressBytes(config.Bech32PrefixAccAddr, address),
 		EthBlockHeight: log.BlockNumber,
 	}
 }

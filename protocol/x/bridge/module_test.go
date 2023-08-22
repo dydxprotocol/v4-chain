@@ -134,7 +134,7 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	require.Equal(
 		t,
 		`{"event_params":{"denom":"bridge-token","eth_chain_id":"11155111",`+
-			`"eth_address":"0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935"},"propose_params":`+
+			`"eth_address":"0xEf01c3A30eB57c91c40C52E996d29c202ae72193"},"propose_params":`+
 			`{"max_bridges_per_block":10,"propose_delay_duration":"60s","skip_rate_ppm":800000,`+
 			`"skip_if_block_delayed_by_duration":"5s"},"safety_params":{"is_disabled":false,`+
 			`"delay_blocks":86400},"acknowledged_event_info":{"next_id":0,"eth_block_height":"0"}}`,
@@ -162,7 +162,7 @@ func TestAppModuleBasic_ValidateGenesisErrBadState(t *testing.T) {
 
 	// bad JSON - extra { at the beginning.
 	h := json.RawMessage(`{{"event_params":{"denom":"bridge-token","eth_chain_id":"11155111",
-		"eth_address":"0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935"},"propose_params":{"max_bridges_per_block":10,
+		"eth_address":"0xEf01c3A30eB57c91c40C52E996d29c202ae72193"},"propose_params":{"max_bridges_per_block":10,
 		"propose_delay_duration":"60s","skip_rate_ppm":800000,"skip_if_block_delayed_by_duration":"5s"},
 		"safety_params":{"is_disabled":false,"delay_blocks":86400},"acknowledged_event_info":{"next_id":0,
 		"eth_block_height":"0"}}`)
@@ -179,7 +179,7 @@ func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	h := json.RawMessage(`{"event_params":{"denom":"bridge-token","eth_chain_id":"11155111",
-		"eth_address":"0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935"},"propose_params":{"max_bridges_per_block":10,
+		"eth_address":"0xEf01c3A30eB57c91c40C52E996d29c202ae72193"},"propose_params":{"max_bridges_per_block":10,
 		"propose_delay_duration":"60s","skip_rate_ppm":800000,"skip_if_block_delayed_by_duration":"5s"},
 		"safety_params":{"is_disabled":false,"delay_blocks":86400},"acknowledged_event_info":{"next_id":0,
 		"eth_block_height":"0"}}`)
@@ -300,7 +300,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	am, keeper, _, _, ctx := createAppModuleWithKeeper(t)
 	msg := `{"event_params": {"denom": "bridge-token", "eth_chain_id": "77",
-	"eth_address": "0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935"}, "propose_params": {"max_bridges_per_block": 10,
+	"eth_address": "0xEf01c3A30eB57c91c40C52E996d29c202ae72193"}, "propose_params": {"max_bridges_per_block": 10,
 	"propose_delay_duration": "60s","skip_rate_ppm": 800000, "skip_if_block_delayed_by_duration": "5s"},
 	"safety_params": {"is_disabled": false,"delay_blocks": 86400}, "acknowledged_event_info": {"next_id": 0,
 	"eth_block_height": "0"}}`
@@ -316,7 +316,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	expected := `{"event_params":{"denom":"bridge-token","eth_chain_id":"77",`
-	expected += `"eth_address":"0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935"},"propose_params":{`
+	expected += `"eth_address":"0xEf01c3A30eB57c91c40C52E996d29c202ae72193"},"propose_params":{`
 	expected += `"max_bridges_per_block":10,"propose_delay_duration":"60s","skip_rate_ppm":800000,`
 	expected += `"skip_if_block_delayed_by_duration":"5s"},"safety_params":{"is_disabled":false,"delay_blocks":86400},`
 	expected += `"acknowledged_event_info":{"next_id":0,"eth_block_height":"0"}}`
