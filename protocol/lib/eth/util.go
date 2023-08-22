@@ -42,7 +42,7 @@ func BridgeLogToEvent(
 		panic(err)
 	}
 	amount := bridgeEventData[0].(*big.Int)
-	address := bridgeEventData[2].([]byte)
+	address := bridgeEventData[2].([]byte) // TODO: take the first 32 bytes of the address if the length is longer than that
 
 	// Unused daemon fields.
 	// bridgeEventData[1] is the Ethereum address that sent the tokens
