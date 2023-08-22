@@ -75,16 +75,17 @@ func (k Keeper) GetMarketParam(
 
 // GetAllMarketParams returns all market params.
 func (k Keeper) GetAllMarketParams(ctx sdk.Context) []types.MarketParam {
-	num := k.GetNumMarkets(ctx)
-	marketParams := make([]types.MarketParam, num)
+	marketParamStore := k.newMarketParamStore(ctx)
 
-	for i := uint32(0); i < num; i++ {
-		marketParam, err := k.GetMarketParam(ctx, i)
-		if err != nil {
-			panic(err)
-		}
+	marketParams := make([]types.MarketParam, 0)
 
-		marketParams[i] = marketParam
+	iterator := marketParamStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		marketParam := types.MarketParam{}
+		k.cdc.MustUnmarshal(iterator.Value(), &marketParam)
+		marketParams = append(marketParams, marketParam)
 	}
 
 	return marketParams

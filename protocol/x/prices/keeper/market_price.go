@@ -124,16 +124,17 @@ func (k Keeper) GetMarketPrice(
 
 // GetAllMarketPrices returns all market prices.
 func (k Keeper) GetAllMarketPrices(ctx sdk.Context) []types.MarketPrice {
-	num := k.GetNumMarkets(ctx)
-	marketPrices := make([]types.MarketPrice, num)
+	marketPriceStore := k.newMarketPriceStore(ctx)
 
-	for i := uint32(0); i < num; i++ {
-		marketPrice, err := k.GetMarketPrice(ctx, i)
-		if err != nil {
-			panic(err)
-		}
+	marketPrices := make([]types.MarketPrice, 0)
 
-		marketPrices[i] = marketPrice
+	iterator := marketPriceStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		marketPrice := types.MarketPrice{}
+		k.cdc.MustUnmarshal(iterator.Value(), &marketPrice)
+		marketPrices = append(marketPrices, marketPrice)
 	}
 
 	return marketPrices
