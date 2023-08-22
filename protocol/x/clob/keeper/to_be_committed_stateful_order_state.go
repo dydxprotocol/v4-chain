@@ -7,9 +7,14 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// To be committed stateful orders are ones that this validator is aware of during block processing (e.g. `DeliverTx`).
+// See `uncommitted_stateful_order_state.go` for associated functions related to stateful orders
+// that this validator is aware of that have yet to be included in a block (e.g. `CheckTx`).
+
 // GetToBeCommittedStatefulOrderCount gets a count of how many stateful orders will be added for the associated
-// subaccount. This is represented by the number of stateful order `placements - removals`. Note that this value
-// can be negative (for example if the stateful order is already on the book and the cancellation is to be committed).
+// subaccount during `DeliverTx`. This is represented by the number of stateful order `placements - removals`.
+// Note that this value can be negative (for example if the stateful order is already on the book and the cancellation
+// is to be committed).
 // OrderId can be conditional or long term.
 func (k Keeper) GetToBeCommittedStatefulOrderCount(
 	ctx sdk.Context,
@@ -28,9 +33,10 @@ func (k Keeper) GetToBeCommittedStatefulOrderCount(
 	return lib.BytesToInt32(b)
 }
 
-// SetUncommittedStatefulOrderCount sets a count of how many stateful orders will be added for the associated
-// subaccount. This represents the number of stateful order `placements - cancellations`. Note that this value
-// can be negative (for example if the stateful order is already on the book and the cancellation is uncommitted).
+// SetToBeCommittedStatefulOrderCount sets a count of how many stateful orders will be added for the associated
+// subaccount during `DeliverTx`. This represents the number of stateful order `placements - cancellations`.
+// Note that this value can be negative (for example if the stateful order is already on the book and the cancellation
+// is to be committed).
 // OrderId can be conditional or long term.
 func (k Keeper) SetToBeCommittedStatefulOrderCount(
 	ctx sdk.Context,

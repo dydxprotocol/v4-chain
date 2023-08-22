@@ -8,6 +8,11 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// Uncommitted stateful orders are ones that this validator is aware of that have yet to be
+// part of a block proposal. These functions would be used during `CheckTx`. See
+// `to_be_committed_stateful_order_state.go` for associated functions related to stateful orders
+// during block processing and commitment (e.g. `DeliverTx`).
+
 // GetUncommittedStatefulOrderPlacement gets a stateful order and the placement information from uncommitted state.
 // OrderId can be conditional or long term.
 // Returns false if no stateful order exists in uncommitted state with `orderId`.
@@ -51,8 +56,9 @@ func (k Keeper) GetUncommittedStatefulOrderCancellation(
 }
 
 // GetUncommittedStatefulOrderCount gets a count of uncommitted stateful orders for the associated subaccount.
-// This is represented by the number of stateful order `placements - cancellations`. Note that this value
-// can be negative (for example if the stateful order is already on the book and the cancellation is uncommitted).
+// This is represented by the number of stateful order `placements - cancellations` that this validator is aware of
+// during `CheckTx`. Note that this value can be negative (for example if the stateful order is already on the book and
+// the cancellation is uncommitted).
 // OrderId can be conditional or long term.
 func (k Keeper) GetUncommittedStatefulOrderCount(
 	ctx sdk.Context,
@@ -72,8 +78,9 @@ func (k Keeper) GetUncommittedStatefulOrderCount(
 }
 
 // SetUncommittedStatefulOrderCount sets a count of uncommitted stateful orders for the associated subaccount.
-// This represents the number of stateful order `placements - cancellations`. Note that this value
-// can be negative (for example if the stateful order is already on the book and the cancellation is uncommitted).
+// This represents the number of stateful order `placements - cancellations` that this validator is aware of
+// during `CheckTx`. Note that this value can be negative (for example if the stateful order is already on the book and
+// the cancellation is uncommitted).
 // OrderId can be conditional or long term.
 func (k Keeper) SetUncommittedStatefulOrderCount(
 	ctx sdk.Context,
@@ -93,7 +100,7 @@ func (k Keeper) SetUncommittedStatefulOrderCount(
 // MustAddUncommittedStatefulOrderPlacement adds a new order placemenet by `OrderId` to a transient store and
 // increments the per subaccount uncommitted stateful order count.
 //
-// This method will panic if the order already exists or if the order count overflows a uint32.
+// This method will panic if the order already exists.
 func (k Keeper) MustAddUncommittedStatefulOrderPlacement(ctx sdk.Context, msg *types.MsgPlaceOrder) {
 	lib.AssertCheckTxMode(ctx)
 
