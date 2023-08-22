@@ -4,11 +4,13 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -29,6 +31,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 
 	// Valid acknowledge bridges tx.
 	validAcknowledgeBridgesTx := constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes
+	validAcknowledgeBridgesMsg := constants.MsgAcknowledgeBridges_Ids0_1_Height0
 	validAcknowledgeBridgesTx_NoEvents := constants.MsgAcknowledgeBridges_NoEvents_TxBytes
 
 	// Valid update price tx.
@@ -49,7 +52,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 	acknowledgeBridgesTx_NotNextToAcknowledge := constants.MsgAcknowledgeBridges_Id1_Height0_TxBytes
 
 	tests := map[string]struct {
-		txsBytes [][]byte
+		txsBytes             [][]byte
+		bridgeEventsInServer []bridgetypes.BridgeEvent
 
 		expectedResponse abci.ResponseProcessProposal
 	}{
@@ -64,7 +68,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				validAddFundingTx,
 				invalidUpdatePriceTx, // invalid.
 			},
-			expectedResponse: rejectResponse,
+			bridgeEventsInServer: validAcknowledgeBridgesMsg.Events,
+			expectedResponse:     rejectResponse,
 		},
 		"Reject: bridge event IDs not consecutive": {
 			txsBytes: [][]byte{
@@ -73,7 +78,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedResponse: rejectResponse,
+			bridgeEventsInServer: validAcknowledgeBridgesMsg.Events,
+			expectedResponse:     rejectResponse,
 		},
 		"Reject: bridge event ID not yet recognized": {
 			txsBytes: [][]byte{
@@ -82,7 +88,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedResponse: rejectResponse,
+			bridgeEventsInServer: validAcknowledgeBridgesMsg.Events,
+			expectedResponse:     rejectResponse,
 		},
 		"Reject: bridge event ID not next to acknowledge": {
 			txsBytes: [][]byte{
@@ -90,6 +97,30 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				acknowledgeBridgesTx_NotNextToAcknowledge,
 				validAddFundingTx,
 				validUpdatePriceTx,
+			},
+			bridgeEventsInServer: validAcknowledgeBridgesMsg.Events,
+			expectedResponse:     rejectResponse,
+		},
+		"Reject: bridge event content mismatch": {
+			txsBytes: [][]byte{
+				validOperationsTx,
+				validAcknowledgeBridgesTx,
+				validAddFundingTx,
+				validUpdatePriceTx,
+			},
+			bridgeEventsInServer: []bridgetypes.BridgeEvent{
+				validAcknowledgeBridgesMsg.Events[0],
+				func(event bridgetypes.BridgeEvent) bridgetypes.BridgeEvent {
+					return bridgetypes.BridgeEvent{
+						Id: event.Id,
+						Coin: sdk.NewCoin(
+							event.Coin.Denom,
+							event.Coin.Amount.Add(sdk.NewInt(10_000)), // second event has different amount.
+						),
+						Address:        event.Address,
+						EthBlockHeight: event.EthBlockHeight,
+					}
+				}(validAcknowledgeBridgesMsg.Events[1]),
 			},
 			expectedResponse: rejectResponse,
 		},
@@ -101,7 +132,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedResponse: rejectResponse,
+			bridgeEventsInServer: validAcknowledgeBridgesMsg.Events,
+			expectedResponse:     rejectResponse,
 		},
 		"Error: cancel order type is not allowed": {
 			txsBytes: [][]byte{
@@ -111,7 +143,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedResponse: rejectResponse,
+			bridgeEventsInServer: validAcknowledgeBridgesMsg.Events,
+			expectedResponse:     rejectResponse,
 		},
 		"Error: app-injected msg type is not allowed": {
 			txsBytes: [][]byte{
@@ -192,7 +225,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedResponse: acceptResponse,
+			bridgeEventsInServer: validAcknowledgeBridgesMsg.Events,
+			expectedResponse:     acceptResponse,
 		},
 	}
 
@@ -210,6 +244,9 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", mock.Anything).Return(constants.AcknowledgedEventInfo_Id0_Height0)
 			mockBridgeKeeper.On("GetRecognizedEventInfo", mock.Anything).Return(constants.RecognizedEventInfo_Id2_Height0)
+			for _, bridgeEvent := range tc.bridgeEventsInServer {
+				mockBridgeKeeper.On("GetBridgeEventFromServer", mock.Anything, bridgeEvent.Id).Return(bridgeEvent, true).Once()
+			}
 
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
