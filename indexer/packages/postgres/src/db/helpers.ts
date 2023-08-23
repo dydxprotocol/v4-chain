@@ -132,7 +132,7 @@ function getPerpetualMarketToLiquidityTierMapping(): Record<string, number> {
   const liquidityTierMap: Record<string, number> = {};
   const perpetuals: Perpetual[] = getPerpetualsFromGenesis();
   perpetuals.forEach((perpetual: Perpetual) => {
-    liquidityTierMap[perpetual.id.toString()] = perpetual.liquidityTier;
+    liquidityTierMap[perpetual.params!.id.toString()] = perpetual.params!.liquidityTier;
   });
   return liquidityTierMap;
 }
@@ -154,14 +154,14 @@ function getPerpetualMarketToMarginMapping(
   }> = {};
   const perpetuals: Perpetual[] = getPerpetualsFromGenesis();
   perpetuals.forEach((perpetual: Perpetual) => {
-    marginMap[perpetual.id.toString()] = {
+    marginMap[perpetual.params!.id.toString()] = {
       initialMarginFraction: ppmToString(
-        liquidityTiersMap[perpetual.liquidityTier].initialMarginPpm,
+        liquidityTiersMap[perpetual.params!.liquidityTier].initialMarginPpm,
       ),
       maintenanceMarginFraction: ppmToString(
         getMaintenanceMarginPpm(
-          liquidityTiersMap[perpetual.liquidityTier].initialMarginPpm,
-          liquidityTiersMap[perpetual.liquidityTier].maintenanceFractionPpm,
+          liquidityTiersMap[perpetual.params!.liquidityTier].initialMarginPpm,
+          liquidityTiersMap[perpetual.params!.liquidityTier].maintenanceFractionPpm,
         ),
       ),
     };
@@ -358,14 +358,17 @@ export function getPerpetualsFromGenesis(): Perpetual[] {
     (genesisPerpetual, index: number): Perpetual => {
       return {
         ...genesisPerpetual,
-        marketId: genesisPerpetual.market_id,
-        atomicResolution: genesisPerpetual.atomic_resolution,
-        defaultFundingPpm: genesisPerpetual.default_funding_ppm,
-        liquidityTier: genesisPerpetual.liquidity_tier,
-        // Reference https://github.com/dydxprotocol/v4/blob/main/x/perpetuals/keeper/perpetual.go#L34
-        // Id for each perpetual is the number of perpetuals, which is equal to the index of the
-        // perpetual in the array.
-        id: index,
+        params: {
+          ...genesisPerpetual.params,
+          marketId: genesisPerpetual.params.market_id,
+          atomicResolution: genesisPerpetual.params.atomic_resolution,
+          defaultFundingPpm: genesisPerpetual.params.default_funding_ppm,
+          liquidityTier: genesisPerpetual.params.liquidity_tier,
+          // Reference https://github.com/dydxprotocol/v4/blob/main/x/perpetuals/keeper/perpetual.go#L34
+          // Id for each perpetual is the number of perpetuals, which is equal to the index of the
+          // perpetual in the array.
+          id: index,
+        },
         // Reference https://github.com/dydxprotocol/v4/blob/main/x/perpetuals/keeper/perpetual.go#L43
         // Currently both fields are set to 0 on V4 when a Perpetual is created.
         fundingIndex: bigIntToBytes(BigInt(0)),
@@ -588,7 +591,8 @@ export function getPerpetualMarketCreateObjects(
   marketParams: MarketParam[],
   liquidityTiers: LiquidityTier[],
 ): PerpetualMarketCreateObject[] {
-  const perpetualsById: { [id: number]: Perpetual } = _.keyBy(perpetuals, 'id');
+  const perpetualsById: { [id: number]: Perpetual } = _.keyBy(
+    perpetuals, (perpetual) => perpetual.params!.id);
   const marketParamsById: { [id: number]: MarketParam } = _.keyBy(marketParams, 'id');
   const liquidityTiersById: { [id: number]: LiquidityTier } = _.keyBy(liquidityTiers, 'id');
 
@@ -611,10 +615,10 @@ export function getPerpetualMarketCreateObjects(
         perpetualForClobPair, marketParamsById,
       );
 
-      if (!(perpetualForClobPair.liquidityTier in liquidityTiersById)) {
+      if (!(perpetualForClobPair.params!.liquidityTier in liquidityTiersById)) {
         throw new LiquidityTierDoesNotExistError(
-          perpetualForClobPair.liquidityTier,
-          perpetualForClobPair.id,
+          perpetualForClobPair.params!.liquidityTier,
+          perpetualForClobPair.params!.id,
         );
       }
 
@@ -675,11 +679,11 @@ function getMarketParamForPerpetual(
   perpetual: Perpetual,
   marketParamsById: { [id: number]: MarketParam },
 ): MarketParam {
-  if (!(perpetual.marketId in marketParamsById)) {
-    throw new MarketDoesNotExistError(perpetual.marketId, perpetual.id);
+  if (!(perpetual.params!.marketId in marketParamsById)) {
+    throw new MarketDoesNotExistError(perpetual.params!.marketId, perpetual.params!.id);
   }
 
-  return marketParamsById[perpetual.marketId];
+  return marketParamsById[perpetual.params!.marketId];
 }
 
 /**
@@ -700,9 +704,9 @@ function getPerpetualMarketCreateObject(
   marketParam: MarketParam,
 ): PerpetualMarketCreateObject {
   return {
-    id: perpetual.id.toString(),
+    id: perpetual.params!.id.toString(),
     clobPairId: clobPair.id.toString(),
-    ticker: perpetual.ticker,
+    ticker: perpetual.params!.ticker,
     marketId: marketParam.id,
     status: clobStatusToMarketStatus(clobPair.status),
     // TODO(DEC-744): Remove base asset, quote asset.
@@ -721,14 +725,14 @@ function getPerpetualMarketCreateObject(
     maxPositionSize: '0',
     openInterest: quantumsToHuman(
       perpetual.openInterest.toString(),
-      perpetual.atomicResolution,
+      perpetual.params!.atomicResolution,
     ).toFixed(6),
     quantumConversionExponent: clobPair.quantumConversionExponent,
-    atomicResolution: perpetual.atomicResolution,
+    atomicResolution: perpetual.params!.atomicResolution,
     subticksPerTick: clobPair.subticksPerTick,
     minOrderBaseQuantums: Number(clobPair.minOrderBaseQuantums),
     stepBaseQuantums: Number(clobPair.stepBaseQuantums),
-    liquidityTierId: perpetual.liquidityTier,
+    liquidityTierId: perpetual.params!.liquidityTier,
   };
 }
 
