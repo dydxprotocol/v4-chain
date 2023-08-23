@@ -72,7 +72,11 @@ const (
 	// MARKET_YFI_USD is the id for the YFI-USD market pair.
 	MARKET_YFI_USD types.MarketId = 32
 
+	// Testing markets used in local, staging, dev
+	// MARKET_TEST_USD is the id used for the TEST-USD market pair.
+	MARKET_TEST_USD types.MarketId = 33
+
 	// Non-trading adjust-by markets.
 	// MARKET_USDT_USD is the id for the USDT-USD market pair.
-	MARKET_USDT_USD types.MarketId = 33
+	MARKET_USDT_USD types.MarketId = 1_000_000
 )

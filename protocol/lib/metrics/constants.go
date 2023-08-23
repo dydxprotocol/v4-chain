@@ -105,6 +105,7 @@ const (
 	NumMatchPerpDeleveragingOperations           = "num_match_perp_deleveraging_operations"
 	NumOffsettingSubaccountsForDeleveraging      = "num_offsetting_subaccounts_for_deleveraging"
 	NumProposedOperations                        = "num_proposed_operations"
+	OffsettingSubaccountPerpetualPosition        = "offsetting_subaccount_perpetual_position"
 	OrderFlag                                    = "order_flag"
 	OrderSide                                    = "order_side"
 	PlaceOrder                                   = "place_order"
@@ -116,6 +117,7 @@ const (
 	ReduceOnly                                   = "reduce_only"
 	RemovalReason                                = "removal_reason"
 	ShortTermOrder                               = "short_term_order"
+	SortLiquidationOrders                        = "sort_liquidation_orders"
 	StatefulOrder                                = "stateful_order"
 	StatefulOrderRemoved                         = "stateful_order_removed"
 	SubaccountPendingMatches                     = "subaccount_pending_matches"
@@ -249,6 +251,7 @@ const (
 
 	// Deleveraging.
 	Deleveraging                   = "deleveraging"
+	DeltaQuoteQuantums             = "delta_quote_quantums"
 	NumSubaccountsIterated         = "num_subaccounts_iterated"
 	NotEnoughPositionToFullyOffset = "not_enough_position_to_fully_offset"
 	NonOverlappingBankruptcyPrices = "non_overlapping_bankruptcy_prices"

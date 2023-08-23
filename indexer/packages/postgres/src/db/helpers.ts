@@ -72,6 +72,7 @@ const CLOB_STATUS_TO_MARKET_STATUS: Record<SpecifiedClobPairStatus, PerpetualMar
   [ClobPair_Status.STATUS_CANCEL_ONLY]: PerpetualMarketStatus.CANCEL_ONLY,
   [ClobPair_Status.STATUS_PAUSED]: PerpetualMarketStatus.PAUSED,
   [ClobPair_Status.STATUS_POST_ONLY]: PerpetualMarketStatus.POST_ONLY,
+  [ClobPair_Status.STATUS_INITIALIZING]: PerpetualMarketStatus.INITIALIZING,
 };
 
 /**

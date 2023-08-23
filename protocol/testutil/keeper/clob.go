@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -192,8 +193,7 @@ func createClobKeeper(
 		rewardsKeeper,
 		indexerEventManager,
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
-		"",
-		"",
+		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
 		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
 	)
