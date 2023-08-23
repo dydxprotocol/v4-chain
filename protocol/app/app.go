@@ -721,6 +721,7 @@ func New(
 		untriggeredConditionalOrders,
 		app.SubaccountsKeeper,
 		app.AssetsKeeper,
+		app.BlockTimeKeeper,
 		app.BankKeeper,
 		app.FeeTiersKeeper,
 		app.PerpetualsKeeper,

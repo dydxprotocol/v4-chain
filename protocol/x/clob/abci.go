@@ -42,9 +42,6 @@ func EndBlocker(
 	// Prune any fill amounts from state which are now past their `pruneableBlockHeight`.
 	keeper.PruneStateFillAmountsForShortTermOrders(ctx)
 
-	// Update the block time of the previously committed block.
-	keeper.SetBlockTimeForLastCommittedBlock(ctx)
-
 	// Prune expired stateful orders completely from state.
 	expiredStatefulOrderIds := keeper.RemoveExpiredStatefulOrdersTimeSlices(ctx, ctx.BlockTime())
 	for _, orderId := range expiredStatefulOrderIds {

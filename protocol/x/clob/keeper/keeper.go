@@ -33,6 +33,7 @@ type (
 		subaccountsKeeper   types.SubaccountsKeeper
 		assetsKeeper        types.AssetsKeeper
 		bankKeeper          types.BankKeeper
+		blockTimeKeeper     types.BlockTimeKeeper
 		feeTiersKeeper      types.FeeTiersKeeper
 		perpetualsKeeper    types.PerpetualsKeeper
 		statsKeeper         types.StatsKeeper
@@ -69,6 +70,7 @@ func NewKeeper(
 	untriggeredConditionalOrders map[types.ClobPairId]*UntriggeredConditionalOrders,
 	subaccountsKeeper types.SubaccountsKeeper,
 	assetsKeeper types.AssetsKeeper,
+	blockTimeKeeper types.BlockTimeKeeper,
 	bankKeeper types.BankKeeper,
 	feeTiersKeeper types.FeeTiersKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
@@ -89,6 +91,7 @@ func NewKeeper(
 		UntriggeredConditionalOrders: untriggeredConditionalOrders,
 		subaccountsKeeper:            subaccountsKeeper,
 		assetsKeeper:                 assetsKeeper,
+		blockTimeKeeper:              blockTimeKeeper,
 		bankKeeper:                   bankKeeper,
 		feeTiersKeeper:               feeTiersKeeper,
 		perpetualsKeeper:             perpetualsKeeper,

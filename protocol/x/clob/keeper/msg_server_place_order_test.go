@@ -12,6 +12,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -140,7 +141,10 @@ func TestPlaceOrder_Error(t *testing.T) {
 
 			ctx := ks.Ctx.WithBlockHeight(6)
 			ctx = ctx.WithBlockTime(time.Unix(int64(6), 0))
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    6,
+				Timestamp: time.Unix(int64(6), 0),
+			})
 
 			for _, order := range tc.StatefulOrders {
 				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, 5)
@@ -211,7 +215,10 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    2,
+				Timestamp: time.Unix(int64(2), 0),
+			})
 
 			// Create test markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)

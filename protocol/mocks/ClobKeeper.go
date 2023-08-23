@@ -501,20 +501,6 @@ func (_m *ClobKeeper) MustAddOrderToStatefulOrdersTimeSlice(ctx types.Context, g
 	_m.Called(ctx, goodTilBlockTime, orderId)
 }
 
-// MustGetBlockTimeForLastCommittedBlock provides a mock function with given fields: ctx
-func (_m *ClobKeeper) MustGetBlockTimeForLastCommittedBlock(ctx types.Context) time.Time {
-	ret := _m.Called(ctx)
-
-	var r0 time.Time
-	if rf, ok := ret.Get(0).(func(types.Context) time.Time); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(time.Time)
-	}
-
-	return r0
-}
-
 // MustRemoveStatefulOrder provides a mock function with given fields: ctx, orderId
 func (_m *ClobKeeper) MustRemoveStatefulOrder(ctx types.Context, orderId clobtypes.OrderId) {
 	_m.Called(ctx, orderId)
@@ -743,11 +729,6 @@ func (_m *ClobKeeper) RemoveExpiredStatefulOrdersTimeSlices(ctx types.Context, b
 // RemoveOrderFillAmount provides a mock function with given fields: ctx, orderId
 func (_m *ClobKeeper) RemoveOrderFillAmount(ctx types.Context, orderId clobtypes.OrderId) {
 	_m.Called(ctx, orderId)
-}
-
-// SetBlockTimeForLastCommittedBlock provides a mock function with given fields: ctx
-func (_m *ClobKeeper) SetBlockTimeForLastCommittedBlock(ctx types.Context) {
-	_m.Called(ctx)
 }
 
 // SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight

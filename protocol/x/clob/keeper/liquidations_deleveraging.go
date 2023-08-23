@@ -96,7 +96,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
-	s := rand.NewSource(k.MustGetBlockTimeForLastCommittedBlock(ctx).Unix())
+	s := rand.NewSource(k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp.Unix())
 	rand := rand.New(s)
 
 	k.subaccountsKeeper.ForEachSubaccountRandomStart(

@@ -515,7 +515,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 	orderIdToCancel := msgCancelOrder.GetOrderId()
 	if orderIdToCancel.IsStatefulOrder() {
 		cancelGoodTilBlockTime := msgCancelOrder.GetGoodTilBlockTime()
-		previousBlockTime := k.MustGetBlockTimeForLastCommittedBlock(ctx)
+		previousBlockTime := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp
 
 		// Return an error if `goodTilBlockTime` is less than previous block's blockTime
 		if cancelGoodTilBlockTime <= lib.MustConvertIntegerToUint32(previousBlockTime.Unix()) {
@@ -679,7 +679,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		}
 	} else {
 		goodTilBlockTimeUnix := order.GetGoodTilBlockTime()
-		previousBlockTime := k.MustGetBlockTimeForLastCommittedBlock(ctx)
+		previousBlockTime := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp
 		previousBlockTimeUnix := lib.MustConvertIntegerToUint32(previousBlockTime.Unix())
 
 		// Return an error if `goodTilBlockTime` is less than or equal to the
