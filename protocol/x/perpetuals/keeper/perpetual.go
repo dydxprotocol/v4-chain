@@ -722,6 +722,41 @@ func (k Keeper) GetNetNotional(
 	return bigQuoteQuantums, nil
 }
 
+// GetNetNotionalRat returns the net notional in quote quantums, which can be represented by the following equation:
+// `quantums / 10^baseAtomicResolution * marketPrice * 10^marketExponent * 10^quoteAtomicResolution`.
+// Note that longs are positive, and shorts are negative.
+// Returns an error if a perpetual with `id` does not exist or if the `Perpetual.MarketId` does
+// not exist.
+func (k Keeper) GetNetNotionalRat(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigNetNotionalQuoteQuantums *big.Rat,
+	err error,
+) {
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.GetNetNotional,
+		metrics.Latency,
+	)
+
+	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
+	if err != nil {
+		return new(big.Rat), err
+	}
+
+	bigQuoteQuantums := lib.BaseToQuoteQuantumsRat(
+		bigQuantums,
+		perpetual.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
+	return bigQuoteQuantums, nil
+}
+
 // GetNotionalInBaseQuantums returns the net notional in base quantums, which can be represented
 // by the following equation:
 // `quoteQuantums * 10^baseAtomicResolution / (marketPrice * 10^marketExponent * 10^quoteAtomicResolution)`.
@@ -831,6 +866,64 @@ func (k Keeper) GetMarginRequirements(
 		lib.BigIntMulPpm(bigInitialMarginQuoteQuantums, liquidityTier.MaintenanceFractionPpm)
 
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
+}
+
+// GetMarginRequirementsRat returns initial and maintenance margin requirements in quote quantums, given the position
+// size in base quantums.
+//
+// Margin requirements are a function of the absolute value of the open notional of the position as well as
+// the parameters of the relevant `LiquidityTier` of the perpetual.
+// Initial margin requirement is determined by multiplying `InitialMarginPpm` by `marginAdjustmentPpm`,
+// then limited to a maximum of 100%. `marginAdjustmentPpm“ is given by the equation
+// `sqrt(notionalValue / liquidityTier.BasePositionNotional)` limited to a minimum of 100%.
+// `notionalValue` is determined by multiplying the size of the position by the oracle price of the position.
+// Maintenance margin requirement is then simply a fraction (`maintenanceFractionPpm`) of initial margin requirement.
+//
+// Returns an error if a perpetual with `id`, `Perpetual.MarketId`, or `Perpetual.LiquidityTier` does not exist.
+func (k Keeper) GetMarginRequirementsRat(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	initialMarginQuoteQuantumsRat *big.Rat,
+	maintenanceMarginQuoteQuantumsRat *big.Rat,
+	err error,
+) {
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.GetMarginRequirements,
+		metrics.Latency,
+	)
+	// Get perpetual and market price.
+	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Get perpetual's liquidity tier.
+	liquidityTier, err := k.GetLiquidityTier(ctx, perpetual.LiquidityTier)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Always consider the magnitude of the position regardless of whether it is long/short.
+	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
+
+	quoteQuantumsRat := lib.BaseToQuoteQuantumsRat(
+		bigAbsQuantums,
+		perpetual.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
+	// Initial margin requirement quote quantums = size in quote quantums * adjusted initial margin PPM.
+	initialMarginQuoteQuantumsRat = liquidityTier.GetAdjustedInitialMarginQuoteQuantumsRat(quoteQuantumsRat)
+
+	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
+	maintenanceMarginQuoteQuantumsRat =
+		lib.BigRatMulPpm(initialMarginQuoteQuantumsRat, liquidityTier.MaintenanceFractionPpm)
+
+	return initialMarginQuoteQuantumsRat, maintenanceMarginQuoteQuantumsRat, nil
 }
 
 // GetSettlement returns the net settlement amount (in quote quantums) given the

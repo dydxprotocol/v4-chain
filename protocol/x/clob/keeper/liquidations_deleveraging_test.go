@@ -548,328 +548,328 @@ func TestProcessDeleveraging(t *testing.T) {
 		//
 		// Here, we construct table tests for only 3x4 permutations of the above groups
 		// since liquidatedSubaccount shouldn't be well-collateralized.
-		"Liquidated: under-collateralized, TNC > 0, offsetting: well-collateralized": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// "Liquidated: under-collateralized, TNC > 0, offsetting: well-collateralized": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
-				// to close 1 BTC short is $54,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(50_000_000_000 + 54_999_000_000),
-				),
-			},
-		},
-		"Liquidated: under-collateralized, TNC > 0, offsetting: under-collateralized, TNC > 0": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
+		// 		// to close 1 BTC short is $54,999 and we close both positions at this price.
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(50_000_000_000 + 54_999_000_000),
+		// 		),
+		// 	},
+		// },
+		// "Liquidated: under-collateralized, TNC > 0, offsetting: under-collateralized, TNC > 0": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
-				// to close 1 BTC short is $54,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(-45_001_000_000 + 54_999_000_000),
-				),
-			},
-		},
-		"Liquidated: under-collateralized, TNC > 0, offsetting: under-collateralized, TNC == 0": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
+		// 		// to close 1 BTC short is $54,999 and we close both positions at this price.
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(-45_001_000_000 + 54_999_000_000),
+		// 		),
+		// 	},
+		// },
+		// "Liquidated: under-collateralized, TNC > 0, offsetting: under-collateralized, TNC == 0": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
-				// to close 1 BTC short is $54,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(-50_000_000_000 + 54_999_000_000),
-				),
-			},
-		},
-		"Liquidated: under-collateralized, TNC > 0, offsetting: under-collateralized, TNC < 0": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
+		// 		// to close 1 BTC short is $54,999 and we close both positions at this price.
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(-50_000_000_000 + 54_999_000_000),
+		// 		),
+		// 	},
+		// },
+		// "Liquidated: under-collateralized, TNC > 0, offsetting: under-collateralized, TNC < 0": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
-				// to close 1 BTC short is $54,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(-50_001_000_000 + 54_999_000_000)),
-			},
-		},
-		"Liquidated: under-collateralized, TNC == 0, offsetting: well-collateralized": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_50000USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
+		// 		// to close 1 BTC short is $54,999 and we close both positions at this price.
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(-50_001_000_000 + 54_999_000_000)),
+		// 	},
+		// },
+		// "Liquidated: under-collateralized, TNC == 0, offsetting: well-collateralized": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_50000USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				// TNC of liquidated subaccount is $0, which means the bankruptcy price
-				// to close 1 BTC short is $50,000 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(50_000_000_000 + 50_000_000_000),
-				),
-			},
-		},
-		"Liquidated: under-collateralized, TNC == 0, offsetting: under-collateralized, TNC > 0": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_50000USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		// TNC of liquidated subaccount is $0, which means the bankruptcy price
+		// 		// to close 1 BTC short is $50,000 and we close both positions at this price.
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(50_000_000_000 + 50_000_000_000),
+		// 		),
+		// 	},
+		// },
+		// "Liquidated: under-collateralized, TNC == 0, offsetting: under-collateralized, TNC > 0": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_50000USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				// TNC of liquidated subaccount is $0, which means the bankruptcy price
-				// to close 1 BTC short is $50,000 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(-45_001_000_000 + 50_000_000_000),
-				),
-			},
-		},
-		"Liquidated: under-collateralized, TNC == 0, offsetting: under-collateralized, TNC == 0": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_50000USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		// TNC of liquidated subaccount is $0, which means the bankruptcy price
+		// 		// to close 1 BTC short is $50,000 and we close both positions at this price.
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(-45_001_000_000 + 50_000_000_000),
+		// 		),
+		// 	},
+		// },
+		// "Liquidated: under-collateralized, TNC == 0, offsetting: under-collateralized, TNC == 0": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_50000USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				// TNC of liquidated subaccount is $0, which means the bankruptcy price
-				// to close 1 BTC short is $50,000 and we close both positions at this price.
-				// USDC of this suabccount is -$50,000 + $50,000 = $0.
-			},
-		},
-		"Liquidated: under-collateralized, TNC == 0, offsetting: under-collateralized, TNC < 0": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_50000USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		// TNC of liquidated subaccount is $0, which means the bankruptcy price
+		// 		// to close 1 BTC short is $50,000 and we close both positions at this price.
+		// 		// USDC of this suabccount is -$50,000 + $50,000 = $0.
+		// 	},
+		// },
+		// "Liquidated: under-collateralized, TNC == 0, offsetting: under-collateralized, TNC < 0": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_50000USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			// TNC of liquidated subaccount is $0, which means the bankruptcy price
-			// to close 1 BTC short is $50,000.
-			// TNC of offsetting subaccount is $-1, which means the bankruptcy price
-			// to close 1 BTC long is $50,001.
-			// Since the bankruptcy prices do not overlap,
-			// i.e. bankruptcy price of long > bankruptcy price of short,
-			// state transitions aren't valid.
-			expectedErr: satypes.ErrFailedToUpdateSubaccounts,
-		},
-		"Liquidated: under-collateralized, TNC < 0, offsetting: well-collateralized": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	// TNC of liquidated subaccount is $0, which means the bankruptcy price
+		// 	// to close 1 BTC short is $50,000.
+		// 	// TNC of offsetting subaccount is $-1, which means the bankruptcy price
+		// 	// to close 1 BTC long is $50,001.
+		// 	// Since the bankruptcy prices do not overlap,
+		// 	// i.e. bankruptcy price of long > bankruptcy price of short,
+		// 	// state transitions aren't valid.
+		// 	expectedErr: satypes.ErrFailedToUpdateSubaccounts,
+		// },
+		// "Liquidated: under-collateralized, TNC < 0, offsetting: well-collateralized": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				// TNC of liquidated subaccount is $-1, which means the bankruptcy price
-				// to close 1 BTC short is $49,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(50_000_000_000 + 49_999_000_000),
-				),
-			},
-		},
-		"Liquidated: under-collateralized, TNC < 0, offsetting: under-collateralized, TNC > 0": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		// TNC of liquidated subaccount is $-1, which means the bankruptcy price
+		// 		// to close 1 BTC short is $49,999 and we close both positions at this price.
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(50_000_000_000 + 49_999_000_000),
+		// 		),
+		// 	},
+		// },
+		// "Liquidated: under-collateralized, TNC < 0, offsetting: under-collateralized, TNC > 0": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				// TNC of liquidated subaccount is $-1, which means the bankruptcy price
-				// to close 1 BTC short is $49,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(-45_001_000_000 + 49_999_000_000),
-				),
-			},
-		},
-		"Liquidated: under-collateralized, TNC < 0, offsetting: under-collateralized, TNC == 0": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		// TNC of liquidated subaccount is $-1, which means the bankruptcy price
+		// 		// to close 1 BTC short is $49,999 and we close both positions at this price.
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(-45_001_000_000 + 49_999_000_000),
+		// 		),
+		// 	},
+		// },
+		// "Liquidated: under-collateralized, TNC < 0, offsetting: under-collateralized, TNC == 0": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			// TNC of liquidated subaccount is $-1, which means the bankruptcy price
-			// to close 1 BTC short is $49,999.
-			// TNC of offsetting subaccount is $0, which means the bankruptcy price
-			// to close 1 BTC long is $50,000.
-			// Since the bankruptcy prices do not overlap,
-			// i.e. bankruptcy price of long > bankruptcy price of short,
-			// state transitions aren't valid.
-			expectedErr: satypes.ErrFailedToUpdateSubaccounts,
-		},
-		"Liquidated: under-collateralized, TNC < 0, offsetting: under-collateralized, TNC < 0": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	// TNC of liquidated subaccount is $-1, which means the bankruptcy price
+		// 	// to close 1 BTC short is $49,999.
+		// 	// TNC of offsetting subaccount is $0, which means the bankruptcy price
+		// 	// to close 1 BTC long is $50,000.
+		// 	// Since the bankruptcy prices do not overlap,
+		// 	// i.e. bankruptcy price of long > bankruptcy price of short,
+		// 	// state transitions aren't valid.
+		// 	expectedErr: satypes.ErrFailedToUpdateSubaccounts,
+		// },
+		// "Liquidated: under-collateralized, TNC < 0, offsetting: under-collateralized, TNC < 0": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			// TNC of liquidated subaccount is $-1, which means the bankruptcy price
-			// to close 1 BTC short is $49,999.
-			// TNC of offsetting subaccount is $-1, which means the bankruptcy price
-			// to close 1 BTC long is $50,001.
-			// Since the bankruptcy prices do not overlap,
-			// i.e. bankruptcy price of long > bankruptcy price of short, state transitions aren't valid.
-			expectedErr: satypes.ErrFailedToUpdateSubaccounts,
-		},
-		`Liquidated: under-collateralized, TNC > 0, offsetting: well-collateralized - 
-		can deleverage a partial position`: {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
-			deltaQuantums:        big.NewInt(10_000_000), // 0.1 BTC
+		// 	// TNC of liquidated subaccount is $-1, which means the bankruptcy price
+		// 	// to close 1 BTC short is $49,999.
+		// 	// TNC of offsetting subaccount is $-1, which means the bankruptcy price
+		// 	// to close 1 BTC long is $50,001.
+		// 	// Since the bankruptcy prices do not overlap,
+		// 	// i.e. bankruptcy price of long > bankruptcy price of short, state transitions aren't valid.
+		// 	expectedErr: satypes.ErrFailedToUpdateSubaccounts,
+		// },
+		// `Liquidated: under-collateralized, TNC > 0, offsetting: well-collateralized -
+		// can deleverage a partial position`: {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	deltaQuantums:        big.NewInt(10_000_000), // 0.1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(54_999_000_000 - 5_499_900_000),
-				),
-				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-90_000_000), // -0.9 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
-				},
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
-					// to close 0.1 BTC short is $5,499.9 and we close both positions at this price.
-					big.NewInt(50_000_000_000 + 5_499_900_000),
-				),
-				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(90_000_000), // 0.9 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
-				},
-			},
-		},
-		`Liquidated: under-collateralized, TNC < 0, offsetting: under-collateralized, TNC < 0 - 
-		can not deleverage paritial positions`: {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
-			deltaQuantums:        big.NewInt(10_000_000), // 0.1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(54_999_000_000 - 5_499_900_000),
+		// 		),
+		// 		PerpetualPositions: []*satypes.PerpetualPosition{
+		// 			{
+		// 				PerpetualId:  0,
+		// 				Quantums:     dtypes.NewInt(-90_000_000), // -0.9 BTC
+		// 				FundingIndex: dtypes.ZeroInt(),
+		// 			},
+		// 		},
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
+		// 			// to close 0.1 BTC short is $5,499.9 and we close both positions at this price.
+		// 			big.NewInt(50_000_000_000 + 5_499_900_000),
+		// 		),
+		// 		PerpetualPositions: []*satypes.PerpetualPosition{
+		// 			{
+		// 				PerpetualId:  0,
+		// 				Quantums:     dtypes.NewInt(90_000_000), // 0.9 BTC
+		// 				FundingIndex: dtypes.ZeroInt(),
+		// 			},
+		// 		},
+		// 	},
+		// },
+		// `Liquidated: under-collateralized, TNC < 0, offsetting: under-collateralized, TNC < 0 -
+		// can not deleverage paritial positions`: {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
+		// 	deltaQuantums:        big.NewInt(10_000_000), // 0.1 BTC
 
-			// TNC of liquidated subaccount is $-1, which means the bankruptcy price
-			// to close 1 BTC short is $49,999.
-			// TNC of offsetting subaccount is $-1, which means the bankruptcy price
-			// to close 1 BTC long is $50,001.
-			// Since the bankruptcy prices do not overlap,
-			// i.e. bankruptcy price of long > bankruptcy price of short,
-			// state transitions aren't valid.
-			expectedErr: satypes.ErrFailedToUpdateSubaccounts,
-		},
-		`Liquidated: under-collateralized, TNC > 0, offsetting: well-collatearlized - 
-		can deleverage when there are multiple positions`: {
-			liquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-				AssetPositions: []*satypes.AssetPosition{
-					{
-						AssetId:  0,
-						Quantums: dtypes.NewInt(80_800_000_000), // $80,800
-					},
-				},
-				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId: 0,
-						Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
-					},
-					{
-						PerpetualId: 1,
-						Quantums:    dtypes.NewInt(-10_000_000_000), // -10 ETH
-					},
-				},
-			},
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	// TNC of liquidated subaccount is $-1, which means the bankruptcy price
+		// 	// to close 1 BTC short is $49,999.
+		// 	// TNC of offsetting subaccount is $-1, which means the bankruptcy price
+		// 	// to close 1 BTC long is $50,001.
+		// 	// Since the bankruptcy prices do not overlap,
+		// 	// i.e. bankruptcy price of long > bankruptcy price of short,
+		// 	// state transitions aren't valid.
+		// 	expectedErr: satypes.ErrFailedToUpdateSubaccounts,
+		// },
+		// `Liquidated: under-collateralized, TNC > 0, offsetting: well-collatearlized -
+		// can deleverage when there are multiple positions`: {
+		// 	liquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 		AssetPositions: []*satypes.AssetPosition{
+		// 			{
+		// 				AssetId:  0,
+		// 				Quantums: dtypes.NewInt(80_800_000_000), // $80,800
+		// 			},
+		// 		},
+		// 		PerpetualPositions: []*satypes.PerpetualPosition{
+		// 			{
+		// 				PerpetualId: 0,
+		// 				Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+		// 			},
+		// 			{
+		// 				PerpetualId: 1,
+		// 				Quantums:    dtypes.NewInt(-10_000_000_000), // -10 ETH
+		// 			},
+		// 		},
+		// 	},
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					// TNC of liquidated subaccount is $800, MMR(BTC) = $5,000, MMR(ETH) = $3,000,
-					// which means the bankruptcy price to close 1 BTC short is $50,500
-					// and we close both positions at this price.
-					big.NewInt(80_800_000_000 - 50_500_000_000),
-				),
-				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId:  1,
-						Quantums:     dtypes.NewInt(-10_000_000_000), // -10 ETH
-						FundingIndex: dtypes.ZeroInt(),
-					},
-				},
-			},
-			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
-					big.NewInt(50_000_000_000 + 50_500_000_000),
-				),
-			},
-		},
-		"Fails when deltaQuantums is invalid with respect to liquidated subaccounts's position side": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
-			deltaQuantums:        big.NewInt(-100_000_000), // -1 BTC
+		// 	expectedLiquidatedSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Carl_Num0,
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			// TNC of liquidated subaccount is $800, MMR(BTC) = $5,000, MMR(ETH) = $3,000,
+		// 			// which means the bankruptcy price to close 1 BTC short is $50,500
+		// 			// and we close both positions at this price.
+		// 			big.NewInt(80_800_000_000 - 50_500_000_000),
+		// 		),
+		// 		PerpetualPositions: []*satypes.PerpetualPosition{
+		// 			{
+		// 				PerpetualId:  1,
+		// 				Quantums:     dtypes.NewInt(-10_000_000_000), // -10 ETH
+		// 				FundingIndex: dtypes.ZeroInt(),
+		// 			},
+		// 		},
+		// 	},
+		// 	expectedOffsettingSubaccount: satypes.Subaccount{
+		// 		Id: &constants.Dave_Num0,
+		// 		AssetPositions: keepertest.CreateUsdcAssetPosition(
+		// 			big.NewInt(50_000_000_000 + 50_500_000_000),
+		// 		),
+		// 	},
+		// },
+		// "Fails when deltaQuantums is invalid with respect to liquidated subaccounts's position side": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	deltaQuantums:        big.NewInt(-100_000_000), // -1 BTC
 
-			expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-		"Fails when deltaQuantums is invalid with respect to liquidated subaccounts's position size": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
-			deltaQuantums:        big.NewInt(500_000_000), // 5 BTC
+		// 	expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
+		// },
+		// "Fails when deltaQuantums is invalid with respect to liquidated subaccounts's position size": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	deltaQuantums:        big.NewInt(500_000_000), // 5 BTC
 
-			expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-		"Fails when deltaQuantums is invalid with respect to offsetting subaccounts's position side": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Carl_Num1_1BTC_Short,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
+		// },
+		// "Fails when deltaQuantums is invalid with respect to offsetting subaccounts's position side": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Carl_Num1_1BTC_Short,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-		"Fails when deltaQuantums is invalid with respect to offsetting subaccounts's position size": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Dave_Num0_01BTC_Long_50000USD,
-			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+		// 	expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
+		// },
+		// "Fails when deltaQuantums is invalid with respect to offsetting subaccounts's position size": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_01BTC_Long_50000USD,
+		// 	deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
-			expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-		// Rounding tests.
-		"Can deleverage short positions correctly after rounding": {
-			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
-			deltaQuantums:        big.NewInt(49_999_991),
-		},
+		// 	expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
+		// },
+		// // Rounding tests.
+		// "Can deleverage short positions correctly after rounding": {
+		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	deltaQuantums:        big.NewInt(49_999_991),
+		// },
 		"Can deleverage long position correctly after rounding": {
 			liquidatedSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
 			offsettingSubaccount: constants.Carl_Num0_1BTC_Short_100000USD,

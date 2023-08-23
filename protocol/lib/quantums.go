@@ -37,6 +37,39 @@ func BaseToQuoteQuantums(
 	)
 }
 
+// BaseToQuoteQuantumsRat converts an amount denoted in base quantums, to an equivalent amount denoted in quote
+// quantums. To determine the equivalent amount, an oracle price is used.
+//
+//   - `priceValue * 10^priceExponent` represents the conversion rate from one full coin of base currency
+//     to one full coin of quote currency.
+//   - `10^baseCurrencyAtomicResolution` represents the amount of one full coin that a base quantum is equal to.
+//   - `10^quoteCurrencyAtomicResolution` represents the amount of one full coin that a quote quantum is equal to.
+//
+// To convert from base to quote quantums, we use the following equation:
+//
+//	quoteQuantums =
+//	  (baseQuantums * 10^baseCurrencyAtomicResolution) *
+//	  (priceValue * 10^priceExponent) /
+//	  (10^quoteCurrencyAtomicResolution)
+//	=
+//	  baseQuantums * priceValue *
+//	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution)
+//
+// The result is rounded down.
+func BaseToQuoteQuantumsRat(
+	bigBaseQuantums *big.Int,
+	baseCurrencyAtomicResolution int32,
+	priceValue uint64,
+	priceExponent int32,
+) (bigNotional *big.Rat) {
+	return multiplyByPriceRat(
+		new(big.Rat).SetInt(bigBaseQuantums),
+		baseCurrencyAtomicResolution,
+		priceValue,
+		priceExponent,
+	)
+}
+
 // QuoteToBaseQuantums converts an amount denoted in quote quantums, to an equivalent amount denoted in base
 // quantums. To determine the equivalent amount, an oracle price is used.
 //
@@ -110,6 +143,31 @@ func multiplyByPrice(
 		ratResult.Num(),
 		ratResult.Denom(),
 	)
+}
+
+// multiplyByPriceRat multiples a value by price, factoring in exponents of base
+// and quote currencies.
+// Given `value`, returns result of the following:
+// `value * priceValue * 10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution)`
+func multiplyByPriceRat(
+	value *big.Rat,
+	baseCurrencyAtomicResolution int32,
+	priceValue uint64,
+	priceExponent int32,
+) (result *big.Rat) {
+	ratResult := new(big.Rat).SetUint64(priceValue)
+
+	ratResult.Mul(
+		ratResult,
+		value,
+	)
+
+	ratResult.Mul(
+		ratResult,
+		RatPow10(priceExponent+baseCurrencyAtomicResolution-QuoteCurrencyAtomicResolution),
+	)
+
+	return ratResult
 }
 
 // FundingRateToIndex converts funding rate (in ppm) to FundingIndex given the oracle price.

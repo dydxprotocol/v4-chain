@@ -45,6 +45,19 @@ func RatPow10(exponent int32) *big.Rat {
 	return result
 }
 
+func SqrtRatUsingInt(r *big.Rat) *big.Rat {
+	// Get numerator and denominator as big.Int
+	num := r.Num()
+	denom := r.Denom()
+
+	// Compute square roots separately using big.Int's Sqrt method
+	sqrtNum := new(big.Int).Sqrt(num)
+	sqrtDenom := new(big.Int).Sqrt(denom)
+
+	// Return their ratio
+	return new(big.Rat).SetFrac(sqrtNum, sqrtDenom)
+}
+
 // BigIntMulPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`.
 func BigIntMulPpm(input *big.Int, ppm uint32) *big.Int {
 	result := new(big.Int)
@@ -64,6 +77,17 @@ func BigMin(a, b *big.Int) *big.Int {
 	result := new(big.Int)
 	// If `a` is greater than `b`, return `b` since it is smaller.
 	// Else, return `a` since it is smaller than or equal to `b`.
+	if a.Cmp(b) > 0 {
+		result.Set(b)
+	} else {
+		result.Set(a)
+	}
+	return result
+}
+
+// BigMinRat takes two `big.Rat` as parameters and returns the smaller one.
+func BigMinRat(a, b *big.Rat) *big.Rat {
+	result := new(big.Rat)
 	if a.Cmp(b) > 0 {
 		result.Set(b)
 	} else {

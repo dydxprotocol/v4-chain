@@ -206,7 +206,24 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we cannot directly calculate `DMMR` from `deltaQuantums` because the maintenance
 	// margin requirement function could be non-linear.
+	_, pmmrRat, err := k.perpetualsKeeper.GetMarginRequirementsRat(ctx, perpetualId, psBig)
+	if err != nil {
+		return nil, err
+	}
+
 	_, pmmrBig, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, psBig)
+	if err != nil {
+		return nil, err
+	}
+
+	_, pmmradRat, err := k.perpetualsKeeper.GetMarginRequirementsRat(
+		ctx,
+		perpetualId,
+		new(big.Int).Add(
+			psBig,
+			deltaQuantums,
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -223,14 +240,30 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		return nil, err
 	}
 
-	absDmmrBig := new(big.Int).Sub(pmmrBig, pmmradBig)
-	// `absDmmrBig` should never be negative if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
-	if absDmmrBig.Sign() == -1 {
+	absDmmrRat := new(big.Rat).Sub(pmmrRat, pmmradRat)
+	// `absDmmrRat` should never be negative if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
+	if absDmmrRat.Sign() == -1 {
 		panic("GetBankruptcyPriceInQuoteQuantums: abs(DMMR) is negative")
 	}
 
+	roundedAbsDmmr := lib.BigRatRound(absDmmrRat, false)
+
+	absDmmrBig := new(big.Int).Sub(pmmrBig, pmmradBig)
+
+	if roundedAbsDmmr.Cmp(absDmmrBig) != 0 {
+		fmt.Printf(
+			`Rounding error when calculating maintenance margin requirement delta.
+			RoundedAbsDmmr: %s.
+			AbsDmmrBig: %s.
+			AbsDmmrRat: %s.`,
+			roundedAbsDmmr.String(),
+			absDmmrBig.String(),
+			absDmmrRat.String(),
+		)
+	}
+
 	// Calculate `TNC * abs(DMMR) / TMMR`.
-	tncMulDmmrBig := new(big.Int).Mul(tncBig, absDmmrBig)
+	tncMulDmmrBig := new(big.Int).Mul(tncBig, roundedAbsDmmr)
 	// This calculation is intentionally rounded down to negative infinity to ensure the
 	// final result is rounded towards positive-infinity. This works because of the following:
 	// - This is the only division in the equation.

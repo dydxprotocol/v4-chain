@@ -59,6 +59,11 @@ func BigRatOneMillion() *big.Rat {
 	return big.NewRat(1_000_000, 1)
 }
 
+// BigRatOneTrillion returns a `big.Rat` that is set to 1_000_000_000_000.
+func BigRatOneTrillion() *big.Rat {
+	return big.NewRat(1_000_000_000_000, 1)
+}
+
 // BigRat0 returns a `big.Rat` that is set to 0.
 func BigRat0() *big.Rat {
 	return big.NewRat(0, 1)

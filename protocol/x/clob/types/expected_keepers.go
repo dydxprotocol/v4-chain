@@ -113,6 +113,15 @@ type PerpetualsKeeper interface {
 		bigMaintenanceMarginQuoteQuantums *big.Int,
 		err error,
 	)
+	GetMarginRequirementsRat(
+		ctx sdk.Context,
+		id uint32,
+		bigQuantums *big.Int,
+	) (
+		bigInitialMarginQuoteQuantums *big.Rat,
+		bigMaintenanceMarginQuoteQuantums *big.Rat,
+		err error,
+	)
 	GetPerpetual(
 		ctx sdk.Context,
 		id uint32,

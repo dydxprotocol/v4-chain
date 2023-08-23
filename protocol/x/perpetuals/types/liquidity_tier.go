@@ -83,6 +83,31 @@ func (liquidityTier LiquidityTier) GetMarginAdjustmentPpm(bigQuoteQuantums *big.
 	return adjustmentFactor.Sqrt(adjustmentFactor)
 }
 
+// GetMarginAdjustmentPpmRat calculates margin adjustment (in ppm) given quote quantums
+// and `liquidityTier`'s base position notional.
+//
+// The idea is to have margin requirement increase as amount of notional increases. Adjustment
+// is `1` for any position smaller than `basePositionNotional` and sqrt of position size
+// for larger positions. Formula for marginAdjustmentPpm is:
+//
+// marginAdjustmentPpm = max(
+//
+//	oneMillion,
+//	sqrt(
+//		quoteQuantums * (oneMillion * oneMillion) / basePositionNotional
+//	)
+//
+// )
+func (liquidityTier LiquidityTier) GetMarginAdjustmentPpmRat(bigQuoteQuantums *big.Rat) *big.Rat {
+	bigBasePositionNotional := new(big.Rat).SetUint64(liquidityTier.BasePositionNotional)
+	if bigQuoteQuantums.Cmp(bigBasePositionNotional) <= 0 {
+		return lib.BigRatOneMillion()
+	}
+	adjustmentFactor := new(big.Rat).Mul(bigQuoteQuantums, lib.BigRatOneTrillion())
+	adjustmentFactor.Quo(adjustmentFactor, bigBasePositionNotional)
+	return lib.SqrtRatUsingInt(adjustmentFactor)
+}
+
 // GetAdjustedInitialMarginQuoteQuantums returns adjusted initial margin in quote quantums
 // (capped at 100% of notional).
 //
@@ -103,4 +128,26 @@ func (liquidityTier LiquidityTier) GetAdjustedInitialMarginQuoteQuantums(bigQuot
 	result = result.Quo(result, lib.BigIntOneTrillion())
 	// Cap adjusted initial margin at 100% of notional.
 	return lib.BigMin(bigQuoteQuantums, result)
+}
+
+// GetAdjustedInitialMarginQuoteQuantumsRat returns adjusted initial margin in quote quantums
+// (capped at 100% of notional).
+//
+// marginQuoteQuantums = adjustedMarginPpm * quoteQuantums / 1_000_000
+// = min(1_000_000, marginAdjustmentPpm * marginPpm / 1_000_000) * quoteQuantums / 1_000_000
+// = min(quoteQuantums, marginPpm * quoteQuantums * marginAdjustmentPpm / 1_000_000 / 1_000_000)
+//
+// note: divisions are delayed for precision purposes.
+func (liquidityTier LiquidityTier) GetAdjustedInitialMarginQuoteQuantumsRat(bigQuoteQuantums *big.Rat) *big.Rat {
+	marginAdjustmentPpm := liquidityTier.GetMarginAdjustmentPpmRat(bigQuoteQuantums)
+
+	result := new(big.Rat).SetUint64(uint64(liquidityTier.InitialMarginPpm))
+	// Multiply `initialMarginPpm` with `quoteQuantums`.
+	result = result.Mul(result, bigQuoteQuantums)
+	// Multiply above result with `marginAdjustmentPpm`.
+	result = result.Mul(result, marginAdjustmentPpm)
+	// Divide above result by 1 trillion.
+	result = result.Quo(result, lib.BigRatOneTrillion())
+	// Cap adjusted initial margin at 100% of notional.
+	return lib.BigMinRat(bigQuoteQuantums, result)
 }
