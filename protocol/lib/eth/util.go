@@ -33,8 +33,8 @@ func getBridgeEventAbi() *ethabi.ABI {
 	return bridgeEventAbi
 }
 
-// padOrTruncateAddress pads an address with zeros if it's shorter than `MIN_ADDRESS_BYTES` or
-// truncates it if it's longer than `MAX_ADDRESS_BYTES`.
+// padOrTruncateAddress right-pads an address with zeros if it's shorter than `MIN_ADDRESS_BYTES` or
+// takes the first `MAX_ADDRESS_BYTES` if it's longer than that.
 func padOrTruncateAddress(address []byte) []byte {
 	if len(address) > MAX_ADDRESS_BYTES {
 		return address[:MAX_ADDRESS_BYTES]
