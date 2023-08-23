@@ -1,4 +1,6 @@
-import { stats, delay, logger } from '@dydxprotocol-indexer/base';
+import {
+  stats, delay, logger, NodeEnv,
+} from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import * as MarketTable from '../stores/market-table';
@@ -56,4 +58,12 @@ export function getMarketFromId(id: number): MarketFromDatabase {
 
 export function getMarketsMap(): MarketsMap {
   return idToMarket;
+}
+
+export function clear(): void {
+  if (config.NODE_ENV !== NodeEnv.TEST) {
+    throw new Error('clear cannot be used in non-test env');
+  }
+
+  idToMarket = {};
 }

@@ -1,9 +1,12 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { NodeEnv, logger, stats } from '@dydxprotocol-indexer/base';
 import {
   BlockFromDatabase,
   BlockTable,
   IsolationLevel,
   Transaction,
+  assetRefresher,
+  marketRefresher,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 
@@ -99,9 +102,20 @@ export async function initializeAllCaches(): Promise<void> {
     // Must be run after perpetualMarketRefresher.start(), because Candle Cache
     // uses the perpetualMarketRefresher cache.
     startCandleCache(txId),
+    perpetualMarketRefresher.updatePerpetualMarkets({ txId }),
+    assetRefresher.updateAssets({ txId }),
+    marketRefresher.updateMarkets({ txId }),
   ]);
   // Must be run after startBlockCache() because it uses the block cache.
   await startPriceCache(getCurrentBlockHeight(), txId);
 
   await Transaction.rollback(txId);
+}
+
+export function resetBlockCache(): void {
+  if (config.NODE_ENV !== NodeEnv.TEST) {
+    throw new Error('resetBlockCache cannot be used in non-test env');
+  }
+
+  currentBlockHeight = '0';
 }

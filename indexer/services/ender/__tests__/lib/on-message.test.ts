@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import {
+  assetRefresher,
   BlockFromDatabase,
   BlockTable,
   dbHelpers,
@@ -13,6 +14,7 @@ import {
   TransactionFromDatabase,
   TransactionTable,
   LiquidityTiersTable,
+  testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import {
   FundingEventV1,
@@ -45,10 +47,6 @@ import {
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { MarketModifyHandler } from '../../src/handlers/markets/market-modify-handler';
 import Long from 'long';
-import {
-  defaultLiquidityTier,
-  defaultLiquidityTier2,
-} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 jest.mock('../../src/handlers/subaccount-update-handler');
 jest.mock('../../src/handlers/transfer-handler');
@@ -259,8 +257,8 @@ describe('on-message', () => {
       MarketTable.create(testConstants.defaultMarket2),
     ]);
     await Promise.all([
-      LiquidityTiersTable.create(defaultLiquidityTier),
-      LiquidityTiersTable.create(defaultLiquidityTier2),
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier2),
     ]);
     await Promise.all([
       PerpetualMarketTable.create(testConstants.defaultPerpetualMarket),
@@ -751,6 +749,46 @@ describe('on-message', () => {
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
+  });
+
+  it('refreshes caches if transaction is rolled back', async () => {
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        defaultSubaccountUpdateEventData,
+        transactionIndex,
+        eventIndex,
+      ),
+    ];
+
+    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+      defaultHeight,
+      defaultTime,
+      events,
+      [defaultTxHash],
+    );
+    const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
+    const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
+
+    // Update block cache with default height
+    updateBlockCache(defaultHeight.toString());
+    await testMocks.seedData();
+
+    // Initialize assetRefresher
+    await assetRefresher.updateAssets();
+    (SubaccountUpdateHandler as jest.Mock).mockReturnValue({
+      handle: () => {
+        assetRefresher.clear();
+        throw new Error();
+      },
+      validate: () => null,
+      getParallelizationIds: () => [],
+    });
+    await onMessage(kafkaMessage);
+
+    expect(assetRefresher.getAssetsMap()).not.toEqual({});
   });
 });
 
