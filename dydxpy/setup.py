@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
 
 setup(
     name="dydxpy",
-    version="{{VERSION}}",
+    version="0.0.0",
     author="dYdX Trading Inc.",
     author_email="contact@dydx.exchange",
     description="Protos for dYdX v4 protocol",
