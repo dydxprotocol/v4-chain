@@ -141,9 +141,8 @@ func (k Keeper) DelayMessageByBlocks(
 	// If the message type is not routable, return an error.
 	if handler == nil {
 		return 0, sdkerrors.Wrapf(
-			types.ErrInvalidInput,
-			"failed to delay message: no handler found for message type %T",
-			msg,
+			types.ErrMsgIsUnroutable,
+			sdk.MsgTypeURL(msg),
 		)
 	}
 

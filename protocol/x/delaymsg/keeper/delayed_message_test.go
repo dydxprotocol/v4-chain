@@ -132,11 +132,7 @@ func TestDelayMessageByBlocks(t *testing.T) {
 func TestDelayMessageByBlocks_NoHandlerFound(t *testing.T) {
 	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 	_, err := delaymsg.DelayMessageByBlocks(ctx, constants.InvalidMsg, blockDelay1)
-	require.ErrorContains(
-		t,
-		err,
-		fmt.Sprintf("failed to delay message: no handler found for message type %T", constants.InvalidMsg),
-	)
+	require.ErrorContains(t, err, "/testpb.TestMsg: proposal message not recognized by router")
 }
 
 func TestDeleteMessage_NotFound(t *testing.T) {

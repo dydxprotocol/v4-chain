@@ -223,9 +223,9 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "delaymsg", cmd.Use)
 	require.Equal(t, 3, len(cmd.Commands()))
-	require.Equal(t, "get-num-messages", cmd.Commands()[0].Name())
+	require.Equal(t, "get-block-message-ids", cmd.Commands()[0].Name())
 	require.Equal(t, "get-message", cmd.Commands()[1].Name())
-	require.Equal(t, "get-block-message-ids", cmd.Commands()[2].Name())
+	require.Equal(t, "get-num-messages", cmd.Commands()[2].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
