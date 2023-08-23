@@ -19,7 +19,6 @@ const CLOB_STATUS_TO_MARKET_STATUS: Record<SpecifiedClobPairStatus, PerpetualMar
   [ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY]: PerpetualMarketStatus.CANCEL_ONLY,
   [ClobPairStatus.CLOB_PAIR_STATUS_PAUSED]: PerpetualMarketStatus.PAUSED,
   [ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY]: PerpetualMarketStatus.POST_ONLY,
-  [ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING]: PerpetualMarketStatus.INITIALIZING,
 };
 
 export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreateEventV1> {
