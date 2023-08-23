@@ -10,7 +10,7 @@ import (
 // a subset of the types defined in the proto for ClobPair_Status.
 var SupportedClobPairStatusTransitions = map[ClobPair_Status]map[ClobPair_Status]struct{}{
 	ClobPair_STATUS_ACTIVE: {},
-	ClobPair_STATUS_POST_ONLY: {
+	ClobPair_STATUS_INITIALIZING: {
 		ClobPair_STATUS_ACTIVE: struct{}{},
 	},
 }

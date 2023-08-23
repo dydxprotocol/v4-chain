@@ -41,7 +41,7 @@ func TestGetPerpetualId(t *testing.T) {
 func TestIsSupportedClobPairStatus_Supported(t *testing.T) {
 	// these are the only two supported statuses
 	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_ACTIVE))
-	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_POST_ONLY))
+	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_INITIALIZING))
 }
 
 func TestIsSupportedClobPairStatus_Unsupported(t *testing.T) {
@@ -52,12 +52,13 @@ func TestIsSupportedClobPairStatus_Unsupported(t *testing.T) {
 	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_UNSPECIFIED))
 	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_PAUSED))
 	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_CANCEL_ONLY))
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_POST_ONLY))
 }
 
 func TestIsSupportedClobPairStatusTransition_Supported(t *testing.T) {
 	// only supported transition
 	require.True(t, types.IsSupportedClobPairStatusTransition(
-		types.ClobPair_STATUS_POST_ONLY, types.ClobPair_STATUS_ACTIVE,
+		types.ClobPair_STATUS_INITIALIZING, types.ClobPair_STATUS_ACTIVE,
 	))
 }
 
@@ -76,7 +77,7 @@ func TestIsSupportedClobPairStatusTransition_Unsupported(t *testing.T) {
 	// iterate over all permutations of clob pair statuses
 	for _, fromClobPairStatus := range types.ClobPair_Status_value {
 		for _, toClobPairStatus := range types.ClobPair_Status_value {
-			if fromClobPairStatus == int32(types.ClobPair_STATUS_POST_ONLY) &&
+			if fromClobPairStatus == int32(types.ClobPair_STATUS_INITIALIZING) &&
 				toClobPairStatus == int32(types.ClobPair_STATUS_ACTIVE) {
 				continue
 			} else {
