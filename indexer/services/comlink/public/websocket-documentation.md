@@ -857,7 +857,7 @@ interface TradingPerpetualMarketMessage {
   clobPairId?: string;
   ticker?: string;
   marketId?: number;
-  status?: PerpetualMarketStatus; // 'ACTIVE', 'PAUSED', 'CANCEL_ONLY' or 'POST_ONLY'
+  status?: PerpetualMarketStatus; // 'ACTIVE', 'PAUSED', 'CANCEL_ONLY', 'POST_ONLY', or 'INITIALIZING'
   baseAsset?: string;
   quoteAsset?: string;
   initialMarginFraction?: string;
