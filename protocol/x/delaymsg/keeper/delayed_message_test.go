@@ -38,24 +38,6 @@ func TestDelayMessageByBlocks(t *testing.T) {
 				},
 			},
 		},
-		"single message from bridge": {
-			testDelayedMsgs: []struct {
-				msg      sdk.Msg
-				delay    uint32
-				msgBytes []byte
-			}{
-				{
-					msg:      constants.TestMsg4,
-					delay:    blockDelay1,
-					msgBytes: constants.Msg4Bytes,
-				},
-			},
-			expectedBlockToMessageIds: map[int64]types.BlockMessageIds{
-				int64(blockDelay1): {
-					Ids: []uint32{0},
-				},
-			},
-		},
 		"multiple messages": {
 			testDelayedMsgs: []struct {
 				msg      sdk.Msg
@@ -117,7 +99,7 @@ func TestDelayMessageByBlocks(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsg, _ := keepertest.DelayMsgKeepersWithAuthorities(t, constants.TestMsgAuthorities)
+			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 			// Act - add messages.
 			for i, testDelayedMsg := range tc.testDelayedMsgs {
@@ -147,8 +129,18 @@ func TestDelayMessageByBlocks(t *testing.T) {
 	}
 }
 
+func TestDelayMessageByBlocks_NoHandlerFound(t *testing.T) {
+	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+	_, err := delaymsg.DelayMessageByBlocks(ctx, constants.InvalidMsg, blockDelay1)
+	require.ErrorContains(
+		t,
+		err,
+		fmt.Sprintf("failed to delay message: no handler found for message type %T", constants.InvalidMsg),
+	)
+}
+
 func TestDeleteMessage_NotFound(t *testing.T) {
-	ctx, delaymsg, _, _ := keepertest.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	err := delaymsg.DeleteMessage(ctx, 0)
 	require.EqualError(t, err, "failed to delete message: message with id 0 not found: Invalid input")
@@ -156,7 +148,7 @@ func TestDeleteMessage_NotFound(t *testing.T) {
 
 func TestDeleteMessage(t *testing.T) {
 	// Setup - add a message.
-	ctx, delaymsg, _ := keepertest.DelayMsgKeepersWithAuthorities(t, constants.TestMsgAuthorities)
+	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	id, err := delaymsg.DelayMessageByBlocks(ctx, constants.TestMsg1, 10)
 	require.Equal(t, uint32(0), id)
@@ -179,7 +171,7 @@ func TestDeleteMessage(t *testing.T) {
 }
 
 func TestGetNumMessages(t *testing.T) {
-	ctx, delaymsg, _, _ := keepertest.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	// No messages.
 	require.Equal(t, uint32(0), delaymsg.GetNumMessages(ctx))
@@ -210,7 +202,7 @@ func expectDelayedMessagesAndBlockIds(
 }
 
 func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
-	ctx, delaymsg, _ := keepertest.DelayMsgKeepersWithAuthorities(t, constants.TestMsgAuthorities)
+	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	// No messages.
 	require.Equal(t, uint32(0), delaymsg.GetNumMessages(ctx))
@@ -275,7 +267,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 }
 
 func TestGetMessage_NotFound(t *testing.T) {
-	ctx, delaymsg, _, _ := keepertest.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	delayedMsg, found := delaymsg.GetMessage(ctx, 0)
 	require.False(t, found)
@@ -298,7 +290,7 @@ func TestSetDelayedMessage_Errors(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsg, _, _ := keepertest.DelayMsgKeepers(t)
+			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 			err := delaymsg.SetDelayedMessage(ctx, &tc.msg)
 			require.EqualError(t, tc.expErr, err.Error())
 		})

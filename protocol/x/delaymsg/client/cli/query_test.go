@@ -14,6 +14,10 @@ import (
 	"testing"
 )
 
+const (
+	GrpcNotFoundError = "NotFound"
+)
+
 // Prevent strconv unused error
 var _ = strconv.IntSize
 
@@ -83,13 +87,13 @@ func TestQueryMessage(t *testing.T) {
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:  0,
-						Msg: constants.Msg4Bytes,
+						Msg: constants.Msg1Bytes,
 					},
 				},
 			},
 			expectedMsg: &types.DelayedMessage{
 				Id:  0,
-				Msg: constants.Msg4Bytes,
+				Msg: constants.Msg1Bytes,
 			},
 		},
 	}
@@ -97,14 +101,52 @@ func TestQueryMessage(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			_, ctx := setupNetwork(t, tc.state)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryMessage(), []string{"0"})
-			require.NoError(t, err)
-			var resp types.QueryMessageResponse
-			require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			require.Equal(t, tc.expectedMsg, resp.Message)
+			if tc.expectedMsg == nil {
+				require.ErrorContains(t, err, GrpcNotFoundError)
+			} else {
+				require.NoError(t, err)
+				var resp types.QueryMessageResponse
+				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+				require.Equal(t, tc.expectedMsg, resp.Message)
+			}
 		})
 	}
 }
 
 func TestQueryBlockMessageIds(t *testing.T) {
-
+	tests := map[string]struct {
+		state                   *types.GenesisState
+		expectedBlockMessageIds []uint32
+	}{
+		"Default: 0": {
+			state: types.DefaultGenesis(),
+		},
+		"Non-zero": {
+			state: &types.GenesisState{
+				NumMessages: 20,
+				DelayedMessages: []*types.DelayedMessage{
+					{
+						Id:          0,
+						Msg:         constants.Msg1Bytes,
+						BlockHeight: 10,
+					},
+				},
+			},
+			expectedBlockMessageIds: []uint32{0},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, ctx := setupNetwork(t, tc.state)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryBlockMessageIds(), []string{"10"})
+			if tc.expectedBlockMessageIds == nil {
+				require.ErrorContains(t, err, GrpcNotFoundError)
+			} else {
+				require.NoError(t, err)
+				var resp types.QueryBlockMessageIdsResponse
+				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+				require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
+			}
+		})
+	}
 }

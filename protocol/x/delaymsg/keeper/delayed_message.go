@@ -137,8 +137,15 @@ func (k Keeper) DelayMessageByBlocks(
 	id uint32,
 	err error,
 ) {
-	// TODO(CORE-437): If message is unroutable, return an error.
-	// https://github.com/cosmos/cosmos-sdk/blob/208219a4283bad7fd6c9a3d93f50c96e7efbb3ae/x/gov/keeper/proposal.go#L67
+	handler := k.router.Handler(msg)
+	// If the message type is not routable, return an error.
+	if handler == nil {
+		return 0, sdkerrors.Wrapf(
+			types.ErrInvalidInput,
+			"failed to delay message: no handler found for message type %T",
+			msg,
+		)
+	}
 
 	nextId := k.GetNumMessages(ctx)
 	blockHeight, err := lib.AddUint32(ctx.BlockHeight(), blockDelay)

@@ -8,23 +8,31 @@ import (
 )
 
 var (
-	TestMsg1 = &testdata.TestMsg{Signers: []string{"meh"}}
-	TestMsg2 = &testdata.TestMsg{Signers: []string{"blah"}}
-	TestMsg3 = &testdata.TestMsg{Signers: []string{"nerp"}}
-	// Use a real bridge event as a test message that passes validation for a live network.
-	TestMsg4 = &bridgetypes.MsgCompleteBridge{
+	// MsgCompleteBridge is an example of an expected Msg type in the delaymsg module.
+	TestMsg1 = &bridgetypes.MsgCompleteBridge{
 		Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
 		Event: bridgetypes.BridgeEvent{
 			Id: 1,
 		},
 	}
+	TestMsg2 = &bridgetypes.MsgCompleteBridge{
+		Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+		Event: bridgetypes.BridgeEvent{
+			Id: 2,
+		},
+	}
+	TestMsg3 = &bridgetypes.MsgCompleteBridge{
+		Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+		Event: bridgetypes.BridgeEvent{
+			Id: 3,
+		},
+	}
+	InvalidMsg = &testdata.TestMsg{Signers: []string{"invalid - no module handles this message"}}
 
-	Msg1Bytes = []byte("\n\x0f\x2ftestpb.TestMsg\x12\x05\n\x03meh")
-	Msg2Bytes = []byte("\n\x0f\x2ftestpb.TestMsg\x12\x06\n\x04blah")
-	Msg3Bytes = []byte("\n\x0f\x2ftestpb.TestMsg\x12\x06\n\x04nerp")
-	Msg4Bytes = []byte("\n&/dydxprotocol.bridge.MsgCompleteBridge\x126\n+dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv\x12\x07\x08\x01\x12\x03\x12\x010")
-
-	TestMsgAuthorities = []string{"meh", "blah", "nerp", authtypes.NewModuleAddress(bridgetypes.ModuleName).String()}
+	// Msg1Bytes, Msg2Bytes and Msg3Bytes are left as long lines for ease of byte-by-byte comparison.
+	Msg1Bytes = []byte("\n&/dydxprotocol.bridge.MsgCompleteBridge\x126\n+dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv\x12\x07\x08\x01\x12\x03\x12\x010") // nolint:lll
+	Msg2Bytes = []byte("\n&/dydxprotocol.bridge.MsgCompleteBridge\x126\n+dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv\x12\x07\x08\x02\x12\x03\x12\x010") // nolint:lll
+	Msg3Bytes = []byte("\n&/dydxprotocol.bridge.MsgCompleteBridge\x126\n+dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv\x12\x07\x08\x03\x12\x03\x12\x010") // nolint:lll
 
 	AllMsgs = []sdk.Msg{TestMsg1, TestMsg2, TestMsg3}
 )

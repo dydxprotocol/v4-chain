@@ -43,7 +43,7 @@ func createAppModuleWithKeeper(t *testing.T) (delaymsg.AppModule, *delaymsg_keep
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, _, _ := keeper.DelayMsgKeepers(t)
+	ctx, keeper, _, _, _, _ := keeper.DelayMsgKeepers(t)
 
 	return delaymsg.NewAppModule(
 		appCodec,
@@ -222,7 +222,7 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "delaymsg", cmd.Use)
-	require.Equal(t, 4, len(cmd.Commands()))
+	require.Equal(t, 3, len(cmd.Commands()))
 	require.Equal(t, "get-num-messages", cmd.Commands()[0].Name())
 	require.Equal(t, "get-message", cmd.Commands()[1].Name())
 	require.Equal(t, "get-block-message-ids", cmd.Commands()[2].Name())
