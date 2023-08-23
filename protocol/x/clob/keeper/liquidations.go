@@ -175,7 +175,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		return nil, err
 	}
 
-	negDnnvBig, err := k.perpetualsKeeper.GetNetNotional(
+	negDnnvRat, err := k.perpetualsKeeper.GetNetNotionalRat(
 		ctx,
 		perpetualId,
 		new(big.Int).Neg(deltaQuantums),
@@ -183,6 +183,10 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	if err != nil {
 		return nil, err
 	}
+
+	// Round up the -DNNV term so that the resulting bankruptcy price is rounded towards positive
+	// infinity.
+	negDnnvBig := lib.BigRatRound(negDnnvRat, true)
 
 	// Position size is necessary for calculating DMMR.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
@@ -260,6 +264,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 			absDmmrBig.String(),
 			absDmmrRat.String(),
 		)
+		fmt.Println()
 	}
 
 	// Calculate `TNC * abs(DMMR) / TMMR`.

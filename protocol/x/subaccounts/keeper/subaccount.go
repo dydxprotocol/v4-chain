@@ -375,13 +375,18 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
 		// Get the new collateralization and margin requirements with the update applied.
-		bigNewNetCollateral,
-			bigNewInitialMargin,
-			bigNewMaintenanceMargin,
+		newNetCollateralRat,
+			newInitialMarginRat,
+			newMaintenanceMarginRat,
 			err := k.internalGetNetCollateralAndMarginRequirements(ctx, u)
 		if err != nil {
 			return false, nil, err
 		}
+
+		// Round the new net collateral and maintenance margin down to be optimistic.
+		bigNewNetCollateral := lib.BigRatRound(newNetCollateralRat, true)
+		bigNewInitialMargin := lib.BigRatRound(newInitialMarginRat, true)
+		bigNewMaintenanceMargin := lib.BigRatRound(newMaintenanceMarginRat, true)
 
 		var result = types.Success
 
@@ -393,9 +398,9 @@ func (k Keeper) internalCanUpdateSubaccounts(
 				SettledSubaccount: u.SettledSubaccount,
 			}
 
-			bigCurNetCollateral,
-				bigCurInitialMargin,
-				bigCurMaintenanceMargin,
+			curNetCollateralRat,
+				curInitialMarginRat,
+				curMaintenanceMarginRat,
 				err := k.internalGetNetCollateralAndMarginRequirements(
 				ctx,
 				emptyUpdate,
@@ -403,6 +408,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			if err != nil {
 				return false, nil, err
 			}
+			// Round the current net collateral and maintenance margin down to be pessimistic.
+			bigCurNetCollateral := lib.BigRatRound(curNetCollateralRat, false)
+			bigCurInitialMargin := lib.BigRatRound(curInitialMarginRat, false)
+			bigCurMaintenanceMargin := lib.BigRatRound(curMaintenanceMarginRat, false)
 
 			// Determine whether the state transition is valid.
 			result = isValidStateTransitionForUndercollateralizedSubaccount(
@@ -519,10 +528,19 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 		PerpetualUpdates:  update.PerpetualUpdates,
 	}
 
-	return k.internalGetNetCollateralAndMarginRequirements(
+	netCollateralRat, initialMarginRat, maintenanceMarginRat, err := k.internalGetNetCollateralAndMarginRequirements(
 		ctx,
 		settledUpdate,
 	)
+
+	if err == nil {
+		// Round all rational numbers down.
+		bigNetCollateral = lib.BigRatRound(netCollateralRat, false)
+		bigInitialMargin = lib.BigRatRound(initialMarginRat, false)
+		bigMaintenanceMargin = lib.BigRatRound(maintenanceMarginRat, false)
+	}
+
+	return bigNetCollateral, bigInitialMargin, bigMaintenanceMargin, err
 }
 
 // internalGetNetCollateralAndMarginRequirements returns the total net collateral, total initial margin
@@ -540,9 +558,9 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	ctx sdk.Context,
 	settledUpdate settledUpdate,
 ) (
-	bigNetCollateral *big.Int,
-	bigInitialMargin *big.Int,
-	bigMaintenanceMargin *big.Int,
+	bigNetCollateral *big.Rat,
+	bigInitialMargin *big.Rat,
+	bigMaintenanceMargin *big.Rat,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -553,9 +571,9 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	)
 
 	// Initialize return values.
-	bigNetCollateral = big.NewInt(0)
-	bigInitialMargin = big.NewInt(0)
-	bigMaintenanceMargin = big.NewInt(0)
+	bigNetCollateral = big.NewRat(0, 1)
+	bigInitialMargin = big.NewRat(0, 1)
+	bigMaintenanceMargin = big.NewRat(0, 1)
 
 	// Merge updates and assets.
 	assetSizes, err := applyUpdatesToPositions(
@@ -563,7 +581,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		settledUpdate.AssetUpdates,
 	)
 	if err != nil {
-		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+		return big.NewRat(0, 1), big.NewRat(0, 1), big.NewRat(0, 1), err
 	}
 
 	// Merge updates and perpetuals.
@@ -572,7 +590,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		settledUpdate.PerpetualUpdates,
 	)
 	if err != nil {
-		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+		return big.NewRat(0, 1), big.NewRat(0, 1), big.NewRat(0, 1), err
 	}
 
 	// The calculate function increments `netCollateral`, `initialMargin`, and `maintenanceMargin`
@@ -581,7 +599,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		id := size.GetId()
 		bigQuantums := size.GetBigQuantums()
 
-		bigNetCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, bigQuantums)
+		bigNetCollateralQuoteQuantums, err := pk.GetNetCollateralRat(ctx, id, bigQuantums)
 		if err != nil {
 			return err
 		}
@@ -590,7 +608,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 
 		bigInitialMarginRequirements,
 			bigMaintenanceMarginRequirements,
-			err := pk.GetMarginRequirements(ctx, id, bigQuantums)
+			err := pk.GetMarginRequirementsRat(ctx, id, bigQuantums)
 		if err != nil {
 			return err
 		}
@@ -605,7 +623,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	for _, size := range assetSizes {
 		err := calculate(k.assetsKeeper, size)
 		if err != nil {
-			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+			return big.NewRat(0, 1), big.NewRat(0, 1), big.NewRat(0, 1), err
 		}
 	}
 
@@ -614,7 +632,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	for _, size := range perpetualSizes {
 		err := calculate(k.perpetualsKeeper, size)
 		if err != nil {
-			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+			return big.NewRat(0, 1), big.NewRat(0, 1), big.NewRat(0, 1), err
 		}
 	}
 

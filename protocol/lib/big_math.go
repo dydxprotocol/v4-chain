@@ -62,7 +62,8 @@ func SqrtRatUsingInt(r *big.Rat) *big.Rat {
 func BigIntMulPpm(input *big.Int, ppm uint32) *big.Int {
 	result := new(big.Int)
 	result.Mul(input, big.NewInt(int64(ppm)))
-	return result.Div(result, big.NewInt(int64(OneMillion)))
+	result.Div(result, big.NewInt(int64(OneMillion)))
+	return result
 }
 
 // BigIntMulSignedPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`.

@@ -19,6 +19,14 @@ type ProductKeeper interface {
 		bigNetCollateralQuoteQuantums *big.Int,
 		err error,
 	)
+	GetNetCollateralRat(
+		ctx sdk.Context,
+		id uint32,
+		bigQuantums *big.Int,
+	) (
+		bigNetCollateralQuoteQuantums *big.Rat,
+		err error,
+	)
 	GetMarginRequirements(
 		ctx sdk.Context,
 		id uint32,
@@ -26,6 +34,15 @@ type ProductKeeper interface {
 	) (
 		bigInitialMarginQuoteQuantums *big.Int,
 		bigMaintenanceMarginQuoteQuantums *big.Int,
+		err error,
+	)
+	GetMarginRequirementsRat(
+		ctx sdk.Context,
+		id uint32,
+		bigQuantums *big.Int,
+	) (
+		bigInitialMarginQuoteQuantums *big.Rat,
+		bigMaintenanceMarginQuoteQuantums *big.Rat,
 		err error,
 	)
 }

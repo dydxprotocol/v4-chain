@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"math/big"
+
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -294,6 +295,24 @@ func (k Keeper) GetNetCollateral(
 	return big.NewInt(0), types.ErrNotImplementedMargin
 }
 
+// GetNetCollateralRat returns the net collateral that a given position (quantums)
+// for a given assetId contributes to an account.
+func (k Keeper) GetNetCollateralRat(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigNetCollateralQuoteQuantums *big.Rat,
+	err error,
+) {
+	bigNetCollateral, err := k.GetNetCollateral(ctx, id, bigQuantums)
+	if err == nil {
+		return new(big.Rat).SetInt(bigNetCollateral), err
+	}
+
+	return nil, err
+}
+
 // GetMarginRequirements returns the initial and maintenance margin-
 // requirements for a given position size for a given assetId.
 func (k Keeper) GetMarginRequirements(
@@ -324,6 +343,25 @@ func (k Keeper) GetMarginRequirements(
 	// Balance is negative.
 	// TODO(DEC-582): margin-trading
 	return big.NewInt(0), big.NewInt(0), types.ErrNotImplementedMargin
+}
+
+// GetMarginRequirementsRat returns the initial and maintenance margin-
+// requirements for a given position size for a given assetId.
+func (k Keeper) GetMarginRequirementsRat(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigInitialMarginQuoteQuantums *big.Rat,
+	bigMaintenanceMarginQuoteQuantums *big.Rat,
+	err error,
+) {
+	bigInitialMarginRequirements, bigMaintenanceMarginRequirements, err := k.GetMarginRequirements(ctx, id, bigQuantums)
+	if err == nil {
+		return new(big.Rat).SetInt(bigInitialMarginRequirements), new(big.Rat).SetInt(bigMaintenanceMarginRequirements), err
+	}
+
+	return nil, nil, err
 }
 
 // ConvertAssetToCoin converts the given `assetId` and `quantums` used in `x/asset`,

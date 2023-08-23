@@ -88,6 +88,14 @@ type PerpetualsKeeper interface {
 		bigNetNotionalQuoteQuantums *big.Int,
 		err error,
 	)
+	GetNetNotionalRat(
+		ctx sdk.Context,
+		id uint32,
+		bigQuantums *big.Int,
+	) (
+		bigNetNotionalQuoteQuantums *big.Rat,
+		err error,
+	)
 	GetNotionalInBaseQuantums(
 		ctx sdk.Context,
 		id uint32,

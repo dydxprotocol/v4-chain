@@ -810,6 +810,24 @@ func (k Keeper) GetNetCollateral(
 	return k.GetNetNotional(ctx, id, bigQuantums)
 }
 
+// GetNetCollateralRat returns the net collateral in quote quantums. The net collateral is equal to
+// the net open notional, which can be represented by the following equation:
+// `quantums / 10^baseAtomicResolution * marketPrice * 10^marketExponent * 10^quoteAtomicResolution`.
+// Note that longs are positive, and shorts are negative.
+// Returns an error if a perpetual with `id` does not exist or if the `Perpetual.MarketId` does
+// not exist.
+func (k Keeper) GetNetCollateralRat(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigNetCollateralQuoteQuantums *big.Rat,
+	err error,
+) {
+	// The net collateral is equal to the net open notional.
+	return k.GetNetNotionalRat(ctx, id, bigQuantums)
+}
+
 // GetMarginRequirements returns initial and maintenance margin requirements in quote quantums, given the position
 // size in base quantums.
 //

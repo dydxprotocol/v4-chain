@@ -865,11 +865,11 @@ func TestProcessDeleveraging(t *testing.T) {
 		// 	expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
 		// },
 		// // Rounding tests.
-		// "Can deleverage short positions correctly after rounding": {
-		// 	liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
-		// 	offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
-		// 	deltaQuantums:        big.NewInt(49_999_991),
-		// },
+		"Can deleverage short positions correctly after rounding": {
+			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+			deltaQuantums:        big.NewInt(49_999_991),
+		},
 		"Can deleverage long position correctly after rounding": {
 			liquidatedSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
 			offsettingSubaccount: constants.Carl_Num0_1BTC_Short_100000USD,
@@ -906,7 +906,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				PerpetualPositions: []*satypes.PerpetualPosition{
 					{
 						PerpetualId: 0,
-						Quantums:    dtypes.NewInt(100_000_000),
+						Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
 					},
 				},
 			},
