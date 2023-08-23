@@ -1432,12 +1432,12 @@ function update_genesis_use_test_volatile_market() {
 	# Perpetual: TEST-USD
 	NUM_PERPETUALS=$(jq -c '.app_state.perpetuals.perpetuals | length' < ${GENESIS})
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.perpetuals.[]' -v "{}"
-	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().ticker' -v 'TEST-USD'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().id' -v "${NUM_PERPETUALS}"
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().market_id' -v '33'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().atomic_resolution' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().default_funding_ppm' -v '0'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().liquidity_tier' -v '0'
+	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.ticker' -v 'TEST-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.id' -v "${NUM_PERPETUALS}"
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.market_id' -v '33'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.atomic_resolution' -v '-10'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.liquidity_tier' -v '0'
 
 	# Clob: TEST-USD
 	NUM_CLOB_PAIRS=$(jq -c '.app_state.clob.clob_pairs | length' < ${GENESIS})
