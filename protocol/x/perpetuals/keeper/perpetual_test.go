@@ -803,7 +803,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Create a new market param and price.
-			marketId := pricesKeeper.GetNumMarkets(ctx)
+			marketId := uint32(0)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
