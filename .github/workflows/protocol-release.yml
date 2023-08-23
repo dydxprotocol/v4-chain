@@ -10,7 +10,7 @@ on:  # yamllint disable-line rule:truthy
 
 
 jobs:
-  protcol-release:
+  protocol-release:
     name: Create Release
     permissions:
       contents: write
@@ -21,9 +21,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3.3.0
-        with:
-          submodules: recursive
-          token: ${{ secrets.GH_REPO_READ_TOKEN }}
       - name: set tag env
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: install go
@@ -107,7 +104,7 @@ jobs:
         run: make dydxpy-gen
 
       - name: Set Env from Tag (remove 'v' prefix)
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+        run: echo "VERSION=$(echo {GITHUB_REF#refs/tags/v} | tr '-' '.')" >> $GITHUB_ENV
 
       - name: Update version in setup.py
         run: echo $VERSION; sed -i "s/{{VERSION}}/$VERSION/g" setup.py
