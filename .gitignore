@@ -5,5 +5,8 @@ dydxpy/build
 dydxpy/dist
 dydxpy/dydxpy.egg-info/
 dydxpy/dydxpy
+dydxjs/build
+dydxjs/node_modules
+dydxjs/src
 
 .idea
