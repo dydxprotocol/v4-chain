@@ -43,6 +43,30 @@ func (k Keeper) ProcessSingleMatch(
 	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
+	if matchWithOrders.TakerOrder.IsLiquidation() {
+		defer func() {
+			if !takerUpdateResult.IsSuccess() {
+				takerSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, matchWithOrders.TakerOrder.GetSubaccountId())
+				takerTnc, takerIMR, takerMMR, _ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+					ctx,
+					satypes.Update{SubaccountId: *takerSubaccount.Id},
+				)
+				ctx.Logger().Info(
+					"collateralization check failed for liquidation",
+					"takerSubaccuont", fmt.Sprintf("%+v", takerSubaccount),
+					"takerTNC", takerTnc,
+					"takerIMR", takerIMR,
+					"takerMMR", takerMMR,
+					"liquidationOrder", fmt.Sprintf("%+v", matchWithOrders.TakerOrder),
+					"makerOrder", fmt.Sprintf("%+v", matchWithOrders.MakerOrder),
+					"fillAmount", matchWithOrders.FillAmount,
+					"result", takerUpdateResult,
+					"error", err,
+				)
+			}
+		}()
+	}
+
 	// Perform stateless validation on the match.
 	if err := matchWithOrders.Validate(); err != nil {
 		return false, takerUpdateResult, makerUpdateResult, nil, sdkerrors.Wrapf(

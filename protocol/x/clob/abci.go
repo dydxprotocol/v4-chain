@@ -3,6 +3,7 @@ package clob
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +16,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
+
+// TODO(jay): Make this configurable for v4-chain.
+const MaxLiquidationOrdersPerBlock = 10
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
 func BeginBlocker(
@@ -204,10 +208,13 @@ func PrepareCheckState(
 	}
 
 	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
+	start := time.Now()
 	sort.Sort(types.SortedLiquidationOrders(liquidationOrders))
+	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.OffsettingSubaccountPerpetualPosition)
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	for _, liquidationOrder := range liquidationOrders {
+	for i := 0; i < MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
+		liquidationOrder := liquidationOrders[i]
 		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
 			ctx.Logger().Error(
 				fmt.Sprintf(
