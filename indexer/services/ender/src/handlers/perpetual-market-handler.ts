@@ -43,9 +43,7 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
       this.getPerpetualMarketCreateObject(this.event),
       { txId: this.txId },
     );
-    await Promise.all([
-      perpetualMarketRefresher.updatePerpetualMarkets({ txId: this.txId }),
-    ]);
+    await perpetualMarketRefresher.updatePerpetualMarkets({ txId: this.txId });
   }
 
   /**

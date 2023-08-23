@@ -2,7 +2,6 @@ package v1_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -384,44 +383,29 @@ func TestOrderToIndexerOrder_Panic(t *testing.T) {
 }
 
 func TestConvertToClobPairStatus(t *testing.T) {
-	tests := []struct {
-		input    clobtypes.ClobPair_Status
-		expected v1.ClobPairStatus
-		panics   bool
-	}{
-		{
-			input:    clobtypes.ClobPair_STATUS_UNSPECIFIED,
-			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_UNSPECIFIED,
-		},
-		{
-			input:    clobtypes.ClobPair_STATUS_ACTIVE,
-			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_ACTIVE,
-		},
-		{
-			input:    clobtypes.ClobPair_STATUS_PAUSED,
-			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_PAUSED,
-		},
-		{
-			input:    clobtypes.ClobPair_STATUS_CANCEL_ONLY,
-			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_CANCEL_ONLY,
-		},
-		{
-			input:    clobtypes.ClobPair_STATUS_POST_ONLY,
-			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_POST_ONLY,
-		},
-		{
-			input:  clobtypes.ClobPair_Status(9999), // some invalid value
-			panics: true,
-		},
+	tests := map[string]struct {
+		status         clobtypes.ClobPair_Status
+		expectedStatus v1.ClobPairStatus
+	}{}
+	// Iterate through all the values for ClobPair_Status to create test cases.
+	for name, value := range clobtypes.ClobPair_Status_value {
+		testName := fmt.Sprintf("Converts ClobPair_Status %s to v1.ClobPairStatus", name)
+		tests[testName] = struct {
+			status         clobtypes.ClobPair_Status
+			expectedStatus v1.ClobPairStatus
+		}{
+			status:         clobtypes.ClobPair_Status(value),
+			expectedStatus: v1.ClobPairStatus(clobtypes.ClobPair_Status_value[name]),
+		}
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.input.String(), func(t *testing.T) {
-			if tt.panics {
-				assert.Panics(t, func() { v1.ConvertToClobPairStatus(tt.input) })
-			} else {
-				assert.Equal(t, tt.expected, v1.ConvertToClobPairStatus(tt.input))
-			}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(
+				t,
+				tc.expectedStatus,
+				v1.ConvertToClobPairStatus(tc.status),
+			)
 		})
 	}
 }
