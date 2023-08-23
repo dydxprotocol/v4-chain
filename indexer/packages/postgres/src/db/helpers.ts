@@ -511,7 +511,7 @@ export function getClobPairsFromGenesis(): ClobPair[] {
         quantumConversionExponent: genesisClobpair.quantum_conversion_exponent,
         // Since the field in the proto is a uint64, this corresponds to a `BigInt` and not `number`
         stepBaseQuantums: Long.fromValue(genesisClobpair.step_base_quantums),
-        minOrderBaseQuantums: Long.fromValue(genesisClobpair.min_order_base_quantums),
+        minOrderBaseQuantums: Long.fromValue(genesisClobpair.step_base_quantums),
         perpetualClobMetadata: {
           perpetualId: genesisClobpair.perpetual_clob_metadata.perpetual_id,
         },
