@@ -1,6 +1,4 @@
 import {
-  liquidityTierRefresher,
-  marketRefresher,
   PerpetualMarketCreateObject,
   perpetualMarketRefresher,
   PerpetualMarketStatus,
