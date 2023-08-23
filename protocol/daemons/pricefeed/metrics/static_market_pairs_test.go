@@ -1,8 +1,9 @@
 package metrics_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -50,5 +51,5 @@ func TestStaticMarketPairs(t *testing.T) {
 }
 
 func TestStaticMarketPairsLength(t *testing.T) {
-	require.Len(t, metrics.StaticMarketPairs, 34)
+	require.Len(t, metrics.StaticMarketPairs, 35)
 }

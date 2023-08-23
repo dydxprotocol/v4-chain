@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -385,6 +386,28 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	// Fetch total quantums to deleverage.
 	deltaQuantumsTotal := matchDeleveraging.GetTotalFilledQuantums()
 
+	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
+	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
+	if !exists {
+		return sdkerrors.Wrapf(
+			types.ErrNoOpenPositionForPerpetual,
+			"Subaccount %+v does not have an open position for perpetual %+v",
+			liquidatedSubaccountId,
+			perpetualId,
+		)
+	}
+	if position.GetIsLong() {
+		deltaQuantumsTotal = deltaQuantumsTotal.Neg(deltaQuantumsTotal)
+	}
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.Deleveraging, metrics.DeltaQuoteQuantums},
+		1,
+		[]gometrics.Label{
+			metrics.GetLabelForBoolValue(metrics.Positive, deltaQuantumsTotal.Sign() > 0),
+		},
+	)
+
 	generatedFills, _ := k.OffsetSubaccountPerpetualPosition(
 		ctx,
 		liquidatedSubaccountId,
@@ -397,8 +420,8 @@ func (k Keeper) PersistMatchDeleveragingToState(
 		return sdkerrors.Wrapf(
 			types.ErrInvalidDeleveragingFills,
 			"Mismatched fill lengths. generated fills: %+v, match deleveraging fills: %+v",
-			fills,
 			generatedFills,
+			fills,
 		)
 	}
 	for idx, originalFill := range fills {
@@ -408,11 +431,11 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				types.ErrInvalidDeleveragingFills,
 				"Mismatched fills. generated fills: %+v, match deleveraging fills: %+v, index %d, "+
 					"generated fill: %+v, match deleveraging fill: %+v",
-				fills,
 				generatedFills,
+				fills,
 				idx,
-				originalFill,
 				generatedFill,
+				originalFill,
 			)
 		}
 	}

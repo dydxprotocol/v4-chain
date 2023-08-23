@@ -6,10 +6,7 @@ export enum ClobPair_Status {
   /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
   STATUS_UNSPECIFIED = 0,
 
-  /**
-   * STATUS_ACTIVE - STATUS_ACTIVE behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
+  /** STATUS_ACTIVE - STATUS_ACTIVE represents an active clob pair. */
   STATUS_ACTIVE = 1,
 
   /**
@@ -29,6 +26,13 @@ export enum ClobPair_Status {
    * TODO(DEC-600): update this documentation.
    */
   STATUS_POST_ONLY = 4,
+
+  /**
+   * STATUS_INITIALIZING - STATUS_INITIALIZING represents a newly-added clob pair.
+   * Clob pairs in this state only accept orders which are
+   * both short-term and post-only.
+   */
+  STATUS_INITIALIZING = 5,
   UNRECOGNIZED = -1,
 }
 /** Status of the CLOB. */
@@ -37,10 +41,7 @@ export enum ClobPair_StatusSDKType {
   /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
   STATUS_UNSPECIFIED = 0,
 
-  /**
-   * STATUS_ACTIVE - STATUS_ACTIVE behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
+  /** STATUS_ACTIVE - STATUS_ACTIVE represents an active clob pair. */
   STATUS_ACTIVE = 1,
 
   /**
@@ -60,6 +61,13 @@ export enum ClobPair_StatusSDKType {
    * TODO(DEC-600): update this documentation.
    */
   STATUS_POST_ONLY = 4,
+
+  /**
+   * STATUS_INITIALIZING - STATUS_INITIALIZING represents a newly-added clob pair.
+   * Clob pairs in this state only accept orders which are
+   * both short-term and post-only.
+   */
+  STATUS_INITIALIZING = 5,
   UNRECOGNIZED = -1,
 }
 export function clobPair_StatusFromJSON(object: any): ClobPair_Status {
@@ -84,6 +92,10 @@ export function clobPair_StatusFromJSON(object: any): ClobPair_Status {
     case "STATUS_POST_ONLY":
       return ClobPair_Status.STATUS_POST_ONLY;
 
+    case 5:
+    case "STATUS_INITIALIZING":
+      return ClobPair_Status.STATUS_INITIALIZING;
+
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -106,6 +118,9 @@ export function clobPair_StatusToJSON(object: ClobPair_Status): string {
 
     case ClobPair_Status.STATUS_POST_ONLY:
       return "STATUS_POST_ONLY";
+
+    case ClobPair_Status.STATUS_INITIALIZING:
+      return "STATUS_INITIALIZING";
 
     case ClobPair_Status.UNRECOGNIZED:
     default:
