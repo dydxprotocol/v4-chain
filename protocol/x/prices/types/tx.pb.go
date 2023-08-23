@@ -6,6 +6,8 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
@@ -27,6 +29,99 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// MsgCreateOracleMarket is a message used by x/gov for creating a new oracle
+// market.
+type MsgCreateOracleMarket struct {
+	// The address that controls the module.
+	Auhority string `protobuf:"bytes,1,opt,name=auhority,proto3" json:"auhority,omitempty"`
+	// `params` defines parameters for the new oracle market.
+	Params *MarketParam `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"`
+}
+
+func (m *MsgCreateOracleMarket) Reset()         { *m = MsgCreateOracleMarket{} }
+func (m *MsgCreateOracleMarket) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateOracleMarket) ProtoMessage()    {}
+func (*MsgCreateOracleMarket) Descriptor() ([]byte, []int) {
+	return fileDescriptor_70ca248e15be37c4, []int{0}
+}
+func (m *MsgCreateOracleMarket) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateOracleMarket) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateOracleMarket.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateOracleMarket) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateOracleMarket.Merge(m, src)
+}
+func (m *MsgCreateOracleMarket) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateOracleMarket) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateOracleMarket.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateOracleMarket proto.InternalMessageInfo
+
+func (m *MsgCreateOracleMarket) GetAuhority() string {
+	if m != nil {
+		return m.Auhority
+	}
+	return ""
+}
+
+func (m *MsgCreateOracleMarket) GetParams() *MarketParam {
+	if m != nil {
+		return m.Params
+	}
+	return nil
+}
+
+// MsgCreateOracleMarketResponse defines the CreateOracleMarket response type.
+type MsgCreateOracleMarketResponse struct {
+}
+
+func (m *MsgCreateOracleMarketResponse) Reset()         { *m = MsgCreateOracleMarketResponse{} }
+func (m *MsgCreateOracleMarketResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateOracleMarketResponse) ProtoMessage()    {}
+func (*MsgCreateOracleMarketResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_70ca248e15be37c4, []int{1}
+}
+func (m *MsgCreateOracleMarketResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateOracleMarketResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateOracleMarketResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateOracleMarketResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateOracleMarketResponse.Merge(m, src)
+}
+func (m *MsgCreateOracleMarketResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateOracleMarketResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateOracleMarketResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateOracleMarketResponse proto.InternalMessageInfo
+
 // MsgUpdateMarketPrices is a request type for the UpdateMarketPrices method.
 type MsgUpdateMarketPrices struct {
 	MarketPriceUpdates []*MsgUpdateMarketPrices_MarketPrice `protobuf:"bytes,1,rep,name=market_price_updates,json=marketPriceUpdates,proto3" json:"market_price_updates,omitempty"`
@@ -36,7 +131,7 @@ func (m *MsgUpdateMarketPrices) Reset()         { *m = MsgUpdateMarketPrices{} }
 func (m *MsgUpdateMarketPrices) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateMarketPrices) ProtoMessage()    {}
 func (*MsgUpdateMarketPrices) Descriptor() ([]byte, []int) {
-	return fileDescriptor_70ca248e15be37c4, []int{0}
+	return fileDescriptor_70ca248e15be37c4, []int{2}
 }
 func (m *MsgUpdateMarketPrices) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -84,7 +179,7 @@ func (m *MsgUpdateMarketPrices_MarketPrice) Reset()         { *m = MsgUpdateMark
 func (m *MsgUpdateMarketPrices_MarketPrice) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateMarketPrices_MarketPrice) ProtoMessage()    {}
 func (*MsgUpdateMarketPrices_MarketPrice) Descriptor() ([]byte, []int) {
-	return fileDescriptor_70ca248e15be37c4, []int{0, 0}
+	return fileDescriptor_70ca248e15be37c4, []int{2, 0}
 }
 func (m *MsgUpdateMarketPrices_MarketPrice) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -136,7 +231,7 @@ func (m *MsgUpdateMarketPricesResponse) Reset()         { *m = MsgUpdateMarketPr
 func (m *MsgUpdateMarketPricesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateMarketPricesResponse) ProtoMessage()    {}
 func (*MsgUpdateMarketPricesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_70ca248e15be37c4, []int{1}
+	return fileDescriptor_70ca248e15be37c4, []int{3}
 }
 func (m *MsgUpdateMarketPricesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -166,6 +261,8 @@ func (m *MsgUpdateMarketPricesResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUpdateMarketPricesResponse proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterType((*MsgCreateOracleMarket)(nil), "dydxprotocol.prices.MsgCreateOracleMarket")
+	proto.RegisterType((*MsgCreateOracleMarketResponse)(nil), "dydxprotocol.prices.MsgCreateOracleMarketResponse")
 	proto.RegisterType((*MsgUpdateMarketPrices)(nil), "dydxprotocol.prices.MsgUpdateMarketPrices")
 	proto.RegisterType((*MsgUpdateMarketPrices_MarketPrice)(nil), "dydxprotocol.prices.MsgUpdateMarketPrices.MarketPrice")
 	proto.RegisterType((*MsgUpdateMarketPricesResponse)(nil), "dydxprotocol.prices.MsgUpdateMarketPricesResponse")
@@ -174,24 +271,34 @@ func init() {
 func init() { proto.RegisterFile("dydxprotocol/prices/tx.proto", fileDescriptor_70ca248e15be37c4) }
 
 var fileDescriptor_70ca248e15be37c4 = []byte{
-	// 266 bytes of a gzipped FileDescriptorProto
+	// 424 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x49, 0xa9, 0x4c, 0xa9,
 	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x2f, 0x28, 0xca, 0x4c, 0x4e, 0x2d, 0xd6,
-	0x2f, 0xa9, 0xd0, 0x03, 0x0b, 0x09, 0x09, 0x23, 0xcb, 0xea, 0x41, 0x64, 0x95, 0x0e, 0x33, 0x72,
-	0x89, 0xfa, 0x16, 0xa7, 0x87, 0x16, 0xa4, 0x24, 0x96, 0xa4, 0xfa, 0x26, 0x16, 0x65, 0xa7, 0x96,
-	0x04, 0x80, 0x65, 0x84, 0x32, 0xb8, 0x44, 0x72, 0xc1, 0xfc, 0x78, 0xb0, 0xd2, 0xf8, 0x52, 0xb0,
-	0x92, 0x62, 0x09, 0x46, 0x05, 0x66, 0x0d, 0x6e, 0x23, 0x33, 0x3d, 0x2c, 0xa6, 0xe9, 0x61, 0x35,
-	0x49, 0x0f, 0x89, 0x13, 0x24, 0x94, 0x8b, 0xe0, 0x40, 0x94, 0x16, 0x4b, 0x39, 0x70, 0x71, 0x23,
-	0x29, 0x11, 0x92, 0xe6, 0xe2, 0x84, 0x5a, 0x9c, 0x99, 0x22, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x1b,
-	0xc4, 0x01, 0x11, 0xf0, 0x4c, 0x11, 0x12, 0xe1, 0x62, 0x05, 0xdb, 0x25, 0xc1, 0xa4, 0xc0, 0xa8,
-	0xc1, 0x12, 0x04, 0xe1, 0x28, 0xc9, 0x73, 0xc9, 0x62, 0xb5, 0x3a, 0x28, 0xb5, 0xb8, 0x20, 0x3f,
-	0xaf, 0x38, 0xd5, 0xa8, 0x9a, 0x8b, 0xd9, 0xb7, 0x38, 0x5d, 0xa8, 0x84, 0x4b, 0x08, 0x8b, 0x4f,
-	0xb5, 0x88, 0xf7, 0x8b, 0x94, 0x11, 0xf1, 0x6a, 0x61, 0x96, 0x3b, 0x05, 0x9d, 0x78, 0x24, 0xc7,
-	0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c,
-	0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x45, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72,
-	0x7e, 0xae, 0x3e, 0x4a, 0xdc, 0x95, 0x99, 0xe8, 0x26, 0x67, 0x24, 0x66, 0xe6, 0xe9, 0xc3, 0x45,
-	0x2a, 0xe0, 0xf1, 0x59, 0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0x96, 0x30, 0x06, 0x04, 0x00, 0x00,
-	0xff, 0xff, 0x1d, 0xad, 0xa8, 0xea, 0xf3, 0x01, 0x00, 0x00,
+	0x2f, 0xa9, 0xd0, 0x03, 0x0b, 0x09, 0x09, 0x23, 0xcb, 0xea, 0x41, 0x64, 0xa5, 0x24, 0x93, 0xf3,
+	0x8b, 0x73, 0xf3, 0x8b, 0xe3, 0xc1, 0xe2, 0xfa, 0x10, 0x0e, 0x44, 0xbd, 0x94, 0x38, 0x84, 0xa7,
+	0x9f, 0x5b, 0x9c, 0xae, 0x5f, 0x66, 0x08, 0xa2, 0xa0, 0x12, 0x6a, 0xd8, 0xac, 0xc9, 0x4d, 0x2c,
+	0xca, 0x4e, 0x2d, 0x89, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x85, 0xa8, 0x53, 0x9a, 0xce, 0xc8, 0x25,
+	0xea, 0x5b, 0x9c, 0xee, 0x5c, 0x94, 0x9a, 0x58, 0x92, 0xea, 0x5f, 0x94, 0x98, 0x9c, 0x93, 0xea,
+	0x0b, 0x56, 0x25, 0x64, 0xc2, 0xc5, 0x91, 0x58, 0x9a, 0x91, 0x5f, 0x94, 0x59, 0x52, 0x29, 0xc1,
+	0xa8, 0xc0, 0xa8, 0xc1, 0xe9, 0x24, 0x71, 0x69, 0x8b, 0xae, 0x08, 0xd4, 0x7a, 0xc7, 0x94, 0x94,
+	0xa2, 0xd4, 0xe2, 0xe2, 0xe0, 0x92, 0xa2, 0xcc, 0xbc, 0xf4, 0x20, 0xb8, 0x4a, 0x21, 0x0b, 0x2e,
+	0x36, 0xb0, 0xf1, 0xc5, 0x12, 0x4c, 0x0a, 0x8c, 0x1a, 0xdc, 0x46, 0x0a, 0x7a, 0x58, 0x7c, 0xa4,
+	0x07, 0xb1, 0x22, 0x00, 0xa4, 0x30, 0x08, 0xaa, 0xde, 0x8a, 0xaf, 0xe9, 0xf9, 0x06, 0x2d, 0xce,
+	0xc4, 0xd2, 0x12, 0x88, 0x49, 0x4a, 0xf2, 0x5c, 0xb2, 0x58, 0x1d, 0x16, 0x94, 0x5a, 0x5c, 0x90,
+	0x9f, 0x57, 0x9c, 0xaa, 0x74, 0x18, 0xe2, 0xf4, 0xd0, 0x82, 0x94, 0xc4, 0x12, 0xa8, 0x5c, 0x00,
+	0xd8, 0x78, 0xa1, 0x0c, 0x2e, 0x11, 0x98, 0x57, 0x41, 0x02, 0xf1, 0xa5, 0x60, 0x25, 0xc5, 0x12,
+	0x8c, 0x0a, 0xcc, 0x1a, 0xdc, 0x46, 0x66, 0xd8, 0x9d, 0x84, 0xcd, 0x24, 0x3d, 0x24, 0x4e, 0x90,
+	0x50, 0x2e, 0x82, 0x03, 0x51, 0x5a, 0x2c, 0xe5, 0xc0, 0xc5, 0x8d, 0xa4, 0x44, 0x48, 0x9a, 0x8b,
+	0x13, 0x6a, 0x71, 0x66, 0x0a, 0x38, 0xd0, 0x78, 0x83, 0x38, 0x20, 0x02, 0x9e, 0x29, 0x42, 0x22,
+	0x5c, 0xac, 0x60, 0xbb, 0xc0, 0x21, 0xc3, 0x12, 0x04, 0xe1, 0x40, 0xbd, 0x89, 0x69, 0x35, 0xcc,
+	0x9b, 0x46, 0x1f, 0x19, 0xb9, 0x98, 0x7d, 0x8b, 0xd3, 0x85, 0x4a, 0xb8, 0x84, 0xb0, 0x78, 0x55,
+	0x8b, 0x78, 0xcf, 0x48, 0x19, 0x11, 0xaf, 0x16, 0x66, 0x3b, 0xc8, 0x56, 0x2c, 0x69, 0x03, 0xa7,
+	0xad, 0x98, 0x6a, 0x71, 0xdb, 0x8a, 0x3b, 0x6a, 0x9d, 0x82, 0x4e, 0x3c, 0x92, 0x63, 0xbc, 0xf0,
+	0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8,
+	0xf1, 0x58, 0x8e, 0x21, 0xca, 0x22, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57,
+	0x1f, 0x25, 0x89, 0x97, 0x99, 0xe8, 0x26, 0x67, 0x24, 0x66, 0xe6, 0xe9, 0xc3, 0x45, 0x2a, 0xe0,
+	0xb9, 0xab, 0xb2, 0x20, 0xb5, 0x38, 0x89, 0x0d, 0x2c, 0x61, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff,
+	0x62, 0xf9, 0xfc, 0x77, 0x81, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -209,6 +316,8 @@ type MsgClient interface {
 	// UpdateMarketPrices updates the oracle price of a market relative to
 	// quoteCurrency.
 	UpdateMarketPrices(ctx context.Context, in *MsgUpdateMarketPrices, opts ...grpc.CallOption) (*MsgUpdateMarketPricesResponse, error)
+	// CreateOracleMarket creates a new oracle market.
+	CreateOracleMarket(ctx context.Context, in *MsgCreateOracleMarket, opts ...grpc.CallOption) (*MsgCreateOracleMarketResponse, error)
 }
 
 type msgClient struct {
@@ -228,11 +337,22 @@ func (c *msgClient) UpdateMarketPrices(ctx context.Context, in *MsgUpdateMarketP
 	return out, nil
 }
 
+func (c *msgClient) CreateOracleMarket(ctx context.Context, in *MsgCreateOracleMarket, opts ...grpc.CallOption) (*MsgCreateOracleMarketResponse, error) {
+	out := new(MsgCreateOracleMarketResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.prices.Msg/CreateOracleMarket", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateMarketPrices updates the oracle price of a market relative to
 	// quoteCurrency.
 	UpdateMarketPrices(context.Context, *MsgUpdateMarketPrices) (*MsgUpdateMarketPricesResponse, error)
+	// CreateOracleMarket creates a new oracle market.
+	CreateOracleMarket(context.Context, *MsgCreateOracleMarket) (*MsgCreateOracleMarketResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -241,6 +361,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) UpdateMarketPrices(ctx context.Context, req *MsgUpdateMarketPrices) (*MsgUpdateMarketPricesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMarketPrices not implemented")
+}
+func (*UnimplementedMsgServer) CreateOracleMarket(ctx context.Context, req *MsgCreateOracleMarket) (*MsgCreateOracleMarketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOracleMarket not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -265,6 +388,24 @@ func _Msg_UpdateMarketPrices_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateOracleMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateOracleMarket)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateOracleMarket(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.prices.Msg/CreateOracleMarket",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateOracleMarket(ctx, req.(*MsgCreateOracleMarket))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.prices.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -273,9 +414,78 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			MethodName: "UpdateMarketPrices",
 			Handler:    _Msg_UpdateMarketPrices_Handler,
 		},
+		{
+			MethodName: "CreateOracleMarket",
+			Handler:    _Msg_CreateOracleMarket_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "dydxprotocol/prices/tx.proto",
+}
+
+func (m *MsgCreateOracleMarket) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateOracleMarket) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateOracleMarket) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Params != nil {
+		{
+			size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Auhority) > 0 {
+		i -= len(m.Auhority)
+		copy(dAtA[i:], m.Auhority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Auhority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateOracleMarketResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateOracleMarketResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateOracleMarketResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *MsgUpdateMarketPrices) Marshal() (dAtA []byte, err error) {
@@ -382,6 +592,32 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgCreateOracleMarket) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Auhority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Params != nil {
+		l = m.Params.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCreateOracleMarketResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgUpdateMarketPrices) Size() (n int) {
 	if m == nil {
 		return 0
@@ -426,6 +662,174 @@ func sovTx(x uint64) (n int) {
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgCreateOracleMarket) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateOracleMarket: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateOracleMarket: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Auhority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Auhority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Params == nil {
+				m.Params = &MarketParam{}
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateOracleMarketResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateOracleMarketResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateOracleMarketResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MsgUpdateMarketPrices) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
