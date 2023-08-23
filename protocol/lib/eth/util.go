@@ -15,6 +15,8 @@ import (
 
 var bridgeEventAbi *ethabi.ABI
 
+const maxAddressBytes = 32
+
 // getBridgeEventAbi returns the ABI (application binary interface) for the Bridge contract.
 func getBridgeEventAbi() *ethabi.ABI {
 	// Initialize the singleton if it does not exist.
@@ -28,7 +30,13 @@ func getBridgeEventAbi() *ethabi.ABI {
 	return bridgeEventAbi
 }
 
-// BridgeLogToEvent converts an Ethereum log from Bridge contract to a BridgeEvent.
+/*
+BridgeLogToEvent converts an Ethereum log from Bridge contract to a BridgeEvent.
+Note: The format of a dYdX address is [prefix][separator][address][checksum], where `prefix` is `dydx`,
+`separator` is `1`, `address` is the actual address portion, and `checksum` occupies last 6 characters.
+An address in Ethereum logs is in hexadecimal format and in Cosmos bech32 format. For example, a
+20-byte address in hexadecimal format is 20*8=160 bits, which is 160/5=32 bech32 characters.
+*/
 func BridgeLogToEvent(
 	log ethcoretypes.Log,
 	denom string,
@@ -42,7 +50,11 @@ func BridgeLogToEvent(
 		panic(err)
 	}
 	amount := bridgeEventData[0].(*big.Int)
-	address := bridgeEventData[2].([]byte) // TODO: take the first 32 bytes of the address if the length is longer than that
+	address := bridgeEventData[2].([]byte)
+	// Truncate address to `maxAddressBytes` if it's longer than that.
+	if len(address) > maxAddressBytes {
+		address = address[:maxAddressBytes]
+	}
 
 	// Unused daemon fields.
 	// bridgeEventData[1] is the Ethereum address that sent the tokens
