@@ -77,12 +77,12 @@ func TestDelayMessage(t *testing.T) {
 		"Panics if message does not decode": {
 			setupMocks:  setupMockWithDecodeFailure,
 			msg:         ValidDelayMsg,
-			expectedErr: fmt.Errorf("UnmarshalInterface for DelayedMessage failed, err = %v", TestError),
+			expectedErr: fmt.Errorf("UnmarshalInterface for DelayedMessage failed, err = %w", TestError),
 		},
 		"Panics if DelayMessageByBlocks returns an error": {
 			setupMocks:  setupMockWithDelayMessageFailure,
 			msg:         ValidDelayMsg,
-			expectedErr: fmt.Errorf("DelayMessageByBlocks failed, err  = %v", TestError),
+			expectedErr: fmt.Errorf("DelayMessageByBlocks failed, err  = %w", TestError),
 		},
 	}
 	for name, tc := range tests {
@@ -98,7 +98,7 @@ func TestDelayMessage(t *testing.T) {
 					t,
 					tc.expectedErr.Error(),
 					func() {
-						msgServer.DelayMessage(goCtx, tc.msg)
+						_, _ = msgServer.DelayMessage(goCtx, tc.msg)
 					},
 				)
 			} else {

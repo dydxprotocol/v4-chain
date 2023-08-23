@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -42,17 +41,17 @@ func DelayMsgKeepers(
 		registry := encCfg.InterfaceRegistry
 
 		router := baseapp.NewMsgServiceRouter()
-		router.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-
-		encCfg.InterfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+		router.SetInterfaceRegistry(registry)
 
 		// Register bridge messages for encoding / decoding.
-		bridgetypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+		bridgetypes.RegisterInterfaces(registry)
 
 		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
 		bridgeKeeper, _, _, _ =
 			createBridgeKeeper(stateStore, db, cdc, transientStoreKey, bankKeeper)
+
+		// Register bridge keeper msg server for msg routing.
 		bridgetypes.RegisterMsgServer(router, bridgekeeper.NewMsgServerImpl(bridgeKeeper))
 
 		authorities = []string{
