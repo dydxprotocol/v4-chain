@@ -41,13 +41,6 @@ function edit_genesis() {
 		EXCHANGE_CONFIG_JSON_DIR="exchange_config"
 	fi
 
-	# Parameter for adding testing markets. Defaults to false.
-	ADD_TESTING_MARKETS=false
-	if [ "$5" = "true" ]; then
-		ADD_TESTING_MARKETS=true
-	fi
-
-
 	# Update crisis module.
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
 
@@ -408,17 +401,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].atomic_resolution' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].default_funding_ppm' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].liquidity_tier' -v '1'
-
-	# Perpetual: TEST-USD
-	if $ADD_TESTING_MARKETS; then
-		dasel put -t json -f "$GENESIS" '.app_state.perpetuals.perpetuals.[]' -v "{}"
-		dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].ticker' -v 'TEST-USD'
-		dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].id' -v '33'
-		dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].market_id' -v '33'
-		dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].atomic_resolution' -v '-10'
-		dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].default_funding_ppm' -v '0'
-		dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].liquidity_tier' -v '0'
-	fi
 
 	# Update prices module.
 	# Market: BTC-USD
@@ -934,23 +916,6 @@ function edit_genesis() {
 	usdt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/usdt_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].exchange_config_json' -v "$usdt_exchange_config_json"
 
-	# Market: TEST-USD
-	if $ADD_TESTING_MARKETS; then
-		dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
-		dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].pair' -v 'TEST-USD'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].id' -v '33'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].exponent' -v '-5'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_exchanges' -v '1'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_price_change_ppm' -v '250' # 0.025%
-		dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].id' -v '33'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].exponent' -v '-5'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].price' -v '10000000'          # $100 = 1 TEST.
-		# TEST Exchange Config
-		test_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/test_exchange_config.json" | jq -c '.')
-		dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$test_exchange_config_json"
-	fi
-
 	total_accounts_quote_balance=0
 	acct_idx=0
 	# Update subaccounts module for load testing accounts.
@@ -1294,18 +1259,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].subticks_per_tick' -v '10000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].quantum_conversion_exponent' -v '-8'
 
-	# Clob: TEST-USD
-	if $ADD_TESTING_MARKETS; then
-		dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
-		dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].id' -v '33'
-		dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[33].status' -v 'STATUS_ACTIVE'
-		dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].perpetual_clob_metadata.perpetual_id' -v '33'
-		dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].step_base_quantums' -v '1000000'
-		dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].subticks_per_tick' -v '10000'
-		dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].min_order_base_quantums' -v '10000000'
-		dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].quantum_conversion_exponent' -v '-8'
-	fi
-
 	# Liquidations
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.max_liquidation_fee_ppm' -v '5000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.fillable_price_config.bankruptcy_adjustment_ppm' -v '1000000'
@@ -1454,4 +1407,46 @@ function update_genesis_use_test_exchange() {
 	do
 			dasel put -t string -f "$GENESIS" ".app_state.prices.market_params.[$market_idx].exchange_config_json" -v "$link_exchange_config_json"
 	done
+}
+
+# Modify the genesis file to add test volatile market. Market TEST-USD will be added as market 33.
+function update_genesis_use_test_volatile_market() {
+	GENESIS=$1/genesis.json
+
+	# Market: TEST-USD
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.last().pair' -v 'TEST-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().id' -v '33'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().exponent' -v '-5'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().min_exchanges' -v '1'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().min_price_change_ppm' -v '250' # 0.025%
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().id' -v '33'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().exponent' -v '-5'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().price' -v '10000000'          # $100 = 1 TEST.
+	# TEST Exchange Config
+	test_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/test_exchange_config.json" | jq -c '.')
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.last().exchange_config_json' -v "$test_exchange_config_json"
+
+
+	# Perpetual: TEST-USD
+	NUM_PERPETUALS=$(jq -c '.app_state.perpetuals.perpetuals | length' < ${GENESIS})
+	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.perpetuals.[]' -v "{}"
+	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().ticker' -v 'TEST-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().id' -v "${NUM_PERPETUALS}"
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().market_id' -v '33'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().atomic_resolution' -v '-10'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().liquidity_tier' -v '0'
+
+	# Clob: TEST-USD
+	NUM_CLOB_PAIRS=$(jq -c '.app_state.clob.clob_pairs | length' < ${GENESIS})
+	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].id' -v "${NUM_CLOB_PAIRS}"
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[33].status' -v 'STATUS_ACTIVE'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].perpetual_clob_metadata.perpetual_id' -v "${NUM_PERPETUALS}"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].step_base_quantums' -v '1000000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].subticks_per_tick' -v '10000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].min_order_base_quantums' -v '10000000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].quantum_conversion_exponent' -v '-8'
 }
