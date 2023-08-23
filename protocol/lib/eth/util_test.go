@@ -40,7 +40,8 @@ func TestBridgeLogToEvent(t *testing.T) {
 					"test-token",
 					sdk.NewInt(55),
 				),
-				Address:        "",
+				// address shorter than 20 bytes is padded with zeros.
+				Address:        "dydx1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq66wm82",
 				EthBlockHeight: 3969937,
 			},
 		},
@@ -82,7 +83,8 @@ func TestBridgeLogToEvent(t *testing.T) {
 					"dv4tnt",
 					sdk.NewInt(1234123443214321),
 				),
-				Address:        "dydx1zg6pydqhy4yy9",
+				// address shorter than 20 bytes is padded with zeros.
+				Address:        "dydx1zg6pydqqqqqqqqqqqqqqqqqqqqqqqqqqm0r5ra",
 				EthBlockHeight: 4139349,
 			},
 		},

@@ -15,7 +15,10 @@ import (
 
 var bridgeEventAbi *ethabi.ABI
 
-const maxAddressBytes = 32
+const (
+	MIN_ADDRESS_BYTES = 20
+	MAX_ADDRESS_BYTES = 32
+)
 
 // getBridgeEventAbi returns the ABI (application binary interface) for the Bridge contract.
 func getBridgeEventAbi() *ethabi.ABI {
@@ -28,6 +31,17 @@ func getBridgeEventAbi() *ethabi.ABI {
 		bridgeEventAbi = &bridgeAbi
 	}
 	return bridgeEventAbi
+}
+
+// padOrTruncateAddress pads an address with zeros if it's shorter than `MIN_ADDRESS_BYTES` or
+// truncates it if it's longer than `MAX_ADDRESS_BYTES`.
+func padOrTruncateAddress(address []byte) []byte {
+	if len(address) > MAX_ADDRESS_BYTES {
+		return address[:MAX_ADDRESS_BYTES]
+	} else if len(address) < MIN_ADDRESS_BYTES {
+		return append(address, make([]byte, MIN_ADDRESS_BYTES-len(address))...)
+	}
+	return address
 }
 
 /*
@@ -50,11 +64,7 @@ func BridgeLogToEvent(
 		panic(err)
 	}
 	amount := bridgeEventData[0].(*big.Int)
-	address := bridgeEventData[2].([]byte)
-	// Truncate address to `maxAddressBytes` if it's longer than that.
-	if len(address) > maxAddressBytes {
-		address = address[:maxAddressBytes]
-	}
+	address := padOrTruncateAddress(bridgeEventData[2].([]byte))
 
 	// Unused daemon fields.
 	// bridgeEventData[1] is the Ethereum address that sent the tokens
