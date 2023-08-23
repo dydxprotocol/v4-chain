@@ -300,6 +300,13 @@ export enum ClobPairStatus {
    * TODO(DEC-600): update this documentation.
    */
   CLOB_PAIR_STATUS_POST_ONLY = 4,
+
+  /**
+   * CLOB_PAIR_STATUS_INITIALIZING - CLOB_PAIR_STATUS_INITIALIZING represents a newly-added clob pair.
+   * Clob pairs in this state only accept orders which are
+   * both short-term and post-only.
+   */
+  CLOB_PAIR_STATUS_INITIALIZING = 5,
   UNRECOGNIZED = -1,
 }
 /**
@@ -334,6 +341,13 @@ export enum ClobPairStatusSDKType {
    * TODO(DEC-600): update this documentation.
    */
   CLOB_PAIR_STATUS_POST_ONLY = 4,
+
+  /**
+   * CLOB_PAIR_STATUS_INITIALIZING - CLOB_PAIR_STATUS_INITIALIZING represents a newly-added clob pair.
+   * Clob pairs in this state only accept orders which are
+   * both short-term and post-only.
+   */
+  CLOB_PAIR_STATUS_INITIALIZING = 5,
   UNRECOGNIZED = -1,
 }
 export function clobPairStatusFromJSON(object: any): ClobPairStatus {
@@ -358,6 +372,10 @@ export function clobPairStatusFromJSON(object: any): ClobPairStatus {
     case "CLOB_PAIR_STATUS_POST_ONLY":
       return ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY;
 
+    case 5:
+    case "CLOB_PAIR_STATUS_INITIALIZING":
+      return ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING;
+
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -380,6 +398,9 @@ export function clobPairStatusToJSON(object: ClobPairStatus): string {
 
     case ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY:
       return "CLOB_PAIR_STATUS_POST_ONLY";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING:
+      return "CLOB_PAIR_STATUS_INITIALIZING";
 
     case ClobPairStatus.UNRECOGNIZED:
     default:
