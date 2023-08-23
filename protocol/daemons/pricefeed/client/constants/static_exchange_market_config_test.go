@@ -1091,12 +1091,12 @@ func TestStaticExchangeMarketConfigCache(t *testing.T) {
 }
 
 func TestStaticExchangeMarketConfigCacheLen(t *testing.T) {
-	require.Len(t, StaticExchangeMarketConfig, 14)
+	require.Len(t, StaticExchangeMarketConfig, 15)
 }
 
 func TestGenerateExchangeConfigJsonLength(t *testing.T) {
 	configs := GenerateExchangeConfigJson(StaticExchangeMarketConfig)
-	require.Len(t, configs, 34)
+	require.Len(t, configs, 35)
 }
 
 func TestGenerateExchangeConfigJson(t *testing.T) {

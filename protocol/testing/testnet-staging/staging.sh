@@ -188,7 +188,8 @@ create_validators() {
 		# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 		# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
 		# Note: `edit_genesis` must be called before `add-genesis-account`.
-		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}"
+		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" ""
+		update_genesis_use_test_volatile_market "$VAL_CONFIG_DIR"
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
 			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,100000000000$NATIVE_TOKEN --home "$VAL_HOME_DIR"
