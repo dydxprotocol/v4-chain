@@ -131,21 +131,35 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 
 	// TODO(CLOB-820): Debug why equity tier count is less than 0.
 	if equityTierCount < 0 {
-		k.Logger(ctx).Info(
-			"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order to be >= 0.",
-			"order",
-			fmt.Sprintf("%+v", order),
-			"deliverTx",
-			lib.IsDeliverTxMode(ctx),
-			"equityTierCount",
-			equityTierCount,
-			"memClobCount",
-			k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter),
-			"toBeCommittedCount",
-			k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId),
-			"uncommittedCount",
-			k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
-		)
+		if lib.IsDeliverTxMode(ctx) {
+			k.Logger(ctx).Info(
+				"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order to be >= 0.",
+				"order",
+				fmt.Sprintf("%+v", order),
+				"deliverTx",
+				lib.IsDeliverTxMode(ctx),
+				"equityTierCount",
+				equityTierCount,
+				"memClobCount",
+				k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter),
+				"toBeCommittedCount",
+				k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId),
+			)
+		} else {
+			k.Logger(ctx).Info(
+				"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order to be >= 0.",
+				"order",
+				fmt.Sprintf("%+v", order),
+				"deliverTx",
+				lib.IsDeliverTxMode(ctx),
+				"equityTierCount",
+				equityTierCount,
+				"memClobCount",
+				k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter),
+				"uncommittedCount",
+				k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
+			)
+		}
 	}
 
 	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.

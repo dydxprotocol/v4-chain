@@ -44,6 +44,8 @@ func GetOrderRemovalReason(
 		return OrderRemovalReason_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER, nil
 	case errors.Is(orderError, clobtypes.ErrFokOrderCouldNotBeFullyFilled):
 		return OrderRemovalReason_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED, nil
+	case errors.Is(orderError, clobtypes.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit):
+		return OrderRemovalReason_ORDER_REMOVAL_REASON_EQUITY_TIER, nil
 	}
 
 	switch orderStatus {
