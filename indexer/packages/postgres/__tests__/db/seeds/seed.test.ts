@@ -50,7 +50,7 @@ describe('seed', () => {
       { readReplica: true },
     );
 
-    expect(perpetualMarkets).toHaveLength(33);
+    expect(perpetualMarkets).toHaveLength(34);
     perpetualMarkets.forEach((perpetualMarket: PerpetualMarketFromDatabase, index: number) => {
       expectPerpetualMarket(
         perpetualMarket,
@@ -65,7 +65,7 @@ describe('seed', () => {
       { readReplica: true },
     );
 
-    expect(markets).toHaveLength(33);
+    expect(markets).toHaveLength(34);
     markets.forEach((marketFromDb: MarketFromDatabase, index: number) => {
       expectMarketParamAndPrice(
         marketFromDb,
@@ -117,13 +117,13 @@ describe('seed', () => {
       { readReplica: true },
     );
 
-    expect(perpetualMarkets).toHaveLength(33);
+    expect(perpetualMarkets).toHaveLength(34);
 
     const markets: MarketFromDatabase[] = await MarketTable.findAll(
       {},
       [],
       { readReplica: true },
     );
-    expect(markets).toHaveLength(33);
+    expect(markets).toHaveLength(34);
   });
 });
