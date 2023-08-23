@@ -1246,7 +1246,27 @@ func TestProcessProposerOperations(t *testing.T) {
 			}
 
 			// Create all CLOBs.
-			for _, clobPair := range tc.clobPairs {
+			for i, clobPair := range tc.clobPairs {
+				perpetualId := clobtest.MustPerpetualId(clobPair)
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							perpetualId,
+							uint32(i),
+							tc.perpetuals[perpetualId].Ticker,
+							tc.perpetuals[perpetualId].MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							tc.perpetuals[perpetualId].AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.MinOrderBaseQuantums,
+							clobPair.StepBaseQuantums,
+							tc.perpetuals[perpetualId].LiquidityTier,
+						),
+					),
+				).Once().Return()
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),

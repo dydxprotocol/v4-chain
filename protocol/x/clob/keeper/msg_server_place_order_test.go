@@ -106,6 +106,25 @@ func TestPlaceOrder_Error(t *testing.T) {
 
 			// Create ClobPair.
 			clobPair := constants.ClobPair_Btc
+			indexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						clobtest.MustPerpetualId(clobPair),
+						ks.ClobKeeper.GetNumClobPairs(ks.Ctx),
+						perpetual.Ticker,
+						perpetual.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						perpetual.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.MinOrderBaseQuantums,
+						clobPair.StepBaseQuantums,
+						perpetual.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(clobPair),
@@ -219,6 +238,25 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			// Create ClobPair.
 			clobPair := constants.ClobPair_Btc
+			indexerEventManager.On("AddTxnEvent",
+				ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						perpetual.Ticker,
+						perpetual.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						perpetual.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.MinOrderBaseQuantums,
+						clobPair.StepBaseQuantums,
+						perpetual.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(clobPair),
