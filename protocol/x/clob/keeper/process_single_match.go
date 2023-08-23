@@ -45,7 +45,7 @@ func (k Keeper) ProcessSingleMatch(
 ) {
 	if matchWithOrders.TakerOrder.IsLiquidation() {
 		defer func() {
-			if !takerUpdateResult.IsSuccess() {
+			if err == nil && !takerUpdateResult.IsSuccess() {
 				takerSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, matchWithOrders.TakerOrder.GetSubaccountId())
 				takerTnc, takerIMR, takerMMR, _ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 					ctx,
@@ -61,7 +61,6 @@ func (k Keeper) ProcessSingleMatch(
 					"makerOrder", fmt.Sprintf("%+v", matchWithOrders.MakerOrder),
 					"fillAmount", matchWithOrders.FillAmount,
 					"result", takerUpdateResult,
-					"error", err,
 				)
 			}
 		}()
