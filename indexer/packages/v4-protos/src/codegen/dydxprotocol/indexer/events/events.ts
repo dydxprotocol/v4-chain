@@ -857,6 +857,7 @@ export interface PerpetualMarketCreateEventV1SDKType {
   liquidity_tier: number;
 }
 /**
+<<<<<<< HEAD
  * LiquidityTierUpsertEventV1 message contains all the information to
  * create/update a Liquidity Tier on the v4 chain.
  */
@@ -917,6 +918,170 @@ export interface LiquidityTierUpsertEventV1SDKType {
    */
 
   base_position_notional: Long;
+=======
+ * UpdateClobPairEventV1 message contains all the information about an update to
+ * a clob pair on the v4 chain.
+ */
+
+export interface UpdateClobPairEventV1 {
+  /**
+   * Unique clob pair Id associated with this perpetual market
+   * Defined in clob.clob_pair
+   */
+  clobPairId: number;
+  /** Status of the CLOB */
+
+  status: ClobPairStatus;
+  /**
+   * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+   * per Subtick.
+   * Defined in clob.clob_pair
+   */
+
+  quantumConversionExponent: number;
+  /**
+   * Defines the tick size of the orderbook by defining how many subticks
+   * are in one tick. That is, the subticks of any valid order must be a
+   * multiple of this value. Generally this value should start `>= 100`to
+   * allow room for decreasing it.
+   * Defined in clob.clob_pair
+   */
+
+  subticksPerTick: number;
+  /**
+   * Minimum size of an order on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  minOrderBaseQuantums: Long;
+  /**
+   * Minimum increment in the size of orders on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  stepBaseQuantums: Long;
+}
+/**
+ * UpdateClobPairEventV1 message contains all the information about an update to
+ * a clob pair on the v4 chain.
+ */
+
+export interface UpdateClobPairEventV1SDKType {
+  /**
+   * Unique clob pair Id associated with this perpetual market
+   * Defined in clob.clob_pair
+   */
+  clob_pair_id: number;
+  /** Status of the CLOB */
+
+  status: ClobPairStatusSDKType;
+  /**
+   * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+   * per Subtick.
+   * Defined in clob.clob_pair
+   */
+
+  quantum_conversion_exponent: number;
+  /**
+   * Defines the tick size of the orderbook by defining how many subticks
+   * are in one tick. That is, the subticks of any valid order must be a
+   * multiple of this value. Generally this value should start `>= 100`to
+   * allow room for decreasing it.
+   * Defined in clob.clob_pair
+   */
+
+  subticks_per_tick: number;
+  /**
+   * Minimum size of an order on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  min_order_base_quantums: Long;
+  /**
+   * Minimum increment in the size of orders on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  step_base_quantums: Long;
+}
+/**
+ * UpdatePerpetualEventV1 message contains all the information about an update
+ * to a perpetual on the v4 chain.
+ */
+
+export interface UpdatePerpetualEventV1 {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  marketId: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomicResolution: number;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidityTier: number;
+}
+/**
+ * UpdatePerpetualEventV1 message contains all the information about an update
+ * to a perpetual on the v4 chain.
+ */
+
+export interface UpdatePerpetualEventV1SDKType {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  market_id: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomic_resolution: number;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidity_tier: number;
+>>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
 }
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
@@ -2289,6 +2454,7 @@ export const PerpetualMarketCreateEventV1 = {
 
 };
 
+<<<<<<< HEAD
 function createBaseLiquidityTierUpsertEventV1(): LiquidityTierUpsertEventV1 {
   return {
     id: 0,
@@ -2319,21 +2485,66 @@ export const LiquidityTierUpsertEventV1 = {
 
     if (!message.basePositionNotional.isZero()) {
       writer.uint32(40).uint64(message.basePositionNotional);
+=======
+function createBaseUpdateClobPairEventV1(): UpdateClobPairEventV1 {
+  return {
+    clobPairId: 0,
+    status: 0,
+    quantumConversionExponent: 0,
+    subticksPerTick: 0,
+    minOrderBaseQuantums: Long.UZERO,
+    stepBaseQuantums: Long.UZERO
+  };
+}
+
+export const UpdateClobPairEventV1 = {
+  encode(message: UpdateClobPairEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.clobPairId !== 0) {
+      writer.uint32(8).uint32(message.clobPairId);
+    }
+
+    if (message.status !== 0) {
+      writer.uint32(16).int32(message.status);
+    }
+
+    if (message.quantumConversionExponent !== 0) {
+      writer.uint32(24).sint32(message.quantumConversionExponent);
+    }
+
+    if (message.subticksPerTick !== 0) {
+      writer.uint32(32).uint32(message.subticksPerTick);
+    }
+
+    if (!message.minOrderBaseQuantums.isZero()) {
+      writer.uint32(40).uint64(message.minOrderBaseQuantums);
+    }
+
+    if (!message.stepBaseQuantums.isZero()) {
+      writer.uint32(48).uint64(message.stepBaseQuantums);
+>>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
     }
 
     return writer;
   },
 
+<<<<<<< HEAD
   decode(input: _m0.Reader | Uint8Array, length?: number): LiquidityTierUpsertEventV1 {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseLiquidityTierUpsertEventV1();
+=======
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdateClobPairEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateClobPairEventV1();
+>>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
+<<<<<<< HEAD
           message.id = reader.uint32();
           break;
 
@@ -2351,6 +2562,29 @@ export const LiquidityTierUpsertEventV1 = {
 
         case 5:
           message.basePositionNotional = (reader.uint64() as Long);
+=======
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 2:
+          message.status = (reader.int32() as any);
+          break;
+
+        case 3:
+          message.quantumConversionExponent = reader.sint32();
+          break;
+
+        case 4:
+          message.subticksPerTick = reader.uint32();
+          break;
+
+        case 5:
+          message.minOrderBaseQuantums = (reader.uint64() as Long);
+          break;
+
+        case 6:
+          message.stepBaseQuantums = (reader.uint64() as Long);
+>>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
           break;
 
         default:
@@ -2362,6 +2596,7 @@ export const LiquidityTierUpsertEventV1 = {
     return message;
   },
 
+<<<<<<< HEAD
   fromPartial(object: DeepPartial<LiquidityTierUpsertEventV1>): LiquidityTierUpsertEventV1 {
     const message = createBaseLiquidityTierUpsertEventV1();
     message.id = object.id ?? 0;
@@ -2369,6 +2604,101 @@ export const LiquidityTierUpsertEventV1 = {
     message.initialMarginPpm = object.initialMarginPpm ?? 0;
     message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
     message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
+=======
+  fromPartial(object: DeepPartial<UpdateClobPairEventV1>): UpdateClobPairEventV1 {
+    const message = createBaseUpdateClobPairEventV1();
+    message.clobPairId = object.clobPairId ?? 0;
+    message.status = object.status ?? 0;
+    message.quantumConversionExponent = object.quantumConversionExponent ?? 0;
+    message.subticksPerTick = object.subticksPerTick ?? 0;
+    message.minOrderBaseQuantums = object.minOrderBaseQuantums !== undefined && object.minOrderBaseQuantums !== null ? Long.fromValue(object.minOrderBaseQuantums) : Long.UZERO;
+    message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseUpdatePerpetualEventV1(): UpdatePerpetualEventV1 {
+  return {
+    id: 0,
+    ticker: "",
+    marketId: 0,
+    atomicResolution: 0,
+    liquidityTier: 0
+  };
+}
+
+export const UpdatePerpetualEventV1 = {
+  encode(message: UpdatePerpetualEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.ticker !== "") {
+      writer.uint32(18).string(message.ticker);
+    }
+
+    if (message.marketId !== 0) {
+      writer.uint32(24).uint32(message.marketId);
+    }
+
+    if (message.atomicResolution !== 0) {
+      writer.uint32(32).sint32(message.atomicResolution);
+    }
+
+    if (message.liquidityTier !== 0) {
+      writer.uint32(40).uint32(message.liquidityTier);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdatePerpetualEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdatePerpetualEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.ticker = reader.string();
+          break;
+
+        case 3:
+          message.marketId = reader.uint32();
+          break;
+
+        case 4:
+          message.atomicResolution = reader.sint32();
+          break;
+
+        case 5:
+          message.liquidityTier = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<UpdatePerpetualEventV1>): UpdatePerpetualEventV1 {
+    const message = createBaseUpdatePerpetualEventV1();
+    message.id = object.id ?? 0;
+    message.ticker = object.ticker ?? "";
+    message.marketId = object.marketId ?? 0;
+    message.atomicResolution = object.atomicResolution ?? 0;
+    message.liquidityTier = object.liquidityTier ?? 0;
+>>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
     return message;
   }
 
