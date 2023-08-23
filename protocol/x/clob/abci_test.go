@@ -367,7 +367,7 @@ func TestEndBlocker_Success(t *testing.T) {
 							types.Subticks(10),
 							constants.BtcUsdExponent,
 							constants.ClobPair_Btc,
-							constants.BtcUsd_20PercentInitial_10PercentMaintenance.AtomicResolution,
+							constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
 							lib.QuoteCurrencyAtomicResolution,
 						),
 					},
@@ -381,7 +381,7 @@ func TestEndBlocker_Success(t *testing.T) {
 							types.Subticks(35),
 							constants.EthUsdExponent,
 							constants.ClobPair_Eth,
-							constants.EthUsd_20PercentInitial_10PercentMaintenance.AtomicResolution,
+							constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
 							lib.QuoteCurrencyAtomicResolution,
 						),
 					},
@@ -665,11 +665,11 @@ func TestEndBlocker_Success(t *testing.T) {
 			} {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -681,8 +681,6 @@ func TestEndBlocker_Success(t *testing.T) {
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.MakerFeePpm,
-				constants.ClobPair_Btc.TakerFeePpm,
 			)
 			require.NoError(t, err)
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Eth).Return()
@@ -693,8 +691,6 @@ func TestEndBlocker_Success(t *testing.T) {
 				constants.ClobPair_Eth.QuantumConversionExponent,
 				constants.ClobPair_Eth.SubticksPerTick,
 				constants.ClobPair_Eth.Status,
-				constants.ClobPair_Eth.MakerFeePpm,
-				constants.ClobPair_Eth.TakerFeePpm,
 			)
 			require.NoError(t, err)
 
@@ -1303,11 +1299,11 @@ func TestPrepareCheckState(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -1326,8 +1322,6 @@ func TestPrepareCheckState(t *testing.T) {
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
-					clobPair.MakerFeePpm,
-					clobPair.TakerFeePpm,
 				)
 				require.NoError(t, err)
 			}

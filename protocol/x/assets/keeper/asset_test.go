@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"math/big"
 	"testing"
 
@@ -54,7 +55,7 @@ func createNAssets(
 }
 
 func TestCreateAsset_MarketNotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
 
 	// Throws error when creating asset for invalid marketId.
 	_, err := keeper.CreateAsset(
@@ -74,7 +75,7 @@ func TestCreateAsset_MarketNotFound(t *testing.T) {
 }
 
 func TestCreateAsset_MarketIdInvalid(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
 
 	// Throws error when creating asset for invalid marketId.
 	_, err := keeper.CreateAsset(
@@ -94,7 +95,7 @@ func TestCreateAsset_MarketIdInvalid(t *testing.T) {
 }
 
 func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 
 	keepertest.CreateNMarkets(t, ctx, pricesKeeper, 1)
 
@@ -123,7 +124,7 @@ func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
 }
 
 func TestModifyAsset_Success(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	items, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
 	require.NoError(t, err)
 
@@ -166,7 +167,7 @@ func TestModifyAsset_Success(t *testing.T) {
 }
 
 func TestModifyAsset_NotFound(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 
 	// Expect error when modifying non-existent asset
 	_, err := keeper.ModifyAsset(
@@ -193,7 +194,7 @@ func TestModifyAsset_NotFound(t *testing.T) {
 }
 
 func TestModifyAsset_MarketNotFound(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 1)
 	require.NoError(t, err)
 
@@ -207,7 +208,7 @@ func TestModifyAsset_MarketNotFound(t *testing.T) {
 }
 
 func TestGetDenomById_Success(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	items, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
 	require.NoError(t, err)
 
@@ -225,7 +226,7 @@ func TestGetDenomById_Success(t *testing.T) {
 }
 
 func TestGetDenomById_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
 
 	_, err := keeper.GetDenomById(
 		ctx,
@@ -235,7 +236,7 @@ func TestGetDenomById_NotFound(t *testing.T) {
 }
 
 func TestGetIdByDenom_Success(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	items, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
 	require.NoError(t, err)
 
@@ -252,7 +253,7 @@ func TestGetIdByDenom_Success(t *testing.T) {
 }
 
 func TestGetIdByDenom_NotFound(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
 	require.NoError(t, err)
 
@@ -265,7 +266,7 @@ func TestGetIdByDenom_NotFound(t *testing.T) {
 }
 
 func TestGetAsset_Success(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	items, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
 	require.NoError(t, err)
 
@@ -282,7 +283,7 @@ func TestGetAsset_Success(t *testing.T) {
 }
 
 func TestGetAsset_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
 	_, err := keeper.GetAsset(ctx,
 		uint32(0),
 	)
@@ -290,7 +291,7 @@ func TestGetAsset_NotFound(t *testing.T) {
 }
 
 func TestGetAllAssets_Success(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	items, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
 	require.NoError(t, err)
 
@@ -301,7 +302,7 @@ func TestGetAllAssets_Success(t *testing.T) {
 }
 
 func TestGetAllAssets_MissingAsset(t *testing.T) {
-	ctx, keeper, _, _, _, storeKey := keepertest.AssetsKeepers(t)
+	ctx, keeper, _, _, _, storeKey := keepertest.AssetsKeepers(t, true)
 
 	// Write some bad data to the store
 	store := ctx.KVStore(storeKey)
@@ -312,7 +313,7 @@ func TestGetAllAssets_MissingAsset(t *testing.T) {
 }
 
 func TestModifyLongInterest_Success(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 1)
 	require.NoError(t, err)
 	assetId := uint32(0)
@@ -358,7 +359,7 @@ func TestModifyLongInterest_Success(t *testing.T) {
 }
 
 func TestModifyLongInterest_CannotNegative(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 1)
 	require.NoError(t, err)
 	assetId := uint32(0)
@@ -389,7 +390,7 @@ func TestModifyLongInterest_CannotNegative(t *testing.T) {
 }
 
 func TestGetNetCollateral(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 2)
 	require.NoError(t, err)
 
@@ -417,7 +418,7 @@ func TestGetNetCollateral(t *testing.T) {
 }
 
 func TestGetMarginRequirements(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 2)
 	require.NoError(t, err)
 
@@ -525,7 +526,7 @@ func TestConvertAssetToCoin_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t)
+			ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
 
 			// Create test asset with the given DenomExponent and AtomicResolution values
 			asset, err := keeper.CreateAsset(
@@ -549,12 +550,24 @@ func TestConvertAssetToCoin_Success(t *testing.T) {
 			// Check if the converted quantums and denom amount are as expected
 			require.Equal(t, tc.expectedConvertedQuantums, convertedQuantums)
 			require.Equal(t, tc.expectedCoin, coin)
+
+			assetEvents := keepertest.GetAssetCreateEventsFromIndexerBlock(ctx, keeper)
+			require.Len(t, assetEvents, 1)
+
+			expectedEvent := indexerevents.NewAssetCreateEvent(
+				asset.Id,
+				testSymbol,
+				false,
+				0,
+				tc.atomicResolution,
+			)
+			require.Contains(t, assetEvents, expectedEvent)
 		})
 	}
 }
 
 func TestConvertAssetToCoin_Failure(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
 
 	// Test convert asset with invalid asset ID.
 	_, _, err := keeper.ConvertAssetToCoin(

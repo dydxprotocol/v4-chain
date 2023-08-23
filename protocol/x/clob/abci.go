@@ -3,6 +3,7 @@ package clob
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -204,10 +205,13 @@ func PrepareCheckState(
 	}
 
 	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
+	start := time.Now()
 	sort.Sort(types.SortedLiquidationOrders(liquidationOrders))
+	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.OffsettingSubaccountPerpetualPosition)
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	for _, liquidationOrder := range liquidationOrders {
+	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
+		liquidationOrder := liquidationOrders[i]
 		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
 			ctx.Logger().Error(
 				fmt.Sprintf(

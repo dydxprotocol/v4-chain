@@ -2084,11 +2084,11 @@ func TestUpdateSubaccounts(t *testing.T) {
 			for i, p := range tc.perpetuals {
 				perp, err := perpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 
@@ -2096,7 +2096,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				if i < len(tc.newFundingIndices) {
 					err = perpetualsKeeper.ModifyFundingIndex(
 						ctx,
-						perp.Id,
+						perp.Params.Id,
 						tc.newFundingIndices[i],
 					)
 					require.NoError(t, err)
@@ -2645,11 +2645,11 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := perpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -3068,11 +3068,11 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := perpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}

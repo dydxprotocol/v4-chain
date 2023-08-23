@@ -28,7 +28,6 @@ type PricesKeeper interface {
 	GetAllMarketParams(ctx sdk.Context) (marketParams []MarketParam)
 	GetMarketPrice(ctx sdk.Context, id uint32) (marketPrice MarketPrice, err error)
 	GetAllMarketPrices(ctx sdk.Context) (marketPrices []MarketPrice)
-	GetNumMarkets(ctx sdk.Context) (numMarkets uint32)
 
 	// Validation related.
 	PerformStatefulPriceUpdateValidation(

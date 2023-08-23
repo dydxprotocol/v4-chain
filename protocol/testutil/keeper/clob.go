@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -78,7 +79,14 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			epochsKeeper,
 			indexerEventsTransientStoreKey,
 		)
-		ks.AssetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, ks.PricesKeeper)
+		ks.AssetsKeeper, _ = createAssetsKeeper(
+			stateStore,
+			db,
+			cdc,
+			ks.PricesKeeper,
+			indexerEventsTransientStoreKey,
+			true,
+		)
 		ks.StatsKeeper, _ = createStatsKeeper(
 			stateStore,
 			epochsKeeper,
@@ -138,6 +146,10 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		}
 	})
 
+	if err := ks.ClobKeeper.InitializeEquityTierLimit(ks.Ctx, types.EquityTierLimitConfiguration{}); err != nil {
+		panic(err)
+	}
+
 	return ks
 }
 
@@ -181,8 +193,7 @@ func createClobKeeper(
 		rewardsKeeper,
 		indexerEventManager,
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
-		"",
-		"",
+		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
 		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
 	)

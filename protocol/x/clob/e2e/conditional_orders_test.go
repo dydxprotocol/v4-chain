@@ -515,7 +515,7 @@ func TestConditionalOrder(t *testing.T) {
 					&genesis,
 					func(genesisState *clobtypes.GenesisState) {
 						genesisState.ClobPairs = []clobtypes.ClobPair{
-							constants.ClobPair_Btc_No_Fee,
+							constants.ClobPair_Btc,
 						}
 						genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
 					},
@@ -694,7 +694,7 @@ func TestConditionalOrderCancellation(t *testing.T) {
 					&genesis,
 					func(genesisState *clobtypes.GenesisState) {
 						genesisState.ClobPairs = []clobtypes.ClobPair{
-							constants.ClobPair_Btc_No_Fee,
+							constants.ClobPair_Btc,
 						}
 						genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
 					},
@@ -1000,7 +1000,7 @@ func TestConditionalOrderExpiration(t *testing.T) {
 					&genesis,
 					func(genesisState *clobtypes.GenesisState) {
 						genesisState.ClobPairs = []clobtypes.ClobPair{
-							constants.ClobPair_Btc_No_Fee,
+							constants.ClobPair_Btc,
 						}
 						genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
 					},

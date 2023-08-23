@@ -180,6 +180,7 @@ export interface OrderSubaccountMessageContents {
   removalReason?: string;
   createdAtHeight?: string;
   clientMetadata: string;
+  triggerPrice?: string;
 }
 
 export enum OrderSide {
@@ -271,6 +272,7 @@ export interface TransferSubaccountMessageContents {
   symbol: string,
   size: string,
   type: TransferType,
+  transactionHash: string,
 }
 
 export enum TransferType {
@@ -866,7 +868,7 @@ interface TradingPerpetualMarketMessage {
   clobPairId?: string;
   ticker?: string;
   marketId?: number;
-  status?: PerpetualMarketStatus; // 'ACTIVE', 'PAUSED', 'CANCEL_ONLY' or 'POST_ONLY'
+  status?: PerpetualMarketStatus; // 'ACTIVE', 'PAUSED', 'CANCEL_ONLY', 'POST_ONLY', or 'INITIALIZING'
   baseAsset?: string;
   quoteAsset?: string;
   initialMarginFraction?: string;

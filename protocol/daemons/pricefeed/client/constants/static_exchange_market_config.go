@@ -3,9 +3,10 @@ package constants
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"sort"
 )
 
 var (
@@ -1048,6 +1049,14 @@ var (
 				},
 				exchange_common.MARKET_USDT_USD: {
 					Ticker: "USDT-USD",
+				},
+			},
+		},
+		exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE: {
+			Id: exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE,
+			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				exchange_common.MARKET_TEST_USD: {
+					Ticker: "TEST-USD",
 				},
 			},
 		},

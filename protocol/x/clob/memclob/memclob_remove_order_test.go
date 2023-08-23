@@ -328,6 +328,7 @@ func TestRemoveOrderIfFilled(t *testing.T) {
 
 			memClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
 				Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
+			memClobKeeper.On("ValidateSubaccountEquityTierLimitForNewOrder", mock.Anything, mock.Anything).Return(nil)
 
 			// Set initial fill amount to `0` for all orders.
 			initialCall := memClobKeeper.On("GetOrderFillAmount", mock.Anything, mock.Anything).

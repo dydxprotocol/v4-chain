@@ -137,6 +137,12 @@ func RunBridgeDaemonTaskLoop(
 	if err != nil {
 		return err
 	}
+	telemetry.IncrCounter(
+		float32(len(logs)),
+		metrics.BridgeDaemon,
+		metrics.NewEthLogs,
+		metrics.Count,
+	)
 
 	// Parse logs into bridge events.
 	newBridgeEvents := []bridgetypes.BridgeEvent{}

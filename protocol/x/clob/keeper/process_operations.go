@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
 	"time"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -357,7 +359,6 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	ctx sdk.Context,
 	matchDeleveraging *types.MatchPerpetualDeleveraging,
 ) error {
-	fills := matchDeleveraging.GetFills()
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
 
 	isLiquidatable, err := k.IsLiquidatable(ctx, liquidatedSubaccountId)
@@ -382,37 +383,48 @@ func (k Keeper) PersistMatchDeleveragingToState(
 
 	perpetualId := matchDeleveraging.GetPerpetualId()
 
-	// Fetch total quantums to deleverage.
-	deltaQuantumsTotal := matchDeleveraging.GetTotalFilledQuantums()
-
-	generatedFills, _ := k.OffsetSubaccountPerpetualPosition(
-		ctx,
-		liquidatedSubaccountId,
-		perpetualId,
-		deltaQuantumsTotal,
-	)
-
-	// Fills should be equal since subaccounts are chosen deterministically.
-	if len(generatedFills) != len(fills) {
+	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
+	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
+	if !exists {
 		return sdkerrors.Wrapf(
-			types.ErrInvalidDeleveragingFills,
-			"Mismatched fill lengths. generated fills: %+v, match deleveraging fills: %+v",
-			fills,
-			generatedFills,
+			types.ErrNoOpenPositionForPerpetual,
+			"Subaccount %+v does not have an open position for perpetual %+v",
+			liquidatedSubaccountId,
+			perpetualId,
 		)
 	}
-	for idx, originalFill := range fills {
-		generatedFill := generatedFills[idx]
-		if generatedFill != originalFill {
+	deltaQuantumsIsNegative := position.GetIsLong()
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.Deleveraging, metrics.DeltaQuoteQuantums},
+		1,
+		[]gometrics.Label{
+			metrics.GetLabelForBoolValue(metrics.Positive, !deltaQuantumsIsNegative),
+		},
+	)
+
+	for _, fill := range matchDeleveraging.GetFills() {
+		deltaQuantums := new(big.Int).SetUint64(fill.FillAmount)
+		if deltaQuantumsIsNegative {
+			deltaQuantums.Neg(deltaQuantums)
+		}
+
+		if err := k.ProcessDeleveraging(
+			ctx,
+			liquidatedSubaccountId,
+			fill.OffsettingSubaccountId,
+			perpetualId,
+			deltaQuantums,
+		); err != nil {
 			return sdkerrors.Wrapf(
-				types.ErrInvalidDeleveragingFills,
-				"Mismatched fills. generated fills: %+v, match deleveraging fills: %+v, index %d, "+
-					"generated fill: %+v, match deleveraging fill: %+v",
-				fills,
-				generatedFills,
-				idx,
-				originalFill,
-				generatedFill,
+				types.ErrInvalidDeleveragingFill,
+				"Failed to process deleveraging fill: %+v. liquidatedSubaccountId: %+v, "+
+					"perpetualId: %v, deltaQuantums: %v, error: %v",
+				fill,
+				liquidatedSubaccountId,
+				perpetualId,
+				deltaQuantums,
+				err,
 			)
 		}
 	}

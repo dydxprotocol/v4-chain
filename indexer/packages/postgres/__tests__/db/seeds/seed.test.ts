@@ -1,21 +1,12 @@
 import { knexPrimary } from '../../../src/helpers/knex';
 import { seed } from '../../../src/db/seeds/01_genesis_seeds';
 import { clearData, migrate, teardown } from '../../../src/helpers/db-helpers';
-import {
-  AssetFromDatabase,
-  LiquidityTiersFromDatabase,
-  MarketFromDatabase,
-  PerpetualMarketFromDatabase,
-} from '../../../src/types';
-import * as AssetTable from '../../../src/stores/asset-table';
+import { LiquidityTiersFromDatabase, MarketFromDatabase, PerpetualMarketFromDatabase } from '../../../src/types';
 import * as PerpetualMarketTable from '../../../src/stores/perpetual-market-table';
 import * as MarketTable from '../../../src/stores/market-table';
 import * as LiquidityTiersTable from '../../../src/stores/liquidity-tiers-table';
+import { expectLiquidityTier, expectMarketParamAndPrice, expectPerpetualMarket } from '../helpers';
 import {
-  expectAsset, expectLiquidityTier, expectMarketParamAndPrice, expectPerpetualMarket,
-} from '../helpers';
-import {
-  getAssetsFromGenesis,
   getClobPairsFromGenesis,
   getLiquidityTiersFromGenesis,
   getMarketParamsFromGenesis,
@@ -48,12 +39,6 @@ describe('seed', () => {
     await seed(knexPrimary);
 
     const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
-      {},
-      [],
-      { readReplica: true },
-    );
-
-    const assets: AssetFromDatabase[] = await AssetTable.findAll(
       {},
       [],
       { readReplica: true },
@@ -96,10 +81,6 @@ describe('seed', () => {
         getLiquidityTiersFromGenesis()[index],
       );
     });
-
-    expect(assets).toHaveLength(1);
-    expectAsset(assets[0],
-      getAssetsFromGenesis()[0]);
   });
 
   it('seed should update the liquidityTierId for existing Perpetual Markets', async () => {
@@ -137,13 +118,6 @@ describe('seed', () => {
     );
 
     expect(perpetualMarkets).toHaveLength(33);
-
-    const assets: AssetFromDatabase[] = await AssetTable.findAll(
-      {},
-      [],
-      { readReplica: true },
-    );
-    expect(assets).toHaveLength(1);
 
     const markets: MarketFromDatabase[] = await MarketTable.findAll(
       {},

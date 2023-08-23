@@ -257,7 +257,7 @@ func (k Keeper) UpdateSubaccounts(
 	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
 	perpIdToFundingIndex := make(map[uint32]dtypes.SerializableInt)
 	for _, perp := range allPerps {
-		perpIdToFundingIndex[perp.Id] = perp.FundingIndex
+		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
 	}
 
 	// Apply the updates to perpetual positions.

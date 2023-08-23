@@ -722,7 +722,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			subaccounts: []satypes.Subaccount{
 				// liquidatable: MMR = $5000, TNC = $0
@@ -789,7 +789,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			subaccounts: []satypes.Subaccount{
 				// liquidatable: MMR = $5000, TNC = $499
@@ -835,7 +835,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			subaccounts: []satypes.Subaccount{
 				// liquidatable: MMR = $5000, TNC = $0
@@ -943,7 +943,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_55000USD,
@@ -1231,11 +1231,11 @@ func TestProcessProposerOperations(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -1254,8 +1254,6 @@ func TestProcessProposerOperations(t *testing.T) {
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
-					clobPair.MakerFeePpm,
-					clobPair.TakerFeePpm,
 				)
 				require.NoError(t, err)
 			}

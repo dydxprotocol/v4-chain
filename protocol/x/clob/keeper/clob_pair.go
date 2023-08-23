@@ -24,8 +24,6 @@ func (k Keeper) CreatePerpetualClobPair(
 	quantumConversionExponent int32,
 	subticksPerTick uint32,
 	status types.ClobPair_Status,
-	makerFeePpm uint32,
-	takerFeePpm uint32,
 ) (types.ClobPair, error) {
 	nextId := k.GetNumClobPairs(ctx)
 
@@ -40,8 +38,6 @@ func (k Keeper) CreatePerpetualClobPair(
 		QuantumConversionExponent: quantumConversionExponent,
 		SubticksPerTick:           subticksPerTick,
 		Status:                    status,
-		MakerFeePpm:               makerFeePpm,
-		TakerFeePpm:               takerFeePpm,
 	}
 	if err := k.validateClobPair(ctx, &clobPair); err != nil {
 		return clobPair, err
@@ -55,10 +51,6 @@ func (k Keeper) CreatePerpetualClobPair(
 
 // validateClobPair validates a CLOB pair's fields are suitable for CLOB pair creation.
 //
-// - MakerFeePpm:
-//   - Must be <= MaxFeePpm.
-//   - Must be <= TakerFeePpm.
-//
 // - Metadata:
 //   - Must be a perpetual CLOB pair with a perpetualId matching a perpetual in the store.
 //
@@ -70,9 +62,6 @@ func (k Keeper) CreatePerpetualClobPair(
 //
 // - SubticksPerTick:
 //   - Must be greater than zero.
-//
-// - TakerFeePpm:
-//   - Must be <= MaxFeePpm.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
 	// TODO(DEC-1535): update this validation when we implement "spot"/"asset" clob pairs.
 	switch clobPair.Metadata.(type) {
@@ -122,27 +111,6 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 
 	if clobPair.Status == types.ClobPair_STATUS_UNSPECIFIED {
 		return sdkerrors.Wrap(types.ErrInvalidClobPairParameter, "invalid ClobPair parameter: Status must be specified.")
-	}
-
-	if clobPair.MakerFeePpm > types.MaxFeePpm || clobPair.TakerFeePpm > types.MaxFeePpm {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"invalid ClobPair parameter: MakerFeePpm (%v) and TakerFeePpm (%v) must both be <= MaxFeePpm (%v).",
-			clobPair.MakerFeePpm,
-			clobPair.TakerFeePpm,
-			types.MaxFeePpm,
-		)
-	}
-
-	// TODO(DEC-1549): Revisit the decision to allow MakerFeePpm == TakerFeePpm.
-	// DEC-133 was initially slated to set TakerFeePpm > MakerFeePpm, but NoFee constants used in many tests prevented it.
-	if clobPair.MakerFeePpm > clobPair.TakerFeePpm {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"invalid ClobPair parameter: MakerFeePpm (%v) must be <= TakerFeePpm (%v).",
-			clobPair.MakerFeePpm,
-			clobPair.TakerFeePpm,
-		)
 	}
 
 	return nil

@@ -89,10 +89,15 @@ export async function sendRequest({
   });
 }
 
-export function getQueryString(params: {[name: string]: string | number | undefined}): string {
+export function getQueryString(
+  params: {[name: string]: string | number | string[] | undefined},
+): string {
   const queryStrings: string[] = [];
-  _.forOwn(params, (value: string | number | undefined, key: string): void => {
-    if (value !== undefined) {
+  _.forOwn(params, (value: string | number | string[] | undefined, key: string): void => {
+    if (Array.isArray(value)) {
+      const commaSeparatedList: string = value.join(',');
+      queryStrings.push(`${key}=${commaSeparatedList}`);
+    } else if (value !== undefined) {
       queryStrings.push(`${key}=${value}`);
     }
   });

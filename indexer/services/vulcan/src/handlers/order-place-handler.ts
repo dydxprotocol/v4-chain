@@ -8,7 +8,6 @@ import {
   APIOrderStatus,
   APIOrderStatusEnum,
   OrderTable,
-  OrderType,
   PerpetualMarketFromDatabase,
   SubaccountMessageContents,
   SubaccountTable,
@@ -40,7 +39,7 @@ import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendWebsocketWrapper } from '../lib/send-websocket-helper';
 import { Handler } from './handler';
-import { convertToRedisOrder } from './helpers';
+import { convertToRedisOrder, getTriggerPrice } from './helpers';
 
 /**
  * Handler for OrderPlace messages.
@@ -282,7 +281,9 @@ export class OrderPlaceHandler extends Handler {
           size: redisOrder.size,
           price: redisOrder.price,
           status,
-          type: OrderType.LIMIT,
+          type: protocolTranslations.protocolConditionTypeToOrderType(
+            redisOrder.order!.conditionType,
+          ),
           timeInForce: apiTranslations.orderTIFToAPITIF(orderTIF),
           postOnly: apiTranslations.isOrderTIFPostOnly(orderTIF),
           reduceOnly: redisOrder.order!.reduceOnly,
@@ -293,6 +294,7 @@ export class OrderPlaceHandler extends Handler {
           ticker: redisOrder.ticker,
           ...(createdAtHeight && { createdAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
+          triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
       ],
     };

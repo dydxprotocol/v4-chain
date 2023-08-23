@@ -32,7 +32,22 @@ func (lc EquityTierLimitConfiguration) Validate() error {
 	return nil
 }
 
+// Initialize ensures the fields are ordered by the application requirements:
+//   - ShortTermOrderEquityTiers by UsdTncRequired in ascending order.
+//   - StatefulOrderEquityTiers by UsdTncRequired in ascending order.
+func (lc EquityTierLimitConfiguration) Initialize() {
+	(equityTierLimits)(lc.ShortTermOrderEquityTiers).sortByUsdTncRequiredAsc()
+	(equityTierLimits)(lc.StatefulOrderEquityTiers).sortByUsdTncRequiredAsc()
+}
+
 type equityTierLimits []EquityTierLimit
+
+// Sorts the list by UsdTncRequired in ascending order.
+func (l equityTierLimits) sortByUsdTncRequiredAsc() {
+	sort.Slice(l, func(i, j int) bool {
+		return l[i].UsdTncRequired.Cmp(l[j].UsdTncRequired) <= 0
+	})
+}
 
 func (l equityTierLimits) validate(field string, maxOrders uint32) error {
 	// Work on a copy to not modify the original slice.
@@ -47,13 +62,14 @@ func (l equityTierLimits) validate(field string, maxOrders uint32) error {
 			return err
 		}
 
-		if i > 0 && sortSlice[i-1].UsdTncRequired.Cmp(limit.UsdTncRequired) == 0 {
+		if i > 0 && l[i-1].UsdTncRequired.Cmp(l[i].UsdTncRequired) >= 0 {
 			return sdkerrors.Wrapf(
 				ErrInvalidEquityTierLimitConfig,
-				"Multiple equity tier limits %+v and %+v for the same UsdTncRequired found for %s",
-				sortSlice[i-1],
-				limit,
+				"Expected %s equity tier UsdTncRequired to be strictly ascending. "+
+					"Found %+v and %+v out of order",
 				field,
+				l[i-1],
+				l[i],
 			)
 		}
 	}

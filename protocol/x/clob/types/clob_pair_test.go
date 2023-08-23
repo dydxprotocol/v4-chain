@@ -28,19 +28,6 @@ func TestGetClobPairMinOrderBaseQuantums(t *testing.T) {
 	require.Equal(t, satypes.BaseQuantums(100), minOrderBaseQuantums)
 }
 
-func TestGetFeePpm(t *testing.T) {
-	makerFeePpm := uint32(500)
-	takerFeePpm := uint32(1000)
-
-	clobPair := types.ClobPair{
-		MakerFeePpm: makerFeePpm,
-		TakerFeePpm: takerFeePpm,
-	}
-
-	require.Equal(t, takerFeePpm, clobPair.GetFeePpm(true))
-	require.Equal(t, makerFeePpm, clobPair.GetFeePpm(false))
-}
-
 func TestGetPerpetualId(t *testing.T) {
 	perpetualId, err := constants.ClobPair_Eth.GetPerpetualId()
 	require.Equal(t, uint32(1), perpetualId)
