@@ -993,7 +993,8 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			for _, s := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
-
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
 			mockIndexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
@@ -1864,6 +1865,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
 
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
 			for i, clobPair := range []types.ClobPair{
 				constants.ClobPair_Btc,
 				constants.ClobPair_Eth_No_Fee,
@@ -1965,6 +1968,8 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+	// the indexer event manager to expect these events.
 	indexerEventManager.On("AddTxnEvent",
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
@@ -4209,6 +4214,8 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			// Create the CLOB pairs and store the expected CLOB pair.
 			for i, clobPair := range tc.clobPairs {
 				perpetualId := clobtest.MustPerpetualId(clobPair)
+				// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+				// the indexer event manager to expect these events.
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,

@@ -1248,6 +1248,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			// Create all CLOBs.
 			for i, clobPair := range tc.clobPairs {
 				perpetualId := clobtest.MustPerpetualId(clobPair)
+				// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+				// the indexer event manager to expect these events.
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,

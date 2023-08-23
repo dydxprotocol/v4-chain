@@ -14,13 +14,13 @@ export class PerpetualMarketValidator extends Validator<PerpetualMarketCreateEve
         { event: this.event },
       );
     }
-    if (!this.event.ticker) {
+    if (this.event.ticker === '') {
       return this.logAndThrowParseMessageError(
         'PerpetualMarketCreateEvent ticker is not populated',
         { event: this.event },
       );
     }
-    if (!this.event.subticksPerTick) {
+    if (this.event.subticksPerTick === 0) {
       return this.logAndThrowParseMessageError(
         'PerpetualMarketCreateEvent subticksPerTick is not populated',
         { event: this.event },

@@ -106,6 +106,8 @@ func TestPlaceOrder_Error(t *testing.T) {
 
 			// Create ClobPair.
 			clobPair := constants.ClobPair_Btc
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,

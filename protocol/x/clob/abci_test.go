@@ -675,6 +675,8 @@ func TestEndBlocker_Success(t *testing.T) {
 			}
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
 
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
 			mockIndexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
@@ -705,6 +707,8 @@ func TestEndBlocker_Success(t *testing.T) {
 			)
 			require.NoError(t, err)
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Eth).Return()
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
 			mockIndexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,

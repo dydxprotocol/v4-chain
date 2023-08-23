@@ -26,6 +26,9 @@ export async function start(): Promise<void> {
  * Used for testing.
  */
 export function clear(): void {
+  if (config.NODE_ENV !== NodeEnv.TEST) {
+    throw new Error('resetCache cannot be used in non-test env');
+  }
   clobPairIdToPerpetualMarket = {};
   tickerToPerpetualMarket = {};
   idToPerpetualMarket = {};

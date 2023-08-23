@@ -1,6 +1,7 @@
 package events
 
 import (
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"testing"
 
@@ -26,7 +27,7 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		ClobPairId:                0,
 		Ticker:                    "BTC",
 		MarketId:                  0,
-		Status:                    ClobPairStatus_CLOB_PAIR_STATUS_ACTIVE,
+		Status:                    v1.ClobPairStatus_CLOB_PAIR_STATUS_ACTIVE,
 		QuantumConversionExponent: -8,
 		AtomicResolution:          8,
 		SubticksPerTick:           5,

@@ -27,7 +27,12 @@ import (
 // Prevent strconv unused error
 var _ = strconv.IntSize
 
-func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int, mockIndexerEventManager *mocks.IndexerEventManager) []types.ClobPair {
+func createNClobPair(
+	keeper *keeper.Keeper,
+	ctx sdk.Context,
+	n int,
+	mockIndexerEventManager *mocks.IndexerEventManager,
+) []types.ClobPair {
 	items := make([]types.ClobPair, n)
 	for i := range items {
 		items[i].Id = uint32(i)
@@ -40,6 +45,8 @@ func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int, mockIndexerE
 		items[i].StepBaseQuantums = 5
 		items[i].Status = types.ClobPair_STATUS_ACTIVE
 
+		// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+		// the indexer event manager to expect these events.
 		mockIndexerEventManager.On("AddTxnEvent",
 			ctx,
 			indexerevents.SubtypePerpetualMarket,
@@ -119,8 +126,11 @@ func TestCreateClobPair(t *testing.T) {
 
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
 			if tc.expectedErr == "" {
 				perpetualId := clobtest.MustPerpetualId(tc.clobPair)
+				perpetual := constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId]
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
@@ -128,15 +138,15 @@ func TestCreateClobPair(t *testing.T) {
 						indexerevents.NewPerpetualMarketCreateEvent(
 							perpetualId,
 							perpetualId,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Params.Ticker,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Params.MarketId,
+							perpetual.Params.Ticker,
+							perpetual.Params.MarketId,
 							tc.clobPair.Status,
 							tc.clobPair.QuantumConversionExponent,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Params.AtomicResolution,
+							perpetual.Params.AtomicResolution,
 							tc.clobPair.SubticksPerTick,
 							tc.clobPair.MinOrderBaseQuantums,
 							tc.clobPair.StepBaseQuantums,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Params.LiquidityTier,
+							perpetual.Params.LiquidityTier,
 						),
 					),
 				).Return()
@@ -269,9 +279,9 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 
 			// Perform the method under test.
 			for _, make := range tc.clobPairs {
-
 				if make.expectedErr == "" {
 					perpetualId := clobtest.MustPerpetualId(make.clobPair)
+					perpetual := constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId]
 					mockIndexerEventManager.On("AddTxnEvent",
 						ks.Ctx,
 						indexerevents.SubtypePerpetualMarket,
@@ -279,15 +289,15 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 							indexerevents.NewPerpetualMarketCreateEvent(
 								perpetualId,
 								perpetualId,
-								constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Params.Ticker,
-								constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Params.MarketId,
+								perpetual.Params.Ticker,
+								perpetual.Params.MarketId,
 								make.clobPair.Status,
 								make.clobPair.QuantumConversionExponent,
-								constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Params.AtomicResolution,
+								perpetual.Params.AtomicResolution,
 								make.clobPair.SubticksPerTick,
 								make.clobPair.MinOrderBaseQuantums,
 								make.clobPair.StepBaseQuantums,
-								constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Params.LiquidityTier,
+								perpetual.Params.LiquidityTier,
 							),
 						),
 					).Return()

@@ -41,7 +41,7 @@ export async function updateLiquidityTiers(options?: Options): Promise<void> {
 /**
  * Gets the liquidity tier for a given id.
  */
-export function getLiquidityTierFromId(id: number): LiquidityTiersFromDatabase | undefined {
+export function getLiquidityTierFromId(id: number): LiquidityTiersFromDatabase {
   const tier: LiquidityTiersFromDatabase | undefined = idToLiquidityTier[id];
   if (tier === undefined) {
     const message: string = `Unable to find liquidity tier with id: ${id}`;

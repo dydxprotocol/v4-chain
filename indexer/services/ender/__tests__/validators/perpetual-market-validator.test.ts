@@ -50,56 +50,45 @@ describe('perpetual-market-validator', () => {
       expect(() => validator.validate()).toThrow(new ParseMessageError(message));
     });
 
-    it('throws error on perpetual market create event missing ticker', () => {
-      const event: PerpetualMarketCreateEventV1 = {
-        ...defaultPerpetualMarketCreateEvent,
-        ticker: '',
-      };
+    it.each([
+      [
+        'throws error on perpetual market create event missing ticker',
+        {
+          ...defaultPerpetualMarketCreateEvent,
+          ticker: '',
+        } as PerpetualMarketCreateEventV1,
+        'PerpetualMarketCreateEvent ticker is not populated',
+      ],
+      [
+        'throws error on perpetual market create event missing subticksPerTick',
+        {
+          ...defaultPerpetualMarketCreateEvent,
+          subticksPerTick: 0,
+        } as PerpetualMarketCreateEventV1,
+        'PerpetualMarketCreateEvent subticksPerTick is not populated',
+      ],
+      [
+        'throws error on perpetual market create event missing minOrderBaseQuantums',
+        {
+          ...defaultPerpetualMarketCreateEvent,
+          minOrderBaseQuantums: Long.fromValue(0),
+        } as PerpetualMarketCreateEventV1,
+        'PerpetualMarketCreateEvent minOrderBaseQuantums is not populated',
+      ],
+      [
+        'throws error on perpetual market create event missing stepBaseQuantums',
+        {
+          ...defaultPerpetualMarketCreateEvent,
+          stepBaseQuantums: Long.fromValue(0),
+        } as PerpetualMarketCreateEventV1,
+        'PerpetualMarketCreateEvent stepBaseQuantums is not populated',
+      ],
+    ])('%s', (_description: string, event: PerpetualMarketCreateEventV1, expectedMessage: string) => {
       const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
         event,
         createBlock(event),
       );
-      const message: string = 'PerpetualMarketCreateEvent ticker is not populated';
-      expect(() => validator.validate()).toThrow(new ParseMessageError(message));
-    });
-
-    it('throws error on perpetual market create event missing subticksPerTick', () => {
-      const event: PerpetualMarketCreateEventV1 = {
-        ...defaultPerpetualMarketCreateEvent,
-        subticksPerTick: 0,
-      };
-      const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
-        event,
-        createBlock(event),
-      );
-      const message: string = 'PerpetualMarketCreateEvent subticksPerTick is not populated';
-      expect(() => validator.validate()).toThrow(new ParseMessageError(message));
-    });
-
-    it('throws error on perpetual market create event missing minOrderBaseQuantums', () => {
-      const event: PerpetualMarketCreateEventV1 = {
-        ...defaultPerpetualMarketCreateEvent,
-        minOrderBaseQuantums: Long.fromValue(0),
-      };
-      const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
-        event,
-        createBlock(event),
-      );
-      const message: string = 'PerpetualMarketCreateEvent minOrderBaseQuantums is not populated';
-      expect(() => validator.validate()).toThrow(new ParseMessageError(message));
-    });
-
-    it('throws error on perpetual market create event missing stepBaseQuantums', () => {
-      const event: PerpetualMarketCreateEventV1 = {
-        ...defaultPerpetualMarketCreateEvent,
-        stepBaseQuantums: Long.fromValue(0),
-      };
-      const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
-        event,
-        createBlock(event),
-      );
-      const message: string = 'PerpetualMarketCreateEvent stepBaseQuantums is not populated';
-      expect(() => validator.validate()).toThrow(new ParseMessageError(message));
+      expect(() => validator.validate()).toThrow(new ParseMessageError(expectedMessage));
     });
   });
 });

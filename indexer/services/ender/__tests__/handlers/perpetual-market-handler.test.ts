@@ -27,7 +27,7 @@ import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
   binaryToBase64String,
   createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
+  createIndexerTendermintEvent, expectPerpetualMarket,
 } from '../helpers/indexer-proto-helpers';
 import { PerpetualMarketCreationHandler } from '../../src/handlers/perpetual-market-handler';
 import {
@@ -155,7 +155,7 @@ describe('perpetualMarketHandler', () => {
       time: defaultTime,
       txHash: defaultTxHash,
     });
-    // Confirm there is no existing perpetualMarket to or from the sender subaccount
+    // Confirm there is no existing perpetualMarket.
     await expectNoExistingPerpetualMarkets();
 
     await onMessage(kafkaMessage);
@@ -170,6 +170,7 @@ describe('perpetualMarketHandler', () => {
     expectTimingStats();
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromId('0');
     expect(perpetualMarket).toBeDefined();
+    expectPerpetualMarket(perpetualMarket!, perpetualMarketEvent);
   });
 });
 
@@ -214,27 +215,23 @@ function createKafkaMessageFromPerpetualMarketEvent({
   time,
   txHash,
 }: {
-  perpetualMarketEvent: PerpetualMarketCreateEventV1 | undefined,
+  perpetualMarketEvent: PerpetualMarketCreateEventV1,
   transactionIndex: number,
   height: number,
   time: Timestamp,
   txHash: string,
 }) {
   const events: IndexerTendermintEvent[] = [];
-  let eventIndex: number = 0;
-  if (perpetualMarketEvent !== undefined) {
-    events.push(
-      createIndexerTendermintEvent(
-        DydxIndexerSubtypes.PERPETUAL_MARKET,
-        binaryToBase64String(
-          PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
-        ),
-        transactionIndex,
-        eventIndex,
+  events.push(
+    createIndexerTendermintEvent(
+      DydxIndexerSubtypes.PERPETUAL_MARKET,
+      binaryToBase64String(
+        PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
       ),
-    );
-    eventIndex += 1;
-  }
+      transactionIndex,
+      0,
+    ),
+  );
 
   const block: IndexerTendermintBlock = createIndexerTendermintBlock(
     height,

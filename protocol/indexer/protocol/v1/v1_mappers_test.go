@@ -2,6 +2,7 @@ package v1_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -380,4 +381,47 @@ func TestOrderToIndexerOrder_Panic(t *testing.T) {
 	require.Panics(t, func() {
 		v1.OrderToIndexerOrder(invalidOrder)
 	})
+}
+
+func TestConvertToClobPairStatus(t *testing.T) {
+	tests := []struct {
+		input    clobtypes.ClobPair_Status
+		expected v1.ClobPairStatus
+		panics   bool
+	}{
+		{
+			input:    clobtypes.ClobPair_STATUS_UNSPECIFIED,
+			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_UNSPECIFIED,
+		},
+		{
+			input:    clobtypes.ClobPair_STATUS_ACTIVE,
+			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_ACTIVE,
+		},
+		{
+			input:    clobtypes.ClobPair_STATUS_PAUSED,
+			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_PAUSED,
+		},
+		{
+			input:    clobtypes.ClobPair_STATUS_CANCEL_ONLY,
+			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_CANCEL_ONLY,
+		},
+		{
+			input:    clobtypes.ClobPair_STATUS_POST_ONLY,
+			expected: v1.ClobPairStatus_CLOB_PAIR_STATUS_POST_ONLY,
+		},
+		{
+			input:  clobtypes.ClobPair_Status(9999), // some invalid value
+			panics: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input.String(), func(t *testing.T) {
+			if tt.panics {
+				assert.Panics(t, func() { v1.ConvertToClobPairStatus(tt.input) })
+			} else {
+				assert.Equal(t, tt.expected, v1.ConvertToClobPairStatus(tt.input))
+			}
+		})
+	}
 }

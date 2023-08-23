@@ -4,7 +4,6 @@ import {
   MarketColumns,
   MarketFromDatabase,
   MarketsMap,
-  PerpetualMarketCreateObject,
   PerpetualPositionFromDatabase,
   PositionSide,
   SubaccountFromDatabase,
@@ -14,7 +13,6 @@ import {
   getAssetCreateObject,
   getAssetPositionCreateObject,
   getLiquidityTiersCreateObject,
-  getPerpetualMarketCreateObject,
   getMaintenanceMarginPpm,
   getUnrealizedPnl,
   getUnsettledFunding,
@@ -28,7 +26,7 @@ import {
   expectAsset,
   expectAssetPositionCreateObject,
   expectLiquidityTier,
-  expectMarketParamAndPrice, expectPerpetualMarket,
+  expectMarketParamAndPrice,
   expectSubaccount,
 } from './helpers';
 import {
@@ -36,7 +34,7 @@ import {
   createdHeight,
   defaultAddress,
   defaultFundingIndexUpdate,
-  defaultPerpetualMarket, defaultPerpetualMarketCreateEvent,
+  defaultPerpetualMarket,
   defaultPerpetualPosition,
   defaultPerpetualPositionId,
   defaultSubaccount,
@@ -90,16 +88,6 @@ describe('helpers', () => {
       const liquidityTiersCreateObject:
       LiquidityTiersCreateObject = getLiquidityTiersCreateObject(defaultLiquidityTier);
       expectLiquidityTier(liquidityTiersCreateObject, defaultLiquidityTier);
-    });
-  });
-
-  describe('getPerpetualMarketCreateObject', () => {
-    it('create PerpetualMarketCreate object from getPerpetualMarketCreateObject event', () => {
-      const perpetualMarketCreateObject:
-      PerpetualMarketCreateObject = getPerpetualMarketCreateObject(
-        defaultPerpetualMarketCreateEvent,
-      );
-      expectPerpetualMarket(perpetualMarketCreateObject, defaultPerpetualMarketCreateEvent);
     });
   });
 

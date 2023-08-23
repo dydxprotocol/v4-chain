@@ -1042,6 +1042,8 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	ctx = ctx.WithIsCheckTx(true)
 
 	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+	// the indexer event manager to expect these events.
 	indexerEventManager.On("AddTxnEvent",
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
@@ -1094,6 +1096,8 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 	memClob.On("CreateOrderbook", ks.Ctx, constants.ClobPair_Btc).Return()
+	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+	// the indexer event manager to expect these events.
 	indexerEventManager.On("AddTxnEvent",
 		ks.Ctx,
 		indexerevents.SubtypePerpetualMarket,

@@ -268,6 +268,124 @@ export function indexerOrder_ConditionTypeToJSON(object: IndexerOrder_ConditionT
       return "UNRECOGNIZED";
   }
 }
+/**
+ * Status of the CLOB.
+ * Defined in clob.clob_pair
+ */
+
+export enum ClobPairStatus {
+  /** CLOB_PAIR_STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
+  CLOB_PAIR_STATUS_UNSPECIFIED = 0,
+
+  /**
+   * CLOB_PAIR_STATUS_ACTIVE - CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_ACTIVE = 1,
+
+  /**
+   * CLOB_PAIR_STATUS_PAUSED - CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_PAUSED = 2,
+
+  /**
+   * CLOB_PAIR_STATUS_CANCEL_ONLY - CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_CANCEL_ONLY = 3,
+
+  /**
+   * CLOB_PAIR_STATUS_POST_ONLY - CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_POST_ONLY = 4,
+  UNRECOGNIZED = -1,
+}
+/**
+ * Status of the CLOB.
+ * Defined in clob.clob_pair
+ */
+
+export enum ClobPairStatusSDKType {
+  /** CLOB_PAIR_STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
+  CLOB_PAIR_STATUS_UNSPECIFIED = 0,
+
+  /**
+   * CLOB_PAIR_STATUS_ACTIVE - CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_ACTIVE = 1,
+
+  /**
+   * CLOB_PAIR_STATUS_PAUSED - CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_PAUSED = 2,
+
+  /**
+   * CLOB_PAIR_STATUS_CANCEL_ONLY - CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_CANCEL_ONLY = 3,
+
+  /**
+   * CLOB_PAIR_STATUS_POST_ONLY - CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
+   * TODO(DEC-600): update this documentation.
+   */
+  CLOB_PAIR_STATUS_POST_ONLY = 4,
+  UNRECOGNIZED = -1,
+}
+export function clobPairStatusFromJSON(object: any): ClobPairStatus {
+  switch (object) {
+    case 0:
+    case "CLOB_PAIR_STATUS_UNSPECIFIED":
+      return ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED;
+
+    case 1:
+    case "CLOB_PAIR_STATUS_ACTIVE":
+      return ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE;
+
+    case 2:
+    case "CLOB_PAIR_STATUS_PAUSED":
+      return ClobPairStatus.CLOB_PAIR_STATUS_PAUSED;
+
+    case 3:
+    case "CLOB_PAIR_STATUS_CANCEL_ONLY":
+      return ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY;
+
+    case 4:
+    case "CLOB_PAIR_STATUS_POST_ONLY":
+      return ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY;
+
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return ClobPairStatus.UNRECOGNIZED;
+  }
+}
+export function clobPairStatusToJSON(object: ClobPairStatus): string {
+  switch (object) {
+    case ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED:
+      return "CLOB_PAIR_STATUS_UNSPECIFIED";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE:
+      return "CLOB_PAIR_STATUS_ACTIVE";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_PAUSED:
+      return "CLOB_PAIR_STATUS_PAUSED";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY:
+      return "CLOB_PAIR_STATUS_CANCEL_ONLY";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY:
+      return "CLOB_PAIR_STATUS_POST_ONLY";
+
+    case ClobPairStatus.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
 /** IndexerOrderId refers to a single order belonging to a Subaccount. */
 
 export interface IndexerOrderId {
