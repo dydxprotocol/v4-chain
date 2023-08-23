@@ -9,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -417,7 +418,23 @@ func (k Keeper) persistMatchedOrders(
 		bigFillQuoteQuantums,
 	)
 
-	// Emit an event indicating the
+	// Emit an event indicating a trade occurred.
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			metrics.EventTypeMatch,
+			sdk.NewAttribute(metrics.TakerSubaccount, matchWithOrders.TakerOrder.GetSubaccountId().Owner),
+			sdk.NewAttribute(metrics.MakerSubaccount, matchWithOrders.MakerOrder.GetSubaccountId().Owner),
+			sdk.NewAttribute(metrics.TakerOrderFeeQuoteQuantums, fmt.Sprint(matchWithOrders.TakerFee)),
+			sdk.NewAttribute(metrics.MakerOrderFeeQuoteQuantums, fmt.Sprint(matchWithOrders.MakerFee)),
+			sdk.NewAttribute(metrics.MakerQuoteBalanceDeltaQuoteQuantums, bigMakerQuoteBalanceDelta.String()),
+			sdk.NewAttribute(metrics.TakerQuoteBalanceDeltaQuoteQuantums, bigTakerQuoteBalanceDelta.String()),
+			sdk.NewAttribute(metrics.MakerPerpetualQuantumsDeltaBaseQuantums, bigMakerPerpetualQuantumsDelta.String()),
+			sdk.NewAttribute(metrics.TakerPerpetualQuantumsDeltaBaseQuantums, bigTakerPerpetualQuantumsDelta.String()),
+			sdk.NewAttribute(metrics.LiquidationInsuranceFundDeltaQuoteQuantums, insuranceFundDelta.String()),
+			sdk.NewAttribute(metrics.IsLiquidation, fmt.Sprint(isTakerLiquidation)),
+			sdk.NewAttribute(metrics.PerpetualId, fmt.Sprint(perpetualId)),
+		),
+	)
 
 	return takerUpdateResult, makerUpdateResult, nil
 }
