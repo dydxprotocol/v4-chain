@@ -1,8 +1,33 @@
 import { Order, OrderSDKType, OrderId, OrderIdSDKType } from "./order";
+import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
 import { OrderRemoval, OrderRemovalSDKType } from "./order_removals";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
+/** MsgCreateClobPair is a message used by x/gov for creating a new clob pair. */
+
+export interface MsgCreateClobPair {
+  /** The address that controls the module. */
+  auhority: string;
+  /** `clob_pair` defines parameters for the new clob pair. */
+
+  clobPair?: ClobPair;
+}
+/** MsgCreateClobPair is a message used by x/gov for creating a new clob pair. */
+
+export interface MsgCreateClobPairSDKType {
+  /** The address that controls the module. */
+  auhority: string;
+  /** `clob_pair` defines parameters for the new clob pair. */
+
+  clob_pair?: ClobPairSDKType;
+}
+/** MsgCreateClobPairResponse defines the CreateClobPair response type. */
+
+export interface MsgCreateClobPairResponse {}
+/** MsgCreateClobPairResponse defines the CreateClobPair response type. */
+
+export interface MsgCreateClobPairResponseSDKType {}
 /**
  * MsgProposedOperations is a message injected by block proposers to
  * specify the operations that occurred in a block.
@@ -117,6 +142,95 @@ export interface OperationRawSDKType {
   short_term_order_placement?: Uint8Array;
   order_removal?: OrderRemovalSDKType;
 }
+
+function createBaseMsgCreateClobPair(): MsgCreateClobPair {
+  return {
+    auhority: "",
+    clobPair: undefined
+  };
+}
+
+export const MsgCreateClobPair = {
+  encode(message: MsgCreateClobPair, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.auhority !== "") {
+      writer.uint32(10).string(message.auhority);
+    }
+
+    if (message.clobPair !== undefined) {
+      ClobPair.encode(message.clobPair, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgCreateClobPair {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgCreateClobPair();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.auhority = reader.string();
+          break;
+
+        case 2:
+          message.clobPair = ClobPair.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgCreateClobPair>): MsgCreateClobPair {
+    const message = createBaseMsgCreateClobPair();
+    message.auhority = object.auhority ?? "";
+    message.clobPair = object.clobPair !== undefined && object.clobPair !== null ? ClobPair.fromPartial(object.clobPair) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgCreateClobPairResponse(): MsgCreateClobPairResponse {
+  return {};
+}
+
+export const MsgCreateClobPairResponse = {
+  encode(_: MsgCreateClobPairResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgCreateClobPairResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgCreateClobPairResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgCreateClobPairResponse>): MsgCreateClobPairResponse {
+    const message = createBaseMsgCreateClobPairResponse();
+    return message;
+  }
+
+};
 
 function createBaseMsgProposedOperations(): MsgProposedOperations {
   return {
