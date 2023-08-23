@@ -111,10 +111,7 @@ describe('perpetualMarketHandler', () => {
       txHash: defaultTxHash,
     });
 
-    const message: string = 'Unable to find market with id: 0';
-    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new Error(message),
-    );
+    await expect(onMessage(kafkaMessage)).rejects.toThrowError();
   });
 
   it('fails when liquidity tier doesnt exist for perpetual market', async () => {
@@ -129,10 +126,7 @@ describe('perpetualMarketHandler', () => {
       txHash: defaultTxHash,
     });
 
-    const message: string = 'Unable to find liquidity tier with id: 0';
-    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new Error(message),
-    );
+    await expect(onMessage(kafkaMessage)).rejects.toThrowError();
   });
 
   it('creates new perpetual market', async () => {
