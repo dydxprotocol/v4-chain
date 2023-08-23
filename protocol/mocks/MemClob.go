@@ -44,6 +44,20 @@ func (_m *MemClob) CancelOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgC
 	return r0, r1
 }
 
+// CountSubaccountOrdersByFilter provides a mock function with given fields: ctx, subaccountId, filter
+func (_m *MemClob) CountSubaccountOrders(ctx types.Context, subaccountId subaccountstypes.SubaccountId, filter func(clobtypes.OrderId) bool) uint32 {
+	ret := _m.Called(ctx, subaccountId, filter)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, func(clobtypes.OrderId) bool) uint32); ok {
+		r0 = rf(ctx, subaccountId, filter)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	return r0
+}
+
 // CreateOrderbook provides a mock function with given fields: ctx, clobPair
 func (_m *MemClob) CreateOrderbook(ctx types.Context, clobPair clobtypes.ClobPair) {
 	_m.Called(ctx, clobPair)

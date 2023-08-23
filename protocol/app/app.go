@@ -615,6 +615,7 @@ func New(
 		appCodec,
 		keys[assetsmoduletypes.StoreKey],
 		app.PricesKeeper,
+		app.IndexerEventManager,
 	)
 	assetsModule := assetsmodule.NewAppModule(appCodec, app.AssetsKeeper)
 
@@ -629,6 +630,8 @@ func New(
 		keys[bridgemoduletypes.StoreKey],
 		bridgeEventManager,
 		app.BankKeeper,
+		// set the gov module account as the authority for updating parameters.
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 

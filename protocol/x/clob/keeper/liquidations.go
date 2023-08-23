@@ -529,7 +529,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	// Return the full position to avoid any rounding errors.
 	if bigAbsQuoteQuantums.Cmp(bigMaxNotionalLiquidatable) <= 0 ||
 		perpetualPosition.GetBigQuantums().CmpAbs(
-			new(big.Int).SetUint64(clobPair.MinOrderBaseQuantums),
+			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		) <= 0 {
 		return clobPair, perpetualPosition.GetBigQuantums(), nil
 	}

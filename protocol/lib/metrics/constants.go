@@ -54,14 +54,31 @@ const (
 	Validate             = "validate"
 
 	// Bridge.
-	AcknowledgeBridges      = "acknowledge_bridges"
-	CompleteBridge          = "complete_bridge"
-	LastCompletedBridgeId   = "last_completed_bridge_id"
-	NextAcknowledgedEventId = "next_acknowledge_event_id"
-	NumBridges              = "num_bridges"
+	AcknowledgeBridges            = "acknowledge_bridges"
+	AcknowledgedEventInfo         = "acknowledged_event_info"
+	BridgeTokenDenom              = "bridge_token_denom"
+	CompleteBridge                = "complete_bridge"
+	GetAcknowledgeBridges         = "get_acknowledge_bridges"
+	LastBridgeEventId             = "last_bridge_event_id"
+	LastBridgeEventEthBlockHeight = "last_bridge_event_eth_block_height"
+	LastCompletedBridgeId         = "last_completed_bridge_id"
+	NextAcknowledgedEventId       = "next_acknowledge_event_id"
+	NumBridges                    = "num_bridges"
+	UnbridgedBalance              = "unbridged_balance"
 
 	// Bridge Daemon.
 	BridgeDaemon = "bridge_daemon"
+	NewEthLogs   = "new_eth_logs"
+
+	// Bridge Server.
+	AddBridgeEvents          = "add_bridge_events"
+	BridgeServer             = "bridge_server"
+	EthBlockHeight           = "eth_block_height"
+	EventIdAlreadyRecognized = "event_id_already_recognized"
+	EventIdNotSequential     = "event_id_not_sequential"
+	EventIdNotNextExpected   = "event_id_not_next_expected"
+	NextId                   = "next_id"
+	RecognizedEventInfo      = "recognized_event_info"
 
 	// CLOB.
 	AddPerpetualFillAmount                       = "add_perpetual_fill_amount"

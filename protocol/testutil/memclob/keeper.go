@@ -468,3 +468,7 @@ func (f *FakeMemClobKeeper) IsLiquidatable(
 ) {
 	panic("This function should not be implemented as FakeMemClobKeeper is getting deprecated (CLOB-175)")
 }
+
+func (f *FakeMemClobKeeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, order types.Order) error {
+	return nil
+}

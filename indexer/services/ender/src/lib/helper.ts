@@ -16,6 +16,7 @@ import {
   IndexerOrder,
   StatefulOrderEventV1,
   FundingEventV1,
+  AssetCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
@@ -116,6 +117,13 @@ export function indexerTendermintEventToEventProtoWithType(
       return {
         type: DydxIndexerSubtypes.FUNDING,
         eventProto: FundingEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+      };
+    }
+    case (DydxIndexerSubtypes.ASSET.toString()): {
+      return {
+        type: DydxIndexerSubtypes.ASSET,
+        eventProto: AssetCreateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
       };
     }

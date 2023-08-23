@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 
 # This script spins up a non-validating full node that periodically is halted
 # and uploads snapshots of the data directory (contains all blocks) to S3.
@@ -92,7 +93,7 @@ while true; do
   log_this "Creating new snapshot"
   SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%M-%H').tar.gz")
   tar cvzf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
-  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1
+  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --debug || true
   rm -rf ${SNAP_PATH}/${SNAP_NAME}
   log_this "Done creating snapshot\n---------------------------\n"
 

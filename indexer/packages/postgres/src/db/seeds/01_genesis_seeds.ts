@@ -2,7 +2,6 @@ import * as Knex from 'knex';
 
 import {
   getPerpetualMarketLiquidityTierUpdateSql,
-  getSeedAssetsSql,
   getSeedBlocksSql,
   getSeedLiquidityTiersSql,
   getSeedMarketsSql,
@@ -15,7 +14,6 @@ export async function seed(knex: Knex): Promise<void> {
   await knex.raw(getSeedMarketsSql());
   await knex.raw(getSeedLiquidityTiersSql());
   await knex.raw(getSeedPerpetualMarketsSql());
-  await knex.raw(getSeedAssetsSql());
 
   // Update perpetual_markets table to add liquidityTierId column
   const updateSql: string[] = getPerpetualMarketLiquidityTierUpdateSql();

@@ -147,6 +147,24 @@ func (m *MemClobPriceTimePriority) CreateOrderbook(
 	m.openOrders.createOrderbook(ctx, clobPairId, subticksPerTick, minOrderBaseQuantums)
 }
 
+// CountSubaccountOrders will count all open orders for a given subaccount that match the provided filter.
+func (m *MemClobPriceTimePriority) CountSubaccountOrders(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	filter func(types.OrderId) bool,
+) (count uint32) {
+	for _, openOrdersPerClob := range m.openOrders.orderbooksMap {
+		for _, openOrdersPerClobAndSide := range openOrdersPerClob.SubaccountOpenClobOrders[subaccountId] {
+			for orderId := range openOrdersPerClobAndSide {
+				if filter(orderId) {
+					count++
+				}
+			}
+		}
+	}
+	return count
+}
+
 // GetOrder gets an order by ID and returns it.
 func (m *MemClobPriceTimePriority) GetOrder(
 	ctx sdk.Context,
@@ -1224,8 +1242,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 //   - The order is not canceled (with an equal-to-or-greater-than `GoodTilBlock` than the new order).
 //   - If the order is replacing another order, then the new order's expiration must not be less than the
 //     existing order's expiration.
-//   - This subaccount has strictly less than `MaxSubaccountOrdersPerClobAndSide` open orders on the new order's
-//     CLOB and side.
+//   - This subaccount has strictly less open orders than the equity tier limit the subaccount qualifies for.
 //
 // Note that it does not perform collateralization checks since that will be done when matching the order (if the order
 // overlaps the book) and when adding the order to the book (if the order has remaining size after matching).
@@ -1240,7 +1257,8 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 // - `Order.Side` is a valid side.
 // - The order is a valid order for the referenced `ClobPair` (where `Order.ClobPairId == ClobPair.Id`). Specifically:
 //   - `Order.Subticks` is a multiple of `ClobPair.SubticksPerTick`.
-//   - `Order.Quantums` is a multiple of `ClobPair.MinOrderBaseQuantums`.
+//   - `Order.Quantums` is greater than orderbook's MinOrderBaseQuantums (equal to `ClobPair.StepBaseQuantums`)
+//   - `Order.Quantums` is a multiple of `ClobPair.StepBaseQuantums`.
 func (m *MemClobPriceTimePriority) validateNewOrder(
 	ctx sdk.Context,
 	order types.Order,
@@ -1286,31 +1304,13 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	}
 
 	// If an order with this `OrderId` does not already exist resting on the book for the same side, then
-	// we need to ensure that adding the new order would not cause the subaccount to exceed `MaxOpenOrdersPerClobAndSide`.
+	// we need to ensure that adding the new order would not exceed any equity tier limits.
 	// Note: The order could already be resting on the book for the same side if this order is a replacement.
 	// Note: The order could already be resting on the book for a different side if this order is a replacement.
 	doesOrderAlreadyExistForSide := restingOrderExists && existingRestingOrder.Side == order.Side
 	if !doesOrderAlreadyExistForSide {
-		existingSubaccountOrdersForClobAndSide, err := m.GetSubaccountOrders(
-			ctx,
-			order.GetClobPairId(),
-			order.OrderId.SubaccountId,
-			order.Side,
-		)
-		if err != nil {
-			// This is an unexpected error and implies prior memclob order validation failed.
-			panic(err)
-		}
-
-		// Verify that opening this order would not exceed the maximum amount of orders per CLOB and side.
-		// This limit is enforced to limit the number of orders that are accounted for in the add to orderbook
-		// collateralization check.
-		if len(existingSubaccountOrdersForClobAndSide) >= types.MaxSubaccountOrdersPerClobAndSide {
-			return sdkerrors.Wrapf(
-				types.ErrOrderWouldExceedMaxOpenOrdersPerClobAndSide,
-				"order id: %+v",
-				order.GetOrderId(),
-			)
+		if err := m.clobKeeper.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order); err != nil {
+			return err
 		}
 	}
 

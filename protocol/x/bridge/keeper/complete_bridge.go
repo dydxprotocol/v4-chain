@@ -9,9 +9,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
-// `CompleteBridge` processes a bridge event by minting the appropriate tokens
-// to the given address. The id of the bridge is not validated as it should have
-// already been validated by AcknowledgeBridges.
+// `CompleteBridge` processes a bridge event by transfer the appropriate tokens
+// from bridge module account to the given address. The id of the bridge is not
+// validated as it should have already been validated by AcknowledgeBridges.
 func (k Keeper) CompleteBridge(
 	ctx sdk.Context,
 	bridge types.BridgeEvent,
@@ -22,12 +22,6 @@ func (k Keeper) CompleteBridge(
 		metrics.CompleteBridge,
 		metrics.Latency,
 	)
-
-	// Mint coin to bridge module account.
-	bridgedCoins := sdk.Coins{bridge.Coin}
-	if err = k.bankKeeper.MintCoins(ctx, types.ModuleName, bridgedCoins); err != nil {
-		return err
-	}
 
 	// Convert bridge address string to sdk.AccAddress.
 	bridgeAccAddress, err := sdk.AccAddressFromBech32(bridge.Address)
@@ -40,7 +34,7 @@ func (k Keeper) CompleteBridge(
 		ctx,
 		types.ModuleName,
 		bridgeAccAddress,
-		bridgedCoins,
+		sdk.Coins{bridge.Coin},
 	); err != nil {
 		return err
 	}

@@ -617,11 +617,18 @@ var (
 		Subticks:     3_000_000_000,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 10},
 	}
-	Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price10000QuoteQt = clobtypes.Order{
+	Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100000QuoteQt = clobtypes.Order{
 		OrderId:      clobtypes.OrderId{SubaccountId: Carl_Num0, ClientId: 0, ClobPairId: 0},
 		Side:         clobtypes.Order_SIDE_BUY,
 		Quantums:     10,
 		Subticks:     100_000_000_000,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+	}
+	Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100001QuoteQt = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Carl_Num0, ClientId: 0, ClobPairId: 0},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     10,
+		Subticks:     100_001_000_000,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
 	}
 	Order_Carl_Num0_Id0_Clob0_Sell1kQtBTC_Price50000 = clobtypes.Order{

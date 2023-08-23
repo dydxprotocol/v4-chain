@@ -2,13 +2,13 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestModifyMarketParam(t *testing.T) {
@@ -136,20 +136,5 @@ func TestGetAllMarketParams(t *testing.T) {
 		t,
 		params,
 		keeper.GetAllMarketParams(ctx),
-	)
-}
-
-func TestGetAllMarketParams_MissingMarket(t *testing.T) {
-	ctx, keeper, storeKey, _, _, _ := keepertest.PricesKeepers(t)
-
-	// Write some bad data to the store
-	store := ctx.KVStore(storeKey)
-	store.Set(types.KeyPrefix(types.NumMarketsKey), lib.Uint32ToBytes(20))
-
-	// Expect a panic
-	require.PanicsWithError(
-		t,
-		"0: Market param does not exist",
-		func() { keeper.GetAllMarketParams(ctx) },
 	)
 }

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	"github.com/cometbft/cometbft/libs/log"
 
@@ -14,9 +15,10 @@ import (
 
 type (
 	Keeper struct {
-		cdc          codec.BinaryCodec
-		storeKey     storetypes.StoreKey
-		pricesKeeper types.PricesKeeper
+		cdc                 codec.BinaryCodec
+		storeKey            storetypes.StoreKey
+		pricesKeeper        types.PricesKeeper
+		indexerEventManager indexer_manager.IndexerEventManager
 	}
 )
 
@@ -24,12 +26,18 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	pricesKeeper types.PricesKeeper,
+	indexerEventManager indexer_manager.IndexerEventManager,
 ) *Keeper {
 	return &Keeper{
-		cdc:          cdc,
-		storeKey:     storeKey,
-		pricesKeeper: pricesKeeper,
+		cdc:                 cdc,
+		storeKey:            storeKey,
+		pricesKeeper:        pricesKeeper,
+		indexerEventManager: indexerEventManager,
 	}
+}
+
+func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
+	return k.indexerEventManager
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {

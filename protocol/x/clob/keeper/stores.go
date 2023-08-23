@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,6 +60,28 @@ func (k Keeper) GetUncommittedStatefulOrderCancellationTransientStore(ctx sdk.Co
 	return prefix.NewStore(
 		ctx.KVStore(k.transientStoreKey),
 		types.KeyPrefix(types.UncommittedStatefulOrderCancellationKeyPrefix),
+	)
+}
+
+// GetUncommittedStatefulOrderCountTransientStore fetches a state store used for creating,
+// reading, updating, and deleting a stateful order count from transient state. This represents
+// the number of uncommitted `order placements - order cancellations` during `CheckTx`.
+func (k Keeper) GetUncommittedStatefulOrderCountTransientStore(ctx sdk.Context) prefix.Store {
+	lib.AssertCheckTxMode(ctx)
+	return prefix.NewStore(
+		ctx.KVStore(k.transientStoreKey),
+		types.KeyPrefix(types.UncommittedStatefulOrderCountPrefix),
+	)
+}
+
+// GetToBeCommittedStatefulOrderCountTransientStore fetches a state store used for creating,
+// reading, updating, and deleting a stateful order count from transient state. This represents
+// the number of to be committed `order placements - order removals` during `DeliverTx`.
+func (k Keeper) GetToBeCommittedStatefulOrderCountTransientStore(ctx sdk.Context) prefix.Store {
+	lib.AssertDeliverTxMode(ctx)
+	return prefix.NewStore(
+		ctx.KVStore(k.transientStoreKey),
+		types.KeyPrefix(types.ToBeCommittedStatefulOrderCountPrefix),
 	)
 }
 

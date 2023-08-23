@@ -39,7 +39,7 @@ func genNumLiquidityTiers(r *rand.Rand, isReasonableGenesis bool) int {
 	)
 }
 
-// genPerpetualToMarketMap returns a list of `Market.Id` that should correspond to each`Perpetual.Id`.
+// genPerpetualToMarketMap returns a list of `Market.Id` that should correspond to each`perpetual.Params.Id`.
 func genPerpetualToMarketMap(r *rand.Rand, numPerpetuals, numMarkets int) []uint32 {
 	markets := sim_helpers.MakeRange(uint32(numMarkets))
 
@@ -60,12 +60,12 @@ func genPerpetualToMarketMap(r *rand.Rand, numPerpetuals, numMarkets int) []uint
 	return markets
 }
 
-// genTicker returns a randomized string used for `Perpetual.Ticker`.
+// genTicker returns a randomized string used for `perpetual.Params.Ticker`.
 func genTicker(r *rand.Rand) string {
 	return simtypes.RandStringOfLength(r, simtypes.RandIntBetween(r, 3, 6)) + "-USD"
 }
 
-// genAtomicResolution returns a randomized int used for `Perpetual.AtomicResolution`.
+// genAtomicResolution returns a randomized int used for `perpetual.Params.AtomicResolution`.
 func genAtomicResolution(r *rand.Rand, isReasonableGenesis bool) int32 {
 	return int32(simtypes.RandIntBetween(
 		r,
@@ -74,7 +74,7 @@ func genAtomicResolution(r *rand.Rand, isReasonableGenesis bool) int32 {
 	))
 }
 
-// genDefaultFundingPpm returns a randomized int used for `Perpetual.DefaultFundingPpm`.
+// genDefaultFundingPpm returns a randomized int used for `perpetual.Params.DefaultFundingPpm`.
 func genDefaultFundingPpm(r *rand.Rand) int32 {
 	defaultFundingPpmAbs := sim_helpers.GetRandomBucketValue(r, sim_helpers.DefaultFundingPpmAbsBuckets)
 	if sim_helpers.RandBool(r) {
@@ -202,13 +202,15 @@ func RandomizedGenState(simState *module.SimulationState) {
 		marketId := marketsForPerp[i]
 
 		perpetuals[i] = types.Perpetual{
-			Ticker:            genTicker(r),
-			MarketId:          marketId,
-			AtomicResolution:  genAtomicResolution(r, isReasonableGenesis),
-			DefaultFundingPpm: genDefaultFundingPpm(r),
-			FundingIndex:      dtypes.ZeroInt(),
-			OpenInterest:      types.DefaultOpenInterest,
-			LiquidityTier:     uint32(simtypes.RandIntBetween(r, 0, numLiquidityTiers)),
+			Params: types.PerpetualParams{
+				Ticker:            genTicker(r),
+				MarketId:          marketId,
+				AtomicResolution:  genAtomicResolution(r, isReasonableGenesis),
+				DefaultFundingPpm: genDefaultFundingPpm(r),
+				LiquidityTier:     uint32(simtypes.RandIntBetween(r, 0, numLiquidityTiers)),
+			},
+			FundingIndex: dtypes.ZeroInt(),
+			OpenInterest: types.DefaultOpenInterest,
 		}
 	}
 

@@ -169,6 +169,15 @@ const GenesisState = `{
               "amount": "900000000000000000"
             }
           ]
+        },
+        {
+          "address": "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+          "coins": [
+            {
+              "denom": "dv4tnt",
+              "amount": "1000000000"
+            }
+          ]
         }
       ],
       "supply": [],
@@ -237,29 +246,23 @@ const GenesisState = `{
       "clob_pairs": [
         {
           "id": 0,
-          "maker_fee_ppm": 200,
-          "min_order_base_quantums": 10,
           "perpetual_clob_metadata": {
             "perpetual_id": 0
           },
           "quantum_conversion_exponent": -8,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 10,
-          "subticks_per_tick": 10000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000
         },
         {
           "id": 1,
-          "maker_fee_ppm": 200,
-          "min_order_base_quantums": 1000,
           "perpetual_clob_metadata": {
             "perpetual_id": 1
           },
           "quantum_conversion_exponent": -9,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000,
-          "subticks_per_tick": 100000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000
         }
       ],
       "equity_tier_limit_config": {
@@ -405,7 +408,7 @@ const GenesisState = `{
           },
           {
             "name": "2",
-            "absolute_volume_requirement": "1000000",
+            "absolute_volume_requirement": "1000000000000",
             "total_volume_share_requirement_ppm": 0,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
@@ -413,7 +416,7 @@ const GenesisState = `{
           },
           {
             "name": "3",
-            "absolute_volume_requirement": "5000000",
+            "absolute_volume_requirement": "5000000000000",
             "total_volume_share_requirement_ppm": 0,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
@@ -421,7 +424,7 @@ const GenesisState = `{
           },
           {
             "name": "4",
-            "absolute_volume_requirement": "25000000",
+            "absolute_volume_requirement": "25000000000000",
             "total_volume_share_requirement_ppm": 0,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
@@ -429,7 +432,7 @@ const GenesisState = `{
           },
           {
             "name": "5",
-            "absolute_volume_requirement": "125000000",
+            "absolute_volume_requirement": "125000000000000",
             "total_volume_share_requirement_ppm": 0,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
@@ -437,33 +440,33 @@ const GenesisState = `{
           },
           {
             "name": "6",
-            "absolute_volume_requirement": "125000000",
-            "total_volume_share_requirement_ppm": 10000,
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
             "maker_volume_share_requirement_ppm": 0,
             "maker_fee_ppm": -110,
             "taker_fee_ppm": 250
           },
           {
             "name": "7",
-            "absolute_volume_requirement": "125000000",
-            "total_volume_share_requirement_ppm": 10000,
-            "maker_volume_share_requirement_ppm": 20000,
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 10000,
             "maker_fee_ppm": -110,
             "taker_fee_ppm": 250
           },
           {
             "name": "8",
-            "absolute_volume_requirement": "125000000",
-            "total_volume_share_requirement_ppm": 10000,
-            "maker_volume_share_requirement_ppm": 50000,
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 20000,
             "maker_fee_ppm": -110,
             "taker_fee_ppm": 250
           },
           {
             "name": "9",
-            "absolute_volume_requirement": "125000000",
-            "total_volume_share_requirement_ppm": 10000,
-            "maker_volume_share_requirement_ppm": 100000,
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 40000,
             "maker_fee_ppm": -110,
             "taker_fee_ppm": 250
           }
@@ -796,20 +799,24 @@ const GenesisState = `{
       },
       "perpetuals": [
         {
-          "atomic_resolution": -10,
-          "default_funding_ppm": 0,
-          "id": 0,
-          "liquidity_tier": 0,
-          "market_id": 0,
-          "ticker": "BTC-USD"
+          "params": {
+            "atomic_resolution": -10,
+            "default_funding_ppm": 0,
+            "id": 0,
+            "liquidity_tier": 0,
+            "market_id": 0,
+            "ticker": "BTC-USD"
+          }
         },
         {
-          "atomic_resolution": -9,
-          "default_funding_ppm": 0,
-          "id": 1,
-          "liquidity_tier": 0,
-          "market_id": 1,
-          "ticker": "ETH-USD"
+          "params": {
+            "atomic_resolution": -9,
+            "default_funding_ppm": 0,
+            "id": 1,
+            "liquidity_tier": 0,
+            "market_id": 1,
+            "ticker": "ETH-USD"
+          }
         }
       ]
     },

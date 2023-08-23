@@ -66,6 +66,7 @@ export interface OrderFromDatabase extends IdBasedModelFromDatabase {
   goodTilBlockTime?: string;
   createdAtHeight?: string;
   clientMetadata: string;
+  triggerPrice?: string;
 }
 
 export interface PerpetualMarketFromDatabase {

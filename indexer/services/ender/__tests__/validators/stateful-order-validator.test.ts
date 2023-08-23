@@ -314,6 +314,30 @@ describe('stateful-order-validator', () => {
         },
         'StatefulOrderEvent conditional order must have valid condition type',
       ],
+
+      // Conditional order triggered Validations
+      [
+        'conditional order triggered does not contain orderId',
+        {
+          conditionalOrderTriggered: {
+            triggeredOrderId: undefined,
+          },
+        },
+        'StatefulOrderEvent conditional order triggered must contain an orderId',
+      ],
+      [
+        'conditional order triggered does not contain the correct order flag',
+        {
+          conditionalOrderTriggered: {
+            triggeredOrderId: {
+              ...defaultOrderId,
+              orderFlags: ORDER_FLAG_SHORT_TERM,
+            },
+          },
+        },
+        `StatefulOrderEvent conditional order triggered must have order flag ${ORDER_FLAG_CONDITIONAL}`,
+      ],
+
     ])('throws error if event %s', (
       _message: string,
       event: StatefulOrderEventV1,

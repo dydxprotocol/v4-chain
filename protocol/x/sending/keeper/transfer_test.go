@@ -127,11 +127,11 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	for _, p := range perpetuals {
 		_, err := perpKeeper.CreatePerpetual(
 			ctx,
-			p.Ticker,
-			p.MarketId,
-			p.AtomicResolution,
-			p.DefaultFundingPpm,
-			p.LiquidityTier,
+			p.Params.Ticker,
+			p.Params.MarketId,
+			p.Params.AtomicResolution,
+			p.Params.DefaultFundingPpm,
+			p.Params.LiquidityTier,
 		)
 		require.NoError(t, err)
 	}
@@ -250,11 +250,11 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 	for _, p := range perpetuals {
 		_, err := perpKeeper.CreatePerpetual(
 			ctx,
-			p.Ticker,
-			p.MarketId,
-			p.AtomicResolution,
-			p.DefaultFundingPpm,
-			p.LiquidityTier,
+			p.Params.Ticker,
+			p.Params.MarketId,
+			p.Params.AtomicResolution,
+			p.Params.DefaultFundingPpm,
+			p.Params.LiquidityTier,
 		)
 		require.NoError(t, err)
 	}

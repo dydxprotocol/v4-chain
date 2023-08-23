@@ -4,6 +4,7 @@ import {
   OrderType,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
+  OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -55,7 +56,7 @@ export class StatefulOrderPlacementHandler extends
     }
 
     await this.runFuncWithTimingStatAndErrorLogging(
-      this.upsertOrder(perpetualMarket!, order, OrderType.LIMIT),
+      this.upsertOrder(perpetualMarket!, order, OrderType.LIMIT, OrderStatus.OPEN),
       this.generateTimingStatsOptions('upsert_order'),
     );
 

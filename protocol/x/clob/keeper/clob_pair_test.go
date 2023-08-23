@@ -38,20 +38,14 @@ func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Clob
 		items[i].SubticksPerTick = 5
 		items[i].StepBaseQuantums = 5
 		items[i].Status = types.ClobPair_STATUS_ACTIVE
-		items[i].MinOrderBaseQuantums = 10
-		items[i].MakerFeePpm = constants.MakerFeePpm
-		items[i].TakerFeePpm = constants.TakerFeePpm
 
 		_, err := keeper.CreatePerpetualClobPair(
 			ctx,
 			clobtest.MustPerpetualId(items[i]),
 			satypes.BaseQuantums(items[i].StepBaseQuantums),
-			satypes.BaseQuantums(items[i].MinOrderBaseQuantums),
 			items[i].QuantumConversionExponent,
 			items[i].SubticksPerTick,
 			items[i].Status,
-			items[i].MakerFeePpm,
-			items[i].TakerFeePpm,
 		)
 		if err != nil {
 			panic(err)
@@ -168,20 +162,9 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 			)),
 			expectedErr: "has invalid perpetual.",
 		},
-		"CLOB pair is invalid when the minimum order size is 0": {
-			clobPair:    *clobtest.GenerateClobPair(clobtest.WithMinOrderBaseQuantums(0)),
-			expectedErr: "invalid ClobPair parameter: MinOrderBaseQuantums must be > 0.",
-		},
 		"CLOB pair is invalid when the step size is 0": {
 			clobPair:    *clobtest.GenerateClobPair(clobtest.WithStepBaseQuantums(0)),
 			expectedErr: "invalid ClobPair parameter: StepBaseQuantums must be > 0.",
-		},
-		"CLOB pair is invalid when minimum order size is not a multiple of step size": {
-			clobPair: *clobtest.GenerateClobPair(
-				clobtest.WithMinOrderBaseQuantums(satypes.BaseQuantums(21)),
-				clobtest.WithStepBaseQuantums(satypes.BaseQuantums(4)),
-			),
-			expectedErr: "must be divisible by StepBaseQuantums",
 		},
 		"CLOB pair is invalid when the subticks per tick is 0": {
 			clobPair:    *clobtest.GenerateClobPair(clobtest.WithSubticksPerTick(0)),
@@ -190,21 +173,6 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 		"CLOB pair is invalid when the status is unspecified": {
 			clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
 			expectedErr: "invalid ClobPair parameter: Status must be specified.",
-		},
-		"CLOB pair is invalid when the maker fee is greater than the max fee": {
-			clobPair:    *clobtest.GenerateClobPair(clobtest.WithMakerFeePpm(1000000)),
-			expectedErr: "be <= MaxFeePpm",
-		},
-		"CLOB pair is invalid when the taker fee is greater than the max fee": {
-			clobPair:    *clobtest.GenerateClobPair(clobtest.WithTakerFeePpm(1000000)),
-			expectedErr: "be <= MaxFeePpm",
-		},
-		"CLOB pair is invalid when the maker fee is higher than the taker fee": {
-			clobPair: *clobtest.GenerateClobPair(
-				clobtest.WithMakerFeePpm(100),
-				clobtest.WithTakerFeePpm(10),
-			),
-			expectedErr: "must be <= TakerFeePpm",
 		},
 	}
 	for name, tc := range tests {
@@ -221,12 +189,9 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 				ks.Ctx,
 				clobtest.MustPerpetualId(tc.clobPair),
 				satypes.BaseQuantums(tc.clobPair.StepBaseQuantums),
-				satypes.BaseQuantums(tc.clobPair.MinOrderBaseQuantums),
 				tc.clobPair.QuantumConversionExponent,
 				tc.clobPair.SubticksPerTick,
 				tc.clobPair.Status,
-				tc.clobPair.MakerFeePpm,
-				tc.clobPair.TakerFeePpm,
 			)
 			storedClobPair, found := ks.ClobKeeper.GetClobPair(ks.Ctx, types.ClobPairId(tc.clobPair.Id))
 			numClobPairs := ks.ClobKeeper.GetNumClobPairs(ks.Ctx)
@@ -348,12 +313,9 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 					ks.Ctx,
 					clobtest.MustPerpetualId(make.clobPair),
 					satypes.BaseQuantums(make.clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(make.clobPair.MinOrderBaseQuantums),
 					make.clobPair.QuantumConversionExponent,
 					make.clobPair.SubticksPerTick,
 					make.clobPair.Status,
-					make.clobPair.MakerFeePpm,
-					make.clobPair.TakerFeePpm,
 				)
 				if make.expectedErr == "" {
 					require.NoError(t, err)

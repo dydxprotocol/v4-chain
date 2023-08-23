@@ -185,12 +185,6 @@ export interface ClobPair {
 
   minOrderBaseQuantums: Long;
   status: ClobPair_Status;
-  /** The maker fee in parts-per-million. */
-
-  makerFeePpm: number;
-  /** The taker fee in parts-per-million. */
-
-  takerFeePpm: number;
 }
 /**
  * ClobPair represents a single CLOB pair for a given product
@@ -223,12 +217,6 @@ export interface ClobPairSDKType {
 
   min_order_base_quantums: Long;
   status: ClobPair_StatusSDKType;
-  /** The maker fee in parts-per-million. */
-
-  maker_fee_ppm: number;
-  /** The taker fee in parts-per-million. */
-
-  taker_fee_ppm: number;
 }
 
 function createBasePerpetualClobMetadata(): PerpetualClobMetadata {
@@ -340,9 +328,7 @@ function createBaseClobPair(): ClobPair {
     subticksPerTick: 0,
     quantumConversionExponent: 0,
     minOrderBaseQuantums: Long.UZERO,
-    status: 0,
-    makerFeePpm: 0,
-    takerFeePpm: 0
+    status: 0
   };
 }
 
@@ -378,14 +364,6 @@ export const ClobPair = {
 
     if (message.status !== 0) {
       writer.uint32(64).int32(message.status);
-    }
-
-    if (message.makerFeePpm !== 0) {
-      writer.uint32(72).uint32(message.makerFeePpm);
-    }
-
-    if (message.takerFeePpm !== 0) {
-      writer.uint32(80).uint32(message.takerFeePpm);
     }
 
     return writer;
@@ -432,14 +410,6 @@ export const ClobPair = {
           message.status = (reader.int32() as any);
           break;
 
-        case 9:
-          message.makerFeePpm = reader.uint32();
-          break;
-
-        case 10:
-          message.takerFeePpm = reader.uint32();
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -459,8 +429,6 @@ export const ClobPair = {
     message.quantumConversionExponent = object.quantumConversionExponent ?? 0;
     message.minOrderBaseQuantums = object.minOrderBaseQuantums !== undefined && object.minOrderBaseQuantums !== null ? Long.fromValue(object.minOrderBaseQuantums) : Long.UZERO;
     message.status = object.status ?? 0;
-    message.makerFeePpm = object.makerFeePpm ?? 0;
-    message.takerFeePpm = object.takerFeePpm ?? 0;
     return message;
   }
 

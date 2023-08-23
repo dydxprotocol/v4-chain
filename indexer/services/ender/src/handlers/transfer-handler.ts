@@ -21,9 +21,7 @@ export class TransferHandler extends Handler<TransferEventV1> {
   eventType: string = 'TransferEvent';
 
   public getParallelizationIds(): string[] {
-    // All transfers can be processed in parallel as this handler only creates new rows in the
-    // database and does not modify the subaccount's asset positions (done in
-    // SubaccountUpdateEvent), so no parallelization ids
+    // Must be handled sequentially with asset create events
     return [];
   }
 

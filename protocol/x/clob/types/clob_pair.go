@@ -4,22 +4,12 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-const MaxFeePpm = 100000 // 10%
-
 func (c *ClobPair) GetClobPairSubticksPerTick() SubticksPerTick {
 	return SubticksPerTick(c.SubticksPerTick)
 }
 
 func (c *ClobPair) GetClobPairMinOrderBaseQuantums() satypes.BaseQuantums {
-	return satypes.BaseQuantums(c.MinOrderBaseQuantums)
-}
-
-// Get fee rate in ppm. Returns the taker fee for taker orders, otherwise returns the maker fee.
-func (c *ClobPair) GetFeePpm(isTaker bool) uint32 {
-	if isTaker {
-		return c.TakerFeePpm
-	}
-	return c.MakerFeePpm
+	return satypes.BaseQuantums(c.StepBaseQuantums)
 }
 
 // GetPerpetualId returns the `PerpetualId` for the provided `clobPair`.

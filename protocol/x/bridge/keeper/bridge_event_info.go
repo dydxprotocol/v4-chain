@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
@@ -32,6 +34,20 @@ func (k Keeper) SetAcknowledgedEventInfo(
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&acknowledgedEventInfo)
 	store.Set([]byte(acknowledgedEventInfoKey), b)
+
+	// Emit metrics on acknowledged event info.
+	telemetry.SetGauge(
+		float32(acknowledgedEventInfo.NextId),
+		types.ModuleName,
+		metrics.AcknowledgedEventInfo,
+		metrics.NextId,
+	)
+	telemetry.SetGauge(
+		float32(acknowledgedEventInfo.EthBlockHeight),
+		types.ModuleName,
+		metrics.AcknowledgedEventInfo,
+		metrics.EthBlockHeight,
+	)
 
 	return nil
 }
