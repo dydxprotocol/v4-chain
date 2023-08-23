@@ -919,37 +919,37 @@ function edit_genesis() {
 	yfi_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/yfi_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[32].exchange_config_json' -v "$yfi_exchange_config_json"
 
+	# Market: USDT-USD
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].pair' -v 'USDT-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].id' -v '1000000'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].exponent' -v '-9'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].min_price_change_ppm' -v '250'  # 0.025%
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[33].id' -v '1000000'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[33].exponent' -v '-9'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[33].price' -v '1000000000'          # $1 = 1 USDT.
+	# USDT Exchange Config
+	usdt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/usdt_exchange_config.json" | jq -c '.')
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].exchange_config_json' -v "$usdt_exchange_config_json"
+
 	# Market: TEST-USD
 	if $ADD_TESTING_MARKETS; then
 		dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
-		dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].pair' -v 'TEST-USD'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].id' -v '33'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].exponent' -v '-5'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].min_exchanges' -v '1'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].min_price_change_ppm' -v '250' # 0.025%
+		dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].pair' -v 'TEST-USD'
+		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].id' -v '33'
+		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].exponent' -v '-5'
+		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_exchanges' -v '1'
+		dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_price_change_ppm' -v '250' # 0.025%
 		dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[33].id' -v '33'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[33].exponent' -v '-5'
-		dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[33].price' -v '10000000'          # $100 = 1 TEST.
+		dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].id' -v '33'
+		dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].exponent' -v '-5'
+		dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].price' -v '10000000'          # $100 = 1 TEST.
 		# TEST Exchange Config
 		test_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/test_exchange_config.json" | jq -c '.')
-		dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].exchange_config_json' -v "$test_exchange_config_json"
+		dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$test_exchange_config_json"
 	fi
-
-	# Market: USDT-USD
-	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
-	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].pair' -v 'USDT-USD'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].id' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_exchanges' -v '3'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_price_change_ppm' -v '250'  # 0.025%
-	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].id' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].price' -v '1000000000'          # $1 = 1 USDT.
-	# USDT Exchange Config
-	usdt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/usdt_exchange_config.json" | jq -c '.')
-	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$usdt_exchange_config_json"
 
 	total_accounts_quote_balance=0
 	acct_idx=0
