@@ -7,7 +7,6 @@ import {
   LiquidityTier,
   MarketParam,
   MarketPrice,
-  Perpetual,
   PerpetualMarketCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
