@@ -13,8 +13,11 @@ import (
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	vest "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -49,6 +52,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*bridge.MsgUpdateProposeParams,
 		*bridge.MsgUpdateSafetyParams,
 
+		// clob
+		*clob.MsgCreateClobPair,
+
 		// delaymsg
 		*delaymsg.MsgDelayMessage,
 
@@ -57,6 +63,12 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// gov
 		*gov.MsgExecLegacyContent,
+
+		// perpetuals
+		*perpetuals.MsgCreatePerpetual,
+
+		// prices
+		*prices.MsgCreateOracleMarket,
 
 		// upgrade
 		*upgrade.MsgCancelUpgrade,
