@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -436,20 +437,6 @@ func TestGetClobPairIdForPerpetual_Success(t *testing.T) {
 	require.Equal(t, types.ClobPairId(0), clobPairId)
 }
 
-func TestGetClobPairIdForPerpetual_SuccessMultipleClobPairIds(t *testing.T) {
-	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-
-	ks.ClobKeeper.PerpetualIdToClobPairId = map[uint32][]types.ClobPairId{
-		0: {types.ClobPairId(0), types.ClobPairId(1)},
-	}
-
-	clobPairId, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0)
-	require.NoError(t, err)
-	// The first CLOB pair ID should be returned.
-	require.Equal(t, types.ClobPairId(0), clobPairId)
-}
-
 func TestGetClobPairIdForPerpetual_ErrorNoClobPair(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
@@ -471,8 +458,32 @@ func TestGetClobPairIdForPerpetual_PanicsEmptyClobPair(t *testing.T) {
 		0: {},
 	}
 
-	require.Panics(t, func() {
-		if _, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0); err != nil {
-		}
-	})
+	require.PanicsWithValue(
+		t,
+		"GetClobPairIdForPerpetual: Perpetual ID was created without a CLOB pair ID.",
+		func() {
+			if _, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0); err != nil {
+				fmt.Printf("function should panic, not have error %+v", err)
+			}
+		},
+	)
+}
+
+func TestGetClobPairIdForPerpetual_PanicsMultipleClobPairIds(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+	ks.ClobKeeper.PerpetualIdToClobPairId = map[uint32][]types.ClobPairId{
+		0: {types.ClobPairId(0), types.ClobPairId(1)},
+	}
+
+	require.PanicsWithValue(
+		t,
+		"GetClobPairIdForPerpetual: Perpetual ID was created with multiple CLOB pair IDs.",
+		func() {
+			if _, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0); err != nil {
+				fmt.Printf("function should panic, not have error %+v", err)
+			}
+		},
+	)
 }

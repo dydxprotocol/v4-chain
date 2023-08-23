@@ -211,6 +211,10 @@ func (k Keeper) GetClobPairIdForPerpetual(
 		panic("GetClobPairIdForPerpetual: Perpetual ID was created without a CLOB pair ID.")
 	}
 
+	if len(clobPairIds) > 1 {
+		panic("GetClobPairIdForPerpetual: Perpetual ID was created with multiple CLOB pair IDs.")
+	}
+
 	return clobPairIds[0], nil
 }
 
