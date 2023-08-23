@@ -367,7 +367,7 @@ func TestEndBlocker_Success(t *testing.T) {
 							types.Subticks(10),
 							constants.BtcUsdExponent,
 							constants.ClobPair_Btc,
-							constants.BtcUsd_20PercentInitial_10PercentMaintenance.AtomicResolution,
+							constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
 							lib.QuoteCurrencyAtomicResolution,
 						),
 					},
@@ -381,7 +381,7 @@ func TestEndBlocker_Success(t *testing.T) {
 							types.Subticks(35),
 							constants.EthUsdExponent,
 							constants.ClobPair_Eth,
-							constants.EthUsd_20PercentInitial_10PercentMaintenance.AtomicResolution,
+							constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
 							lib.QuoteCurrencyAtomicResolution,
 						),
 					},
@@ -665,11 +665,11 @@ func TestEndBlocker_Success(t *testing.T) {
 			} {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -1340,11 +1340,11 @@ func TestPrepareCheckState(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}

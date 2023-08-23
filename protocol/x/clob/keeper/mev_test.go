@@ -871,11 +871,11 @@ func TestRecordMevMetrics(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -968,7 +968,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				mockPerpetualKeeper.On("GetSettlement", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(new(big.Int), new(big.Int), nil)
 				for _, p := range tc.perpetuals {
-					mockPerpetualKeeper.On("GetPerpetual", mock.Anything, p.Id).Return(p, nil)
+					mockPerpetualKeeper.On("GetPerpetual", mock.Anything, p.Params.Id).Return(p, nil)
 				}
 			}
 
@@ -1210,11 +1210,11 @@ func TestGetMidPrices(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}

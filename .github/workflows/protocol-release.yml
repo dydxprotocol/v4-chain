@@ -1,0 +1,122 @@
+name: Release
+# This workflow helps with creating releases.
+# This job will only be triggered when a release tag (vX.X.X) or release candidate tag (vX.X.X-rcX) is pushed
+on:  # yamllint disable-line rule:truthy
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"  # e.g.: v1.0.1
+      - "v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"  # e.g.: v1.0.1-rc1
+
+
+jobs:
+  protocol-release:
+    name: Create Release
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: ./protocol
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3.3.0
+      - name: set tag env
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: install go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.19'
+          check-latest: true
+      - name: Create Directory
+        run: mkdir ./build
+      - name: Build Reproducible Linux Binaries
+        run: make distclean build-reproducible
+      - name: Rename Binaries
+        run: |
+          mv ./build/dydxprotocold:linux-arm64 ./build/dydxprotocold-${{ env.VERSION }}-linux-arm64
+          mv ./build/dydxprotocold:linux-amd64 ./build/dydxprotocold-${{ env.VERSION }}-linux-amd64
+      - name: Compress binaries
+        run: |
+          tar -cvzf dydxprotocold-${{ env.VERSION }}-linux-arm64.tar.gz \
+            ./build/dydxprotocold-${{ env.VERSION }}-linux-arm64
+          tar -cvzf dydxprotocold-${{ env.VERSION }}-linux-amd64.tar.gz \
+            ./build/dydxprotocold-${{ env.VERSION }}-linux-amd64
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          # TODO(DEC-1743): add more helpful release notes and change logs
+          body: Release ${{ env.VERSION }}
+          draft: true
+          prerelease: false
+      - name: Upload linux-amd64 tar.gz
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dydxprotocold-${{ env.VERSION }}-linux-amd64.tar.gz
+          asset_name: dydxprotocold-${{ env.VERSION }}-linux-amd64.tar.gz
+          asset_content_type: application/gzip
+      - name: Upload linux-arm64 tar.gz
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dydxprotocold-${{ env.VERSION }}-linux-arm64.tar.gz
+          asset_name: dydxprotocold-${{ env.VERSION }}-linux-arm64.tar.gz
+          asset_content_type: application/gzip
+          # TODO(DEC-1743): add build report and binary check sums
+
+  dydxpy-release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./dydxpy
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      
+      - name: Install buf
+        run: |
+          BIN="/usr/local/bin" && \
+          VERSION="1.26.1" && \
+          curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
+          chmod +x "${BIN}/buf"
+
+      - name: Install Requirements
+        run: pip install -r requirements-publish.txt
+
+      - name: Generate dydxpy
+        working-directory: ./ # Move to parent folder
+        run: make dydxpy-gen
+
+      - name: Set Env from Tag (remove 'v' prefix)
+        run: echo "VERSION=$(echo {GITHUB_REF#refs/tags/v} | tr '-' '.')" >> $GITHUB_ENV
+
+      - name: Update version in setup.py
+        run: echo $VERSION; sed -i "s/{{VERSION}}/$VERSION/g" setup.py
+
+      - name: Build package and source tarball
+        run: |
+          pip3 wheel --no-deps -w dist .
+          python3 setup.py sdist -d dist
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          twine upload -r pypi dist/*
