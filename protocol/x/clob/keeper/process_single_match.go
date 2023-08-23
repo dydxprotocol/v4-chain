@@ -376,7 +376,13 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	if !success {
-		panic("Err != nil but success was false")
+		panic(
+			fmt.Sprintf(
+				"persistMatchedOrders: Err != nil but success was false. Error: %v, Updates: %+v",
+				err,
+				updates,
+			),
+		)
 	}
 
 	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta); err != nil {

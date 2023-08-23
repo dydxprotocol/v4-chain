@@ -241,8 +241,8 @@ const (
 	CanUpdateSubaccounts                  = "can_update_subaccounts"
 	GetNetCollateralAndMarginRequirements = "get_net_collateral_and_margin_requirements"
 	GetSubaccount                         = "get_subaccount"
-	MakerSubaccount                       = "taker_subaccount"
-	TakerSubaccount                       = "maker_subaccount"
+	MakerSubaccount                       = "maker_subaccount"
+	TakerSubaccount                       = "taker_subaccount"
 	UpdateSubaccounts                     = "update_subaccounts"
 
 	// Liquidation Daemon.
