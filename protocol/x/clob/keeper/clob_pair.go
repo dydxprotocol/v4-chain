@@ -205,3 +205,64 @@ func (k Keeper) GetAllClobPair(ctx sdk.Context) (list []types.ClobPair) {
 
 	return
 }
+
+// validateOrderAgainstClobPair returns an error if placing the provided
+// order would conflict with the clob pair's current status.
+func (k Keeper) validateOrderAgainstClobPair(
+	ctx sdk.Context,
+	order types.Order,
+	clobPair types.ClobPair,
+) error {
+	switch clobPair.Status {
+	case types.ClobPair_STATUS_ACTIVE:
+		return nil
+	case types.ClobPair_STATUS_INITIALIZING:
+		// Reject non-short-term orders.
+		if order.IsStatefulOrder() {
+			return sdkerrors.Wrapf(
+				types.ErrOrderConflictsWithClobPairStatus,
+				"Order %+v must not be stateful for clob pair with status %+v",
+				order,
+				clobPair.Status,
+			)
+		}
+
+		// Reject non-post-only orders.
+		if order.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
+			return sdkerrors.Wrapf(
+				types.ErrOrderConflictsWithClobPairStatus,
+				"Order %+v must be post-only for clob pair with status %+v",
+				order,
+				clobPair.Status,
+			)
+		}
+
+		// Reject orders on the wrong side of the market.
+		currentOraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+		currentOraclePriceSubticks := lib.BigRatRound(currentOraclePriceSubticksRat, false).Uint64()
+		// Throw error if order is a buy and order subticks is greater than oracle price subticks
+		if order.IsBuy() && order.Subticks > currentOraclePriceSubticks {
+			return sdkerrors.Wrapf(
+				types.ErrOrderConflictsWithClobPairStatus,
+				"Order subticks %+v must be less than or equal to oracle price subticks %+v for clob pair with status %+v",
+				order.Subticks,
+				currentOraclePriceSubticks,
+				clobPair.Status,
+			)
+		}
+		// Throw error if order is a sell and order subticks is less than oracle price subticks
+		if !order.IsBuy() && order.Subticks < currentOraclePriceSubticks {
+			return sdkerrors.Wrapf(
+				types.ErrOrderConflictsWithClobPairStatus,
+				"Order subticks %+v must be greater than or equal to oracle price subticks %+v for clob pair with status %+v",
+				order.Subticks,
+				currentOraclePriceSubticks,
+				clobPair.Status,
+			)
+		}
+
+		return nil
+	default:
+		return nil
+	}
+}

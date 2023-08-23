@@ -153,6 +153,11 @@ var (
 		32,
 		"Existing stateful order cancellation has higher-or-equal priority than the new one",
 	)
+	ErrOrderConflictsWithClobPairStatus = sdkerrors.Register(
+		ModuleName,
+		33,
+		"Order conflicts with ClobPair status",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(

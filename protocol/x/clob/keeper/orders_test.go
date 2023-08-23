@@ -1111,6 +1111,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 
 	tests := map[string]struct {
 		setupDeliverTxState func(ctx sdk.Context, k *keeper.Keeper)
+		clobPairs           []types.ClobPair
 		order               types.Order
 		expectedErr         string
 	}{
@@ -1470,25 +1471,167 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			},
 			expectedErr: types.ErrInvalidPlaceOrder.Error(),
 		},
+		"Fails with long-term order and ClobPair_Status of INITIALIZING": {
+			clobPairs: []types.ClobPair{
+				{
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					Status:           types.ClobPair_STATUS_INITIALIZING,
+					StepBaseQuantums: 10,
+					SubticksPerTick:  10,
+				},
+			},
+			order:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+			expectedErr: "must not be stateful for clob pair with status",
+		},
+		"Fails with conditional order and ClobPair_Status of INITIALIZING": {
+			clobPairs: []types.ClobPair{
+				{
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					Status:           types.ClobPair_STATUS_INITIALIZING,
+					StepBaseQuantums: 10,
+					SubticksPerTick:  10,
+				},
+			},
+			order:       constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
+			expectedErr: "must not be stateful for clob pair with status",
+		},
+		"Fails with short-term non-post-only order and ClobPair_Status of INITIALIZING": {
+			clobPairs: []types.ClobPair{
+				{
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					Status:           types.ClobPair_STATUS_INITIALIZING,
+					StepBaseQuantums: 10,
+					SubticksPerTick:  10,
+				},
+			},
+			order:       constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16,
+			expectedErr: "must be post-only for clob pair with status",
+		},
+		"Fails with short-term post-only bid above oracle price and ClobPair_Status of INITIALIZING": {
+			clobPairs: []types.ClobPair{
+				{
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					Status:           types.ClobPair_STATUS_INITIALIZING,
+					StepBaseQuantums: 10,
+					SubticksPerTick:  1,
+				},
+			},
+			order: types.Order{
+				OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 1, ClobPairId: 0},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     20,
+				Subticks:     3, // oracle price for btc is 2 subticks for default genesis
+				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 15},
+				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
+			},
+			expectedErr: "must be less than or equal to oracle price subticks",
+		},
+		"Fails with short-term post-only ask below oracle price and ClobPair_Status of INITIALIZING": {
+			clobPairs: []types.ClobPair{
+				{
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					Status:           types.ClobPair_STATUS_INITIALIZING,
+					StepBaseQuantums: 10,
+					SubticksPerTick:  1,
+				},
+			},
+			order: types.Order{
+				OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 1, ClobPairId: 0},
+				Side:         types.Order_SIDE_SELL,
+				Quantums:     20,
+				Subticks:     1, // oracle price for btc is 2 subticks for default genesis
+				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 15},
+				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
+			},
+			expectedErr: "must be greater than or equal to oracle price subticks",
+		},
+		"Succeeds with short-term post-only bid below oracle price and ClobPair_Status of INITIALIZING": {
+			clobPairs: []types.ClobPair{
+				{
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					Status:           types.ClobPair_STATUS_INITIALIZING,
+					StepBaseQuantums: 10,
+					SubticksPerTick:  1,
+				},
+			},
+			order: types.Order{
+				OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 1, ClobPairId: 0},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     20,
+				Subticks:     1, // oracle price for btc is 2 subticks for default genesis
+				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 15},
+				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
+			},
+		},
+		"Succeeds with short-term post-only ask above oracle price and ClobPair_Status of INITIALIZING": {
+			clobPairs: []types.ClobPair{
+				{
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					Status:           types.ClobPair_STATUS_INITIALIZING,
+					StepBaseQuantums: 10,
+					SubticksPerTick:  1,
+				},
+			},
+			order: types.Order{
+				OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 1, ClobPairId: 0},
+				Side:         types.Order_SIDE_SELL,
+				Quantums:     20,
+				Subticks:     3, // oracle price for btc is 2 subticks for default genesis
+				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 15},
+				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
+			},
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() cmt.GenesisDoc {
 				genesis := testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *types.GenesisState) {
-					state.ClobPairs = []types.ClobPair{
-						{
-							Metadata: &types.ClobPair_PerpetualClobMetadata{
-								PerpetualClobMetadata: &types.PerpetualClobMetadata{
-									PerpetualId: 0,
-								},
+				clobPairs := []types.ClobPair{
+					{
+						Metadata: &types.ClobPair_PerpetualClobMetadata{
+							PerpetualClobMetadata: &types.PerpetualClobMetadata{
+								PerpetualId: 0,
 							},
-							Status:           types.ClobPair_STATUS_ACTIVE,
-							StepBaseQuantums: 12,
-							SubticksPerTick:  39,
 						},
-					}
+						Status:           types.ClobPair_STATUS_ACTIVE,
+						StepBaseQuantums: 12,
+						SubticksPerTick:  39,
+					},
+				}
+				if tc.clobPairs != nil {
+					clobPairs = tc.clobPairs
+				}
+				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *types.GenesisState) {
+					state.ClobPairs = clobPairs
 				})
 				return genesis
 			}).Build()
@@ -1513,6 +1656,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				require.True(t, resp.IsErr())
 				require.Contains(t, resp.Log, tc.expectedErr)
 			} else {
+				fmt.Println(resp.Log)
 				require.True(t, resp.IsOK())
 			}
 		})
