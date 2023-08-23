@@ -3,7 +3,6 @@ package exchange_common
 import "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 
 // All market ids must match with the genesis state.
-// TODO(CORE-296): Remove static daemon market config.
 const (
 	// MARKET_BTC_USD is the id for the BTC-USD market pair.
 	MARKET_BTC_USD types.MarketId = 0
