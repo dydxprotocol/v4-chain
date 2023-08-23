@@ -424,7 +424,7 @@ func (k Keeper) persistMatchedOrders(
 		bigFillQuoteQuantums,
 	)
 
-	// Emit an event indicating a trade occurred.
+	// Emit an event indicating a match occurred.
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			metrics.EventTypeMatch,
