@@ -974,6 +974,68 @@ export interface PerpetualMarketCreateEventV1SDKType {
 
   liquidity_tier: number;
 }
+/**
+ * LiquidityTierUpsertEventV1 message contains all the information to
+ * create/update a Liquidity Tier on the v4 chain.
+ */
+
+export interface LiquidityTierUpsertEventV1 {
+  /** Unique id. */
+  id: number;
+  /** The name of the tier purely for mnemonic purposes, e.g. "Gold". */
+
+  name: string;
+  /**
+   * The margin fraction needed to open a position.
+   * In parts-per-million.
+   */
+
+  initialMarginPpm: number;
+  /**
+   * The fraction of the initial-margin that the maintenance-margin is,
+   * e.g. 50%. In parts-per-million.
+   */
+
+  maintenanceFractionPpm: number;
+  /**
+   * The maximum position size at which the margin requirements are
+   * not increased over the default values. Above this position size,
+   * the margin requirements increase at a rate of sqrt(size).
+   */
+
+  basePositionNotional: Long;
+}
+/**
+ * LiquidityTierUpsertEventV1 message contains all the information to
+ * create/update a Liquidity Tier on the v4 chain.
+ */
+
+export interface LiquidityTierUpsertEventV1SDKType {
+  /** Unique id. */
+  id: number;
+  /** The name of the tier purely for mnemonic purposes, e.g. "Gold". */
+
+  name: string;
+  /**
+   * The margin fraction needed to open a position.
+   * In parts-per-million.
+   */
+
+  initial_margin_ppm: number;
+  /**
+   * The fraction of the initial-margin that the maintenance-margin is,
+   * e.g. 50%. In parts-per-million.
+   */
+
+  maintenance_fraction_ppm: number;
+  /**
+   * The maximum position size at which the margin requirements are
+   * not increased over the default values. Above this position size,
+   * the margin requirements increase at a rate of sqrt(size).
+   */
+
+  base_position_notional: Long;
+}
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
   return {
@@ -2340,6 +2402,91 @@ export const PerpetualMarketCreateEventV1 = {
     message.minOrderBaseQuantums = object.minOrderBaseQuantums !== undefined && object.minOrderBaseQuantums !== null ? Long.fromValue(object.minOrderBaseQuantums) : Long.UZERO;
     message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
     message.liquidityTier = object.liquidityTier ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseLiquidityTierUpsertEventV1(): LiquidityTierUpsertEventV1 {
+  return {
+    id: 0,
+    name: "",
+    initialMarginPpm: 0,
+    maintenanceFractionPpm: 0,
+    basePositionNotional: Long.UZERO
+  };
+}
+
+export const LiquidityTierUpsertEventV1 = {
+  encode(message: LiquidityTierUpsertEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+
+    if (message.initialMarginPpm !== 0) {
+      writer.uint32(24).uint32(message.initialMarginPpm);
+    }
+
+    if (message.maintenanceFractionPpm !== 0) {
+      writer.uint32(32).uint32(message.maintenanceFractionPpm);
+    }
+
+    if (!message.basePositionNotional.isZero()) {
+      writer.uint32(40).uint64(message.basePositionNotional);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): LiquidityTierUpsertEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLiquidityTierUpsertEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.name = reader.string();
+          break;
+
+        case 3:
+          message.initialMarginPpm = reader.uint32();
+          break;
+
+        case 4:
+          message.maintenanceFractionPpm = reader.uint32();
+          break;
+
+        case 5:
+          message.basePositionNotional = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<LiquidityTierUpsertEventV1>): LiquidityTierUpsertEventV1 {
+    const message = createBaseLiquidityTierUpsertEventV1();
+    message.id = object.id ?? 0;
+    message.name = object.name ?? "";
+    message.initialMarginPpm = object.initialMarginPpm ?? 0;
+    message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
+    message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
     return message;
   }
 
