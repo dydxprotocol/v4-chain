@@ -99,8 +99,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	s := rand.NewSource(k.MustGetBlockTimeForLastCommittedBlock(ctx).Unix())
 	rand := rand.New(s)
 
-	// TODO(DEC-1487): Determine how offsetting subaccounts should be selected.
-	k.subaccountsKeeper.ForEachSubaccountFromRandomStart(
+	k.subaccountsKeeper.ForEachSubaccountRandomStart(
 		ctx,
 		func(offsettingSubaccount satypes.Subaccount) (finished bool) {
 			numSubaccountsIterated++

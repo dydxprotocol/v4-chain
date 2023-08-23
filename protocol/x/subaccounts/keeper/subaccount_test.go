@@ -185,7 +185,7 @@ func TestForEachSubaccount(t *testing.T) {
 	}
 }
 
-func TestForEachSubaccountFromRandomStart(t *testing.T) {
+func TestForEachSubaccountRandomStart(t *testing.T) {
 	tests := map[string]struct {
 		numSubaccountsInState int
 		iterationCount        int
@@ -222,7 +222,7 @@ func TestForEachSubaccountFromRandomStart(t *testing.T) {
 			_ = createNSubaccount(keeper, ctx, tc.numSubaccountsInState)
 			collectedSubaccounts := make([]types.Subaccount, 0)
 			i := 0
-			keeper.ForEachSubaccountFromRandomStart(
+			keeper.ForEachSubaccountRandomStart(
 				ctx,
 				func(subaccount types.Subaccount) bool {
 					i++
