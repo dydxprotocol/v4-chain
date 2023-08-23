@@ -250,6 +250,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -995,6 +996,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
@@ -1004,6 +1006,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
+				satypes.BaseQuantums(constants.ClobPair_Eth.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Eth.StepBaseQuantums),
 				constants.ClobPair_Eth.QuantumConversionExponent,
 				constants.ClobPair_Eth.SubticksPerTick,
@@ -1828,6 +1831,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -1905,6 +1909,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ctx,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
+		satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 		constants.ClobPair_Btc.QuantumConversionExponent,
 		constants.ClobPair_Btc.SubticksPerTick,
@@ -3398,6 +3403,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
@@ -4106,6 +4112,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -4366,6 +4373,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -4632,6 +4640,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,

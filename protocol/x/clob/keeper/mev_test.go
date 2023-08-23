@@ -890,6 +890,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -1228,6 +1229,7 @@ func TestGetMidPrices(t *testing.T) {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,

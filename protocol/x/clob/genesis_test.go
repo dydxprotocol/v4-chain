@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -11,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
@@ -453,6 +455,7 @@ func TestGenesis(t *testing.T) {
 			got := clob.ExportGenesis(ctx, *ks.ClobKeeper)
 			require.NotNil(t, got)
 			require.Equal(t, tc.genesis.ClobPairs, got.ClobPairs)
+			assertPerpetualMarketCreateEventsInIndexerBlock(t, ks.ClobKeeper, ctx, len(tc.genesis.ClobPairs))
 			require.Equal(t, tc.genesis.LiquidationsConfig, got.LiquidationsConfig)
 			require.Equal(t, tc.genesis.BlockRateLimitConfig, got.BlockRateLimitConfig)
 			require.Equal(t, tc.genesis.EquityTierLimitConfig, got.EquityTierLimitConfig)
@@ -462,4 +465,16 @@ func TestGenesis(t *testing.T) {
 			require.Equal(t, uint32(len(got.ClobPairs)), numClobPairs)
 		})
 	}
+}
+
+// assertPerpetualMarketCreateEventsInIndexerBlock checks that the number of perpetual market create
+// events included in the Indexer block kafka message.
+func assertPerpetualMarketCreateEventsInIndexerBlock(
+	t *testing.T,
+	k *keeper.Keeper,
+	ctx sdk.Context,
+	numPerpetualMarkets int,
+) {
+	perpetualMarketEvents := keepertest.GetPerpetualMarketCreateEventsFromIndexerBlock(ctx, k)
+	require.Len(t, perpetualMarketEvents, numPerpetualMarkets)
 }

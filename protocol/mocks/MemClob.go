@@ -41,7 +41,7 @@ func (_m *MemClob) CancelOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgC
 	return r0, r1
 }
 
-// CountSubaccountOrdersByFilter provides a mock function with given fields: ctx, subaccountId, filter
+// CountSubaccountOrders provides a mock function with given fields: ctx, subaccountId, filter
 func (_m *MemClob) CountSubaccountOrders(ctx types.Context, subaccountId subaccountstypes.SubaccountId, filter func(clobtypes.OrderId) bool) uint32 {
 	ret := _m.Called(ctx, subaccountId, filter)
 

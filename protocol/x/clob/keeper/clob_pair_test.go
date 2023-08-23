@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"strconv"
 	"testing"
 
@@ -25,7 +27,7 @@ import (
 // Prevent strconv unused error
 var _ = strconv.IntSize
 
-func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.ClobPair {
+func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int, mockIndexerEventManager *mocks.IndexerEventManager) []types.ClobPair {
 	items := make([]types.ClobPair, n)
 	for i := range items {
 		items[i].Id = uint32(i)
@@ -38,9 +40,30 @@ func createNClobPair(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Clob
 		items[i].StepBaseQuantums = 5
 		items[i].Status = types.ClobPair_STATUS_ACTIVE
 
+		mockIndexerEventManager.On("AddTxnEvent",
+			ctx,
+			indexerevents.SubtypePerpetualMarket,
+			indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.NewPerpetualMarketCreateEvent(
+					clobtest.MustPerpetualId(items[i]),
+					items[i].Id,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Ticker,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[0].MarketId,
+					items[i].Status,
+					items[i].QuantumConversionExponent,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[0].AtomicResolution,
+					items[i].SubticksPerTick,
+					items[i].MinOrderBaseQuantums,
+					items[i].StepBaseQuantums,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[0].LiquidityTier,
+				),
+			),
+		).Return()
+
 		_, err := keeper.CreatePerpetualClobPair(
 			ctx,
 			clobtest.MustPerpetualId(items[i]),
+			satypes.BaseQuantums(items[i].MinOrderBaseQuantums),
 			satypes.BaseQuantums(items[i].StepBaseQuantums),
 			items[i].QuantumConversionExponent,
 			items[i].SubticksPerTick,
@@ -91,15 +114,39 @@ func TestCreateClobPair(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Boilerplate setup.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+			if tc.expectedErr == "" {
+				perpetualId := clobtest.MustPerpetualId(tc.clobPair)
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							perpetualId,
+							perpetualId,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Ticker,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].MarketId,
+							tc.clobPair.Status,
+							tc.clobPair.QuantumConversionExponent,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].AtomicResolution,
+							tc.clobPair.SubticksPerTick,
+							tc.clobPair.MinOrderBaseQuantums,
+							tc.clobPair.StepBaseQuantums,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].LiquidityTier,
+						),
+					),
+				).Return()
+			}
 
 			// Perform the method under test.
 			createdClobPair, actualErr := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(tc.clobPair),
+				satypes.BaseQuantums(tc.clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(tc.clobPair.StepBaseQuantums),
 				tc.clobPair.QuantumConversionExponent,
 				tc.clobPair.SubticksPerTick,
@@ -214,16 +261,42 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Boilerplate setup.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			// Perform the method under test.
 			for _, make := range tc.clobPairs {
+
+				if make.expectedErr == "" {
+					perpetualId := clobtest.MustPerpetualId(make.clobPair)
+					mockIndexerEventManager.On("AddTxnEvent",
+						ks.Ctx,
+						indexerevents.SubtypePerpetualMarket,
+						indexer_manager.GetB64EncodedEventMessage(
+							indexerevents.NewPerpetualMarketCreateEvent(
+								perpetualId,
+								perpetualId,
+								constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Ticker,
+								constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].MarketId,
+								make.clobPair.Status,
+								make.clobPair.QuantumConversionExponent,
+								constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].AtomicResolution,
+								make.clobPair.SubticksPerTick,
+								make.clobPair.MinOrderBaseQuantums,
+								make.clobPair.StepBaseQuantums,
+								constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].LiquidityTier,
+							),
+						),
+					).Return()
+				}
+
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobtest.MustPerpetualId(make.clobPair),
+					satypes.BaseQuantums(make.clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(make.clobPair.StepBaseQuantums),
 					make.clobPair.QuantumConversionExponent,
 					make.clobPair.SubticksPerTick,
@@ -297,10 +370,11 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 
 func TestClobPairGet(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-	items := createNClobPair(ks.ClobKeeper, ks.Ctx, 10)
+	items := createNClobPair(ks.ClobKeeper, ks.Ctx, 10, mockIndexerEventManager)
 	for _, item := range items {
 		rst, found := ks.ClobKeeper.GetClobPair(ks.Ctx,
 			types.ClobPairId(item.Id),
@@ -314,10 +388,11 @@ func TestClobPairGet(t *testing.T) {
 }
 func TestClobPairRemove(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-	items := createNClobPair(ks.ClobKeeper, ks.Ctx, 10)
+	items := createNClobPair(ks.ClobKeeper, ks.Ctx, 10, mockIndexerEventManager)
 	for _, item := range items {
 		ks.ClobKeeper.RemoveClobPair(ks.Ctx,
 			types.ClobPairId(item.Id),
@@ -331,10 +406,11 @@ func TestClobPairRemove(t *testing.T) {
 
 func TestClobPairGetAll(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-	items := createNClobPair(ks.ClobKeeper, ks.Ctx, 10)
+	items := createNClobPair(ks.ClobKeeper, ks.Ctx, 10, mockIndexerEventManager)
 	require.ElementsMatch(t,
 		nullify.Fill(items), //nolint:staticcheck
 		nullify.Fill(ks.ClobKeeper.GetAllClobPair(ks.Ctx)), //nolint:staticcheck

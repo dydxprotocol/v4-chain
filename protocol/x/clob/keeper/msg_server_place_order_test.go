@@ -109,6 +109,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(clobPair),
+				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,
@@ -221,6 +222,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(clobPair),
+				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,

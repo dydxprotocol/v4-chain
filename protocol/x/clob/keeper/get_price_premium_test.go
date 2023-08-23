@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"errors"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 	"testing"
 
@@ -181,14 +183,36 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 
 			tc.setUpMockMemClob(memClob, tc.args)
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, nil, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, nil, mockIndexerEventManager)
 
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
+			perpetualId := clobtest.MustPerpetualId(tc.args.clobPair)
+			mockIndexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						perpetualId,
+						0,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].Ticker,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].MarketId,
+						tc.args.clobPair.Status,
+						tc.args.clobPair.QuantumConversionExponent,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].AtomicResolution,
+						tc.args.clobPair.SubticksPerTick,
+						tc.args.clobPair.MinOrderBaseQuantums,
+						tc.args.clobPair.StepBaseQuantums,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId].LiquidityTier,
+					),
+				),
+			).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(tc.args.clobPair),
+				satypes.BaseQuantums(tc.args.clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(tc.args.clobPair.StepBaseQuantums),
 				tc.args.clobPair.QuantumConversionExponent,
 				tc.args.clobPair.SubticksPerTick,

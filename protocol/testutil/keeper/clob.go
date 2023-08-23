@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
@@ -200,4 +202,31 @@ func createClobKeeper(
 	k.SetAnteHandler(constants.EmptyAnteHandler)
 
 	return k, storeKey, memKey
+}
+
+// GetPerpetualMarketCreateEventsFromIndexerBlock returns the perpetual market
+// create events in the Indexer Block event Kafka message.
+func GetPerpetualMarketCreateEventsFromIndexerBlock(
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+) []*indexerevents.PerpetualMarketCreateEventV1 {
+	var perpetualMarketEvents []*indexerevents.PerpetualMarketCreateEventV1
+	block := keeper.GetIndexerEventManager().ProduceBlock(ctx)
+	if block == nil {
+		return perpetualMarketEvents
+	}
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypePerpetualMarket {
+			continue
+		}
+		bytes := indexer_manager.GetBytesFromEventData(event.Data)
+		unmarshaler := common.UnmarshalerImpl{}
+		var perpetualMarketEvent indexerevents.PerpetualMarketCreateEventV1
+		err := unmarshaler.Unmarshal(bytes, &perpetualMarketEvent)
+		if err != nil {
+			panic(err)
+		}
+		perpetualMarketEvents = append(perpetualMarketEvents, &perpetualMarketEvent)
+	}
+	return perpetualMarketEvents
 }
