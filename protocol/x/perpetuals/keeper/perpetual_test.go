@@ -107,14 +107,14 @@ func TestModifyPerpetual_Success(t *testing.T) {
 		liquidityTier := uint32((i + 1) % numLiquidityTiers)
 		retItem, err := keeper.ModifyPerpetual(
 			ctx,
-			item.Id,
+			item.Params.Id,
 			ticker,
 			marketId,
 			defaultFundingPpm,
 			liquidityTier,
 		)
 		require.NoError(t, err)
-		newItem, err := keeper.GetPerpetual(ctx, item.Id)
+		newItem, err := keeper.GetPerpetual(ctx, item.Params.Id)
 		require.NoError(t, err)
 		require.Equal(
 			t,
@@ -124,27 +124,27 @@ func TestModifyPerpetual_Success(t *testing.T) {
 		require.Equal(
 			t,
 			ticker,
-			newItem.Ticker,
+			newItem.Params.Ticker,
 		)
 		require.Equal(
 			t,
 			marketId,
-			newItem.MarketId,
+			newItem.Params.MarketId,
 		)
 		require.Equal(
 			t,
 			int32(i),
-			newItem.AtomicResolution,
+			newItem.Params.AtomicResolution,
 		)
 		require.Equal(
 			t,
 			defaultFundingPpm,
-			newItem.DefaultFundingPpm,
+			newItem.Params.DefaultFundingPpm,
 		)
 		require.Equal(
 			t,
 			liquidityTier,
-			newItem.LiquidityTier,
+			newItem.Params.LiquidityTier,
 		)
 	}
 }
@@ -303,7 +303,7 @@ func TestGetPerpetual_Success(t *testing.T) {
 
 	for _, perp := range perps {
 		rst, err := keeper.GetPerpetual(ctx,
-			perp.Id,
+			perp.Params.Id,
 		)
 		require.NoError(t, err)
 		require.Equal(t,
@@ -628,7 +628,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// Verify initial and maintenance margin requirements are calculated correctly.
 			bigInitialMargin, bigMaintenanceMargin, err := keeper.GetMarginRequirements(
 				ctx,
-				perpetual.Id,
+				perpetual.Params.Id,
 				tc.bigBaseQuantums,
 			)
 			require.NoError(t, err)
@@ -674,26 +674,26 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 
 	// Store the perpetual with a bad MarketId.
 	nonExistentMarketId := uint32(999)
-	perpetual.MarketId = nonExistentMarketId
+	perpetual.Params.MarketId = nonExistentMarketId
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
 	perpetualStore.Set(types.PerpetualKey(
-		perpetual.Id,
+		perpetual.Params.Id,
 	), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, _, err = keeper.GetMarginRequirements(
 		ctx,
-		perpetual.Id,
+		perpetual.Params.Id,
 		big.NewInt(-1),
 	)
 
 	expectedErrorStr := fmt.Sprintf(
 		"Market ID %d does not exist on perpetual ID %d",
-		perpetual.MarketId,
-		perpetual.Id,
+		perpetual.Params.MarketId,
+		perpetual.Params.Id,
 	)
 	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
@@ -709,19 +709,19 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 
 	// Store the perpetual with a bad LiquidityTier.
 	nonExistentLiquidityTier := uint32(999)
-	perpetual.LiquidityTier = nonExistentLiquidityTier
+	perpetual.Params.LiquidityTier = nonExistentLiquidityTier
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
 	perpetualStore.Set(types.PerpetualKey(
-		perpetual.Id,
+		perpetual.Params.Id,
 	), b)
 
 	// Getting margin requirements for perpetual with bad LiquidityTier should return an error.
 	_, _, err = keeper.GetMarginRequirements(
 		ctx,
-		perpetual.Id,
+		perpetual.Params.Id,
 		big.NewInt(-1),
 	)
 
@@ -803,7 +803,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Create a new market param and price.
-			marketId := pricesKeeper.GetNumMarkets(ctx)
+			marketId := uint32(0)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
@@ -835,7 +835,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 			// Verify collateral requirements are calculated correctly.
 			bigNotionalQuoteQuantums, err := keeper.GetNetNotional(
 				ctx,
-				perpetual.Id,
+				perpetual.Params.Id,
 				tc.bigBaseQuantums,
 			)
 			require.NoError(t, err)
@@ -874,25 +874,25 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 
 	// Store the perpetual with a bad MarketId.
 	nonExistentMarketId := uint32(999)
-	perpetual.MarketId = nonExistentMarketId
+	perpetual.Params.MarketId = nonExistentMarketId
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
 	perpetualStore.Set(types.PerpetualKey(
-		perpetual.Id,
+		perpetual.Params.Id,
 	), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, err = keeper.GetNetNotional(
 		ctx,
-		perpetual.Id,
+		perpetual.Params.Id,
 		big.NewInt(-1),
 	)
 	expectedErrorStr := fmt.Sprintf(
 		"Market ID %d does not exist on perpetual ID %d",
-		perpetual.MarketId,
-		perpetual.Id,
+		perpetual.Params.MarketId,
+		perpetual.Params.Id,
 	)
 	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
@@ -1000,7 +1000,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			// Verify collateral requirements are calculated correctly.
 			bigNotionalBaseQuantums, err := keeper.GetNotionalInBaseQuantums(
 				ctx,
-				perpetual.Id,
+				perpetual.Params.Id,
 				tc.bigQuoteQuantums,
 			)
 			require.NoError(t, err)
@@ -1039,25 +1039,25 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 
 	// Store the perpetual with a bad MarketId.
 	nonExistentMarketId := uint32(999)
-	perpetual.MarketId = nonExistentMarketId
+	perpetual.Params.MarketId = nonExistentMarketId
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
 	perpetualStore.Set(types.PerpetualKey(
-		perpetual.Id,
+		perpetual.Params.Id,
 	), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, err = keeper.GetNotionalInBaseQuantums(
 		ctx,
-		perpetual.Id,
+		perpetual.Params.Id,
 		big.NewInt(-1),
 	)
 	expectedErrorStr := fmt.Sprintf(
 		"Market ID %d does not exist on perpetual ID %d",
-		perpetual.MarketId,
-		perpetual.Id,
+		perpetual.Params.MarketId,
+		perpetual.Params.Id,
 	)
 	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
@@ -1166,7 +1166,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			// Verify collateral requirements are calculated correctly.
 			bigCollateralQuoteQuantums, err := keeper.GetNetCollateral(
 				ctx,
-				perpetual.Id,
+				perpetual.Params.Id,
 				tc.bigBaseQuantums,
 			)
 			require.NoError(t, err)
@@ -1205,25 +1205,25 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 
 	// Store the perpetual with a bad MarketId.
 	nonExistentMarketId := uint32(999)
-	perpetual.MarketId = nonExistentMarketId
+	perpetual.Params.MarketId = nonExistentMarketId
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
 	perpetualStore.Set(types.PerpetualKey(
-		perpetual.Id,
+		perpetual.Params.Id,
 	), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, err = keeper.GetNetCollateral(
 		ctx,
-		perpetual.Id,
+		perpetual.Params.Id,
 		big.NewInt(-1),
 	)
 	expectedErrorStr := fmt.Sprintf(
 		"Market ID %d does not exist on perpetual ID %d",
-		perpetual.MarketId,
-		perpetual.Id,
+		perpetual.Params.MarketId,
+		perpetual.Params.Id,
 	)
 	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
@@ -1321,7 +1321,7 @@ func TestGetSettlement_Success(t *testing.T) {
 			perps, err := createNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
 			require.NoError(t, err)
 
-			perpetualId := perps[0].Id
+			perpetualId := perps[0].Params.Id
 
 			// Since FundingIndex starts at zero, tc.perpetualFundingIndex will be
 			// the current FundingIndex.
@@ -1369,16 +1369,16 @@ func TestModifyFundingIndex_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, perp := range perps {
-		testFundingIndexDelta := big.NewInt(2*(int64(perp.Id)%2) - 1)
+		testFundingIndexDelta := big.NewInt(2*(int64(perp.Params.Id)%2) - 1)
 
 		err := keeper.ModifyFundingIndex(
 			ctx,
-			perp.Id,
+			perp.Params.Id,
 			testFundingIndexDelta,
 		)
 		require.NoError(t, err)
 
-		newPerp, err := keeper.GetPerpetual(ctx, perp.Id)
+		newPerp, err := keeper.GetPerpetual(ctx, perp.Params.Id)
 		require.NoError(t, err)
 
 		require.Equal(
@@ -1871,11 +1871,11 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			for i, p := range tc.testPerpetuals {
 				perp, err := perpsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 				oldPerps[i] = perp
@@ -1917,7 +1917,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 				ctx.WithBlockHeight(int64(testCurrentFundingTickEpochStartBlock)))
 
 			for i, p := range oldPerps {
-				newPerp, err := perpsKeeper.GetPerpetual(ctx, p.Id)
+				newPerp, err := perpsKeeper.GetPerpetual(ctx, p.Params.Id)
 				require.NoError(t, err)
 
 				// Set `expectedFundingIndexDelta` either to the provided big.Int or to a big.Int of the
@@ -2082,7 +2082,7 @@ func TestMaybeProcessNewFundingTickEpoch_NoNewEpoch(t *testing.T) {
 		ctx.WithBlockHeight(int64(testCurrentFundingTickEpochStartBlock + 1)))
 
 	for _, perp := range perps {
-		newPerp, err := perpsKeeper.GetPerpetual(ctx, perp.Id)
+		newPerp, err := perpsKeeper.GetPerpetual(ctx, perp.Params.Id)
 		require.NoError(t, err)
 
 		require.Equal(t,
@@ -2218,7 +2218,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 
 			for i, sample := range msgAddPremiumVotes.Votes {
 				if i > 0 {
-					// Check samples are unique and are sorted by perpetual.Id
+					// Check samples are unique and are sorted by perpetual.Params.Id
 					require.True(
 						t,
 						msgAddPremiumVotes.Votes[i-1].PerpetualId < sample.PerpetualId,
@@ -2319,9 +2319,9 @@ func TestAddPremiums_Success(t *testing.T) {
 		firstPremiums := make([]types.FundingPremium, numPerpetuals)
 		for i, perp := range perps {
 			firstPremiums[i] = types.FundingPremium{
-				PerpetualId: perp.Id,
+				PerpetualId: perp.Params.Id,
 				// -1000 for even Ids, +1000 for odd Ids.
-				PremiumPpm: 1_000 * (2*(int32(perp.Id)%2) - 1),
+				PremiumPpm: 1_000 * (2*(int32(perp.Params.Id)%2) - 1),
 			}
 		}
 
@@ -2339,14 +2339,14 @@ func TestAddPremiums_Success(t *testing.T) {
 		marketSamplesMap := firstStoredPremiums.GetMarketPremiumsMap()
 
 		for _, perp := range perps {
-			entries := marketSamplesMap[perp.Id].Premiums
+			entries := marketSamplesMap[perp.Params.Id].Premiums
 
 			require.Equal(t,
 				1,
 				len(entries),
 			)
 			require.Equal(t,
-				1000*(2*(int32(perp.Id)%2)-1),
+				1000*(2*(int32(perp.Params.Id)%2)-1),
 				entries[0],
 			)
 		}
@@ -2377,8 +2377,8 @@ func TestAddPremiums_Success(t *testing.T) {
 		marketSamplesMap = secondStoredPremiums.GetMarketPremiumsMap()
 
 		for _, perp := range perps {
-			entries := marketSamplesMap[perp.Id].Premiums
-			if perp.Id%2 == 0 {
+			entries := marketSamplesMap[perp.Params.Id].Premiums
+			if perp.Params.Id%2 == 0 {
 				// Even perpetuals should have two samples of -1000.
 				require.Equal(t,
 					2,

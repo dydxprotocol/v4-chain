@@ -61,20 +61,20 @@ export function expectPerpetualMarket(
   // TODO(IND-219): Set initialMarginFraction/maintenanceMarginFraction using LiquidityTier
   expect(perpetualMarket).toEqual(expect.objectContaining({
     ...HARDCODED_PERPETUAL_MARKET_VALUES,
-    id: perpetual.id.toString(),
+    id: perpetual.params!.id.toString(),
     clobPairId: clobPair.id.toString(),
-    ticker: perpetual.ticker,
-    marketId: perpetual.marketId,
+    ticker: perpetual.params!.ticker,
+    marketId: perpetual.params!.marketId,
     openInterest: quantumsToHuman(
       perpetual.openInterest.toString(),
-      perpetual.atomicResolution,
+      perpetual.params!.atomicResolution,
     ).toFixed(6),
     quantumConversionExponent: clobPair.quantumConversionExponent,
-    atomicResolution: perpetual.atomicResolution,
+    atomicResolution: perpetual.params!.atomicResolution,
     subticksPerTick: clobPair.subticksPerTick,
     minOrderBaseQuantums: Number(clobPair.minOrderBaseQuantums),
     stepBaseQuantums: Number(clobPair.stepBaseQuantums),
-    liquidityTierId: perpetual.liquidityTier,
+    liquidityTierId: perpetual.params!.liquidityTier,
   }));
 }
 

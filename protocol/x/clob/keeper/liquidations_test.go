@@ -231,11 +231,11 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -979,11 +979,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			} {
 				_, err = ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					perpetual.Ticker,
-					perpetual.MarketId,
-					perpetual.AtomicResolution,
-					perpetual.DefaultFundingPpm,
-					perpetual.LiquidityTier,
+					perpetual.Params.Ticker,
+					perpetual.Params.MarketId,
+					perpetual.Params.AtomicResolution,
+					perpetual.Params.DefaultFundingPpm,
+					perpetual.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -1808,11 +1808,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			} {
 				_, err = ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					perpetual.Ticker,
-					perpetual.MarketId,
-					perpetual.AtomicResolution,
-					perpetual.DefaultFundingPpm,
-					perpetual.LiquidityTier,
+					perpetual.Params.Ticker,
+					perpetual.Params.MarketId,
+					perpetual.Params.AtomicResolution,
+					perpetual.Params.DefaultFundingPpm,
+					perpetual.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -2018,11 +2018,11 @@ func TestIsLiquidatable(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -2434,11 +2434,11 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -2963,11 +2963,11 @@ func TestGetFillablePrice(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -3385,11 +3385,11 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -4082,11 +4082,11 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -4347,11 +4347,11 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -4620,11 +4620,11 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 			// Create perpetual.
 			_, err := ks.PerpetualsKeeper.CreatePerpetual(
 				ks.Ctx,
-				constants.BtcUsd_100PercentMarginRequirement.Ticker,
-				constants.BtcUsd_100PercentMarginRequirement.MarketId,
-				constants.BtcUsd_100PercentMarginRequirement.AtomicResolution,
-				constants.BtcUsd_100PercentMarginRequirement.DefaultFundingPpm,
-				constants.BtcUsd_100PercentMarginRequirement.LiquidityTier,
+				constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+				constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+				constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+				constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
+				constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 			)
 			require.NoError(t, err)
 

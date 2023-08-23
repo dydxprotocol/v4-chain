@@ -144,13 +144,6 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 				`]}`,
 			expectedErr: "duplicated market param id",
 		},
-		"Bad state: gap in market param id": {
-			genesisJson: `{"market_params": [` +
-				`{"id":0,"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1},` +
-				`{"id":2,"pair": "LINK-USD","minExchanges":1,"minPriceChangePpm":1}` +
-				`]}`,
-			expectedErr: "found gap in market param id",
-		},
 		"Bad state: Invalid param": {
 			genesisJson: `{"market_params": [{ "pair": "" }]}`,
 			expectedErr: sdkerrors.Wrap(pricestypes.ErrInvalidInput, "Pair cannot be empty").Error(),

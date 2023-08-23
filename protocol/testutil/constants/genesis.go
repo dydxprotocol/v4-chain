@@ -799,20 +799,24 @@ const GenesisState = `{
       },
       "perpetuals": [
         {
-          "atomic_resolution": -10,
-          "default_funding_ppm": 0,
-          "id": 0,
-          "liquidity_tier": 0,
-          "market_id": 0,
-          "ticker": "BTC-USD"
+          "params": {
+            "atomic_resolution": -10,
+            "default_funding_ppm": 0,
+            "id": 0,
+            "liquidity_tier": 0,
+            "market_id": 0,
+            "ticker": "BTC-USD"
+          }
         },
         {
-          "atomic_resolution": -9,
-          "default_funding_ppm": 0,
-          "id": 1,
-          "liquidity_tier": 0,
-          "market_id": 1,
-          "ticker": "ETH-USD"
+          "params": {
+            "atomic_resolution": -9,
+            "default_funding_ppm": 0,
+            "id": 1,
+            "liquidity_tier": 0,
+            "market_id": 1,
+            "ticker": "ETH-USD"
+          }
         }
       ]
     },
