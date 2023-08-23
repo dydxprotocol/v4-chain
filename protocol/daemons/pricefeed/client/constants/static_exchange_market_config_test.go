@@ -1,11 +1,13 @@
 package constants
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/json"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestStaticExchangeMarketConfigCache(t *testing.T) {
@@ -1250,7 +1252,7 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 			//_, err = f.WriteString(configs[tc.id] + "\n") // Final newline added manually.
 			//require.NoError(t, err)
 
-			actualExchangeConfigJson := pricefeed.CompactJsonString(t, configs[tc.id])
+			actualExchangeConfigJson := json.CompactJsonString(t, configs[tc.id])
 			expectedExchangeConfigJson := pricefeed.ReadJsonTestFile(t, tc.expectedExchangeConfigJsonFile)
 			require.Equal(t, expectedExchangeConfigJson, actualExchangeConfigJson)
 		})
