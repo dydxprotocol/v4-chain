@@ -8,7 +8,7 @@ import { DeepPartial } from "../../helpers";
 
 export interface MsgCreateClobPair {
   /** The address that controls the module. */
-  auhority: string;
+  authority: string;
   /** `clob_pair` defines parameters for the new clob pair. */
 
   clobPair?: ClobPair;
@@ -17,7 +17,7 @@ export interface MsgCreateClobPair {
 
 export interface MsgCreateClobPairSDKType {
   /** The address that controls the module. */
-  auhority: string;
+  authority: string;
   /** `clob_pair` defines parameters for the new clob pair. */
 
   clob_pair?: ClobPairSDKType;
@@ -145,15 +145,15 @@ export interface OperationRawSDKType {
 
 function createBaseMsgCreateClobPair(): MsgCreateClobPair {
   return {
-    auhority: "",
+    authority: "",
     clobPair: undefined
   };
 }
 
 export const MsgCreateClobPair = {
   encode(message: MsgCreateClobPair, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.auhority !== "") {
-      writer.uint32(10).string(message.auhority);
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
     }
 
     if (message.clobPair !== undefined) {
@@ -173,7 +173,7 @@ export const MsgCreateClobPair = {
 
       switch (tag >>> 3) {
         case 1:
-          message.auhority = reader.string();
+          message.authority = reader.string();
           break;
 
         case 2:
@@ -191,7 +191,7 @@ export const MsgCreateClobPair = {
 
   fromPartial(object: DeepPartial<MsgCreateClobPair>): MsgCreateClobPair {
     const message = createBaseMsgCreateClobPair();
-    message.auhority = object.auhority ?? "";
+    message.authority = object.authority ?? "";
     message.clobPair = object.clobPair !== undefined && object.clobPair !== null ? ClobPair.fromPartial(object.clobPair) : undefined;
     return message;
   }

@@ -8,7 +8,7 @@ import { DeepPartial, Long } from "../../helpers";
 
 export interface MsgCreateOracleMarket {
   /** The address that controls the module. */
-  auhority: string;
+  authority: string;
   /** `params` defines parameters for the new oracle market. */
 
   params?: MarketParam;
@@ -20,7 +20,7 @@ export interface MsgCreateOracleMarket {
 
 export interface MsgCreateOracleMarketSDKType {
   /** The address that controls the module. */
-  auhority: string;
+  authority: string;
   /** `params` defines parameters for the new oracle market. */
 
   params?: MarketParamSDKType;
@@ -74,15 +74,15 @@ export interface MsgUpdateMarketPricesResponseSDKType {}
 
 function createBaseMsgCreateOracleMarket(): MsgCreateOracleMarket {
   return {
-    auhority: "",
+    authority: "",
     params: undefined
   };
 }
 
 export const MsgCreateOracleMarket = {
   encode(message: MsgCreateOracleMarket, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.auhority !== "") {
-      writer.uint32(10).string(message.auhority);
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
     }
 
     if (message.params !== undefined) {
@@ -102,7 +102,7 @@ export const MsgCreateOracleMarket = {
 
       switch (tag >>> 3) {
         case 1:
-          message.auhority = reader.string();
+          message.authority = reader.string();
           break;
 
         case 2:
@@ -120,7 +120,7 @@ export const MsgCreateOracleMarket = {
 
   fromPartial(object: DeepPartial<MsgCreateOracleMarket>): MsgCreateOracleMarket {
     const message = createBaseMsgCreateOracleMarket();
-    message.auhority = object.auhority ?? "";
+    message.authority = object.authority ?? "";
     message.params = object.params !== undefined && object.params !== null ? MarketParam.fromPartial(object.params) : undefined;
     return message;
   }
