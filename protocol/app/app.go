@@ -726,8 +726,7 @@ func New(
 		app.RewardsKeeper,
 		app.IndexerEventManager,
 		txConfig.TxDecoder(),
-		clobFlags.MevTelemetryHost,
-		clobFlags.MevTelemetryIdentifier,
+		clobFlags,
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgCancelOrder](),
 	)

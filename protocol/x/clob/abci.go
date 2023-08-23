@@ -17,9 +17,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-// TODO(jay): Make this configurable for v4-chain.
-const MaxLiquidationOrdersPerBlock = 10
-
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
 func BeginBlocker(
 	ctx sdk.Context,
@@ -213,7 +210,7 @@ func PrepareCheckState(
 	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.OffsettingSubaccountPerpetualPosition)
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	for i := 0; i < MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
+	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
 		liquidationOrder := liquidationOrders[i]
 		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
 			ctx.Logger().Error(
