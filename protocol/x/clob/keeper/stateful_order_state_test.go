@@ -190,11 +190,16 @@ func TestMustTriggerConditionalOrder(t *testing.T) {
 		uint32(0),
 		longTermOrderPlacement.PlacementIndex.BlockHeight,
 	)
+	require.Equal(t,
+		ks.ClobKeeper.GetToBeCommittedStatefulOrderCount(ks.Ctx, conditionalOrder.OrderId),
+		int32(1),
+	)
 
 	traceDecoder.RequireKeyPrefixWrittenInSequence(
 		t,
 		[]string{
-			// Write the order to untriggered state and memStore.
+			// Write the order to untriggered state and memStore and increment the `to be committed` stateful order
+			// count.
 			"NextStatefulOrderBlockTransactionIndex/value",
 			fmt.Sprintf(
 				"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -206,6 +211,11 @@ func TestMustTriggerConditionalOrder(t *testing.T) {
 				"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
 				string(proto.MustFirst(
 					conditionalOrder.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+				string(proto.MustFirst(
+					conditionalOrder.OrderId.SubaccountId.Marshal(),
 				)),
 			),
 			"NextStatefulOrderBlockTransactionIndex/value",
@@ -355,8 +365,90 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal(),
 				)),
 			),
-			// Write the order to state and memStore.
+			// Write the order to state and memStore and increment the `to be committed` stateful order count.
 			"NextStatefulOrderBlockTransactionIndex/value",
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.SubaccountId.Marshal(),
+				)),
+			),
+			// Delete the order from state and memStore.
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
+				)),
+			),
+			// Write the order to state and memStore and increment the `to be committed` stateful order count.
+			"NextStatefulOrderBlockTransactionIndex/value",
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.SubaccountId.Marshal(),
+				)),
+			),
+			// Delete the order from state and memStore.
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
+				)),
+			),
+			// Write the order to state and memStore and increment the `to be committed` stateful order count.
+			"NextStatefulOrderBlockTransactionIndex/value",
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf(
+				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.SubaccountId.Marshal(),
+				)),
+			),
+			// Delete the order from state and memStore.
 			fmt.Sprintf(
 				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 				string(proto.MustFirst(
@@ -382,20 +474,6 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
 				)),
 			),
-			// Write the order to state and memStore.
-			"NextStatefulOrderBlockTransactionIndex/value",
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
-				)),
-			),
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
-				)),
-			),
 			// Delete the order from state and memStore.
 			fmt.Sprintf(
 				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -409,60 +487,7 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
 				)),
 			),
-			// Write the order to state and memStore.
-			"NextStatefulOrderBlockTransactionIndex/value",
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
-				)),
-			),
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
-				)),
-			),
-			// Delete the order from state and memStore.
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal(),
-				)),
-			),
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal(),
-				)),
-			),
-			// Delete the order from state and memStore.
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
-				)),
-			),
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
-				)),
-			),
-			// Delete the order from state and memStore.
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
-				)),
-			),
-			fmt.Sprintf(
-				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
-				string(proto.MustFirst(
-					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
-				)),
-			),
-			// Write the order to state and memStore.
+			// Write the order to state and memStore and increment the `to be committed` stateful order count.
 			"NextStatefulOrderBlockTransactionIndex/value",
 			fmt.Sprintf(
 				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -476,7 +501,12 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal(),
 				)),
 			),
-			// Write the order to state and memStore.
+			fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.SubaccountId.Marshal(),
+				)),
+			),
+			// Write the order to state and memStore and increment the `to be committed` stateful order count.
 			"NextStatefulOrderBlockTransactionIndex/value",
 			fmt.Sprintf(
 				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -490,7 +520,12 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal(),
 				)),
 			),
-			// Write the order to state and memStore.
+			fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.SubaccountId.Marshal(),
+				)),
+			),
+			// Write the order to state and memStore and increment the `to be committed` stateful order count.
 			"NextStatefulOrderBlockTransactionIndex/value",
 			fmt.Sprintf(
 				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -502,6 +537,11 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 				string(proto.MustFirst(
 					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.Marshal(),
+				)),
+			),
+			fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId.SubaccountId.Marshal(),
 				)),
 			),
 		},
@@ -532,6 +572,15 @@ func TestGetSetDeleteLongTermOrderState_Replacements(t *testing.T) {
 	for i, order := range orders {
 		ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, blockHeights[i])
 	}
+	// Since the order is a replacement we expect the `to be committed` stateful order count to be 1.
+	require.Equal(
+		t,
+		ks.ClobKeeper.GetToBeCommittedStatefulOrderCount(
+			ks.Ctx,
+			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+		),
+		int32(1),
+	)
 
 	// Verify the last created order exists.
 	foundOrderPlacement, found := ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, orders[1].OrderId)
@@ -557,7 +606,7 @@ func TestGetSetDeleteLongTermOrderState_Replacements(t *testing.T) {
 	traceDecoder.RequireKeyPrefixWrittenInSequence(
 		t,
 		[]string{
-			// Write the order to state and memStore.
+			// Write the order to state and memStore and increment the `to be committed` stateful order count.
 			"NextStatefulOrderBlockTransactionIndex/value",
 			fmt.Sprintf(
 				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -567,7 +616,13 @@ func TestGetSetDeleteLongTermOrderState_Replacements(t *testing.T) {
 				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 				string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
 			),
-			// Write the order to state and memStore.
+			fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+				string(proto.MustFirst(
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.SubaccountId.Marshal(),
+				)),
+			),
+			// Write the order to state and memStore. We should not expect the `to be committed` stateful order
+			// count to change since this is a replacement.
 			"NextStatefulOrderBlockTransactionIndex/value",
 			fmt.Sprintf(
 				"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -714,7 +769,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.Marshal(),
 					)),
 				),
-				// Place the first stateful order in state and memStore.
+				// Place the first stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -726,6 +782,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
 					string(proto.MustFirst(
 						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.Marshal(),
+					)),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.SubaccountId.Marshal(),
 					)),
 				),
 				// Add second order to stateful order slice.
@@ -743,7 +804,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.Marshal(),
 					)),
 				),
-				// Place the second stateful order in state and memStore.
+				// Place the second stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -755,6 +817,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
 					string(proto.MustFirst(
 						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.Marshal(),
+					)),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.SubaccountId.Marshal(),
 					)),
 				),
 				// Add third order to stateful order slice.
@@ -772,7 +839,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
 					)),
 				),
-				// Place the third stateful order in state and memStore.
+				// Place the third stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -784,6 +852,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(
 						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
+					)),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.SubaccountId.Marshal(),
 					)),
 				),
 			},
@@ -841,7 +914,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.Marshal(),
 					)),
 				),
-				// Place the first stateful order in state and memStore.
+				// Place the first stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -853,6 +927,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
 					string(proto.MustFirst(
 						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.Marshal(),
+					)),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.SubaccountId.Marshal(),
 					)),
 				),
 				// Add second order to stateful order slice.
@@ -870,7 +949,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.Marshal(),
 					)),
 				),
-				// Place the second stateful order in state and memStore.
+				// Place the second stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -882,6 +962,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
 					string(proto.MustFirst(
 						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.Marshal(),
+					)),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.SubaccountId.Marshal(),
 					)),
 				),
 				// Add third order to stateful order slice.
@@ -899,7 +984,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
 					)),
 				),
-				// Place the third stateful order in state and memStore.
+				// Place the third stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -913,8 +999,14 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
 					)),
 				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.SubaccountId.Marshal(),
+					)),
+				),
 				// Remove first order from stateful order slice, which removes the fill amount and stateful
-				// order placement from state and memStore as well.
+				// order placement from state and memStore and decrements the `to be committed` stateful
+				// order count.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:30.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -940,8 +1032,14 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.Marshal(),
 					)),
 				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.SubaccountId.Marshal(),
+					)),
+				),
 				// Remove second order from stateful order slice, which removes the fill amount and stateful
-				// order placement from state and memStore as well.
+				// order placement from state and memStore and decrements the `to be committed` stateful
+				// order count.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -965,6 +1063,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(
 						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal(),
+					)),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.SubaccountId.Marshal(),
 					)),
 				),
 			},
@@ -1044,7 +1147,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						),
 					),
 				),
-				// Place the first stateful order in state and memStore.
+				// Place the first stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -1061,6 +1165,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 							constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.Marshal(),
 						),
 					),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add second order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.00000000",
@@ -1081,7 +1190,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						),
 					),
 				),
-				// Place the second stateful order in state and memStore.
+				// Place the second stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -1098,6 +1208,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 							constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.Marshal(),
 						),
 					),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add third order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
@@ -1117,7 +1232,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						),
 					),
 				),
-				// Place the third stateful order in state and memStore.
+				// Place the third stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -1134,6 +1250,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
 						),
 					),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add fourth order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
@@ -1146,7 +1267,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.Marshal())),
 				),
-				// Place the fourth stateful order in state and memStore.
+				// Place the fourth stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1155,6 +1277,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add fifth order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
@@ -1167,7 +1294,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.Marshal())),
 				),
-				// Place the fifth stateful order in state and memStore.
+				// Place the fifth stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1176,6 +1304,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add sixth order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
@@ -1188,7 +1321,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal())),
 				),
-				// Place the sixth stateful order in state and memStore.
+				// Place the sixth stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1197,6 +1331,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add seventh order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/2021-02-21T00:00:00.000000000",
@@ -1209,7 +1348,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal())),
 				),
-				// Place the seventh stateful order in state and memStore.
+				// Place the seventh stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1218,6 +1358,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 			},
 			expectedTimeSlices: map[time.Time][]types.OrderId{
@@ -1274,7 +1419,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						),
 					),
 				),
-				// Place the first stateful order in state and memStore.
+				// Place the first stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -1291,6 +1437,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
 						),
 					),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add second order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
@@ -1303,7 +1454,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.Marshal())),
 				),
-				// Place the second stateful order in state and memStore.
+				// Place the second stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1312,6 +1464,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add third order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
@@ -1324,7 +1481,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
 				),
-				// Place the third stateful order in state and memStore.
+				// Place the third stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1334,8 +1492,14 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
 				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.SubaccountId.Marshal(),
+					)),
+				),
 				// Remove first order from stateful order slice, which removes the fill amount and stateful
-				// order placement from state and memStore as well.
+				// order placement from state and memStore and decrements the `to be committed` stateful
+				// order count.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1369,8 +1533,14 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						),
 					),
 				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.SubaccountId.Marshal(),
+					)),
+				),
 				// Remove second order from stateful order slice, which removes the fill amount and stateful
-				// order placement from state and memStore as well.
+				// order placement from state and memStore and decrements the `to be committed` stateful
+				// order count.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1388,8 +1558,14 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.Marshal())),
 				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.SubaccountId.Marshal(),
+					)),
+				),
 				// Remove third order from stateful order slice, which removes the fill amount and stateful
-				// order placement from state and memStore as well.
+				// order placement from state and memStore and decrements the `to be committed` stateful
+				// order count.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
 				fmt.Sprintf(
 					"OrderAmount/value/%v",
@@ -1406,6 +1582,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 			},
 			expectedTimeSlices: map[time.Time][]types.OrderId{
@@ -1468,7 +1649,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						),
 					),
 				),
-				// Place the first stateful order in state and memStore.
+				// Place the first stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -1485,6 +1667,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.Marshal(),
 						),
 					),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add second order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:20.000000000",
@@ -1497,7 +1684,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal())),
 				),
-				// Place the second stateful order in state and memStore.
+				// Place the second stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1506,6 +1694,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add third order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:25.000000000",
@@ -1518,7 +1711,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal())),
 				),
-				// Place the third stateful order in state and memStore.
+				// Place the third stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1527,6 +1721,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add fourth order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:15.000000000",
@@ -1547,7 +1746,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						),
 					),
 				),
-				// Place the fourth stateful order in state and memStore.
+				// Place the fourth stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -1564,6 +1764,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 							constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.Marshal(),
 						),
 					),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss15.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add fifth order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:30.000000000",
@@ -1584,7 +1789,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 						),
 					),
 				),
-				// Place the fifth stateful order in state and memStore.
+				// Place the fifth stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Untriggered/Conditional/value/%v",
@@ -1601,6 +1807,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 							constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.Marshal(),
 						),
 					),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTBT30_TakeProfit10.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add sixth order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
@@ -1612,7 +1823,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.Marshal())),
 				),
-				// Place the sixth stateful order in state and memStore.
+				// Place the sixth stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1621,6 +1833,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Add seventh order to stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
@@ -1633,7 +1850,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.Marshal())),
 				),
-				// Place the seventh stateful order in state and memStore.
+				// Place the seventh stateful order in state and memStore and increment the `to be committed` stateful
+				// order count.
 				"NextStatefulOrderBlockTransactionIndex/value",
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
@@ -1642,6 +1860,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Remove seventh order from stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:10.000000000",
@@ -1654,7 +1877,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.Marshal())),
 				),
-				// Remove the seventh stateful order placement from state and memStore.
+				// Remove the seventh stateful order placement from state and memStore and decrement the
+				// `to be committed` stateful order count.
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.Marshal())),
@@ -1662,6 +1886,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 				// Remove third order from stateful order slice.
 				"StatefulOrdersTimeSlice/value/1970-01-01T00:00:25.000000000",
@@ -1674,7 +1903,8 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 					"OrderAmount/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal())),
 				),
-				// Remove the third stateful order placement from state and memStore.
+				// Remove the third stateful order placement from state and memStore and decrement the
+				// `to be committed` stateful order count.
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal())),
@@ -1682,6 +1912,11 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 				fmt.Sprintf(
 					"StatefulOrderPlacement/Placed/LongTerm/value/%v",
 					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.Marshal())),
+				),
+				fmt.Sprintf("StatefulOrderCount/ToBeCommitted/LongTerm/value/%v",
+					string(proto.MustFirst(
+						constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId.SubaccountId.Marshal(),
+					)),
 				),
 			},
 			expectedTimeSlices: map[time.Time][]types.OrderId{

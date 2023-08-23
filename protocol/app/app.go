@@ -615,6 +615,7 @@ func New(
 		appCodec,
 		keys[assetsmoduletypes.StoreKey],
 		app.PricesKeeper,
+		app.IndexerEventManager,
 	)
 	assetsModule := assetsmodule.NewAppModule(appCodec, app.AssetsKeeper)
 

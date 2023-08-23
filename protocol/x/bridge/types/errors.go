@@ -28,6 +28,16 @@ var (
 		4,
 		"Authority is invalid",
 	)
+	ErrBridgeEventNotFound = sdkerrors.Register(
+		ModuleName,
+		5,
+		"Bridge event not found",
+	)
+	ErrBridgeEventContentMismatch = sdkerrors.Register(
+		ModuleName,
+		6,
+		"Bridge event content mismatch",
+	)
 
 	ErrNegativeDuration = sdkerrors.Register(
 		ModuleName,

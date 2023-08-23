@@ -60,7 +60,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_10_000USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -110,7 +110,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_10_000USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -156,7 +156,7 @@ func TestRecordMevMetrics(t *testing.T) {
 		// 		constants.Dave_Num1_10_000USD,
 		// 	},
 		// 	clobPairs: []types.ClobPair{
-		// 		constants.ClobPair_Btc_No_Fee,
+		// 		constants.ClobPair_Btc,
 		// 	},
 		//  feeParams: constants.PerpetualFeeParamsNoFee,
 		// 	perpetuals: []perptypes.Perpetual{
@@ -216,7 +216,7 @@ func TestRecordMevMetrics(t *testing.T) {
 		// 		constants.Dave_Num1_10_000USD,
 		// 	},
 		// 	clobPairs: []types.ClobPair{
-		// 		constants.ClobPair_Btc_No_Fee,
+		// 		constants.ClobPair_Btc,
 		// 	},
 		//  feeParams: constants.PerpetualFeeParamsNoFee,
 		// 	perpetuals: []perptypes.Perpetual{
@@ -277,7 +277,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_10_000USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -341,7 +341,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_10_000USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -405,7 +405,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_10_000USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -459,7 +459,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_10_000USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -514,7 +514,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_10_000USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -569,7 +569,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_10_000USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -611,7 +611,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_10_000USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -707,7 +707,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				constants.Dave_Num1_100BTC_Short_10100USD,
 			},
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_No_Fee,
+				constants.ClobPair_Btc,
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			perpetuals: []perptypes.Perpetual{
@@ -745,7 +745,7 @@ func TestRecordMevMetrics(t *testing.T) {
 		// 		constants.Dave_Num1_100BTC_Short_10100USD,
 		// 	},
 		// 	clobPairs: []types.ClobPair{
-		// 		constants.ClobPair_Btc_No_Fee,
+		// 		constants.ClobPair_Btc,
 		// 	},
 		//  feeParams: constants.PerpetualFeeParamsNoFee,
 		// 	perpetuals: []perptypes.Perpetual{
@@ -782,7 +782,7 @@ func TestRecordMevMetrics(t *testing.T) {
 		// 		constants.Dave_Num1_100BTC_Short_10100USD,
 		// 	},
 		// 	clobPairs: []types.ClobPair{
-		// 		constants.ClobPair_Btc_No_Fee,
+		// 		constants.ClobPair_Btc,
 		// 	},
 		//  feeParams: constants.PerpetualFeeParamsNoFee,
 		// 	perpetuals: []perptypes.Perpetual{
@@ -800,7 +800,7 @@ func TestRecordMevMetrics(t *testing.T) {
 		// 			clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
 		// 				types.MatchPerpetualDeleveraging{
 		// 					Liquidated:  constants.Dave_Num0,
-		// 					PerpetualId: constants.ClobPair_Btc_No_Fee.MustGetPerpetualId(),
+		// 					PerpetualId: constants.ClobPair_Btc.MustGetPerpetualId(),
 		// 					Fills: []types.MatchPerpetualDeleveraging_Fill{
 		// 						{
 		// 							// Deleverage against Dave_Num1 instead of Carl_Num0.
@@ -871,11 +871,11 @@ func TestRecordMevMetrics(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -891,12 +891,9 @@ func TestRecordMevMetrics(t *testing.T) {
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
-					clobPair.MakerFeePpm,
-					clobPair.TakerFeePpm,
 				)
 				require.NoError(t, err)
 			}
@@ -970,7 +967,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				mockPerpetualKeeper.On("GetSettlement", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(new(big.Int), new(big.Int), nil)
 				for _, p := range tc.perpetuals {
-					mockPerpetualKeeper.On("GetPerpetual", mock.Anything, p.Id).Return(p, nil)
+					mockPerpetualKeeper.On("GetPerpetual", mock.Anything, p.Params.Id).Return(p, nil)
 				}
 			}
 
@@ -1212,11 +1209,11 @@ func TestGetMidPrices(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					p.Ticker,
-					p.MarketId,
-					p.AtomicResolution,
-					p.DefaultFundingPpm,
-					p.LiquidityTier,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
 			}
@@ -1232,12 +1229,9 @@ func TestGetMidPrices(t *testing.T) {
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
 					clobPair.Status,
-					clobPair.MakerFeePpm,
-					clobPair.TakerFeePpm,
 				)
 				require.NoError(t, err)
 			}

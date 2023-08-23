@@ -246,6 +246,7 @@ export function generateTransferContents(
         transfer,
         SubaccountTable.uuid(subaccountId.owner, subaccountId.number),
       ),
+      transactionHash: transfer.transactionHash,
     },
   };
 }

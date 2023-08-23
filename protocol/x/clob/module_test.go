@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -35,7 +36,7 @@ import (
 
 func getValidGenesisStr() string {
 	gs := `{"clob_pairs":[{"id":0,"perpetual_clob_metadata":{"perpetual_id":0},"subticks_per_tick":100,`
-	gs += `"min_order_base_quantums":1000,"step_base_quantums":5,"status":"STATUS_ACTIVE"}],`
+	gs += `"step_base_quantums":5,"status":"STATUS_ACTIVE"}],`
 	gs += `"liquidations_config":{"max_insurance_fund_quantums_for_deleveraging":"0",`
 	gs += `"max_liquidation_fee_ppm":5000,"position_block_limits":{"min_position_notional_liquidated":"1000",`
 	gs += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
@@ -323,7 +324,6 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.Equal(t, uint32(0), clobPairs[0].GetPerpetualClobMetadata().PerpetualId)
 	require.Equal(t, uint32(100), clobPairs[0].SubticksPerTick)
 	require.Equal(t, uint64(5), clobPairs[0].StepBaseQuantums)
-	require.Equal(t, uint64(1_000), clobPairs[0].MinOrderBaseQuantums)
 	require.Equal(t, clob_types.ClobPair_STATUS_ACTIVE, clobPairs[0].Status)
 
 	liquidationsConfig := keeper.GetLiquidationsConfig(ctx)
@@ -427,8 +427,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	expected := `{"clob_pairs":[{"id":0,"perpetual_clob_metadata":{"perpetual_id":0},`
-	expected += `"step_base_quantums":"5","subticks_per_tick":100,"quantum_conversion_exponent":0,`
-	expected += `"min_order_base_quantums":"1000","status":"STATUS_ACTIVE","maker_fee_ppm":0,"taker_fee_ppm":0}],`
+	expected += `"min_order_base_quantums":"0","step_base_quantums":"5","subticks_per_tick":100,`
+	expected += `"quantum_conversion_exponent":0,"status":"STATUS_ACTIVE"}],`
 	expected += `"liquidations_config":{"max_insurance_fund_quantums_for_deleveraging":"0",`
 	expected += `"max_liquidation_fee_ppm":5000,"position_block_limits":{"min_position_notional_liquidated":"1000",`
 	expected += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`

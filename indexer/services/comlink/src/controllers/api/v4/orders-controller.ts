@@ -43,6 +43,8 @@ import {
   mergePostgresAndRedisOrdersToResponseObjects,
   postgresAndRedisOrderToResponseObject,
 } from '../../../request-helpers/request-transformer';
+import { sanitizeArray } from '../../../request-helpers/sanitizers';
+import { validateArray } from '../../../request-helpers/validators';
 import {
   GetOrderRequest, ListOrderRequest, OrderResponseObject, PostgresOrderMap, RedisOrderMap,
 } from '../../../types';
@@ -60,7 +62,7 @@ class OrdersController extends Controller {
       @Query() ticker?: string,
       @Query() side?: OrderSide,
       @Query() type?: OrderType,
-      @Query() status?: APIOrderStatus,
+      @Query() status?: APIOrderStatus[],
       @Query() goodTilBlockBeforeOrAt?: number,
       @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
       @Query() returnLatestOrders?: boolean,
@@ -120,7 +122,7 @@ class OrdersController extends Controller {
       mergedResponses = _.filter(
         mergedResponses,
         (orderResponse: OrderResponseObject, _index: number) => {
-          return orderResponse.status === status;
+          return status.includes(orderResponse.status);
         },
       );
     }
@@ -186,12 +188,15 @@ router.get(
     // orders are removed from Redis. Until then, orders have to be merged with Postgres orders
     // to get the correct status.
     status: {
-      in: 'query',
-      isIn: {
-        options: [Object.values(APIOrderStatusEnum)],
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(APIOrderStatusEnum)),
         errorMessage: `status must be one of ${Object.values(APIOrderStatusEnum)}`,
       },
-      optional: true,
     },
     goodTilBlockBeforeOrAt: {
       in: 'query',

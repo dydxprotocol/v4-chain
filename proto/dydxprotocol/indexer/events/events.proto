@@ -277,3 +277,76 @@ message AssetCreateEventV1 {
   // a position size of one full coin.
   sint32 atomic_resolution = 5;
 }
+
+// Status of the CLOB.
+// Defined in clob.clob_pair
+enum ClobPairStatus {
+  // Default value. This value is invalid and unused.
+  CLOB_PAIR_STATUS_UNSPECIFIED = 0;
+  // CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  CLOB_PAIR_STATUS_ACTIVE = 1;
+  // CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  CLOB_PAIR_STATUS_PAUSED = 2;
+  // CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  CLOB_PAIR_STATUS_CANCEL_ONLY = 3;
+  // CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  CLOB_PAIR_STATUS_POST_ONLY = 4;
+}
+
+// PerpetualMarketCreateEventV1 message contains all the information about a
+// new Perpetual Market on the v4 chain.
+message PerpetualMarketCreateEventV1 {
+  // Unique Perpetual id.
+  // Defined in perpetuals.perpetual
+  uint32 id = 1;
+
+  // Unique clob pair Id associated with this perpetual market
+  // Defined in clob.clob_pair
+  uint32 clob_pair_id = 2;
+
+  // The name of the `Perpetual` (e.g. `BTC-USD`).
+  // Defined in perpetuals.perpetual
+  string ticker = 3;
+
+  // Unique id of market param associated with this perpetual market.
+  // Defined in perpetuals.perpetual
+  uint32 market_id = 4;
+
+  // Status of the CLOB
+  ClobPairStatus status = 5;
+
+  // `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+  // per Subtick.
+  // Defined in clob.clob_pair
+  sint32 quantum_conversion_exponent = 6;
+
+  // The exponent for converting an atomic amount (`size = 1`)
+  // to a full coin. For example, if `AtomicResolution = -8`
+  // then a `PerpetualPosition` with `size = 1e8` is equivalent to
+  // a position size of one full coin.
+  // Defined in perpetuals.perpetual
+  sint32 atomic_resolution = 7;
+
+  // Defines the tick size of the orderbook by defining how many subticks
+  // are in one tick. That is, the subticks of any valid order must be a
+  // multiple of this value. Generally this value should start `>= 100`to
+  // allow room for decreasing it.
+  // Defined in clob.clob_pair
+  uint32 subticks_per_tick = 8;
+
+  // Minimum size of an order on the CLOB, in base quantums.
+  // Defined in clob.clob_pair
+  uint64 min_order_base_quantums = 9;
+
+  // Minimum increment in the size of orders on the CLOB, in base quantums.
+  // Defined in clob.clob_pair
+  uint64 step_base_quantums = 10;
+
+  // The liquidity_tier that this perpetual is associated with.
+  // Defined in perpetuals.perpetual
+  uint32 liquidity_tier = 11;
+}

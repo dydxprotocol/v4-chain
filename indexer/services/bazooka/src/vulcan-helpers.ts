@@ -76,8 +76,6 @@ export async function sendStatefulOrderMessages() {
       {},
     );
 
-    // TODO(IND-313): Once conditional orders are implemented, update this to add
-    //  UNTRIGGERED placement status for conditional orders.
     let offchainUpdates: OffChainUpdateV1[] = _.map(
       indexerOrders,
       (indexerOrder: IndexerOrder) => {

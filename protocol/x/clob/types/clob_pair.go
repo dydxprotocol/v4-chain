@@ -4,8 +4,6 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-const MaxFeePpm = 100000 // 10%
-
 // SupportedClobPairStatusTransitions has keys corresponding to currently-supported
 // ClobPair_Status types with values equal to the set of ClobPair_Status types that
 // may be transitioned to from this state. Note the keys of this map may be
@@ -36,15 +34,7 @@ func (c *ClobPair) GetClobPairSubticksPerTick() SubticksPerTick {
 }
 
 func (c *ClobPair) GetClobPairMinOrderBaseQuantums() satypes.BaseQuantums {
-	return satypes.BaseQuantums(c.MinOrderBaseQuantums)
-}
-
-// Get fee rate in ppm. Returns the taker fee for taker orders, otherwise returns the maker fee.
-func (c *ClobPair) GetFeePpm(isTaker bool) uint32 {
-	if isTaker {
-		return c.TakerFeePpm
-	}
-	return c.MakerFeePpm
+	return satypes.BaseQuantums(c.StepBaseQuantums)
 }
 
 // GetPerpetualId returns the `PerpetualId` for the provided `clobPair`.

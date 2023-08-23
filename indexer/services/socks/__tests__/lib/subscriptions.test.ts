@@ -45,7 +45,10 @@ describe('Subscriptions', () => {
     [Channel.V4_TRADES]: [invalidTicker],
   };
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
-    [Channel.V4_ACCOUNTS]: ['/v4/addresses/.+/subaccountNumber/.+', '/v4/orders?.+OPEN'],
+    [Channel.V4_ACCOUNTS]: [
+      '/v4/addresses/.+/subaccountNumber/.+',
+      '/v4/orders?.+OPEN,UNTRIGGERED',
+    ],
     [Channel.V4_CANDLES]: ['/v4/candles/perpetualMarkets/.+?resolution=.+'],
     [Channel.V4_MARKETS]: ['/v4/perpetualMarkets'],
     [Channel.V4_ORDERBOOK]: ['/v4/orderbooks/perpetualMarket/.+'],

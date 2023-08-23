@@ -1,4 +1,4 @@
-import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { DateTime } from 'luxon';
 
 import * as AssetPositionTable from '../../src/stores/asset-position-table';
@@ -203,7 +203,6 @@ export const defaultOrder: OrderCreateObject = {
   goodTilBlock: '100',
   orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
   clientMetadata: '0',
-  triggerPrice: '19000',
 };
 
 export const defaultOrderGoodTilBlockTime: OrderCreateObject = {
@@ -212,6 +211,14 @@ export const defaultOrderGoodTilBlockTime: OrderCreateObject = {
   goodTilBlock: undefined,
   goodTilBlockTime: '2023-01-22T00:00:00.000Z',
   orderFlags: ORDER_FLAG_LONG_TERM.toString(),
+};
+
+export const defaultConditionalOrder: OrderCreateObject = {
+  ...defaultOrderGoodTilBlockTime,
+  type: OrderType.STOP_LIMIT,
+  clientId: '3',
+  orderFlags: ORDER_FLAG_CONDITIONAL.toString(),
+  triggerPrice: '19000',
 };
 
 export const defaultOrderId: string = OrderTable.uuid(
@@ -226,6 +233,13 @@ export const defaultOrderGoodTilBlockTimeId: string = OrderTable.uuid(
   defaultOrderGoodTilBlockTime.clientId,
   defaultOrderGoodTilBlockTime.clobPairId,
   defaultOrderGoodTilBlockTime.orderFlags,
+);
+
+export const defaultConditionalOrderId: string = OrderTable.uuid(
+  defaultConditionalOrder.subaccountId,
+  defaultConditionalOrder.clientId,
+  defaultConditionalOrder.clobPairId,
+  defaultConditionalOrder.orderFlags,
 );
 
 // ============== Blocks ==============

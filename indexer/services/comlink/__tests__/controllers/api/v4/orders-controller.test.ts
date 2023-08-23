@@ -30,6 +30,9 @@ import {
   IndexerOrder_Side,
   RedisOrder,
 } from '@dydxprotocol-indexer/v4-protos';
+import {
+  ORDER_FLAG_CONDITIONAL,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 
 describe('orders-controller#V4', () => {
   beforeAll(async () => {
@@ -177,6 +180,13 @@ describe('orders-controller#V4', () => {
       clientId: '3',
       goodTilBlock: '1251',
       status: APIOrderStatusEnum.FILLED,
+    };
+    const untriggeredOrder: OrderCreateObject = {
+      ...testConstants.defaultOrder,
+      clientId: '4',
+      orderFlags: ORDER_FLAG_CONDITIONAL.toString(),
+      status: APIOrderStatusEnum.UNTRIGGERED,
+      triggerPrice: '1000',
     };
 
     it('Successfully gets multiple redis orders', async () => {
@@ -421,6 +431,7 @@ describe('orders-controller#V4', () => {
       await Promise.all([
         OrderTable.create(testConstants.defaultOrder),
         OrderTable.create(filledOrder),
+        OrderTable.create(untriggeredOrder),
         placeOrder({
           redisOrder: redisTestConstants.defaultRedisOrder,
           client: redisClient,
@@ -482,6 +493,55 @@ describe('orders-controller#V4', () => {
       // Best effort opened order should be only order in response.
       expect(response.body).toEqual([
         redisOrderToResponseObject(redisOrderWithDifferentMarket),
+      ]);
+
+      response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders?${getQueryString({
+          ...defaultQueryParams,
+          status: APIOrderStatusEnum.UNTRIGGERED,
+        })}`,
+      });
+
+      // Untriggered order should be only order in response.
+      expect(response.body).toEqual([
+        postgresOrderToResponseObject({
+          ...untriggeredOrder,
+          id: OrderTable.uuid(
+            untriggeredOrder.subaccountId,
+            untriggeredOrder.clientId,
+            untriggeredOrder.clobPairId,
+            untriggeredOrder.orderFlags,
+          ),
+        }),
+      ]);
+
+      response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders?${getQueryString({
+          ...defaultQueryParams,
+          status: [APIOrderStatusEnum.UNTRIGGERED, APIOrderStatusEnum.OPEN],
+        })}`,
+      });
+
+      // Untriggered order and open order should be in response.
+      expect(response.body).toEqual([
+        postgresAndRedisOrderToResponseObject(
+          {
+            ...testConstants.defaultOrder,
+            id: testConstants.defaultOrderId,
+          },
+          redisTestConstants.defaultRedisOrder,
+        ),
+        postgresOrderToResponseObject({
+          ...untriggeredOrder,
+          id: OrderTable.uuid(
+            untriggeredOrder.subaccountId,
+            untriggeredOrder.clientId,
+            untriggeredOrder.clobPairId,
+            untriggeredOrder.orderFlags,
+          ),
+        }),
       ]);
     });
 

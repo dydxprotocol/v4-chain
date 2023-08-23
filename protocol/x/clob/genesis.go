@@ -23,12 +23,9 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 			ctx,
 			perpetualId,
 			satypes.BaseQuantums(elem.StepBaseQuantums),
-			satypes.BaseQuantums(elem.MinOrderBaseQuantums),
 			elem.QuantumConversionExponent,
 			elem.SubticksPerTick,
 			elem.Status,
-			elem.MakerFeePpm,
-			elem.TakerFeePpm,
 		)
 		if err != nil {
 			panic(err)

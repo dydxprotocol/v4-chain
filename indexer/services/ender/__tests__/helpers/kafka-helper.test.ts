@@ -304,7 +304,7 @@ describe('kafka-helper', () => {
       assetId: defaultAsset.id,
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
-      transactionHash: '',
+      transactionHash: 'hash',
       createdAt: DateTime.utc().toISO(),
       createdAtHeight: '1',
     };
@@ -319,7 +319,7 @@ describe('kafka-helper', () => {
       assetId: defaultAsset.id,
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
-      transactionHash: '',
+      transactionHash: 'hash',
       createdAt: DateTime.utc().toISO(),
       createdAtHeight: '1',
     };
@@ -331,7 +331,7 @@ describe('kafka-helper', () => {
       assetId: defaultAsset.id,
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
-      transactionHash: '',
+      transactionHash: 'hash',
       createdAt: DateTime.utc().toISO(),
       createdAtHeight: '1',
     };
@@ -357,6 +357,7 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: transfer.size,
         type: TransferType.TRANSFER_OUT,
+        transactionHash: transfer.transactionHash,
       });
     });
 
@@ -381,6 +382,7 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: transfer.size,
         type: TransferType.TRANSFER_IN,
+        transactionHash: transfer.transactionHash,
       });
     });
 
@@ -404,6 +406,7 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: deposit.size,
         type: TransferType.DEPOSIT,
+        transactionHash: deposit.transactionHash,
       });
     });
 
@@ -427,6 +430,7 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: deposit.size,
         type: TransferType.WITHDRAWAL,
+        transactionHash: withdrawal.transactionHash,
       });
     });
   });

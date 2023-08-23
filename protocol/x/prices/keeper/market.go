@@ -28,17 +28,6 @@ func (k Keeper) CreateMarket(
 		return types.MarketParam{}, err
 	}
 
-	// Validate param uses the `nextId`.
-	nextId := k.GetNumMarkets(ctx)
-	if marketParam.Id != nextId {
-		return types.MarketParam{}, sdkerrors.Wrapf(
-			types.ErrInvalidInput,
-			"expected market param with id %d, got %d",
-			nextId,
-			marketParam.Id,
-		)
-	}
-
 	paramBytes := k.cdc.MustMarshal(&marketParam)
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
 
@@ -47,9 +36,6 @@ func (k Keeper) CreateMarket(
 
 	marketPriceStore := k.newMarketPriceStore(ctx)
 	marketPriceStore.Set(types.MarketKey(marketPrice.Id), priceBytes)
-
-	// Store the new `numMarkets`.
-	k.setNumMarkets(ctx, nextId+1)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
@@ -89,22 +75,16 @@ func (k Keeper) GetAllMarketParamPrices(ctx sdk.Context) ([]types.MarketParamPri
 }
 
 // GetNumMarkets returns the total number of markets.
+// Panics if the length of market params and prices does not match.
 func (k Keeper) GetNumMarkets(
 	ctx sdk.Context,
 ) uint32 {
-	store := ctx.KVStore(k.storeKey)
-	var numMarketsBytes []byte = store.Get(types.KeyPrefix(types.NumMarketsKey))
-	return lib.BytesToUint32(numMarketsBytes)
-}
+	marketParams := k.GetAllMarketParams(ctx)
+	marketPrices := k.GetAllMarketPrices(ctx)
 
-// setNumMarkets sets the number of markets with a new value.
-func (k Keeper) setNumMarkets(
-	ctx sdk.Context,
-	newValue uint32,
-) {
-	// Get necessary stores.
-	store := ctx.KVStore(k.storeKey)
+	if len(marketParams) != len(marketPrices) {
+		panic(sdkerrors.Wrap(types.ErrMarketPricesAndParamsDontMatch, "market param and price lengths do not match"))
+	}
 
-	// Set `numMarkets`.
-	store.Set(types.KeyPrefix(types.NumMarketsKey), lib.Uint32ToBytes(newValue))
+	return lib.MustConvertIntegerToUint32(len(marketParams))
 }

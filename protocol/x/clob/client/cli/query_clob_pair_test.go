@@ -53,10 +53,9 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 			Metadata: &types.ClobPair_PerpetualClobMetadata{
 				PerpetualClobMetadata: &types.PerpetualClobMetadata{PerpetualId: 0},
 			},
-			SubticksPerTick:      5,
-			StepBaseQuantums:     5,
-			MinOrderBaseQuantums: 10,
-			Status:               types.ClobPair_STATUS_ACTIVE,
+			SubticksPerTick:  5,
+			StepBaseQuantums: 5,
+			Status:           types.ClobPair_STATUS_ACTIVE,
 		}
 		nullify.Fill(&clobPair) //nolint:staticcheck
 		state.ClobPairs = append(state.ClobPairs, clobPair)

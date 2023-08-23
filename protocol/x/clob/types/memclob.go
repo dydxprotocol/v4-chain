@@ -16,10 +16,6 @@ const ShortBlockWindow uint32 = 20
 // long-term/conditional `MsgPlaceOrder` message will be considered valid by the validator.
 const StatefulOrderTimeWindow time.Duration = 95 * 24 * time.Hour // 95 days.
 
-// MaxSubaccountOrdersPerClobAndSide represents the maximum number of orders that can be open on a certain CLOB and
-// side, per subaccount.
-const MaxSubaccountOrdersPerClobAndSide = 20
-
 // MemClob is an interface that encapsulates all reads and writes to the
 // CLOB's in-memory data structures.
 type MemClob interface {
@@ -34,6 +30,11 @@ type MemClob interface {
 		ctx sdk.Context,
 		clobPair ClobPair,
 	)
+	CountSubaccountOrders(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		filter func(OrderId) bool,
+	) uint32
 	GetClobPairForPerpetual(
 		ctx sdk.Context,
 		perpetualId uint32,
