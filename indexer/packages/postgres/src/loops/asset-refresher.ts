@@ -2,7 +2,7 @@ import { stats, delay, logger } from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import * as AssetTable from '../stores/asset-table';
-import { AssetFromDatabase, AssetsMap } from '../types';
+import { AssetFromDatabase, AssetsMap, Options } from '../types';
 
 let idToAsset: AssetsMap = {};
 
@@ -19,12 +19,12 @@ export async function start(): Promise<void> {
 /**
  * Updates in-memory map of assets.
  */
-export async function updateAssets(): Promise<void> {
+export async function updateAssets(options?: Options): Promise<void> {
   const startTime: number = Date.now();
   const assets: AssetFromDatabase[] = await AssetTable.findAll(
     {},
     [],
-    { readReplica: true },
+    options || { readReplica: true },
   );
 
   const tmpIdToAsset: Record<string, AssetFromDatabase> = {};

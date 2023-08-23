@@ -14,6 +14,7 @@ import {
   getGoodTilBlockTime,
   getStepSize,
   getTickSize,
+  orderTypeToProtocolConditionType,
   priceToSubticks,
   protocolConditionTypeToOrderType,
   protocolOrderTIFToTIF,
@@ -223,6 +224,44 @@ describe('protocolTranslations', () => {
       expect(() => {
         protocolConditionTypeToOrderType(100 as IndexerOrder_ConditionType);
       }).toThrow(new Error('Unexpected ConditionType: 100'));
+    });
+  });
+
+  describe('orderTypeToProtocolConditionType', () => {
+    it.each([
+      ['LIMIT', OrderType.LIMIT, IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
+      ['HARD_TRADE', OrderType.HARD_TRADE, IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
+      [
+        'FAILED_HARD_TRADE',
+        OrderType.FAILED_HARD_TRADE,
+        IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+      ],
+      ['MARKET', OrderType.MARKET, IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
+      [
+        'TRAILING_STOP',
+        OrderType.TRAILING_STOP,
+        IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+      ],
+      ['STOP_LIMIT', OrderType.STOP_LIMIT, IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS],
+      ['STOP_MARKET', OrderType.STOP_MARKET, IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS],
+      ['TAKE_PROFIT', OrderType.TAKE_PROFIT, IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT],
+      [
+        'TAKE_PROFIT_MARKET',
+        OrderType.TAKE_PROFIT_MARKET,
+        IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT,
+      ],
+    ])('successfully gets order type given protocol condition type: %s', (
+      _name: string,
+      orderType: OrderType,
+      conditionType: IndexerOrder_ConditionType,
+    ) => {
+      expect(orderTypeToProtocolConditionType(orderType)).toEqual(conditionType);
+    });
+
+    it('throws error if unrecognized OrderType given', () => {
+      expect(() => {
+        orderTypeToProtocolConditionType('INVALID' as OrderType);
+      }).toThrow(new Error('Unexpected OrderType: INVALID'));
     });
   });
 });

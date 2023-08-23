@@ -35,7 +35,7 @@ func createAppModuleWithKeeper(t *testing.T) (assets.AppModule, *assets_keeper.K
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, _, _, _, _ := keeper.AssetsKeepers(t)
+	ctx, keeper, _, _, _, _ := keeper.AssetsKeepers(t, true)
 
 	return assets.NewAppModule(
 		appCodec,

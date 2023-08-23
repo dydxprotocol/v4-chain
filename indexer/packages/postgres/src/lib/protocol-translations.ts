@@ -35,12 +35,35 @@ const INDEXER_TIF_TO_PROTOCOL_TIF_MAP: Record<TimeInForce, IndexerOrder_TimeInFo
   [TimeInForce.POST_ONLY]: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
 };
 
+// Mapping from Condition type enum from protocol to OrderType enum in the Indexer
 const CONDITION_TYPE_TO_ORDER_TYPE_MAP: Record<IndexerOrder_ConditionType, OrderType> = {
   // Default behavior with UNSPECIFIED / UNRECOGNIZED = Limit Order
   [IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED]: OrderType.LIMIT,
   [IndexerOrder_ConditionType.UNRECOGNIZED]: OrderType.LIMIT,
   [IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS]: OrderType.STOP_LIMIT,
   [IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT]: OrderType.TAKE_PROFIT,
+};
+
+// Reverse mapping of above
+const ORDER_TYPE_TO_CONDITION_TYPE_MAP: Record<OrderType, IndexerOrder_ConditionType> = {
+  // Limit orders are unspecified
+  [OrderType.LIMIT]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+
+  // Only STOP_LIMIT is used currently
+  [OrderType.STOP_LIMIT]: IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS,
+  [OrderType.STOP_MARKET]: IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS,
+
+  // Only TAKE_PROFIT is used currently
+  [OrderType.TAKE_PROFIT]: IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT,
+  [OrderType.TAKE_PROFIT_MARKET]: IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT,
+
+  // TODO(IND-356): Remove irrelevant order types
+  // Unused order types
+  [OrderType.HARD_TRADE]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+  [OrderType.FAILED_HARD_TRADE]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+  [OrderType.MARKET]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+  [OrderType.TRANSFER_PLACEHOLDER]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+  [OrderType.TRAILING_STOP]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
 };
 
 /**
@@ -301,4 +324,23 @@ export function protocolConditionTypeToOrderType(
   }
 
   return CONDITION_TYPE_TO_ORDER_TYPE_MAP[protocolConditionType];
+}
+
+/**
+ * Converts OrderType enum to protocol ConditionType.
+ * Special cased:
+ * - all unused types (not LIMIT / STOP-LIMIT/MARKET / TAKE-PROFIT (MARKET)) default to unspecified
+ * - STOP_LIMIT and STOP_MARKET map to STOP_LOSS
+ * - TAKE_PROFIT and TAKE_PROFIT_MARKET map to TAKE_PROFIT
+ * @param orderType
+ * @returns
+ */
+export function orderTypeToProtocolConditionType(
+  orderType: OrderType,
+): IndexerOrder_ConditionType {
+  if (!(orderType in ORDER_TYPE_TO_CONDITION_TYPE_MAP)) {
+    throw new Error(`Unexpected OrderType: ${orderType}`);
+  }
+
+  return ORDER_TYPE_TO_CONDITION_TYPE_MAP[orderType];
 }

@@ -354,7 +354,6 @@
       "clob_pairs": [
         {
           "id": 0,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 0
@@ -362,12 +361,10 @@
           "quantum_conversion_exponent": -8,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 10000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000
         },
         {
           "id": 1,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 1
@@ -375,12 +372,10 @@
           "quantum_conversion_exponent": -9,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 100000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000
         },
         {
           "id": 2,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 2
@@ -388,12 +383,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 3,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 3
@@ -401,12 +394,10 @@
           "quantum_conversion_exponent": -12,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 100000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000000
         },
         {
           "id": 4,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 4
@@ -414,12 +405,10 @@
           "quantum_conversion_exponent": -12,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 100000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000000
         },
         {
           "id": 5,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 5
@@ -427,12 +416,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 6,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 1000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 6
@@ -440,12 +427,10 @@
           "quantum_conversion_exponent": -13,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 100000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 7,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 7
@@ -453,12 +438,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 1000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 1000000
         },
         {
           "id": 8,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 8
@@ -466,12 +449,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 1000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 1000000
         },
         {
           "id": 9,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 9
@@ -479,12 +460,10 @@
           "quantum_conversion_exponent": -10,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 1000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 1000000
         },
         {
           "id": 10,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 10
@@ -492,12 +471,10 @@
           "quantum_conversion_exponent": -10,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 100000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000
         },
         {
           "id": 11,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 11
@@ -505,12 +482,10 @@
           "quantum_conversion_exponent": -13,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 100000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000000
         },
         {
           "id": 12,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 12
@@ -518,12 +493,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 1000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 1000000
         },
         {
           "id": 13,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 13
@@ -531,12 +504,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 14,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 14
@@ -544,12 +515,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 1000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 1000000
         },
         {
           "id": 15,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 15
@@ -557,12 +526,10 @@
           "quantum_conversion_exponent": -12,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 16,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 16
@@ -570,12 +537,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 17,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 17
@@ -583,12 +548,10 @@
           "quantum_conversion_exponent": -10,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 100000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000
         },
         {
           "id": 18,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 18
@@ -596,12 +559,10 @@
           "quantum_conversion_exponent": -12,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 19,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 19
@@ -609,12 +570,10 @@
           "quantum_conversion_exponent": -13,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 100000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000000
         },
         {
           "id": 20,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 1000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 20
@@ -622,12 +581,10 @@
           "quantum_conversion_exponent": -13,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 100000,
-          "subticks_per_tick": 100000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000000
         },
         {
           "id": 21,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 1000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 21
@@ -635,12 +592,10 @@
           "quantum_conversion_exponent": -12,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 100000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 22,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 1000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 22
@@ -648,12 +603,10 @@
           "quantum_conversion_exponent": -12,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 100000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 23,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 23
@@ -661,12 +614,10 @@
           "quantum_conversion_exponent": -9,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 10000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000
         },
         {
           "id": 24,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 1000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 24
@@ -674,12 +625,10 @@
           "quantum_conversion_exponent": -12,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 100000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 25,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 25
@@ -687,12 +636,10 @@
           "quantum_conversion_exponent": -13,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 100000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000000
         },
         {
           "id": 26,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 26
@@ -700,12 +647,10 @@
           "quantum_conversion_exponent": -10,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 100000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000
         },
         {
           "id": 27,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 27
@@ -713,12 +658,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 1000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 1000000
         },
         {
           "id": 28,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 1000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 28
@@ -726,12 +669,10 @@
           "quantum_conversion_exponent": -13,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 100000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 29,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 1000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 29
@@ -739,12 +680,10 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 100000,
-          "subticks_per_tick": 100000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000
         },
         {
           "id": 30,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 1000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 30
@@ -752,8 +691,7 @@
           "quantum_conversion_exponent": -11,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 100000,
-          "subticks_per_tick": 100000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 100000
         },
         {
           "id": 31,
@@ -765,12 +703,10 @@
           "quantum_conversion_exponent": -13,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 100000,
-          "subticks_per_tick": 10000000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000000
         },
         {
           "id": 32,
-          "maker_fee_ppm": 200,
           "min_order_base_quantums": 10000000,
           "perpetual_clob_metadata": {
             "perpetual_id": 32
@@ -778,8 +714,7 @@
           "quantum_conversion_exponent": -8,
           "status": "STATUS_ACTIVE",
           "step_base_quantums": 1000000,
-          "subticks_per_tick": 10000,
-          "taker_fee_ppm": 500
+          "subticks_per_tick": 10000
         }
       ],
       "liquidations_config": {
@@ -1563,268 +1498,334 @@
       },
       "perpetuals": [
         {
-          "atomic_resolution": -10,
-          "default_funding_ppm": 0,
-          "id": 0,
-          "liquidity_tier": 0,
-          "market_id": 0,
-          "ticker": "BTC-USD"
+          "params": {
+            "atomic_resolution": -10,
+            "default_funding_ppm": 0,
+            "id": 0,
+            "liquidity_tier": 0,
+            "market_id": 0,
+            "ticker": "BTC-USD"
+          }
         },
         {
-          "atomic_resolution": -9,
-          "default_funding_ppm": 0,
-          "id": 1,
-          "liquidity_tier": 0,
-          "market_id": 1,
-          "ticker": "ETH-USD"
+          "params": {
+            "atomic_resolution": -9,
+            "default_funding_ppm": 0,
+            "id": 1,
+            "liquidity_tier": 0,
+            "market_id": 1,
+            "ticker": "ETH-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 2,
-          "liquidity_tier": 1,
-          "market_id": 2,
-          "ticker": "LINK-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 2,
+            "liquidity_tier": 1,
+            "market_id": 2,
+            "ticker": "LINK-USD"
+          }
         },
         {
-          "atomic_resolution": -6,
-          "default_funding_ppm": 0,
-          "id": 3,
-          "liquidity_tier": 1,
-          "market_id": 3,
-          "ticker": "MATIC-USD"
+          "params": {
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "id": 3,
+            "liquidity_tier": 1,
+            "market_id": 3,
+            "ticker": "MATIC-USD"
+          }
         },
         {
-          "atomic_resolution": -6,
-          "default_funding_ppm": 0,
-          "id": 4,
-          "liquidity_tier": 1,
-          "market_id": 4,
-          "ticker": "CRV-USD"
+          "params": {
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "id": 4,
+            "liquidity_tier": 1,
+            "market_id": 4,
+            "ticker": "CRV-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 5,
-          "liquidity_tier": 1,
-          "market_id": 5,
-          "ticker": "SOL-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 5,
+            "liquidity_tier": 1,
+            "market_id": 5,
+            "ticker": "SOL-USD"
+          }
         },
         {
-          "atomic_resolution": -5,
-          "default_funding_ppm": 0,
-          "id": 6,
-          "liquidity_tier": 1,
-          "market_id": 6,
-          "ticker": "ADA-USD"
+          "params": {
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "id": 6,
+            "liquidity_tier": 1,
+            "market_id": 6,
+            "ticker": "ADA-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 7,
-          "liquidity_tier": 1,
-          "market_id": 7,
-          "ticker": "AVAX-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 7,
+            "liquidity_tier": 1,
+            "market_id": 7,
+            "ticker": "AVAX-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 8,
-          "liquidity_tier": 1,
-          "market_id": 8,
-          "ticker": "FIL-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 8,
+            "liquidity_tier": 1,
+            "market_id": 8,
+            "ticker": "FIL-USD"
+          }
         },
         {
-          "atomic_resolution": -8,
-          "default_funding_ppm": 0,
-          "id": 9,
-          "liquidity_tier": 1,
-          "market_id": 9,
-          "ticker": "AAVE-USD"
+          "params": {
+            "atomic_resolution": -8,
+            "default_funding_ppm": 0,
+            "id": 9,
+            "liquidity_tier": 1,
+            "market_id": 9,
+            "ticker": "AAVE-USD"
+          }
         },
         {
-          "atomic_resolution": -8,
-          "default_funding_ppm": 0,
-          "id": 10,
-          "liquidity_tier": 1,
-          "market_id": 10,
-          "ticker": "LTC-USD"
+          "params": {
+            "atomic_resolution": -8,
+            "default_funding_ppm": 0,
+            "id": 10,
+            "liquidity_tier": 1,
+            "market_id": 10,
+            "ticker": "LTC-USD"
+          }
         },
         {
-          "atomic_resolution": -5,
-          "default_funding_ppm": 0,
-          "id": 11,
-          "liquidity_tier": 1,
-          "market_id": 11,
-          "ticker": "DOGE-USD"
+          "params": {
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "id": 11,
+            "liquidity_tier": 1,
+            "market_id": 11,
+            "ticker": "DOGE-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 12,
-          "liquidity_tier": 1,
-          "market_id": 12,
-          "ticker": "ICP-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 12,
+            "liquidity_tier": 1,
+            "market_id": 12,
+            "ticker": "ICP-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 13,
-          "liquidity_tier": 1,
-          "market_id": 13,
-          "ticker": "ATOM-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 13,
+            "liquidity_tier": 1,
+            "market_id": 13,
+            "ticker": "ATOM-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 14,
-          "liquidity_tier": 1,
-          "market_id": 14,
-          "ticker": "DOT-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 14,
+            "liquidity_tier": 1,
+            "market_id": 14,
+            "ticker": "DOT-USD"
+          }
         },
         {
-          "atomic_resolution": -6,
-          "default_funding_ppm": 0,
-          "id": 15,
-          "liquidity_tier": 1,
-          "market_id": 15,
-          "ticker": "XTZ-USD"
+          "params": {
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "id": 15,
+            "liquidity_tier": 1,
+            "market_id": 15,
+            "ticker": "XTZ-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 16,
-          "liquidity_tier": 1,
-          "market_id": 16,
-          "ticker": "UNI-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 16,
+            "liquidity_tier": 1,
+            "market_id": 16,
+            "ticker": "UNI-USD"
+          }
         },
         {
-          "atomic_resolution": -8,
-          "default_funding_ppm": 0,
-          "id": 17,
-          "liquidity_tier": 1,
-          "market_id": 17,
-          "ticker": "BCH-USD"
+          "params": {
+            "atomic_resolution": -8,
+            "default_funding_ppm": 0,
+            "id": 17,
+            "liquidity_tier": 1,
+            "market_id": 17,
+            "ticker": "BCH-USD"
+          }
         },
         {
-          "atomic_resolution": -6,
-          "default_funding_ppm": 0,
-          "id": 18,
-          "liquidity_tier": 1,
-          "market_id": 18,
-          "ticker": "EOS-USD"
+          "params": {
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "id": 18,
+            "liquidity_tier": 1,
+            "market_id": 18,
+            "ticker": "EOS-USD"
+          }
         },
         {
-          "atomic_resolution": -5,
-          "default_funding_ppm": 0,
-          "id": 19,
-          "liquidity_tier": 1,
-          "market_id": 19,
-          "ticker": "TRX-USD"
+          "params": {
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "id": 19,
+            "liquidity_tier": 1,
+            "market_id": 19,
+            "ticker": "TRX-USD"
+          }
         },
         {
-          "atomic_resolution": -5,
-          "default_funding_ppm": 0,
-          "id": 20,
-          "liquidity_tier": 1,
-          "market_id": 20,
-          "ticker": "ALGO-USD"
+          "params": {
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "id": 20,
+            "liquidity_tier": 1,
+            "market_id": 20,
+            "ticker": "ALGO-USD"
+          }
         },
         {
-          "atomic_resolution": -6,
-          "default_funding_ppm": 0,
-          "id": 21,
-          "liquidity_tier": 1,
-          "market_id": 21,
-          "ticker": "NEAR-USD"
+          "params": {
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "id": 21,
+            "liquidity_tier": 1,
+            "market_id": 21,
+            "ticker": "NEAR-USD"
+          }
         },
         {
-          "atomic_resolution": -6,
-          "default_funding_ppm": 0,
-          "id": 22,
-          "liquidity_tier": 2,
-          "market_id": 22,
-          "ticker": "SNX-USD"
+          "params": {
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "id": 22,
+            "liquidity_tier": 2,
+            "market_id": 22,
+            "ticker": "SNX-USD"
+          }
         },
         {
-          "atomic_resolution": -9,
-          "default_funding_ppm": 0,
-          "id": 23,
-          "liquidity_tier": 2,
-          "market_id": 23,
-          "ticker": "MKR-USD"
+          "params": {
+            "atomic_resolution": -9,
+            "default_funding_ppm": 0,
+            "id": 23,
+            "liquidity_tier": 2,
+            "market_id": 23,
+            "ticker": "MKR-USD"
+          }
         },
         {
-          "atomic_resolution": -6,
-          "default_funding_ppm": 0,
-          "id": 24,
-          "liquidity_tier": 1,
-          "market_id": 24,
-          "ticker": "SUSHI-USD"
+          "params": {
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "id": 24,
+            "liquidity_tier": 1,
+            "market_id": 24,
+            "ticker": "SUSHI-USD"
+          }
         },
         {
-          "atomic_resolution": -5,
-          "default_funding_ppm": 0,
-          "id": 25,
-          "liquidity_tier": 1,
-          "market_id": 25,
-          "ticker": "XLM-USD"
+          "params": {
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "id": 25,
+            "liquidity_tier": 1,
+            "market_id": 25,
+            "ticker": "XLM-USD"
+          }
         },
         {
-          "atomic_resolution": -8,
-          "default_funding_ppm": 0,
-          "id": 26,
-          "liquidity_tier": 1,
-          "market_id": 26,
-          "ticker": "XMR-USD"
+          "params": {
+            "atomic_resolution": -8,
+            "default_funding_ppm": 0,
+            "id": 26,
+            "liquidity_tier": 1,
+            "market_id": 26,
+            "ticker": "XMR-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 27,
-          "liquidity_tier": 1,
-          "market_id": 27,
-          "ticker": "ETC-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 27,
+            "liquidity_tier": 1,
+            "market_id": 27,
+            "ticker": "ETC-USD"
+          }
         },
         {
-          "atomic_resolution": -5,
-          "default_funding_ppm": 0,
-          "id": 28,
-          "liquidity_tier": 2,
-          "market_id": 28,
-          "ticker": "1INCH-USD"
+          "params": {
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "id": 28,
+            "liquidity_tier": 2,
+            "market_id": 28,
+            "ticker": "1INCH-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 29,
-          "liquidity_tier": 2,
-          "market_id": 29,
-          "ticker": "COMP-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 29,
+            "liquidity_tier": 2,
+            "market_id": 29,
+            "ticker": "COMP-USD"
+          }
         },
         {
-          "atomic_resolution": -7,
-          "default_funding_ppm": 0,
-          "id": 30,
-          "liquidity_tier": 1,
-          "market_id": 30,
-          "ticker": "ZEC-USD"
+          "params": {
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "id": 30,
+            "liquidity_tier": 1,
+            "market_id": 30,
+            "ticker": "ZEC-USD"
+          }
         },
         {
-          "atomic_resolution": -5,
-          "default_funding_ppm": 0,
-          "id": 31,
-          "liquidity_tier": 1,
-          "market_id": 31,
-          "ticker": "ZRX-USD"
+          "params": {
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "id": 31,
+            "liquidity_tier": 1,
+            "market_id": 31,
+            "ticker": "ZRX-USD"
+          }
         },
         {
-          "atomic_resolution": -10,
-          "default_funding_ppm": 0,
-          "id": 32,
-          "liquidity_tier": 1,
-          "market_id": 32,
-          "ticker": "YFI-USD"
+          "params": {
+            "atomic_resolution": -10,
+            "default_funding_ppm": 0,
+            "id": 32,
+            "liquidity_tier": 1,
+            "market_id": 32,
+            "ticker": "YFI-USD"
+          }
         }
       ]
     },

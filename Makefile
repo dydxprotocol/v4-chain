@@ -20,4 +20,23 @@ proto-check-bc-breaking:
 proto-export:
 	@rm -rf proto/.proto-export && cd proto && buf export --config ./buf.yaml --output ../.proto-export
 
-.PHONY: proto-format proto-lint proto-check-bc-breaking proto-export
+proto-export-deps:
+	@rm -rf ./.proto-export-deps
+	@cd proto && buf export --config ./buf.yaml --output ../.proto-export-deps --exclude-imports && buf export buf.build/cosmos/cosmos-sdk:v0.47.0 --output ../.proto-export-deps
+
+PROTO_DIRS=$(shell find .proto-export-deps -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
+
+dydxpy-gen: proto-export-deps
+	@rm -rf ./dydxpy/dydxpy
+	@mkdir -p ./dydxpy/dydxpy
+	@for dir in $(PROTO_DIRS); do \
+		python3 -m grpc_tools.protoc \
+		-I .proto-export-deps \
+		--python_out=./dydxpy/dydxpy \
+		--pyi_out=./dydxpy/dydxpy \
+		--grpc_python_out=./dydxpy/dydxpy \
+		$$(find ./$${dir} -type f -name '*.proto'); \
+	done; \
+	touch dydxpy/dydxpy/__init__.py
+
+.PHONY: proto-format proto-lint proto-check-bc-breaking proto-export proto-export-deps dydxpy-gen

@@ -35,19 +35,6 @@ describe('asset-validator', () => {
       validator.validate();
       expectDidntLogError();
     });
-
-    it('throws error on invalid asset create event', () => {
-      const event: AssetCreateEventV1 = {
-        ...defaultAssetCreateEvent,
-        marketId: 1000,
-      };
-      const validator: AssetValidator = new AssetValidator(
-        event,
-        createBlock(event),
-      );
-      const message: string = 'Unable to find market with id: 1000';
-      expect(() => validator.validate()).toThrow(new Error(message));
-    });
   });
 });
 

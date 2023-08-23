@@ -143,6 +143,7 @@ export interface TransferResponseObject {
   createdAtHeight: string,
   symbol: string,
   type: TransferType,
+  transactionHash: string,
 }
 
 /* ------- PNL TICKS TYPES ------- */
@@ -358,7 +359,7 @@ export interface GetOrderRequest {
 export interface ListOrderRequest extends SubaccountRequest, LimitRequest, TickerRequest {
   side?: OrderSide,
   type?: OrderType,
-  status?: OrderStatus,
+  status?: OrderStatus[],
   goodTilBlockBeforeOrAt?: number,
   goodTilBlockTimeBeforeOrAt?: IsoString,
   returnLatestOrders?: boolean,

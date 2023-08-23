@@ -480,7 +480,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedError: fmt.Errorf("Multiple rate limits"),
 		},
-		"duplicate short term order equity tier limit UsdTncRequired not allowed": {
+		"out of order short term order equity tier limit UsdTncRequired not allowed": {
 			genState: &types.GenesisState{
 				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
 					ShortTermOrderEquityTiers: []types.EquityTierLimit{
@@ -495,9 +495,9 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Errorf("Multiple equity tier limits"),
+			expectedError: fmt.Errorf("Expected ShortTermOrderEquityTiers equity tier UsdTncRequired to be strictly ascending."),
 		},
-		"duplicate stateful order equity tier limit UsdTncRequired not allowed": {
+		"out of order stateful order equity tier limit UsdTncRequired not allowed": {
 			genState: &types.GenesisState{
 				EquityTierLimitConfig: types.EquityTierLimitConfiguration{
 					StatefulOrderEquityTiers: []types.EquityTierLimit{
@@ -512,7 +512,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Errorf("Multiple equity tier limits"),
+			expectedError: fmt.Errorf("Expected StatefulOrderEquityTiers equity tier UsdTncRequired to be strictly ascending."),
 		},
 		"short term order equity tier limit UsdTncRequired is nil": {
 			genState: &types.GenesisState{

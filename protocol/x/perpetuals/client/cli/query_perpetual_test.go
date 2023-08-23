@@ -63,10 +63,12 @@ func networkWithLiquidityTierAndPerpetualObjects(
 	// Generate `n` Perpetuals.
 	for i := 0; i < n; i++ {
 		perpetual := types.Perpetual{
-			Id:            uint32(i),
-			Ticker:        fmt.Sprintf("test_query_ticker_%d", i),
-			FundingIndex:  dtypes.ZeroInt(),
-			LiquidityTier: uint32(i % m),
+			Params: types.PerpetualParams{
+				Id:            uint32(i),
+				Ticker:        fmt.Sprintf("test_query_ticker_%d", i),
+				LiquidityTier: uint32(i % m),
+			},
+			FundingIndex: dtypes.ZeroInt(),
 		}
 		nullify.Fill(&perpetual) //nolint:staticcheck
 		state.Perpetuals = append(state.Perpetuals, perpetual)
@@ -95,7 +97,7 @@ func TestShowPerpetual(t *testing.T) {
 	}{
 		{
 			desc: "found",
-			id:   objs[0].Id,
+			id:   objs[0].Params.Id,
 
 			args: common,
 			obj:  objs[0],
@@ -142,7 +144,7 @@ func checkExpectedPerp(t *testing.T, expected types.Perpetual, received types.Pe
 // Check the recieved perpetual object matches one of the expected perpetuals.
 func expectedContainsReceived(t *testing.T, expectedPerps []types.Perpetual, received types.Perpetual) {
 	for _, expected := range expectedPerps {
-		if received.Id == expected.Id {
+		if received.Params.Id == expected.Params.Id {
 			checkExpectedPerp(t, expected, received)
 			return
 		}
@@ -210,7 +212,7 @@ func TestListPerpetual(t *testing.T) {
 		cmpOptions := []cmp.Option{
 			cmpopts.IgnoreFields(types.Perpetual{}, "FundingIndex"),
 			cmpopts.SortSlices(func(x, y types.Perpetual) bool {
-				return x.Id > y.Id
+				return x.Params.Id > y.Params.Id
 			}),
 		}
 		if diff := cmp.Diff(objs, resp.Perpetual, cmpOptions...); diff != "" {

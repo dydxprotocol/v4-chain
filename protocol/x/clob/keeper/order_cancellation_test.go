@@ -143,7 +143,7 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrMemClobCancelAlreadyExists)
 
 	longTermOrder := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
-	ks.ClobKeeper.SetLongTermOrderPlacement(ctx, longTermOrder, 15)
+	ks.ClobKeeper.SetLongTermOrderPlacement(ctx.WithIsCheckTx(false), longTermOrder, 15)
 	ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
 		ctx,
 		longTermOrder.MustGetUnixGoodTilBlockTime(),
@@ -164,9 +164,9 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 	blockTime := time.Unix(10, 0)
 
 	tests := map[string]struct {
-		setupState     func(ctx sdk.Context, k *keeper.Keeper)
-		msgCancelOrder *types.MsgCancelOrder
-		expectedErr    string
+		setupDeliverTxState func(ctx sdk.Context, k *keeper.Keeper)
+		msgCancelOrder      *types.MsgCancelOrder
+		expectedErr         string
 	}{
 		"short-term cancellation succeeds with a GoodTilBlock of blockHeight": {
 			msgCancelOrder: &types.MsgCancelOrder{
@@ -249,7 +249,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 		},
 		`stateful cancellation succeeds when GoodTilBlockTime equal to StatefulOrderTimeWindow greater
 		than previous block blockTime`: {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -278,7 +278,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			expectedErr: "Order Id to cancel does not exist.",
 		},
 		"stateful cancellation succeeds if existing order GTBT is less than cancel order GTBT.": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -299,7 +299,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			},
 		},
 		"stateful cancellation succeeds if existing order GTBT is equal to cancel order GTBT.": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -319,7 +319,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			},
 		},
 		"stateful cancellation fails if existing order GTBT is greater than cancel order GTBT.": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -340,7 +340,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			expectedErr: "cancellation goodTilBlockTime less than stateful order goodTilBlockTime.",
 		},
 		"stateful cancellation success if existing cancellation with lower GTBT": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -360,7 +360,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			},
 		},
 		"stateful cancellation success if existing cancellation with higher GTBT": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -380,7 +380,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			},
 		},
 		"stateful cancellation success if existing cancellation with equal GTBT": {
-			setupState: func(ctx sdk.Context, k *keeper.Keeper) {
+			setupDeliverTxState: func(ctx sdk.Context, k *keeper.Keeper) {
 				k.SetLongTermOrderPlacement(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -413,10 +413,9 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 									PerpetualId: 0,
 								},
 							},
-							Status:               types.ClobPair_STATUS_ACTIVE,
-							StepBaseQuantums:     12,
-							SubticksPerTick:      39,
-							MinOrderBaseQuantums: 204,
+							Status:           types.ClobPair_STATUS_ACTIVE,
+							StepBaseQuantums: 12,
+							SubticksPerTick:  39,
 						},
 					}
 				})
@@ -429,8 +428,8 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 				testapp.AdvanceToBlockOptions{BlockTime: blockTime},
 			)
 
-			if tc.setupState != nil {
-				tc.setupState(ctx, tApp.App.ClobKeeper)
+			if tc.setupDeliverTxState != nil {
+				tc.setupDeliverTxState(ctx.WithIsCheckTx(false), tApp.App.ClobKeeper)
 			}
 
 			resp := tApp.CheckTx(testapp.MustMakeCheckTxsWithClobMsg(

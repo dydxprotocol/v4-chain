@@ -46,17 +46,11 @@ func DefaultGenesis() *GenesisState {
 func (gs GenesisState) Validate() error {
 	// Check for duplicated key for Markets.
 	marketParamKeyMap := make(map[uint32]struct{})
-	expectedMarketId := uint32(0)
 	for _, marketParam := range gs.MarketParams {
 		if _, exists := marketParamKeyMap[marketParam.Id]; exists {
 			return fmt.Errorf("duplicated market param id")
 		}
 		marketParamKeyMap[marketParam.Id] = struct{}{}
-
-		if marketParam.Id != expectedMarketId {
-			return fmt.Errorf("found gap in market param id")
-		}
-		expectedMarketId = expectedMarketId + 1
 
 		if err := marketParam.Validate(); err != nil {
 			return err

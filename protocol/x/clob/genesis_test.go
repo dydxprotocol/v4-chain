@@ -1,8 +1,9 @@
 package clob_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -107,11 +108,10 @@ func TestGenesis(t *testing.T) {
 								PerpetualId: 0,
 							},
 						},
-						Id:                   uint32(0),
-						StepBaseQuantums:     5,
-						SubticksPerTick:      5,
-						MinOrderBaseQuantums: 10,
-						Status:               types.ClobPair_STATUS_ACTIVE,
+						Id:               uint32(0),
+						StepBaseQuantums: 5,
+						SubticksPerTick:  5,
+						Status:           types.ClobPair_STATUS_ACTIVE,
 					},
 					{
 						Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -119,11 +119,10 @@ func TestGenesis(t *testing.T) {
 								PerpetualId: 0,
 							},
 						},
-						Id:                   uint32(1),
-						StepBaseQuantums:     5,
-						SubticksPerTick:      5,
-						MinOrderBaseQuantums: 10,
-						Status:               types.ClobPair_STATUS_ACTIVE,
+						Id:               uint32(1),
+						StepBaseQuantums: 5,
+						SubticksPerTick:  5,
+						Status:           types.ClobPair_STATUS_ACTIVE,
 					},
 				},
 				LiquidationsConfig: types.LiquidationsConfig{
@@ -167,12 +166,11 @@ func TestGenesis(t *testing.T) {
 			genesis: types.GenesisState{
 				ClobPairs: []types.ClobPair{
 					{
-						Id:                   uint32(0),
-						Metadata:             nil,
-						StepBaseQuantums:     5,
-						SubticksPerTick:      5,
-						MinOrderBaseQuantums: 10,
-						Status:               types.ClobPair_STATUS_ACTIVE,
+						Id:               uint32(0),
+						Metadata:         nil,
+						StepBaseQuantums: 5,
+						SubticksPerTick:  5,
+						Status:           types.ClobPair_STATUS_ACTIVE,
 					},
 					{
 						Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -180,11 +178,10 @@ func TestGenesis(t *testing.T) {
 								PerpetualId: 0,
 							},
 						},
-						Id:                   uint32(1),
-						StepBaseQuantums:     5,
-						SubticksPerTick:      5,
-						MinOrderBaseQuantums: 10,
-						Status:               types.ClobPair_STATUS_ACTIVE,
+						Id:               uint32(1),
+						StepBaseQuantums: 5,
+						SubticksPerTick:  5,
+						Status:           types.ClobPair_STATUS_ACTIVE,
 					},
 				},
 				LiquidationsConfig: types.LiquidationsConfig{
@@ -210,11 +207,10 @@ func TestGenesis(t *testing.T) {
 								QuoteAssetId: 1,
 							},
 						},
-						Id:                   uint32(0),
-						StepBaseQuantums:     5,
-						SubticksPerTick:      5,
-						MinOrderBaseQuantums: 10,
-						Status:               types.ClobPair_STATUS_ACTIVE,
+						Id:               uint32(0),
+						StepBaseQuantums: 5,
+						SubticksPerTick:  5,
+						Status:           types.ClobPair_STATUS_ACTIVE,
 					},
 					{
 						Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -222,11 +218,10 @@ func TestGenesis(t *testing.T) {
 								PerpetualId: 0,
 							},
 						},
-						Id:                   uint32(1),
-						StepBaseQuantums:     5,
-						SubticksPerTick:      5,
-						MinOrderBaseQuantums: 10,
-						Status:               types.ClobPair_STATUS_ACTIVE,
+						Id:               uint32(1),
+						StepBaseQuantums: 5,
+						SubticksPerTick:  5,
+						Status:           types.ClobPair_STATUS_ACTIVE,
 					},
 				},
 				LiquidationsConfig: types.LiquidationsConfig{

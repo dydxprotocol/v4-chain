@@ -49,7 +49,7 @@ func SubaccountsKeepers(
 		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		perpetualsKeeper, _ = createPerpetualsKeeper(stateStore, db, cdc, pricesKeeper, epochsKeeper, transientStoreKey)
-		assetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, pricesKeeper)
+		assetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, pricesKeeper, transientStoreKey, msgSenderEnabled)
 
 		accountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
 

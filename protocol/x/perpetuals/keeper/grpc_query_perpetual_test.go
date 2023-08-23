@@ -28,14 +28,14 @@ func TestPerpetualQuerySingle(t *testing.T) {
 		{
 			desc: "First",
 			request: &types.QueryPerpetualRequest{
-				Id: msgs[0].Id,
+				Id: msgs[0].Params.Id,
 			},
 			response: &types.QueryPerpetualResponse{Perpetual: msgs[0]},
 		},
 		{
 			desc: "Second",
 			request: &types.QueryPerpetualRequest{
-				Id: msgs[1].Id,
+				Id: msgs[1].Params.Id,
 			},
 			response: &types.QueryPerpetualResponse{Perpetual: msgs[1]},
 		},

@@ -1,0 +1,9 @@
+{
+    "extends": "./node_modules/@dydxprotocol/node-service-base-dev/tsconfig.json",
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

@@ -78,7 +78,14 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			epochsKeeper,
 			indexerEventsTransientStoreKey,
 		)
-		ks.AssetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, ks.PricesKeeper)
+		ks.AssetsKeeper, _ = createAssetsKeeper(
+			stateStore,
+			db,
+			cdc,
+			ks.PricesKeeper,
+			indexerEventsTransientStoreKey,
+			true,
+		)
 		ks.StatsKeeper, _ = createStatsKeeper(
 			stateStore,
 			epochsKeeper,
@@ -137,6 +144,10 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.StatsKeeper,
 		}
 	})
+
+	if err := ks.ClobKeeper.InitializeEquityTierLimit(ks.Ctx, types.EquityTierLimitConfiguration{}); err != nil {
+		panic(err)
+	}
 
 	return ks
 }

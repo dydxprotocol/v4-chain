@@ -952,6 +952,9 @@
           },
           "type": {
             "$ref": "#/components/schemas/TransferType"
+          },
+          "transactionHash": {
+            "type": "string"
           }
         },
         "required": [
@@ -962,7 +965,8 @@
           "createdAt",
           "createdAtHeight",
           "symbol",
-          "type"
+          "type",
+          "transactionHash"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1492,7 +1496,10 @@
             "name": "status",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/APIOrderStatus"
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/APIOrderStatus"
+              }
             }
           },
           {

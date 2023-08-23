@@ -928,7 +928,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders?address=string&subacco
 |ticker|query|string|false|none|
 |side|query|[OrderSide](#schemaorderside)|false|none|
 |type|query|[OrderType](#schemaordertype)|false|none|
-|status|query|[APIOrderStatus](#schemaapiorderstatus)|false|none|
+|status|query|array[any]|false|none|
 |goodTilBlockBeforeOrAt|query|number(double)|false|none|
 |goodTilBlockTimeBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
 |returnLatestOrders|query|boolean|false|none|
@@ -1666,7 +1666,8 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/transfers?address=string&suba
       "createdAt": "string",
       "createdAtHeight": "string",
       "symbol": "string",
-      "type": "TRANSFER_IN"
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
     }
   ]
 }
@@ -3089,7 +3090,8 @@ or
   "createdAt": "string",
   "createdAtHeight": "string",
   "symbol": "string",
-  "type": "TRANSFER_IN"
+  "type": "TRANSFER_IN",
+  "transactionHash": "string"
 }
 
 ```
@@ -3110,6 +3112,7 @@ or
 |createdAtHeight|string|true|none|none|
 |symbol|string|true|none|none|
 |type|[TransferType](#schematransfertype)|true|none|none|
+|transactionHash|string|true|none|none|
 
 ## TransferResponse
 
@@ -3135,7 +3138,8 @@ or
       "createdAt": "string",
       "createdAtHeight": "string",
       "symbol": "string",
-      "type": "TRANSFER_IN"
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
     }
   ]
 }
