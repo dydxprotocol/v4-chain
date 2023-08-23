@@ -183,6 +183,45 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				),
 			},
 		},
+		`Can place a liquidation that matches maker orders with maker rebates`: {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_46000USD_Short,
+			},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParamsMakerRebate,
+			existingOrders: []types.Order{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+			},
+
+			order: constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+
+			expectedPlacedOrders: []*types.MsgPlaceOrder{
+				{
+					Order: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				},
+			},
+			expectedMatchedOrders: []*types.ClobMatch{
+				types.NewClobMatchFromMatchPerpetualLiquidation(
+					&types.MatchPerpetualLiquidation{
+						ClobPairId:  constants.ClobPair_Btc.Id,
+						IsBuy:       false,
+						TotalSize:   100_000_000,
+						Liquidated:  constants.Dave_Num0,
+						PerpetualId: constants.ClobPair_Btc.GetPerpetualClobMetadata().PerpetualId,
+						Fills: []types.MakerFill{
+							{
+								MakerOrderId: types.OrderId{},
+								FillAmount:   100_000_000,
+							},
+						},
+					},
+				),
+			},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

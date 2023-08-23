@@ -17,6 +17,7 @@ import (
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	clobmodulememclob "github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -65,8 +66,7 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		nil,
 		nil,
-		"",
-		"",
+		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
 		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
 	)
