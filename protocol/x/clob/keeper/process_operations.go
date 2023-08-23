@@ -359,7 +359,6 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	ctx sdk.Context,
 	matchDeleveraging *types.MatchPerpetualDeleveraging,
 ) error {
-	fills := matchDeleveraging.GetFills()
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
 
 	isLiquidatable, err := k.IsLiquidatable(ctx, liquidatedSubaccountId)
@@ -394,20 +393,20 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			perpetualId,
 		)
 	}
-	deltaQuantumsShouldBeNegative := position.GetIsLong()
+	deltaQuantumsIsNegative := position.GetIsLong()
 
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.Deleveraging, metrics.DeltaQuoteQuantums},
 		1,
 		[]gometrics.Label{
-			metrics.GetLabelForBoolValue(metrics.Positive, deltaQuantumsShouldBeNegative),
+			metrics.GetLabelForBoolValue(metrics.Positive, !deltaQuantumsIsNegative),
 		},
 	)
 
-	for _, fill := range fills {
+	for _, fill := range matchDeleveraging.GetFills() {
 		deltaQuantums := new(big.Int).SetUint64(fill.FillAmount)
-		if deltaQuantumsShouldBeNegative {
-			deltaQuantums = deltaQuantums.Neg(deltaQuantums)
+		if deltaQuantumsIsNegative {
+			deltaQuantums.Neg(deltaQuantums)
 		}
 
 		if err := k.ProcessDeleveraging(
@@ -419,9 +418,12 @@ func (k Keeper) PersistMatchDeleveragingToState(
 		); err != nil {
 			return sdkerrors.Wrapf(
 				types.ErrInvalidDeleveragingFill,
-				"Failed to process deleveraging fill: %+v. liquidatedSubaccountId: %+v, error: %v",
+				"Failed to process deleveraging fill: %+v. liquidatedSubaccountId: %+v, "+
+					"perpetualId: %v, deltaQuantums: %v, error: %v",
 				fill,
 				liquidatedSubaccountId,
+				perpetualId,
+				deltaQuantums,
 				err,
 			)
 		}
