@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	epochskeeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -32,6 +34,7 @@ func createStatsKeeper(
 		epochsKeeper,
 		storeKey,
 		transientStoreKey,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	return k, storeKey
