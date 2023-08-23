@@ -472,6 +472,7 @@ func TestGetClobPairIdForPerpetual_PanicsEmptyClobPair(t *testing.T) {
 	}
 
 	require.Panics(t, func() {
-		if _, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0); err != nil {}
+		if _, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0); err != nil {
+		}
 	})
 }
