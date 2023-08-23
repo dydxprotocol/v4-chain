@@ -35,6 +35,7 @@ import {
   MarketParam,
   MarketPrice,
   Perpetual,
+  PerpetualParams,
 } from '@dydxprotocol-indexer/v4-protos';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -277,23 +278,30 @@ describe('helpers', () => {
   });
 
   describe('getPerpetualMarketCreateObjects', () => {
-    const defaultPerpetual: Perpetual = {
+    const defaultParams: PerpetualParams = {
       id: 0,
       ticker: 'BTC-USD',
       marketId: 0,
       atomicResolution: -10,
       defaultFundingPpm: 0,
       liquidityTier: 0,
+    };
+
+    const defaultPerpetual: Perpetual = {
+      params: defaultParams,
       fundingIndex: bigIntToBytes(BigInt(0)),
       openInterest: Long.fromValue(1_000_000_000),
     };
 
     const defaultPerpetual2: Perpetual = {
       ...defaultPerpetual,
-      id: 1,
-      ticker: 'ETH-USD',
-      marketId: 1,
-      atomicResolution: -8,
+      params: {
+        ...defaultParams,
+        id: 1,
+        ticker: 'ETH-USD',
+        marketId: 1,
+        atomicResolution: -8,
+      },
     };
 
     const defaultClobPair: ClobPair = {
@@ -371,7 +379,7 @@ describe('helpers', () => {
           [defaultMarketParam],
           [defaultLiquidityTier],
         );
-      }).toThrow(new PerpetualDoesNotExistError(defaultPerpetual2.id, defaultClobPair2.id));
+      }).toThrow(new PerpetualDoesNotExistError(defaultPerpetual2.params!.id, defaultClobPair2.id));
     });
 
     it('throws error if perpetual references an non-existent market', async () => {
@@ -382,7 +390,7 @@ describe('helpers', () => {
           [defaultMarketParam2],
           [defaultLiquidityTier],
         );
-      }).toThrow(new MarketDoesNotExistError(defaultMarketParam.id, defaultPerpetual.id));
+      }).toThrow(new MarketDoesNotExistError(defaultMarketParam.id, defaultPerpetual.params!.id));
     });
 
     it('throws error if perpetual references an non-existent liquidity tier', async () => {
@@ -393,7 +401,10 @@ describe('helpers', () => {
           [defaultMarketParam],
           [],
         );
-      }).toThrow(new LiquidityTierDoesNotExistError(defaultLiquidityTier.id, defaultPerpetual.id));
+      }).toThrow(new LiquidityTierDoesNotExistError(
+        defaultLiquidityTier.id,
+        defaultPerpetual.params!.id,
+      ));
     });
 
     it('throws error if clob pair status is invalid', async () => {
