@@ -1442,11 +1442,11 @@ function update_genesis_use_test_volatile_market() {
 	# Clob: TEST-USD
 	NUM_CLOB_PAIRS=$(jq -c '.app_state.clob.clob_pairs | length' < ${GENESIS})
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].id' -v "${NUM_CLOB_PAIRS}"
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[33].status' -v 'STATUS_ACTIVE'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].perpetual_clob_metadata.perpetual_id' -v "${NUM_PERPETUALS}"
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].step_base_quantums' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].subticks_per_tick' -v '10000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].min_order_base_quantums' -v '10000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].quantum_conversion_exponent' -v '-8'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().id' -v "${NUM_CLOB_PAIRS}"
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.last().status' -v 'STATUS_ACTIVE'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().perpetual_clob_metadata.perpetual_id' -v "${NUM_PERPETUALS}"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().step_base_quantums' -v '1000000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().subticks_per_tick' -v '10000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().min_order_base_quantums' -v '10000000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().quantum_conversion_exponent' -v '-8'
 }
