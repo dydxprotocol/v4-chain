@@ -170,4 +170,8 @@ enum ClobPairStatus {
   // CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
   // TODO(DEC-600): update this documentation.
   CLOB_PAIR_STATUS_POST_ONLY = 4;
+  // CLOB_PAIR_STATUS_INITIALIZING represents a newly-added clob pair.
+  // Clob pairs in this state only accept orders which are
+  // both short-term and post-only.
+  CLOB_PAIR_STATUS_INITIALIZING = 5;
 }

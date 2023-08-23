@@ -191,7 +191,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 
 			perpetualId := clobtest.MustPerpetualId(tc.args.clobPair)
 			perpetual := constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId]
-			// Refactor into helper function that takes in perpetual/clobPair args
+			// TODO(IND-362): Refactor into helper function that takes in perpetual/clobPair args.
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 			// the indexer event manager to expect these events.
 			mockIndexerEventManager.On("AddTxnEvent",

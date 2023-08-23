@@ -1,6 +1,8 @@
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
-import { ClobPairStatus, PerpetualMarketCreateEventV1 } from '@dydxprotocol-indexer/v4-protos';
-import Long from 'long';
+import {
+  ORDER_FLAG_CONDITIONAL,
+  ORDER_FLAG_LONG_TERM,
+  ORDER_FLAG_SHORT_TERM,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import { DateTime } from 'luxon';
 
 import * as AssetPositionTable from '../../src/stores/asset-position-table';
@@ -17,8 +19,15 @@ import {
   AssetCreateObject,
   AssetPositionCreateObject,
   BlockCreateObject,
+  CandleCreateObject,
+  CandleResolution,
   FillCreateObject,
+  FillType,
+  FundingIndexUpdatesCreateObject,
   Liquidity,
+  LiquidityTiersCreateObject,
+  MarketCreateObject,
+  OraclePriceCreateObject,
   OrderCreateObject,
   OrderSide,
   OrderStatus,
@@ -26,21 +35,14 @@ import {
   PerpetualMarketCreateObject,
   PerpetualMarketStatus,
   PerpetualPositionCreateObject,
-  PositionSide,
   PerpetualPositionStatus,
+  PnlTicksCreateObject,
+  PositionSide,
   SubaccountCreateObject,
   TendermintEventCreateObject,
   TimeInForce,
   TransactionCreateObject,
   TransferCreateObject,
-  OraclePriceCreateObject,
-  MarketCreateObject,
-  CandleCreateObject,
-  CandleResolution,
-  FillType,
-  PnlTicksCreateObject,
-  FundingIndexUpdatesCreateObject,
-  LiquidityTiersCreateObject,
   WalletCreateObject,
 } from '../../src/types';
 
