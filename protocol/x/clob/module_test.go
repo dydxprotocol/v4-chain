@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -57,7 +59,7 @@ func getValidGenesisStr() string {
 }
 
 func createAppModule(t *testing.T) clob.AppModule {
-	am, _, _, _, _ := createAppModuleWithKeeper(t)
+	am, _, _, _, _, _ := createAppModuleWithKeeper(t)
 	return am
 }
 
@@ -70,12 +72,14 @@ func createAppModuleWithKeeper(t *testing.T) (
 	*prices_keeper.Keeper,
 	*perp_keeper.Keeper,
 	sdk.Context,
+	*mocks.IndexerEventManager,
 ) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keeper.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	ks := keeper.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
 	return clob.NewAppModule(
 		appCodec,
@@ -85,7 +89,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 		nil,
 		memClob,
 		liqiudations_types.NewLiquidatableSubaccountIds(),
-	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.Ctx
+	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.Ctx, mockIndexerEventManager
 }
 
 func createAppModuleBasic(t *testing.T) clob.AppModuleBasic {
@@ -306,11 +310,31 @@ func TestAppModule_RegisterInvariants(t *testing.T) {
 }
 
 func TestAppModule_InitExportGenesis(t *testing.T) {
-	am, keeper, pricesKeeper, perpetualsKeeper, ctx := createAppModuleWithKeeper(t)
+	am, keeper, pricesKeeper, perpetualsKeeper, ctx, mockIndexerEventManager := createAppModuleWithKeeper(t)
 	ctx = ctx.WithBlockTime(constants.TimeT)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	gs := json.RawMessage(getValidGenesisStr())
+
+	mockIndexerEventManager.On("AddTxnEvent",
+		ctx,
+		indexerevents.SubtypePerpetualMarket,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				uint32(0),
+				uint32(0),
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Ticker,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].MarketId,
+				clob_types.ClobPair_STATUS_ACTIVE,
+				0,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].AtomicResolution,
+				uint32(100),
+				uint64(0),
+				uint64(5),
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].LiquidityTier,
+			),
+		),
+	).Once().Return()
 
 	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
@@ -450,7 +474,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 }
 
 func TestAppModule_InitGenesisPanic(t *testing.T) {
-	am, _, _, _, ctx := createAppModuleWithKeeper(t)
+	am, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	gs := json.RawMessage(`invalid json`)
@@ -464,14 +488,14 @@ func TestAppModule_ConsensusVersion(t *testing.T) {
 }
 
 func TestAppModule_BeginBlock(t *testing.T) {
-	am, _, _, _, ctx := createAppModuleWithKeeper(t)
+	am, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
 
 	var req abci.RequestBeginBlock
 	am.BeginBlock(ctx, req) // should not panic
 }
 
 func TestAppModule_EndBlock(t *testing.T) {
-	am, _, _, _, ctx := createAppModuleWithKeeper(t)
+	am, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
 	ctx = ctx.WithBlockTime(constants.TimeT)
 
 	var req abci.RequestEndBlock
