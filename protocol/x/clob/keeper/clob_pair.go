@@ -57,7 +57,7 @@ func (k Keeper) CreatePerpetualClobPair(
 //   - Must be a perpetual CLOB pair with a perpetualId matching a perpetual in the store.
 //
 // - Status:
-//   - Must be a status other than ClobPair_STATUS_UNSPECIFIED.
+//   - Must be a supported status.
 //
 // - StepBaseQuantums:
 //   - Must be greater than zero.
@@ -65,6 +65,15 @@ func (k Keeper) CreatePerpetualClobPair(
 // - SubticksPerTick:
 //   - Must be greater than zero.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
+	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairParameter,
+			"CLOB pair (%+v) has unsupported status %+v",
+			clobPair,
+			clobPair.Status,
+		)
+	}
+
 	// validate the given clob pair id is not already in use
 	if _, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
 		panic(
@@ -119,10 +128,6 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 			"invalid ClobPair parameter: SubticksPerTick must be > 0. Got %v",
 			clobPair.SubticksPerTick,
 		)
-	}
-
-	if clobPair.Status == types.ClobPair_STATUS_UNSPECIFIED {
-		return sdkerrors.Wrap(types.ErrInvalidClobPairParameter, "invalid ClobPair parameter: Status must be specified.")
 	}
 
 	return nil

@@ -167,7 +167,13 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 		},
 		"CLOB pair is invalid when the status is unspecified": {
 			clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
-			expectedErr: "invalid ClobPair parameter: Status must be specified.",
+			expectedErr: "has unsupported status STATUS_UNSPECIFIED",
+		},
+		"CLOB pair status is not supported": {
+			clobPair: *clobtest.GenerateClobPair(
+				clobtest.WithStatus(types.ClobPair_STATUS_PAUSED),
+			),
+			expectedErr: "has unsupported status STATUS_PAUSED",
 		},
 	}
 	for name, tc := range tests {
@@ -256,7 +262,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 				{clobPair: constants.ClobPair_Btc},
 				{
 					clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
-					expectedErr: "invalid ClobPair parameter: Status must be specified.",
+					expectedErr: "has unsupported status STATUS_UNSPECIFIED",
 				},
 			},
 			expectedNumClobPairs: 1,
@@ -268,7 +274,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 			clobPairs: []CreationExpectation{
 				{
 					clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
-					expectedErr: "invalid ClobPair parameter: Status must be specified.",
+					expectedErr: "has unsupported status STATUS_UNSPECIFIED",
 				},
 				{clobPair: constants.ClobPair_Btc},
 			},
@@ -282,7 +288,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 				{clobPair: constants.ClobPair_Btc},
 				{
 					clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
-					expectedErr: "invalid ClobPair parameter: Status must be specified.",
+					expectedErr: "has unsupported status STATUS_UNSPECIFIED",
 				},
 				{clobPair: constants.ClobPair_Eth},
 			},

@@ -361,10 +361,10 @@ var (
 		4003,
 		"Fill amount cannot be zero",
 	)
-	ErrInvalidDeleveragingFills = sdkerrors.Register(
+	ErrInvalidDeleveragingFill = sdkerrors.Register(
 		ModuleName,
 		4004,
-		"Generated deleveraging fills do not match operations queue deleveraging fills",
+		"Deleveraging fill is invalid",
 	)
 	ErrDeleveragedSubaccountNotLiquidatable = sdkerrors.Register(
 		ModuleName,
