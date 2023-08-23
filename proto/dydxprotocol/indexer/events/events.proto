@@ -350,3 +350,26 @@ message PerpetualMarketCreateEventV1 {
   // Defined in perpetuals.perpetual
   uint32 liquidity_tier = 11;
 }
+
+// LiquidityTierUpsertEventV1 message contains all the information to
+// create/update a Liquidity Tier on the v4 chain.
+message LiquidityTierUpsertEventV1 {
+  // Unique id.
+  uint32 id = 1;
+
+  // The name of the tier purely for mnemonic purposes, e.g. "Gold".
+  string name = 2;
+
+  // The margin fraction needed to open a position.
+  // In parts-per-million.
+  uint32 initial_margin_ppm = 3;
+
+  // The fraction of the initial-margin that the maintenance-margin is,
+  // e.g. 50%. In parts-per-million.
+  uint32 maintenance_fraction_ppm = 4;
+
+  // The maximum position size at which the margin requirements are
+  // not increased over the default values. Above this position size,
+  // the margin requirements increase at a rate of sqrt(size).
+  uint64 base_position_notional = 5;
+}
