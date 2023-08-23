@@ -65,3 +65,36 @@ jobs:
           npm install -g pnpm@6.34.0
           pnpm install --loglevel warn --frozen-lockfile
           cd packages/v4-protos && npm run build:verify-proto
+  dydxpy-gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - run: |
+          BIN="/usr/local/bin" && \
+          VERSION="1.26.1" && \
+          curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
+          chmod +x "${BIN}/buf"
+      - run: pip install -r ./dydxpy/requirements.txt
+      - run: make dydxpy-gen
+      - working-directory: ./dydxpy
+        run: pip3 wheel --no-deps -w dist .
+  dydxjs-gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: |
+          BIN="/usr/local/bin" && \
+          VERSION="1.26.1" && \
+          curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
+          chmod +x "${BIN}/buf"
+      - working-directory: ./dydxjs
+        run: |
+          npm install
+          npm run transpile
+          npm run build

@@ -235,6 +235,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 
 	// Acknowledge bridges tx.
 	validAcknowledgeBridgesTx := constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes
+	validAcknowledgeBridgesMsg := constants.MsgAcknowledgeBridges_Ids0_1_Height0
 	invalidAcknowledgeBridgesTx := constants.MsgAcknowledgeBridges_Id55_Height15_TxBytes
 
 	// Add funding tx.
@@ -317,6 +318,9 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 			mockBridgeKeeper.On("GetRecognizedEventInfo", mock.Anything).Return(
 				constants.RecognizedEventInfo_Id2_Height0,
 			)
+			for _, bridgeEvent := range validAcknowledgeBridgesMsg.Events {
+				mockBridgeKeeper.On("GetBridgeEventFromServer", mock.Anything, bridgeEvent.Id).Return(bridgeEvent, true).Once()
+			}
 
 			ppt, err := process.DecodeProcessProposalTxs(
 				ctx,
@@ -342,6 +346,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 
 	// Valid acknowledge bridges tx.
 	validAcknowledgeBridgesTx := constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes
+	validAcknowledgeBridgesMsg := constants.MsgAcknowledgeBridges_Ids0_1_Height0
 
 	// Valid add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
@@ -402,6 +407,9 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 			mockBridgeKeeper.On("GetRecognizedEventInfo", mock.Anything).Return(
 				constants.RecognizedEventInfo_Id2_Height0,
 			)
+			for _, bridgeEvent := range validAcknowledgeBridgesMsg.Events {
+				mockBridgeKeeper.On("GetBridgeEventFromServer", mock.Anything, bridgeEvent.Id).Return(bridgeEvent, true).Once()
+			}
 
 			ppt, err := process.DecodeProcessProposalTxs(
 				ctx,

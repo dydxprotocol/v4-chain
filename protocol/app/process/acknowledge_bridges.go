@@ -59,7 +59,9 @@ func DecodeAcknowledgeBridgesTx(
 
 // Validate returns an error if:
 // - msg fails `ValidateBasic`.
-// - msg fails `bridgeKeeper.CanAcknowledgeBridges`.
+// - first bridge event ID is not the one to be next acknowledged.
+// - last bridge event ID has not been recognized.
+// - a bridge event's content is not the same as in server state.
 func (abt *AcknowledgeBridgesTx) Validate() error {
 	// `ValidateBasic` validates that bridge event IDs are consecutive.
 	if err := abt.msg.ValidateBasic(); err != nil {
@@ -111,6 +113,17 @@ func (abt *AcknowledgeBridgesTx) Validate() error {
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.Error, types.ErrBridgeIdNotRecognized.Error())},
 		)
 		return types.ErrBridgeIdNotRecognized
+	}
+
+	// Validate that bridge events' content is the same as in server state.
+	for _, event := range abt.msg.Events {
+		eventInState, found := abt.bridgeKeeper.GetBridgeEventFromServer(abt.ctx, event.Id)
+		if !found {
+			return types.ErrBridgeEventNotFound
+		}
+		if !eventInState.Equal(event) {
+			return types.ErrBridgeEventContentMismatch
+		}
 	}
 
 	return nil
