@@ -55,4 +55,7 @@ type DelayMsgKeeper interface {
 
 	// GetAuthorities returns the set of authorities that can send delayed messages.
 	GetAuthorities() map[string]struct{}
+
+	// DispatchMessagesForBlock executes all delayed messages scheduled for the given block height and deletes them.
+	DispatchMessagesForBlock(ctx sdk.Context)
 }

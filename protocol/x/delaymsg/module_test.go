@@ -305,9 +305,8 @@ func TestAppModule_BeginBlock(t *testing.T) {
 }
 
 func TestAppModule_EndBlock(t *testing.T) {
-	am := createAppModule(t)
+	am, _, ctx := createAppModuleWithKeeper(t)
 
-	var ctx sdk.Context
 	var req abci.RequestEndBlock
 	result := am.EndBlock(ctx, req)
 	require.Equal(t, 0, len(result))

@@ -11,6 +11,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	bridgekeeper "github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 
@@ -66,9 +67,59 @@ func DelayMsgKeepers(
 			authorities,
 		)
 
-		return []GenesisInitializer{delayMsgKeeper}
+		return []GenesisInitializer{
+			delayMsgKeeper,
+		}
 	})
 	return ctx, delayMsgKeeper, storeKey, bridgeKeeper, bankKeeper, authorities
+}
+
+func DelayMsgKeeperWithMockBridgeKeeper(
+	t testing.TB,
+) (
+	ctx sdk.Context,
+	delayMsgKeeper *keeper.Keeper,
+	storeKey storetypes.StoreKey,
+	bridgeKeeper *mocks.BridgeKeeper,
+	authorities []string,
+) {
+	ctx = initKeepers(t, func(
+		db *tmdb.MemDB,
+		_ codectypes.InterfaceRegistry,
+		_ *codec.ProtoCodec,
+		stateStore storetypes.CommitMultiStore,
+		transientStoreKey storetypes.StoreKey,
+	) []GenesisInitializer {
+		encCfg := testutil.MakeTestEncodingConfig()
+		cdc := encCfg.Codec.(*codec.ProtoCodec)
+		registry := encCfg.InterfaceRegistry
+
+		router := baseapp.NewMsgServiceRouter()
+		router.SetInterfaceRegistry(registry)
+
+		// Register bridge messages for encoding / decoding.
+		bridgetypes.RegisterInterfaces(registry)
+
+		bridgeKeeper = &mocks.BridgeKeeper{}
+
+		// Register bridge keeper msg server for msg routing.
+		bridgetypes.RegisterMsgServer(router, bridgekeeper.NewMsgServerImpl(bridgeKeeper))
+
+		authorities = []string{
+			authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		}
+		delayMsgKeeper, storeKey = createDelayMsgKeeper(
+			stateStore,
+			db,
+			cdc,
+			router,
+			authorities,
+		)
+
+		return []GenesisInitializer{delayMsgKeeper}
+	})
+	return ctx, delayMsgKeeper, storeKey, bridgeKeeper, authorities
 }
 
 func createDelayMsgKeeper(
