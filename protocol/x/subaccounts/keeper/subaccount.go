@@ -383,16 +383,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			return false, nil, err
 		}
 
-		// Round the new net collateral and maintenance margin down to be optimistic.
-		bigNewNetCollateral := lib.BigRatRound(newNetCollateralRat, true)
-		bigNewInitialMargin := lib.BigRatRound(newInitialMarginRat, true)
-		bigNewMaintenanceMargin := lib.BigRatRound(newMaintenanceMarginRat, true)
-
 		var result = types.Success
 
 		// The subaccount is not well-collateralized after the update.
 		// We must now check if the state transition is valid.
-		if bigNewInitialMargin.Cmp(bigNewNetCollateral) > 0 {
+		if newInitialMarginRat.Cmp(newNetCollateralRat) > 0 {
 			// Get the current collateralization and margin requirements without the update applied.
 			emptyUpdate := settledUpdate{
 				SettledSubaccount: u.SettledSubaccount,
@@ -408,18 +403,14 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			if err != nil {
 				return false, nil, err
 			}
-			// Round the current net collateral and maintenance margin down to be pessimistic.
-			bigCurNetCollateral := lib.BigRatRound(curNetCollateralRat, false)
-			bigCurInitialMargin := lib.BigRatRound(curInitialMarginRat, false)
-			bigCurMaintenanceMargin := lib.BigRatRound(curMaintenanceMarginRat, false)
 
 			// Determine whether the state transition is valid.
 			result = isValidStateTransitionForUndercollateralizedSubaccount(
-				bigCurNetCollateral,
-				bigCurInitialMargin,
-				bigCurMaintenanceMargin,
-				bigNewNetCollateral,
-				bigNewMaintenanceMargin,
+				curNetCollateralRat,
+				curInitialMarginRat,
+				curMaintenanceMarginRat,
+				newNetCollateralRat,
+				newMaintenanceMarginRat,
 			)
 		}
 
@@ -450,11 +441,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 // collateralized and is now undercollateralized, `types.NewlyUndercollateralized` is
 // returned.
 func isValidStateTransitionForUndercollateralizedSubaccount(
-	bigCurNetCollateral *big.Int,
-	bigCurInitialMargin *big.Int,
-	bigCurMaintenanceMargin *big.Int,
-	bigNewNetCollateral *big.Int,
-	bigNewMaintenanceMargin *big.Int,
+	bigCurNetCollateral *big.Rat,
+	bigCurInitialMargin *big.Rat,
+	bigCurMaintenanceMargin *big.Rat,
+	bigNewNetCollateral *big.Rat,
+	bigNewMaintenanceMargin *big.Rat,
 ) types.UpdateResult {
 	// Determine whether the subaccount was previously undercollateralized before the update.
 	var underCollateralizationResult = types.StillUndercollateralized
@@ -469,7 +460,7 @@ func isValidStateTransitionForUndercollateralizedSubaccount(
 
 	// If the maintenance margin is zero, it means the subaccount must have no open positions, and negative net
 	// collateral. If the net collateral is not improving then this transition is not valid.
-	if bigNewMaintenanceMargin.BitLen() == 0 {
+	if bigNewMaintenanceMargin.Num().BitLen() == 0 {
 		if bigNewNetCollateral.Cmp(bigCurNetCollateral) > 0 {
 			return types.Success
 		}
@@ -481,8 +472,8 @@ func isValidStateTransitionForUndercollateralizedSubaccount(
 	// `newNetCollateral / newMaintenanceMargin >= curNetCollateral / curMaintenanceMargin`.
 	// However, to prevent cases of divide-by-zero, we factor this as
 	// `newNetCollateral * curMaintenanceMargin >= curNetCollateral * newMaintenanceMargin`.
-	bigCurRisk := new(big.Int).Mul(bigNewNetCollateral, bigCurMaintenanceMargin)
-	bigNewRisk := new(big.Int).Mul(bigCurNetCollateral, bigNewMaintenanceMargin)
+	bigCurRisk := new(big.Rat).Mul(bigNewNetCollateral, bigCurMaintenanceMargin)
+	bigNewRisk := new(big.Rat).Mul(bigCurNetCollateral, bigNewMaintenanceMargin)
 
 	// The subaccount is not well-collateralized, and the state transition leaves the subaccount in a
 	// "more-risky" state (collateral relative to margin requirements is decreasing).

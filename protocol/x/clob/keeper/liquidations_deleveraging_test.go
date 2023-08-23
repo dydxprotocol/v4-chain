@@ -864,7 +864,7 @@ func TestProcessDeleveraging(t *testing.T) {
 
 		// 	expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
 		// },
-		// // Rounding tests.
+		// Rounding tests.
 		"Can deleverage short positions correctly after rounding": {
 			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
 			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
