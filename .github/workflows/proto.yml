@@ -79,8 +79,6 @@ jobs:
           chmod +x "${BIN}/buf"
       - run: pip install -r ./dydxpy/requirements.txt
       - run: make dydxpy-gen
-      - working-directory: ./dydxpy
-        run: pip3 wheel --no-deps -w dist .
   dydxjs-gen:
     runs-on: ubuntu-latest
     steps:
