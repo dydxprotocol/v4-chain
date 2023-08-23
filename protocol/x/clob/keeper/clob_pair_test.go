@@ -73,12 +73,9 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 			ks.Ctx,
 			clobtest.MustPerpetualId(clobPair),
 			satypes.BaseQuantums(clobPair.StepBaseQuantums),
-			satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 			clobPair.QuantumConversionExponent,
 			clobPair.SubticksPerTick,
 			clobPair.Status,
-			clobPair.MakerFeePpm,
-			clobPair.TakerFeePpm,
 		)
 	}
 
@@ -109,13 +106,13 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
 
-	// write clob pair to state with clob pair id 0
+	// Write clob pair to state with clob pair id 0.
 	b := cdc.MustMarshal(&constants.ClobPair_Btc)
 	store.Set(types.ClobPairKey(
 		types.ClobPairId(constants.ClobPair_Btc.Id),
 	), b)
 
-	// set count back down to 0 to simulate error in num clob pairs store
+	// Set count back down to 0 to simulate error in num clob pairs store.
 	store = prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.NumClobPairsKey))
 	store.Set(types.KeyPrefix(types.NumClobPairsKey), lib.Uint32ToBytes(0))
 
@@ -129,12 +126,9 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 				ks.Ctx,
 				clobtest.MustPerpetualId(clobPair),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
-				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,
 				clobPair.Status,
-				clobPair.MakerFeePpm,
-				clobPair.TakerFeePpm,
 			)
 		},
 		"Should panic when attempting to create clob pair with duplicate id",
@@ -478,7 +472,6 @@ func TestGetClobPairIdForPerpetual_PanicsEmptyClobPair(t *testing.T) {
 	}
 
 	require.Panics(t, func() {
-		//nolint: errcheck
-		ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0)
+		if _, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0); err != nil {}
 	})
 }
