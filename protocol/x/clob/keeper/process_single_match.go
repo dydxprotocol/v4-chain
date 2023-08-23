@@ -53,7 +53,7 @@ func (k Keeper) ProcessSingleMatch(
 				)
 				ctx.Logger().Info(
 					"collateralization check failed for liquidation",
-					"takerSubaccuont", fmt.Sprintf("%+v", takerSubaccount),
+					"takerSubaccount", fmt.Sprintf("%+v", takerSubaccount),
 					"takerTNC", takerTnc,
 					"takerIMR", takerIMR,
 					"takerMMR", takerMMR,

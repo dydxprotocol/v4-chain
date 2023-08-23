@@ -84,7 +84,12 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	fills []types.MatchPerpetualDeleveraging_Fill,
 	deltaQuantumsRemaining *big.Int,
 ) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.OffsettingSubaccountPerpetualPosition)
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		types.ModuleName,
+		metrics.OffsettingSubaccountPerpetualPosition,
+	)
 
 	numSubaccountsIterated := 0
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)

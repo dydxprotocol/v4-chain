@@ -1,6 +1,8 @@
 package flags
 
 import (
+	"fmt"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +27,7 @@ const (
 
 // Default values.
 const (
-	DefaultMaxLiquidationOrdersPerBlock = 10
+	DefaultMaxLiquidationOrdersPerBlock = 35
 
 	DefaultMevTelemetryHost       = ""
 	DefaultMevTelemetryIdentifier = ""
@@ -38,7 +40,10 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Uint32(
 		MaxLiquidationOrdersPerBlock,
 		DefaultMaxLiquidationOrdersPerBlock,
-		"Sets the maximum number of liquidation orders to process per block.",
+		fmt.Sprintf(
+			"Sets the maximum number of liquidation orders to process per block. Default = %d",
+			DefaultMaxLiquidationOrdersPerBlock,
+		),
 	)
 	cmd.Flags().String(
 		MevTelemetryHost,

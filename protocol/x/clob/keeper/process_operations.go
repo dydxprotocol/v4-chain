@@ -387,7 +387,16 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	deltaQuantumsTotal := matchDeleveraging.GetTotalFilledQuantums()
 
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
-	if position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId); exists && position.GetIsLong() {
+	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
+	if !exists {
+		return sdkerrors.Wrapf(
+			types.ErrNoOpenPositionForPerpetual,
+			"Subaccount %+v does not have an open position for perpetual %+v",
+			liquidatedSubaccountId,
+			perpetualId,
+		)
+	}
+	if position.GetIsLong() {
 		deltaQuantumsTotal = deltaQuantumsTotal.Neg(deltaQuantumsTotal)
 	}
 
