@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
@@ -383,9 +384,6 @@ func (k Keeper) PersistMatchDeleveragingToState(
 
 	perpetualId := matchDeleveraging.GetPerpetualId()
 
-	// Fetch total quantums to deleverage.
-	deltaQuantumsTotal := matchDeleveraging.GetTotalFilledQuantums()
-
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
 	if !exists {
@@ -396,46 +394,35 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			perpetualId,
 		)
 	}
-	if position.GetIsLong() {
-		deltaQuantumsTotal = deltaQuantumsTotal.Neg(deltaQuantumsTotal)
-	}
+	deltaQuantumsShouldBeNegative := position.GetIsLong()
 
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.Deleveraging, metrics.DeltaQuoteQuantums},
 		1,
 		[]gometrics.Label{
-			metrics.GetLabelForBoolValue(metrics.Positive, deltaQuantumsTotal.Sign() > 0),
+			metrics.GetLabelForBoolValue(metrics.Positive, deltaQuantumsShouldBeNegative),
 		},
 	)
 
-	generatedFills, _ := k.OffsetSubaccountPerpetualPosition(
-		ctx,
-		liquidatedSubaccountId,
-		perpetualId,
-		deltaQuantumsTotal,
-	)
+	for _, fill := range fills {
+		deltaQuantums := new(big.Int).SetUint64(fill.FillAmount)
+		if deltaQuantumsShouldBeNegative {
+			deltaQuantums = deltaQuantums.Neg(deltaQuantums)
+		}
 
-	// Fills should be equal since subaccounts are chosen deterministically.
-	if len(generatedFills) != len(fills) {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidDeleveragingFills,
-			"Mismatched fill lengths. generated fills: %+v, match deleveraging fills: %+v",
-			generatedFills,
-			fills,
-		)
-	}
-	for idx, originalFill := range fills {
-		generatedFill := generatedFills[idx]
-		if generatedFill != originalFill {
+		if err := k.ProcessDeleveraging(
+			ctx,
+			liquidatedSubaccountId,
+			fill.OffsettingSubaccountId,
+			perpetualId,
+			deltaQuantums,
+		); err != nil {
 			return sdkerrors.Wrapf(
-				types.ErrInvalidDeleveragingFills,
-				"Mismatched fills. generated fills: %+v, match deleveraging fills: %+v, index %d, "+
-					"generated fill: %+v, match deleveraging fill: %+v",
-				generatedFills,
-				fills,
-				idx,
-				generatedFill,
-				originalFill,
+				types.ErrInvalidDeleveragingFill,
+				"Failed to process deleveraging fill: %+v. liquidatedSubaccountId: %+v, error: %v",
+				fill,
+				liquidatedSubaccountId,
+				err,
 			)
 		}
 	}
