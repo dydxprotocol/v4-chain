@@ -660,6 +660,8 @@ func New(
 		app.EpochsKeeper,
 		keys[statsmoduletypes.StoreKey],
 		tkeys[statsmoduletypes.TransientStoreKey],
+		// set the governance module account as the authority for conducting upgrades
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
 
