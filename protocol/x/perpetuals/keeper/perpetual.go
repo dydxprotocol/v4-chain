@@ -788,7 +788,8 @@ func (k Keeper) GetNetCollateral(
 // `notionalValue` is determined by multiplying the size of the position by the oracle price of the position.
 // Maintenance margin requirement is then simply a fraction (`maintenanceFractionPpm`) of initial margin requirement.
 //
-// Returns an error if a perpetual with `id`, `perpetual.Params.MarketId`, or `perpetual.Params.LiquidityTier` does not exist.
+// Returns an error if a perpetual with `id`, `perpetual.Params.MarketId`, or
+// `perpetual.Params.LiquidityTier` does not exist.
 func (k Keeper) GetMarginRequirements(
 	ctx sdk.Context,
 	id uint32,
@@ -1148,7 +1149,9 @@ func (k Keeper) validatePerpetualStateless(perpetual *types.Perpetual) error {
 	// Validate `defaultFundingPpm`
 	defaultFundingPpm := lib.AbsInt32(perpetual.Params.DefaultFundingPpm)
 	if defaultFundingPpm > types.MaxDefaultFundingPpmAbs {
-		return sdkerrors.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, lib.Int32ToString(perpetual.Params.DefaultFundingPpm))
+		return sdkerrors.Wrap(
+			types.ErrDefaultFundingPpmMagnitudeExceedsMax,
+			lib.Int32ToString(perpetual.Params.DefaultFundingPpm))
 	}
 
 	return nil
