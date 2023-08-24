@@ -15,6 +15,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -53,7 +54,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -124,7 +127,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -195,7 +200,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -266,7 +273,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -338,7 +347,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRaw(
@@ -409,7 +420,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRaw(
@@ -485,7 +498,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				).Return(nil).Twice()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -574,7 +589,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
@@ -658,7 +675,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
@@ -738,7 +757,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
@@ -827,7 +848,9 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
@@ -1023,7 +1046,9 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 				},
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -1074,7 +1099,9 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 				},
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -1127,7 +1154,9 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
@@ -1324,7 +1353,9 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 				},
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -1373,7 +1404,9 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 				},
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -1426,7 +1459,9 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
 				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
