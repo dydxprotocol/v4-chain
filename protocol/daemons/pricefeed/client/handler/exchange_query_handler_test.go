@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 
 	pf_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
@@ -19,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test modification to verify github workflow runs.
 const (
 	successStatus           = 200
 	failStatus400           = 400
