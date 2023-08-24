@@ -33,6 +33,10 @@ jobs:
           pnpm install --loglevel warn --frozen-lockfile
           pnpm run build:all
 
+      - name: Output some data
+        run: |
+          ls; pwd;
+
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v3
