@@ -21,14 +21,14 @@ func TestGenesis(t *testing.T) {
 	require.ElementsMatch(t, actual.Assets, expected.Assets)
 }
 
-// assertAssetCreateEventsInIndexerBlock checks that the number of subaccount update events
+// assertAssetCreateEventsInIndexerBlock checks that the number of asset create events
 // included in the Indexer block kafka message.
 func assertAssetCreateEventsInIndexerBlock(
 	t *testing.T,
 	k *keeper.Keeper,
 	ctx sdk.Context,
-	numSubaccounts int,
+	numAssets int,
 ) {
 	assetEvents := keepertest.GetAssetCreateEventsFromIndexerBlock(ctx, k)
-	require.Len(t, assetEvents, numSubaccounts)
+	require.Len(t, assetEvents, numAssets)
 }

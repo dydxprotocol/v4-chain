@@ -27,6 +27,7 @@ import {
   FundingUpdateV1,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
+  LiquidityTierUpsertEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -48,6 +49,7 @@ export enum DydxIndexerSubtypes {
   FUNDING = 'funding_values',
   ASSET = 'asset',
   PERPETUAL_MARKET = 'perpetual_market',
+  LIQUIDITY_TIER = 'liquidity_tier',
 }
 
 // Generic interface used for creating the Handler objects
@@ -89,6 +91,10 @@ export type EventProtoWithType = {
 } | {
   type: DydxIndexerSubtypes.PERPETUAL_MARKET,
   eventProto: PerpetualMarketCreateEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+} | {
+  type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+  eventProto: LiquidityTierUpsertEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
 });
 

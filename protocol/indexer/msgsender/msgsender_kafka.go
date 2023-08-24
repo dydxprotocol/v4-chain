@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/burdiyan/kafkautil"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
@@ -43,6 +44,8 @@ func NewIndexerMessageSenderKafka(
 	config.Producer.Return.Successes = true
 	config.Producer.Retry.Max = indexerFlags.MaxRetries
 	config.Producer.MaxMessageBytes = 4194304 // 4MB
+	// Use the JVM compatible parititoner to match `kafkajs` which is used in the indexer services.
+	config.Producer.Partitioner = kafkautil.NewJVMCompatiblePartitioner
 	producer, err := sarama.NewAsyncProducer(indexerFlags.KafkaAddrs, config)
 
 	if err != nil {

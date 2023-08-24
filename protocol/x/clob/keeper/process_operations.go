@@ -129,6 +129,15 @@ func (k Keeper) ProcessInternalOperations(
 			}
 		case *types.InternalOperation_ShortTermOrderPlacement:
 			order := castedOperation.ShortTermOrderPlacement.GetOrder()
+			if err := k.PerformStatefulOrderValidation(
+				ctx,
+				&order,
+				lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+				false,
+			); err != nil {
+				return err
+			}
+
 			placedShortTermOrders[order.GetOrderId()] = order
 		case *types.InternalOperation_OrderRemoval:
 			// Remove the stateful order from state.
@@ -289,14 +298,24 @@ func (k Keeper) PersistMatchLiquidationToState(
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	fills := matchLiquidation.GetFills()
+	isLiquidatable, err := k.IsLiquidatable(ctx, matchLiquidation.Liquidated)
+	if err != nil {
+		return err
+	}
+	if !isLiquidatable {
+		return sdkerrors.Wrapf(
+			types.ErrSubaccountNotLiquidatable,
+			"PersistMatchLiquidationToState: Subaccount %s is not liquidatable",
+			matchLiquidation.Liquidated,
+		)
+	}
 
 	takerOrder, err := k.ConstructTakerOrderFromMatchPerpetualLiquidation(ctx, matchLiquidation)
 	if err != nil {
 		return err
 	}
 
-	for _, fill := range fills {
+	for _, fill := range matchLiquidation.GetFills() {
 		makerOrderId := fill.GetMakerOrderId()
 		makerOrder := k.MustFetchOrderFromOrderId(ctx, makerOrderId, ordersMap)
 
@@ -304,6 +323,10 @@ func (k Keeper) PersistMatchLiquidationToState(
 			MakerOrder: &makerOrder,
 			TakerOrder: takerOrder,
 			FillAmount: satypes.BaseQuantums(fill.FillAmount),
+		}
+
+		if err := matchWithOrders.Validate(); err != nil {
+			return err
 		}
 
 		// Write the position updates and state fill amounts for this match.

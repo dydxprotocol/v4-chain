@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"math"
 	"math/big"
 	"testing"
@@ -290,6 +291,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -1031,19 +1033,60 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			for _, s := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
-
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
+			mockIndexerEventManager.On("AddTxnEvent",
+				ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.MinOrderBaseQuantums,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.Status,
 			)
 			require.NoError(t, err)
+			mockIndexerEventManager.On("AddTxnEvent",
+				ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						1,
+						1,
+						constants.EthUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.EthUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Eth.Status,
+						constants.ClobPair_Eth.QuantumConversionExponent,
+						constants.EthUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Eth.SubticksPerTick,
+						constants.ClobPair_Eth.MinOrderBaseQuantums,
+						constants.ClobPair_Eth.StepBaseQuantums,
+						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
+				satypes.BaseQuantums(constants.ClobPair_Eth.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Eth.StepBaseQuantums),
 				constants.ClobPair_Eth.QuantumConversionExponent,
 				constants.ClobPair_Eth.SubticksPerTick,
@@ -1844,10 +1887,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, perpetual := range []perptypes.Perpetual{
+			perpetuals := []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			} {
+			}
+			for _, perpetual := range perpetuals {
 				_, err = ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
 					perpetual.Params.Ticker,
@@ -1863,13 +1907,35 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
 
-			for _, clobPair := range []types.ClobPair{
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
+			for i, clobPair := range []types.ClobPair{
 				constants.ClobPair_Btc,
 				constants.ClobPair_Eth_No_Fee,
 			} {
+				mockIndexerEventManager.On("AddTxnEvent",
+					ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							uint32(i),
+							uint32(i),
+							perpetuals[i].Params.Ticker,
+							perpetuals[i].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							perpetuals[i].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.MinOrderBaseQuantums,
+							clobPair.StepBaseQuantums,
+							perpetuals[i].Params.LiquidityTier,
+						),
+					),
+				).Once().Return()
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -1946,9 +2012,31 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+	// the indexer event manager to expect these events.
+	indexerEventManager.On("AddTxnEvent",
+		ctx,
+		indexerevents.SubtypePerpetualMarket,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				0,
+				0,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+				constants.ClobPair_Btc.Status,
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.MinOrderBaseQuantums,
+				constants.ClobPair_Btc.StepBaseQuantums,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+			),
+		),
+	).Once().Return()
 	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ctx,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
+		satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 		constants.ClobPair_Btc.QuantumConversionExponent,
 		constants.ClobPair_Btc.SubticksPerTick,
@@ -3417,7 +3505,8 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -3439,9 +3528,29 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			}
 
 			// Create clob pair.
+			mockIndexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						tc.perpetuals[0].Params.Ticker,
+						tc.perpetuals[0].Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						tc.perpetuals[0].Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.MinOrderBaseQuantums,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						tc.perpetuals[0].Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
@@ -4114,7 +4223,8 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -4146,10 +4256,33 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 
 			// Create the CLOB pairs and store the expected CLOB pair.
-			for _, clobPair := range tc.clobPairs {
+			for i, clobPair := range tc.clobPairs {
+				perpetualId := clobtest.MustPerpetualId(clobPair)
+				// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+				// the indexer event manager to expect these events.
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							perpetualId,
+							uint32(i),
+							tc.perpetuals[perpetualId].Params.Ticker,
+							tc.perpetuals[perpetualId].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							tc.perpetuals[perpetualId].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.MinOrderBaseQuantums,
+							clobPair.StepBaseQuantums,
+							tc.perpetuals[perpetualId].Params.LiquidityTier,
+						),
+					),
+				).Once().Return()
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -4410,6 +4543,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -4653,7 +4787,8 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -4673,9 +4808,29 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create all CLOBs.
+			mockIndexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.MinOrderBaseQuantums,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,

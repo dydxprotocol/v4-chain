@@ -152,3 +152,26 @@ message IndexerOrder {
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
 }
+
+// Status of the CLOB.
+// Defined in clob.clob_pair
+enum ClobPairStatus {
+  // Default value. This value is invalid and unused.
+  CLOB_PAIR_STATUS_UNSPECIFIED = 0;
+  // CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  CLOB_PAIR_STATUS_ACTIVE = 1;
+  // CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  CLOB_PAIR_STATUS_PAUSED = 2;
+  // CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  CLOB_PAIR_STATUS_CANCEL_ONLY = 3;
+  // CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
+  // TODO(DEC-600): update this documentation.
+  CLOB_PAIR_STATUS_POST_ONLY = 4;
+  // CLOB_PAIR_STATUS_INITIALIZING represents a newly-added clob pair.
+  // Clob pairs in this state only accept orders which are
+  // both short-term and post-only.
+  CLOB_PAIR_STATUS_INITIALIZING = 5;
+}
