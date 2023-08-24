@@ -1,41 +1,25 @@
 import {
   AssetCreateObject,
+  LiquidityTiersCreateObject,
   MarketColumns,
   MarketFromDatabase,
   MarketsMap,
-  PerpetualMarketCreateObject,
   PerpetualPositionFromDatabase,
   PositionSide,
   SubaccountFromDatabase,
-  LiquidityTiersCreateObject,
 } from '../../src/types';
 import {
   AssetPositionCreateObjectWithId,
   getAssetCreateObject,
   getAssetPositionCreateObject,
+  getLiquidityTiersCreateObject,
+  getMaintenanceMarginPpm,
   getUnrealizedPnl,
-  getPerpetualMarketCreateObjects,
   getUnsettledFunding,
   SubaccountCreateObjectWithId,
-  getMaintenanceMarginPpm,
-  getLiquidityTiersCreateObject,
 } from '../../src/db/helpers';
 import {
-  InvalidClobPairStatusError,
-  LiquidityTierDoesNotExistError,
-  MarketDoesNotExistError,
-  PerpetualDoesNotExistError,
-} from '../../src/lib/errors';
-import {
-  Asset,
-  AssetPosition,
-  ClobPair,
-  ClobPair_Status,
-  LiquidityTier,
-  MarketParam,
-  MarketPrice,
-  Perpetual,
-  PerpetualParams,
+  Asset, AssetPosition, LiquidityTier, MarketParam, MarketPrice,
 } from '@dydxprotocol-indexer/v4-protos';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -43,7 +27,6 @@ import {
   expectAssetPositionCreateObject,
   expectLiquidityTier,
   expectMarketParamAndPrice,
-  expectPerpetualMarket,
   expectSubaccount,
 } from './helpers';
 import {
@@ -274,151 +257,6 @@ describe('helpers', () => {
         price: Long.fromValue(5_000_000_000),
       };
       expectMarketParamAndPrice(marketFromDb, marketParam, marketPrice);
-    });
-  });
-
-  describe('getPerpetualMarketCreateObjects', () => {
-    const defaultParams: PerpetualParams = {
-      id: 0,
-      ticker: 'BTC-USD',
-      marketId: 0,
-      atomicResolution: -10,
-      defaultFundingPpm: 0,
-      liquidityTier: 0,
-    };
-
-    const defaultPerpetual: Perpetual = {
-      params: defaultParams,
-      fundingIndex: bigIntToBytes(BigInt(0)),
-      openInterest: Long.fromValue(1_000_000_000),
-    };
-
-    const defaultPerpetual2: Perpetual = {
-      ...defaultPerpetual,
-      params: {
-        ...defaultParams,
-        id: 1,
-        ticker: 'ETH-USD',
-        marketId: 1,
-        atomicResolution: -8,
-      },
-    };
-
-    const defaultClobPair: ClobPair = {
-      id: 0,
-      perpetualClobMetadata: {
-        perpetualId: 0,
-      },
-      stepBaseQuantums: Long.fromValue(5_000),
-      subticksPerTick: 1_000,
-      quantumConversionExponent: -8,
-      minOrderBaseQuantums: Long.fromValue(10_000),
-      status: ClobPair_Status.STATUS_ACTIVE,
-    };
-
-    const defaultClobPair2: ClobPair = {
-      ...defaultClobPair,
-      id: 1,
-      perpetualClobMetadata: {
-        perpetualId: 1,
-      },
-    };
-
-    const defaultMarketParam: MarketParam = {
-      id: 0,
-      pair: 'BTC-USD',
-      exponent: -5,
-      exchangeConfigJson: '{exchanges:[{"exchangeName":"Binance","ticker":"BTCUSDT"},{"exchangeName":"BinanceUS","ticker":"BTCUSD"}]}',
-      minExchanges: 1,
-      minPriceChangePpm: 50,
-    };
-
-    const defaultMarketParam2: MarketParam = {
-      ...defaultMarketParam,
-      id: 1,
-      pair: 'ETH-USD',
-      exponent: -6,
-    };
-
-    const defaultLiquidityTier: LiquidityTier = {
-      id: 0,
-      basePositionNotional: Long.fromValue(1000000000000),
-      impactNotional: Long.fromValue(10000000000),
-      initialMarginPpm: 50000,
-      maintenanceFractionPpm: 600000,
-      name: 'Large-Cap',
-    };
-
-    it('generates perpetual market create objects given clob pairs and perpetuals', () => {
-      const perpetualMarkets: PerpetualMarketCreateObject[] = getPerpetualMarketCreateObjects(
-        [defaultClobPair, defaultClobPair2],
-        [defaultPerpetual, defaultPerpetual2],
-        [defaultMarketParam, defaultMarketParam2],
-        [defaultLiquidityTier],
-      );
-
-      expect(perpetualMarkets).toHaveLength(2);
-      expectPerpetualMarket(
-        perpetualMarkets[0],
-        defaultPerpetual,
-        defaultClobPair,
-      );
-
-      expectPerpetualMarket(
-        perpetualMarkets[1],
-        defaultPerpetual2,
-        defaultClobPair2,
-      );
-    });
-
-    it('throws error if clob pair references an non-existent perpetual', async () => {
-      await expect(() => {
-        getPerpetualMarketCreateObjects(
-          [defaultClobPair2],
-          [defaultPerpetual],
-          [defaultMarketParam],
-          [defaultLiquidityTier],
-        );
-      }).toThrow(new PerpetualDoesNotExistError(defaultPerpetual2.params!.id, defaultClobPair2.id));
-    });
-
-    it('throws error if perpetual references an non-existent market', async () => {
-      await expect(() => {
-        getPerpetualMarketCreateObjects(
-          [defaultClobPair],
-          [defaultPerpetual],
-          [defaultMarketParam2],
-          [defaultLiquidityTier],
-        );
-      }).toThrow(new MarketDoesNotExistError(defaultMarketParam.id, defaultPerpetual.params!.id));
-    });
-
-    it('throws error if perpetual references an non-existent liquidity tier', async () => {
-      await expect(() => {
-        getPerpetualMarketCreateObjects(
-          [defaultClobPair],
-          [defaultPerpetual],
-          [defaultMarketParam],
-          [],
-        );
-      }).toThrow(new LiquidityTierDoesNotExistError(
-        defaultLiquidityTier.id,
-        defaultPerpetual.params!.id,
-      ));
-    });
-
-    it('throws error if clob pair status is invalid', async () => {
-      await expect(() => {
-        getPerpetualMarketCreateObjects(
-          [{
-            ...defaultClobPair,
-            status: ClobPair_Status.STATUS_UNSPECIFIED,
-          }],
-          [defaultPerpetual],
-          [defaultMarketParam],
-          [defaultLiquidityTier],
-        );
-      }).toThrow(new InvalidClobPairStatusError(ClobPair_Status.STATUS_UNSPECIFIED));
     });
   });
 

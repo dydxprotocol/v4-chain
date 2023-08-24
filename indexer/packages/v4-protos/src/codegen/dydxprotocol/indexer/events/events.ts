@@ -1,5 +1,5 @@
 import { IndexerSubaccountId, IndexerSubaccountIdSDKType, IndexerPerpetualPosition, IndexerPerpetualPositionSDKType, IndexerAssetPosition, IndexerAssetPositionSDKType } from "../protocol/v1/subaccount";
-import { IndexerOrder, IndexerOrderSDKType, IndexerOrderId, IndexerOrderIdSDKType } from "../protocol/v1/clob";
+import { IndexerOrder, IndexerOrderSDKType, IndexerOrderId, IndexerOrderIdSDKType, ClobPairStatus, ClobPairStatusSDKType } from "../protocol/v1/clob";
 import { OrderRemovalReason, OrderRemovalReasonSDKType } from "../shared/removal_reason";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../../helpers";
@@ -92,124 +92,6 @@ export function fundingEventV1_TypeToJSON(object: FundingEventV1_Type): string {
       return "TYPE_PREMIUM_VOTE";
 
     case FundingEventV1_Type.UNRECOGNIZED:
-    default:
-      return "UNRECOGNIZED";
-  }
-}
-/**
- * Status of the CLOB.
- * Defined in clob.clob_pair
- */
-
-export enum ClobPairStatus {
-  /** CLOB_PAIR_STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
-  CLOB_PAIR_STATUS_UNSPECIFIED = 0,
-
-  /**
-   * CLOB_PAIR_STATUS_ACTIVE - CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
-  CLOB_PAIR_STATUS_ACTIVE = 1,
-
-  /**
-   * CLOB_PAIR_STATUS_PAUSED - CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
-  CLOB_PAIR_STATUS_PAUSED = 2,
-
-  /**
-   * CLOB_PAIR_STATUS_CANCEL_ONLY - CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
-  CLOB_PAIR_STATUS_CANCEL_ONLY = 3,
-
-  /**
-   * CLOB_PAIR_STATUS_POST_ONLY - CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
-  CLOB_PAIR_STATUS_POST_ONLY = 4,
-  UNRECOGNIZED = -1,
-}
-/**
- * Status of the CLOB.
- * Defined in clob.clob_pair
- */
-
-export enum ClobPairStatusSDKType {
-  /** CLOB_PAIR_STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
-  CLOB_PAIR_STATUS_UNSPECIFIED = 0,
-
-  /**
-   * CLOB_PAIR_STATUS_ACTIVE - CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
-  CLOB_PAIR_STATUS_ACTIVE = 1,
-
-  /**
-   * CLOB_PAIR_STATUS_PAUSED - CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
-  CLOB_PAIR_STATUS_PAUSED = 2,
-
-  /**
-   * CLOB_PAIR_STATUS_CANCEL_ONLY - CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
-  CLOB_PAIR_STATUS_CANCEL_ONLY = 3,
-
-  /**
-   * CLOB_PAIR_STATUS_POST_ONLY - CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
-  CLOB_PAIR_STATUS_POST_ONLY = 4,
-  UNRECOGNIZED = -1,
-}
-export function clobPairStatusFromJSON(object: any): ClobPairStatus {
-  switch (object) {
-    case 0:
-    case "CLOB_PAIR_STATUS_UNSPECIFIED":
-      return ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED;
-
-    case 1:
-    case "CLOB_PAIR_STATUS_ACTIVE":
-      return ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE;
-
-    case 2:
-    case "CLOB_PAIR_STATUS_PAUSED":
-      return ClobPairStatus.CLOB_PAIR_STATUS_PAUSED;
-
-    case 3:
-    case "CLOB_PAIR_STATUS_CANCEL_ONLY":
-      return ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY;
-
-    case 4:
-    case "CLOB_PAIR_STATUS_POST_ONLY":
-      return ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY;
-
-    case -1:
-    case "UNRECOGNIZED":
-    default:
-      return ClobPairStatus.UNRECOGNIZED;
-  }
-}
-export function clobPairStatusToJSON(object: ClobPairStatus): string {
-  switch (object) {
-    case ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED:
-      return "CLOB_PAIR_STATUS_UNSPECIFIED";
-
-    case ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE:
-      return "CLOB_PAIR_STATUS_ACTIVE";
-
-    case ClobPairStatus.CLOB_PAIR_STATUS_PAUSED:
-      return "CLOB_PAIR_STATUS_PAUSED";
-
-    case ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY:
-      return "CLOB_PAIR_STATUS_CANCEL_ONLY";
-
-    case ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY:
-      return "CLOB_PAIR_STATUS_POST_ONLY";
-
-    case ClobPairStatus.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
   }
@@ -973,6 +855,68 @@ export interface PerpetualMarketCreateEventV1SDKType {
    */
 
   liquidity_tier: number;
+}
+/**
+ * LiquidityTierUpsertEventV1 message contains all the information to
+ * create/update a Liquidity Tier on the v4 chain.
+ */
+
+export interface LiquidityTierUpsertEventV1 {
+  /** Unique id. */
+  id: number;
+  /** The name of the tier purely for mnemonic purposes, e.g. "Gold". */
+
+  name: string;
+  /**
+   * The margin fraction needed to open a position.
+   * In parts-per-million.
+   */
+
+  initialMarginPpm: number;
+  /**
+   * The fraction of the initial-margin that the maintenance-margin is,
+   * e.g. 50%. In parts-per-million.
+   */
+
+  maintenanceFractionPpm: number;
+  /**
+   * The maximum position size at which the margin requirements are
+   * not increased over the default values. Above this position size,
+   * the margin requirements increase at a rate of sqrt(size).
+   */
+
+  basePositionNotional: Long;
+}
+/**
+ * LiquidityTierUpsertEventV1 message contains all the information to
+ * create/update a Liquidity Tier on the v4 chain.
+ */
+
+export interface LiquidityTierUpsertEventV1SDKType {
+  /** Unique id. */
+  id: number;
+  /** The name of the tier purely for mnemonic purposes, e.g. "Gold". */
+
+  name: string;
+  /**
+   * The margin fraction needed to open a position.
+   * In parts-per-million.
+   */
+
+  initial_margin_ppm: number;
+  /**
+   * The fraction of the initial-margin that the maintenance-margin is,
+   * e.g. 50%. In parts-per-million.
+   */
+
+  maintenance_fraction_ppm: number;
+  /**
+   * The maximum position size at which the margin requirements are
+   * not increased over the default values. Above this position size,
+   * the margin requirements increase at a rate of sqrt(size).
+   */
+
+  base_position_notional: Long;
 }
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
@@ -2340,6 +2284,91 @@ export const PerpetualMarketCreateEventV1 = {
     message.minOrderBaseQuantums = object.minOrderBaseQuantums !== undefined && object.minOrderBaseQuantums !== null ? Long.fromValue(object.minOrderBaseQuantums) : Long.UZERO;
     message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
     message.liquidityTier = object.liquidityTier ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseLiquidityTierUpsertEventV1(): LiquidityTierUpsertEventV1 {
+  return {
+    id: 0,
+    name: "",
+    initialMarginPpm: 0,
+    maintenanceFractionPpm: 0,
+    basePositionNotional: Long.UZERO
+  };
+}
+
+export const LiquidityTierUpsertEventV1 = {
+  encode(message: LiquidityTierUpsertEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+
+    if (message.initialMarginPpm !== 0) {
+      writer.uint32(24).uint32(message.initialMarginPpm);
+    }
+
+    if (message.maintenanceFractionPpm !== 0) {
+      writer.uint32(32).uint32(message.maintenanceFractionPpm);
+    }
+
+    if (!message.basePositionNotional.isZero()) {
+      writer.uint32(40).uint64(message.basePositionNotional);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): LiquidityTierUpsertEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLiquidityTierUpsertEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.name = reader.string();
+          break;
+
+        case 3:
+          message.initialMarginPpm = reader.uint32();
+          break;
+
+        case 4:
+          message.maintenanceFractionPpm = reader.uint32();
+          break;
+
+        case 5:
+          message.basePositionNotional = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<LiquidityTierUpsertEventV1>): LiquidityTierUpsertEventV1 {
+    const message = createBaseLiquidityTierUpsertEventV1();
+    message.id = object.id ?? 0;
+    message.name = object.name ?? "";
+    message.initialMarginPpm = object.initialMarginPpm ?? 0;
+    message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
+    message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
     return message;
   }
 
