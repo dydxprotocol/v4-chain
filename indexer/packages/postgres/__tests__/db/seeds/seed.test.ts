@@ -40,7 +40,7 @@ describe('seed', () => {
       { readReplica: true },
     );
 
-    expect(markets).toHaveLength(33);
+    expect(markets).toHaveLength(35);
     markets.forEach((marketFromDb: MarketFromDatabase, index: number) => {
       expectMarketParamAndPrice(
         marketFromDb,
@@ -67,6 +67,6 @@ describe('seed', () => {
       [],
       { readReplica: true },
     );
-    expect(markets).toHaveLength(33);
+    expect(markets).toHaveLength(35);
   });
 });
