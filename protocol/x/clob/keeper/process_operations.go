@@ -129,6 +129,15 @@ func (k Keeper) ProcessInternalOperations(
 			}
 		case *types.InternalOperation_ShortTermOrderPlacement:
 			order := castedOperation.ShortTermOrderPlacement.GetOrder()
+			if err := k.PerformStatefulOrderValidation(
+				ctx,
+				&order,
+				lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+				false,
+			); err != nil {
+				return err
+			}
+
 			placedShortTermOrders[order.GetOrderId()] = order
 		case *types.InternalOperation_OrderRemoval:
 			// Remove the stateful order from state.

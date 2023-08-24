@@ -131,8 +131,8 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 			BlockHeight: 5,
 		},
 		expectedError: fmt.Errorf(
-			"Subaccount with id {%s 0} failed with UpdateResult: NewlyUndercollateralized:",
-			constants.Carl_Num0.Owner,
+			"Subaccount with id %v failed with UpdateResult: NewlyUndercollateralized:",
+			constants.Carl_Num0,
 		),
 	}
 
@@ -1060,46 +1060,46 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 
 func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 	tests := map[string]processProposerOperationsTestCase{
-		// "Liquidation returns error if order quantums is not divisible by StepBaseQuantums": {
-		// 	perpetuals: []*perptypes.Perpetual{
-		// 		&constants.BtcUsd_100PercentMarginRequirement,
-		// 	},
-		// 	subaccounts: []satypes.Subaccount{
-		// 		constants.Carl_Num0_1BTC_Short_54999USD,
-		// 		constants.Dave_Num0_1BTC_Long_50000USD,
-		// 	},
-		// 	perpetualFeeParams: &constants.PerpetualFeeParams,
-		// 	clobPairs: []types.ClobPair{
-		// 		constants.ClobPair_Btc,
-		// 	},
-		// 	rawOperations: []types.OperationRaw{
-		// 		clobtest.NewShortTermOrderPlacementOperationRaw(
-		// 			types.Order{
-		// 				OrderId:      constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-		// 				Side:         types.Order_SIDE_SELL,
-		// 				Quantums:     9, // StepBaseQuantums is 5
-		// 				Subticks:     50_000_000_000,
-		// 				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 20},
-		// 			},
-		// 		),
-		// 		clobtest.NewMatchOperationRawFromPerpetualLiquidation(
-		// 			types.MatchPerpetualLiquidation{
-		// 				Liquidated:  constants.Carl_Num0,
-		// 				ClobPairId:  0,
-		// 				PerpetualId: 0,
-		// 				TotalSize:   100_000_000, // 1 BTC
-		// 				IsBuy:       true,
-		// 				Fills: []types.MakerFill{
-		// 					{
-		// 						MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-		// 						FillAmount:   5,
-		// 					},
-		// 				},
-		// 			},
-		// 		),
-		// 	},
-		// 	expectedError: errors.New("Order Quantums 9 must be a multiple of the ClobPair's StepBaseQuantums"),
-		// },
+		"Liquidation returns error if order quantums is not divisible by StepBaseQuantums": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_54999USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     9, // StepBaseQuantums is 5
+						Subticks:     50_000_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 20},
+					},
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
+						Liquidated:  constants.Carl_Num0,
+						ClobPairId:  0,
+						PerpetualId: 0,
+						TotalSize:   100_000_000, // 1 BTC
+						IsBuy:       true,
+						Fills: []types.MakerFill{
+							{
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+								FillAmount:   5,
+							},
+						},
+					},
+				),
+			},
+			expectedError: errors.New("Order Quantums 9 must be a multiple of the ClobPair's StepBaseQuantums"),
+		},
 		"Liquidation returns error if fillAmount is not divisible by StepBaseQuantums": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
@@ -1194,8 +1194,8 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 				),
 			},
 			expectedError: fmt.Errorf(
-				"Subaccount with id {%s 0} failed with UpdateResult: NewlyUndercollateralized",
-				constants.Carl_Num0.Owner,
+				"Subaccount with id %v failed with UpdateResult: NewlyUndercollateralized",
+				constants.Carl_Num0,
 			),
 		},
 		"Liquidation fails if matches exceed the order quantums when considering state fill amounts": {
@@ -1301,6 +1301,7 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 				10_000_000,
 			),
 		},
+		// TODO(CLOB-824): Re-enable reduce-only tests.
 		// "Returns error when maker order is reduce-only and would increase position size": {
 		// 	perpetuals: []*perptypes.Perpetual{
 		// 		&constants.BtcUsd_100PercentMarginRequirement,
@@ -2294,7 +2295,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxNotionalLiquidated: math.MaxUint64,
-					// Max insuracen lost that a subaccount can have is $0.5.
+					// Max insurance lost that a subaccount can have is $0.5.
 					// For this liquidation, overall insurance fund delta is -$0.5, which is within the limit.
 					// but the delta for the second fill is -$0.75, therefore, still considered to be exceeding the limit.
 					MaxQuantumsInsuranceLost: 500_000,
