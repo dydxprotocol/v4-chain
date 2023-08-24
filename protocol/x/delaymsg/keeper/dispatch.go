@@ -24,17 +24,13 @@ func (k Keeper) DispatchMessagesForBlock(ctx sdk.Context) {
 		}
 
 		var msg sdk.Msg
-		err := k.DecodeMessage(delayedMsg.Msg, &msg)
-
-		if err != nil {
+		if err := k.DecodeMessage(delayedMsg.Msg, &msg); err != nil {
 			k.Logger(ctx).Error("failed to decode delayed message with id %v: %v", id, err)
 			continue
 		}
 
 		handler := k.router.Handler(msg)
-		_, err = handler(ctx, msg)
-
-		if err != nil {
+		if _, err := handler(ctx, msg); err != nil {
 			k.Logger(ctx).Error("failed to execute delayed message with id %v: %v", id, err)
 		}
 	}
