@@ -196,23 +196,48 @@ func assertLiquidityTierUpsertEventsInIndexerBlock(
 	// Loop through each event and check if each event matches the expected value
 	for i, event := range liquidityTierUpsertEvents {
 		if event.Id != liquidityTiers[i].Id {
-			t.Fatalf("Expected LiquidityTierUpsertEvent with Id %d, but got %d at index %d", liquidityTiers[i].Id, event.Id, i)
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with Id %d, but got %d at index %d",
+				liquidityTiers[i].Id,
+				event.Id,
+				i,
+			)
 		}
 
 		if event.Name != liquidityTiers[i].Name {
-			t.Fatalf("Expected LiquidityTierUpsertEvent with Name %s, but got %s at index %d", liquidityTiers[i].Name, event.Name, i)
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with Name %s, but got %s at index %d",
+				liquidityTiers[i].Name,
+				event.Name,
+				i,
+			)
 		}
 
 		if event.InitialMarginPpm != liquidityTiers[i].InitialMarginPpm {
-			t.Fatalf("Expected LiquidityTierUpsertEvent with InitialMarginPpm %d, but got %d at index %d", liquidityTiers[i].InitialMarginPpm, event.InitialMarginPpm, i)
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with InitialMarginPpm %d, but got %d at index %d",
+				liquidityTiers[i].InitialMarginPpm,
+				event.InitialMarginPpm,
+				i,
+			)
 		}
 
 		if event.MaintenanceFractionPpm != liquidityTiers[i].MaintenanceFractionPpm {
-			t.Fatalf("Expected LiquidityTierUpsertEvent with MaintenanceFractionPpm %d, but got %d at index %d", liquidityTiers[i].MaintenanceFractionPpm, event.MaintenanceFractionPpm, i)
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with MaintenanceFractionPpm %d, but got %d at index %d",
+				liquidityTiers[i].MaintenanceFractionPpm,
+				event.MaintenanceFractionPpm,
+				i,
+			)
 		}
 
 		if event.BasePositionNotional != liquidityTiers[i].BasePositionNotional {
-			t.Fatalf("Expected LiquidityTierUpsertEvent with BasePositionNotional %d, but got %d at index %d", liquidityTiers[i].BasePositionNotional, event.BasePositionNotional, i)
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with BasePositionNotional %d, but got %d at index %d",
+				liquidityTiers[i].BasePositionNotional,
+				event.BasePositionNotional,
+				i,
+			)
 		}
 	}
 }
