@@ -370,16 +370,22 @@ func (k Keeper) persistMatchedOrders(
 	makerUpdateResult = successPerUpdate[1]
 
 	// If not successful, return error indicating why.
-	if err := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); err != nil {
-		return takerUpdateResult, makerUpdateResult, err
+	if updateResultErr := satypes.GetErrorFromUpdateResults(
+		success,
+		successPerUpdate,
+		updates,
+	); updateResultErr != nil {
+		return takerUpdateResult, makerUpdateResult, updateResultErr
 	}
 
 	if !success {
 		panic(
 			fmt.Sprintf(
-				"persistMatchedOrders: Err != nil but success was false. Error: %v, Updates: %+v",
+				"persistMatchedOrders: UpdateSubaccounts failed but err == nil and no error returned"+
+					"from successPerUpdate but success was false. Error: %v, Updates: %+v, SuccessPerUpdate: %+v",
 				err,
 				updates,
+				successPerUpdate,
 			),
 		)
 	}
