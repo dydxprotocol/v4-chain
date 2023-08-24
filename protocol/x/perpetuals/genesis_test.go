@@ -1,6 +1,7 @@
 package perpetuals_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -9,6 +10,7 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	"github.com/stretchr/testify/require"
@@ -21,6 +23,7 @@ func TestGenesis(t *testing.T) {
 	ctx, k, priceKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 	prices.InitGenesis(ctx, *priceKeeper, pricesGenesisState)
 	perpetuals.InitGenesis(ctx, *k, genesisState)
+	assertLiquidityTierUpsertEventsInIndexerBlock(t, k, ctx, len(genesisState.LiquidityTiers))
 	got := perpetuals.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
 
@@ -172,4 +175,16 @@ func TestGenesis_Failure(t *testing.T) {
 			})
 		})
 	}
+}
+
+// assertLiquidityTierUpsertEventsInIndexerBlock checks the number of liquidity tier upsert events
+// included in the Indexer block kafka message.
+func assertLiquidityTierUpsertEventsInIndexerBlock(
+	t *testing.T,
+	k *keeper.Keeper,
+	ctx sdk.Context,
+	numLiquidityTiers int,
+) {
+	liquidityTierUpsertEvents := keepertest.GetLiquidityTierUpsertEventsFromIndexerBlock(ctx, k)
+	require.Len(t, liquidityTierUpsertEvents, numLiquidityTiers)
 }
