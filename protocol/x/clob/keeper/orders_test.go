@@ -2,10 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"math/big"
 	"testing"
 	"time"
+
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 
 	cmt "github.com/cometbft/cometbft/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -1653,6 +1654,50 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				Side:         types.Order_SIDE_SELL,
 				Quantums:     20,
 				Subticks:     3, // oracle price for btc is 2 subticks for default genesis
+				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 15},
+				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
+			},
+		},
+		"Succeeds with short-term post-only bid equal to oracle price and ClobPair_Status of INITIALIZING": {
+			clobPairs: []types.ClobPair{
+				{
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					Status:           types.ClobPair_STATUS_INITIALIZING,
+					StepBaseQuantums: 10,
+					SubticksPerTick:  1,
+				},
+			},
+			order: types.Order{
+				OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 1, ClobPairId: 0},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     20,
+				Subticks:     2, // oracle price for btc is 2 subticks for default genesis
+				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 15},
+				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
+			},
+		},
+		"Succeeds with short-term post-only ask equal to oracle price and ClobPair_Status of INITIALIZING": {
+			clobPairs: []types.ClobPair{
+				{
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					Status:           types.ClobPair_STATUS_INITIALIZING,
+					StepBaseQuantums: 10,
+					SubticksPerTick:  1,
+				},
+			},
+			order: types.Order{
+				OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 1, ClobPairId: 0},
+				Side:         types.Order_SIDE_SELL,
+				Quantums:     20,
+				Subticks:     2, // oracle price for btc is 2 subticks for default genesis
 				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 15},
 				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
 			},

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -244,11 +246,21 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 	order types.Order,
 	clobPair types.ClobPair,
 ) error {
+	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
+		panic(
+			fmt.Sprintf(
+				"validateOrderAgainstClobPairStatus: clob pair status %v is not supported",
+				clobPair.Status,
+			),
+		)
+	}
+
 	switch clobPair.Status {
-	case types.ClobPair_STATUS_ACTIVE:
-		return nil
 	case types.ClobPair_STATUS_INITIALIZING:
-		// Reject non-short-term orders.
+		// Reject stateful orders. Short-term orders expire within the ShortBlockWindow, ensuring
+		// stale short term order expiration. Stateful orders are rejected to prevent long-term orders
+		// from controlling the price at which new orders can be placed. This is necessary when all orders
+		// are post-only.
 		if order.IsStatefulOrder() {
 			return sdkerrors.Wrapf(
 				types.ErrOrderConflictsWithClobPairStatus,
@@ -258,7 +270,8 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 			)
 		}
 
-		// Reject non-post-only orders.
+		// Reject non-post-only orders. During the initializing phase we only allow post-only orders.
+		// This allows liquidity to build around the oracle price without any real trading happening.
 		if order.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
 			return sdkerrors.Wrapf(
 				types.ErrOrderConflictsWithClobPairStatus,
@@ -268,7 +281,9 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 			)
 		}
 
-		// Reject orders on the wrong side of the market.
+		// Reject orders on the wrong side of the market. This is to ensure liquidity is building around
+		// the oracle price. For instance without this check a user could place an ask far below the oracle
+		// price, thereby preventing any bids at or above the specified price of the ask.
 		currentOraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
 		currentOraclePriceSubticks := lib.BigRatRound(currentOraclePriceSubticksRat, false).Uint64()
 		// Throw error if order is a buy and order subticks is greater than oracle price subticks
@@ -291,9 +306,7 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 				clobPair.Status,
 			)
 		}
-
-		return nil
-	default:
-		return nil
 	}
+
+	return nil
 }
