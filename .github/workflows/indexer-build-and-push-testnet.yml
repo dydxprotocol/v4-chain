@@ -12,7 +12,7 @@ jobs:
   # Build and push to testnet env
   call-build-and-push-ecs-services-testnet:
     name: (Testnet) Build and Push ECS Services
-    uses: ./.github/workflows/build-and-push-all-ecr-images.yml
+    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: testnet
     secrets: inherit
@@ -20,7 +20,7 @@ jobs:
   # Build and push to public-testnet (aka testnet1 and testnet2 environments)
   call-build-and-push-ecs-services-public-testnet:
     name: (Public Testnet) Build and Push ECS Services
-    uses: ./.github/workflows/build-and-push-all-ecr-images.yml
+    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: testnet2
     secrets: inherit
