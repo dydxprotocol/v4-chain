@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/burdiyan/kafkautil"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/burdiyan/kafkautil"
 )
 
 // Ensure the `IndexerMessageSender` interface is implemented at compile time.
