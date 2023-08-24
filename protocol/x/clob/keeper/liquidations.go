@@ -195,9 +195,10 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		)
 	}
 
-	// `-DNNV = -(PNNVAD - PNNV) = PNNV - PNNVAD`, where `PNNVAD` is the perpetual's net notional
+	// `DNNV = PNNVAD - PNNV`, where `PNNVAD` is the perpetual's net notional
 	// with a position size of `PS + deltaQuantums`.
-	// Note that we are intentionally not calculating `-DNNV` from `deltaQuantums` directly to avoid rounding errors.
+	// Note that we are intentionally not calculating `DNNV` from `deltaQuantums`
+	// directly to avoid rounding errors.
 	pnnvBig, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		perpetualId,
@@ -216,12 +217,9 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		return nil, err
 	}
 
-	negDnnvBig := new(big.Int).Sub(
-		pnnvBig,
-		pnnvadBig,
-	)
+	dnnvBig := new(big.Int).Sub(pnnvadBig, pnnvBig)
 
-	// `DMMR = PMMR - PMMRAD`, where `PMMRAD` is the perpetual's maintenance margin requirement
+	// `DMMR = PMMRAD - PMMR`, where `PMMRAD` is the perpetual's maintenance margin requirement
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we cannot directly calculate `DMMR` from `deltaQuantums` because the maintenance
 	// margin requirement function could be non-linear.
@@ -242,14 +240,14 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		return nil, err
 	}
 
-	absDmmrBig := new(big.Int).Sub(pmmrBig, pmmradBig)
-	// `absDmmrBig` should never be negative if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
-	if absDmmrBig.Sign() == -1 {
-		panic("GetBankruptcyPriceInQuoteQuantums: abs(DMMR) is negative")
+	dmmrBig := new(big.Int).Sub(pmmradBig, pmmrBig)
+	// `dmmrBig` should never be positive if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
+	if dmmrBig.Sign() == 1 {
+		panic("GetBankruptcyPriceInQuoteQuantums: DMMR is positive")
 	}
 
 	// Calculate `TNC * abs(DMMR) / TMMR`.
-	tncMulDmmrBig := new(big.Int).Mul(tncBig, absDmmrBig)
+	tncMulDmmrBig := new(big.Int).Mul(tncBig, new(big.Int).Abs(dmmrBig))
 	// This calculation is intentionally rounded down to negative infinity to ensure the
 	// final result is rounded towards positive-infinity. This works because of the following:
 	// - This is the only division in the equation.
@@ -259,7 +257,10 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	quoteQuantumsBeforeBankruptcyBig := new(big.Int).Div(tncMulDmmrBig, tmmrBig)
 
 	// Calculate `-DNNV - TNC * abs(DMMR) / TMMR`.
-	bankruptcyPriceQuoteQuantumsBig := new(big.Int).Sub(negDnnvBig, quoteQuantumsBeforeBankruptcyBig)
+	bankruptcyPriceQuoteQuantumsBig := new(big.Int).Sub(
+		new(big.Int).Neg(dnnvBig),
+		quoteQuantumsBeforeBankruptcyBig,
+	)
 
 	return bankruptcyPriceQuoteQuantumsBig, nil
 }
