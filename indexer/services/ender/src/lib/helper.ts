@@ -17,6 +17,7 @@ import {
   StatefulOrderEventV1,
   FundingEventV1,
   AssetCreateEventV1,
+  PerpetualMarketCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
@@ -124,6 +125,13 @@ export function indexerTendermintEventToEventProtoWithType(
       return {
         type: DydxIndexerSubtypes.ASSET,
         eventProto: AssetCreateEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+      };
+    }
+    case (DydxIndexerSubtypes.PERPETUAL_MARKET.toString()): {
+      return {
+        type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+        eventProto: PerpetualMarketCreateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
       };
     }

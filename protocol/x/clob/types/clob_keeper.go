@@ -23,6 +23,7 @@ type ClobKeeper interface {
 	CreatePerpetualClobPair(
 		ctx sdk.Context,
 		perpetualId uint32,
+		minOrderInBaseQuantums satypes.BaseQuantums,
 		stepSizeInBaseQuantums satypes.BaseQuantums,
 		quantumConversionExponent int32,
 		subticksPerTick uint32,
@@ -101,8 +102,6 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		processProposerMatchesEvents ProcessProposerMatchesEvents,
 	)
-	SetBlockTimeForLastCommittedBlock(ctx sdk.Context)
-	MustGetBlockTimeForLastCommittedBlock(ctx sdk.Context) (blockTime time.Time)
 	GetNumClobPairs(ctx sdk.Context) uint32
 	PerformOrderCancellationStatefulValidation(
 		ctx sdk.Context,

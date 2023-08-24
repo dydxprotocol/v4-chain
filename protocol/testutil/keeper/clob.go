@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
@@ -31,6 +32,7 @@ type ClobKeepersTestContext struct {
 	ClobKeeper        *keeper.Keeper
 	PricesKeeper      *priceskeeper.Keeper
 	AssetsKeeper      *asskeeper.Keeper
+	BlockTimeKeeper   *blocktimekeeper.Keeper
 	FeeTiersKeeper    *feetierskeeper.Keeper
 	PerpetualsKeeper  *perpkeeper.Keeper
 	StatsKeeper       *statskeeper.Keeper
@@ -87,6 +89,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			indexerEventsTransientStoreKey,
 			true,
 		)
+		ks.BlockTimeKeeper, _ = createBlockTimeKeeper(stateStore, db, cdc)
 		ks.StatsKeeper, _ = createStatsKeeper(
 			stateStore,
 			epochsKeeper,
@@ -124,6 +127,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			cdc,
 			memClob,
 			ks.AssetsKeeper,
+			ks.BlockTimeKeeper,
 			bankKeeper,
 			ks.FeeTiersKeeper,
 			ks.PerpetualsKeeper,
@@ -159,6 +163,7 @@ func createClobKeeper(
 	cdc *codec.ProtoCodec,
 	memClob types.MemClob,
 	aKeeper *asskeeper.Keeper,
+	blockTimeKeeper types.BlockTimeKeeper,
 	bankKeeper types.BankKeeper,
 	feeTiersKeeper types.FeeTiersKeeper,
 	perpKeeper *perpkeeper.Keeper,
@@ -184,6 +189,7 @@ func createClobKeeper(
 		memClob,
 		saKeeper,
 		aKeeper,
+		blockTimeKeeper,
 		bankKeeper,
 		feeTiersKeeper,
 		perpKeeper,

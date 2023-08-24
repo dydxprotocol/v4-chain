@@ -293,10 +293,9 @@ func (k Keeper) MustAddOrderToStatefulOrdersTimeSlice(
 	k.setStatefulOrdersTimeSliceInState(ctx, goodTilBlockTime, longTermOrdersExpiringAtTime)
 }
 
-// MustRemoveStatefulOrder removes an order by `OrderId` from an existing time slice and decrements
-// the `to be committed` stateful order count. If the time slice is empty after removing the `OrderId`,
-// then the time slice is pruned from state. For the `OrderId` which is removed, this method also calls
-// `DeleteStatefulOrderPlacement` to remove the order placement from state.
+// MustRemoveStatefulOrder removes an order by `OrderId` from an existing time slice. If the time slice is empty
+// after removing the `OrderId`, then the time slice is pruned from state. For the `OrderId` which is removed,
+// this method also calls `DeleteStatefulOrderPlacement` to remove the order placement from state.
 func (k Keeper) MustRemoveStatefulOrder(
 	ctx sdk.Context,
 	orderId types.OrderId,
@@ -345,13 +344,6 @@ func (k Keeper) MustRemoveStatefulOrder(
 
 	// Delete the Stateful order placement from state.
 	k.DeleteLongTermOrderPlacement(ctx, orderId)
-
-	// Decrement the `to be committed` stateful order count.
-	k.SetToBeCommittedStatefulOrderCount(
-		ctx,
-		orderId,
-		k.GetToBeCommittedStatefulOrderCount(ctx, orderId)-1,
-	)
 }
 
 // IsConditionalOrderTriggered checks if a given order ID is triggered or untriggered in state.
@@ -390,45 +382,6 @@ func (k Keeper) RemoveExpiredStatefulOrdersTimeSlices(ctx sdk.Context, blockTime
 	}
 
 	return expiredOrderIds
-}
-
-// SetBlockTimeForLastCommittedBlock writes the block time of the previously committed block
-// to state. This is necessary for consensus validation of stateful orders,
-// since `order.GoodTIlBlockTime` is always validated against the previous block's timestamp
-// and cannot be validated against the current block's timestamp.
-// Note that this function overwrites the current value and does not validate `ctx.BlockTime()`
-// against the current value in state.
-func (k Keeper) SetBlockTimeForLastCommittedBlock(
-	ctx sdk.Context,
-) {
-	blockTime := ctx.BlockTime()
-	if blockTime.IsZero() {
-		panic("Block-time is zero")
-	}
-
-	store := ctx.KVStore(k.storeKey)
-	store.Set(
-		types.KeyPrefix(types.LastCommittedBlockTimeKey),
-		sdk.FormatTimeBytes(blockTime),
-	)
-}
-
-// MustGetBlockTimeForLastCommittedBlock returns the block time of the previously commited block.
-// Panics if the previously committed block time is not found.
-func (k Keeper) MustGetBlockTimeForLastCommittedBlock(
-	ctx sdk.Context,
-) (
-	blockTime time.Time,
-) {
-	store := ctx.KVStore(k.storeKey)
-	time, err := sdk.ParseTimeBytes(
-		store.Get(types.KeyPrefix(types.LastCommittedBlockTimeKey)),
-	)
-
-	if err != nil {
-		panic("Failed to get the block time of the previously committed block")
-	}
-	return time.UTC()
 }
 
 // GetAllPlacedStatefulOrders iterates over all stateful order placements and returns a list

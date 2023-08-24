@@ -158,6 +158,11 @@ var (
 		33,
 		"ClobPair with id already exists",
 	)
+	ErrOrderConflictsWithClobPairStatus = sdkerrors.Register(
+		ModuleName,
+		34,
+		"Order conflicts with ClobPair status",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(

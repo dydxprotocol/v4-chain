@@ -4,6 +4,7 @@ import (
 	sdklog "cosmossdk.io/log"
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +17,7 @@ type (
 		storeKey storetypes.StoreKey
 		// authorities stores addresses capable of submitting a delayed message.
 		authorities map[string]struct{}
+		router      *baseapp.MsgServiceRouter
 	}
 )
 
@@ -23,6 +25,7 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	router *baseapp.MsgServiceRouter,
 	authorities []string,
 ) *Keeper {
 	authoritiesMap := make(map[string]struct{}, len(authorities))
@@ -33,6 +36,7 @@ func NewKeeper(
 		cdc:         cdc,
 		storeKey:    storeKey,
 		authorities: authoritiesMap,
+		router:      router,
 	}
 }
 

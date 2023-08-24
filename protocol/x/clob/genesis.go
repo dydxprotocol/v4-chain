@@ -22,6 +22,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 		_, err = k.CreatePerpetualClobPair(
 			ctx,
 			perpetualId,
+			satypes.BaseQuantums(elem.MinOrderBaseQuantums),
 			satypes.BaseQuantums(elem.StepBaseQuantums),
 			elem.QuantumConversionExponent,
 			elem.SubticksPerTick,
@@ -46,9 +47,6 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	}
 
 	k.InitializeProcessProposerMatchesEvents(ctx)
-
-	// Set the last committed block-time to the genesis time.
-	k.SetBlockTimeForLastCommittedBlock(ctx)
 }
 
 // ExportGenesis returns the capability module's exported genesis.

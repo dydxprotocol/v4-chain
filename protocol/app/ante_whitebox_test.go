@@ -57,6 +57,7 @@ func newTestHandlerOptions() HandlerOptions {
 		memClob,
 		nil,
 		nil,
+		nil,
 		bankKeeper,
 		nil,
 		nil,

@@ -638,6 +638,7 @@ func New(
 	app.DelayMsgKeeper = *delaymsgmodulekeeper.NewKeeper(
 		appCodec,
 		keys[delaymsgmoduletypes.StoreKey],
+		bApp.MsgServiceRouter(),
 		// Permit delayed messages to be signed by the following modules.
 		[]string{
 			authtypes.NewModuleAddress(bridgemoduletypes.ModuleName).String(),
@@ -720,6 +721,7 @@ func New(
 		memClob,
 		app.SubaccountsKeeper,
 		app.AssetsKeeper,
+		app.BlockTimeKeeper,
 		app.BankKeeper,
 		app.FeeTiersKeeper,
 		app.PerpetualsKeeper,

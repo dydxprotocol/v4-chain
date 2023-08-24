@@ -25,6 +25,7 @@ import (
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
@@ -674,9 +675,32 @@ func TestEndBlocker_Success(t *testing.T) {
 				require.NoError(t, err)
 			}
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
+			mockIndexerEventManager.On("AddTxnEvent",
+				ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.Ticker,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.MinOrderBaseQuantums,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
@@ -684,9 +708,31 @@ func TestEndBlocker_Success(t *testing.T) {
 			)
 			require.NoError(t, err)
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Eth).Return()
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
+			mockIndexerEventManager.On("AddTxnEvent",
+				ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						1,
+						1,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.Ticker,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.MarketId,
+						constants.ClobPair_Eth.Status,
+						constants.ClobPair_Eth.QuantumConversionExponent,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						constants.ClobPair_Eth.SubticksPerTick,
+						constants.ClobPair_Eth.MinOrderBaseQuantums,
+						constants.ClobPair_Eth.StepBaseQuantums,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
+				satypes.BaseQuantums(constants.ClobPair_Eth.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Eth.StepBaseQuantums),
 				constants.ClobPair_Eth.QuantumConversionExponent,
 				constants.ClobPair_Eth.SubticksPerTick,
@@ -741,13 +787,6 @@ func TestEndBlocker_Success(t *testing.T) {
 			)
 
 			require.True(t, memClob.AssertExpectations(t))
-
-			require.True(
-				t,
-				tc.blockTime.Equal(
-					ks.ClobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx),
-				),
-			)
 
 			for orderId, exists := range tc.expectedStatefulPlacementInState {
 				_, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, orderId)
@@ -1318,6 +1357,7 @@ func TestPrepareCheckState(t *testing.T) {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -1341,9 +1381,11 @@ func TestPrepareCheckState(t *testing.T) {
 				tc.processProposerMatchesEvents,
 			)
 
-			// Set the block time on the context and of the last committed block.
+			// Set the blocktime of the last committed block.
 			ctx = ctx.WithBlockTime(unixTimeFive)
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Timestamp: unixTimeFive,
+			})
 
 			// Initialize the memclob with each placed operation using a forked version of state,
 			// and ensure the forked state is not committed to the base state.

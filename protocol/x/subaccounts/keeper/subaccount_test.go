@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"math"
 	"math/big"
+	"math/rand"
 	"strconv"
 	"testing"
 
@@ -180,6 +181,78 @@ func TestForEachSubaccount(t *testing.T) {
 				items[:tc.iterationCount],
 				collectedSubaccounts,
 			)
+		})
+	}
+}
+
+func TestForEachSubaccountRandomStart(t *testing.T) {
+	tests := map[string]struct {
+		numSubaccountsInState int
+		iterationCount        int
+	}{
+		"No subaccounts in state": {
+			numSubaccountsInState: 0,
+			iterationCount:        0,
+		},
+		"one subaccount in state, one iteration": {
+			numSubaccountsInState: 1,
+			iterationCount:        1,
+		},
+		"two subaccount in state, one iteration": {
+			numSubaccountsInState: 2,
+			iterationCount:        1,
+		},
+		"ten subaccount in state, one iteration": {
+			numSubaccountsInState: 10,
+			iterationCount:        1,
+		},
+		"ten subaccount in state, partial iteration": {
+			numSubaccountsInState: 10,
+			iterationCount:        8,
+		},
+		"ten subaccount in state, full iteration": {
+			numSubaccountsInState: 10,
+			iterationCount:        10,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			rand := rand.New(rand.NewSource(53))
+			ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+			_ = createNSubaccount(keeper, ctx, tc.numSubaccountsInState)
+			collectedSubaccounts := make([]types.Subaccount, 0)
+			i := 0
+			keeper.ForEachSubaccountRandomStart(
+				ctx,
+				func(subaccount types.Subaccount) bool {
+					i++
+					collectedSubaccounts = append(collectedSubaccounts, subaccount)
+					return i == tc.iterationCount
+				},
+				rand,
+			)
+
+			require.Len(t, collectedSubaccounts, tc.iterationCount)
+
+			if tc.iterationCount > 0 {
+				subaccounts := keeper.GetAllSubaccount(ctx)
+
+				offset := 0
+				for i, subaccount := range subaccounts {
+					if *subaccount.Id == *collectedSubaccounts[0].Id {
+						offset = i
+						break
+					}
+				}
+
+				for i := 0; i < tc.iterationCount; i++ {
+					require.Equal(
+						t,
+						subaccounts[(i+offset)%(tc.numSubaccountsInState)],
+						collectedSubaccounts[i],
+					)
+				}
+			}
 		})
 	}
 }

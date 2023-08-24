@@ -84,22 +84,15 @@ func (k Keeper) MaybeStartNextEpoch(ctx sdk.Context, id types.EpochInfoName) (ne
 	))
 
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			metrics.EventTypeNewEpoch,
-			sdk.NewAttribute(metrics.EpochInfoName, epoch.Name),
-			sdk.NewAttribute(metrics.EpochNumber, fmt.Sprint(epoch.CurrentEpoch)),
-			sdk.NewAttribute(metrics.EpochStartTickTime, fmt.Sprint(currentTick)),
-			sdk.NewAttribute(metrics.EpochStartBlockTime, fmt.Sprint(ctx.BlockTime().Unix())),
-			sdk.NewAttribute(metrics.EpochStartBlock, fmt.Sprint(epoch.CurrentEpochStartBlock)),
-		),
+		types.NewEpochEvent(ctx, epoch, currentTick),
 	)
 
 	// Stat latest epoch number.
 	telemetry.SetGaugeWithLabels(
-		[]string{types.ModuleName, metrics.EpochNumber},
+		[]string{types.ModuleName, types.AttributeKeyEpochNumber},
 		float32(epoch.CurrentEpoch),
 		[]gometrics.Label{
-			metrics.GetLabelForStringValue(metrics.EpochInfoName, epoch.Name),
+			metrics.GetLabelForStringValue(types.AttributeKeyEpochInfoName, epoch.Name),
 			metrics.GetLabelForIntValue(metrics.BlockHeight, int(epoch.CurrentEpochStartBlock)),
 		},
 	)

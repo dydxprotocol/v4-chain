@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"errors"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 	"testing"
 
@@ -145,14 +147,40 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 
 			tc.setUpMockMemClob(memClob, tc.args)
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, nil, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, nil, mockIndexerEventManager)
 
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
+			perpetualId := clobtest.MustPerpetualId(tc.args.clobPair)
+			perpetual := constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId]
+			// TODO(IND-362): Refactor into helper function that takes in perpetual/clobPair args.
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
+			mockIndexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						perpetualId,
+						0,
+						perpetual.Params.Ticker,
+						perpetual.Params.MarketId,
+						tc.args.clobPair.Status,
+						tc.args.clobPair.QuantumConversionExponent,
+						perpetual.Params.AtomicResolution,
+						tc.args.clobPair.SubticksPerTick,
+						tc.args.clobPair.MinOrderBaseQuantums,
+						tc.args.clobPair.StepBaseQuantums,
+						perpetual.Params.LiquidityTier,
+					),
+				),
+			).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(tc.args.clobPair),
+				satypes.BaseQuantums(tc.args.clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(tc.args.clobPair.StepBaseQuantums),
 				tc.args.clobPair.QuantumConversionExponent,
 				tc.args.clobPair.SubticksPerTick,

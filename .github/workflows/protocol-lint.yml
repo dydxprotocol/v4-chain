@@ -1,6 +1,6 @@
 name: Protocol Lint
 # Lint runs all linting jobs.
-# This workflow is run on every pull request and push to the `main` / `release` branches.
+
 on:  # yamllint disable-line rule:truthy
   pull_request:
     paths:
@@ -10,6 +10,12 @@ on:  # yamllint disable-line rule:truthy
       - main
       - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
       - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+
+# Ensure only a single instance of this workflow is running, and cancel any that are in-progress
+# before this workflow instance starts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   # Validates that the YAML files in the V4 repository are formatted properly.
