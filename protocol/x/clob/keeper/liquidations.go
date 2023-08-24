@@ -163,6 +163,8 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// `-DNNV - (TNC * (abs(DMMR) / TMMR))`.
 	// To calculate this, we must first fetch the following values:
 	// - DNNV (delta position net notional value).
+	//   - Note that this is calculated from PNNV (position net notional value) and
+	//     PNNVAD (position net notional value after delta).
 	// - TNC (total net collateral).
 	// - DMMR (delta maintenance margin requirement).
 	// - TMMR (total maintenance margin requirement).
@@ -195,7 +197,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 
 	// `-DNNV = -(PNNVAD - PNNV) = PNNV - PNNVAD`, where `PNNVAD` is the perpetual's net notional
 	// with a position size of `PS + deltaQuantums`.
-	// Note that we are intentionally not calculating `-DNNV` from `deltaQuantums` to avoid rounding errors.
+	// Note that we are intentionally not calculating `-DNNV` from `deltaQuantums` directly to avoid rounding errors.
 	pnnvBig, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		perpetualId,
