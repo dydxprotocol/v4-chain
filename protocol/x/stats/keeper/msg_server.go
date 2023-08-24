@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"gopkg.in/typ.v4/maps"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -26,11 +27,11 @@ func (k msgServer) UpdateParams(
 	goCtx context.Context,
 	msg *types.MsgUpdateParams,
 ) (*types.MsgUpdateParamsResponse, error) {
-	if k.GetAuthority() != msg.Authority {
+	if _, ok := k.GetAuthorities()[msg.Authority]; !ok {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
-			"invalid authority; expected %s, got %s",
-			k.GetAuthority(),
+			"invalid authority; expected one of %s, got %s",
+			maps.Keys(k.GetAuthorities()),
 			msg.Authority,
 		)
 	}

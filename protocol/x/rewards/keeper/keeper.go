@@ -36,9 +36,8 @@ type (
 		// Neeeded for retrieve market price of rewards token.
 		pricesKeeper types.PricesKeeper
 
-		// the address capable of executing a MsgUpdateParams message. Typically, this
-		// should be the x/gov module account.
-		authority string
+		// the addresses capable of executing a MsgUpdateParams message.
+		authorities map[string]struct{}
 	}
 )
 
@@ -50,8 +49,12 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	feeTiersKeeper types.FeeTiersKeeper,
 	pricesKeeper types.PricesKeeper,
-	authority string,
+	authorities []string,
 ) *Keeper {
+	authoritiesMap := make(map[string]struct{}, len(authorities))
+	for _, authority := range authorities {
+		authoritiesMap[authority] = struct{}{}
+	}
 	return &Keeper{
 		cdc:               cdc,
 		storeKey:          storeKey,
@@ -60,13 +63,17 @@ func NewKeeper(
 		bankKeeper:        bankKeeper,
 		feeTiersKeeper:    feeTiersKeeper,
 		pricesKeeper:      pricesKeeper,
-		authority:         authority,
+		authorities:       authoritiesMap,
 	}
 }
 
-// GetAuthority returns the x/rewards module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
+// GetAuthorities returns the x/rewards module's authorities.
+func (k Keeper) GetAuthorities() map[string]struct{} {
+	authorities := make(map[string]struct{}, len(k.authorities))
+	for authority := range k.authorities {
+		authorities[authority] = struct{}{}
+	}
+	return authorities
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

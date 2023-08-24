@@ -28,7 +28,7 @@ type (
 		storeKey        storetypes.StoreKey
 		bankKeeper      types.BankKeeper
 		blockTimeKeeper types.BlockTimeKeeper
-		authority       string
+		authorities     map[string]struct{}
 	}
 )
 
@@ -37,24 +37,31 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
-	authority string,
+	authorities []string,
 ) *Keeper {
+	authoritiesMap := make(map[string]struct{}, len(authorities))
+	for _, authority := range authorities {
+		authoritiesMap[authority] = struct{}{}
+	}
 	return &Keeper{
 		cdc:             cdc,
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
-		authority:       authority,
+		authorities:     authoritiesMap,
 	}
+}
+
+func (k Keeper) GetAuthorities() map[string]struct{} {
+	authorities := make(map[string]struct{}, len(k.authorities))
+	for authority := range k.authorities {
+		authorities[authority] = struct{}{}
+	}
+	return authorities
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-// GetAuthority returns the x/vest module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // Process vesting for all vest entries. Intended to be called in BeginBlocker.

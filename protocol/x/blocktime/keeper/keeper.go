@@ -22,19 +22,34 @@ const (
 
 type (
 	Keeper struct {
-		cdc      codec.BinaryCodec
-		storeKey storetypes.StoreKey
+		cdc         codec.BinaryCodec
+		storeKey    storetypes.StoreKey
+		authorities map[string]struct{}
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	authorities []string,
 ) *Keeper {
-	return &Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
+	authoritiesMap := make(map[string]struct{}, len(authorities))
+	for _, authority := range authorities {
+		authoritiesMap[authority] = struct{}{}
 	}
+	return &Keeper{
+		cdc:         cdc,
+		storeKey:    storeKey,
+		authorities: authoritiesMap,
+	}
+}
+
+func (k Keeper) GetAuthorities() map[string]struct{} {
+	authorities := make(map[string]struct{}, len(k.authorities))
+	for authority := range k.authorities {
+		authorities[authority] = struct{}{}
+	}
+	return authorities
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
