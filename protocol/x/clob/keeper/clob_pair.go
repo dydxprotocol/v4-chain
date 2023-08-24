@@ -239,6 +239,78 @@ func (k Keeper) GetAllClobPair(ctx sdk.Context) (list []types.ClobPair) {
 	return
 }
 
+// validateOrderAgainstClobPairStatus returns an error if placing the provided
+// order would conflict with the clob pair's current status.
+func (k Keeper) validateOrderAgainstClobPairStatus(
+	ctx sdk.Context,
+	order types.Order,
+	clobPair types.ClobPair,
+) error {
+	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
+		panic(
+			fmt.Sprintf(
+				"validateOrderAgainstClobPairStatus: clob pair status %v is not supported",
+				clobPair.Status,
+			),
+		)
+	}
+
+	switch clobPair.Status {
+	case types.ClobPair_STATUS_INITIALIZING:
+		// Reject stateful orders. Short-term orders expire within the ShortBlockWindow, ensuring
+		// stale short term order expiration. Stateful orders are rejected to prevent long-term orders
+		// from controlling the price at which new orders can be placed. This is necessary when all orders
+		// are post-only.
+		if order.IsStatefulOrder() {
+			return sdkerrors.Wrapf(
+				types.ErrOrderConflictsWithClobPairStatus,
+				"Order %+v must not be stateful for clob pair with status %+v",
+				order,
+				clobPair.Status,
+			)
+		}
+
+		// Reject non-post-only orders. During the initializing phase we only allow post-only orders.
+		// This allows liquidity to build around the oracle price without any real trading happening.
+		if order.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
+			return sdkerrors.Wrapf(
+				types.ErrOrderConflictsWithClobPairStatus,
+				"Order %+v must be post-only for clob pair with status %+v",
+				order,
+				clobPair.Status,
+			)
+		}
+
+		// Reject orders on the wrong side of the market. This is to ensure liquidity is building around
+		// the oracle price. For instance without this check a user could place an ask far below the oracle
+		// price, thereby preventing any bids at or above the specified price of the ask.
+		currentOraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+		currentOraclePriceSubticks := lib.BigRatRound(currentOraclePriceSubticksRat, false).Uint64()
+		// Throw error if order is a buy and order subticks is greater than oracle price subticks
+		if order.IsBuy() && order.Subticks > currentOraclePriceSubticks {
+			return sdkerrors.Wrapf(
+				types.ErrOrderConflictsWithClobPairStatus,
+				"Order subticks %+v must be less than or equal to oracle price subticks %+v for clob pair with status %+v",
+				order.Subticks,
+				currentOraclePriceSubticks,
+				clobPair.Status,
+			)
+		}
+		// Throw error if order is a sell and order subticks is less than oracle price subticks
+		if !order.IsBuy() && order.Subticks < currentOraclePriceSubticks {
+			return sdkerrors.Wrapf(
+				types.ErrOrderConflictsWithClobPairStatus,
+				"Order subticks %+v must be greater than or equal to oracle price subticks %+v for clob pair with status %+v",
+				order.Subticks,
+				currentOraclePriceSubticks,
+				clobPair.Status,
+			)
+		}
+	}
+
+	return nil
+}
+
 // mustGetClobPair fetches a ClobPair from state given its id.
 // This function panics if the ClobPair is not found.
 func (k Keeper) mustGetClobPair(

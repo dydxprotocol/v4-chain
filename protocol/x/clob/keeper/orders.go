@@ -603,6 +603,8 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 //   - The `Subticks` of the order is a multiple of the ClobPair's `SubticksPerTick`.
 //   - The `Quantums` of the order is a multiple of the ClobPair's `StepBaseQuantums`.
 //
+// This validation also ensures that the order is valid for the ClobPair's status.
+//
 // For short term orders it also ensures:
 //   - The `GoodTilBlock` of the order is greater than the provided `blockHeight`.
 //   - The `GoodTilBlock` of the order does not exceed the provided `blockHeight + ShortBlockWindow`.
@@ -652,6 +654,20 @@ func (k Keeper) PerformStatefulOrderValidation(
 			order.Quantums,
 			clobPair.StepBaseQuantums,
 		)
+	}
+
+	// Validates the order against the ClobPair's status.
+	if err := k.validateOrderAgainstClobPairStatus(ctx, order.MustGetOrder(), clobPair); err != nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.ValidateOrder, metrics.OrderConflictsWithClobPairStatus, metrics.Count},
+			1,
+			append(
+				order.GetOrderLabels(),
+				metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+				metrics.GetLabelForBoolValue(metrics.DeliverTx, lib.IsDeliverTxMode(ctx)),
+			),
+		)
+		return err
 	}
 
 	if order.OrderId.IsShortTermOrder() {
