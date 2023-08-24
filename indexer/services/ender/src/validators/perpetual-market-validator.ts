@@ -27,13 +27,6 @@ export class PerpetualMarketValidator extends Validator<PerpetualMarketCreateEve
       );
     }
 
-    if (this.event.minOrderBaseQuantums.eq(Long.fromValue(0))) {
-      return this.logAndThrowParseMessageError(
-        'PerpetualMarketCreateEvent minOrderBaseQuantums is not populated',
-        { event: this.event },
-      );
-    }
-
     if (this.event.stepBaseQuantums.eq(Long.fromValue(0))) {
       return this.logAndThrowParseMessageError(
         'PerpetualMarketCreateEvent stepBaseQuantums is not populated',

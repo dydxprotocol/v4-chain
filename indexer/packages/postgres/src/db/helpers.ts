@@ -228,13 +228,13 @@ export function getAssetPositionCreateObject(
 
 export function getMarketParamsFromGenesis(): MarketParam[] {
   const markets: MarketParam[] = genesis.app_state.prices.market_params.map(
-    (genesisMarketParam, index: number): MarketParam => {
+    (genesisMarketParam): MarketParam => {
       return {
         ...genesisMarketParam,
         minExchanges: genesisMarketParam.min_exchanges,
         minPriceChangePpm: genesisMarketParam.min_price_change_ppm,
         exchangeConfigJson: '',
-        id: index,
+        id: genesisMarketParam.id,
       };
     },
   );
@@ -244,10 +244,10 @@ export function getMarketParamsFromGenesis(): MarketParam[] {
 
 export function getMarketPricesFromGenesis(): MarketPrice[] {
   const marketPrices: MarketPrice[] = genesis.app_state.prices.market_prices.map(
-    (genesisMarketPrice, index: number): MarketPrice => {
+    (genesisMarketPrice): MarketPrice => {
       return {
         ...genesisMarketPrice,
-        id: index,
+        id: genesisMarketPrice.id,
         exponent: genesisMarketPrice.exponent,
         price: Long.fromNumber(genesisMarketPrice.price),
       };
