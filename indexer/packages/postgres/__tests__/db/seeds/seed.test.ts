@@ -6,12 +6,8 @@ import {
 } from '../../../src/types';
 import * as MarketTable from '../../../src/stores/market-table';
 import * as LiquidityTiersTable from '../../../src/stores/liquidity-tiers-table';
-import { expectLiquidityTier, expectMarketParamAndPrice } from '../helpers';
-import {
-  getLiquidityTiersFromGenesis,
-  getMarketParamsFromGenesis,
-  getMarketPricesFromGenesis,
-} from '../../../src/db/helpers';
+import { expectLiquidityTier } from '../helpers';
+import { getLiquidityTiersFromGenesis } from '../../../src/db/helpers';
 
 describe('seed', () => {
   beforeAll(async () => {
