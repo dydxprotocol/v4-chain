@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -20,26 +19,29 @@ func (k Keeper) DispatchMessagesForBlock(ctx sdk.Context) {
 	for _, id := range blockMessageIds.Ids {
 		delayedMsg, found := k.GetMessage(ctx, id)
 		if !found {
-			panic(fmt.Errorf("delayed message %v not found", id))
+			k.Logger(ctx).Error("delayed message %v not found", id)
+			continue
 		}
 
 		var msg sdk.Msg
 		err := k.DecodeMessage(delayedMsg.Msg, &msg)
 
 		if err != nil {
-			panic(fmt.Errorf("Failed to decode delayed message: %w", err))
+			k.Logger(ctx).Error("failed to decode delayed message with id %v: %v", id, err)
+			continue
 		}
 
 		handler := k.router.Handler(msg)
 		_, err = handler(ctx, msg)
 
 		if err != nil {
-			panic(fmt.Errorf("Failed to execute delayed message: %w", err))
+			k.Logger(ctx).Error("failed to execute delayed message with id %v: %v", id, err)
 		}
+	}
 
-		err = k.DeleteMessage(ctx, id)
-		if err != nil {
-			panic(fmt.Errorf("Failed to delete delayed message: %w", err))
+	for _, id := range blockMessageIds.Ids {
+		if err := k.DeleteMessage(ctx, id); err != nil {
+			k.Logger(ctx).Error("failed to delete delayed message: %w", err)
 		}
 	}
 }
