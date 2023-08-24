@@ -25,6 +25,8 @@ import {
   apiTranslations,
   FillType,
   perpetualMarketRefresher,
+  PerpetualMarketStatus,
+  PerpetualMarketFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -43,6 +45,7 @@ import {
   Timestamp,
   OffChainUpdateV1,
   IndexerOrderId,
+  PerpetualMarketCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { Message, ProducerRecord } from 'kafkajs';
 import _ from 'lodash';
@@ -786,4 +789,41 @@ export async function expectPerpetualPosition(
   if (fields.exitPrice !== undefined) {
     expect(perpetualPosition!.exitPrice).toEqual(fields.exitPrice);
   }
+}
+
+// Values of the `PerpetualMarketCreateObject` which are hard-coded and not dervied from
+// the values in `genesis.json`
+export const HARDCODED_PERPETUAL_MARKET_VALUES: Object = {
+  baseAsset: '',
+  quoteAsset: '',
+  lastPrice: '0',
+  priceChange24H: '0',
+  trades24H: 0,
+  volume24H: '0',
+  nextFundingRate: '0',
+  basePositionSize: '0',
+  incrementalPositionSize: '0',
+  maxPositionSize: '0',
+  status: PerpetualMarketStatus.ACTIVE,
+  openInterest: '0',
+};
+
+export function expectPerpetualMarket(
+  perpetualMarket: PerpetualMarketFromDatabase,
+  perpetual: PerpetualMarketCreateEventV1,
+): void {
+  // TODO(IND-219): Set initialMarginFraction/maintenanceMarginFraction using LiquidityTier
+  expect(perpetualMarket).toEqual(expect.objectContaining({
+    ...HARDCODED_PERPETUAL_MARKET_VALUES,
+    id: perpetual.id.toString(),
+    clobPairId: perpetual.clobPairId.toString(),
+    ticker: perpetual.ticker,
+    marketId: perpetual.marketId,
+    quantumConversionExponent: perpetual.quantumConversionExponent,
+    atomicResolution: perpetual.atomicResolution,
+    subticksPerTick: perpetual.subticksPerTick,
+    minOrderBaseQuantums: Number(perpetual.minOrderBaseQuantums),
+    stepBaseQuantums: Number(perpetual.stepBaseQuantums),
+    liquidityTierId: perpetual.liquidityTier,
+  }));
 }

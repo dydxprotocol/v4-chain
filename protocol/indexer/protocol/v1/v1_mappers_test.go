@@ -381,3 +381,31 @@ func TestOrderToIndexerOrder_Panic(t *testing.T) {
 		v1.OrderToIndexerOrder(invalidOrder)
 	})
 }
+
+func TestConvertToClobPairStatus(t *testing.T) {
+	tests := map[string]struct {
+		status         clobtypes.ClobPair_Status
+		expectedStatus v1.ClobPairStatus
+	}{}
+	// Iterate through all the values for ClobPair_Status to create test cases.
+	for name, value := range clobtypes.ClobPair_Status_value {
+		testName := fmt.Sprintf("Converts ClobPair_Status %s to v1.ClobPairStatus", name)
+		tests[testName] = struct {
+			status         clobtypes.ClobPair_Status
+			expectedStatus v1.ClobPairStatus
+		}{
+			status:         clobtypes.ClobPair_Status(value),
+			expectedStatus: v1.ClobPairStatus(clobtypes.ClobPair_Status_value[name]),
+		}
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(
+				t,
+				tc.expectedStatus,
+				v1.ConvertToClobPairStatus(tc.status),
+			)
+		})
+	}
+}

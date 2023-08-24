@@ -134,20 +134,6 @@ func (_m *PricesKeeper) GetMarketPrice(ctx types.Context, id uint32) (pricestype
 	return r0, r1
 }
 
-// GetNumMarkets provides a mock function with given fields: ctx
-func (_m *PricesKeeper) GetNumMarkets(ctx types.Context) uint32 {
-	ret := _m.Called(ctx)
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func(types.Context) uint32); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	return r0
-}
-
 // Logger provides a mock function with given fields: ctx
 func (_m *PricesKeeper) Logger(ctx types.Context) log.Logger {
 	ret := _m.Called(ctx)

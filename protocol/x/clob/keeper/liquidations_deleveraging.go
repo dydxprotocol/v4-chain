@@ -1,7 +1,11 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
 	"math/big"
+	"math/rand"
+	"time"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -81,12 +85,21 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	fills []types.MatchPerpetualDeleveraging_Fill,
 	deltaQuantumsRemaining *big.Int,
 ) {
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		types.ModuleName,
+		metrics.OffsettingSubaccountPerpetualPosition,
+	)
+
 	numSubaccountsIterated := 0
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
-	// TODO(DEC-1487): Determine how offsetting subaccounts should be selected.
-	k.subaccountsKeeper.ForEachSubaccount(
+	s := rand.NewSource(k.MustGetBlockTimeForLastCommittedBlock(ctx).Unix())
+	rand := rand.New(s)
+
+	k.subaccountsKeeper.ForEachSubaccountRandomStart(
 		ctx,
 		func(offsettingSubaccount satypes.Subaccount) (finished bool) {
 			numSubaccountsIterated++
@@ -123,8 +136,95 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					OffsettingSubaccountId: *offsettingSubaccount.Id,
 					FillAmount:             new(big.Int).Abs(deltaQuantums).Uint64(),
 				})
+			} else if errors.Is(err, types.ErrInvalidPerpetualPositionSizeDelta) {
+				panic(
+					fmt.Sprintf(
+						"Invalid perpetual position size delta when processing deleveraging. error: %v",
+						err,
+					),
+				)
 			} else {
-				// If an error is returned, then the subaccounts' bankruptcy prices do not overlap.
+				// If an error is returned, it's likely because the subaccounts' bankruptcy prices do not overlap.
+				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
+				liquidatedBankruptcyPrice, bankruptcyPriceError := k.GetBankruptcyPriceInQuoteQuantums(
+					ctx,
+					liquidatedSubaccountId,
+					perpetualId,
+					deltaQuantums,
+				)
+				if bankruptcyPriceError != nil {
+					k.Logger(ctx).Error(
+						"error when getting bankruptcy price for liquidated subaccount",
+						"error", bankruptcyPriceError,
+						"blockHeight", ctx.BlockHeight(),
+						"checkTx", ctx.IsCheckTx(),
+						"perpetualId", perpetualId,
+						"deltaQuantums", deltaQuantums,
+					)
+					return false
+				}
+				liquidatedTnc, _, _, tncErr := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+					ctx, satypes.Update{SubaccountId: *liquidatedSubaccount.Id},
+				)
+				if tncErr != nil {
+					k.Logger(ctx).Error(
+						"error when getting TNC for liquidated subaccount",
+						"error", tncErr,
+						"blockHeight", ctx.BlockHeight(),
+						"checkTx", ctx.IsCheckTx(),
+						"perpetualId", perpetualId,
+						"deltaQuantums", deltaQuantums,
+					)
+					return false
+				}
+
+				offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, *offsettingSubaccount.Id)
+				offsettingBankruptcyPrice, bankruptcyPriceError := k.GetBankruptcyPriceInQuoteQuantums(
+					ctx,
+					*offsettingSubaccount.Id,
+					perpetualId,
+					new(big.Int).Neg(deltaQuantums),
+				)
+				if bankruptcyPriceError != nil {
+					k.Logger(ctx).Error(
+						"error when getting bankruptcy price for offsetting subaccount",
+						"error", bankruptcyPriceError,
+						"blockHeight", ctx.BlockHeight(),
+						"checkTx", ctx.IsCheckTx(),
+						"perpetualId", perpetualId,
+						"deltaQuantums", deltaQuantums,
+					)
+					return false
+				}
+				offsettingTnc, _, _, tncErr := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+					ctx, satypes.Update{SubaccountId: *offsettingSubaccount.Id},
+				)
+				if tncErr != nil {
+					k.Logger(ctx).Error(
+						"error when getting TNC for offsetting subaccount",
+						"error", tncErr,
+						"blockHeight", ctx.BlockHeight(),
+						"checkTx", ctx.IsCheckTx(),
+						"perpetualId", perpetualId,
+						"deltaQuantums", deltaQuantums,
+					)
+					return false
+				}
+
+				k.Logger(ctx).Info(
+					"Encountered error when processing deleveraging",
+					"error", err,
+					"blockHeight", ctx.BlockHeight(),
+					"checkTx", ctx.IsCheckTx(),
+					"perpetualId", perpetualId,
+					"deltaQuantums", deltaQuantums,
+					"liquidatedSubaccount", fmt.Sprintf("%+v", liquidatedSubaccount),
+					"liquidatedBankruptcyPriceQuoteQuantums", liquidatedBankruptcyPrice,
+					"liquidatedTnc", liquidatedTnc,
+					"offsettingSubaccount", fmt.Sprintf("%+v", offsettingSubaccount),
+					"offsettingBankruptcyPriceQuoteQuantums", offsettingBankruptcyPrice,
+					"offsettingTnc", offsettingTnc,
+				)
 				telemetry.IncrCounterWithLabels(
 					[]string{types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count},
 					1,
@@ -133,13 +233,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			}
 			return deltaQuantumsRemaining.Sign() == 0
 		},
-	)
-
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		float32(numSubaccountsIterated),
-		metrics.NumSubaccountsIterated,
-		metrics.Count,
+		rand,
 	)
 
 	mode := metrics.DeliverTx
@@ -148,6 +242,14 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		mode = metrics.CheckTx
 		blockHeight += 1
 	}
+
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.NumSubaccountsIterated, metrics.Count},
+		float32(numSubaccountsIterated),
+		[]gometrics.Label{
+			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+		},
+	)
 
 	if deltaQuantumsRemaining.Sign() == 0 {
 		// Deleveraging was successful.

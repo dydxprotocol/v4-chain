@@ -1,12 +1,9 @@
 package keeper_test
 
-/*
-
 import (
 	"errors"
 	"fmt"
 	"math"
-	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +11,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -27,10 +26,10 @@ import (
 // each run is equal.
 func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *testing.T) {
 	// TODO(DEC-908): Set up correct `bankKeeper` mock to verify fee transfer.
-	tc := processProposerMatchesTestCase{
-		perpetuals: []perptypes.Perpetual{
-			constants.BtcUsd_100PercentMarginRequirement,
-			constants.EthUsd_20PercentInitial_10PercentMaintenance,
+	tc := processProposerOperationsTestCase{
+		perpetuals: []*perptypes.Perpetual{
+			&constants.BtcUsd_100PercentMarginRequirement,
+			&constants.EthUsd_20PercentInitial_10PercentMaintenance,
 		},
 		subaccounts: []satypes.Subaccount{
 			constants.Carl_Num0_1BTC_Short,
@@ -54,9 +53,10 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 				},
 			},
 		},
-		placeOrders: []*types.MsgPlaceOrder{
-			{
-				Order: types.Order{
+		perpetualFeeParams: &constants.PerpetualFeeParams,
+		rawOperations: []types.OperationRaw{
+			clobtest.NewShortTermOrderPlacementOperationRaw(
+				types.Order{
 					OrderId: types.OrderId{
 						SubaccountId: constants.Carl_Num0,
 						ClientId:     0,
@@ -67,9 +67,9 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 					Subticks:     90_000_000_000,
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 20},
 				},
-			},
-			{
-				Order: types.Order{
+			),
+			clobtest.NewShortTermOrderPlacementOperationRaw(
+				types.Order{
 					OrderId: types.OrderId{
 						SubaccountId: constants.Carl_Num0,
 						ClientId:     1,
@@ -80,62 +80,67 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 					Subticks:     200_000_000_000,
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 20},
 				},
-			},
-		},
-		clobMatches: []*types.ClobMatch{
-			types.NewClobMatchFromMatchPerpetualLiquidation(
-				&types.MatchPerpetualLiquidation{
+			),
+			clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+				types.MatchPerpetualLiquidation{
 					Liquidated:  constants.Dave_Num0,
 					ClobPairId:  0,
 					PerpetualId: 0,
 					TotalSize:   10,
 					IsBuy:       false,
-					Fills: []types.MatchPerpetualLiquidation_Fill{
+					Fills: []types.MakerFill{
 						// Fill would be processed successfully.
 						{
-							MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
+							MakerOrderId: types.OrderId{
+								SubaccountId: constants.Carl_Num0,
+								ClientId:     0,
+								ClobPairId:   0,
+							},
 							FillAmount: 10,
 						},
 					},
 				},
 			),
-			types.NewClobMatchFromMatchPerpetualLiquidation(
-				&types.MatchPerpetualLiquidation{
+			clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+				types.MatchPerpetualLiquidation{
 					Liquidated:  constants.Dave_Num0,
 					ClobPairId:  1,
 					PerpetualId: 1,
 					TotalSize:   1000,
 					IsBuy:       false,
-					Fills: []types.MatchPerpetualLiquidation_Fill{
+					Fills: []types.MakerFill{
 						// Fill would lead to undercollateralization.
 						{
-							MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
+							MakerOrderId: types.OrderId{
+								SubaccountId: constants.Carl_Num0,
+								ClientId:     1,
+								ClobPairId:   1,
+							},
 							FillAmount: 1000,
 						},
 					},
 				},
 			),
 		},
-		clobPairs: []*types.ClobPair{
-			&constants.ClobPair_Btc,
-			&constants.ClobPair_Eth,
+		clobPairs: []types.ClobPair{
+			constants.ClobPair_Btc,
+			constants.ClobPair_Eth,
 		},
+
+		expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+			BlockHeight: 5,
+		},
+		expectedError: fmt.Errorf(
+			"Subaccount with id %v failed with UpdateResult: NewlyUndercollateralized:",
+			constants.Carl_Num0,
+		),
 	}
 
 	// Should be the same among all runs.
 	var gasConsumed sdk.Gas
 
 	for i := 0; i < 100; i++ {
-		ctx, keeper, _, _, mockMsgSender, _, _ := setupProcessProposerMatchesTestCase(t, tc)
-		mockMsgSender.On("Enabled").Return(false)
-
-		err := keeper.ProcessProposerMatches(ctx, tc.placeOrders, tc.clobMatches)
-		require.ErrorContains(t, err,
-			fmt.Sprintf(
-				"Subaccount with id {%s 0} failed with UpdateResult: NewlyUndercollateralized:",
-				constants.Carl_Num0.Owner,
-			),
-		)
+		ctx, _ := runProcessProposerOperationsTestCase(t, tc)
 
 		if i == 0 {
 			gasConsumed = ctx.GasMeter().GasConsumed()
@@ -154,26 +159,33 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 }
 
 func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
-	tests := map[string]processProposerMatchesTestCase{
+	blockHeight := uint32(5)
+	tests := map[string]processProposerOperationsTestCase{
 		"Liquidation succeeds no fills": {
-			perpetuals:                        []perptypes.Perpetual{constants.BtcUsd_100PercentMarginRequirement},
-			subaccounts:                       []satypes.Subaccount{},
-			setupMockBankKeeper:               func(bk *mocks.BankKeeper) {},
-			placeOrders:                       []*types.MsgPlaceOrder{},
-			clobMatches:                       []*types.ClobMatch{},
-			expectedFillAmounts:               map[types.OrderId]satypes.BaseQuantums{},
-			expectedPruneableBlockHeights:     map[uint32][]types.OrderId{},
-			expectedQuoteBalances:             map[satypes.SubaccountId]*big.Int{},
-			expectedPerpetualPositions:        map[satypes.SubaccountId][]*satypes.PerpetualPosition{},
+			perpetuals:                 []*perptypes.Perpetual{&constants.BtcUsd_100PercentMarginRequirement},
+			subaccounts:                []satypes.Subaccount{},
+			perpetualFeeParams:         &constants.PerpetualFeeParams,
+			setupMockBankKeeper:        func(bk *mocks.BankKeeper) {},
+			rawOperations:              []types.OperationRaw{},
+			expectedFillAmounts:        map[types.OrderId]satypes.BaseQuantums{},
+			expectedQuoteBalances:      map[satypes.SubaccountId]int64{},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{},
 		},
 		"Liquidation succeeds when order is completely filled": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -192,45 +204,45 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
 				).Return(nil).Once()
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 100_000_000, // 1 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+								FillAmount:   100_000_000, // 1 BTC
 							},
 						},
 					},
 				),
 			},
+
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 100_000_000,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $4,749, no taker fees, pays $250 insurance fee
-				constants.Carl_Num0: big.NewInt(4_999_000_000 - 250_000_000),
+				constants.Carl_Num0: 4_999_000_000 - 250_000_000,
 				// $99,990
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 10_000_000),
+				constants.Dave_Num0: 100_000_000_000 - 10_000_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Dave_Num0: {},
 				constants.Carl_Num0: {},
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
@@ -242,12 +254,16 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds with negative insurance fund delta when order is completely filled": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -272,25 +288,23 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(1_000_000)),
 				).Return(nil).Once()
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Bankruptcy price in quote quantums is $50499 for 1 BTC.
 					// When subticks is $50,500, the insurance fund delta is -$1.
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 100_000_000, // 1 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId,
+								FillAmount:   100_000_000, // 1 BTC
 							},
 						},
 					},
@@ -299,21 +313,22 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId: 100_000_000,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// The subaccount had $50,499 initially, bought 1BTC at $50,500
 				// to cover the short position, and received $1 from insurance fund.
-				constants.Carl_Num0: big.NewInt(0),
+				constants.Carl_Num0: 0,
 				// $100,489.9
-				constants.Dave_Num0: big.NewInt(50_000_000_000 + 50_500_000_000 - 10_100_000),
+				constants.Dave_Num0: 50_000_000_000 + 50_500_000_000 - 10_100_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Dave_Num0: {},
 				constants.Carl_Num0: {},
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
@@ -325,12 +340,16 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds with multiple partial fills": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -349,30 +368,28 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(62_500_000)),
 				).Return(nil).Twice()
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
-				},
-				{
-					Order: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000, // .25 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.OrderId,
+								FillAmount:   25_000_000, // .25 BTC
 							},
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
-								FillAmount: 25_000_000, // .25 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12.OrderId,
+								FillAmount:   25_000_000, // .25 BTC
 							},
 						},
 					},
@@ -382,20 +399,11 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.OrderId: 25_000_000,
 				constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12.OrderId: 25_000_000,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {},
-				11 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.OrderId,
-				},
-				12 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $29874, no taker fees, pays $125 insurance fee
-				constants.Carl_Num0: big.NewInt(29_999_000_000 - 125_000_000),
+				constants.Carl_Num0: 29_999_000_000 - 125_000_000,
 				// $74,995
-				constants.Dave_Num0: big.NewInt(75_000_000_000 - 5_000_000),
+				constants.Dave_Num0: 75_000_000_000 - 5_000_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
@@ -413,6 +421,13 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					},
 				},
 			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.OrderId,
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12.OrderId,
+				},
+				BlockHeight: blockHeight,
+			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
@@ -423,12 +438,16 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds with multiple partial fills - negative insurance fund delta": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -453,30 +472,28 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000)),
 				).Return(nil).Twice()
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11,
-				},
-				{
-					Order: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11,
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000, // .25 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11.OrderId,
+								FillAmount:   25_000_000, // .25 BTC
 							},
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
-								FillAmount: 25_000_000, // .25 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId,
+								FillAmount:   25_000_000, // .25 BTC
 							},
 						},
 					},
@@ -486,21 +503,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11.OrderId: 25_000_000,
 				constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId: 25_000_000,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {},
-				11 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11.OrderId,
-				},
-				12 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// The subaccount had $50,499 initially, bought 0.5BTC at $50,500
 				// to cover the short position, and received $0.5 from insurance fund.
-				constants.Carl_Num0: big.NewInt(25_249_500_000),
+				constants.Carl_Num0: 25_249_500_000,
 				// $75,244.5
-				constants.Dave_Num0: big.NewInt(50_000_000_000 + 25_250_000_000 - 5_050_000),
+				constants.Dave_Num0: 50_000_000_000 + 25_250_000_000 - 5_050_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
@@ -518,6 +526,13 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					},
 				},
 			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11.OrderId,
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId,
+				},
+				BlockHeight: blockHeight,
+			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
@@ -528,12 +543,16 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds with both positive and negative insurance fund delta": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -566,32 +585,30 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000)),
 				).Return(nil).Once()
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Above bankruptcy price.
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10,
-				},
-				{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10,
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Below bankruptcy price.
-					Order: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 75_000_000, // .75 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10.OrderId,
+								FillAmount:   75_000_000, // .75 BTC
 							},
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
-								FillAmount: 25_000_000, // .25 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId,
+								FillAmount:   25_000_000, // .25 BTC
 							},
 						},
 					},
@@ -601,25 +618,24 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10.OrderId:   75_000_000,
 				constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId: 25_000_000,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-				},
-				12 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// The subaccount had $50,499 initially, bought 0.75BTC at $50,498
 				// and 0.25BTC at $50,500.
 				// The subaccount pays $0.5 total to insurance fund.
-				constants.Carl_Num0: big.NewInt(0),
+				constants.Carl_Num0: 0,
 				// // $50,000 + (50498 * 0.75 + 50500 * 0.25) * (1 - 0.02%)
-				constants.Dave_Num0: big.NewInt(100_488_400_300),
+				constants.Dave_Num0: 100_488_400_300,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
 				constants.Dave_Num0: {},
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10.OrderId,
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
@@ -631,12 +647,16 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Insurance fund delta calculation accounts for state changes from previous fills": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -678,32 +698,30 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Above bankruptcy price.
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10,
-				},
-				{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10,
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Below bankruptcy price.
-					Order: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 75_000_000, // .75 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10.OrderId,
+								FillAmount:   75_000_000, // .75 BTC
 							},
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
-								FillAmount: 25_000_000, // .25 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId,
+								FillAmount:   25_000_000, // .25 BTC
 							},
 						},
 					},
@@ -713,25 +731,24 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10.OrderId:   75_000_000,
 				constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId: 25_000_000,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-				},
-				12 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// The subaccount had $50,499 initially, bought 0.75BTC at $50,498
 				// and 0.25BTC at $50,500.
 				// The subaccount pays $0.5 total to insurance fund.
-				constants.Carl_Num0: big.NewInt(0),
+				constants.Carl_Num0: 0,
 				// // $50,000 + (50498 * 0.75 + 50500 * 0.25) * (1 - 0.02%)
-				constants.Dave_Num0: big.NewInt(100_488_400_300),
+				constants.Dave_Num0: 100_488_400_300,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
 				constants.Dave_Num0: {},
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50498_GTB10.OrderId,
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
@@ -743,12 +760,16 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds if matches does not exceed the order quantums when considering state fill amounts": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -767,26 +788,31 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(125_000_000)),
 				).Return(nil).Once()
 			},
-			stateFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				{SubaccountId: constants.Dave_Num0, ClientId: 0}: satypes.BaseQuantums(50_000_000),
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetOrderFillAmount(
+					ctx,
+					types.OrderId{
+						SubaccountId: constants.Dave_Num0, ClientId: 0,
+					},
+					satypes.BaseQuantums(50_000_000),
+					50,
+				)
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 50_000_000, // .50 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+								FillAmount:   50_000_000, // .50 BTC
 							},
 						},
 					},
@@ -795,16 +821,11 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 100_000_000,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				1000: {
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $29874, no taker fees, pays $125 insurance fee
-				constants.Carl_Num0: big.NewInt(29_999_000_000 - 125_000_000),
+				constants.Carl_Num0: 29_999_000_000 - 125_000_000,
 				// $74,995
-				constants.Dave_Num0: big.NewInt(75_000_000_000 - 5_000_000),
+				constants.Dave_Num0: 75_000_000_000 - 5_000_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
@@ -822,6 +843,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					},
 				},
 			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+				},
+				BlockHeight: blockHeight,
+			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
@@ -831,107 +858,13 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Dave_Num0: {},
 			},
 		},
-		"Liquidation succeeds with multiple fills if one order is a replacement and " +
-			"the fills are not ordered ascending by GTB": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
-			},
-			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
-				bk.On(
-					"SendCoinsFromModuleToModule",
-					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(1_000_000)),
-				).Return(nil)
-				bk.On(
-					"SendCoinsFromModuleToModule",
-					mock.Anything,
-					satypes.ModuleName,
-					types.InsuranceFundName,
-					// Subaccount pays $25 to insurance fund for liquidating 0.1 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(25_000_000)),
-				).Return(nil).Twice()
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB12,
-				},
-				{
-					Order: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000, // 1 BTC
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 10_000_000, // .10 BTC
-							},
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
-								FillAmount: 10_000_000, // .10 BTC
-							},
-						},
-					},
-				),
-			},
-			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.OrderId: 20_000_000,
-			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {},
-				12 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB12.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $44949, no taker fees, pays $50 insurance fee
-				constants.Carl_Num0: big.NewInt(44_999_000_000 - 50_000_000),
-				// $59,998
-				constants.Dave_Num0: big.NewInt(60_000_000_000 - 2_000_000),
-			},
-			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
-				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-80_000_000), // .8 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
-				},
-				constants.Dave_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(80_000_000), // .8 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
-				},
-			},
-			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
-				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    10_000_000_000,
-					QuantumsInsuranceLost: 0,
-				},
-				constants.Dave_Num0: {},
-			},
-		},
 		"Liquidation succeeds with position size smaller than clobPair.MinOrderBaseQuantums": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
-			clobPairs: []*types.ClobPair{
-				&constants.ClobPair_Btc3,
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc3,
 			},
 			subaccounts: []satypes.Subaccount{
 				{
@@ -949,22 +882,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 						},
 					},
 				},
-				constants.Dave_Num0_1BTC_Long,
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Dave_Num0,
-							ClientId:     1,
-							ClobPairId:   0,
-						},
-						Side:         types.Order_SIDE_SELL,
-						Quantums:     25_000_000,
-						Subticks:     50_000_000_000,
-						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 11},
-					},
-				},
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -982,22 +900,56 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(25)),
 				).Return(nil)
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId: types.OrderId{
+							SubaccountId: constants.Dave_Num0,
+							ClientId:     1,
+							ClobPairId:   0,
+						},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     25_000_000,
+						Subticks:     50_000_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 11},
+					},
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   10,
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
+								MakerOrderId: types.OrderId{
+									SubaccountId: constants.Dave_Num0,
+									ClientId:     1,
+									ClobPairId:   0,
+								},
 								FillAmount: 10,
 							},
 						},
 					},
 				),
+			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				{
+					SubaccountId: constants.Dave_Num0,
+					ClientId:     1,
+					ClobPairId:   0,
+				}: satypes.BaseQuantums(10),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					{
+						SubaccountId: constants.Dave_Num0,
+						ClientId:     1,
+						ClobPairId:   0,
+					},
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
@@ -1008,134 +960,140 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Dave_Num0: {},
 			},
 		},
-		"Liquidation succeeds if maker order is reduce-only": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
-			},
-			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
-				bk.On(
-					"SendCoinsFromModuleToModule",
-					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(5_000_000)),
-				).Return(nil)
-				bk.On(
-					"SendCoinsFromModuleToModule",
-					mock.Anything,
-					satypes.ModuleName,
-					types.InsuranceFundName,
-					// Subaccount pays $125 to insurance fund for liquidating 0.5 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(125_000_000)),
-				).Return(nil).Once()
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000, // 1 BTC
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 50_000_000, // .50 BTC
-							},
-						},
-					},
-				),
-			},
-			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO.OrderId: 50_000_000,
-			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $29874, no taker fees, pays $125 insurance fee
-				constants.Carl_Num0: big.NewInt(29_999_000_000 - 125_000_000),
-				// $74,995
-				constants.Dave_Num0: big.NewInt(75_000_000_000 - 5_000_000),
-			},
-			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
-				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
-				},
-				constants.Dave_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
-				},
-			},
-			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
-				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    25_000_000_000,
-					QuantumsInsuranceLost: 0,
-				},
-				constants.Dave_Num0: {},
-			},
-		},
+		// TODO(CLOB-824): Re-enable reduce-only tests.
+		// "Liquidation succeeds if maker order is reduce-only": {
+		// 	perpetuals: []*perptypes.Perpetual{
+		// 		&constants.BtcUsd_100PercentMarginRequirement,
+		// 	},
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_1BTC_Short_54999USD,
+		// 		constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	},
+		// 	perpetualFeeParams: &constants.PerpetualFeeParams,
+		// 	clobPairs: []types.ClobPair{
+		// 		constants.ClobPair_Btc,
+		// 	},
+		// 	setupMockBankKeeper: func(bk *mocks.BankKeeper) {
+		// 		bk.On(
+		// 			"SendCoinsFromModuleToModule",
+		// 			mock.Anything,
+		// 			satypes.ModuleName,
+		// 			authtypes.FeeCollectorName,
+		// 			mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(5_000_000)),
+		// 		).Return(nil)
+		// 		bk.On(
+		// 			"SendCoinsFromModuleToModule",
+		// 			mock.Anything,
+		// 			satypes.ModuleName,
+		// 			types.InsuranceFundName,
+		// 			// Subaccount pays $125 to insurance fund for liquidating 0.5 BTC.
+		// 			mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(125_000_000)),
+		// 		).Return(nil).Once()
+		// 	},
+		// 	rawOperations: []types.OperationRaw{
+		// 		clobtest.NewShortTermOrderPlacementOperationRaw(
+		// 			constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO,
+		// 		),
+		// 		clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+		// 			types.MatchPerpetualLiquidation{
+		// 				Liquidated:  constants.Carl_Num0,
+		// 				ClobPairId:  0,
+		// 				PerpetualId: 0,
+		// 				TotalSize:   100_000_000, // 1 BTC
+		// 				IsBuy:       true,
+		// 				Fills: []types.MakerFill{
+		// 					{
+		// 						MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO.OrderId,
+		// 						FillAmount:   50_000_000, // .50 BTC
+		// 					},
+		// 				},
+		// 			},
+		// 		),
+		// 	},
+		// expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+		// 	constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO.OrderId: 50_000_000,
+		// },
+		// 	expectedQuoteBalances: map[satypes.SubaccountId]int64{
+		// 		// $29874, no taker fees, pays $125 insurance fee
+		// 		constants.Carl_Num0: 29_999_000_000 - 125_000_000,
+		// 		// $74,995
+		// 		constants.Dave_Num0: 75_000_000_000 - 5_000_000,
+		// 	},
+		// 	expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+		// 		constants.Carl_Num0: {
+		// 			{
+		// 				PerpetualId:  0,
+		// 				Quantums:     dtypes.NewInt(-50_000_000), // .5 BTC
+		// 				FundingIndex: dtypes.ZeroInt(),
+		// 			},
+		// 		},
+		// 		constants.Dave_Num0: {
+		// 			{
+		// 				PerpetualId:  0,
+		// 				Quantums:     dtypes.NewInt(50_000_000), // .5 BTC
+		// 				FundingIndex: dtypes.ZeroInt(),
+		// 			},
+		// 		},
+		// 	},
+		// 	expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+		// 		OrderIdsFilledInLastBlock: []types.OrderId{
+		// 			constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO.OrderId,
+		// 		},
+		// 		BlockHeight: blockHeight,
+		// 	},
+		// 	expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+		// 		constants.Carl_Num0: {
+		// 			PerpetualsLiquidated:  []uint32{0},
+		// 			NotionalLiquidated:    25_000_000_000,
+		// 			QuantumsInsuranceLost: 0,
+		// 		},
+		// 		constants.Dave_Num0: {},
+		// 	},
+		// },
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			runProcessProposerMatchSuccessTest(t, tc)
+			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
 }
 
 func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
-	tests := map[string]processProposerMatchesTestCase{
+	tests := map[string]processProposerOperationsTestCase{
 		"Liquidation returns error if order quantums is not divisible by StepBaseQuantums": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId:      constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 						Side:         types.Order_SIDE_SELL,
 						Quantums:     9, // StepBaseQuantums is 5
 						Subticks:     50_000_000_000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 20},
 					},
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 5,
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+								FillAmount:   5,
 							},
 						},
 					},
@@ -1144,36 +1102,38 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 			expectedError: errors.New("Order Quantums 9 must be a multiple of the ClobPair's StepBaseQuantums"),
 		},
 		"Liquidation returns error if fillAmount is not divisible by StepBaseQuantums": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId:      constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 						Side:         types.Order_SIDE_SELL,
 						Quantums:     10,
 						Subticks:     50_000_000_000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 20},
 					},
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 9, // StepBaseQuantums is 5
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+								FillAmount:   9, // StepBaseQuantums is 5
 							},
 						},
 					},
@@ -1182,89 +1142,98 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 			expectedError: types.ErrFillAmountNotDivisibleByStepSize,
 		},
 		"Liquidation returns error if collateralization check fails with non-success": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
 				constants.Dave_Num0_1BTC_Long_45001USD_Short,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         types.Order_SIDE_BUY,
 						Quantums:     10,
 						Subticks:     90_000_000_000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 20},
 					},
-				},
-				{
-					Order: types.Order{
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 1, ClobPairId: 0},
 						Side:         types.Order_SIDE_BUY,
 						Quantums:     10,
 						Subticks:     200_000_000_000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 20},
 					},
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Dave_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   20,
 						IsBuy:       false,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							// Fill would be processed successfully.
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 10,
+								MakerOrderId: types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 0, ClobPairId: 0},
+								FillAmount:   10,
 							},
 							// Fill would lead to undercollateralization.
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
-								FillAmount: 10,
+								MakerOrderId: types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 1, ClobPairId: 0},
+								FillAmount:   10,
 							},
 						},
 					},
 				),
 			},
 			expectedError: fmt.Errorf(
-				"Subaccount with id {%s 0} failed with UpdateResult: NewlyUndercollateralized",
-				constants.Carl_Num0.Owner,
+				"Subaccount with id %v failed with UpdateResult: NewlyUndercollateralized",
+				constants.Carl_Num0,
 			),
 		},
 		"Liquidation fails if matches exceed the order quantums when considering state fill amounts": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			stateFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				{SubaccountId: constants.Dave_Num0, ClientId: 0}: satypes.BaseQuantums(50_000_001),
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetOrderFillAmount(
+					ctx,
+					types.OrderId{SubaccountId: constants.Dave_Num0, ClientId: 0},
+					satypes.BaseQuantums(50_000_001),
+					50,
+				)
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   50_000_000,
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 50_000_000,
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+								FillAmount:   50_000_000,
 							},
 						},
 					},
@@ -1277,12 +1246,16 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 			),
 		},
 		"Returns error when order filled, subaccounts updated, but transfer to fee module acc failed": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -1300,23 +1273,21 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 					mock.Anything,
 				).Return(nil)
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000,
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 100_000_000,
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+								FillAmount:   100_000_000,
 							},
 						},
 					},
@@ -1331,128 +1302,135 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 				10_000_000,
 			),
 		},
-		"Returns error when maker order is reduce-only and would increase position size": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_54999USD,
-				{
-					Id: &constants.Dave_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_50_000,
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(-100_000_000), // 1 BTC
-						},
-					},
-				},
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000,
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 100_000_000,
-							},
-						},
-					},
-				),
-			},
-			expectedError: types.ErrReduceOnlyWouldIncreasePositionSize,
-		},
-		"Returns error when maker order is reduce-only and would change position side": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_54999USD,
-				{
-					Id: &constants.Dave_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_50_000,
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(99_000_000), // 0.99 BTC
-						},
-					},
-				},
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000,
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 100_000_000,
-							},
-						},
-					},
-				),
-			},
-			expectedError: types.ErrReduceOnlyWouldChangePositionSide,
-		},
+		// TODO(CLOB-824): Re-enable reduce-only tests.
+		// "Returns error when maker order is reduce-only and would increase position size": {
+		// 	perpetuals: []*perptypes.Perpetual{
+		// 		&constants.BtcUsd_100PercentMarginRequirement,
+		// 	},
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_1BTC_Short_54999USD,
+		// 		{
+		// 			Id: &constants.Dave_Num0,
+		// 			AssetPositions: []*satypes.AssetPosition{
+		// 				&constants.Usdc_Asset_50_000,
+		// 			},
+		// 			PerpetualPositions: []*satypes.PerpetualPosition{
+		// 				{
+		// 					PerpetualId: 0,
+		// 					Quantums:    dtypes.NewInt(-100_000_000), // 1 BTC
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	perpetualFeeParams: &constants.PerpetualFeeParams,
+		// 	clobPairs: []types.ClobPair{
+		// 		constants.ClobPair_Btc,
+		// 	},
+		// 	rawOperations: []types.OperationRaw{
+		// 		clobtest.NewShortTermOrderPlacementOperationRaw(
+		// 			constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO,
+		// 		),
+		// 		clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+		// 			types.MatchPerpetualLiquidation{
+		// 				Liquidated:  constants.Carl_Num0,
+		// 				ClobPairId:  0,
+		// 				PerpetualId: 0,
+		// 				TotalSize:   100_000_000,
+		// 				IsBuy:       true,
+		// 				Fills: []types.MakerFill{
+		// 					{
+		// 						MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO.OrderId,
+		// 						FillAmount:   100_000_000,
+		// 					},
+		// 				},
+		// 			},
+		// 		),
+		// 	},
+		// 	expectedError: types.ErrReduceOnlyWouldIncreasePositionSize,
+		// },
+		// "Returns error when maker order is reduce-only and would change position side": {
+		// 	perpetuals: []*perptypes.Perpetual{
+		// 		&constants.BtcUsd_100PercentMarginRequirement,
+		// 	},
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_1BTC_Short_54999USD,
+		// 		{
+		// 			Id: &constants.Dave_Num0,
+		// 			AssetPositions: []*satypes.AssetPosition{
+		// 				&constants.Usdc_Asset_50_000,
+		// 			},
+		// 			PerpetualPositions: []*satypes.PerpetualPosition{
+		// 				{
+		// 					PerpetualId: 0,
+		// 					Quantums:    dtypes.NewInt(99_000_000), // 0.99 BTC
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	perpetualFeeParams: &constants.PerpetualFeeParams,
+		// 	clobPairs: []types.ClobPair{
+		// 		constants.ClobPair_Btc,
+		// 	},
+		// 	rawOperations: []types.OperationRaw{
+		// 		clobtest.NewShortTermOrderPlacementOperationRaw(
+		// 			constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO,
+		// 		),
+		// 		clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+		// 			types.MatchPerpetualLiquidation{
+		// 				Liquidated:  constants.Carl_Num0,
+		// 				ClobPairId:  0,
+		// 				PerpetualId: 0,
+		// 				TotalSize:   100_000_000,
+		// 				IsBuy:       true,
+		// 				Fills: []types.MakerFill{
+		// 					{
+		// 						MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10_RO.OrderId,
+		// 						FillAmount:   100_000_000,
+		// 					},
+		// 				},
+		// 			},
+		// 		),
+		// 	},
+		// 	expectedError: types.ErrReduceOnlyWouldChangePositionSide,
+		// },
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			runProcessProposerMatchFailureTest(t, tc)
+			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
 }
 
 func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
-	tests := map[string]processProposerMatchesTestCase{
+	tests := map[string]processProposerOperationsTestCase{
 		"Stateful order validation: subaccount is not liquidatable": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000, // .25 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+								FillAmount:   25_000_000, // .25 BTC
 							},
 						},
 					},
@@ -1461,30 +1439,32 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrSubaccountNotLiquidatable,
 		},
 		"Stateful order validation: invalid clob": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  999,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000, // .25 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+								FillAmount:   25_000_000, // .25 BTC
 							},
 						},
 					},
@@ -1493,137 +1473,147 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrInvalidClob,
 		},
 		"Stateful order validation: subaccount has no open position for perpetual id": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+				&constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  1,
 						PerpetualId: 1,
 						TotalSize:   100_000_000,
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000,
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+								FillAmount:   25_000_000,
 							},
 						},
 					},
 				),
 			},
-			expectedError: types.ErrNoOpenPositionForPerpetual,
+			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
 		},
 		"Stateful order validation: size of liquidation order exceeds position size": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   150_000_000, // 1.5 BTC exceeding position size of 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000,
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+								FillAmount:   25_000_000,
 							},
 						},
 					},
 				),
 			},
-			expectedError: types.ErrInvalidLiquidationOrderTotalSize,
+			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
 		},
 		"Stateful order validation: liquidation order is on the wrong side": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       false,       // wrong side
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000,
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+								FillAmount:   25_000_000,
 							},
 						},
 					},
 				),
 			},
-			expectedError: types.ErrInvalidLiquidationOrderSide,
+			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
 		},
 		"Stateful match validation: clob pair and perpetual ids do not match": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-				constants.EthUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+				&constants.EthUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         types.Order_SIDE_BUY,
 						Quantums:     1000,
 						Subticks:     1000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 					},
-				},
-			},
-			clobPairs: []*types.ClobPair{
-				&constants.ClobPair_Btc,
-				&constants.ClobPair_Eth,
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  1,
 						PerpetualId: 0,           // does not match clob pair id 1
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
+								MakerOrderId: types.OrderId{
+									SubaccountId: constants.Alice_Num0,
+									ClientId:     0,
+									ClobPairId:   0,
+								},
 								FillAmount: 25_000_000, // .25 BTC
 							},
 						},
@@ -1633,16 +1623,20 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrClobPairAndPerpetualDoNotMatch,
 		},
 		"Stateful match validation: fails if collateralization check does not succeed": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
 				constants.Dave_Num0_1BTC_Long_45001USD_Short,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId: types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 0, ClobPairId: 0},
 						Side:    types.Order_SIDE_BUY,
 						// Note: This perpetual has a `MaintenanceMargin` of 100%.
@@ -1662,19 +1656,21 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 						Subticks:     100_010_000_000, // Spending 10,001 quote quantums
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 20},
 					},
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Dave_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       false,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
+								MakerOrderId: types.OrderId{
+									SubaccountId: constants.Carl_Num0,
+									ClientId:     0,
+									ClobPairId:   0,
+								},
 								FillAmount: 10,
 							},
 						},
@@ -1687,30 +1683,32 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			),
 		},
 		"Stateless match validation: self trade": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000, // .25 BTC
+								MakerOrderId: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+								FillAmount:   25_000_000, // .25 BTC
 							},
 						},
 					},
@@ -1719,79 +1717,84 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: errors.New("Match constitutes a self-trade"),
 		},
 		"Stateless match validation: fillAmount must be greater than 0": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-				{
-					Order: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 0,
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+								FillAmount:   0,
 							},
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
-								FillAmount: 100,
+								MakerOrderId: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50000_GTB12.OrderId,
+								FillAmount:   100,
 							},
 						},
 					},
 				),
 			},
-			expectedError: errors.New("fillAmount must be greater than 0"),
+			expectedError: types.ErrFillAmountIsZero,
 		},
 		"Stateless match validation: clobPairIds do not match": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-				constants.EthUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+				&constants.EthUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 1},
 						Side:         types.Order_SIDE_BUY,
 						Quantums:     1000,
 						Subticks:     1000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 					},
-				},
-			},
-			clobPairs: []*types.ClobPair{
-				&constants.ClobPair_Btc,
-				&constants.ClobPair_Eth,
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,           // Corresponds to ClobPairId 0.
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
+								MakerOrderId: types.OrderId{
+									SubaccountId: constants.Alice_Num0,
+									ClientId:     0,
+									ClobPairId:   1,
+								},
 								FillAmount: 25_000_000, // .25 BTC
 							},
 						},
@@ -1801,35 +1804,41 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: errors.New("ClobPairIds do not match"),
 		},
 		"Stateless match validation: maker and taker on the same side": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD, // Buy to cover short position.
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         types.Order_SIDE_BUY,
 						Quantums:     100_000_000,
 						Subticks:     50_000_000_000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 					},
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
+								MakerOrderId: types.OrderId{
+									SubaccountId: constants.Alice_Num0,
+									ClientId:     0,
+									ClobPairId:   0,
+								},
 								FillAmount: 25_000_000, // .25 BTC
 							},
 						},
@@ -1839,35 +1848,41 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: errors.New("Orders are not on opposing sides of the book in match"),
 		},
 		"Stateless match validation: liquidation buy order doesn't cross with maker sell order": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Dave_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         types.Order_SIDE_SELL,
 						Quantums:     100_000_000,
 						Subticks:     1_000_000_000_000, // Maker order selling at $1,000,000, higher than fillable price
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 					},
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
+								MakerOrderId: types.OrderId{
+									SubaccountId: constants.Dave_Num0,
+									ClientId:     0,
+									ClobPairId:   0,
+								},
 								FillAmount: 25_000_000, // .25 BTC
 							},
 						},
@@ -1878,35 +1893,41 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError:        errors.New("Orders do not cross in match"),
 		},
 		"Stateless match validation: liquidation sell order doesn't cross with maker buy order": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
 				constants.Dave_Num0_1BTC_Long_45001USD_Short,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         types.Order_SIDE_BUY,
 						Quantums:     100_000_000,
 						Subticks:     500_000_000, // Maker order buying at $500, lower than fillable price
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 					},
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Dave_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       false,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
+								MakerOrderId: types.OrderId{
+									SubaccountId: constants.Carl_Num0,
+									ClientId:     0,
+									ClobPairId:   0,
+								},
 								FillAmount: 25_000_000, // .25 BTC
 							},
 						},
@@ -1917,30 +1938,32 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError:        errors.New("Orders do not cross in match"),
 		},
 		"Stateless match validation: minimum initial order quantums exceeds fill amount": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 50_000_000, // 0.5 BTC. Too big!
+								MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.OrderId,
+								FillAmount:   50_000_000, // 0.5 BTC. Too big!
 							},
 						},
 					},
@@ -1948,114 +1971,122 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			},
 			expectedError: errors.New("Minimum initial order quantums exceeds fill amount"),
 		},
-		"Position limit: fails when liquidation order size is greater than" +
-			" max portion of the position that can be liquidated": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				},
-			},
-			// Can only liquidate 50% of any position at most.
-			liquidationConfig: &constants.LiquidationsConfig_Position_Min10m_Max05mPpm,
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000, // 1 BTC, liquidating entire position
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 51_000_000, // 0.51 BTC
-							},
-						},
-					},
-				),
-			},
-			expectedError: types.ErrLiquidationOrderSizeGreaterThanMax,
-		},
-		"Position limit: fails when liquidation order size is smaller than min notional liquidated": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				},
-			},
-			liquidationConfig: &constants.LiquidationsConfig_Position_Min10m_Max05mPpm,
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   10_000, // $5 notional
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 10_000, // $5 notional
-							},
-						},
-					},
-				),
-			},
-			expectedError: types.ErrLiquidationOrderSizeSmallerThanMin,
-		},
+		// TODO(CLOB-816): validate liquidation order size against liquidation config
+		// position limit.
+		// "Position limit: fails when liquidation order size is greater than" +
+		// 	" max portion of the position that can be liquidated": {
+		// 	perpetuals: []*perptypes.Perpetual{
+		// 		&constants.BtcUsd_100PercentMarginRequirement,
+		// 	},
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_1BTC_Short_54999USD,
+		// 		constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	},
+		// 	perpetualFeeParams: &constants.PerpetualFeeParams,
+		// 	clobPairs: []types.ClobPair{
+		// 		constants.ClobPair_Btc,
+		// 	},
+		// 	rawOperations: []types.OperationRaw{
+		// 		clobtest.NewShortTermOrderPlacementOperationRaw(
+		// 			constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
+		// 		),
+		// 		clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+		// 			types.MatchPerpetualLiquidation{
+		// 				Liquidated:  constants.Carl_Num0,
+		// 				ClobPairId:  0,
+		// 				PerpetualId: 0,
+		// 				TotalSize:   100_000_000, // 1 BTC, liquidating entire position
+		// 				IsBuy:       true,
+		// 				Fills: []types.MakerFill{
+		// 					{
+		// 						MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+		// 						FillAmount:   51_000_000, // 0.51 BTC
+		// 					},
+		// 				},
+		// 			},
+		// 		),
+		// 	},
+		// 	// Can only liquidate 50% of any position at most.
+		// 	liquidationConfig: &constants.LiquidationsConfig_Position_Min10m_Max05mPpm,
+		// 	expectedError:     types.ErrLiquidationOrderSizeGreaterThanMax,
+		// },
+		// "Position limit: fails when liquidation order size is smaller than min notional liquidated": {
+		// 	perpetuals: []*perptypes.Perpetual{
+		// 		&constants.BtcUsd_100PercentMarginRequirement,
+		// 	},
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_1BTC_Short_54999USD,
+		// 		constants.Dave_Num0_1BTC_Long_50000USD,
+		// 	},
+		// 	perpetualFeeParams: &constants.PerpetualFeeParams,
+		// 	clobPairs: []types.ClobPair{
+		// 		constants.ClobPair_Btc,
+		// 	},
+		// 	rawOperations: []types.OperationRaw{
+		// 		clobtest.NewShortTermOrderPlacementOperationRaw(
+		// 			constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
+		// 		),
+		// 		clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+		// 			types.MatchPerpetualLiquidation{
+		// 				Liquidated:  constants.Carl_Num0,
+		// 				ClobPairId:  0,
+		// 				PerpetualId: 0,
+		// 				TotalSize:   10_000, // $5 notional
+		// 				IsBuy:       true,
+		// 				Fills: []types.MakerFill{
+		// 					{
+		// 						MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+		// 						FillAmount:   10_000, // $5 notional
+		// 					},
+		// 				},
+		// 			},
+		// 		),
+		// 	},
+		// 	liquidationConfig: &constants.LiquidationsConfig_Position_Min10m_Max05mPpm,
+		// 	expectedError:     types.ErrLiquidationOrderSizeSmallerThanMin,
+		// },
 		"Subaccount block limit: fails when trying to liquidate the same perpetual id": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 50_000_000, // 0.50 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+								FillAmount:   50_000_000, // 0.50 BTC
 							},
 						},
 					},
 				),
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   50_000_000, // 0.5 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 50_000_000, // 0.50 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+								FillAmount:   50_000_000, // 0.50 BTC
 							},
 						},
 					},
@@ -2064,52 +2095,73 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrSubaccountHasLiquidatedPerpetual,
 		},
 		"Subaccount block limit: fails when liquidation exceeds subaccount notional amount limit": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			liquidationConfig: &constants.LiquidationsConfig_Subaccount_Max10bNotionalLiquidated_Max10bInsuranceLost,
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 50_000_000, // 0.50 BTC, $25,000 notional
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
+								FillAmount:   50_000_000, // 0.50 BTC, $25,000 notional
 							},
 						},
 					},
 				),
 			},
-			expectedError: types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+			liquidationConfig: &constants.LiquidationsConfig_Subaccount_Max10bNotionalLiquidated_Max10bInsuranceLost,
+			expectedError:     types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
 		},
 		"Subaccount block limit: fails when a single liquidation fill exceeds max insurance lost block limit": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Bankruptcy price in quote quantums is $50499 for 1 BTC.
 					// When subticks is $50,500, the insurance fund delta is -$1.
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
-				},
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
+						Liquidated:  constants.Carl_Num0,
+						ClobPairId:  0,
+						PerpetualId: 0,
+						TotalSize:   100_000_000, // 1 BTC
+						IsBuy:       true,
+						Fills: []types.MakerFill{
+							{
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId,
+								FillAmount:   100_000_000, // 1 BTC
+							},
+						},
+					},
+				),
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
@@ -2121,42 +2173,48 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 				},
 			},
 			insuranceFundBalance: math.MaxUint64,
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			expectedError:        types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
+		},
+		"Subaccount block limit: fails when insurance lost from multiple liquidation fills exceed block limit": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					// Insurance fund delta is -$0.25.
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11,
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					// Insurance fund delta is -$0.25.
+					constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 100_000_000, // 1 BTC
+								MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11.OrderId,
+								FillAmount:   25_000_000, // 0.25 BTC
+							},
+							{
+								MakerOrderId: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12.OrderId,
+								FillAmount:   25_000_000, // 0.25 BTC
 							},
 						},
 					},
 				),
-			},
-			expectedError: types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
-		},
-		"Subaccount block limit: fails when insurance lost from multiple liquidation fills exceed block limit": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					// Insurance fund delta is -$0.25.
-					Order: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11,
-				},
-				{
-					// Insurance fund delta is -$0.25.
-					Order: constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
-				},
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
@@ -2168,58 +2226,68 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 				},
 			},
 			insuranceFundBalance: math.MaxUint64,
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000, // 1 BTC
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000, // 0.25 BTC
-							},
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
-								FillAmount: 25_000_000, // 0.25 BTC
-							},
-						},
-					},
-				),
-			},
-			expectedError: types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
+			expectedError:        types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 		},
 		"Liquidation checks insurance fund delta for individual fills and not the entire liquidation order": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Above bankruptcy price.
-					Order: types.Order{
+					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Dave_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         types.Order_SIDE_SELL,
 						Quantums:     25_000_000,
 						Subticks:     50_498_000_000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
 					},
-				},
-				{
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Below bankruptcy price.
-					Order: types.Order{
+					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Dave_Num0, ClientId: 2, ClobPairId: 0},
 						Side:         types.Order_SIDE_SELL,
 						Quantums:     75_000_000,
 						Subticks:     50_500_000_000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 12},
 					},
-				},
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
+						Liquidated:  constants.Carl_Num0,
+						ClobPairId:  0,
+						PerpetualId: 0,
+						TotalSize:   100_000_000, // 1 BTC
+						IsBuy:       true,
+						Fills: []types.MakerFill{
+							{
+								MakerOrderId: types.OrderId{
+									SubaccountId: constants.Dave_Num0,
+									ClientId:     0,
+									ClobPairId:   0,
+								},
+								FillAmount: 25_000_000, // .25 BTC, insurance fund delta is $0.25.
+							},
+							{
+								MakerOrderId: types.OrderId{
+									SubaccountId: constants.Dave_Num0,
+									ClientId:     2,
+									ClobPairId:   0,
+								},
+								FillAmount: 75_000_000, // .75 BTC, insurance fund delta is -$0.75
+							},
+						},
+					},
+				),
 			},
 			insuranceFundBalance: 10_000_000,
 			liquidationConfig: &types.LiquidationsConfig{
@@ -2228,32 +2296,11 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxNotionalLiquidated: math.MaxUint64,
-					// Max insuracen lost that a subaccount can have is $0.5.
+					// Max insurance lost that a subaccount can have is $0.5.
 					// For this liquidation, overall insurance fund delta is -$0.5, which is within the limit.
 					// but the delta for the second fill is -$0.75, therefore, still considered to be exceeding the limit.
 					MaxQuantumsInsuranceLost: 500_000,
 				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000, // 1 BTC
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 25_000_000, // .25 BTC, insurance fund delta is $0.25.
-							},
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 1},
-								FillAmount: 75_000_000, // .75 BTC, insurance fund delta is -$0.75
-							},
-						},
-					},
-				),
 			},
 			expectedError: types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 		},
@@ -2261,97 +2308,120 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			runProcessProposerMatchFailureTest(t, tc)
+			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
 }
 
 func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
-	tests := map[string]processProposerMatchesTestCase{
+	tests := map[string]processProposerOperationsTestCase{
 		"Fails when insurance fund is empty": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Bankruptcy price in quote quantums is $50499 for 1 BTC.
 					// When subticks is $50,500, the insurance fund delta is -$1.
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
-				},
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
+						Liquidated:  constants.Carl_Num0,
+						ClobPairId:  0,
+						PerpetualId: 0,
+						TotalSize:   100_000_000,
+						IsBuy:       true,
+						Fills: []types.MakerFill{
+							{
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId,
+								FillAmount:   100_000_000,
+							},
+						},
+					},
+				),
 			},
 			insuranceFundBalance: 0, // Insurance fund is empty
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000,
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 100_000_000,
-							},
-						},
-					},
-				),
-			},
-			expectedError: types.ErrInsuranceFundHasInsufficientFunds,
+			expectedError:        types.ErrInsuranceFundHasInsufficientFunds,
 		},
 		"Fails when insurance fund is non empty but does not have enough to cover liquidation": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Bankruptcy price in quote quantums is $50499 for 1 BTC.
 					// When subticks is $50,500, the insurance fund delta is -$1.
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
-				},
-			},
-			insuranceFundBalance: 999_999, // Insurance fund only has $0.999999
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000,
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 100_000_000,
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId,
+								FillAmount:   100_000_000,
 							},
 						},
 					},
 				),
 			},
-			expectedError: types.ErrInsuranceFundHasInsufficientFunds,
+			insuranceFundBalance: 999_999, // Insurance fund only has $0.999999
+			expectedError:        types.ErrInsuranceFundHasInsufficientFunds,
 		},
 		"Fails when insurance fund has enough balance but is less than MaxInsuranceFundQuantumsForDeleveraging": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
 					// Bankruptcy price in quote quantums is $50499 for 1 BTC.
 					// When subticks is $50,500, the insurance fund delta is -$1.
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
-				},
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
+				),
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
+						Liquidated:  constants.Carl_Num0,
+						ClobPairId:  0,
+						PerpetualId: 0,
+						TotalSize:   100_000_000,
+						IsBuy:       true,
+						Fills: []types.MakerFill{
+							{
+								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId,
+								FillAmount:   100_000_000,
+							},
+						},
+					},
+				),
 			},
 			insuranceFundBalance: 2_000_000, // Insurance fund has $2
 			liquidationConfig: &types.LiquidationsConfig{
@@ -2361,32 +2431,13 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 				PositionBlockLimits:                     constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits:                   constants.SubaccountBlockLimits_No_Limit,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000,
-						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
-							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderIndex{MakerOrderIndex: 0},
-								FillAmount: 100_000_000,
-							},
-						},
-					},
-				),
-			},
 			expectedError: types.ErrInsuranceFundHasInsufficientFunds,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			runProcessProposerMatchFailureTest(t, tc)
+			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
 }
-
-*/

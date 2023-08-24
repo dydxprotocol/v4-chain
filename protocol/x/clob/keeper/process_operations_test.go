@@ -42,6 +42,9 @@ type processProposerOperationsTestCase struct {
 	triggeredConditionalOrders []types.Order
 	rawOperations              []types.OperationRaw
 
+	setupState          func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext)
+	setupMockBankKeeper func(bk *mocks.BankKeeper)
+
 	// Liquidation specific setup.
 	liquidationConfig    *types.LiquidationsConfig
 	insuranceFundBalance uint64
@@ -51,8 +54,10 @@ type processProposerOperationsTestCase struct {
 	// the operations field above.
 	expectedProcessProposerMatchesEvents types.ProcessProposerMatchesEvents
 	expectedMatches                      []*MatchWithOrdersForTesting
+	expectedFillAmounts                  map[types.OrderId]satypes.BaseQuantums
 	expectedQuoteBalances                map[satypes.SubaccountId]int64
 	expectedPerpetualPositions           map[satypes.SubaccountId][]*satypes.PerpetualPosition
+	expectedSubaccountLiquidationInfo    map[satypes.SubaccountId]types.SubaccountLiquidationInfo
 	expectedError                        error
 	expectedPanics                       string
 }
@@ -1178,164 +1183,7 @@ func TestProcessProposerOperations(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockBankKeeper := &mocks.BankKeeper{}
-			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
-				mock.Anything,
-				mock.Anything,
-				mock.Anything,
-				mock.Anything,
-			).Return(nil)
-			mockBankKeeper.On(
-				"GetBalance",
-				mock.Anything,
-				mock.Anything,
-				mock.Anything,
-			).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(tc.insuranceFundBalance)))
-
-			mockIndexerEventManager := &mocks.IndexerEventManager{}
-			// This memclob is not used in the test since DeliverTx creates a new memclob to replay
-			// operations on.
-			ks := keepertest.NewClobKeepersTestContext(
-				t,
-				memclob.NewMemClobPriceTimePriority(false),
-				mockBankKeeper,
-				mockIndexerEventManager,
-			)
-
-			// set DeliverTx mode.
-			ctx := ks.Ctx.WithIsCheckTx(false)
-
-			// Assert Indexer messages
-			setupNewMockEventManager(
-				t,
-				ctx,
-				mockIndexerEventManager,
-				tc.expectedMatches,
-				tc.rawOperations,
-			)
-
-			// Create the default markets.
-			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
-
-			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
-
-			require.NotNil(t, tc.perpetualFeeParams)
-			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, *tc.perpetualFeeParams))
-
-			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
-			require.NoError(t, err)
-
-			// Create all perpetuals.
-			for _, p := range tc.perpetuals {
-				_, err := ks.PerpetualsKeeper.CreatePerpetual(
-					ctx,
-					p.Params.Ticker,
-					p.Params.MarketId,
-					p.Params.AtomicResolution,
-					p.Params.DefaultFundingPpm,
-					p.Params.LiquidityTier,
-				)
-				require.NoError(t, err)
-			}
-
-			// Create all subaccounts.
-			for _, subaccount := range tc.subaccounts {
-				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
-			}
-
-			// Create all CLOBs.
-			for _, clobPair := range tc.clobPairs {
-				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
-					ctx,
-					clobtest.MustPerpetualId(clobPair),
-					satypes.BaseQuantums(clobPair.StepBaseQuantums),
-					clobPair.QuantumConversionExponent,
-					clobPair.SubticksPerTick,
-					clobPair.Status,
-				)
-				require.NoError(t, err)
-			}
-
-			// Initialize the liquidations config.
-			if tc.liquidationConfig != nil {
-				require.NoError(t, ks.ClobKeeper.InitializeLiquidationsConfig(ctx, *tc.liquidationConfig))
-			} else {
-				require.NoError(t, ks.ClobKeeper.InitializeLiquidationsConfig(ctx, constants.LiquidationsConfig_No_Limit))
-			}
-
-			// Create all pre-existing stateful orders in state. Duplicate orders are not allowed.
-			// We don't need to set the stateful order placement in memclob because the deliverTx flow
-			// will create its own memclob.
-			seenOrderIds := make(map[types.OrderId]struct{})
-			for _, order := range tc.preExistingStatefulOrders {
-				_, exists := seenOrderIds[order.GetOrderId()]
-				require.Falsef(t, exists, "Duplicate pre-existing stateful order (+%v)", order)
-				seenOrderIds[order.GetOrderId()] = struct{}{}
-				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
-					ctx,
-					order.MustGetUnixGoodTilBlockTime(),
-					order.OrderId,
-				)
-			}
-
-			for _, order := range tc.triggeredConditionalOrders {
-				_, exists := seenOrderIds[order.GetOrderId()]
-				require.Falsef(t, exists, "Duplicate pre-existing stateful order (+%v)", order)
-				seenOrderIds[order.GetOrderId()] = struct{}{}
-				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
-					ctx,
-					order.MustGetUnixGoodTilBlockTime(),
-					order.OrderId,
-				)
-
-				ks.ClobKeeper.MustTriggerConditionalOrder(ctx, order.OrderId)
-			}
-
-			// Set the block time on the context and of the last committed block.
-			ctx = ctx.WithBlockTime(time.Unix(5, 0)).WithBlockHeight(int64(blockHeight))
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
-
-			// Run the DeliverTx ProcessProposerOperations flow.
-			if tc.expectedPanics != "" {
-				require.PanicsWithValue(t, tc.expectedPanics, func() {
-					_ = ks.ClobKeeper.ProcessProposerOperations(ctx, tc.rawOperations)
-				})
-				return
-			}
-
-			err = ks.ClobKeeper.ProcessProposerOperations(ctx, tc.rawOperations)
-			if tc.expectedError != nil {
-				require.ErrorContains(t, err, tc.expectedError.Error())
-			} else {
-				require.NoError(t, err)
-			}
-
-			// Verify that processProposerMatchesEvents is the same.
-			processProposerMatchesEvents := ks.ClobKeeper.GetProcessProposerMatchesEvents(ctx)
-			require.Equal(t, tc.expectedProcessProposerMatchesEvents, processProposerMatchesEvents)
-
-			// Verify that newly-placed stateful orders were written to state.
-			for _, newlyPlacedStatefulOrderId := range processProposerMatchesEvents.PlacedLongTermOrderIds {
-				_, exists := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, newlyPlacedStatefulOrderId)
-				require.Truef(t, exists, "order with ID (%+v) was not placed in state.", newlyPlacedStatefulOrderId)
-			}
-
-			// Verify that removed stateful orders were in fact removed from state.
-			for _, removedStatefulOrderId := range processProposerMatchesEvents.RemovedStatefulOrderIds {
-				_, exists := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, removedStatefulOrderId)
-				require.Falsef(t, exists, "order (%+v) was not removed from state.", removedStatefulOrderId)
-			}
-
-			// Verify subaccount state.
-			assertSubaccountState(t, ctx, ks.SubaccountsKeeper, tc.expectedQuoteBalances, tc.expectedPerpetualPositions)
-
-			mockIndexerEventManager.AssertExpectations(t)
-
-			// TODO(CLOB-230) Add more assertions.
+			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
 }
@@ -1509,6 +1357,243 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 			require.Equal(t, tc.expectedProcessProposerMatchesEvents, processProposerMatchesEvents)
 		})
 	}
+}
+
+func setupProcessProposerOperationsTestCase(
+	t *testing.T,
+	tc processProposerOperationsTestCase,
+) (
+	ctx sdk.Context,
+	ks keepertest.ClobKeepersTestContext,
+	mockIndexerEventManager *mocks.IndexerEventManager,
+) {
+	blockHeight := tc.expectedProcessProposerMatchesEvents.BlockHeight
+
+	mockBankKeeper := &mocks.BankKeeper{}
+	if tc.setupMockBankKeeper != nil {
+		tc.setupMockBankKeeper(mockBankKeeper)
+	} else {
+		mockBankKeeper.On(
+			"SendCoinsFromModuleToModule",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).Return(nil)
+		mockBankKeeper.On(
+			"GetBalance",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(tc.insuranceFundBalance)))
+	}
+
+	mockIndexerEventManager = &mocks.IndexerEventManager{}
+	// This memclob is not used in the test since DeliverTx creates a new memclob to replay
+	// operations on.
+	ks = keepertest.NewClobKeepersTestContext(
+		t,
+		memclob.NewMemClobPriceTimePriority(false),
+		mockBankKeeper,
+		mockIndexerEventManager,
+	)
+
+	// set DeliverTx mode.
+	ctx = ks.Ctx.WithIsCheckTx(false)
+
+	// Assert Indexer messages
+	if tc.expectedError == nil && tc.expectedPanics == "" && len(tc.expectedMatches) > 0 {
+		setupNewMockEventManager(
+			t,
+			ctx,
+			mockIndexerEventManager,
+			tc.expectedMatches,
+			tc.rawOperations,
+		)
+	} else {
+		mockIndexerEventManager.On("Enabled").Return(false).Maybe()
+		mockIndexerEventManager.On("AddTxnEvent",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).Return().Maybe()
+	}
+
+	// Create the default markets.
+	keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+	// Create liquidity tiers.
+	keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+	require.NotNil(t, tc.perpetualFeeParams)
+	require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, *tc.perpetualFeeParams))
+
+	err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+	require.NoError(t, err)
+
+	// Create all perpetuals.
+	for _, p := range tc.perpetuals {
+		_, err := ks.PerpetualsKeeper.CreatePerpetual(
+			ctx,
+			p.Params.Ticker,
+			p.Params.MarketId,
+			p.Params.AtomicResolution,
+			p.Params.DefaultFundingPpm,
+			p.Params.LiquidityTier,
+		)
+		require.NoError(t, err)
+	}
+
+	// Create all subaccounts.
+	for _, subaccount := range tc.subaccounts {
+		ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
+	}
+
+	// Create all CLOBs.
+	for i, clobPair := range tc.clobPairs {
+		perpetualId := clobtest.MustPerpetualId(clobPair)
+		// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+		// the indexer event manager to expect these events.
+		if tc.expectedError == nil && tc.expectedPanics == "" && len(tc.expectedMatches) > 0 {
+			mockIndexerEventManager.On("AddTxnEvent",
+				mock.Anything,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						perpetualId,
+						uint32(i),
+						tc.perpetuals[perpetualId].Params.Ticker,
+						tc.perpetuals[perpetualId].Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						tc.perpetuals[perpetualId].Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.MinOrderBaseQuantums,
+						clobPair.StepBaseQuantums,
+						tc.perpetuals[perpetualId].Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
+		}
+
+		_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+			ctx,
+			clobtest.MustPerpetualId(clobPair),
+			satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
+			satypes.BaseQuantums(clobPair.StepBaseQuantums),
+			clobPair.QuantumConversionExponent,
+			clobPair.SubticksPerTick,
+			clobPair.Status,
+		)
+		require.NoError(t, err)
+	}
+
+	// Initialize the liquidations config.
+	if tc.liquidationConfig != nil {
+		require.NoError(t, ks.ClobKeeper.InitializeLiquidationsConfig(ctx, *tc.liquidationConfig))
+	} else {
+		require.NoError(t, ks.ClobKeeper.InitializeLiquidationsConfig(ctx, constants.LiquidationsConfig_No_Limit))
+	}
+
+	if tc.setupState != nil {
+		tc.setupState(ctx, ks)
+	}
+
+	// Create all pre-existing stateful orders in state. Duplicate orders are not allowed.
+	// We don't need to set the stateful order placement in memclob because the deliverTx flow
+	// will create its own memclob.
+	seenOrderIds := make(map[types.OrderId]struct{})
+	for _, order := range tc.preExistingStatefulOrders {
+		_, exists := seenOrderIds[order.GetOrderId()]
+		require.Falsef(t, exists, "Duplicate pre-existing stateful order (+%v)", order)
+		seenOrderIds[order.GetOrderId()] = struct{}{}
+		ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
+		ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+			ctx,
+			order.MustGetUnixGoodTilBlockTime(),
+			order.OrderId,
+		)
+	}
+
+	for _, order := range tc.triggeredConditionalOrders {
+		_, exists := seenOrderIds[order.GetOrderId()]
+		require.Falsef(t, exists, "Duplicate pre-existing stateful order (+%v)", order)
+		seenOrderIds[order.GetOrderId()] = struct{}{}
+		ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
+		ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+			ctx,
+			order.MustGetUnixGoodTilBlockTime(),
+			order.OrderId,
+		)
+
+		ks.ClobKeeper.MustTriggerConditionalOrder(ctx, order.OrderId)
+	}
+
+	// Set the block time on the context and of the last committed block.
+	ctx = ctx.WithBlockTime(time.Unix(5, 0)).WithBlockHeight(int64(blockHeight))
+	ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+
+	return ctx, ks, mockIndexerEventManager
+}
+
+func runProcessProposerOperationsTestCase(
+	t *testing.T,
+	tc processProposerOperationsTestCase,
+) (
+	ctx sdk.Context,
+	ks keepertest.ClobKeepersTestContext,
+) {
+	ctx, ks, mockIndexerEventManager := setupProcessProposerOperationsTestCase(t, tc)
+
+	if tc.expectedPanics != "" {
+		require.PanicsWithValue(t, tc.expectedPanics, func() {
+			_ = ks.ClobKeeper.ProcessProposerOperations(ctx, tc.rawOperations)
+		})
+		return ctx, ks
+	}
+
+	err := ks.ClobKeeper.ProcessProposerOperations(ctx, tc.rawOperations)
+	if tc.expectedError != nil {
+		require.ErrorContains(t, err, tc.expectedError.Error())
+		return ctx, ks
+	} else {
+		require.NoError(t, err)
+	}
+
+	// Verify that processProposerMatchesEvents is the same.
+	processProposerMatchesEvents := ks.ClobKeeper.GetProcessProposerMatchesEvents(ctx)
+	require.Equal(t, tc.expectedProcessProposerMatchesEvents, processProposerMatchesEvents)
+
+	// Verify that newly-placed stateful orders were written to state.
+	for _, newlyPlacedStatefulOrderId := range processProposerMatchesEvents.PlacedLongTermOrderIds {
+		_, exists := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, newlyPlacedStatefulOrderId)
+		require.Truef(t, exists, "order with ID (%+v) was not placed in state.", newlyPlacedStatefulOrderId)
+	}
+
+	// Verify that removed stateful orders were in fact removed from state.
+	for _, removedStatefulOrderId := range processProposerMatchesEvents.RemovedStatefulOrderIds {
+		_, exists := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, removedStatefulOrderId)
+		require.Falsef(t, exists, "order (%+v) was not removed from state.", removedStatefulOrderId)
+	}
+
+	// Verify subaccount liquidation info.
+	for subaccountId, expected := range tc.expectedSubaccountLiquidationInfo {
+		actual := ks.ClobKeeper.GetSubaccountLiquidationInfo(ctx, subaccountId)
+		require.Equal(t, expected, actual)
+	}
+
+	// Verify subaccount state.
+	assertSubaccountState(t, ctx, ks.SubaccountsKeeper, tc.expectedQuoteBalances, tc.expectedPerpetualPositions)
+
+	for orderId, fillAmount := range tc.expectedFillAmounts {
+		_, actualFillAmount, _ := ks.ClobKeeper.GetOrderFillAmount(ctx, orderId)
+		require.Equal(t, fillAmount, actualFillAmount)
+	}
+
+	mockIndexerEventManager.AssertExpectations(t)
+
+	// TODO(CLOB-230) Add more assertions.
+	return ctx, ks
 }
 
 func setupNewMockEventManager(

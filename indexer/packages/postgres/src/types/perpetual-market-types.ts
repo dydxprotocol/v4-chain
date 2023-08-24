@@ -80,4 +80,5 @@ export enum PerpetualMarketStatus {
   PAUSED = 'PAUSED',
   CANCEL_ONLY = 'CANCEL_ONLY',
   POST_ONLY = 'POST_ONLY',
+  INITIALIZING = 'INITIALIZING',
 }

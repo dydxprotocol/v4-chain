@@ -663,7 +663,8 @@
           "ACTIVE",
           "PAUSED",
           "CANCEL_ONLY",
-          "POST_ONLY"
+          "POST_ONLY",
+          "INITIALIZING"
         ],
         "type": "string"
       },

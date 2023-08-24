@@ -2,7 +2,7 @@ import { stats, delay, logger } from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import * as MarketTable from '../stores/market-table';
-import { MarketFromDatabase, MarketsMap } from '../types';
+import { MarketFromDatabase, MarketsMap, Options } from '../types';
 
 let idToMarket: MarketsMap = {};
 
@@ -19,12 +19,12 @@ export async function start(): Promise<void> {
 /**
  * Updates in-memory map of markets.
  */
-export async function updateMarkets(): Promise<void> {
+export async function updateMarkets(options?: Options): Promise<void> {
   const startTime: number = Date.now();
   const markets: MarketFromDatabase[] = await MarketTable.findAll(
     {},
     [],
-    { readReplica: true },
+    options || { readReplica: true },
   );
 
   const tmpIdToMarket: Record<string, MarketFromDatabase> = {};
