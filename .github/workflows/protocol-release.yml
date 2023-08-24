@@ -60,7 +60,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dydxprotocold-${{ env.VERSION }}-linux-amd64.tar.gz
+          asset_path: protocol/dydxprotocold-${{ env.VERSION }}-linux-amd64.tar.gz
           asset_name: dydxprotocold-${{ env.VERSION }}-linux-amd64.tar.gz
           asset_content_type: application/gzip
       - name: Upload linux-arm64 tar.gz
@@ -69,7 +69,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dydxprotocold-${{ env.VERSION }}-linux-arm64.tar.gz
+          asset_path: protocol/dydxprotocold-${{ env.VERSION }}-linux-arm64.tar.gz
           asset_name: dydxprotocold-${{ env.VERSION }}-linux-arm64.tar.gz
           asset_content_type: application/gzip
           # TODO(DEC-1743): add build report and binary check sums
@@ -107,7 +107,7 @@ jobs:
         run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | tr '-' '.')" >> $GITHUB_ENV
 
       - name: Update version in setup.py
-        run: echo $VERSION; sed -i "s/{{VERSION}}/$VERSION/g" setup.py
+        run: echo $VERSION; sed -i "s/0.0.0/$VERSION/g" setup.py
 
       - name: Build package and source tarball
         run: |
