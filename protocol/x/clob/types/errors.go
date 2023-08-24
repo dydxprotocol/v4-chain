@@ -158,6 +158,11 @@ var (
 		33,
 		"Order conflicts with ClobPair status",
 	)
+	ErrInvalidMsgSetClobPairStatus = sdkerrors.Register(
+		ModuleName,
+		34,
+		"MsgSetClobPairStatus is invalid",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(

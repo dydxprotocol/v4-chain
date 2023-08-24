@@ -80,6 +80,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.delaymsg.MsgDelayMessage",
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse",
 
+		// clob
+		"/dydxprotocol.clob.MsgSetClobPairStatus",
+		"/dydxprotocol.clob.MsgSetClobPairStatusResponse",
+
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
