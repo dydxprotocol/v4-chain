@@ -15,13 +15,15 @@ import (
 )
 
 var (
-	BridgeAuthority = authtypes.NewModuleAddress(bridgetypes.ModuleName).String()
+	BridgeAuthority      = authtypes.NewModuleAddress(bridgetypes.ModuleName).String()
+	BridgeAccountAddress = sdk.MustAccAddressFromBech32(BridgeAuthority)
 
 	BridgeGenesisAccountBalance = sdk.NewCoin("dv4tnt", sdk.NewInt(1000000000))
 	AliceInitialAccountBalance  = sdk.NewCoin("dv4tnt", sdk.NewInt(99500000000))
 
-	BridgeExpectdAccountBalance = sdk.NewCoin("dv4tnt", sdk.NewInt(1000000000-888))
-	AliceExpectedAccountBalance = sdk.NewCoin("dv4tnt", sdk.NewInt(99500000000+888))
+	delta                        = constants.BridgeEvent_Id0_Height0.Coin.Amount.Int64()
+	BridgeExpectedAccountBalance = sdk.NewCoin("dv4tnt", sdk.NewInt(1000000000-delta))
+	AliceExpectedAccountBalance  = sdk.NewCoin("dv4tnt", sdk.NewInt(99500000000+delta))
 )
 
 func TestDispatchMessagesForBlock(t *testing.T) {
@@ -63,8 +65,20 @@ func generateBridgeEventMsgBytes(t *testing.T, event bridgetypes.BridgeEvent) []
 	return bytes
 }
 
+func expectAccountBalance(
+	t *testing.T,
+	ctx sdk.Context,
+	tApp testapp.TestApp,
+	address sdk.AccAddress,
+	expectedBalance sdk.Coin,
+) {
+	balance := tApp.App.BankKeeper.GetBalance(ctx, address, expectedBalance.Denom)
+	require.Equal(t, expectedBalance.Amount, balance.Amount)
+	require.Equal(t, expectedBalance.Denom, balance.Denom)
+}
+
 func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
-	// Create an encoded bridge event set to occur at block 10.
+	// Create an encoded bridge event set to occur at block 2.
 	// Expect that Alice's account will increase by 888 coins at block 1.
 	// Bridge module account will also decrease by 888 coins at block 1.
 	delayedMessage := types.DelayedMessage{
@@ -87,34 +101,16 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	}).WithTesting(t).Build()
 	ctx := tApp.InitChain()
 
-	bridgeAccountAddress := sdk.MustAccAddressFromBech32(BridgeAuthority)
 	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
-	denom := constants.BridgeEvent_Id0_Height0.Coin.Denom
 
-	bridgeAccountBalance := tApp.App.BankKeeper.GetBalance(ctx, bridgeAccountAddress, denom)
-	aliceAccountBalance := tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, denom)
-	t.Log("BridgeAccountAddress", bridgeAccountAddress)
-	t.Log("AliceAccountAddress", constants.BridgeEvent_Id0_Height0.Address)
-	t.Log("BridgeAccountBalance", bridgeAccountBalance)
-	t.Log("AliceAccountBalance", aliceAccountBalance)
+	// Sanity check: at block 1, balances are as expected before the message is sent.
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, aliceAccountAddress, AliceInitialAccountBalance)
 
-	// Sanity check: balances are as expected before the message is sent.
-	require.Equal(t, BridgeGenesisAccountBalance.Amount, bridgeAccountBalance.Amount)
-	require.Equal(t, BridgeGenesisAccountBalance.Denom, bridgeAccountBalance.Denom)
-	require.Equal(t, AliceInitialAccountBalance.Amount, aliceAccountBalance.Amount)
-	require.Equal(t, AliceInitialAccountBalance.Denom, aliceAccountBalance.Denom)
+	// Advance to block 2 and invoke delayed message to complete bridge.
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
-	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
-
-	bridgeAccountBalance = tApp.App.BankKeeper.GetBalance(ctx, bridgeAccountAddress, denom)
-	aliceAccountBalance = tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, denom)
-
-	t.Log("BridgeAccountBalance", bridgeAccountBalance)
-	t.Log("AliceAccountBalance", aliceAccountBalance)
-
-	// Sanity check: balances are as expected before the message is sent.
-	//require.Equal(t, BridgeExpectdAccountBalance.Amount, bridgeAccountBalance.Amount)
-	require.Equal(t, BridgeExpectdAccountBalance.Denom, bridgeAccountBalance.Denom)
-	require.Equal(t, AliceExpectedAccountBalance.Amount, aliceAccountBalance.Amount)
-	require.Equal(t, AliceExpectedAccountBalance.Denom, aliceAccountBalance.Denom)
+	// Assert: balances have been updated to reflect the executed CompleteBridge message.
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
+	expectAccountBalance(t, ctx, tApp, aliceAccountAddress, AliceExpectedAccountBalance)
 }

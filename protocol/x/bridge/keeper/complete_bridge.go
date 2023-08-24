@@ -29,14 +29,6 @@ func (k Keeper) CompleteBridge(
 		return err
 	}
 
-	balance := k.bankKeeper.GetBalance(ctx, bridgeAccAddress, bridge.Coin.Denom)
-	bridgeBalance := k.bankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(k.GetBridgeAuthority()), bridge.Coin.Denom)
-	k.Logger(ctx).Info("completing bridge: initial balance",
-		"recipient_balance", balance,
-		"recipient_address", bridgeAccAddress,
-		"bridge_account_balance", bridgeBalance,
-	)
-
 	// Send coin from bridge module account to specified account.
 	if err = k.bankKeeper.SendCoinsFromModuleToAccount(
 		ctx,
@@ -46,15 +38,6 @@ func (k Keeper) CompleteBridge(
 	); err != nil {
 		return err
 	}
-
-	balance = k.bankKeeper.GetBalance(ctx, bridgeAccAddress, bridge.Coin.Denom)
-	bridgeBalance = k.bankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(k.GetBridgeAuthority()), bridge.Coin.Denom)
-
-	k.Logger(ctx).Info("completing bridge: final balance",
-		"recipient_balance", balance,
-		"recipient_address", bridgeAccAddress,
-		"bridge_account_balance", bridgeBalance,
-	)
 
 	// Emit metric on last completed bridge id.
 	telemetry.SetGauge(
