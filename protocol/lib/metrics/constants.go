@@ -111,7 +111,7 @@ const (
 	NumShortTermOrderTxBytes                     = "num_short_term_order_tx_bytes"
 	OffsettingSubaccountPerpetualPosition        = "offsetting_subaccount_perpetual_position"
 	OperationsQueueLength                        = "operations_queue_length"
-	OrderConflictsWithClobPairStatus			 = "order_conflicts_with_clob_pair_status"
+	OrderConflictsWithClobPairStatus             = "order_conflicts_with_clob_pair_status"
 	OrderFlag                                    = "order_flag"
 	OrderSide                                    = "order_side"
 	PlaceOrder                                   = "place_order"
