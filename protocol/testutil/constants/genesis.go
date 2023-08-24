@@ -342,6 +342,10 @@ const GenesisState = `{
         "denom": "dv4tnt"
       }
     },
+    "delaymsg": {
+      "num_messages": "0",
+      "delayed_messages": []
+    },
     "distribution": {
       "delegator_starting_infos": [],
       "delegator_withdraw_infos": [],

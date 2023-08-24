@@ -202,6 +202,7 @@ func (validator *operationsQueueValidator) validateShortTermOrderPlacementOperat
 // This validation does not perform any state reads, or memclob reads.
 //
 // The following validation occurs in this method:
+//   - Match has at least one fill.
 //   - For all fills, The fill amount is not zero.
 //   - For all fills, maker order ids must be previously placed in an operation.
 //   - Taker order id must be previously placed in an operation.
@@ -210,6 +211,14 @@ func (validator *operationsQueueValidator) validateMatchOrdersOperation(
 	matchOrders *MatchOrders,
 ) error {
 	fills := matchOrders.GetFills()
+	if len(fills) == 0 {
+		return sdkerrors.Wrapf(
+			ErrInvalidMatchOrder,
+			"Match has no fills: %+v",
+			matchOrders,
+		)
+	}
+
 	makerOrderIdSet := make(map[OrderId]struct{}, len(fills))
 	takerOrderId := matchOrders.GetTakerOrderId()
 
@@ -261,23 +270,30 @@ func (validator *operationsQueueValidator) validateMatchOrdersOperation(
 // The following validation occurs in this method:
 //   - The total size of liquidation order is not zero.
 //   - FillAmounts is not zero.
+//   - Liquidation match has at least one fill.
 //   - For all fills, maker order ids must be previously placed in an operation.
 //   - The sum of all fill_amount entries in the list of fills is not greater than the total size.
 func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOperation(
 	liquidationMatch *MatchPerpetualLiquidation,
 ) error {
 	fills := liquidationMatch.GetFills()
-	totalSize := liquidationMatch.GetTotalSize()
+	if len(fills) == 0 {
+		return sdkerrors.Wrapf(
+			ErrInvalidMatchOrder,
+			"Liquidation match has no fills: %+v",
+			liquidationMatch,
+		)
+	}
 
 	// Make sure the total size greater than zero.
-	// TODO(CLOB-599): Disallow liquidation matches with zero size.
-	// if liquidationMatch.GetTotalSize() == 0 {
-	// 	return sdkerrors.Wrapf(
-	// 		ErrInvalidLiquidationOrderTotalSize,
-	// 		"Liquidation match total size is zero. match: %+v",
-	// 		liquidationMatch,
-	// 	)
-	// }
+	totalSize := liquidationMatch.GetTotalSize()
+	if totalSize == 0 {
+		return sdkerrors.Wrapf(
+			ErrInvalidLiquidationOrderTotalSize,
+			"Liquidation match total size is zero. match: %+v",
+			liquidationMatch,
+		)
+	}
 
 	// Make sure the sum of all fill_amount entries in the list of fills does not exceed the total size.
 	// Get the total quantums filled for this liquidation order.
@@ -304,6 +320,7 @@ func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOper
 			return err
 		}
 	}
+
 	if bigQuantumsFilled.Cmp(new(big.Int).SetUint64(totalSize)) == 1 {
 		return sdkerrors.Wrapf(
 			ErrTotalFillAmountExceedsOrderSize,

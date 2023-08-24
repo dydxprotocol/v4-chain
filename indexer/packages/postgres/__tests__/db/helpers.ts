@@ -1,12 +1,6 @@
 import { bytesToBigInt, getPositionIsLong } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
-  Asset,
-  AssetPosition,
-  ClobPair,
-  LiquidityTier,
-  MarketParam,
-  MarketPrice,
-  Perpetual,
+  Asset, AssetPosition, LiquidityTier, MarketParam, MarketPrice,
 } from '@dydxprotocol-indexer/v4-protos';
 
 import { QUOTE_CURRENCY_ATOMIC_RESOLUTION } from '../../src';
@@ -18,26 +12,8 @@ import {
   AssetPositionFromDatabase,
   LiquidityTiersFromDatabase,
   MarketFromDatabase,
-  PerpetualMarketFromDatabase,
-  PerpetualMarketStatus,
   SubaccountFromDatabase,
 } from '../../src/types';
-
-// Values of the `PerpetualMarketCreateObject` which are hard-coded and not dervied from
-// the values in `genesis.json`
-export const HARDCODED_PERPETUAL_MARKET_VALUES: Object = {
-  baseAsset: '',
-  quoteAsset: '',
-  lastPrice: '0',
-  priceChange24H: '0',
-  trades24H: 0,
-  volume24H: '0',
-  nextFundingRate: '0',
-  basePositionSize: '0',
-  incrementalPositionSize: '0',
-  maxPositionSize: '0',
-  status: PerpetualMarketStatus.ACTIVE,
-};
 
 export function expectMarketParamAndPrice(
   marketFromDb: MarketFromDatabase,
@@ -50,31 +26,6 @@ export function expectMarketParamAndPrice(
     exponent: marketParam.exponent,
     minPriceChangePpm: marketParam.minPriceChangePpm,
     oraclePrice: protocolPriceToHuman(marketPrice.price.toString(), marketPrice.exponent),
-  }));
-}
-
-export function expectPerpetualMarket(
-  perpetualMarket: PerpetualMarketFromDatabase,
-  perpetual: Perpetual,
-  clobPair: ClobPair,
-): void {
-  // TODO(IND-219): Set initialMarginFraction/maintenanceMarginFraction using LiquidityTier
-  expect(perpetualMarket).toEqual(expect.objectContaining({
-    ...HARDCODED_PERPETUAL_MARKET_VALUES,
-    id: perpetual.params!.id.toString(),
-    clobPairId: clobPair.id.toString(),
-    ticker: perpetual.params!.ticker,
-    marketId: perpetual.params!.marketId,
-    openInterest: quantumsToHuman(
-      perpetual.openInterest.toString(),
-      perpetual.params!.atomicResolution,
-    ).toFixed(6),
-    quantumConversionExponent: clobPair.quantumConversionExponent,
-    atomicResolution: perpetual.params!.atomicResolution,
-    subticksPerTick: clobPair.subticksPerTick,
-    minOrderBaseQuantums: Number(clobPair.minOrderBaseQuantums),
-    stepBaseQuantums: Number(clobPair.stepBaseQuantums),
-    liquidityTierId: perpetual.params!.liquidityTier,
   }));
 }
 

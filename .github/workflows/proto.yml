@@ -1,11 +1,29 @@
 name: Protobuf
 on:  # yamllint disable-line rule:truthy
   pull_request:
+    paths:
+      # The protos themselves
+      - '**.proto'
+      # Any generated code
+      - '**.pb.go'
+      - '**.pb.gw.go'
+      - 'indexer/packages/v4-protos/**'
+      # Code that affects generation
+      - 'dydxjs/**'
+      - 'dydxpy/**'
+      - 'proto/**'
+      - 'indexer/package.json'
+      - 'protocol/scripts/protoc**'
   push:
     branches:
       - main
       - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
       - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   format:
     runs-on: ubuntu-latest

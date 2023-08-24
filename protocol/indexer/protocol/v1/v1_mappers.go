@@ -163,3 +163,22 @@ func orderToIndexerOrder_GoodTilBlockTime(
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
 	}
 }
+
+func ConvertToClobPairStatus(status clobtypes.ClobPair_Status) ClobPairStatus {
+	switch status {
+	case clobtypes.ClobPair_STATUS_UNSPECIFIED:
+		return ClobPairStatus_CLOB_PAIR_STATUS_UNSPECIFIED
+	case clobtypes.ClobPair_STATUS_ACTIVE:
+		return ClobPairStatus_CLOB_PAIR_STATUS_ACTIVE
+	case clobtypes.ClobPair_STATUS_PAUSED:
+		return ClobPairStatus_CLOB_PAIR_STATUS_PAUSED
+	case clobtypes.ClobPair_STATUS_CANCEL_ONLY:
+		return ClobPairStatus_CLOB_PAIR_STATUS_CANCEL_ONLY
+	case clobtypes.ClobPair_STATUS_POST_ONLY:
+		return ClobPairStatus_CLOB_PAIR_STATUS_POST_ONLY
+	case clobtypes.ClobPair_STATUS_INITIALIZING:
+		return ClobPairStatus_CLOB_PAIR_STATUS_INITIALIZING
+	default:
+		panic("invalid clob pair status")
+	}
+}

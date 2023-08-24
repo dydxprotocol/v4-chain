@@ -1,4 +1,4 @@
-import { ClobPair_Status } from '@dydxprotocol-indexer/v4-protos';
+import { ClobPairStatus } from '@dydxprotocol-indexer/v4-protos';
 
 /**
  * Custom error types.
@@ -21,14 +21,15 @@ export class RequiredFieldMissing extends CustomError {
   }
 }
 
-export class ValidationError extends CustomError {}
+export class ValidationError extends CustomError {
+}
 
 /**
  * Custom errors for converting genesis.json into seed SQL.
  */
 
 export class InvalidClobPairStatusError extends Error {
-  constructor(clobPairStatus: ClobPair_Status) {
+  constructor(clobPairStatus: ClobPairStatus) {
     super(`Invalid clob pair status: ${clobPairStatus}`);
     this.name = 'InvalidClobPairStatusError';
   }

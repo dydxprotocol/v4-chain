@@ -153,9 +153,14 @@ var (
 		32,
 		"Existing stateful order cancellation has higher-or-equal priority than the new one",
 	)
-	ErrPerpetualDoesNotExist = sdkerrors.Register(
+	ErrOrderConflictsWithClobPairStatus = sdkerrors.Register(
 		ModuleName,
 		33,
+		"Order conflicts with ClobPair status",
+	)
+	ErrPerpetualDoesNotExist = sdkerrors.Register(
+		ModuleName,
+		34,
 		"Perpetual does not exist in state",
 	)
 

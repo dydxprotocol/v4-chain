@@ -515,7 +515,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 	orderIdToCancel := msgCancelOrder.GetOrderId()
 	if orderIdToCancel.IsStatefulOrder() {
 		cancelGoodTilBlockTime := msgCancelOrder.GetGoodTilBlockTime()
-		previousBlockTime := k.MustGetBlockTimeForLastCommittedBlock(ctx)
+		previousBlockTime := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp
 
 		// Return an error if `goodTilBlockTime` is less than previous block's blockTime
 		if cancelGoodTilBlockTime <= lib.MustConvertIntegerToUint32(previousBlockTime.Unix()) {
@@ -603,6 +603,8 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 //   - The `Subticks` of the order is a multiple of the ClobPair's `SubticksPerTick`.
 //   - The `Quantums` of the order is a multiple of the ClobPair's `StepBaseQuantums`.
 //
+// This validation also ensures that the order is valid for the ClobPair's status.
+//
 // For short term orders it also ensures:
 //   - The `GoodTilBlock` of the order is greater than the provided `blockHeight`.
 //   - The `GoodTilBlock` of the order does not exceed the provided `blockHeight + ShortBlockWindow`.
@@ -654,6 +656,20 @@ func (k Keeper) PerformStatefulOrderValidation(
 		)
 	}
 
+	// Validates the order against the ClobPair's status.
+	if err := k.validateOrderAgainstClobPairStatus(ctx, order.MustGetOrder(), clobPair); err != nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.ValidateOrder, metrics.OrderConflictsWithClobPairStatus, metrics.Count},
+			1,
+			append(
+				order.GetOrderLabels(),
+				metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+				metrics.GetLabelForBoolValue(metrics.DeliverTx, lib.IsDeliverTxMode(ctx)),
+			),
+		)
+		return err
+	}
+
 	if order.OrderId.IsShortTermOrder() {
 		goodTilBlock := order.GetGoodTilBlock()
 
@@ -679,7 +695,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		}
 	} else {
 		goodTilBlockTimeUnix := order.GetGoodTilBlockTime()
-		previousBlockTime := k.MustGetBlockTimeForLastCommittedBlock(ctx)
+		previousBlockTime := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp
 		previousBlockTimeUnix := lib.MustConvertIntegerToUint32(previousBlockTime.Unix())
 
 		// Return an error if `goodTilBlockTime` is less than or equal to the

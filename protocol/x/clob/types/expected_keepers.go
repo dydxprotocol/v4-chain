@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -41,9 +42,10 @@ type SubaccountsKeeper interface {
 	) (
 		list []satypes.Subaccount,
 	)
-	ForEachSubaccount(
+	ForEachSubaccountRandomStart(
 		ctx sdk.Context,
 		callback func(satypes.Subaccount) (finished bool),
+		rand *rand.Rand,
 	)
 	GetRandomSubaccount(
 		ctx sdk.Context,
@@ -73,6 +75,10 @@ type SubaccountsKeeper interface {
 
 type AssetsKeeper interface {
 	GetAsset(ctx sdk.Context, id uint32) (val assettypes.Asset, err error)
+}
+
+type BlockTimeKeeper interface {
+	GetPreviousBlockInfo(ctx sdk.Context) blocktimetypes.BlockInfo
 }
 
 type FeeTiersKeeper interface {

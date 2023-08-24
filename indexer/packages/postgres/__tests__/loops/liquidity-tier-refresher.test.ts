@@ -27,8 +27,8 @@ describe('liquidityTierRefresher', () => {
         );
       });
 
-    it('returns undefined if liquidityTier does not exist', () => {
-      expect(getLiquidityTierFromId(50)).toBeUndefined();
+    it('throws error if liquidityTier does not exist', () => {
+      expect(() => getLiquidityTierFromId(50)).toThrowError('Unable to find liquidity tier with id: 50');
     });
   });
 });

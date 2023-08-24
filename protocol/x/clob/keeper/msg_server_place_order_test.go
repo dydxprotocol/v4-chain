@@ -12,6 +12,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -106,9 +107,31 @@ func TestPlaceOrder_Error(t *testing.T) {
 
 			// Create ClobPair.
 			clobPair := constants.ClobPair_Btc
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
+			indexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						clobtest.MustPerpetualId(clobPair),
+						ks.ClobKeeper.GetNumClobPairs(ks.Ctx),
+						perpetual.Params.Ticker,
+						perpetual.Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						perpetual.Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.MinOrderBaseQuantums,
+						clobPair.StepBaseQuantums,
+						perpetual.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(clobPair),
+				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,
@@ -118,7 +141,10 @@ func TestPlaceOrder_Error(t *testing.T) {
 
 			ctx := ks.Ctx.WithBlockHeight(6)
 			ctx = ctx.WithBlockTime(time.Unix(int64(6), 0))
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    6,
+				Timestamp: time.Unix(int64(6), 0),
+			})
 
 			for _, order := range tc.StatefulOrders {
 				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, 5)
@@ -189,7 +215,10 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    2,
+				Timestamp: time.Unix(int64(2), 0),
+			})
 
 			// Create test markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
@@ -218,9 +247,29 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			// Create ClobPair.
 			clobPair := constants.ClobPair_Btc
+			indexerEventManager.On("AddTxnEvent",
+				ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						perpetual.Params.Ticker,
+						perpetual.Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						perpetual.Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.MinOrderBaseQuantums,
+						clobPair.StepBaseQuantums,
+						perpetual.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(clobPair),
+				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,

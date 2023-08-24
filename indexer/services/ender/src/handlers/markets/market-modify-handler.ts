@@ -1,5 +1,7 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { MarketFromDatabase, MarketUpdateObject, MarketTable } from '@dydxprotocol-indexer/postgres';
+import {
+  MarketFromDatabase, MarketUpdateObject, MarketTable, marketRefresher,
+} from '@dydxprotocol-indexer/postgres';
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { ConsolidatedKafkaEvent, MarketModifyEventMessage } from '../../lib/types';
@@ -52,13 +54,14 @@ export class MarketModifyHandler extends Handler<MarketEventV1> {
 
     const updatedMarket:
     MarketFromDatabase | undefined = await MarketTable
-      .update(updateObject);
+      .update(updateObject, { txId: this.txId });
     if (updatedMarket === undefined) {
       this.logAndThrowParseMessageError(
         'Failed to update market in markets table',
         { castedMarketModifyMessage },
       );
     }
+    await marketRefresher.updateMarkets({ txId: this.txId });
     return updatedMarket as MarketFromDatabase;
   }
 }
