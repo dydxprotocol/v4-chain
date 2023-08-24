@@ -91,7 +91,7 @@ func (k Keeper) CreatePerpetualClobPair(
 // - SubticksPerTick:
 //   - Must be greater than zero.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
-	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
+	if !types.IsSupportedClobPairStatus(clobPair.Status) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidClobPairParameter,
 			"CLOB pair (%+v) has unsupported status %+v",
@@ -246,7 +246,9 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 	order types.Order,
 	clobPair types.ClobPair,
 ) error {
-	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
+	if !types.IsSupportedClobPairStatus(clobPair.Status){
+		// Validation should only be called against ClobPairs in state, implying we have a ClobPair with
+		// an unsupported status in state.
 		panic(
 			fmt.Sprintf(
 				"validateOrderAgainstClobPairStatus: clob pair status %v is not supported",
@@ -339,7 +341,7 @@ func (k Keeper) SetClobPairStatus(
 ) error {
 	clobPair := k.mustGetClobPair(ctx, clobPairId)
 
-	if isSupported := types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus); !isSupported {
+	if !types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidClobPairStatusTransition,
 			"Cannot transition from status %+v to status %+v",
