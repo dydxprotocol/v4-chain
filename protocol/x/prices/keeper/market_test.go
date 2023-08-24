@@ -189,18 +189,3 @@ func TestGetAllMarketParamPrices(t *testing.T) {
 		allParamPrices,
 	)
 }
-
-func TestGetAllParamMarketPrices_MissingMarket(t *testing.T) {
-	ctx, keeper, storeKey, _, _, _ := keepertest.PricesKeepers(t)
-
-	// Write some bad data to the store
-	store := ctx.KVStore(storeKey)
-	store.Set(types.KeyPrefix(types.NumMarketsKey), lib.Uint32ToBytes(20))
-
-	// Expect a panic
-	require.PanicsWithError(
-		t,
-		"0: Market param does not exist",
-		func() { _, _ = keeper.GetAllMarketParamPrices(ctx) },
-	)
-}

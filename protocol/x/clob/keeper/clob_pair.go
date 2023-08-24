@@ -4,6 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -20,6 +22,7 @@ import (
 func (k Keeper) CreatePerpetualClobPair(
 	ctx sdk.Context,
 	perpetualId uint32,
+	minOrderBaseQuantums satypes.BaseQuantums,
 	stepSizeBaseQuantums satypes.BaseQuantums,
 	quantumConversionExponent int32,
 	subticksPerTick uint32,
@@ -42,9 +45,32 @@ func (k Keeper) CreatePerpetualClobPair(
 	if err := k.validateClobPair(ctx, &clobPair); err != nil {
 		return clobPair, err
 	}
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return clobPair, err
+	}
 
 	k.setClobPair(ctx, clobPair)
 	k.setNumClobPairs(ctx, nextId+1)
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypePerpetualMarket,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				perpetualId,
+				nextId,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				status,
+				quantumConversionExponent,
+				perpetual.Params.AtomicResolution,
+				subticksPerTick,
+				minOrderBaseQuantums.ToUint64(),
+				stepSizeBaseQuantums.ToUint64(),
+				perpetual.Params.LiquidityTier,
+			),
+		),
+	)
 
 	return clobPair, nil
 }
@@ -55,7 +81,7 @@ func (k Keeper) CreatePerpetualClobPair(
 //   - Must be a perpetual CLOB pair with a perpetualId matching a perpetual in the store.
 //
 // - Status:
-//   - Must be a status other than ClobPair_STATUS_UNSPECIFIED.
+//   - Must be a supported status.
 //
 // - StepBaseQuantums:
 //   - Must be greater than zero.
@@ -63,6 +89,15 @@ func (k Keeper) CreatePerpetualClobPair(
 // - SubticksPerTick:
 //   - Must be greater than zero.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
+	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairParameter,
+			"CLOB pair (%+v) has unsupported status %+v",
+			clobPair,
+			clobPair.Status,
+		)
+	}
+
 	// TODO(DEC-1535): update this validation when we implement "spot"/"asset" clob pairs.
 	switch clobPair.Metadata.(type) {
 	case *types.ClobPair_PerpetualClobMetadata:
@@ -107,10 +142,6 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 			"invalid ClobPair parameter: SubticksPerTick must be > 0. Got %v",
 			clobPair.SubticksPerTick,
 		)
-	}
-
-	if clobPair.Status == types.ClobPair_STATUS_UNSPECIFIED {
-		return sdkerrors.Wrap(types.ErrInvalidClobPairParameter, "invalid ClobPair parameter: Status must be specified.")
 	}
 
 	return nil

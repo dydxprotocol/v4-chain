@@ -157,10 +157,12 @@ func TestGenesis_Failure(t *testing.T) {
 				},
 				Perpetuals: []types.Perpetual{
 					{
-						MarketId:      tc.marketId,
-						Ticker:        tc.ticker,
-						FundingIndex:  dtypes.ZeroInt(),
-						LiquidityTier: 0,
+						Params: types.PerpetualParams{
+							MarketId:      tc.marketId,
+							Ticker:        tc.ticker,
+							LiquidityTier: 0,
+						},
+						FundingIndex: dtypes.ZeroInt(),
 					},
 				},
 			}

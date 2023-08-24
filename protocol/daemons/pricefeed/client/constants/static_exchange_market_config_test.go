@@ -1,11 +1,13 @@
 package constants
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/json"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestStaticExchangeMarketConfigCache(t *testing.T) {
@@ -1089,12 +1091,12 @@ func TestStaticExchangeMarketConfigCache(t *testing.T) {
 }
 
 func TestStaticExchangeMarketConfigCacheLen(t *testing.T) {
-	require.Len(t, StaticExchangeMarketConfig, 14)
+	require.Len(t, StaticExchangeMarketConfig, 15)
 }
 
 func TestGenerateExchangeConfigJsonLength(t *testing.T) {
 	configs := GenerateExchangeConfigJson(StaticExchangeMarketConfig)
-	require.Len(t, configs, 34)
+	require.Len(t, configs, 35)
 }
 
 func TestGenerateExchangeConfigJson(t *testing.T) {
@@ -1250,7 +1252,7 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 			//_, err = f.WriteString(configs[tc.id] + "\n") // Final newline added manually.
 			//require.NoError(t, err)
 
-			actualExchangeConfigJson := pricefeed.CompactJsonString(t, configs[tc.id])
+			actualExchangeConfigJson := json.CompactJsonString(t, configs[tc.id])
 			expectedExchangeConfigJson := pricefeed.ReadJsonTestFile(t, tc.expectedExchangeConfigJsonFile)
 			require.Equal(t, expectedExchangeConfigJson, actualExchangeConfigJson)
 		})
