@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"math"
 	"math/rand"
 	"sync"
@@ -149,7 +150,8 @@ type GenesisStates interface {
 		satypes.GenesisState |
 		assettypes.GenesisState |
 		epochstypes.GenesisState |
-		sendingtypes.GenesisState
+		sendingtypes.GenesisState |
+		delaymsgtypes.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function
@@ -173,6 +175,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = blocktimetypes.ModuleName
 	case bridgetypes.GenesisState:
 		moduleName = bridgetypes.ModuleName
+	case delaymsgtypes.GenesisState:
+		moduleName = delaymsgtypes.ModuleName
 	case perptypes.GenesisState:
 		moduleName = perptypes.ModuleName
 	case clobtypes.GenesisState:

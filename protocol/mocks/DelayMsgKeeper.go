@@ -63,6 +63,11 @@ func (_m *DelayMsgKeeper) DeleteMessage(ctx types.Context, id uint32) error {
 	return r0
 }
 
+// DispatchMessagesForBlock provides a mock function with given fields: ctx
+func (_m *DelayMsgKeeper) DispatchMessagesForBlock(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 // GetAllDelayedMessages provides a mock function with given fields: ctx
 func (_m *DelayMsgKeeper) GetAllDelayedMessages(ctx types.Context) []*delaymsgtypes.DelayedMessage {
 	ret := _m.Called(ctx)
