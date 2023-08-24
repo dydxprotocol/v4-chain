@@ -15,42 +15,28 @@ func (k Keeper) DispatchMessagesForBlock(ctx sdk.Context) {
 		return
 	}
 
-	// Create a cache context to avoid writing to the store during message execution.
-	// Only persist the cache if all message executions are successful.
-	cacheCtx, writeCache := ctx.CacheContext()
-	failure := false
-
 	// Execute all delayed messages scheduled for this block and delete them from the store.
 	for _, id := range blockMessageIds.Ids {
-		delayedMsg, found := k.GetMessage(cacheCtx, id)
+		delayedMsg, found := k.GetMessage(ctx, id)
 		if !found {
-			k.Logger(cacheCtx).Error("delayed message %v not found", id)
-			failure = true
-			break
+			k.Logger(ctx).Error("delayed message %v not found", id)
+			continue
 		}
 
 		var msg sdk.Msg
 		err := k.DecodeMessage(delayedMsg.Msg, &msg)
 
 		if err != nil {
-			k.Logger(cacheCtx).Error("failed to decode delayed message with id %v: %v", id, err)
-			failure = true
-			break
+			k.Logger(ctx).Error("failed to decode delayed message with id %v: %v", id, err)
+			continue
 		}
 
 		handler := k.router.Handler(msg)
-		_, err = handler(cacheCtx, msg)
+		_, err = handler(ctx, msg)
 
 		if err != nil {
-			k.Logger(cacheCtx).Error("failed to execute delayed message with id %v: %v", id, err)
-			failure = true
-			break
+			k.Logger(ctx).Error("failed to execute delayed message with id %v: %v", id, err)
 		}
-	}
-
-	// If all message executions are successful, persist the cache.
-	if !failure {
-		writeCache()
 	}
 
 	for _, id := range blockMessageIds.Ids {
