@@ -1,16 +1,40 @@
 package keeper_test
 
-/*
+import (
+	"errors"
+	"fmt"
+	"math"
+	"testing"
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/mock"
+)
 
 func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
-	tests := map[string]processProposerMatchesTestCase{
+	blockHeight := uint32(5)
+	tests := map[string]processProposerOperationsTestCase{
 		"Succeeds with new maker Long-Term order": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -25,42 +49,46 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-				{
-					Order: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-				},
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         100_000_000,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 100_000_000,
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 100_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				// $99,975
+				constants.Dave_Num0: 100_000_000_000 - 25_000_000,
+				// $49,990
+				constants.Carl_Num0: 50_000_000_000 - 10_000_000,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $99,975
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 25_000_000),
-				// $49,990
-				constants.Carl_Num0: big.NewInt(50_000_000_000 - 10_000_000),
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -68,12 +96,12 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with new taker Long-Term order": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -88,42 +116,50 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-				{
-					Order: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-				},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderIndex{MakerOrderIndex: 0},
-						TakerOneof: &types.MatchOrders_TakerOrderId{
-							TakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
 						},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         100_000_000,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 100_000_000,
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 100_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				// $99,990
+				constants.Dave_Num0: 100_000_000_000 - 10_000_000,
+				// $49,975
+				constants.Carl_Num0: 50_000_000_000 - 25_000_000,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $99,990
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 10_000_000),
-				// $49,975
-				constants.Carl_Num0: big.NewInt(50_000_000_000 - 25_000_000),
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -131,12 +167,19 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with existing maker Long-Term order": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -151,44 +194,43 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-					4, // Placed in previous block.
-				)
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         100_000_000,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 100_000_000,
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 100_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				// $99,975
+				constants.Dave_Num0: 100_000_000_000 - 25_000_000,
+				// $49,990
+				constants.Carl_Num0: 50_000_000_000 - 10_000_000,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $99,975
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 25_000_000),
-				// $49,990
-				constants.Carl_Num0: big.NewInt(50_000_000_000 - 10_000_000),
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -196,12 +238,19 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with existing taker Long-Term order": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -216,44 +265,43 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-					4, // Placed in previous block.
-				)
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderIndex{MakerOrderIndex: 0},
-						TakerOneof: &types.MatchOrders_TakerOrderId{
-							TakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
 						},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         100_000_000,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 100_000_000,
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 100_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				// $99,990
+				constants.Dave_Num0: 100_000_000_000 - 10_000_000,
+				// $49,975
+				constants.Carl_Num0: 50_000_000_000 - 25_000_000,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $99,990
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 10_000_000),
-				// $49,975
-				constants.Carl_Num0: big.NewInt(50_000_000_000 - 25_000_000),
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -261,12 +309,20 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with new maker and taker Long-Term orders completely filled": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -281,40 +337,42 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
-				},
-				{
-					Order: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC,
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderId{
-							TakerOrderId: &constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-						},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 100_000_000,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId:  100_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 0,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $99,975
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 25_000_000),
+				constants.Dave_Num0: 100_000_000_000 - 25_000_000,
 				// $49,990
-				constants.Carl_Num0: big.NewInt(50_000_000_000 - 10_000_000),
+				constants.Carl_Num0: 50_000_000_000 - 10_000_000,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				},
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -322,12 +380,20 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with new maker and taker Long-Term orders partially filled": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -342,27 +408,17 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
-				},
-				{
-					Order: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   50_000_000, // 0.5 BTC,
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderId{
-							TakerOrderId: &constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-						},
-						FillAmount: 50_000_000, // 0.5 BTC
 					},
 				),
 			},
@@ -370,12 +426,18 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 50_000_000,
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId:  50_000_000,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $74,987.5
-				constants.Dave_Num0: big.NewInt(75_000_000_000 - 12_500_000),
+				constants.Dave_Num0: 75_000_000_000 - 12_500_000,
 				// $74,995
-				constants.Carl_Num0: big.NewInt(75_000_000_000 - 5_000_000),
+				constants.Carl_Num0: 75_000_000_000 - 5_000_000,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
@@ -395,12 +457,19 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with Long-Term order and multiple fills": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -415,56 +484,57 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					),
 				).Return(nil).Twice()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK,
-				},
-				{
-					Order: constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000,
-				},
-				{
-					Order: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   50_000_000, // 0.5 BTC,
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 50_000_000, // 0.5 BTC
 					},
 				),
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   50_000_000, // 0.5 BTC,
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 1},
-						FillAmount: 50_000_000, // 0.5 BTC
 					},
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK.OrderId:      50_000_000,
-				constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000.OrderId:                50_000_000,
-				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 100_000_000,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK.OrderId: 50_000_000,
+				constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000.OrderId:           50_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				// $99,990
+				constants.Dave_Num0: 100_000_000_000 - 10_000_000,
+				// $49,975
+				constants.Carl_Num0: 50_000_000_000 - 25_000_000,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK.OrderId,
 					constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000.OrderId,
+					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $99,990
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 10_000_000),
-				// $49,975
-				constants.Carl_Num0: big.NewInt(50_000_000_000 - 25_000_000),
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -472,12 +542,19 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with new maker Long-Term order in liquidation match": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -496,46 +573,48 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderId{
-									MakerOrderId: &constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-								},
-								FillAmount: 100_000_000, // 1 BTC
+								MakerOrderId: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+								FillAmount:   100_000_000, // 1 BTC
 							},
 						},
 					},
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 100_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $4,749, no taker fees, pays $250 insurance fee
-				constants.Carl_Num0: big.NewInt(4_999_000_000 - 250_000_000),
+				constants.Carl_Num0: 4_999_000_000 - 250_000_000,
 				// $99,990
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 10_000_000),
+				constants.Dave_Num0: 100_000_000_000 - 10_000_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Dave_Num0: {},
 				constants.Carl_Num0: {},
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				},
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
@@ -547,12 +626,19 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with existing maker Long-Term order in liquidation match": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -571,47 +657,48 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
-					4, // Placed in previous block.
-				)
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			placeOrders: []*types.MsgPlaceOrder{},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderId{
-									MakerOrderId: &constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-								},
-								FillAmount: 100_000_000, // 1 BTC
+								MakerOrderId: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+								FillAmount:   100_000_000, // 1 BTC
 							},
 						},
 					},
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 100_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				// $4,749, no taker fees, pays $250 insurance fee
-				constants.Carl_Num0: big.NewInt(4_999_000_000 - 250_000_000),
+				constants.Carl_Num0: 4_999_000_000 - 250_000_000,
 				// $99,990
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 10_000_000),
+				constants.Dave_Num0: 100_000_000_000 - 10_000_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Dave_Num0: {},
 				constants.Carl_Num0: {},
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				},
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
@@ -623,12 +710,19 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with maker Long-Term order when considering state fill amount": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -643,50 +737,49 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-					4, // Placed in previous block.
-				)
-				k.SetOrderFillAmount(
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					50_000_000,
 					math.MaxUint32,
 				)
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   50_000_000,
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 50_000_000, // 0.5 BTC
 					},
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         50_000_000,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 100_000_000,
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 50_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				// $74,975
+				constants.Dave_Num0: 75_000_000_000 - 12_500_000,
+				// $74,990
+				constants.Carl_Num0: 75_000_000_000 - 5_000_000,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $74,975
-				constants.Dave_Num0: big.NewInt(75_000_000_000 - 12_500_000),
-				// $74,990
-				constants.Carl_Num0: big.NewInt(75_000_000_000 - 5_000_000),
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
@@ -706,12 +799,19 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with taker Long-Term order when considering state fill amount": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -726,50 +826,50 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-					4, // Placed in previous block.
-				)
-				k.SetOrderFillAmount(
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					50_000_000,
 					math.MaxUint32,
 				)
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderIndex{MakerOrderIndex: 0},
-						TakerOneof: &types.MatchOrders_TakerOrderId{
-							TakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
+							FillAmount:   50_000_000,
 						},
-						FillAmount: 50_000_000, // 1 BTC
 					},
 				),
 			},
+
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         50_000_000,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 100_000_000,
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId: 50_000_000,
+				// Fully filled orders are removed.
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 0,
 			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				// $74,990
+				constants.Dave_Num0: 75_000_000_000 - 5_000_000,
+				// $74,975
+				constants.Carl_Num0: 75_000_000_000 - 12_500_000,
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $74,990
-				constants.Dave_Num0: big.NewInt(75_000_000_000 - 5_000_000),
-				// $74,975
-				constants.Carl_Num0: big.NewInt(75_000_000_000 - 12_500_000),
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				},
+				BlockHeight: blockHeight,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
@@ -788,491 +888,230 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				},
 			},
 		},
-		"New maker order can overwrite existing order": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
-			},
-			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
-				bk.On(
-					"SendCoinsFromModuleToModule",
-					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
-					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
-							25_000_000+10_000_000,
-						),
-					),
-				).Return(nil).Once()
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetLongTermOrderPlacement(
-					ctx,
-					types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_LongTerm,
-							ClobPairId:   0,
-						},
-						Side:         types.Order_SIDE_BUY,
-						Quantums:     99_000_000,     // 0.99 BTC
-						Subticks:     49_999_000_000, // $49,999
-						GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 9},
-					},
-					4, // Placed in a previous block.
-				)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-				{
-					Order: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
-						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 100_000_000, // 1 BTC
-					},
-				),
-			},
-			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         100_000_000,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 100_000_000,
-			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $99,975
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 25_000_000),
-				// $49,990
-				constants.Carl_Num0: big.NewInt(50_000_000_000 - 10_000_000),
-			},
-			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
-				constants.Carl_Num0: {},
-				constants.Dave_Num0: {},
-			},
-		},
-		"New taker order can overwrite existing order": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
-			},
-			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
-				bk.On(
-					"SendCoinsFromModuleToModule",
-					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
-					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
-							25_000_000+10_000_000,
-						),
-					),
-				).Return(nil).Once()
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetLongTermOrderPlacement(
-					ctx,
-					types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_LongTerm,
-							ClobPairId:   0,
-						},
-						Side:         types.Order_SIDE_BUY,
-						Quantums:     99_000_000,     // 0.99 BTC
-						Subticks:     49_999_000_000, // $49,999
-						GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 9},
-					},
-					4, // Placed in a previous block.
-				)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-				{
-					Order: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderIndex{MakerOrderIndex: 0},
-						TakerOneof: &types.MatchOrders_TakerOrderId{
-							TakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
-						},
-						FillAmount: 100_000_000, // 1 BTC
-					},
-				),
-			},
-			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         100_000_000,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 100_000_000,
-			},
-			expectedPruneableBlockHeights: map[uint32][]types.OrderId{
-				10 + types.ShortBlockWindow: {
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-				},
-			},
-			expectedQuoteBalances: map[satypes.SubaccountId]*big.Int{
-				// $99,990
-				constants.Dave_Num0: big.NewInt(100_000_000_000 - 10_000_000),
-				// $49,975
-				constants.Carl_Num0: big.NewInt(50_000_000_000 - 25_000_000),
-			},
-			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
-				constants.Carl_Num0: {},
-				constants.Dave_Num0: {},
-			},
-		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			runProcessProposerMatchSuccessTest(t, tc)
+			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
 }
 
 func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
-	tests := map[string]processProposerMatchesTestCase{
-		`Stateful order validation: Long-term order GoodTilBlockTime is less than the
-		block time of the previous block`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_LongTerm,
-							ClobPairId:   0,
-						},
-						Side:     types.Order_SIDE_BUY,
-						Quantums: 10,
-						Subticks: 100,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{
-							// Block-time of the previously committed block is 5.
-							GoodTilBlockTime: 4,
-						},
-					},
-				},
-			},
-			clobMatches:   []*types.ClobMatch{},
-			expectedError: types.ErrTimeExceedsGoodTilBlockTime,
-		},
-		`Stateful order validation: Long-term order GoodTilBlockTime exceeds StatefulOrderTimeWindow`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_LongTerm,
-							ClobPairId:   0,
-						},
-						Side:     types.Order_SIDE_BUY,
-						Quantums: 10,
-						Subticks: 100,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{
-							GoodTilBlockTime: 5 + uint32(types.StatefulOrderTimeWindow.Seconds()) + 1,
-						},
-					},
-				},
-			},
-			clobMatches:   []*types.ClobMatch{},
-			expectedError: types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
-		},
-		`Stateful order validation: Long-term order already exists in state`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			clobMatches:   []*types.ClobMatch{},
-			expectedError: types.ErrStatefulOrderAlreadyExists,
-		},
-		`Stateful order validation: GoodTilBlockTime of new order is less than existing order`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20, // GTBT is 20.
-					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					// GTBT of the new order is 15.
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			clobMatches:   []*types.ClobMatch{},
-			expectedError: types.ErrStatefulOrderAlreadyExists,
-		},
+	tests := map[string]processProposerOperationsTestCase{
 		`Stateful order validation: referenced maker order does not exist in state`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						// Maker order is a long-term order.
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
 						},
-						// Taker order is a short-term order.
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
-			expectedError: types.ErrStatefulOrderDoesNotExist,
+			expectedPanics: fmt.Sprintf(
+				"MustFetchOrderFromOrderId: failed fetching stateful term order for order id: %+v",
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			),
 		},
 		`Stateful order validation: referenced taker order does not exist in state`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						// Maker order is a short-term order.
-						MakerOneof: &types.MatchOrders_MakerOrderIndex{MakerOrderIndex: 0},
-						// Taker order is a long-term order.
-						TakerOneof: &types.MatchOrders_TakerOrderId{
-							TakerOrderId: &constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
 						},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
-			expectedError: types.ErrStatefulOrderDoesNotExist,
+			expectedPanics: fmt.Sprintf(
+				"MustFetchOrderFromOrderId: failed fetching stateful term order for order id: %+v",
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+			),
 		},
 		`Stateful order validation: referenced maker order in liquidation match does not exist in state`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				require.NoError(
-					t,
-					k.InitializeLiquidationsConfig(
-						ctx,
-						constants.LiquidationsConfig_No_Limit,
-					),
-				)
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
 								// Maker order is a long-term order.
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderId{
-									MakerOrderId: &constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-								},
-								FillAmount: 100_000_000, // 1 BTC
+								MakerOrderId: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+								FillAmount:   100_000_000, // 1 BTC
 							},
 						},
 					},
 				),
 			},
-			expectedError: types.ErrStatefulOrderDoesNotExist,
+			expectedPanics: fmt.Sprintf(
+				"MustFetchOrderFromOrderId: failed fetching stateful term order for order id: %+v",
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+			),
 		},
 		`Stateful order validation: referenced long-term order is on the wrong side`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
 				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					OrderId: types.OrderId{
+						SubaccountId: constants.Carl_Num0,
+						ClientId:     0,
+						OrderFlags:   types.OrderIdFlags_LongTerm,
+						ClobPairId:   0,
+					},
+					Side:         types.Order_SIDE_SELL, // This is a sell order instead of a buy order.
+					Quantums:     100_000_000,
+					Subticks:     50_000_000_000,
+					GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 				},
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetLongTermOrderPlacement(
-					ctx,
-					types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_LongTerm,
-							ClobPairId:   0,
-						},
-						Side:         types.Order_SIDE_SELL, // This is a sell order instead of a buy order.
-						Quantums:     100_000_000,
-						Subticks:     50_000_000_000,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
-					},
-					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				)
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						// Maker order is a long-term order.
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &types.OrderId{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: types.OrderId{
 								SubaccountId: constants.Carl_Num0,
 								ClientId:     0,
 								OrderFlags:   types.OrderIdFlags_LongTerm,
 							},
+							FillAmount: 100_000_000, // 1 BTC
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
 			expectedError: errors.New("Orders are not on opposing sides of the book in match"),
 		},
 		`Stateful order validation: referenced long-term order is for the wrong clob pair`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+				&constants.EthUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+			},
+			preExistingStatefulOrders: []types.Order{
 				{
-					// This is a BTC order.
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					OrderId: types.OrderId{
+						SubaccountId: constants.Carl_Num0,
+						ClientId:     0,
+						OrderFlags:   types.OrderIdFlags_LongTerm,
+						ClobPairId:   1, // ETH.
+					},
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     100_000_000,
+					Subticks:     50_000_000_000,
+					GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 				},
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetLongTermOrderPlacement(
-					ctx,
-					types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_LongTerm,
-							ClobPairId:   1, // ETH.
-						},
-						Side:         types.Order_SIDE_BUY,
-						Quantums:     100_000_000,
-						Subticks:     50_000_000_000,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
-					},
-					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				)
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						// Maker order is a long-term order.
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &types.OrderId{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					// This is a BTC order.
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: types.OrderId{
 								SubaccountId: constants.Carl_Num0,
 								ClientId:     0,
 								OrderFlags:   types.OrderIdFlags_LongTerm,
 								ClobPairId:   1, // ETH.
 							},
+							FillAmount: 100_000_000, // 1 BTC
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
 			expectedError: errors.New("ClobPairIds do not match in match"),
 		},
 		"Fails with Long-Term order when considering state fill amount": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -1287,33 +1126,26 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-					4, // Placed in previous block.
-				)
-				k.SetOrderFillAmount(
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					50_000_001,
 					math.MaxUint32,
 				)
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   50_000_000,
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 50_000_000,
 					},
 				),
 			},
@@ -1327,329 +1159,258 @@ func TestProcessProposerMatches_LongTerm_Validation_Failure(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			runProcessProposerMatchFailureTest(t, tc)
+			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
 }
 
 func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
-	tests := map[string]processProposerMatchesTestCase{
-		`Stateful order validation: Conditional order GoodTilBlockTime is less than the
-		block time of the previous block`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_Conditional,
-							ClobPairId:   0,
-						},
-						Side:     types.Order_SIDE_BUY,
-						Quantums: 10,
-						Subticks: 100,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{
-							// Block-time of the previously committed block is 5.
-							GoodTilBlockTime: 4,
-						},
-					},
-				},
-			},
-			clobMatches:   []*types.ClobMatch{},
-			expectedError: types.ErrTimeExceedsGoodTilBlockTime,
-		},
-		`Stateful order validation: Conditional order GoodTilBlockTime exceeds StatefulOrderTimeWindow`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_Conditional,
-							ClobPairId:   0,
-						},
-						Side:     types.Order_SIDE_BUY,
-						Quantums: 10,
-						Subticks: 100,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{
-							GoodTilBlockTime: 5 + uint32(types.StatefulOrderTimeWindow.Seconds()) + 1,
-						},
-					},
-				},
-			},
-			clobMatches:   []*types.ClobMatch{},
-			expectedError: types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
-		},
-		`Stateful order validation: Conditional order already exists in state`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			clobMatches:   []*types.ClobMatch{},
-			expectedError: types.ErrStatefulOrderAlreadyExists,
-		},
-		`Stateful order validation: GoodTilBlockTime of new order is less than existing order`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20, // GTBT is 20.
-					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				)
-			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					// GTBT of the new order is 15.
-					Order: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				},
-			},
-			clobMatches:   []*types.ClobMatch{},
-			expectedError: types.ErrStatefulOrderAlreadyExists,
-		},
+	tests := map[string]processProposerOperationsTestCase{
 		`Stateful order validation: referenced maker order does not exist in state`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						// Maker order is a conditional order.
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
 						},
-						// Taker order is a short-term order.
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
-			expectedError: types.ErrStatefulOrderDoesNotExist,
+			expectedPanics: fmt.Sprintf(
+				"MustFetchOrderFromOrderId: failed fetching triggered conditional order for order id: %+v",
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			),
 		},
 		`Stateful order validation: referenced taker order does not exist in state`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
-				},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						// Maker order is a short-term order.
-						MakerOneof: &types.MatchOrders_MakerOrderIndex{MakerOrderIndex: 0},
-						// Taker order is a conditional order.
-						TakerOneof: &types.MatchOrders_TakerOrderId{
-							TakerOrderId: &constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
 						},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
-			expectedError: types.ErrStatefulOrderDoesNotExist,
+			expectedPanics: fmt.Sprintf(
+				"MustFetchOrderFromOrderId: failed fetching triggered conditional order for order id: %+v",
+				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+			),
 		},
 		`Stateful order validation: referenced maker order in liquidation match does not exist in state`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				require.NoError(
-					t,
-					k.InitializeLiquidationsConfig(
-						ctx,
-						constants.LiquidationsConfig_No_Limit,
-					),
-				)
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchPerpetualLiquidation(
-					&types.MatchPerpetualLiquidation{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
 						TotalSize:   100_000_000, // 1 BTC
 						IsBuy:       true,
-						Fills: []types.MatchPerpetualLiquidation_Fill{
+						Fills: []types.MakerFill{
 							{
 								// Maker order is a conditional order.
-								MakerOneof: &types.MatchPerpetualLiquidation_Fill_MakerOrderId{
-									MakerOrderId: &constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-								},
-								FillAmount: 100_000_000, // 1 BTC
+								MakerOrderId: constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+								FillAmount:   100_000_000, // 1 BTC
 							},
 						},
 					},
 				),
 			},
-			expectedError: types.ErrStatefulOrderDoesNotExist,
+			expectedPanics: fmt.Sprintf(
+				"MustFetchOrderFromOrderId: failed fetching triggered conditional order for order id: %+v",
+				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+			),
 		},
-		`Stateful order validation: referenced conditional order is on the wrong side`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+		`Stateful order validation: referenced maker order exist in state but is untriggered`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
+						},
+					},
+				),
+			},
+			expectedPanics: fmt.Sprintf(
+				"MustFetchOrderFromOrderId: failed fetching triggered conditional order for order id: %+v",
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			),
+		},
+		`Stateful order validation: referenced conditional order is on the wrong side`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			triggeredConditionalOrders: []types.Order{
 				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					OrderId: types.OrderId{
+						SubaccountId: constants.Carl_Num0,
+						ClientId:     0,
+						OrderFlags:   types.OrderIdFlags_Conditional,
+						ClobPairId:   0,
+					},
+					Side:         types.Order_SIDE_SELL, // This is a sell order instead of a buy order.
+					Quantums:     100_000_000,
+					Subticks:     50_000_000_000,
+					GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 				},
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetLongTermOrderPlacement(
-					ctx,
-					types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_Conditional,
-							ClobPairId:   0,
-						},
-						Side:         types.Order_SIDE_SELL, // This is a sell order instead of a buy order.
-						Quantums:     100_000_000,
-						Subticks:     50_000_000_000,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
-					},
-					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				)
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						// Maker order is a conditional order.
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &types.OrderId{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: types.OrderId{
 								SubaccountId: constants.Carl_Num0,
 								ClientId:     0,
 								OrderFlags:   types.OrderIdFlags_Conditional,
 							},
+							FillAmount: 100_000_000, // 1 BTC
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
 			expectedError: errors.New("Orders are not on opposing sides of the book in match"),
 		},
 		`Stateful order validation: referenced conditional order is for the wrong clob pair`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			placeOrders: []*types.MsgPlaceOrder{
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			triggeredConditionalOrders: []types.Order{
 				{
-					// This is a BTC order.
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					OrderId: types.OrderId{
+						SubaccountId: constants.Carl_Num0,
+						ClientId:     0,
+						OrderFlags:   types.OrderIdFlags_Conditional,
+						ClobPairId:   1, // ETH.
+					},
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     100_000_000,
+					Subticks:     50_000_000_000,
+					GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 				},
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx)
-				k.SetLongTermOrderPlacement(
-					ctx,
-					types.Order{
-						OrderId: types.OrderId{
-							SubaccountId: constants.Carl_Num0,
-							ClientId:     0,
-							OrderFlags:   types.OrderIdFlags_Conditional,
-							ClobPairId:   1, // ETH.
-						},
-						Side:         types.Order_SIDE_BUY,
-						Quantums:     100_000_000,
-						Subticks:     50_000_000_000,
-						GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
-					},
-					lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				)
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						// Maker order is a conditional order.
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &types.OrderId{
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					// This is a BTC order.
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: types.OrderId{
 								SubaccountId: constants.Carl_Num0,
 								ClientId:     0,
 								OrderFlags:   types.OrderIdFlags_Conditional,
 								ClobPairId:   1, // ETH.
 							},
+							FillAmount: 100_000_000, // 1 BTC
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 100_000_000, // 1 BTC
 					},
 				),
 			},
 			expectedError: errors.New("ClobPairIds do not match in match"),
 		},
 		"Fails with conditional order when considering state fill amount": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			triggeredConditionalOrders: []types.Order{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
@@ -1664,33 +1425,26 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 					),
 				).Return(nil).Once()
 			},
-			setupState: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				k.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
-				k.SetLongTermOrderPlacement(
-					ctx,
-					constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-					4, // Placed in previous block.
-				)
-				k.SetOrderFillAmount(
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+				ks.ClobKeeper.SetOrderFillAmount(
 					ctx,
 					constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					50_000_001,
 					math.MaxUint32,
 				)
 			},
-			placeOrders: []*types.MsgPlaceOrder{
-				{
-					Order: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
-				},
-			},
-			clobMatches: []*types.ClobMatch{
-				types.NewClobMatchFromMatchOrders(
-					&types.MatchOrders{
-						MakerOneof: &types.MatchOrders_MakerOrderId{
-							MakerOrderId: &constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   50_000_000,
 						},
-						TakerOneof: &types.MatchOrders_TakerOrderIndex{TakerOrderIndex: 0},
-						FillAmount: 50_000_000,
 					},
 				),
 			},
@@ -1704,9 +1458,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			runProcessProposerMatchFailureTest(t, tc)
+			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
 }
-
-*/
