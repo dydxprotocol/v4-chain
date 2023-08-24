@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -209,4 +211,51 @@ func (k Keeper) GetAllClobPair(ctx sdk.Context) (list []types.ClobPair) {
 	}
 
 	return
+}
+
+// mustGetClobPair fetches a ClobPair from state given its id.
+// This function panics if the ClobPair is not found.
+func (k Keeper) mustGetClobPair(
+	ctx sdk.Context,
+	clobPairId types.ClobPairId,
+) types.ClobPair {
+	clobPair, found := k.GetClobPair(ctx, clobPairId)
+	if !found {
+		panic(
+			fmt.Sprintf(
+				"mustGetClobPair: ClobPair with id %+v not found",
+				clobPairId,
+			),
+		)
+	}
+	return clobPair
+}
+
+// SetClobPairStatus fetches a ClobPair by id and sets its
+// Status property equal to the provided ClobPair_Status. This function returns
+// an error if the proposed status transition is not supported.
+func (k Keeper) SetClobPairStatus(
+	ctx sdk.Context,
+	clobPairId types.ClobPairId,
+	clobPairStatus types.ClobPair_Status,
+) error {	
+	clobPair := k.mustGetClobPair(ctx, clobPairId)
+	
+	if isSupportedTransition := types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus); !isSupportedTransition {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairStatusTransition,
+			"Cannot transition between status %+v and status %+v",
+			clobPair.Status,
+			clobPairStatus,
+		)
+	}
+
+	clobPair.Status = clobPairStatus
+	if err := k.validateClobPair(ctx, &clobPair); err != nil {
+		return err
+	}
+
+	k.setClobPair(ctx, clobPair)
+
+	return nil
 }

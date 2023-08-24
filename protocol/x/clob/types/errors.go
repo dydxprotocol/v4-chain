@@ -153,6 +153,11 @@ var (
 		32,
 		"Existing stateful order cancellation has higher-or-equal priority than the new one",
 	)
+	ErrInvalidClobPairStatusTransition = sdkerrors.Register(
+		ModuleName,
+		33,
+		"Invalid ClobPair status transition",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(
