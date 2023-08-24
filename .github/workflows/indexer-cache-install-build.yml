@@ -42,8 +42,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            packages/kafa/node_modules
-            services/comlink/node_modules
+            indexer/packages/kafa/node_modules
+            indexer/services/comlink/node_modules
           key: ${{ runner.os }}-indexer-pnpm-${{ github.sha }}
 
       - name: Cache build
@@ -51,6 +51,6 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            packages/kafka/build
-            services/comlink/build
+            indexer/packages/kafka/build
+            indexer/services/comlink/build
           key: ${{ runner.os }}-indexer-build-{{ github.sha }}
