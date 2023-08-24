@@ -16,6 +16,7 @@ const (
 	AttributeKeyEpochStartBlock     = "epoch_start_block"
 )
 
+// NewEpochEvent constructs a new_epoch sdk.Event.
 func NewEpochEvent(ctx sdk.Context, epoch EpochInfo, currentTick uint32) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeNewEpoch,
