@@ -1,6 +1,19 @@
 name: Protobuf
 on:  # yamllint disable-line rule:truthy
   pull_request:
+    paths:
+      # The protos themselves
+      - '**.proto'
+      # Any generated code
+      - '**.pb.go'
+      - '**.pb.gw.go'
+      - 'indexer/packages/v4-protos/**'
+      # Code that affects generation
+      - 'dydxjs/**'
+      - 'dydxpy/**'
+      - 'proto/**'
+      - 'indexer/package.json'
+      - 'protocol/scripts/protoc**'
   push:
     branches:
       - main
