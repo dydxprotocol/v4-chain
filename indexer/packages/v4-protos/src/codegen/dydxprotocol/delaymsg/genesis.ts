@@ -6,30 +6,32 @@ import { DeepPartial } from "../../helpers";
 export interface GenesisState {
   delayedMessages: DelayedMessage[];
   /**
-   * next_message_id is the next message ID to be used. Since we can delete
-   * messages and don't want to re-use message ids, we need to keep track of the
-   * next unused id.
+   * num_messages is the number of messages that have been created. It denotes
+   * the id to be assigned to the next message. This number may not match the
+   * number of messages currently stored on the chain because messages are
+   * deleted from the chain after they are executed.
    */
 
-  nextMessageId: number;
+  numMessages: number;
 }
 /** GenesisState defines the delaymsg module's genesis state. */
 
 export interface GenesisStateSDKType {
   delayed_messages: DelayedMessageSDKType[];
   /**
-   * next_message_id is the next message ID to be used. Since we can delete
-   * messages and don't want to re-use message ids, we need to keep track of the
-   * next unused id.
+   * num_messages is the number of messages that have been created. It denotes
+   * the id to be assigned to the next message. This number may not match the
+   * number of messages currently stored on the chain because messages are
+   * deleted from the chain after they are executed.
    */
 
-  next_message_id: number;
+  num_messages: number;
 }
 
 function createBaseGenesisState(): GenesisState {
   return {
     delayedMessages: [],
-    nextMessageId: 0
+    numMessages: 0
   };
 }
 
@@ -39,8 +41,8 @@ export const GenesisState = {
       DelayedMessage.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
-    if (message.nextMessageId !== 0) {
-      writer.uint32(16).uint32(message.nextMessageId);
+    if (message.numMessages !== 0) {
+      writer.uint32(16).uint32(message.numMessages);
     }
 
     return writer;
@@ -60,7 +62,7 @@ export const GenesisState = {
           break;
 
         case 2:
-          message.nextMessageId = reader.uint32();
+          message.numMessages = reader.uint32();
           break;
 
         default:
@@ -75,7 +77,7 @@ export const GenesisState = {
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
     message.delayedMessages = object.delayedMessages?.map(e => DelayedMessage.fromPartial(e)) || [];
-    message.nextMessageId = object.nextMessageId ?? 0;
+    message.numMessages = object.numMessages ?? 0;
     return message;
   }
 

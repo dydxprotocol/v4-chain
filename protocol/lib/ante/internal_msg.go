@@ -13,6 +13,7 @@ import (
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -47,6 +48,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*bridge.MsgUpdateEventParams,
 		*bridge.MsgUpdateProposeParams,
 		*bridge.MsgUpdateSafetyParams,
+
+		// delaymsg
+		*delaymsg.MsgDelayMessage,
 
 		// distribution
 		*distribution.MsgCommunityPoolSpend,

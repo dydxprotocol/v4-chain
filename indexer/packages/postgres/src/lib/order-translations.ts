@@ -1,5 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { IndexerOrder, IndexerOrder_ConditionType, IndexerOrder_Side } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerOrder, IndexerOrder_Side } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
 import * as OrderTable from '../stores/order-table';
@@ -8,7 +8,12 @@ import {
   OrderFromDatabase, OrderSide, PerpetualMarketFromDatabase, SubaccountFromDatabase,
 } from '../types';
 import { blockTimeFromIsoString } from './helpers';
-import { humanToQuantums, priceToSubticks, tifToProtocolOrderTIF } from './protocol-translations';
+import {
+  humanToQuantums,
+  priceToSubticks,
+  tifToProtocolOrderTIF,
+  orderTypeToProtocolConditionType,
+} from './protocol-translations';
 
 /**
  * Converts an order from the database to an IndexerOrder proto.
@@ -40,6 +45,9 @@ export async function convertToIndexerOrder(
     });
     throw new Error(`Subaccount for order not found: ${order.subaccountId}`);
   }
+  const triggerSubticks: Long = (order.triggerPrice === undefined || order.triggerPrice === null)
+    ? Long.fromValue(0, true)
+    : Long.fromString(priceToSubticks(order.triggerPrice, perpetualMarket), true);
   const indexerOrder: IndexerOrder = {
     orderId: {
       subaccountId: {
@@ -54,18 +62,17 @@ export async function convertToIndexerOrder(
     quantums: Long.fromString(humanToQuantums(
       order.size,
       perpetualMarket.atomicResolution,
-    ).toFixed()),
+    ).toFixed(), true),
     subticks: Long.fromString(priceToSubticks(
       order.price,
       perpetualMarket,
-    )),
+    ), true),
     goodTilBlockTime: blockTimeFromIsoString(order.goodTilBlockTime!),
     timeInForce: tifToProtocolOrderTIF(order.timeInForce),
     reduceOnly: order.reduceOnly,
     clientMetadata: Number(order.clientMetadata),
-    // TODO(IND-319): Derive these fields from the `triggerPrice` of the order.
-    conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
-    conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+    conditionType: orderTypeToProtocolConditionType(order.type),
+    conditionalOrderTriggerSubticks: triggerSubticks,
   };
 
   return indexerOrder;

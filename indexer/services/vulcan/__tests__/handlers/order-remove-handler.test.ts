@@ -221,6 +221,7 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrder,
         redisTestConstants.defaultRedisOrder,
         redisTestConstants.defaultOrderUuid,
+        undefined,
       ],
       [
         'goodTilBlockTime',
@@ -228,6 +229,15 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        undefined,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        testConstants.defaultConditionalOrder.triggerPrice,
       ],
     ])('successfully removes order (with %s)', async (
       _name: string,
@@ -235,6 +245,7 @@ describe('OrderRemoveHandler', () => {
       removedOrder: OrderCreateObject,
       removedRedisOrder: RedisOrder,
       expectedOrderUuid: string,
+      triggerPrice?: string,
     ) => {
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
         ...defaultOrderRemove,
@@ -312,7 +323,9 @@ describe('OrderRemoveHandler', () => {
             size: defaultSize,
             totalOptimisticFilled: '0',
             price: defaultPrice,
-            type: OrderType.LIMIT,
+            type: protocolTranslations.protocolConditionTypeToOrderType(
+              removedRedisOrder.order!.conditionType,
+            ),
             status: OrderStatus.CANCELED,
             timeInForce: apiTranslations.orderTIFToAPITIF(
               protocolTranslations.protocolOrderTIFToTIF(removedRedisOrder.order!.timeInForce),
@@ -328,6 +341,7 @@ describe('OrderRemoveHandler', () => {
             ticker: redisTestConstants.defaultRedisOrder.ticker,
             removalReason: OrderRemovalReason[defaultOrderRemove.reason],
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
+            triggerPrice,
           },
         ],
       };
@@ -364,6 +378,7 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrder,
         redisTestConstants.defaultRedisOrder,
         redisTestConstants.defaultOrderUuid,
+        undefined,
       ],
       [
         'goodTilBlockTime',
@@ -371,6 +386,15 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        undefined,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        testConstants.defaultConditionalOrder.triggerPrice,
       ],
     ])('successfully removes order (with %s) and can set reason to BEST_EFFORT_CANCELED', async (
       _name: string,
@@ -378,6 +402,7 @@ describe('OrderRemoveHandler', () => {
       removedOrder: OrderCreateObject,
       removedRedisOrder: RedisOrder,
       expectedOrderUuid: string,
+      triggerPrice?: string,
     ) => {
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
         ...defaultOrderRemove,
@@ -431,7 +456,9 @@ describe('OrderRemoveHandler', () => {
             size: defaultSize,
             totalOptimisticFilled: '0',
             price: defaultPrice,
-            type: OrderType.LIMIT,
+            type: protocolTranslations.protocolConditionTypeToOrderType(
+              removedRedisOrder.order!.conditionType,
+            ),
             status: OrderStatus.BEST_EFFORT_CANCELED,
             timeInForce: apiTranslations.orderTIFToAPITIF(
               protocolTranslations.protocolOrderTIFToTIF(removedRedisOrder.order!.timeInForce),
@@ -447,6 +474,7 @@ describe('OrderRemoveHandler', () => {
             ticker: redisTestConstants.defaultRedisOrder.ticker,
             removalReason: OrderRemovalReason[defaultOrderRemove.reason],
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
+            triggerPrice,
           },
         ],
       };
@@ -481,6 +509,7 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrder,
         redisTestConstants.defaultRedisOrder,
         redisTestConstants.defaultOrderUuid,
+        undefined,
       ],
       [
         'goodTilBlockTime',
@@ -488,6 +517,15 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        undefined,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        testConstants.defaultConditionalOrder.triggerPrice,
       ],
     ])(
       'successfully removes order (with %s) and does not change orderbookLevelsCache when order is on book',
@@ -497,6 +535,7 @@ describe('OrderRemoveHandler', () => {
         removedOrder: OrderCreateObject,
         removedRedisOrder: RedisOrder,
         expectedOrderUuid: string,
+        triggerPrice?: string,
       ) => {
         const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
           ...defaultOrderRemove,
@@ -551,7 +590,9 @@ describe('OrderRemoveHandler', () => {
             size: defaultSize,
             totalOptimisticFilled: '0',
             price: defaultPrice,
-            type: OrderType.LIMIT,
+            type: protocolTranslations.protocolConditionTypeToOrderType(
+              removedRedisOrder.order!.conditionType,
+            ),
             status: OrderStatus.CANCELED,
             timeInForce: apiTranslations.orderTIFToAPITIF(
               protocolTranslations.protocolOrderTIFToTIF(removedRedisOrder.order!.timeInForce),
@@ -567,6 +608,7 @@ describe('OrderRemoveHandler', () => {
             ticker: redisTestConstants.defaultRedisOrder.ticker,
             removalReason: OrderRemovalReason[defaultOrderRemove.reason],
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
+            triggerPrice,
           }],
         };
         expectWebsocketMessagesSent(
@@ -591,6 +633,7 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrder,
         redisTestConstants.defaultRedisOrder,
         redisTestConstants.defaultOrderUuid,
+        undefined,
       ],
       [
         'goodTilBlockTime',
@@ -598,6 +641,15 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        undefined,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        testConstants.defaultConditionalOrder.triggerPrice,
       ],
     ])(
       'does not increase orderbook level if total filled > quantums of order (with %s)',
@@ -607,6 +659,7 @@ describe('OrderRemoveHandler', () => {
         removedOrder: OrderCreateObject,
         removedRedisOrder: RedisOrder,
         expectedOrderUuid: string,
+        triggerPrice?: string,
       ) => {
         const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
           ...defaultOrderRemove,
@@ -672,7 +725,9 @@ describe('OrderRemoveHandler', () => {
             // Check that the total filled was > than quantums
             totalOptimisticFilled: '0.00010001',
             price: defaultPrice,
-            type: OrderType.LIMIT,
+            type: protocolTranslations.protocolConditionTypeToOrderType(
+              removedRedisOrder.order!.conditionType,
+            ),
             status: OrderStatus.CANCELED,
             timeInForce: apiTranslations.orderTIFToAPITIF(
               protocolTranslations.protocolOrderTIFToTIF(removedRedisOrder.order!.timeInForce),
@@ -688,6 +743,7 @@ describe('OrderRemoveHandler', () => {
             ticker: redisTestConstants.defaultRedisOrder.ticker,
             removalReason: OrderRemovalReason[defaultOrderRemove.reason],
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
+            triggerPrice,
           }],
         };
         expectWebsocketMessagesSent(
@@ -720,6 +776,13 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
       ],
     ])(
       'does not send subaccount message for fully-filled orders for best effort user cancel ' +
@@ -807,6 +870,13 @@ describe('OrderRemoveHandler', () => {
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
       ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+      ],
     ])(
       'does not send subaccount message for removals with fully-filled reason (with %s)',
       async (
@@ -889,14 +959,38 @@ describe('OrderRemoveHandler', () => {
       }));
     });
 
-    it('sends subaccount websocket message if order is not redis', async () => {
+    it.each([
+      [
+        'goodTilBlock',
+        redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        testConstants.defaultOrderGoodTilBlockTime,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        undefined,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        testConstants.defaultConditionalOrder.triggerPrice,
+      ],
+    ])('sends subaccount websocket message if order is not redis (with %s)', async (
+      _name: string,
+      removedOrderId: IndexerOrderId,
+      removedOrder: OrderCreateObject,
+      removedRedisOrder: RedisOrder,
+      expectedOrderUuid: string,
+      triggerPrice?: string,
+    ) => {
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
         ...statefulCancelationOrderRemove,
-        removedOrderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        removedOrderId,
       });
 
       await Promise.all([
-        OrderTable.create(testConstants.defaultOrderGoodTilBlockTime),
+        OrderTable.create(removedOrder),
       ]);
 
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
@@ -908,28 +1002,27 @@ describe('OrderRemoveHandler', () => {
       // Subaccounts message is sent first followed by orderbooks message
       const subaccountContents: SubaccountMessageContents = {
         orders: [{
-          id: redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+          id: expectedOrderUuid,
           subaccountId: testConstants.defaultSubaccountId,
-          clientId: redisTestConstants.defaultOrderIdGoodTilBlockTime.clientId.toString(),
+          clientId: removedOrderId.clientId.toString(),
           clobPairId: testConstants.defaultOrderGoodTilBlockTime.clobPairId,
           side: OrderSide.BUY,
-          size: testConstants.defaultOrderGoodTilBlockTime.size,
+          size: removedOrder.size,
           totalFilled: '0',
-          price: testConstants.defaultOrderGoodTilBlockTime.price,
-          type: OrderType.LIMIT,
+          price: removedOrder.price,
+          type: protocolTranslations.protocolConditionTypeToOrderType(
+            removedRedisOrder.order!.conditionType,
+          ),
           status: OrderStatus.CANCELED,
-          timeInForce: apiTranslations.orderTIFToAPITIF(
-            testConstants.defaultOrderGoodTilBlockTime.timeInForce,
-          ),
-          postOnly: apiTranslations.isOrderTIFPostOnly(
-            testConstants.defaultOrderGoodTilBlockTime.timeInForce,
-          ),
-          reduceOnly: testConstants.defaultOrderGoodTilBlockTime.reduceOnly,
-          orderFlags: testConstants.defaultOrderGoodTilBlockTime.orderFlags,
-          goodTilBlockTime: testConstants.defaultOrderGoodTilBlockTime.goodTilBlockTime,
-          ticker: redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          timeInForce: apiTranslations.orderTIFToAPITIF(removedOrder.timeInForce),
+          postOnly: apiTranslations.isOrderTIFPostOnly(removedOrder.timeInForce),
+          reduceOnly: removedOrder.reduceOnly,
+          orderFlags: removedOrder.orderFlags,
+          goodTilBlockTime: removedOrder.goodTilBlockTime,
+          ticker: removedRedisOrder.ticker,
           removalReason: OrderRemovalReason[statefulCancelationOrderRemove.reason],
-          clientMetadata: testConstants.defaultOrderGoodTilBlockTime.clientMetadata.toString(),
+          clientMetadata: removedOrder.clientMetadata.toString(),
+          triggerPrice,
         }],
       };
       expectWebsocketMessagesSent(
@@ -946,20 +1039,44 @@ describe('OrderRemoveHandler', () => {
       expectTimingStats(true, false, false, true);
     });
 
-    it('successfully removes stateful order, not resting on book', async () => {
+    it.each([
+      [
+        'goodTilBlock',
+        redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        testConstants.defaultOrderGoodTilBlockTime,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        undefined,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        testConstants.defaultConditionalOrder.triggerPrice,
+      ],
+    ])('successfully removes stateful order, not resting on book', async (
+      _name: string,
+      removedOrderId: IndexerOrderId,
+      removedOrder: OrderCreateObject,
+      removedRedisOrder: RedisOrder,
+      expectedOrderUuid: string,
+      triggerPrice?: string,
+    ) => {
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
         ...statefulCancelationOrderRemove,
-        removedOrderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        removedOrderId,
       });
 
       await Promise.all([
         placeOrder(
           {
-            redisOrder: redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+            redisOrder: removedRedisOrder,
             client: redisClient,
           }),
         OrderbookLevelsCache.updatePriceLevel({
-          ticker: redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          ticker: removedRedisOrder.ticker,
           side: OrderSide.BUY,
           humanPrice: defaultPrice,
           sizeDeltaInQuantums: defaultQuantums.toString(),
@@ -970,7 +1087,7 @@ describe('OrderRemoveHandler', () => {
       // Must be done separately so that the subaccount and perpetualMarket have been created
       // before the order
       await Promise.all([
-        OrderTable.create(testConstants.defaultOrderGoodTilBlockTime),
+        OrderTable.create(removedOrder),
       ]);
 
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
@@ -982,42 +1099,41 @@ describe('OrderRemoveHandler', () => {
       await Promise.all([
         // orderbook should not be affected, so it will be set to defaultQuantums
         expectOrderbookLevelCache(
-          redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          removedRedisOrder.ticker,
           OrderSide.BUY,
           redisTestConstants.defaultPrice,
           defaultQuantums.toString(),
         ),
-        expectOrdersCacheEmpty(redisTestConstants.defaultOrderUuidGoodTilBlockTime),
-        expectOrdersDataCacheEmpty(redisTestConstants.defaultOrderIdGoodTilBlockTime),
+        expectOrdersCacheEmpty(expectedOrderUuid),
+        expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
-        expectCanceledOrdersCacheEmpty(redisTestConstants.defaultOrderUuidGoodTilBlockTime),
+        expectCanceledOrdersCacheEmpty(expectedOrderUuid),
       ]);
 
       // Subaccounts message is sent first followed by orderbooks message
       const subaccountContents: SubaccountMessageContents = {
         orders: [{
-          id: redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+          id: expectedOrderUuid,
           subaccountId: testConstants.defaultSubaccountId,
-          clientId: redisTestConstants.defaultOrderIdGoodTilBlockTime.clientId.toString(),
+          clientId: removedOrderId.clientId.toString(),
           clobPairId: testConstants.defaultOrderGoodTilBlockTime.clobPairId,
           side: OrderSide.BUY,
-          size: testConstants.defaultOrderGoodTilBlockTime.size,
+          size: removedOrder.size,
           totalFilled: '0',
-          price: testConstants.defaultOrderGoodTilBlockTime.price,
-          type: OrderType.LIMIT,
+          price: removedOrder.price,
+          type: protocolTranslations.protocolConditionTypeToOrderType(
+            removedRedisOrder.order!.conditionType,
+          ),
           status: OrderStatus.CANCELED,
-          timeInForce: apiTranslations.orderTIFToAPITIF(
-            testConstants.defaultOrderGoodTilBlockTime.timeInForce,
-          ),
-          postOnly: apiTranslations.isOrderTIFPostOnly(
-            testConstants.defaultOrderGoodTilBlockTime.timeInForce,
-          ),
-          reduceOnly: testConstants.defaultOrderGoodTilBlockTime.reduceOnly,
-          orderFlags: testConstants.defaultOrderGoodTilBlockTime.orderFlags,
-          goodTilBlockTime: testConstants.defaultOrderGoodTilBlockTime.goodTilBlockTime,
-          ticker: redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          timeInForce: apiTranslations.orderTIFToAPITIF(removedOrder.timeInForce),
+          postOnly: apiTranslations.isOrderTIFPostOnly(removedOrder.timeInForce),
+          reduceOnly: removedOrder.reduceOnly,
+          orderFlags: removedOrder.orderFlags,
+          goodTilBlockTime: removedOrder.goodTilBlockTime,
+          ticker: removedRedisOrder.ticker,
           removalReason: OrderRemovalReason[statefulCancelationOrderRemove.reason],
-          clientMetadata: testConstants.defaultOrderGoodTilBlockTime.clientMetadata.toString(),
+          clientMetadata: removedOrder.clientMetadata.toString(),
+          triggerPrice,
         }],
       };
       expectWebsocketMessagesSent(
@@ -1034,21 +1150,45 @@ describe('OrderRemoveHandler', () => {
       expectTimingStats(true, false, false, true);
     });
 
-    it('successfully removes stateful order, resting on book', async () => {
+    it.each([
+      [
+        'goodTilBlock',
+        redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        testConstants.defaultOrderGoodTilBlockTime,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        undefined,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        testConstants.defaultConditionalOrder.triggerPrice,
+      ],
+    ])('successfully removes stateful order, resting on book', async (
+      _name: string,
+      removedOrderId: IndexerOrderId,
+      removedOrder: OrderCreateObject,
+      removedRedisOrder: RedisOrder,
+      expectedOrderUuid: string,
+      triggerPrice?: string,
+    ) => {
       const orderbookLevel: string = Big(defaultQuantums.toString()).times(2).toString();
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
         ...statefulCancelationOrderRemove,
-        removedOrderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        removedOrderId,
       });
 
       await Promise.all([
         placeOrder(
           {
-            redisOrder: redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+            redisOrder: removedRedisOrder,
             client: redisClient,
           }),
         OrderbookLevelsCache.updatePriceLevel({
-          ticker: redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          ticker: removedRedisOrder.ticker,
           side: OrderSide.BUY,
           humanPrice: defaultPrice,
           sizeDeltaInQuantums: orderbookLevel,
@@ -1059,9 +1199,9 @@ describe('OrderRemoveHandler', () => {
       // Must be done separately so that the subaccount and perpetualMarket have been created
       // before the order
       await Promise.all([
-        OrderTable.create(testConstants.defaultOrderGoodTilBlockTime),
+        OrderTable.create(removedOrder),
         // Must be done after adding orders to all caches to overwrite the ordersDataCache
-        setOrderToRestingOnOrderbook(redisTestConstants.defaultRedisOrderGoodTilBlockTime),
+        setOrderToRestingOnOrderbook(removedRedisOrder),
       ]);
 
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
@@ -1078,41 +1218,40 @@ describe('OrderRemoveHandler', () => {
       ).toString();
       await Promise.all([
         expectOrderbookLevelCache(
-          redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          removedRedisOrder.ticker,
           OrderSide.BUY,
           redisTestConstants.defaultPrice,
           remainingOrderbookLevel,
         ),
-        expectOrdersCacheEmpty(redisTestConstants.defaultOrderUuidGoodTilBlockTime),
-        expectOrdersDataCacheEmpty(redisTestConstants.defaultOrderIdGoodTilBlockTime),
+        expectOrdersCacheEmpty(expectedOrderUuid),
+        expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
       ]);
 
       // Subaccounts message is sent first followed by orderbooks message
       const subaccountContents: SubaccountMessageContents = {
         orders: [{
-          id: redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+          id: expectedOrderUuid,
           subaccountId: testConstants.defaultSubaccountId,
-          clientId: redisTestConstants.defaultOrderIdGoodTilBlockTime.clientId.toString(),
+          clientId: removedOrderId.clientId.toString(),
           clobPairId: testConstants.defaultOrderGoodTilBlockTime.clobPairId,
           side: OrderSide.BUY,
-          size: testConstants.defaultOrderGoodTilBlockTime.size,
+          size: removedOrder.size,
           totalFilled: '0',
-          price: testConstants.defaultOrderGoodTilBlockTime.price,
-          type: OrderType.LIMIT,
+          price: removedOrder.price,
+          type: protocolTranslations.protocolConditionTypeToOrderType(
+            removedRedisOrder.order!.conditionType,
+          ),
           status: OrderStatus.CANCELED,
-          timeInForce: apiTranslations.orderTIFToAPITIF(
-            testConstants.defaultOrderGoodTilBlockTime.timeInForce,
-          ),
-          postOnly: apiTranslations.isOrderTIFPostOnly(
-            testConstants.defaultOrderGoodTilBlockTime.timeInForce,
-          ),
-          reduceOnly: testConstants.defaultOrderGoodTilBlockTime.reduceOnly,
-          orderFlags: testConstants.defaultOrderGoodTilBlockTime.orderFlags,
-          goodTilBlockTime: testConstants.defaultOrderGoodTilBlockTime.goodTilBlockTime,
-          ticker: redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          timeInForce: apiTranslations.orderTIFToAPITIF(removedOrder.timeInForce),
+          postOnly: apiTranslations.isOrderTIFPostOnly(removedOrder.timeInForce),
+          reduceOnly: removedOrder.reduceOnly,
+          orderFlags: removedOrder.orderFlags,
+          goodTilBlockTime: removedOrder.goodTilBlockTime,
+          ticker: removedRedisOrder.ticker,
           removalReason: OrderRemovalReason[statefulCancelationOrderRemove.reason],
-          clientMetadata: testConstants.defaultOrderGoodTilBlockTime.clientMetadata.toString(),
+          clientMetadata: removedOrder.clientMetadata.toString(),
+          triggerPrice,
         }],
       };
 
@@ -1143,21 +1282,45 @@ describe('OrderRemoveHandler', () => {
       expectTimingStats(true, false, true, true);
     });
 
-    it('does not increase orderbook level if total filled > quantums', async () => {
+    it.each([
+      [
+        'goodTilBlock',
+        redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        testConstants.defaultOrderGoodTilBlockTime,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        undefined,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultOrderIdConditional,
+        testConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        testConstants.defaultConditionalOrder.triggerPrice,
+      ],
+    ])('does not increase orderbook level if total filled > quantums', async (
+      _name: string,
+      removedOrderId: IndexerOrderId,
+      removedOrder: OrderCreateObject,
+      removedRedisOrder: RedisOrder,
+      expectedOrderUuid: string,
+      triggerPrice?: string,
+    ) => {
       const orderbookLevel: string = Big(defaultQuantums.toString()).times(2).toString();
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
         ...statefulCancelationOrderRemove,
-        removedOrderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        removedOrderId,
       });
 
       await Promise.all([
         placeOrder(
           {
-            redisOrder: redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+            redisOrder: removedRedisOrder,
             client: redisClient,
           }),
         OrderbookLevelsCache.updatePriceLevel({
-          ticker: redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          ticker: removedRedisOrder.ticker,
           side: OrderSide.BUY,
           humanPrice: defaultPrice,
           sizeDeltaInQuantums: orderbookLevel,
@@ -1169,7 +1332,7 @@ describe('OrderRemoveHandler', () => {
         orderPlace: undefined,
         orderRemove: undefined,
         orderUpdate: {
-          orderId: redisTestConstants.defaultRedisOrderGoodTilBlockTime.order!.orderId!,
+          orderId: removedRedisOrder.order!.orderId!,
           totalFilledQuantums: defaultQuantums.add(Long.fromValue(100)),
         },
       };
@@ -1178,7 +1341,7 @@ describe('OrderRemoveHandler', () => {
       // Must be done separately so that the subaccount and perpetualMarket have been created
       // before the order
       await Promise.all([
-        OrderTable.create(testConstants.defaultOrderGoodTilBlockTime),
+        OrderTable.create(removedOrder),
       ]);
 
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
@@ -1189,41 +1352,40 @@ describe('OrderRemoveHandler', () => {
 
       await Promise.all([
         expectOrderbookLevelCache(
-          redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          removedRedisOrder.ticker,
           OrderSide.BUY,
           redisTestConstants.defaultPrice,
           orderbookLevel,
         ),
-        expectOrdersCacheEmpty(redisTestConstants.defaultOrderUuidGoodTilBlockTime),
-        expectOrdersDataCacheEmpty(redisTestConstants.defaultOrderIdGoodTilBlockTime),
+        expectOrdersCacheEmpty(expectedOrderUuid),
+        expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
       ]);
 
       // Subaccounts message is sent first followed by orderbooks message
       const subaccountContents: SubaccountMessageContents = {
         orders: [{
-          id: redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+          id: expectedOrderUuid,
           subaccountId: testConstants.defaultSubaccountId,
-          clientId: redisTestConstants.defaultOrderIdGoodTilBlockTime.clientId.toString(),
+          clientId: removedOrderId.clientId.toString(),
           clobPairId: testConstants.defaultOrderGoodTilBlockTime.clobPairId,
           side: OrderSide.BUY,
-          size: testConstants.defaultOrderGoodTilBlockTime.size,
+          size: removedOrder.size,
           totalFilled: '0',
-          price: testConstants.defaultOrderGoodTilBlockTime.price,
-          type: OrderType.LIMIT,
+          price: removedOrder.price,
+          type: protocolTranslations.protocolConditionTypeToOrderType(
+            removedRedisOrder.order!.conditionType,
+          ),
           status: OrderStatus.CANCELED,
-          timeInForce: apiTranslations.orderTIFToAPITIF(
-            testConstants.defaultOrderGoodTilBlockTime.timeInForce,
-          ),
-          postOnly: apiTranslations.isOrderTIFPostOnly(
-            testConstants.defaultOrderGoodTilBlockTime.timeInForce,
-          ),
-          reduceOnly: testConstants.defaultOrderGoodTilBlockTime.reduceOnly,
-          orderFlags: testConstants.defaultOrderGoodTilBlockTime.orderFlags,
-          goodTilBlockTime: testConstants.defaultOrderGoodTilBlockTime.goodTilBlockTime,
-          ticker: redisTestConstants.defaultRedisOrderGoodTilBlockTime.ticker,
+          timeInForce: apiTranslations.orderTIFToAPITIF(removedOrder.timeInForce),
+          postOnly: apiTranslations.isOrderTIFPostOnly(removedOrder.timeInForce),
+          reduceOnly: removedOrder.reduceOnly,
+          orderFlags: removedOrder.orderFlags,
+          goodTilBlockTime: removedOrder.goodTilBlockTime,
+          ticker: removedRedisOrder.ticker,
           removalReason: OrderRemovalReason[statefulCancelationOrderRemove.reason],
-          clientMetadata: testConstants.defaultOrderGoodTilBlockTime.clientMetadata.toString(),
+          clientMetadata: removedOrder.clientMetadata.toString(),
+          triggerPrice,
         }],
       };
 

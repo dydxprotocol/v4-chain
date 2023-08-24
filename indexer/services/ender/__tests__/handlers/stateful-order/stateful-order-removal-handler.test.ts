@@ -138,7 +138,7 @@ describe('statefulOrderRemovalHandler', () => {
     );
 
     await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new Error(`Unable to cancel order with orderId: ${orderId}`),
+      new Error(`Unable to update order status with orderId: ${orderId}`),
     );
   });
 });

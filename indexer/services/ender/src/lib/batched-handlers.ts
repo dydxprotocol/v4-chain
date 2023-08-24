@@ -69,10 +69,9 @@ export class BatchedHandlers {
   /**
    * Processes all handlers that were passed in through `addHandler` parallelizing handlers.handle
    * and ensuring that handlers with overlapping parallelization ids are not processed in parallel.
-   * @returns the kafka publisher which contains all the events to be published to kafka
+   * Adds events to the kafkaPublisher.
    */
-  public async process(): Promise<KafkaPublisher> {
-    const kafkaPublisher: KafkaPublisher = new KafkaPublisher();
+  public async process(kafkaPublisher: KafkaPublisher): Promise<void> {
     for (let batchIndex = 0; batchIndex < this.batchedHandlers.length; batchIndex++) {
       const start: number = Date.now();
       const handlerCountMapping: { [key: string]: number } = {};
@@ -107,6 +106,5 @@ export class BatchedHandlers {
       stats.histogram(`${config.SERVICE_NAME}.batch_size`, this.batchedHandlers[batchIndex].length);
     }
     stats.histogram(`${config.SERVICE_NAME}.num_batches_in_block`, this.batchedHandlers.length);
-    return kafkaPublisher;
   }
 }

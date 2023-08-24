@@ -63,4 +63,5 @@ type ProcessBridgeKeeper interface {
 	GetRecognizedEventInfo(
 		ctx sdk.Context,
 	) (recognizedEventInfo bridgetypes.BridgeEventInfo)
+	GetBridgeEventFromServer(ctx sdk.Context, id uint32) (event bridgetypes.BridgeEvent, found bool)
 }

@@ -10,7 +10,7 @@ func DefaultGenesis() *GenesisState {
 		EventParams: EventParams{
 			Denom:      "bridge-token",
 			EthChainId: 11155111,
-			EthAddress: "0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935",
+			EthAddress: "0xEf01c3A30eB57c91c40C52E996d29c202ae72193",
 		},
 		ProposeParams: ProposeParams{
 			MaxBridgesPerBlock:           10,

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -60,6 +62,20 @@ func (k Keeper) CreateAsset(
 
 	// Store the denom-to-asset-id mapping
 	k.setDenomToId(ctx, asset.Denom, asset.Id)
+
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeAsset,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewAssetCreateEvent(
+				nextId,
+				asset.Symbol,
+				asset.HasMarket,
+				asset.MarketId,
+				asset.AtomicResolution,
+			),
+		),
+	)
 
 	return asset, nil
 }

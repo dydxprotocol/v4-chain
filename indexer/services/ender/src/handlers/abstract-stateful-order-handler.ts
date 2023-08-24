@@ -20,13 +20,14 @@ export abstract class AbstractStatefulOrderHandler<T> extends Handler<T> {
     ];
   }
 
-  protected async cancelOrder(
+  protected async updateOrderStatus(
     orderIdProto: IndexerOrderId,
+    status: OrderStatus,
   ): Promise<OrderFromDatabase> {
     const orderId = OrderTable.orderIdToUuid(orderIdProto);
     const orderUpdateObject: OrderUpdateObject = {
       id: orderId,
-      status: OrderStatus.CANCELED,
+      status,
     };
 
     const order: OrderFromDatabase | undefined = await OrderTable.update(
@@ -34,10 +35,11 @@ export abstract class AbstractStatefulOrderHandler<T> extends Handler<T> {
       { txId: this.txId },
     );
     if (order === undefined) {
-      const message: string = `Unable to cancel order with orderId: ${orderId}`;
+      const message: string = `Unable to update order status with orderId: ${orderId}`;
       logger.error({
         at: 'AbstractStatefulOrderHandler#cancelOrder',
         message,
+        status,
       });
       throw new Error(message);
     }
@@ -53,6 +55,7 @@ export abstract class AbstractStatefulOrderHandler<T> extends Handler<T> {
     perpetualMarket: PerpetualMarketFromDatabase,
     order: IndexerOrder,
     type: OrderType,
+    status: OrderStatus,
     triggerPrice?: string,
   ): Promise<OrderFromDatabase> {
     const size: string = getSize(order, perpetualMarket);
@@ -67,7 +70,7 @@ export abstract class AbstractStatefulOrderHandler<T> extends Handler<T> {
       totalFilled: '0',
       price,
       type,
-      status: OrderStatus.OPEN,
+      status,
       timeInForce: protocolTranslations.protocolOrderTIFToTIF(order.timeInForce),
       reduceOnly: order.reduceOnly,
       orderFlags: order.orderId!.orderFlags.toString(),

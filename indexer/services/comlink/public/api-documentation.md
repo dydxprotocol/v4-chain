@@ -928,7 +928,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders?address=string&subacco
 |ticker|query|string|false|none|
 |side|query|[OrderSide](#schemaorderside)|false|none|
 |type|query|[OrderType](#schemaordertype)|false|none|
-|status|query|[APIOrderStatus](#schemaapiorderstatus)|false|none|
+|status|query|array[any]|false|none|
 |goodTilBlockBeforeOrAt|query|number(double)|false|none|
 |goodTilBlockTimeBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
 |returnLatestOrders|query|boolean|false|none|
@@ -972,6 +972,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders?address=string&subacco
     "goodTilBlockTime": "string",
     "createdAtHeight": "string",
     "clientMetadata": "string",
+    "triggerPrice": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -1008,6 +1009,7 @@ Status Code **200**
 |» goodTilBlockTime|string|false|none|none|
 |» createdAtHeight|string|false|none|none|
 |» clientMetadata|string|true|none|none|
+|» triggerPrice|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -1127,6 +1129,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}',
   "goodTilBlockTime": "string",
   "createdAtHeight": "string",
   "clientMetadata": "string",
+  "triggerPrice": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -1663,7 +1666,8 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/transfers?address=string&suba
       "createdAt": "string",
       "createdAtHeight": "string",
       "symbol": "string",
-      "type": "TRANSFER_IN"
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
     }
   ]
 }
@@ -2662,6 +2666,7 @@ or
   "goodTilBlockTime": "string",
   "createdAtHeight": "string",
   "clientMetadata": "string",
+  "triggerPrice": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -2689,6 +2694,7 @@ or
 |goodTilBlockTime|string|false|none|none|
 |createdAtHeight|string|false|none|none|
 |clientMetadata|string|true|none|none|
+|triggerPrice|string|false|none|none|
 |timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|
@@ -2720,6 +2726,7 @@ or
 |*anonymous*|PAUSED|
 |*anonymous*|CANCEL_ONLY|
 |*anonymous*|POST_ONLY|
+|*anonymous*|INITIALIZING|
 
 ## PerpetualMarketResponseObject
 
@@ -3083,7 +3090,8 @@ or
   "createdAt": "string",
   "createdAtHeight": "string",
   "symbol": "string",
-  "type": "TRANSFER_IN"
+  "type": "TRANSFER_IN",
+  "transactionHash": "string"
 }
 
 ```
@@ -3104,6 +3112,7 @@ or
 |createdAtHeight|string|true|none|none|
 |symbol|string|true|none|none|
 |type|[TransferType](#schematransfertype)|true|none|none|
+|transactionHash|string|true|none|none|
 
 ## TransferResponse
 
@@ -3129,7 +3138,8 @@ or
       "createdAt": "string",
       "createdAtHeight": "string",
       "symbol": "string",
-      "type": "TRANSFER_IN"
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
     }
   ]
 }

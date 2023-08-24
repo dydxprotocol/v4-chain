@@ -3,7 +3,6 @@ package sim_helpers
 import (
 	"math"
 
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -23,15 +22,6 @@ var (
 		Valid:      25,
 	}
 
-	MinFeePpm = GenesisParameters[int]{
-		Reasonable: 0,
-		Valid:      0,
-	}
-	MaxFeePpm = GenesisParameters[int]{
-		Reasonable: 1000, // 0.1%
-		Valid:      clobtypes.MaxFeePpm,
-	}
-
 	MinStepBaseQuantums = GenesisParameters[int]{
 		Reasonable: 10,
 		Valid:      1,
@@ -41,10 +31,6 @@ var (
 		Valid:      math.MaxUint32,
 	}
 
-	MinOrderBaseQuantums = GenesisParameters[int]{
-		Reasonable: 10,
-		Valid:      1,
-	}
 	MaxOrderBaseQuantums = GenesisParameters[int]{
 		Reasonable: 10_000_000,
 		Valid:      math.MaxUint32,

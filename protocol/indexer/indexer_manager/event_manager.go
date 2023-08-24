@@ -13,6 +13,7 @@ type IndexerEventManager interface {
 	SendOnchainData(block *IndexerTendermintBlock)
 	ProduceBlock(ctx sdk.Context) *IndexerTendermintBlock
 	AddBlockEvent(ctx sdk.Context, subType string, data string, blockEvent IndexerTendermintEvent_BlockEvent)
+	ClearEvents(ctx sdk.Context)
 }
 
 // Ensure the `IndexerEventManager` interface is implemented at compile time.
@@ -65,6 +66,15 @@ func (i *indexerEventManagerImpl) AddTxnEvent(
 ) {
 	if i.indexerMessageSender.Enabled() {
 		addTxnEvent(ctx, subType, data, i.indexerEventsTransientStoreKey)
+	}
+}
+
+// ClearEvents clears all events in the context's transient store of indexer events.
+func (i *indexerEventManagerImpl) ClearEvents(
+	ctx sdk.Context,
+) {
+	if i.indexerMessageSender.Enabled() {
+		clearEvents(ctx, i.indexerEventsTransientStoreKey)
 	}
 }
 

@@ -1,5 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { MarketFromDatabase, MarketTable } from '@dydxprotocol-indexer/postgres';
+import { MarketFromDatabase, MarketTable, marketRefresher } from '@dydxprotocol-indexer/postgres';
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { ConsolidatedKafkaEvent, MarketCreateEventMessage } from '../../lib/types';
@@ -27,7 +27,7 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
       marketCreate.marketId,
     );
     // TODO(DEC-1752): Removed the height check once database seeding comes from V4 events.
-    if (market !== undefined && this.block.height !== 0 && this.block.height !== 1) {
+    if (market !== undefined && this.block.height !== 0) {
       this.logAndThrowParseMessageError(
         'Market in MarketCreate already exists',
         { marketCreate },
@@ -35,15 +35,20 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
     }
     if (market === undefined) {
       await this.runFuncWithTimingStatAndErrorLogging(
-        MarketTable.create({
-          id: marketCreate.marketId,
-          pair: marketCreate.marketCreate.base!.pair,
-          exponent: marketCreate.marketCreate.exponent,
-          minPriceChangePpm: marketCreate.marketCreate.base!.minPriceChangePpm,
-        }),
+        this.createMarket(marketCreate),
         this.generateTimingStatsOptions('create_market'),
       );
     }
     return [];
+  }
+
+  private async createMarket(marketCreate: MarketCreateEventMessage): Promise<void> {
+    await MarketTable.create({
+      id: marketCreate.marketId,
+      pair: marketCreate.marketCreate.base!.pair,
+      exponent: marketCreate.marketCreate.exponent,
+      minPriceChangePpm: marketCreate.marketCreate.base!.minPriceChangePpm,
+    });
+    await marketRefresher.updateMarkets();
   }
 }

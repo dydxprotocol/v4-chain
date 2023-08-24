@@ -33,9 +33,9 @@ func TestCreateOrderbook_MultiplePerpetualClobPairSucceeds(t *testing.T) {
 
 	memclob := NewMemClobPriceTimePriority(false)
 	clobPair_Btc2 := types.ClobPair{
-		Id:                   100,
-		SubticksPerTick:      120,
-		MinOrderBaseQuantums: 1,
+		Id:               100,
+		SubticksPerTick:  120,
+		StepBaseQuantums: 1,
 		Metadata: &types.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &types.PerpetualClobMetadata{
 				PerpetualId: 0,
@@ -102,9 +102,9 @@ func TestCreateOrderbook_PanicsWhenSubticksPerTickIsZero(t *testing.T) {
 	memclob := NewMemClobPriceTimePriority(false)
 
 	clobPair := types.ClobPair{
-		Id:                   0,
-		SubticksPerTick:      0,
-		MinOrderBaseQuantums: 10,
+		Id:               0,
+		SubticksPerTick:  0,
+		StepBaseQuantums: 10,
 		Metadata: &types.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &types.PerpetualClobMetadata{
 				PerpetualId: 0,
@@ -122,9 +122,9 @@ func TestCreateOrderbook_PanicsWhenMinOrderBaseQuantumsIsZero(t *testing.T) {
 	memclob := NewMemClobPriceTimePriority(false)
 
 	clobPair := types.ClobPair{
-		Id:                   0,
-		SubticksPerTick:      10,
-		MinOrderBaseQuantums: 0,
+		Id:               0,
+		SubticksPerTick:  10,
+		StepBaseQuantums: 0,
 		Metadata: &types.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &types.PerpetualClobMetadata{
 				PerpetualId: 0,

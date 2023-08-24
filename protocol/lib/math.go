@@ -29,6 +29,17 @@ func Uint64LinearInterpolate(v0 uint64, v1 uint64, cPpm uint32) (uint64, error) 
 	}
 }
 
+// AddUint32 returns the sum of a and b. If the sum underflows or overflows, this method returns an error.
+func AddUint32(a int64, b uint32) (int64, error) {
+	sum := a + int64(b)
+
+	// This check should catch a + b overflows.
+	if sum < a {
+		return 0, fmt.Errorf("int64 overflow: %d + %d", a, b)
+	}
+	return sum, nil
+}
+
 // DivisionUint32RoundUp returns the result of x/y, rounded up.
 func DivisionUint32RoundUp(x, y uint32) uint32 {
 	// Cast to uint64 so that equation below can't overflow.

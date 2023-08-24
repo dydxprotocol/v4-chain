@@ -101,6 +101,11 @@ const (
 	IntervalMs = 2000
 	TimeoutMs = 3000
 	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "TestVolatileExchange"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 3
 `
 )
 

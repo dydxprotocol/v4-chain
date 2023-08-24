@@ -103,8 +103,9 @@ type ProposeParams struct {
 	// also recognize its occurence. Therefore the bridge daemon should
 	// pool for new finalized events at least as often as this parameter.
 	ProposeDelayDuration time.Duration `protobuf:"bytes,2,opt,name=propose_delay_duration,json=proposeDelayDuration,proto3,stdduration" json:"propose_delay_duration"`
-	// Do not propose any events if a random number generator
-	// (between 0 and 1_000_000) generates a number smaller than this number.
+	// Do not propose any events if a [0, 1_000_000) random number generator
+	// generates a number smaller than this number.
+	// Setting this parameter to 1_000_000 means always skipping proposing events.
 	SkipRatePpm uint32 `protobuf:"varint,3,opt,name=skip_rate_ppm,json=skipRatePpm,proto3" json:"skip_rate_ppm,omitempty"`
 	// Do not propose any events if the timestamp of the proposal block is
 	// behind the proposers' wall-clock by at least this duration.

@@ -53,8 +53,7 @@ message ClobPair {
   enum Status {
     // Default value. This value is invalid and unused.
     STATUS_UNSPECIFIED = 0;
-    // STATUS_ACTIVE behavior is unfinalized.
-    // TODO(DEC-600): update this documentation.
+    // STATUS_ACTIVE represents an active clob pair.
     STATUS_ACTIVE = 1;
     // STATUS_PAUSED behavior is unfinalized.
     // TODO(DEC-600): update this documentation.
@@ -65,13 +64,11 @@ message ClobPair {
     // STATUS_POST_ONLY behavior is unfinalized.
     // TODO(DEC-600): update this documentation.
     STATUS_POST_ONLY = 4;
+    // STATUS_INITIALIZING represents a newly-added clob pair.
+    // Clob pairs in this state only accept orders which are
+    // both short-term and post-only.
+    STATUS_INITIALIZING = 5;
   }
 
   Status status = 8;
-
-  // The maker fee in parts-per-million.
-  uint32 maker_fee_ppm = 9;
-
-  // The taker fee in parts-per-million.
-  uint32 taker_fee_ppm = 10;
 }

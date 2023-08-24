@@ -21,24 +21,11 @@ func TestGetClobPairSubticksPerTick(t *testing.T) {
 
 func TestGetClobPairMinOrderBaseQuantums(t *testing.T) {
 	clobPair := types.ClobPair{
-		MinOrderBaseQuantums: uint64(100),
+		StepBaseQuantums: uint64(100),
 	}
 
 	minOrderBaseQuantums := clobPair.GetClobPairMinOrderBaseQuantums()
 	require.Equal(t, satypes.BaseQuantums(100), minOrderBaseQuantums)
-}
-
-func TestGetFeePpm(t *testing.T) {
-	makerFeePpm := uint32(500)
-	takerFeePpm := uint32(1000)
-
-	clobPair := types.ClobPair{
-		MakerFeePpm: makerFeePpm,
-		TakerFeePpm: takerFeePpm,
-	}
-
-	require.Equal(t, takerFeePpm, clobPair.GetFeePpm(true))
-	require.Equal(t, makerFeePpm, clobPair.GetFeePpm(false))
 }
 
 func TestGetPerpetualId(t *testing.T) {
@@ -49,4 +36,59 @@ func TestGetPerpetualId(t *testing.T) {
 	perpetualId, err = constants.ClobPair_Asset.GetPerpetualId()
 	require.Equal(t, uint32(0), perpetualId)
 	require.ErrorIs(t, types.ErrAssetOrdersNotImplemented, err)
+}
+
+func TestIsSupportedClobPairStatus_Supported(t *testing.T) {
+	// these are the only two supported statuses
+	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_ACTIVE))
+	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_INITIALIZING))
+}
+
+func TestIsSupportedClobPairStatus_Unsupported(t *testing.T) {
+	// out of bounds of the clob pair status enum
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_Status(100)))
+
+	// these are part of the ClobPair_Status enum but are not supported
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_UNSPECIFIED))
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_PAUSED))
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_CANCEL_ONLY))
+	require.False(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_POST_ONLY))
+}
+
+func TestIsSupportedClobPairStatusTransition_Supported(t *testing.T) {
+	// only supported transition
+	require.True(t, types.IsSupportedClobPairStatusTransition(
+		types.ClobPair_STATUS_INITIALIZING, types.ClobPair_STATUS_ACTIVE,
+	))
+}
+
+func TestIsSupportedClobPairStatusTransition_Unsupported(t *testing.T) {
+	// out of bounds of the clob pair status enum
+	require.False(t, types.IsSupportedClobPairStatusTransition(
+		types.ClobPair_Status(100), types.ClobPair_Status(100),
+	))
+	require.False(t, types.IsSupportedClobPairStatusTransition(
+		types.ClobPair_STATUS_ACTIVE, types.ClobPair_Status(100),
+	))
+	require.False(t, types.IsSupportedClobPairStatusTransition(
+		types.ClobPair_Status(100), types.ClobPair_STATUS_ACTIVE,
+	))
+
+	// iterate over all permutations of clob pair statuses
+	for _, fromClobPairStatus := range types.ClobPair_Status_value {
+		for _, toClobPairStatus := range types.ClobPair_Status_value {
+			if fromClobPairStatus == int32(types.ClobPair_STATUS_INITIALIZING) &&
+				toClobPairStatus == int32(types.ClobPair_STATUS_ACTIVE) {
+				continue
+			} else {
+				require.False(
+					t,
+					types.IsSupportedClobPairStatusTransition(
+						types.ClobPair_Status(fromClobPairStatus),
+						types.ClobPair_Status(toClobPairStatus),
+					),
+				)
+			}
+		}
+	}
 }

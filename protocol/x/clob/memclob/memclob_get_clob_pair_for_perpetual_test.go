@@ -30,9 +30,9 @@ func TestGetClobPairForPerpetual_SuccessMultipleClobPairIds(t *testing.T) {
 
 	// Create multiple orderbooks.
 	clobPair_Btc2 := types.ClobPair{
-		Id:                   100,
-		SubticksPerTick:      120,
-		MinOrderBaseQuantums: 1,
+		Id:               100,
+		SubticksPerTick:  120,
+		StepBaseQuantums: 1,
 		Metadata: &types.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &types.PerpetualClobMetadata{
 				PerpetualId: 0,

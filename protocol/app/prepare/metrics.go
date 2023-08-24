@@ -58,7 +58,7 @@ func recordSuccessMetrics(params successMetricParams) {
 	)
 
 	// Bridge tx.
-	telemetry.SetGauge(
+	telemetry.IncrCounter(
 		float32(params.bridgeTx.NumBridges),
 		ModuleName,
 		metrics.NumBridges,

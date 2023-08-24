@@ -6,10 +6,7 @@ export enum ClobPair_Status {
   /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
   STATUS_UNSPECIFIED = 0,
 
-  /**
-   * STATUS_ACTIVE - STATUS_ACTIVE behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
+  /** STATUS_ACTIVE - STATUS_ACTIVE represents an active clob pair. */
   STATUS_ACTIVE = 1,
 
   /**
@@ -29,6 +26,13 @@ export enum ClobPair_Status {
    * TODO(DEC-600): update this documentation.
    */
   STATUS_POST_ONLY = 4,
+
+  /**
+   * STATUS_INITIALIZING - STATUS_INITIALIZING represents a newly-added clob pair.
+   * Clob pairs in this state only accept orders which are
+   * both short-term and post-only.
+   */
+  STATUS_INITIALIZING = 5,
   UNRECOGNIZED = -1,
 }
 /** Status of the CLOB. */
@@ -37,10 +41,7 @@ export enum ClobPair_StatusSDKType {
   /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
   STATUS_UNSPECIFIED = 0,
 
-  /**
-   * STATUS_ACTIVE - STATUS_ACTIVE behavior is unfinalized.
-   * TODO(DEC-600): update this documentation.
-   */
+  /** STATUS_ACTIVE - STATUS_ACTIVE represents an active clob pair. */
   STATUS_ACTIVE = 1,
 
   /**
@@ -60,6 +61,13 @@ export enum ClobPair_StatusSDKType {
    * TODO(DEC-600): update this documentation.
    */
   STATUS_POST_ONLY = 4,
+
+  /**
+   * STATUS_INITIALIZING - STATUS_INITIALIZING represents a newly-added clob pair.
+   * Clob pairs in this state only accept orders which are
+   * both short-term and post-only.
+   */
+  STATUS_INITIALIZING = 5,
   UNRECOGNIZED = -1,
 }
 export function clobPair_StatusFromJSON(object: any): ClobPair_Status {
@@ -84,6 +92,10 @@ export function clobPair_StatusFromJSON(object: any): ClobPair_Status {
     case "STATUS_POST_ONLY":
       return ClobPair_Status.STATUS_POST_ONLY;
 
+    case 5:
+    case "STATUS_INITIALIZING":
+      return ClobPair_Status.STATUS_INITIALIZING;
+
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -106,6 +118,9 @@ export function clobPair_StatusToJSON(object: ClobPair_Status): string {
 
     case ClobPair_Status.STATUS_POST_ONLY:
       return "STATUS_POST_ONLY";
+
+    case ClobPair_Status.STATUS_INITIALIZING:
+      return "STATUS_INITIALIZING";
 
     case ClobPair_Status.UNRECOGNIZED:
     default:
@@ -185,12 +200,6 @@ export interface ClobPair {
 
   minOrderBaseQuantums: Long;
   status: ClobPair_Status;
-  /** The maker fee in parts-per-million. */
-
-  makerFeePpm: number;
-  /** The taker fee in parts-per-million. */
-
-  takerFeePpm: number;
 }
 /**
  * ClobPair represents a single CLOB pair for a given product
@@ -223,12 +232,6 @@ export interface ClobPairSDKType {
 
   min_order_base_quantums: Long;
   status: ClobPair_StatusSDKType;
-  /** The maker fee in parts-per-million. */
-
-  maker_fee_ppm: number;
-  /** The taker fee in parts-per-million. */
-
-  taker_fee_ppm: number;
 }
 
 function createBasePerpetualClobMetadata(): PerpetualClobMetadata {
@@ -340,9 +343,7 @@ function createBaseClobPair(): ClobPair {
     subticksPerTick: 0,
     quantumConversionExponent: 0,
     minOrderBaseQuantums: Long.UZERO,
-    status: 0,
-    makerFeePpm: 0,
-    takerFeePpm: 0
+    status: 0
   };
 }
 
@@ -378,14 +379,6 @@ export const ClobPair = {
 
     if (message.status !== 0) {
       writer.uint32(64).int32(message.status);
-    }
-
-    if (message.makerFeePpm !== 0) {
-      writer.uint32(72).uint32(message.makerFeePpm);
-    }
-
-    if (message.takerFeePpm !== 0) {
-      writer.uint32(80).uint32(message.takerFeePpm);
     }
 
     return writer;
@@ -432,14 +425,6 @@ export const ClobPair = {
           message.status = (reader.int32() as any);
           break;
 
-        case 9:
-          message.makerFeePpm = reader.uint32();
-          break;
-
-        case 10:
-          message.takerFeePpm = reader.uint32();
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -459,8 +444,6 @@ export const ClobPair = {
     message.quantumConversionExponent = object.quantumConversionExponent ?? 0;
     message.minOrderBaseQuantums = object.minOrderBaseQuantums !== undefined && object.minOrderBaseQuantums !== null ? Long.fromValue(object.minOrderBaseQuantums) : Long.UZERO;
     message.status = object.status ?? 0;
-    message.makerFeePpm = object.makerFeePpm ?? 0;
-    message.takerFeePpm = object.takerFeePpm ?? 0;
     return message;
   }
 

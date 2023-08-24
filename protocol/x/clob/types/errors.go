@@ -3,8 +3,6 @@ package types
 // DONTCOVER
 
 import (
-	"fmt"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -77,10 +75,7 @@ var (
 	ErrOrderWouldExceedMaxOpenOrdersPerClobAndSide = sdkerrors.Register(
 		ModuleName,
 		17,
-		fmt.Sprintf(
-			"Subaccount cannot open more than %d orders on a given CLOB and side",
-			MaxSubaccountOrdersPerClobAndSide,
-		),
+		"Subaccount cannot open more than 20 orders on a given CLOB and side",
 	)
 	ErrFillAmountNotDivisibleByStepSize = sdkerrors.Register(
 		ModuleName,
@@ -361,10 +356,10 @@ var (
 		4003,
 		"Fill amount cannot be zero",
 	)
-	ErrInvalidDeleveragingFills = sdkerrors.Register(
+	ErrInvalidDeleveragingFill = sdkerrors.Register(
 		ModuleName,
 		4004,
-		"Generated deleveraging fills do not match operations queue deleveraging fills",
+		"Deleveraging fill is invalid",
 	)
 	ErrDeleveragedSubaccountNotLiquidatable = sdkerrors.Register(
 		ModuleName,
@@ -423,5 +418,10 @@ var (
 		ModuleName,
 		10000,
 		"Proposed EquityTierLimitConfig is invalid",
+	)
+	ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit = sdkerrors.Register(
+		ModuleName,
+		10001,
+		"Subaccount cannot open more orders due to equity tier limit.",
 	)
 )

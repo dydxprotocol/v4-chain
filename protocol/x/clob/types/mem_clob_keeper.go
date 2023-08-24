@@ -87,4 +87,8 @@ type MemClobKeeper interface {
 		bool,
 		error,
 	)
+	ValidateSubaccountEquityTierLimitForNewOrder(
+		ctx sdk.Context,
+		order Order,
+	) error
 }

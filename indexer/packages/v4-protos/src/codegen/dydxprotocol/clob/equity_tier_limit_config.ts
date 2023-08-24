@@ -39,10 +39,7 @@ export interface EquityTierLimitConfigurationSDKType {
 /** Defines an equity tier limit. */
 
 export interface EquityTierLimit {
-  /**
-   * The absolute size of total net collateral in base quantums
-   * of equity required in USD equivalent.
-   */
+  /** The total net collateral in USDC quote quantums of equity required. */
   usdTncRequired: Uint8Array;
   /** What the limit is for `usd_tnc_required`. */
 
@@ -51,10 +48,7 @@ export interface EquityTierLimit {
 /** Defines an equity tier limit. */
 
 export interface EquityTierLimitSDKType {
-  /**
-   * The absolute size of total net collateral in base quantums
-   * of equity required in USD equivalent.
-   */
+  /** The total net collateral in USDC quote quantums of equity required. */
   usd_tnc_required: Uint8Array;
   /** What the limit is for `usd_tnc_required`. */
 

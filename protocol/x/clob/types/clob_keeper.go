@@ -24,12 +24,9 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 		stepSizeInBaseQuantums satypes.BaseQuantums,
-		minOrderInBaseQuantums satypes.BaseQuantums,
 		quantumConversionExponent int32,
 		subticksPerTick uint32,
 		status ClobPair_Status,
-		makerFeePpm uint32,
-		takerFeePpm uint32,
 	) (
 		ClobPair,
 		error,

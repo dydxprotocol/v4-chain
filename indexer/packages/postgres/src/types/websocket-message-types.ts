@@ -114,6 +114,7 @@ export interface OrderSubaccountMessageContents {
   totalOptimisticFilled?: string;
   goodTilBlock?: string;
   goodTilBlockTime?: string;
+  triggerPrice?: string;
 
   // This will only be filled if the order was removed
   removalReason?: string;
@@ -153,6 +154,7 @@ export interface TransferSubaccountMessageContents {
   symbol: string,
   size: string,
   type: TransferType,
+  transactionHash: string,
 }
 
 /* ------- TradeMessageContents ------- */
