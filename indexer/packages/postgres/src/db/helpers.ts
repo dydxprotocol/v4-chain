@@ -1,22 +1,18 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { bigIntToBytes, bytesToBigInt, getPositionIsLong } from '@dydxprotocol-indexer/v4-proto-parser';
+import { bytesToBigInt, getPositionIsLong } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   Asset, AssetPosition, MarketParam, MarketPrice,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import Long from 'long';
-import { DateTime } from 'luxon';
 
 import { CURRENCY_DECIMAL_PRECISION, ONE_MILLION } from '../constants';
 import { setBulkRowsForUpdate } from '../helpers/stores-helpers';
 import { protocolPriceToHuman, quantumsToHumanFixedString } from '../lib/protocol-translations';
 import * as AssetPositionTable from '../stores/asset-position-table';
-import * as SubaccountTable from '../stores/subaccount-table';
 import {
   AssetCreateObject,
-  BlockColumns,
-  BlockCreateObject,
   FundingIndexMap,
   IsoString,
   MarketColumns,
@@ -83,72 +79,6 @@ export function getSeedMarketsSql(): string {
           ON CONFLICT DO NOTHING`;
 }
 
-/**
- * @description Gets the SQL to seed the `blocks` table.
- *
- * This needs to be run before the seeding of any tables that have blockHeight foreign key.
- *
- * @returns SQL statement for seeding the `blocks` table. The SQL statement will do
- * nothing if the rows in the `blocks` table already exist.
- */
-export function getSeedBlocksSql() {
-  const blockCreateObjects:
-  BlockCreateObject[] = [{
-    // Setting block height to -1, so the genesis.json initialized structs from the full node will
-    // be block 0
-    blockHeight: '-1',
-    time: DateTime.utc().toISO(),
-  }];
-
-  const blockColumns = _.keys(blockCreateObjects[0]) as BlockColumns[];
-
-  const blockRows: string[] = setBulkRowsForUpdate<BlockColumns>({
-    objectArray: blockCreateObjects,
-    columns: blockColumns,
-    timestampColumns: [
-      BlockColumns.time,
-    ],
-    numericColumns: [
-      BlockColumns.blockHeight,
-    ],
-  });
-
-  return `INSERT INTO BLOCKS (${blockColumns.map((col) => `"${col}"`).join(',')})
-          VALUES ${blockRows.map((block) => `(${block})`).join(', ')}
-          ON CONFLICT DO NOTHING`;
-}
-
-/**
- * @description Gets `AssetPosition` objects from genesis state.
- * @returns a map from subaccountId to its asset positions
- */
-export function getAssetPositionsFromGenesis(): _.Dictionary<AssetPosition[]> {
-  const assetPositionMapping: _.Dictionary<AssetPosition[]> = {};
-  // Get `AssetPosition` objects from the genesis app state
-  genesis.app_state.subaccounts.subaccounts
-    .forEach(
-      (subaccount) => {
-        const subaccountNumber = subaccount.id.number;
-        const subaccountOwner = subaccount.id.owner;
-        const subaccountId = SubaccountTable.uuid(
-          subaccountOwner,
-          subaccountNumber,
-        );
-        const assetPositions: AssetPosition[] = [];
-        _.forEach(subaccount.asset_positions, (assetPosition) => {
-          assetPositions.push({
-            assetId: assetPosition.asset_id,
-            index: Long.fromValue(assetPosition.index),
-            quantums: bigIntToBytes(BigInt(assetPosition.quantums)),
-          });
-        });
-        assetPositionMapping[subaccountId] = assetPositions;
-      },
-    );
-
-  return assetPositionMapping;
-}
-
 export function getAssetCreateObject(asset: Asset): AssetCreateObject {
   return {
     id: BigInt(asset.id).toString(),
@@ -176,13 +106,13 @@ export function getAssetPositionCreateObject(
 
 export function getMarketParamsFromGenesis(): MarketParam[] {
   const markets: MarketParam[] = genesis.app_state.prices.market_params.map(
-    (genesisMarketParam, index: number): MarketParam => {
+    (genesisMarketParam): MarketParam => {
       return {
         ...genesisMarketParam,
         minExchanges: genesisMarketParam.min_exchanges,
         minPriceChangePpm: genesisMarketParam.min_price_change_ppm,
         exchangeConfigJson: '',
-        id: index,
+        id: genesisMarketParam.id,
       };
     },
   );
@@ -192,10 +122,10 @@ export function getMarketParamsFromGenesis(): MarketParam[] {
 
 export function getMarketPricesFromGenesis(): MarketPrice[] {
   const marketPrices: MarketPrice[] = genesis.app_state.prices.market_prices.map(
-    (genesisMarketPrice, index: number): MarketPrice => {
+    (genesisMarketPrice): MarketPrice => {
       return {
         ...genesisMarketPrice,
-        id: index,
+        id: genesisMarketPrice.id,
         exponent: genesisMarketPrice.exponent,
         price: Long.fromNumber(genesisMarketPrice.price),
       };

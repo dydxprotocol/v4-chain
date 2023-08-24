@@ -119,3 +119,47 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
           twine upload -r pypi dist/*
+
+  dydxjs-release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./dydxjs
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Npm
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org
+          cache: "npm"
+          cache-dependency-path: '**/package-lock.json'
+      
+      - name: Install buf
+        run: |
+          BIN="/usr/local/bin" && \
+          VERSION="1.26.1" && \
+          curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
+          chmod +x "${BIN}/buf"
+
+      - name: Set Env from Tag to follow semver
+        run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed -r 's/(.*-[[:alpha:]]+)([[:digit:]]+)/\1.\2/')" >> $GITHUB_ENV
+
+      - name: Update version in package.json
+        run: echo $VERSION; sed -i "s/0.0.0/$VERSION/g" package.json
+
+      - name: Install
+        run: npm i
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_READ }}
+
+      - name: Transpile
+        run: npm run transpile
+
+      - name: Publish
+        run: ./scripts/publish-if-not-exists.sh
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_WRITE }}
