@@ -46,7 +46,7 @@ describe('liquidity-tier-validator', () => {
           ...defaultLiquidityTierUpsertEvent,
           initialMarginPpm: 0,
         } as LiquidityTierUpsertEventV1,
-        'LiquidityTierCreateEvent initialMarginPpm is not populated',
+        'LiquidityTierUpsertEventV1 initialMarginPpm is not populated',
       ],
       [
         'throws error on perpetual market create event missing maintenanceFractionPpm',
@@ -54,7 +54,7 @@ describe('liquidity-tier-validator', () => {
           ...defaultLiquidityTierUpsertEvent,
           maintenanceFractionPpm: 0,
         } as LiquidityTierUpsertEventV1,
-        'LiquidityTierCreateEvent maintenanceFractionPpm is not populated',
+        'LiquidityTierUpsertEventV1 maintenanceFractionPpm is not populated',
       ],
     ])('%s', (_description: string, event: LiquidityTierUpsertEventV1, expectedMessage: string) => {
       const validator: LiquidityTierValidator = new LiquidityTierValidator(

@@ -32,6 +32,7 @@ import {
   defaultHeight, defaultLiquidityTierUpsertEvent, defaultPreviousHeight, defaultTime, defaultTxHash,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
+import { defaultLiquidityTier } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('liquidityTierHandler', () => {
   beforeAll(async () => {
@@ -95,22 +96,6 @@ describe('liquidityTierHandler', () => {
     });
   });
 
-  it('fails when market doesnt exist for liquidityTier', async () => {
-    const transactionIndex: number = 0;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromLiquidityTiersEvent({
-      liquidityTierEvent: defaultLiquidityTierUpsertEvent,
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-
-    const message: string = 'Unable to find market with id: 0';
-    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new Error(message),
-    );
-  });
-
   it('creates new liquidity tier', async () => {
     const transactionIndex: number = 0;
     const liquidityTierEvent: LiquidityTierUpsertEventV1 = defaultLiquidityTierUpsertEvent;
@@ -123,6 +108,34 @@ describe('liquidityTierHandler', () => {
     });
     // Confirm there is no existing liquidity tier
     await expectNoExistingLiquidityTiers();
+
+    await onMessage(kafkaMessage);
+
+    const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
+      {},
+      [], {
+        orderBy: [[LiquidityTiersColumns.id, Ordering.ASC]],
+      });
+    expect(newLiquidityTiers.length).toEqual(1);
+    expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
+    expectTimingStats();
+    const liquidityTier:
+    LiquidityTiersFromDatabase = liquidityTierRefresher.getLiquidityTierFromId(0);
+    expect(liquidityTier).toBeDefined();
+  });
+
+  it('updates existing liquidity tier', async () => {
+    const transactionIndex: number = 0;
+    const liquidityTierEvent: LiquidityTierUpsertEventV1 = defaultLiquidityTierUpsertEvent;
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromLiquidityTiersEvent({
+      liquidityTierEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+    // Confirm there is no existing liquidity tier
+    await LiquidityTiersTable.upsert(defaultLiquidityTier);
 
     await onMessage(kafkaMessage);
 

@@ -11,6 +11,7 @@ type HandlerBatch = Handler<EventMessage>[];
 export const SyncSubtypes: DydxIndexerSubtypes[] = [
   DydxIndexerSubtypes.MARKET,
   DydxIndexerSubtypes.ASSET,
+  DydxIndexerSubtypes.LIQUIDITY_TIER,
   DydxIndexerSubtypes.PERPETUAL_MARKET,
 ];
 
