@@ -434,8 +434,8 @@ func (k Keeper) persistMatchedOrders(
 		types.NewCreateMatchEvent(
 			matchWithOrders.TakerOrder.GetSubaccountId(),
 			matchWithOrders.MakerOrder.GetSubaccountId(),
-			big.NewInt(matchWithOrders.TakerFee),
-			big.NewInt(matchWithOrders.MakerFee),
+			bigTakerFeeQuoteQuantums,
+			bigMakerFeeQuoteQuantums,
 			bigTakerQuoteBalanceDelta,
 			bigMakerQuoteBalanceDelta,
 			bigTakerPerpetualQuantumsDelta,

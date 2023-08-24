@@ -27,8 +27,7 @@ const (
 	AttributeKeyPerpetualId                             = "perpetual_id"
 )
 
-// NewCreateMatchEvent constructs a new match sdk.Event. Note that liquidation orders will always
-// have a taker fee of zero in the emitted event.
+// NewCreateMatchEvent constructs a new match sdk.Event.
 func NewCreateMatchEvent(
 	taker satypes.SubaccountId,
 	maker satypes.SubaccountId,
@@ -42,21 +41,13 @@ func NewCreateMatchEvent(
 	isLiquidation bool,
 	perpetualId uint32,
 ) sdk.Event {
-	// If the match is a liquidation, the taker order fee should be set to 0 since the protocol
-	// doesn't charge taker fees on liquidation orders.
-	// TODO (CLOB-812): Update this logic after adding taker fees to liquidation orders.
-	takerOrderFeeQuoteQuantums := new(big.Int).Set(takerOrderFee)
-	if isLiquidation {
-		takerOrderFeeQuoteQuantums = big.NewInt(0)
-	}
-
 	return sdk.NewEvent(
 		EventTypeMatch,
 		sdk.NewAttribute(AttributeKeyTakerSubaccount, taker.Owner),
 		sdk.NewAttribute(AttributeKeyTakerSubaccountNumber, fmt.Sprint(taker.Number)),
 		sdk.NewAttribute(AttributeKeyMakerSubaccount, maker.Owner),
 		sdk.NewAttribute(AttributeKeyMakerSubaccountNumber, fmt.Sprint(maker.Number)),
-		sdk.NewAttribute(AttributeKeyTakerOrderFeeQuoteQuantums, fmt.Sprint(takerOrderFeeQuoteQuantums)),
+		sdk.NewAttribute(AttributeKeyTakerOrderFeeQuoteQuantums, fmt.Sprint(takerOrderFee)),
 		sdk.NewAttribute(AttributeKeyMakerOrderFeeQuoteQuantums, fmt.Sprint(makerOrderFee)),
 		sdk.NewAttribute(AttributeKeyTakerQuoteBalanceDeltaQuoteQuantums, takerQuoteBalanceDelta.String()),
 		sdk.NewAttribute(AttributeKeyMakerQuoteBalanceDeltaQuoteQuantums, makerQuoteBalanceDelta.String()),
