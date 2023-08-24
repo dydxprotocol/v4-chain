@@ -388,7 +388,7 @@ func TestSetClobPairStatus(t *testing.T) {
 					clobPair.Status,
 				)
 			},
-			status: types.ClobPair_STATUS_INITIALIZING,
+			status:      types.ClobPair_STATUS_INITIALIZING,
 			expectedErr: "Cannot transition from status STATUS_ACTIVE to status STATUS_INITIALIZING",
 		},
 		"Errors with unsupported transition to unsupported status": {
@@ -404,7 +404,7 @@ func TestSetClobPairStatus(t *testing.T) {
 					clobPair.Status,
 				)
 			},
-			status: types.ClobPair_Status(100),
+			status:      types.ClobPair_Status(100),
 			expectedErr: "Cannot transition from status STATUS_ACTIVE to status 100",
 		},
 	}
