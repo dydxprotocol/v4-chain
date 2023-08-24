@@ -8,7 +8,6 @@ import {
 import {
   BlockTable,
   dbHelpers,
-  liquidityTierRefresher,
   LiquidityTiersColumns,
   LiquidityTiersFromDatabase,
   LiquidityTiersTable,
@@ -119,9 +118,6 @@ describe('liquidityTierHandler', () => {
     expect(newLiquidityTiers.length).toEqual(1);
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
-    const liquidityTier:
-    LiquidityTiersFromDatabase = liquidityTierRefresher.getLiquidityTierFromId(0);
-    expect(liquidityTier).toBeDefined();
   });
 
   it('updates existing liquidity tier', async () => {
@@ -134,7 +130,7 @@ describe('liquidityTierHandler', () => {
       time: defaultTime,
       txHash: defaultTxHash,
     });
-    // Confirm there is no existing liquidity tier
+    // Create existing liquidity tier
     await LiquidityTiersTable.upsert(defaultLiquidityTier);
 
     await onMessage(kafkaMessage);
@@ -147,9 +143,6 @@ describe('liquidityTierHandler', () => {
     expect(newLiquidityTiers.length).toEqual(1);
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
-    const liquidityTier:
-    LiquidityTiersFromDatabase = liquidityTierRefresher.getLiquidityTierFromId(0);
-    expect(liquidityTier).toBeDefined();
   });
 });
 

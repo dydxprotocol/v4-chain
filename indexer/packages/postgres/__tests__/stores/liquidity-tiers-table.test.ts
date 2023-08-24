@@ -86,7 +86,7 @@ describe('LiquidityTier store', () => {
     }));
   });
 
-  it('Successfully upserts a liquidity tier', async () => {
+  it('Successfully upserts an existing liquidity tier', async () => {
     await LiquidityTierTable.create(defaultLiquidityTier);
 
     const liquidityTier: LiquidityTiersFromDatabase | undefined = await LiquidityTierTable.upsert({
@@ -98,5 +98,12 @@ describe('LiquidityTier store', () => {
       ...defaultLiquidityTier,
       initialMarginPpm: '1000',
     }));
+  });
+
+  it('Successfully upserts a liquidity tier', async () => {
+    const liquidityTier: LiquidityTiersFromDatabase | undefined = await
+    LiquidityTierTable.upsert(defaultLiquidityTier);
+
+    expect(liquidityTier).toEqual(expect.objectContaining(defaultLiquidityTier));
   });
 });

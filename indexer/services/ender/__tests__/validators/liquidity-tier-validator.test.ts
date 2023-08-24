@@ -16,6 +16,7 @@ import {
 } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError } from '../helpers/validator-helpers';
 import { LiquidityTierValidator } from '../../src/validators/liquidity-tier-validator';
+import Long from 'long';
 
 describe('liquidity-tier-validator', () => {
   beforeEach(async () => {
@@ -63,6 +64,39 @@ describe('liquidity-tier-validator', () => {
       );
       expect(() => validator.validate()).toThrow(new ParseMessageError(expectedMessage));
     });
+
+    it.each([
+      [
+        'logs error on liquidity tier upsert event with empty name',
+        {
+          ...defaultLiquidityTierUpsertEvent,
+          name: '',
+        } as LiquidityTierUpsertEventV1,
+        'LiquidityTierUpsertEventV1 name is not populated',
+      ],
+      [
+        'logs error on liquidity tier upsert event with basePositionNotional equal to 0',
+        {
+          ...defaultLiquidityTierUpsertEvent,
+          basePositionNotional: Long.fromValue(0),
+        } as LiquidityTierUpsertEventV1,
+        'LiquidityTierUpsertEventV1 basePositionNotional is not populated',
+      ],
+
+      // ... other test cases here ...
+    ])('%s', (_description: string, event: LiquidityTierUpsertEventV1, expectedMessage: string) => {
+      const loggerError = jest.spyOn(logger, 'error');
+
+      const validator: LiquidityTierValidator = new LiquidityTierValidator(
+        event,
+        createBlock(event),
+      );
+      validator.validate();
+      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
+        message: expectedMessage,
+      }));
+    });
+
   });
 });
 

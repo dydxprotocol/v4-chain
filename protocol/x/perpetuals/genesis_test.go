@@ -23,7 +23,7 @@ func TestGenesis(t *testing.T) {
 	ctx, k, priceKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 	prices.InitGenesis(ctx, *priceKeeper, pricesGenesisState)
 	perpetuals.InitGenesis(ctx, *k, genesisState)
-	assertLiquidityTierUpsertEventsInIndexerBlock(t, k, ctx, len(genesisState.LiquidityTiers))
+	assertLiquidityTierUpsertEventsInIndexerBlock(t, k, ctx, genesisState.LiquidityTiers)
 	got := perpetuals.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
 
@@ -177,14 +177,42 @@ func TestGenesis_Failure(t *testing.T) {
 	}
 }
 
-// assertLiquidityTierUpsertEventsInIndexerBlock checks the number of liquidity tier upsert events
+// assertLiquidityTierUpsertEventsInIndexerBlock checks the liquidity tier upsert events
 // included in the Indexer block kafka message.
 func assertLiquidityTierUpsertEventsInIndexerBlock(
 	t *testing.T,
 	k *keeper.Keeper,
 	ctx sdk.Context,
-	numLiquidityTiers int,
+	liquidityTiers []types.LiquidityTier,
 ) {
+	// Get LiquidityTierUpsertEvents from IndexerBlock
 	liquidityTierUpsertEvents := keepertest.GetLiquidityTierUpsertEventsFromIndexerBlock(ctx, k)
-	require.Len(t, liquidityTierUpsertEvents, numLiquidityTiers)
+
+	// Check if the length of the LiquidityTierUpsertEvents matches the expected length
+	if len(liquidityTierUpsertEvents) != len(liquidityTiers) {
+		t.Fatalf("Expected %d LiquidityTierUpsertEvents, but got %d", len(liquidityTiers), len(liquidityTierUpsertEvents))
+	}
+
+	// Loop through each event and check if each event matches the expected value
+	for i, event := range liquidityTierUpsertEvents {
+		if event.Id != liquidityTiers[i].Id {
+			t.Fatalf("Expected LiquidityTierUpsertEvent with Id %d, but got %d at index %d", liquidityTiers[i].Id, event.Id, i)
+		}
+
+		if event.Name != liquidityTiers[i].Name {
+			t.Fatalf("Expected LiquidityTierUpsertEvent with Name %s, but got %s at index %d", liquidityTiers[i].Name, event.Name, i)
+		}
+
+		if event.InitialMarginPpm != liquidityTiers[i].InitialMarginPpm {
+			t.Fatalf("Expected LiquidityTierUpsertEvent with InitialMarginPpm %d, but got %d at index %d", liquidityTiers[i].InitialMarginPpm, event.InitialMarginPpm, i)
+		}
+
+		if event.MaintenanceFractionPpm != liquidityTiers[i].MaintenanceFractionPpm {
+			t.Fatalf("Expected LiquidityTierUpsertEvent with MaintenanceFractionPpm %d, but got %d at index %d", liquidityTiers[i].MaintenanceFractionPpm, event.MaintenanceFractionPpm, i)
+		}
+
+		if event.BasePositionNotional != liquidityTiers[i].BasePositionNotional {
+			t.Fatalf("Expected LiquidityTierUpsertEvent with BasePositionNotional %d, but got %d at index %d", liquidityTiers[i].BasePositionNotional, event.BasePositionNotional, i)
+		}
+	}
 }
