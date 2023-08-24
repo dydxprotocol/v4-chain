@@ -42,7 +42,7 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 	require.Equal(t, []uint32{0, 1, 2}, blockMessageIds.Ids)
 
 	// Mock the bridge keeper methods called by the bridge msg server.
-	bridgeKeeper.On("GetBridgeAuthority").Return(BridgeAuthority).Once()
+	bridgeKeeper.On("GetBridgeAuthority").Return(BridgeAuthority)
 	bridgeKeeper.On("CompleteBridge", ctx, mock.Anything).Return(nil).Times(len(constants.AllMsgs))
 
 	// Dispatch messages for block 0.
@@ -54,6 +54,7 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 	require.True(t, bridgeKeeper.AssertExpectations(t))
 }
 
+// generateBridgeEventMsgBytes wraps bridge event in a MsgCompleteBridge and byte-encodes it.
 func generateBridgeEventMsgBytes(t *testing.T, event bridgetypes.BridgeEvent) []byte {
 	_, k, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 	msgCompleteBridge := bridgetypes.MsgCompleteBridge{
@@ -65,10 +66,11 @@ func generateBridgeEventMsgBytes(t *testing.T, event bridgetypes.BridgeEvent) []
 	return bytes
 }
 
+// expectAccountBalance checks that the specified account has the expected balance.
 func expectAccountBalance(
 	t *testing.T,
 	ctx sdk.Context,
-	tApp testapp.TestApp,
+	tApp *testapp.TestApp,
 	address sdk.AccAddress,
 	expectedBalance sdk.Coin,
 ) {
@@ -79,8 +81,8 @@ func expectAccountBalance(
 
 func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	// Create an encoded bridge event set to occur at block 2.
-	// Expect that Alice's account will increase by 888 coins at block 1.
-	// Bridge module account will also decrease by 888 coins at block 1.
+	// Expect that Alice's account will increase by 888 coins at block 2.
+	// Bridge module account will also decrease by 888 coins at block 2.
 	delayedMessage := types.DelayedMessage{
 		Id:          0,
 		Msg:         generateBridgeEventMsgBytes(t, constants.BridgeEvent_Id0_Height0),
@@ -104,13 +106,13 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
 
 	// Sanity check: at block 1, balances are as expected before the message is sent.
-	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
-	expectAccountBalance(t, ctx, tApp, aliceAccountAddress, AliceInitialAccountBalance)
+	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, AliceInitialAccountBalance)
 
 	// Advance to block 2 and invoke delayed message to complete bridge.
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
-	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
-	expectAccountBalance(t, ctx, tApp, aliceAccountAddress, AliceExpectedAccountBalance)
+	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
+	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, AliceExpectedAccountBalance)
 }
