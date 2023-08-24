@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -71,16 +69,6 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 			"CLOB pair (%+v) has unsupported status %+v",
 			clobPair,
 			clobPair.Status,
-		)
-	}
-
-	// validate the given clob pair id is not already in use
-	if _, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
-		panic(
-			fmt.Sprintf(
-				"ClobPair with id %+v already exists in state",
-				clobPair.GetClobPairId(),
-			),
 		)
 	}
 
