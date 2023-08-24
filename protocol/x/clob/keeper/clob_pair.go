@@ -206,9 +206,9 @@ func (k Keeper) GetAllClobPair(ctx sdk.Context) (list []types.ClobPair) {
 	return
 }
 
-// validateOrderAgainstClobPair returns an error if placing the provided
+// validateOrderAgainstClobPairStatus returns an error if placing the provided
 // order would conflict with the clob pair's current status.
-func (k Keeper) validateOrderAgainstClobPair(
+func (k Keeper) validateOrderAgainstClobPairStatus(
 	ctx sdk.Context,
 	order types.Order,
 	clobPair types.ClobPair,

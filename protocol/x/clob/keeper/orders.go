@@ -655,7 +655,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	// Validates the order against the clob pair. This validation is based on the clob pair's status.
-	if err := k.validateOrderAgainstClobPair(ctx, order.MustGetOrder(), clobPair); err != nil {
+	if err := k.validateOrderAgainstClobPairStatus(ctx, order.MustGetOrder(), clobPair); err != nil {
 		return err
 	}
 
