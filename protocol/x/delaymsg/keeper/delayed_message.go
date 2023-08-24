@@ -128,6 +128,18 @@ func (k Keeper) SetDelayedMessage(
 	return nil
 }
 
+// DecodeMessage decodes message bytes into a sdk.Msg. This method is added to the keeper
+// to allow for mocking in msg service tests.
+func (k Keeper) DecodeMessage(msgBytes []byte, msg *sdk.Msg) error {
+	return k.cdc.UnmarshalInterface(msgBytes, msg)
+}
+
+// EncodeMessage encodes a sdk.Msg into bytes. This method is added to the keeper
+// for ease of testing.
+func (k Keeper) EncodeMessage(msg sdk.Msg) ([]byte, error) {
+	return k.cdc.MarshalInterface(msg)
+}
+
 // DelayMessageByBlocks registers an sdk.Msg to be executed after blockDelay blocks.
 func (k Keeper) DelayMessageByBlocks(
 	ctx sdk.Context,
@@ -137,8 +149,14 @@ func (k Keeper) DelayMessageByBlocks(
 	id uint32,
 	err error,
 ) {
-	// TODO(CORE-437): If message is unroutable, return an error.
-	// https://github.com/cosmos/cosmos-sdk/blob/208219a4283bad7fd6c9a3d93f50c96e7efbb3ae/x/gov/keeper/proposal.go#L67
+	handler := k.router.Handler(msg)
+	// If the message type is not routable, return an error.
+	if handler == nil {
+		return 0, sdkerrors.Wrapf(
+			types.ErrMsgIsUnroutable,
+			sdk.MsgTypeURL(msg),
+		)
+	}
 
 	nextId := k.GetNumMessages(ctx)
 	blockHeight, err := lib.AddUint32(ctx.BlockHeight(), blockDelay)
@@ -154,7 +172,7 @@ func (k Keeper) DelayMessageByBlocks(
 	if err != nil {
 		return 0, sdkerrors.Wrapf(
 			types.ErrInvalidInput,
-			"failed to marshal message: %v",
+			"failed to marshal message: %v. Is the message type registered?",
 			err,
 		)
 	}

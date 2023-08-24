@@ -14,6 +14,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	sakeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
@@ -1531,7 +1532,10 @@ func setupProcessProposerOperationsTestCase(
 
 	// Set the block time on the context and of the last committed block.
 	ctx = ctx.WithBlockTime(time.Unix(5, 0)).WithBlockHeight(int64(blockHeight))
-	ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+		Height:    blockHeight,
+		Timestamp: time.Unix(int64(5), 0),
+	})
 
 	return ctx, ks, mockIndexerEventManager
 }

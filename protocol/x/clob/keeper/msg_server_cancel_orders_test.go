@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	keeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/mock"
@@ -80,7 +81,10 @@ func TestCancelOrder_Error(t *testing.T) {
 
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    2,
+				Timestamp: time.Unix(int64(2), 0),
+			})
 
 			// Run MsgHandler for cancellation.
 			_, err := msgServer.CancelOrder(ctx, &tc.StatefulOrderCancellation)
@@ -118,7 +122,10 @@ func TestCancelOrder_Success(t *testing.T) {
 
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    2,
+				Timestamp: time.Unix(int64(2), 0),
+			})
 
 			// Setup IndexerEventManager mock.
 			indexerEventManager.On(

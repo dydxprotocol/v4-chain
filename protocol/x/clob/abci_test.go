@@ -25,6 +25,7 @@ import (
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
@@ -787,13 +788,6 @@ func TestEndBlocker_Success(t *testing.T) {
 
 			require.True(t, memClob.AssertExpectations(t))
 
-			require.True(
-				t,
-				tc.blockTime.Equal(
-					ks.ClobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx),
-				),
-			)
-
 			for orderId, exists := range tc.expectedStatefulPlacementInState {
 				_, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, orderId)
 				require.Equal(t, exists, found)
@@ -1387,9 +1381,11 @@ func TestPrepareCheckState(t *testing.T) {
 				tc.processProposerMatchesEvents,
 			)
 
-			// Set the block time on the context and of the last committed block.
+			// Set the blocktime of the last committed block.
 			ctx = ctx.WithBlockTime(unixTimeFive)
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Timestamp: unixTimeFive,
+			})
 
 			// Initialize the memclob with each placed operation using a forked version of state,
 			// and ensure the forked state is not committed to the base state.

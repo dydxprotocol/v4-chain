@@ -43,7 +43,7 @@ func (g *GrpcClientImpl) NewGrpcConnection(
 	)
 }
 
-// NewTcpConnection calls `grpc.Dial` to create a insecure tcp connection.
+// NewTcpConnection calls `grpc.Dial` to create an insecure tcp connection.
 func (g *GrpcClientImpl) NewTcpConnection(
 	ctx context.Context,
 	endpoint string,
