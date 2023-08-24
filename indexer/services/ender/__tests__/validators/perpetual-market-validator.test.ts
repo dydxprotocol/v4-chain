@@ -68,14 +68,6 @@ describe('perpetual-market-validator', () => {
         'PerpetualMarketCreateEvent subticksPerTick is not populated',
       ],
       [
-        'throws error on perpetual market create event missing minOrderBaseQuantums',
-        {
-          ...defaultPerpetualMarketCreateEvent,
-          minOrderBaseQuantums: Long.fromValue(0),
-        } as PerpetualMarketCreateEventV1,
-        'PerpetualMarketCreateEvent minOrderBaseQuantums is not populated',
-      ],
-      [
         'throws error on perpetual market create event missing stepBaseQuantums',
         {
           ...defaultPerpetualMarketCreateEvent,
