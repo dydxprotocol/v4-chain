@@ -13,7 +13,6 @@ service Msg {
   // AddPremiumVotes add new samples of the funding premiums to the
   // application.
   rpc AddPremiumVotes(MsgAddPremiumVotes) returns (MsgAddPremiumVotesResponse);
-
   // CreatePerpetual creates a new perpetual object.
   rpc CreatePerpetual(MsgCreatePerpetual) returns (MsgCreatePerpetualResponse);
 }
