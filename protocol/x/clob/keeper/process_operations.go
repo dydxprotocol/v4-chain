@@ -31,9 +31,14 @@ func (k Keeper) ProcessProposerOperations(
 	lib.AssertDeliverTxMode(ctx)
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.ProcessOperations)
 
-	// Validates RawOperations and transforms them into InternalOperations to be used internally by memclob.
+	// Stateless validation of RawOperations and transforms them into InternalOperations to be used internally by memclob.
 	operations, err := types.ValidateAndTransformRawOperations(ctx, rawOperations, k.txDecoder, k.antehandler)
 	if err != nil {
+		return sdkerrors.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
+	}
+
+	// Stateful validation
+	if err := k.StatefulValidateProposedOperations(ctx, operations); err != nil {
 		return sdkerrors.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
 	}
 

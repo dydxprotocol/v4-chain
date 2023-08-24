@@ -153,6 +153,11 @@ var (
 		32,
 		"Existing stateful order cancellation has higher-or-equal priority than the new one",
 	)
+	ErrPerpetualDoesNotExist = sdkerrors.Register(
+		ModuleName,
+		33,
+		"Perpetual does not exist in state",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(
