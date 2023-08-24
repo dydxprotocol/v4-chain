@@ -5,7 +5,7 @@ import {
   PerpetualPositionFromDatabase,
   PositionSide,
 } from '../../src/types';
-import {getMaintenanceMarginPpm, getUnrealizedPnl, getUnsettledFunding,} from '../../src/db/helpers';
+import { getMaintenanceMarginPpm, getUnrealizedPnl, getUnsettledFunding } from '../../src/db/helpers';
 import {
   defaultFundingIndexUpdate,
   defaultPerpetualMarket,
@@ -14,11 +14,11 @@ import {
 } from '../helpers/constants';
 import * as PerpetualPositionTable from '../../src/stores/perpetual-position-table';
 import * as MarketTable from '../../src/stores/market-table';
-import {CURRENCY_DECIMAL_PRECISION} from '../../src';
+import { CURRENCY_DECIMAL_PRECISION } from '../../src';
 import Big from 'big.js';
-import {seedData} from '../helpers/mock-generators';
+import { seedData } from '../helpers/mock-generators';
 import _ from 'lodash';
-import {clearData} from '../../src/helpers/db-helpers';
+import { clearData } from '../../src/helpers/db-helpers';
 
 describe('helpers', () => {
 
@@ -92,7 +92,7 @@ describe('helpers', () => {
       await seedData();
 
       const perpetualPosition: PerpetualPositionFromDatabase = await
-        PerpetualPositionTable.create(defaultPerpetualPosition);
+      PerpetualPositionTable.create(defaultPerpetualPosition);
 
       const markets: MarketFromDatabase[] = await MarketTable.findAll({}, []);
 
@@ -112,11 +112,11 @@ describe('helpers', () => {
       await seedData();
 
       const perpetualPosition: PerpetualPositionFromDatabase = await
-        PerpetualPositionTable.create({
-          ...defaultPerpetualPosition,
-          side: PositionSide.SHORT,
-          size: '-10',
-        });
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        side: PositionSide.SHORT,
+        size: '-10',
+      });
 
       const markets: MarketFromDatabase[] = await MarketTable.findAll({}, []);
 
