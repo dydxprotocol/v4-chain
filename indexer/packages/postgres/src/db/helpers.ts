@@ -244,10 +244,10 @@ export function getMarketParamsFromGenesis(): MarketParam[] {
 
 export function getMarketPricesFromGenesis(): MarketPrice[] {
   const marketPrices: MarketPrice[] = genesis.app_state.prices.market_prices.map(
-    (genesisMarketPrice, index: number): MarketPrice => {
+    (genesisMarketPrice): MarketPrice => {
       return {
         ...genesisMarketPrice,
-        id: index,
+        id: genesisMarketPrice.id,
         exponent: genesisMarketPrice.exponent,
         price: Long.fromNumber(genesisMarketPrice.price),
       };
