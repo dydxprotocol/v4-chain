@@ -97,12 +97,14 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 		&mocks.BankKeeper{},
 		&mocks.IndexerEventManager{},
 	)
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 	// Read a new `ClobPair` and make sure it does not exist.
 	_, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 1)
 	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
 
-	// Write multiple `ClobPairs` to state, but don't call `MemClob.CreateOrderbook`.
+	// Write `ClobPair` to state, but don't call `keeper.createOrderbook`.
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
@@ -123,7 +125,7 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 		func() {
 			clobPair := *clobtest.GenerateClobPair()
 			//nolint: errcheck
-			ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(clobPair),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
@@ -131,6 +133,9 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 				clobPair.SubticksPerTick,
 				clobPair.Status,
 			)
+			if err != nil {
+				fmt.Println(err)
+			}
 		},
 		"Should panic when attempting to create clob pair with duplicate id",
 	)
