@@ -960,6 +960,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Dave_Num0: {},
 			},
 		},
+		// TODO(CLOB-824): Re-enable reduce-only tests.
 		// "Liquidation succeeds if maker order is reduce-only": {
 		// 	perpetuals: []*perptypes.Perpetual{
 		// 		&constants.BtcUsd_100PercentMarginRequirement,
