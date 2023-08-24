@@ -9,6 +9,11 @@ on:  # yamllint disable-line rule:truthy
       - main
       - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
       - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   # Build and push
   call-build-ecs-service-ender:
