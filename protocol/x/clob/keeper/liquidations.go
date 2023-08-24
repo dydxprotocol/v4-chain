@@ -175,16 +175,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		return nil, err
 	}
 
-	negDnnvBig, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		perpetualId,
-		new(big.Int).Neg(deltaQuantums),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Position size is necessary for calculating DMMR.
+	// Position size is necessary for calculating DNNV and DMMR.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	position, _ := subaccount.GetPerpetualPositionForId(perpetualId)
 	psBig := position.GetBigQuantums()
@@ -201,6 +192,32 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 			psBig,
 		)
 	}
+
+	// `-DNNV = -(PNNVAD - PNNV) = PNNV - PNNVAD`, where `PNNVAD` is the perpetual's net notional
+	// with a position size of `PS + deltaQuantums`.
+	// Note that we are intentionally not calculating `-DNNV` from `deltaQuantums` to avoid rounding errors.
+	pnnvBig, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		perpetualId,
+		psBig,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	pnnvadBig, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		perpetualId,
+		new(big.Int).Add(psBig, deltaQuantums),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	negDnnvBig := new(big.Int).Sub(
+		pnnvBig,
+		pnnvadBig,
+	)
 
 	// `DMMR = PMMR - PMMRAD`, where `PMMRAD` is the perpetual's maintenance margin requirement
 	// with a position size of `PS + deltaQuantums`.
