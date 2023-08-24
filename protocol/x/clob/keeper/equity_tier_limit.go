@@ -146,7 +146,7 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 				order,
 				equityTierCount,
 				k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter),
-				k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId),
+				k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
 			)
 		}
 		panic(err)
