@@ -86,42 +86,6 @@ export function getSeedMarketsSql(): string {
 }
 
 /**
- * @description Gets the SQL to seed the `liquidity_tiers` table, using the `genesis.json` file
- * from the V4 network.
- * @returns SQL statement for seeding the `liquidity_tiers` table. The SQL statement will do
- * nothing if the rows in the `liquidity_tiers` table already exist.
- */
-export function getSeedLiquidityTiersSql(): string {
-  // Get `LiquidityTier` objects from the genesis app state
-  const liquidityTiers: LiquidityTier[] = getLiquidityTiersFromGenesis();
-
-  const liquidityTierCreateObjects:
-  LiquidityTiersCreateObject[] = liquidityTiers.map((liquidityTier: LiquidityTier) => {
-    return getLiquidityTiersCreateObject(liquidityTier);
-  });
-
-  const liquidityTierColumns = _.keys(liquidityTierCreateObjects[0]) as LiquidityTiersColumns[];
-
-  const liquidityTierRows: string[] = setBulkRowsForUpdate<LiquidityTiersColumns>({
-    objectArray: liquidityTierCreateObjects,
-    columns: liquidityTierColumns,
-    stringColumns: [
-      LiquidityTiersColumns.name,
-      LiquidityTiersColumns.basePositionNotional,
-    ],
-    numericColumns: [
-      LiquidityTiersColumns.id,
-      LiquidityTiersColumns.initialMarginPpm,
-      LiquidityTiersColumns.maintenanceFractionPpm,
-    ],
-  });
-
-  return `INSERT INTO LIQUIDITY_TIERS (${liquidityTierColumns.map((col) => `"${col}"`).join(',')})
-          VALUES ${liquidityTierRows.map((liquidityTier) => `(${liquidityTier})`).join(', ')}
-          ON CONFLICT DO NOTHING`;
-}
-
-/**
  * @description Gets the SQL to seed the `blocks` table.
  *
  * This needs to be run before the seeding of any tables that have blockHeight foreign key.
@@ -254,26 +218,6 @@ export function getMarketPricesFromGenesis(): MarketPrice[] {
     },
   );
   return marketPrices;
-}
-
-/**
- * Gets LiquidityTiers from geneis.
- * @returns
- */
-export function getLiquidityTiersFromGenesis(): LiquidityTier[] {
-  const liquidityTiers: LiquidityTier[] = genesis.app_state.perpetuals.liquidity_tiers.map(
-    (genesisLiquidityTier, index: number): LiquidityTier => {
-      return {
-        ...genesisLiquidityTier,
-        basePositionNotional: Long.fromValue(genesisLiquidityTier.base_position_notional),
-        initialMarginPpm: genesisLiquidityTier.initial_margin_ppm,
-        maintenanceFractionPpm: genesisLiquidityTier.maintenance_fraction_ppm,
-        impactNotional: Long.fromValue(genesisLiquidityTier.impact_notional),
-        id: index,
-      };
-    },
-  );
-  return liquidityTiers;
 }
 
 /**
