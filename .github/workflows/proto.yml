@@ -1,6 +1,13 @@
 name: Protobuf
 on:  # yamllint disable-line rule:truthy
   pull_request:
+    paths:
+      - '**.proto'
+      - 'dydxjs/**'
+      - 'dydxpy/**'
+      - 'proto/**'
+      - 'indexer/package.json'
+      - 'protocol/scripts/protoc**'
   push:
     branches:
       - main
