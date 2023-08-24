@@ -14,7 +14,9 @@ import config from '../config';
 import { startCandleCache } from './candle-cache';
 import { startPriceCache } from './price-cache';
 
-let currentBlockHeight: string = '-1';
+const INITIAL_BLOCK_HEIGHT: string = '-1';
+
+let currentBlockHeight: string = INITIAL_BLOCK_HEIGHT;
 
 export async function refreshBlockCache(txId?: number): Promise<void> {
   const block: BlockFromDatabase | undefined = await BlockTable.getLatest({ txId });
@@ -117,5 +119,5 @@ export function resetBlockCache(): void {
     throw new Error('resetBlockCache cannot be used in non-test env');
   }
 
-  currentBlockHeight = '0';
+  currentBlockHeight = INITIAL_BLOCK_HEIGHT;
 }

@@ -91,7 +91,7 @@ describe('block-cache', () => {
   describe('initializeAllCaches', () => {
     it('successfully initializes all caches', async () => {
       // Validate that caches are empty
-      expect(getCurrentBlockHeight()).toEqual('0');
+      expect(getCurrentBlockHeight()).toEqual('-1');
       expect(getCandlesMap()).toEqual({});
       expect(getPriceMap()).toEqual({});
       expect(perpetualMarketRefresher.getPerpetualMarketsMap()).toEqual({});
