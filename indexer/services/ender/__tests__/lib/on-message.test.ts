@@ -780,6 +780,7 @@ describe('on-message', () => {
     await assetRefresher.updateAssets();
     (SubaccountUpdateHandler as jest.Mock).mockReturnValue({
       handle: () => {
+        // clear cache so we can confirm that the assetRefresher is updated after the error
         assetRefresher.clear();
         throw new Error();
       },
