@@ -313,6 +313,17 @@ func TestValidateAndTransformRawOperations(t *testing.T) {
 		},
 
 		// tests for Match Orders
+		"Stateless match order validation: match contains no fills": {
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000),
+				clobtestutils.NewMatchOperationRaw(
+					&constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000,
+					[]types.MakerFill{},
+				),
+			},
+			expectedError: types.ErrInvalidMatchOrder,
+		},
 		"Stateless match order validation: fill amount is zero": {
 			operations: []types.OperationRaw{
 				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
@@ -391,7 +402,26 @@ func TestValidateAndTransformRawOperations(t *testing.T) {
 					Liquidated:  constants.Carl_Num0,
 					ClobPairId:  0,
 					PerpetualId: 0,
-					TotalSize:   1,
+					TotalSize:   0, // Total size is zero.
+					IsBuy:       true,
+					Fills: []types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.GetOrderId(),
+							FillAmount:   100,
+						},
+					},
+				}),
+			},
+			expectedError: types.ErrInvalidLiquidationOrderTotalSize,
+		},
+		"Stateless liquidation validation: fails when fill amount is zero": {
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
+				clobtestutils.NewMatchOperationRawFromPerpetualLiquidation(types.MatchPerpetualLiquidation{
+					Liquidated:  constants.Carl_Num0,
+					ClobPairId:  0,
+					PerpetualId: 0,
+					TotalSize:   100,
 					IsBuy:       true,
 					Fills: []types.MakerFill{
 						{
@@ -402,6 +432,20 @@ func TestValidateAndTransformRawOperations(t *testing.T) {
 				}),
 			},
 			expectedError: types.ErrFillAmountIsZero,
+		},
+		"Stateless liquidation validation: fails when liquidation match contains no fills": {
+			operations: []types.OperationRaw{
+				clobtestutils.NewShortTermOrderPlacementOperationRaw(constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000),
+				clobtestutils.NewMatchOperationRawFromPerpetualLiquidation(types.MatchPerpetualLiquidation{
+					Liquidated:  constants.Carl_Num0,
+					ClobPairId:  0,
+					PerpetualId: 0,
+					TotalSize:   100,
+					IsBuy:       true,
+					Fills:       []types.MakerFill{},
+				}),
+			},
+			expectedError: types.ErrInvalidMatchOrder,
 		},
 
 		// Tests for Match Perpetual Deleveraging
