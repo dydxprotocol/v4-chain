@@ -332,7 +332,6 @@ message PerpetualMarketCreateEventV1 {
   uint32 liquidity_tier = 11;
 }
 
-<<<<<<< HEAD
 // LiquidityTierUpsertEventV1 message contains all the information to
 // create/update a Liquidity Tier on the v4 chain.
 message LiquidityTierUpsertEventV1 {

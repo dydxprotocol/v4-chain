@@ -857,7 +857,6 @@ export interface PerpetualMarketCreateEventV1SDKType {
   liquidity_tier: number;
 }
 /**
-<<<<<<< HEAD
  * LiquidityTierUpsertEventV1 message contains all the information to
  * create/update a Liquidity Tier on the v4 chain.
  */
@@ -918,7 +917,8 @@ export interface LiquidityTierUpsertEventV1SDKType {
    */
 
   base_position_notional: Long;
-=======
+}
+/**
  * UpdateClobPairEventV1 message contains all the information about an update to
  * a clob pair on the v4 chain.
  */
@@ -1081,7 +1081,6 @@ export interface UpdatePerpetualEventV1SDKType {
    */
 
   liquidity_tier: number;
->>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
 }
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
@@ -2454,7 +2453,6 @@ export const PerpetualMarketCreateEventV1 = {
 
 };
 
-<<<<<<< HEAD
 function createBaseLiquidityTierUpsertEventV1(): LiquidityTierUpsertEventV1 {
   return {
     id: 0,
@@ -2485,7 +2483,61 @@ export const LiquidityTierUpsertEventV1 = {
 
     if (!message.basePositionNotional.isZero()) {
       writer.uint32(40).uint64(message.basePositionNotional);
-=======
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): LiquidityTierUpsertEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLiquidityTierUpsertEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.name = reader.string();
+          break;
+
+        case 3:
+          message.initialMarginPpm = reader.uint32();
+          break;
+
+        case 4:
+          message.maintenanceFractionPpm = reader.uint32();
+          break;
+
+        case 5:
+          message.basePositionNotional = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<LiquidityTierUpsertEventV1>): LiquidityTierUpsertEventV1 {
+    const message = createBaseLiquidityTierUpsertEventV1();
+    message.id = object.id ?? 0;
+    message.name = object.name ?? "";
+    message.initialMarginPpm = object.initialMarginPpm ?? 0;
+    message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
+    message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
+    return message;
+  }
+
+};
+
 function createBaseUpdateClobPairEventV1(): UpdateClobPairEventV1 {
   return {
     clobPairId: 0,
@@ -2521,48 +2573,21 @@ export const UpdateClobPairEventV1 = {
 
     if (!message.stepBaseQuantums.isZero()) {
       writer.uint32(48).uint64(message.stepBaseQuantums);
->>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
     }
 
     return writer;
   },
 
-<<<<<<< HEAD
-  decode(input: _m0.Reader | Uint8Array, length?: number): LiquidityTierUpsertEventV1 {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseLiquidityTierUpsertEventV1();
-=======
   decode(input: _m0.Reader | Uint8Array, length?: number): UpdateClobPairEventV1 {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseUpdateClobPairEventV1();
->>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-<<<<<<< HEAD
-          message.id = reader.uint32();
-          break;
-
-        case 2:
-          message.name = reader.string();
-          break;
-
-        case 3:
-          message.initialMarginPpm = reader.uint32();
-          break;
-
-        case 4:
-          message.maintenanceFractionPpm = reader.uint32();
-          break;
-
-        case 5:
-          message.basePositionNotional = (reader.uint64() as Long);
-=======
           message.clobPairId = reader.uint32();
           break;
 
@@ -2584,7 +2609,6 @@ export const UpdateClobPairEventV1 = {
 
         case 6:
           message.stepBaseQuantums = (reader.uint64() as Long);
->>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
           break;
 
         default:
@@ -2596,15 +2620,6 @@ export const UpdateClobPairEventV1 = {
     return message;
   },
 
-<<<<<<< HEAD
-  fromPartial(object: DeepPartial<LiquidityTierUpsertEventV1>): LiquidityTierUpsertEventV1 {
-    const message = createBaseLiquidityTierUpsertEventV1();
-    message.id = object.id ?? 0;
-    message.name = object.name ?? "";
-    message.initialMarginPpm = object.initialMarginPpm ?? 0;
-    message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
-    message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
-=======
   fromPartial(object: DeepPartial<UpdateClobPairEventV1>): UpdateClobPairEventV1 {
     const message = createBaseUpdateClobPairEventV1();
     message.clobPairId = object.clobPairId ?? 0;
@@ -2698,7 +2713,6 @@ export const UpdatePerpetualEventV1 = {
     message.marketId = object.marketId ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
->>>>>>> f487673 ([IND-357][IND-358]: Add Update Perpetual Market protos)
     return message;
   }
 
