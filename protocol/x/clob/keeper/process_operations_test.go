@@ -1450,10 +1450,36 @@ func setupProcessProposerOperationsTestCase(
 	}
 
 	// Create all CLOBs.
-	for _, clobPair := range tc.clobPairs {
+	for i, clobPair := range tc.clobPairs {
+		perpetualId := clobtest.MustPerpetualId(clobPair)
+		// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+		// the indexer event manager to expect these events.
+		if tc.expectedError == nil && tc.expectedPanics == "" && len(tc.expectedMatches) > 0 {
+			mockIndexerEventManager.On("AddTxnEvent",
+				mock.Anything,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						perpetualId,
+						uint32(i),
+						tc.perpetuals[perpetualId].Params.Ticker,
+						tc.perpetuals[perpetualId].Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						tc.perpetuals[perpetualId].Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.MinOrderBaseQuantums,
+						clobPair.StepBaseQuantums,
+						tc.perpetuals[perpetualId].Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
+		}
+
 		_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 			ctx,
 			clobtest.MustPerpetualId(clobPair),
+			satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 			satypes.BaseQuantums(clobPair.StepBaseQuantums),
 			clobPair.QuantumConversionExponent,
 			clobPair.SubticksPerTick,

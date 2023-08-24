@@ -25,6 +25,8 @@ import {
   IndexerOrder_ConditionType,
   OrderRemovalReason,
   AssetCreateEventV1,
+  PerpetualMarketCreateEventV1,
+  ClobPairStatus,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -95,6 +97,20 @@ export const defaultMarketModify: MarketEventV1 = {
   marketModify: {
     base: defaultMarketBase,
   },
+};
+
+export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
+  id: 0,
+  clobPairId: 1,
+  ticker: 'BTC-USD',
+  marketId: 0,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE,
+  quantumConversionExponent: -8,
+  atomicResolution: -10,
+  subticksPerTick: 100,
+  minOrderBaseQuantums: Long.fromValue(10),
+  stepBaseQuantums: Long.fromValue(10),
+  liquidityTier: 0,
 };
 
 export const defaultPreviousHeight: string = '2';

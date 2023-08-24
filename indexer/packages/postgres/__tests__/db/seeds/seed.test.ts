@@ -1,25 +1,15 @@
 import { knexPrimary } from '../../../src/helpers/knex';
 import { seed } from '../../../src/db/seeds/01_genesis_seeds';
 import { clearData, migrate, teardown } from '../../../src/helpers/db-helpers';
-import { LiquidityTiersFromDatabase, MarketFromDatabase, PerpetualMarketFromDatabase } from '../../../src/types';
-import * as PerpetualMarketTable from '../../../src/stores/perpetual-market-table';
+import { LiquidityTiersFromDatabase, MarketFromDatabase } from '../../../src/types';
 import * as MarketTable from '../../../src/stores/market-table';
 import * as LiquidityTiersTable from '../../../src/stores/liquidity-tiers-table';
-import { expectLiquidityTier, expectMarketParamAndPrice, expectPerpetualMarket } from '../helpers';
+import { expectLiquidityTier, expectMarketParamAndPrice } from '../helpers';
 import {
-  getClobPairsFromGenesis,
   getLiquidityTiersFromGenesis,
   getMarketParamsFromGenesis,
   getMarketPricesFromGenesis,
-  getPerpetualsFromGenesis,
 } from '../../../src/db/helpers';
-import {
-  defaultLiquidityTier,
-  defaultLiquidityTier2,
-  defaultMarket,
-  defaultMarket2,
-  defaultPerpetualMarket,
-} from '../../helpers/constants';
 
 describe('seed', () => {
   beforeAll(async () => {
@@ -38,26 +28,11 @@ describe('seed', () => {
   it('seeds database', async () => {
     await seed(knexPrimary);
 
-    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
-      {},
-      [],
-      { readReplica: true },
-    );
-
     const liquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
       {},
       [],
       { readReplica: true },
     );
-
-    expect(perpetualMarkets).toHaveLength(34);
-    perpetualMarkets.forEach((perpetualMarket: PerpetualMarketFromDatabase, index: number) => {
-      expectPerpetualMarket(
-        perpetualMarket,
-        getPerpetualsFromGenesis()[index],
-        getClobPairsFromGenesis()[index],
-      );
-    });
 
     const markets: MarketFromDatabase[] = await MarketTable.findAll(
       {},
@@ -83,41 +58,9 @@ describe('seed', () => {
     });
   });
 
-  it('seed should update the liquidityTierId for existing Perpetual Markets', async () => {
-    await Promise.all([
-      MarketTable.create(defaultMarket),
-      MarketTable.create(defaultMarket2),
-    ]);
-    await Promise.all([
-      LiquidityTiersTable.create(defaultLiquidityTier),
-      LiquidityTiersTable.create(defaultLiquidityTier2),
-    ]);
-    await PerpetualMarketTable.create({
-      ...defaultPerpetualMarket,
-      liquidityTierId: 1,
-    });
-
-    await seed(knexPrimary);
-
-    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
-      {},
-      [],
-      { readReplica: true },
-    );
-    expect(perpetualMarkets[0].liquidityTierId).toEqual(0);
-  });
-
   it('can be run multiple times', async () => {
     await seed(knexPrimary);
     await seed(knexPrimary);
-
-    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
-      {},
-      [],
-      { readReplica: true },
-    );
-
-    expect(perpetualMarkets).toHaveLength(34);
 
     const markets: MarketFromDatabase[] = await MarketTable.findAll(
       {},

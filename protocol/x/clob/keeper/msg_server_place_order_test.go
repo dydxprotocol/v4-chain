@@ -106,9 +106,31 @@ func TestPlaceOrder_Error(t *testing.T) {
 
 			// Create ClobPair.
 			clobPair := constants.ClobPair_Btc
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
+			indexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						clobtest.MustPerpetualId(clobPair),
+						ks.ClobKeeper.GetNumClobPairs(ks.Ctx),
+						perpetual.Params.Ticker,
+						perpetual.Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						perpetual.Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.MinOrderBaseQuantums,
+						clobPair.StepBaseQuantums,
+						perpetual.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobtest.MustPerpetualId(clobPair),
+				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,
@@ -218,9 +240,29 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			// Create ClobPair.
 			clobPair := constants.ClobPair_Btc
+			indexerEventManager.On("AddTxnEvent",
+				ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						perpetual.Params.Ticker,
+						perpetual.Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						perpetual.Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.MinOrderBaseQuantums,
+						clobPair.StepBaseQuantums,
+						perpetual.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobtest.MustPerpetualId(clobPair),
+				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,
