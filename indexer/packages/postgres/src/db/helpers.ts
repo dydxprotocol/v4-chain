@@ -1,16 +1,16 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { bigIntToBytes, bytesToBigInt, getPositionIsLong } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
-  Asset, AssetPosition, LiquidityTier, MarketParam, MarketPrice,
+  Asset, AssetPosition, MarketParam, MarketPrice,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import Long from 'long';
 import { DateTime } from 'luxon';
 
-import { CURRENCY_DECIMAL_PRECISION, ONE_MILLION, QUOTE_CURRENCY_ATOMIC_RESOLUTION } from '../constants';
+import { CURRENCY_DECIMAL_PRECISION, ONE_MILLION } from '../constants';
 import { setBulkRowsForUpdate } from '../helpers/stores-helpers';
-import { protocolPriceToHuman, quantumsToHuman, quantumsToHumanFixedString } from '../lib/protocol-translations';
+import { protocolPriceToHuman, quantumsToHumanFixedString } from '../lib/protocol-translations';
 import * as AssetPositionTable from '../stores/asset-position-table';
 import * as SubaccountTable from '../stores/subaccount-table';
 import {
@@ -19,8 +19,6 @@ import {
   BlockCreateObject,
   FundingIndexMap,
   IsoString,
-  LiquidityTiersColumns,
-  LiquidityTiersCreateObject,
   MarketColumns,
   MarketCreateObject,
   MarketsMap,
@@ -149,20 +147,6 @@ export function getAssetPositionsFromGenesis(): _.Dictionary<AssetPosition[]> {
     );
 
   return assetPositionMapping;
-}
-
-export function getLiquidityTiersCreateObject(liquidityTier: LiquidityTier):
-  LiquidityTiersCreateObject {
-  return {
-    id: liquidityTier.id,
-    name: liquidityTier.name,
-    initialMarginPpm: liquidityTier.initialMarginPpm.toString(),
-    maintenanceFractionPpm: liquidityTier.maintenanceFractionPpm.toString(),
-    basePositionNotional: quantumsToHuman(
-      liquidityTier.basePositionNotional.toString(),
-      QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-    ).toFixed(6),
-  };
 }
 
 export function getAssetCreateObject(asset: Asset): AssetCreateObject {

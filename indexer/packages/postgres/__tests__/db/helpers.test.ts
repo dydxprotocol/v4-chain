@@ -1,6 +1,5 @@
 import {
   AssetCreateObject,
-  LiquidityTiersCreateObject,
   MarketColumns,
   MarketFromDatabase,
   MarketsMap,
@@ -12,22 +11,17 @@ import {
   AssetPositionCreateObjectWithId,
   getAssetCreateObject,
   getAssetPositionCreateObject,
-  getLiquidityTiersCreateObject,
   getMaintenanceMarginPpm,
   getUnrealizedPnl,
   getUnsettledFunding,
   SubaccountCreateObjectWithId,
 } from '../../src/db/helpers';
 import {
-  Asset, AssetPosition, LiquidityTier, MarketParam, MarketPrice,
+  Asset, AssetPosition, MarketParam, MarketPrice,
 } from '@dydxprotocol-indexer/v4-protos';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
-  expectAsset,
-  expectAssetPositionCreateObject,
-  expectLiquidityTier,
-  expectMarketParamAndPrice,
-  expectSubaccount,
+  expectAsset, expectAssetPositionCreateObject, expectMarketParamAndPrice, expectSubaccount,
 } from './helpers';
 import {
   createdDateTime,
@@ -71,23 +65,6 @@ describe('helpers', () => {
     it('create asset object from asset proto', () => {
       const assetCreateObject: AssetCreateObject = getAssetCreateObject(defaultAsset);
       expectAsset(assetCreateObject, defaultAsset);
-    });
-  });
-
-  describe('getLiquidityTiersCreateObjects', () => {
-    const defaultLiquidityTier: LiquidityTier = {
-      id: 0,
-      name: 'tier1',
-      initialMarginPpm: 50000,
-      maintenanceFractionPpm: 30000,
-      basePositionNotional: Long.fromValue(10000),
-      impactNotional: Long.fromValue(500),
-    };
-
-    it('create LiquidityTiers object from LiquidityTiers proto', () => {
-      const liquidityTiersCreateObject:
-      LiquidityTiersCreateObject = getLiquidityTiersCreateObject(defaultLiquidityTier);
-      expectLiquidityTier(liquidityTiersCreateObject, defaultLiquidityTier);
     });
   });
 

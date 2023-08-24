@@ -1,0 +1,87 @@
+import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import {
+  IndexerTendermintBlock,
+  IndexerTendermintEvent,
+  LiquidityTierUpsertEventV1,
+} from '@dydxprotocol-indexer/v4-protos';
+import { dbHelpers, testMocks } from '@dydxprotocol-indexer/postgres';
+import { DydxIndexerSubtypes } from '../../src/lib/types';
+import {
+  defaultHeight, defaultLiquidityTierUpsertEvent, defaultTime, defaultTxHash,
+} from '../helpers/constants';
+import {
+  binaryToBase64String,
+  createIndexerTendermintBlock,
+  createIndexerTendermintEvent,
+} from '../helpers/indexer-proto-helpers';
+import { expectDidntLogError } from '../helpers/validator-helpers';
+import { LiquidityTierValidator } from '../../src/validators/liquidity-tier-validator';
+
+describe('liquidity-tier-validator', () => {
+  beforeEach(async () => {
+    await testMocks.seedData();
+    jest.spyOn(logger, 'error');
+  });
+
+  afterEach(async () => {
+    await dbHelpers.clearData();
+    jest.clearAllMocks();
+  });
+
+  describe('validate', () => {
+    it('does not throw error on valid liquidity tier upsert event', () => {
+      const validator: LiquidityTierValidator = new LiquidityTierValidator(
+        defaultLiquidityTierUpsertEvent,
+        createBlock(defaultLiquidityTierUpsertEvent),
+      );
+
+      validator.validate();
+      expectDidntLogError();
+    });
+
+    it.each([
+      [
+        'throws error on liquidity tier upsert event missing initialMarginPpm',
+        {
+          ...defaultLiquidityTierUpsertEvent,
+          initialMarginPpm: 0,
+        } as LiquidityTierUpsertEventV1,
+        'LiquidityTierCreateEvent initialMarginPpm is not populated',
+      ],
+      [
+        'throws error on perpetual market create event missing maintenanceFractionPpm',
+        {
+          ...defaultLiquidityTierUpsertEvent,
+          maintenanceFractionPpm: 0,
+        } as LiquidityTierUpsertEventV1,
+        'LiquidityTierCreateEvent maintenanceFractionPpm is not populated',
+      ],
+    ])('%s', (_description: string, event: LiquidityTierUpsertEventV1, expectedMessage: string) => {
+      const validator: LiquidityTierValidator = new LiquidityTierValidator(
+        event,
+        createBlock(event),
+      );
+      expect(() => validator.validate()).toThrow(new ParseMessageError(expectedMessage));
+    });
+  });
+});
+
+function createBlock(
+  liquidityTierEvent: LiquidityTierUpsertEventV1,
+): IndexerTendermintBlock {
+  const event: IndexerTendermintEvent = createIndexerTendermintEvent(
+    DydxIndexerSubtypes.LIQUIDITY_TIER,
+    binaryToBase64String(
+      LiquidityTierUpsertEventV1.encode(liquidityTierEvent).finish(),
+    ),
+    0,
+    0,
+  );
+
+  return createIndexerTendermintBlock(
+    defaultHeight,
+    defaultTime,
+    [event],
+    [defaultTxHash],
+  );
+}

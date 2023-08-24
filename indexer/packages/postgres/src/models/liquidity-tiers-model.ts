@@ -1,8 +1,8 @@
-import { Model } from 'objection';
-
 import { IntegerPattern, NonNegativeNumericPattern } from '../lib/validators';
+import UpsertQueryBuilder from '../query-builders/upsert';
+import BaseModel from './base-model';
 
-export default class LiquidityTiersModel extends Model {
+export default class LiquidityTiersModel extends BaseModel {
   static get tableName() {
     return 'liquidity_tiers';
   }
@@ -34,6 +34,8 @@ export default class LiquidityTiersModel extends Model {
   }
 
   id!: number;
+
+  QueryBuilderType!: UpsertQueryBuilder<this>;
 
   name!: string;
 
