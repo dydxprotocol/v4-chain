@@ -11,7 +11,7 @@ on:  # yamllint disable-line rule:truthy
 # Ensure only a single instance of this workflow is running, and cancel any that are in-progress
 # before this workflow instance starts
 concurrency:
-  group: ${{ github.ref }}-build-test-coverage
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
