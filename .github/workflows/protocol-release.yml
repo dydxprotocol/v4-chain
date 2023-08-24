@@ -146,7 +146,7 @@ jobs:
           chmod +x "${BIN}/buf"
 
       - name: Set Env from Tag to follow semver
-        run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed 's/-rc/-rc./')" >> $GITHUB_ENV
+        run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed -r 's/(.*-[[:alpha:]]+)([[:digit:]]+)/\1.\2/')" >> $GITHUB_ENV
 
       - name: Update version in package.json
         run: echo $VERSION; sed -i "s/0.0.0/$VERSION/g" package.json
