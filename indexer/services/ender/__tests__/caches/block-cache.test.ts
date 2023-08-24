@@ -81,6 +81,9 @@ describe('block-cache', () => {
         expect(getCurrentBlockHeight()).toEqual('3');
         expect(getCandlesMap()).not.toEqual({});
         expect(getPriceMap()).not.toEqual({});
+        expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
+        expect(assetRefresher.getAssetsMap()).not.toEqual({});
+        expect(marketRefresher.getMarketsMap()).not.toEqual({});
       }
     });
   });

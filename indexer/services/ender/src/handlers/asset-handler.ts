@@ -35,6 +35,6 @@ export class AssetCreationHandler extends Handler<AssetCreateEventV1> {
       hasMarket: this.event.hasMarket,
       marketId: this.event.marketId,
     }, { txId: this.txId });
-    await assetRefresher.addAsset(asset);
+    assetRefresher.addAsset(asset);
   }
 }
