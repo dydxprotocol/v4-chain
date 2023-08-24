@@ -13,6 +13,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/mock"
@@ -128,9 +129,10 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 	ctx := ks.Ctx.WithIsCheckTx(true)
-	previousBlockTime := 50
-	ctx = ctx.WithBlockTime(time.Unix(int64(previousBlockTime), 0))
-	ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+		Height:    1,
+		Timestamp: time.Unix(int64(50), 0),
+	})
 
 	shortTermOrder := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	ctx = ctx.WithBlockHeight(14)

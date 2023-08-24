@@ -14,6 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -514,7 +515,9 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 			}
 
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ks.Ctx.WithBlockTime(time.Unix(5, 0)))
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+				Timestamp: time.Unix(5, 0),
+			})
 
 			fills, deltaQuantumsRemaining := ks.ClobKeeper.OffsetSubaccountPerpetualPosition(
 				ks.Ctx,

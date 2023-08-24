@@ -40,7 +40,7 @@ func TestInitGenesis(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsgKeeper, _, _ := keeper.DelayMsgKeepers(t)
+			ctx, delaymsgKeeper, _, _, _, _ := keeper.DelayMsgKeepers(t)
 			delaymsgKeeper.InitializeForGenesis(ctx)
 			delaymsg.InitGenesis(ctx, *delaymsgKeeper, *tc.genesisState)
 			got := delaymsg.ExportGenesis(ctx, *delaymsgKeeper)
