@@ -346,3 +346,96 @@ func TestClobPairGetAll(t *testing.T) {
 		nullify.Fill(ks.ClobKeeper.GetAllClobPair(ks.Ctx)), //nolint:staticcheck
 	)
 }
+
+func TestSetClobPairStatus(t *testing.T) {
+	testCases := map[string]struct {
+		setup         func(ks keepertest.ClobKeepersTestContext)
+		status        types.ClobPair_Status
+		expectedErr   string
+		expectedPanic string
+	}{
+		"Succeeds with valid status transition": {
+			setup: func(ks keepertest.ClobKeepersTestContext) {
+				// write a clob pair to the store with status initializing
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+
+				clobPair := constants.ClobPair_Btc
+				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
+				b := cdc.MustMarshal(&clobPair)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(clobPair.Id),
+				), b)
+			},
+			status: types.ClobPair_STATUS_ACTIVE,
+		},
+		"Panics with missing clob pair": {
+			setup:         func(ks keepertest.ClobKeepersTestContext) {},
+			status:        types.ClobPair_STATUS_ACTIVE,
+			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
+		},
+		"Errors with unsupported transition to supported status": {
+			setup: func(ks keepertest.ClobKeepersTestContext) {
+				clobPair := constants.ClobPair_Btc
+				//nolint:errcheck
+				ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
+					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
+				)
+			},
+			status: types.ClobPair_STATUS_INITIALIZING,
+			expectedErr: "Cannot transition from status STATUS_ACTIVE to status STATUS_INITIALIZING",
+		},
+		"Errors with unsupported transition to unsupported status": {
+			setup: func(ks keepertest.ClobKeepersTestContext) {
+				clobPair := constants.ClobPair_Btc
+				//nolint:errcheck
+				ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
+					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
+				)
+			},
+			status: types.ClobPair_Status(100),
+			expectedErr: "Cannot transition from status STATUS_ACTIVE to status 100",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+			tc.setup(ks)
+
+			if tc.expectedPanic != "" {
+				require.PanicsWithValue(
+					t,
+					tc.expectedPanic,
+					func() {
+						err := ks.ClobKeeper.SetClobPairStatus(ks.Ctx, 0, tc.status)
+						require.NoError(t, err)
+					},
+				)
+			} else {
+				err := ks.ClobKeeper.SetClobPairStatus(ks.Ctx, 0, tc.status)
+
+				if tc.expectedErr != "" {
+					require.ErrorContains(t, err, tc.expectedErr)
+				} else {
+					require.NoError(t, err)
+				}
+			}
+		})
+	}
+}

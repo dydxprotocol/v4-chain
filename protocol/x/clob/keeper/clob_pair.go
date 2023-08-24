@@ -238,13 +238,13 @@ func (k Keeper) SetClobPairStatus(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 	clobPairStatus types.ClobPair_Status,
-) error {	
+) error {
 	clobPair := k.mustGetClobPair(ctx, clobPairId)
-	
-	if isSupportedTransition := types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus); !isSupportedTransition {
+
+	if isSupported := types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus); !isSupported {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidClobPairStatusTransition,
-			"Cannot transition between status %+v and status %+v",
+			"Cannot transition from status %+v to status %+v",
 			clobPair.Status,
 			clobPairStatus,
 		)
