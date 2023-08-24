@@ -2,6 +2,7 @@ syntax = "proto3";
 package dydxprotocol.clob;
 
 import "gogoproto/gogo.proto";
+import "dydxprotocol/clob/clob_pair.proto";
 import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/order_removals.proto";
 import "dydxprotocol/clob/matches.proto";
@@ -20,6 +21,8 @@ service Msg {
   rpc PlaceOrder(MsgPlaceOrder) returns (MsgPlaceOrderResponse);
   // CancelOrder allows accounts to cancel existing orders on the orderbook.
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
+  // SetClobPairStatus
+  rpc SetClobPairStatus(MsgSetClobPairStatus) returns (MsgSetClobPairStatusResponse);
 }
 
 // MsgProposedOperations is a message injected by block proposers to
@@ -59,6 +62,15 @@ message MsgCancelOrder {
 
 // MsgCancelOrderResponse is a response type used for canceling orders.
 message MsgCancelOrderResponse {}
+
+// MsgSetClobPairStatus is a request type used for setting a ClobPair's status.
+message MsgSetClobPairStatus {
+  uint32 clob_pair_id = 1;
+  ClobPair.Status status = 2;
+}
+
+// MsgSetClobPairStatusResponse is a response type used for setting ClobPair's status.
+message MsgSetClobPairStatusResponse {}
 
 // OperationRaw represents an operation in the proposed operations.
 // Note that the `order_placement` operation is a signed message.
