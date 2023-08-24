@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	flags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -39,6 +40,8 @@ type (
 		indexerEventManager indexer_manager.IndexerEventManager
 
 		memStoreInitialized *atomic.Bool
+
+		MaxLiquidationOrdersPerBlock uint32
 
 		// mev telemetry config
 		mevTelemetryHost       string
@@ -73,8 +76,7 @@ func NewKeeper(
 	rewardsKeeper types.RewardsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	txDecoder sdk.TxDecoder,
-	mevTelemetryHost string,
-	mevTelemetryIdentifier string,
+	clobFlags flags.ClobFlags,
 	placeOrderRateLimiter rate_limit.RateLimiter[*types.MsgPlaceOrder],
 	cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder],
 ) *Keeper {
@@ -95,8 +97,9 @@ func NewKeeper(
 		indexerEventManager:          indexerEventManager,
 		memStoreInitialized:          &atomic.Bool{},
 		txDecoder:                    txDecoder,
-		mevTelemetryHost:             mevTelemetryHost,
-		mevTelemetryIdentifier:       mevTelemetryIdentifier,
+		mevTelemetryHost:             clobFlags.MevTelemetryHost,
+		mevTelemetryIdentifier:       clobFlags.MevTelemetryIdentifier,
+		MaxLiquidationOrdersPerBlock: clobFlags.MaxLiquidationOrdersPerBlock,
 		placeOrderRateLimiter:        placeOrderRateLimiter,
 		cancelOrderRateLimiter:       cancelOrderRateLimiter,
 	}

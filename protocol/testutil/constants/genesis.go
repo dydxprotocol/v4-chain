@@ -197,7 +197,7 @@ const GenesisState = `{
       "event_params": {
         "denom": "bridge-token",
         "eth_chain_id": "11155111",
-        "eth_address": "0x40ad69F5d9f7F9EA2Fc5C2009C7335F10593C935"
+        "eth_address": "0xEf01c3A30eB57c91c40C52E996d29c202ae72193"
       },
       "propose_params": {
         "max_bridges_per_block": 10,
@@ -799,20 +799,24 @@ const GenesisState = `{
       },
       "perpetuals": [
         {
-          "atomic_resolution": -10,
-          "default_funding_ppm": 0,
-          "id": 0,
-          "liquidity_tier": 0,
-          "market_id": 0,
-          "ticker": "BTC-USD"
+          "params": {
+            "atomic_resolution": -10,
+            "default_funding_ppm": 0,
+            "id": 0,
+            "liquidity_tier": 0,
+            "market_id": 0,
+            "ticker": "BTC-USD"
+          }
         },
         {
-          "atomic_resolution": -9,
-          "default_funding_ppm": 0,
-          "id": 1,
-          "liquidity_tier": 0,
-          "market_id": 1,
-          "ticker": "ETH-USD"
+          "params": {
+            "atomic_resolution": -9,
+            "default_funding_ppm": 0,
+            "id": 1,
+            "liquidity_tier": 0,
+            "market_id": 1,
+            "ticker": "ETH-USD"
+          }
         }
       ]
     },

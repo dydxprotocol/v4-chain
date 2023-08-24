@@ -2,8 +2,9 @@ package types_test
 
 import (
 	"errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"testing"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -66,25 +67,6 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			expectedError: errors.New("duplicated market param id"),
-		},
-		"invalid: found gap in market param id": {
-			genState: &types.GenesisState{
-				MarketParams: []types.MarketParam{
-					{
-						Id:                0,
-						Pair:              constants.BtcUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
-					},
-					{
-						Id:                2, // nonconsecutive id
-						Pair:              constants.EthUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
-					},
-				},
-			},
-			expectedError: errors.New("found gap in market param id"),
 		},
 		"invalid: market param invalid (pair unset)": {
 			genState: &types.GenesisState{

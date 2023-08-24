@@ -25,23 +25,67 @@ func TestBridgeLogToEvent(t *testing.T) {
 				Id: 0,
 				Coin: sdk.NewCoin(
 					"dv4tnt",
-					sdk.NewInt(42),
+					sdk.NewInt(12345),
 				),
-				Address:        "dydx1qy352euf40x77qfrg4ncn27dauqjx3t83x4ummcpydzk0zdtehhse25p74",
+				Address:        "dydx1qqgzqvzq2ps8pqys5zcvp58q7rluextx92xhln",
 				EthBlockHeight: 3872013,
 			},
 		},
-		"Success: event ID 1": {
+		"Success: event ID 1 - empty address": {
 			inputLog:   constants.EthLog_Event1,
 			inputDenom: "test-token",
 			expectedEvent: bridgetypes.BridgeEvent{
 				Id: 1,
 				Coin: sdk.NewCoin(
 					"test-token",
-					sdk.NewInt(222),
+					sdk.NewInt(55),
 				),
-				Address:        "dydx1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsnpjqx",
+				// address shorter than 20 bytes is padded with zeros.
+				Address:        "dydx1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq66wm82",
 				EthBlockHeight: 3969937,
+			},
+		},
+		"Success: event ID 2": {
+			inputLog:   constants.EthLog_Event2,
+			inputDenom: "test-token",
+			expectedEvent: bridgetypes.BridgeEvent{
+				Id: 2,
+				Coin: sdk.NewCoin(
+					"test-token",
+					sdk.NewInt(777),
+				),
+				// 32 bytes * 8 bits / 5 bits = 51.2 characters ~ 52 bech32 characters
+				Address:        "dydx1qqgzqvzq2ps8pqys5zcvp58q7rluextxzy3rx3z4vemc3xgq42as94fpcv",
+				EthBlockHeight: 4139345,
+			},
+		},
+		"Success: event ID 3": {
+			inputLog:   constants.EthLog_Event3,
+			inputDenom: "test-token-2",
+			expectedEvent: bridgetypes.BridgeEvent{
+				Id: 3,
+				Coin: sdk.NewCoin(
+					"test-token-2",
+					sdk.NewInt(888),
+				),
+				// address data is 62 bytes but we take the first 32 bytes only.
+				// 32 bytes * 8 bits / 5 bits ~ 52 bech32 characters
+				Address:        "dydx124n92ej4ve2kv4tx24n92ej4ve2kv4tx24n92ej4ve2kv4tx24nq8exmjh",
+				EthBlockHeight: 4139348,
+			},
+		},
+		"Success: event ID 4": {
+			inputLog:   constants.EthLog_Event4,
+			inputDenom: "dv4tnt",
+			expectedEvent: bridgetypes.BridgeEvent{
+				Id: 4,
+				Coin: sdk.NewCoin(
+					"dv4tnt",
+					sdk.NewInt(1234123443214321),
+				),
+				// address shorter than 20 bytes is padded with zeros.
+				Address:        "dydx1zg6pydqqqqqqqqqqqqqqqqqqqqqqqqqqm0r5ra",
+				EthBlockHeight: 4139349,
 			},
 		},
 	}

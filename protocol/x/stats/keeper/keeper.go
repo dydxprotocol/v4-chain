@@ -30,6 +30,9 @@ type (
 		epochsKeeper      types.EpochsKeeper
 		storeKey          storetypes.StoreKey
 		transientStoreKey storetypes.StoreKey
+
+		// The address capable of updating params. Typically the x/gov module account.
+		authority string
 	}
 )
 
@@ -38,13 +41,19 @@ func NewKeeper(
 	epochsKeeper types.EpochsKeeper,
 	storeKey storetypes.StoreKey,
 	transientStoreKey storetypes.StoreKey,
+	authority string,
 ) *Keeper {
 	return &Keeper{
 		cdc:               cdc,
 		epochsKeeper:      epochsKeeper,
 		storeKey:          storeKey,
 		transientStoreKey: transientStoreKey,
+		authority:         authority,
 	}
+}
+
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

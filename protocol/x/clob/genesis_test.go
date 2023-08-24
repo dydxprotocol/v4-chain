@@ -1,6 +1,9 @@
 package clob_test
 
 import (
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -419,12 +422,40 @@ func TestGenesis(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 			ctx := ks.Ctx.WithBlockTime(constants.TimeT)
 
 			prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
+			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+			// the indexer event manager to expect these events.
+			if tc.expectedErr == "" {
+				for i, clobPair := range tc.genesis.ClobPairs {
+					perpetualId := clobtest.MustPerpetualId(clobPair)
+					perpetual := constants.Perpetuals_DefaultGenesisState.Perpetuals[perpetualId]
+					mockIndexerEventManager.On("AddTxnEvent",
+						ctx,
+						indexerevents.SubtypePerpetualMarket,
+						indexer_manager.GetB64EncodedEventMessage(
+							indexerevents.NewPerpetualMarketCreateEvent(
+								perpetualId,
+								uint32(i),
+								perpetual.Params.Ticker,
+								perpetual.Params.MarketId,
+								clobPair.Status,
+								clobPair.QuantumConversionExponent,
+								perpetual.Params.AtomicResolution,
+								clobPair.SubticksPerTick,
+								clobPair.MinOrderBaseQuantums,
+								clobPair.StepBaseQuantums,
+								perpetual.Params.LiquidityTier,
+							),
+						),
+					).Once().Return()
+				}
+			}
 			// If we expect a panic, verify that initializing the genesis state causes a panic and
 			// end the test.
 			if tc.expectedErr != "" {

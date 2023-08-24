@@ -130,7 +130,7 @@ func PopulateTestPremiumStore(
 	for _, premiumPpm := range testFundingPremiums {
 		newPremiums := make([]types.FundingPremium, len(perpetuals))
 		for i, p := range perpetuals {
-			newPremiums[i] = *types.NewFundingPremium(p.Id, premiumPpm)
+			newPremiums[i] = *types.NewFundingPremium(p.Params.Id, premiumPpm)
 		}
 
 		if isVote {

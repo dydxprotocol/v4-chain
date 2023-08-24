@@ -660,6 +660,8 @@ func New(
 		app.EpochsKeeper,
 		keys[statsmoduletypes.StoreKey],
 		tkeys[statsmoduletypes.TransientStoreKey],
+		// set the governance module account as the authority for conducting upgrades
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
 
@@ -726,8 +728,7 @@ func New(
 		app.RewardsKeeper,
 		app.IndexerEventManager,
 		txConfig.TxDecoder(),
-		clobFlags.MevTelemetryHost,
-		clobFlags.MevTelemetryIdentifier,
+		clobFlags,
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgCancelOrder](),
 	)
