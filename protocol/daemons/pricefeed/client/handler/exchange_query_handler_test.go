@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Test modification to verify github workflow runs.
 const (
 	successStatus           = 200
 	failStatus400           = 400

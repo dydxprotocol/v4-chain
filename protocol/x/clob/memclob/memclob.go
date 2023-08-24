@@ -22,6 +22,8 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// Test modification to verify that price daemon github workflow tests don't run on protocol/x/ modifications.
+
 // Ensure that `memClobPriceTimePriority` struct properly implements
 // the `MemClob` interface.
 var _ types.MemClob = &MemClobPriceTimePriority{}
