@@ -95,6 +95,8 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	aliceAccountBalance := tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, denom)
 	t.Log("BridgeAccountAddress", bridgeAccountAddress)
 	t.Log("AliceAccountAddress", constants.BridgeEvent_Id0_Height0.Address)
+	t.Log("BridgeAccountBalance", bridgeAccountBalance)
+	t.Log("AliceAccountBalance", aliceAccountBalance)
 
 	// Sanity check: balances are as expected before the message is sent.
 	require.Equal(t, BridgeGenesisAccountBalance.Amount, bridgeAccountBalance.Amount)
@@ -106,6 +108,9 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 
 	bridgeAccountBalance = tApp.App.BankKeeper.GetBalance(ctx, bridgeAccountAddress, denom)
 	aliceAccountBalance = tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, denom)
+
+	t.Log("BridgeAccountBalance", bridgeAccountBalance)
+	t.Log("AliceAccountBalance", aliceAccountBalance)
 
 	// Sanity check: balances are as expected before the message is sent.
 	//require.Equal(t, BridgeExpectdAccountBalance.Amount, bridgeAccountBalance.Amount)
