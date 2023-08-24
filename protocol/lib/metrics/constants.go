@@ -149,13 +149,8 @@ const (
 	RemovedFromOrderBook                 = "removed_from_orderbook"
 
 	// Epochs.
-	FundingSampleEpochNumber = "funding_sample_epoch_number"
-	EventTypeNewEpoch        = "new_epoch"
-	EpochStartBlockTime      = "epoch_start_block_time"
-	EpochStartTickTime       = "epoch_start_tick_time"
-	EpochNumber              = "epoch_number"
-	EpochInfoName            = "epoch_name"
-	EpochStartBlock          = "epoch_start_block"
+	EpochInfoName = "epoch_name"
+	EpochNumber   = "epoch_number"
 
 	// Perpetuals.
 	AddPremiumSamples            = "add_premium_samples"
