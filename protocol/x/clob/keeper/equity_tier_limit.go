@@ -129,44 +129,34 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 		}
 	}
 
-	// TODO(CLOB-820): Debug why equity tier count is less than 0.
 	if equityTierCount < 0 {
 		if lib.IsDeliverTxMode(ctx) {
-			k.Logger(ctx).Info(
-				"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order to be >= 0.",
-				"order",
-				fmt.Sprintf("%+v", order),
-				"deliverTx",
-				lib.IsDeliverTxMode(ctx),
-				"equityTierCount",
+			err = fmt.Errorf(
+				"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
+					"equityTierCount %d, memClobCount %d, (stateful order only) toBeCommittedCount %d.",
+				order,
 				equityTierCount,
-				"memClobCount",
 				k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter),
-				"toBeCommittedCount",
 				k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId),
 			)
 		} else {
-			k.Logger(ctx).Info(
-				"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order to be >= 0.",
-				"order",
-				fmt.Sprintf("%+v", order),
-				"deliverTx",
-				lib.IsDeliverTxMode(ctx),
-				"equityTierCount",
+			err = fmt.Errorf(
+				"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
+					"equityTierCount %d, memClobCount %d, (stateful order only) uncommittedCount %d.",
+				order,
 				equityTierCount,
-				"memClobCount",
 				k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter),
-				"uncommittedCount",
-				k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
+				k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId),
 			)
 		}
+		panic(err)
 	}
 
 	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.
 	// Note that once we combine the count of orders on the memclob with how many `uncommitted` or `to be committed`
 	// stateful orders on the memclob we should always have a negative number since we only count order
 	// cancellations/removals for orders that exist.
-	if int(equityTierCount) >= int(equityTierLimit.Limit) {
+	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
 		return sdkerrors.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
 			"Opening order would exceed equity tier limit of %d. Order id: %+v",

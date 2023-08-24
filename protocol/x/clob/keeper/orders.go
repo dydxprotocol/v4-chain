@@ -123,8 +123,8 @@ func (k Keeper) PlaceShortTermOrder(
 //     previous block.
 //
 // Note that this method conditionally updates state depending on the context. This is needed
-// to separate updating committed state during DeliverTx from uncommitted state that is modified during
-// CheckTx.
+// to separate updating committed state during DeliverTx (the stateful order and the ToBeCommitted stateful order
+// count) from uncommitted state that is modified during CheckTx.
 func (k Keeper) CancelStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgCancelOrder,
@@ -148,6 +148,13 @@ func (k Keeper) CancelStatefulOrder(
 		// Remove the stateful order from state. Note that if the stateful order did not
 		// exist in state, then it would have failed validation in the previous step.
 		k.MustRemoveStatefulOrder(ctx, msg.OrderId)
+
+		// Decrement the `to be committed` stateful order count.
+		k.SetToBeCommittedStatefulOrderCount(
+			ctx,
+			msg.OrderId,
+			k.GetToBeCommittedStatefulOrderCount(ctx, msg.OrderId)-1,
+		)
 	} else {
 		// Write the stateful order cancellation to uncommitted state. PerformOrderCancellationStatefulValidation will
 		// return an error if the order cancellation already exists which will prevent
