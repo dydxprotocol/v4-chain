@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -25,10 +26,10 @@ var (
 )
 
 func TestGetBlockMessageIds_DeleteAllMgs(t *testing.T) {
-	ctx, delaymsg, _ := keeper.DelayMsgKeepersWithAuthorities(t, testMsgAuthorities)
+	ctx, delaymsg, _, _, _, _ := keeper.DelayMsgKeepers(t)
 
 	for _, delay := range testBlockDelays {
-		_, err := delaymsg.DelayMessageByBlocks(ctx, testMsg1, delay)
+		_, err := delaymsg.DelayMessageByBlocks(ctx, constants.TestMsg1, delay)
 		require.NoError(t, err)
 	}
 
@@ -70,9 +71,9 @@ func TestGetBlockMessageIds_DeleteWithMultipleIds(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup - add all messages to the same block.
-			ctx, delaymsg, _, _ := keeper.DelayMsgKeepers(t)
+			ctx, delaymsg, _, _, _, _ := keeper.DelayMsgKeepers(t)
 
-			for _, msg := range allMsgs {
+			for _, msg := range constants.AllMsgs {
 				_, err := delaymsg.DelayMessageByBlocks(ctx, msg, 10)
 				require.NoError(t, err)
 			}
@@ -89,7 +90,7 @@ func TestGetBlockMessageIds_DeleteWithMultipleIds(t *testing.T) {
 			require.True(t, found)
 			require.Equal(t, tc.expectedRemainingIds, blockMessageIds.Ids)
 
-			require.Equal(t, uint32(len(allMsgs)), delaymsg.GetNumMessages(ctx))
+			require.Equal(t, uint32(len(constants.AllMsgs)), delaymsg.GetNumMessages(ctx))
 		})
 	}
 }
