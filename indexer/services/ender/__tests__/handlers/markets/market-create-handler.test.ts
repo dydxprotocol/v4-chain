@@ -2,22 +2,26 @@ import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
 import {
   dbHelpers, MarketFromDatabase, MarketTable, testMocks,
 } from '@dydxprotocol-indexer/postgres';
-import {
-  MarketEventV1,
-  IndexerTendermintBlock,
-  IndexerTendermintEvent,
-} from '@dydxprotocol-indexer/v4-protos';
+import { IndexerTendermintBlock, IndexerTendermintEvent, MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
 import { DydxIndexerSubtypes, MarketCreateEventMessage } from '../../../src/lib/types';
 import {
-  defaultHeight, defaultMarketCreate, defaultPreviousHeight, defaultTime, defaultTxHash,
+  defaultHeight,
+  defaultMarketCreate,
+  defaultPreviousHeight,
+  defaultTime,
+  defaultTxHash,
 } from '../../helpers/constants';
 import { createKafkaMessageFromMarketEvent } from '../../helpers/kafka-helpers';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import { MarketCreateHandler } from '../../../src/handlers/markets/market-create-handler';
-import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../../helpers/indexer-proto-helpers';
+import {
+  binaryToBase64String,
+  createIndexerTendermintBlock,
+  createIndexerTendermintEvent,
+} from '../../helpers/indexer-proto-helpers';
 import Long from 'long';
 
 describe('marketCreateHandler', () => {
@@ -142,31 +146,6 @@ describe('marketCreateHandler', () => {
       at: 'onMessage#onMessage',
       message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
     }));
-    expect(producerSendMock.mock.calls.length).toEqual(0);
-  });
-
-  it('does not error when attempting to create an existing market for block height 0', async () => {
-    const marketTableMock: jest.SpyInstance = jest.spyOn(MarketTable, 'create');
-    const transactionIndex: number = 0;
-
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvent: defaultMarketCreate,
-      transactionIndex,
-      height: 0,
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-    await onMessage(kafkaMessage);
-
-    // Check that market in database is the old market.
-    const market: MarketFromDatabase = await MarketTable.findById(
-      defaultMarketCreate.marketId,
-    ) as MarketFromDatabase;
-    expect(market.minPriceChangePpm).toEqual(50);
-
-    expect(loggerError).not.toHaveBeenCalled();
-    expect(loggerCrit).not.toHaveBeenCalled();
-    expect(marketTableMock.mock.calls.length).toEqual(0);
     expect(producerSendMock.mock.calls.length).toEqual(0);
   });
 });

@@ -25,7 +25,7 @@ export class ValidationError extends CustomError {
 }
 
 /**
- * Custom errors for converting genesis.json into seed SQL.
+ * Custom errors for events.
  */
 
 export class InvalidClobPairStatusError extends Error {

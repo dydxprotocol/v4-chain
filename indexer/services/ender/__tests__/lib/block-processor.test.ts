@@ -17,12 +17,12 @@ import {
   defaultMarketCreate,
   defaultPreviousHeight,
 } from '../helpers/constants';
-import { updateBlockCache } from '../../src/caches/block-cache';
 import Long from 'long';
 import { BlockProcessor } from '../../src/lib/block-processor';
 import { BatchedHandlers } from '../../src/lib/batched-handlers';
 import { SyncHandlers } from '../../src/lib/sync-handlers';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { updateBlockCache } from '../../src/caches/block-cache';
 
 describe('block-processor', () => {
   let batchedHandlers: MockProxy<BatchedHandlers>;
@@ -31,7 +31,6 @@ describe('block-processor', () => {
   beforeEach(() => {
     batchedHandlers = mock<BatchedHandlers>();
     syncHandlers = mock<SyncHandlers>();
-    updateBlockCache(defaultPreviousHeight);
   });
 
   beforeAll(async () => {
@@ -114,6 +113,7 @@ describe('block-processor', () => {
   ];
 
   it('batched handlers called before sync handlers for normal blocks', async () => {
+    updateBlockCache(defaultPreviousHeight);
     const block: IndexerTendermintBlock = createIndexerTendermintBlock(
       defaultHeight,
       defaultTime,
@@ -141,7 +141,6 @@ describe('block-processor', () => {
   });
 
   it('sync handlers called before batched handlers for genesis block', async () => {
-    updateBlockCache('-1');
     const block: IndexerTendermintBlock = createIndexerTendermintBlock(
       0,
       defaultTime,
