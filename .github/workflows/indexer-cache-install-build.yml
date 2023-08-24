@@ -35,7 +35,7 @@ jobs:
 
       - name: Output some data
         run: |
-          ls; pwd;
+          ls; pwd; ls ~/;
 
       - name: Cache node_modules
         id: cache-node-modules
