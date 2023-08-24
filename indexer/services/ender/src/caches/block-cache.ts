@@ -11,7 +11,7 @@ import config from '../config';
 import { startCandleCache } from './candle-cache';
 import { startPriceCache } from './price-cache';
 
-let currentBlockHeight: string = '0';
+let currentBlockHeight: string = '-1';
 
 export async function refreshBlockCache(txId?: number): Promise<void> {
   const block: BlockFromDatabase | undefined = await BlockTable.getLatest({ txId });

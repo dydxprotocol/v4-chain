@@ -29,6 +29,10 @@ describe('block-cache', () => {
     await dbHelpers.teardown();
   });
 
+  it('block cache initial height should be -1', () => {
+    expect(getCurrentBlockHeight()).toEqual('-1');
+  });
+
   it('successfully starts block cache', async () => {
     await refreshBlockCache();
 
