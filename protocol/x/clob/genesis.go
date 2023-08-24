@@ -47,9 +47,6 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	}
 
 	k.InitializeProcessProposerMatchesEvents(ctx)
-
-	// Set the last committed block-time to the genesis time.
-	k.SetBlockTimeForLastCommittedBlock(ctx)
 }
 
 // ExportGenesis returns the capability module's exported genesis.

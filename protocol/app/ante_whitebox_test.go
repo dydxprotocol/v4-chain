@@ -59,6 +59,7 @@ func newTestHandlerOptions() HandlerOptions {
 		untriggeredConditionalOrders,
 		nil,
 		nil,
+		nil,
 		bankKeeper,
 		nil,
 		nil,

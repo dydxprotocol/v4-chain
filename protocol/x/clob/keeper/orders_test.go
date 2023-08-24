@@ -22,6 +22,7 @@ import (
 	memclobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/tracer"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -956,7 +957,10 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			ctx = ctx.WithIsCheckTx(false).
 				WithBlockHeight(int64(blockHeight)).
 				WithBlockTime(time.Unix(5, 0))
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    2,
+				Timestamp: time.Unix(int64(5), 0),
+			})
 
 			// Create all existing orders.
 			for _, order := range tc.existingOrders {
@@ -1129,7 +1133,10 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	)
 	require.NoError(t, err)
 	ctx := ks.Ctx.WithBlockHeight(int64(100)).WithBlockTime(time.Unix(5, 0))
-	ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+		Height:    100,
+		Timestamp: time.Unix(int64(5), 0),
+	})
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
 
 	// Run the test if the preexisting order is not in state. Expected panic.
@@ -2335,7 +2342,10 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 
 			ctx := ks.Ctx.WithBlockHeight(int64(100)).WithBlockTime(time.Unix(5, 0))
 			ctx = ctx.WithIsCheckTx(true)
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    100,
+				Timestamp: time.Unix(int64(5), 0),
+			})
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
@@ -2461,7 +2471,10 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 
 			ctx := ks.Ctx.WithBlockHeight(int64(100)).WithBlockTime(time.Unix(5, 0))
 			ctx = ctx.WithIsCheckTx(true)
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    100,
+				Timestamp: time.Unix(int64(5), 0),
+			})
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
