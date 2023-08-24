@@ -48,7 +48,7 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
       pair: marketCreate.marketCreate.base!.pair,
       exponent: marketCreate.marketCreate.exponent,
       minPriceChangePpm: marketCreate.marketCreate.base!.minPriceChangePpm,
-    });
-    await marketRefresher.updateMarkets();
+    }, { txId: this.txId });
+    await marketRefresher.updateMarkets({ txId: this.txId });
   }
 }
