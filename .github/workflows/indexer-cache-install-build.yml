@@ -1,0 +1,52 @@
+name: Indexer Cache Install & Build
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - 'indexer/**'
+  push:
+    branches:
+      - 'vincentc/**'
+      - main
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
+      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+jobs:
+  run_command:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install pnpm
+        run:
+          npm install -g pnpm@6.34.0
+
+      - name: Build and install
+        run: |
+          pnpm install --loglevel warn --frozen-lockfile
+          pnpm run build:all
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/**/node_modules
+            services/**/node_modules
+          key: ${{ runner.os }}-indexer-pnpm-${{ github.sha }}
+
+      - name: Cache build
+        id: cache-build
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/**/build
+            services/**/build
+          key: ${{ runner.os }}-indexer-build-{{ github.sha }}

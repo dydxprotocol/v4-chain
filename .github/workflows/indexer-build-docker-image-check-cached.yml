@@ -1,0 +1,63 @@
+name: Indexer Build Comlink Docker Image with cache
+on:  # yamllint disable-line rule:truthy
+  workflow_run:
+    workflows: ["Indexer Cache Install & Build"]
+    types: [completed]
+jobs:
+  run_command:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install pnpm
+        run:
+          npm install -g pnpm@6.34.0
+
+      - name: Restore cached node_modules
+        id: restore-node-modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/**/node_modules
+            services/**/node_modules
+          key: ${{ runner.os }}-indexer-pnpm-${{ github.sha }}
+
+      - name: Restore cached build
+        id: restore-build
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/**/build
+            services/**/build
+          key: ${{ runner.os }}-indexer-build-{{ github.sha }}
+          
+      - if: ${{ steps.restore-node-modules.outputs.cache-hit != 'true' }}
+        name: Install
+        run: |
+          pnpm install --loglevel warn --frozen-lockfile
+
+      - if: ${{ steps.restore-build.outputs.cache-hit != 'true' }}
+        name: Build
+        run: |
+          pnpm run build:prod:all
+
+      - name: Build docker image
+        id: build-image
+        env:
+          SERVICE: comlink
+        run: |
+          commit_hash=$(git rev-parse --short HEAD)
+          DOCKER_BUILDKIT=1 docker build \
+            --platform amd64 \
+            -t service-base \
+            -f Dockerfile.service.remote \
+            --build-arg service=$SERVICE .
