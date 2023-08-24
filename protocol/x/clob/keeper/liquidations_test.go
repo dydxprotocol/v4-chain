@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -1098,6 +1099,8 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig),
 			)
 
+			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+
 			// Place all existing orders on the orderbook.
 			for _, matchableOrder := range tc.placedMatchableOrders {
 				// If the order is a liquidation order, place the liquidation.
@@ -1945,6 +1948,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				t,
 				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig),
 			)
+
+			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
 
 			// Place all existing orders on the orderbook.
 			for _, matchableOrder := range tc.placedMatchableOrders {

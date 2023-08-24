@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
@@ -95,8 +96,10 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
-	// TODO(DEC-1487): Determine how offsetting subaccounts should be selected.
-	k.subaccountsKeeper.ForEachSubaccount(
+	s := rand.NewSource(k.MustGetBlockTimeForLastCommittedBlock(ctx).Unix())
+	rand := rand.New(s)
+
+	k.subaccountsKeeper.ForEachSubaccountRandomStart(
 		ctx,
 		func(offsettingSubaccount satypes.Subaccount) (finished bool) {
 			numSubaccountsIterated++
@@ -230,6 +233,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			}
 			return deltaQuantumsRemaining.Sign() == 0
 		},
+		rand,
 	)
 
 	mode := metrics.DeliverTx
