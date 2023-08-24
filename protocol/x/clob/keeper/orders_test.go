@@ -1656,7 +1656,6 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				require.True(t, resp.IsErr())
 				require.Contains(t, resp.Log, tc.expectedErr)
 			} else {
-				fmt.Println(resp.Log)
 				require.True(t, resp.IsOK())
 			}
 		})
