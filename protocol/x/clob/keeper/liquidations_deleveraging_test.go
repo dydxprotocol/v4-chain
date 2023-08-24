@@ -865,6 +865,80 @@ func TestProcessDeleveraging(t *testing.T) {
 
 			expectedErr: types.ErrInvalidPerpetualPositionSizeDelta,
 		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			for _, p := range []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			} {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
+					p.Ticker,
+					p.MarketId,
+					p.AtomicResolution,
+					p.DefaultFundingPpm,
+					p.LiquidityTier,
+				)
+				require.NoError(t, err)
+			}
+
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
+
+			err = ks.ClobKeeper.ProcessDeleveraging(
+				ks.Ctx,
+				*tc.liquidatedSubaccount.GetId(),
+				*tc.offsettingSubaccount.GetId(),
+				uint32(0),
+				tc.deltaQuantums,
+			)
+			if tc.expectedErr == nil {
+				require.NoError(t, err)
+
+				actualLiquidated := ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, *tc.liquidatedSubaccount.GetId())
+				require.Equal(
+					t,
+					tc.expectedLiquidatedSubaccount,
+					actualLiquidated,
+				)
+
+				actualOffsetting := ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, *tc.offsettingSubaccount.GetId())
+				require.Equal(
+					t,
+					tc.expectedOffsettingSubaccount,
+					actualOffsetting,
+				)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+func TestProcessDeleveraging_Rounding(t *testing.T) {
+	tests := map[string]struct {
+		// Setup.
+		liquidatedSubaccount satypes.Subaccount
+		offsettingSubaccount satypes.Subaccount
+		deltaQuantums        *big.Int
+
+		// Expectations.
+		expectedErr error
+	}{
 		// Rounding tests.
 		"Can deleverage short positions correctly after rounding": {
 			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
@@ -966,20 +1040,6 @@ func TestProcessDeleveraging(t *testing.T) {
 			)
 			if tc.expectedErr == nil {
 				require.NoError(t, err)
-
-				// actualLiquidated := ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, *tc.liquidatedSubaccount.GetId())
-				// require.Equal(
-				// 	t,
-				// 	tc.expectedLiquidatedSubaccount,
-				// 	actualLiquidated,
-				// )
-
-				// actualOffsetting := ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, *tc.offsettingSubaccount.GetId())
-				// require.Equal(
-				// 	t,
-				// 	tc.expectedOffsettingSubaccount,
-				// 	actualOffsetting,
-				// )
 			} else {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
 			}
