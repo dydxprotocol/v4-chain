@@ -562,6 +562,143 @@ func TestClobPairGetAll(t *testing.T) {
 	)
 }
 
+func TestSetClobPairStatus(t *testing.T) {
+	testCases := map[string]struct {
+		setup         func(t *testing.T, ks keepertest.ClobKeepersTestContext, manager *mocks.IndexerEventManager)
+		status        types.ClobPair_Status
+		expectedErr   string
+		expectedPanic string
+	}{
+		"Succeeds with valid status transition": {
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+				// write a clob pair to the store with status initializing
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+
+				clobPair := constants.ClobPair_Btc
+				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
+				b := cdc.MustMarshal(&clobPair)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(clobPair.Id),
+				), b)
+			},
+			status: types.ClobPair_STATUS_ACTIVE,
+		},
+		"Panics with missing clob pair": {
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+			},
+			status:        types.ClobPair_STATUS_ACTIVE,
+			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
+		},
+		"Errors with unsupported transition to supported status": {
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+				clobPair := constants.ClobPair_Btc
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							0,
+							0,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.MinOrderBaseQuantums,
+							clobPair.StepBaseQuantums,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+						),
+					),
+				).Once().Return()
+
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
+					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
+				)
+				require.NoError(t, err)
+			},
+			status:      types.ClobPair_STATUS_INITIALIZING,
+			expectedErr: "Cannot transition from status STATUS_ACTIVE to status STATUS_INITIALIZING",
+		},
+		"Errors with unsupported transition to unsupported status": {
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+				clobPair := constants.ClobPair_Btc
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							0,
+							0,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.MinOrderBaseQuantums,
+							clobPair.StepBaseQuantums,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+						),
+					),
+				).Once().Return()
+
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
+					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
+				)
+				require.NoError(t, err)
+			},
+			status:      types.ClobPair_Status(100),
+			expectedErr: "Cannot transition from status STATUS_ACTIVE to status 100",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+			tc.setup(t, ks, mockIndexerEventManager)
+
+			if tc.expectedPanic != "" {
+				require.PanicsWithValue(
+					t,
+					tc.expectedPanic,
+					func() {
+						err := ks.ClobKeeper.SetClobPairStatus(ks.Ctx, 0, tc.status)
+						require.NoError(t, err)
+					},
+				)
+			} else {
+				err := ks.ClobKeeper.SetClobPairStatus(ks.Ctx, 0, tc.status)
+
+				if tc.expectedErr != "" {
+					require.ErrorContains(t, err, tc.expectedErr)
+				} else {
+					require.NoError(t, err)
+				}
+			}
+		})
+	}
+}
+
 func TestGetClobPairIdForPerpetual_Success(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})

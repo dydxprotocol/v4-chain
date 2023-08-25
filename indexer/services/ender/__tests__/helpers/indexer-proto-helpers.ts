@@ -791,8 +791,8 @@ export async function expectPerpetualPosition(
   }
 }
 
-// Values of the `PerpetualMarketCreateObject` which are hard-coded and not dervied from
-// the values in `genesis.json`
+// Values of the `PerpetualMarketCreateObject` which are hard-coded and not derived
+// from PerpetualMarketCreate events.
 export const HARDCODED_PERPETUAL_MARKET_VALUES: Object = {
   baseAsset: '',
   quoteAsset: '',

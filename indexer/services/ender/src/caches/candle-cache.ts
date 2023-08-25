@@ -1,3 +1,4 @@
+import { NodeEnv } from '@dydxprotocol-indexer/base';
 import {
   CandleFromDatabase,
   CandleResolution,
@@ -51,7 +52,7 @@ export function getCandlesMap(): CandlesMap {
 }
 
 export function clearCandlesMap(): void {
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env.NODE_ENV !== NodeEnv.TEST) {
     throw Error('cannot clear candles map outside of test environment');
   }
 

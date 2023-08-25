@@ -1,5 +1,6 @@
 import {
   PerpetualMarketCreateObject,
+  PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   PerpetualMarketStatus,
   PerpetualMarketTable,
@@ -40,11 +41,11 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
   }
 
   private async createPerpetualMarket(): Promise<void> {
-    await PerpetualMarketTable.create(
+    const perpetualMarket: PerpetualMarketFromDatabase = await PerpetualMarketTable.create(
       this.getPerpetualMarketCreateObject(this.event),
       { txId: this.txId },
     );
-    await perpetualMarketRefresher.updatePerpetualMarkets({ txId: this.txId });
+    perpetualMarketRefresher.addPerpetualMarket(perpetualMarket);
   }
 
   /**

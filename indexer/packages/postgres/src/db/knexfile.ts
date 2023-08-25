@@ -33,9 +33,6 @@ export function getConfigForHost(host: string) : Knex.Config {
     migrations: {
       directory: `${__dirname}/migrations/migration_files/`,
     },
-    seeds: {
-      directory: `${__dirname}/seeds/`,
-    },
   };
 }
 

@@ -1,4 +1,6 @@
-import { stats, delay, logger } from '@dydxprotocol-indexer/base';
+import {
+  stats, delay, logger, NodeEnv,
+} from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import * as AssetTable from '../stores/asset-table';
@@ -56,4 +58,20 @@ export function getAssetFromId(id: string): AssetFromDatabase {
 
 export function getAssetsMap(): AssetsMap {
   return idToAsset;
+}
+
+export function clear(): void {
+  if (config.NODE_ENV !== NodeEnv.TEST) {
+    throw new Error('clear cannot be used in non-test env');
+  }
+
+  idToAsset = {};
+}
+
+export function addAsset(asset: AssetFromDatabase): void {
+  if (asset.id in idToAsset) {
+    throw new Error(`Asset with id ${asset.id} already exists`);
+  }
+
+  idToAsset[asset.id] = asset;
 }
