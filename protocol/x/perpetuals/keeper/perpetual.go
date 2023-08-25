@@ -830,8 +830,14 @@ func (k Keeper) GetMarginRequirements(
 	bigInitialMarginQuoteQuantums = liquidityTier.GetAdjustedInitialMarginQuoteQuantums(bigQuoteQuantums)
 
 	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
-	bigMaintenanceMarginQuoteQuantums =
-		lib.BigIntMulPpm(bigInitialMarginQuoteQuantums, liquidityTier.MaintenanceFractionPpm)
+	bigMaintenanceMarginQuoteQuantumsRat := new(big.Rat).SetInt(bigInitialMarginQuoteQuantums)
+	bigMaintenanceMarginQuoteQuantums = lib.BigRatRound(
+		lib.BigRatMulPpm(
+			bigMaintenanceMarginQuoteQuantumsRat,
+			liquidityTier.MaintenanceFractionPpm,
+		),
+		true,
+	)
 
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
 }
