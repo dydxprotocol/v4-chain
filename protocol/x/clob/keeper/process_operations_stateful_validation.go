@@ -132,6 +132,7 @@ func (k Keeper) StatefulValidateProposedOperationMatch(
 				takerOrder,
 			)
 		}
+		takerIsBuy := takerOrder.IsBuy()
 
 		fills := matchOrder.GetFills()
 		for _, fill := range fills {
@@ -140,6 +141,16 @@ func (k Keeper) StatefulValidateProposedOperationMatch(
 			makerOrder, err := k.FetchOrderFromOrderId(ctx, makerOrderId, shortTermOrdersMap)
 			if err != nil {
 				return err
+			}
+
+			// Orders must be on different sides of the book.
+			if takerIsBuy == makerOrder.IsBuy() {
+				return sdkerrors.Wrapf(
+					types.ErrInvalidMatchOrder,
+					"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
+					takerOrder.GetOrderTextString(),
+					makerOrder.GetOrderTextString(),
+				)
 			}
 
 			// Maker order cannot be FOK or IOC.
@@ -158,15 +169,19 @@ func (k Keeper) StatefulValidateProposedOperationMatch(
 		fills := matchLiquidation.GetFills()
 		for _, fill := range fills {
 			makerOrderId := fill.GetMakerOrderId()
-			if makerOrderId.IsStatefulOrder() {
-				_, found := k.GetLongTermOrderPlacement(ctx, makerOrderId)
-				if !found {
-					return sdkerrors.Wrapf(
-						types.ErrStatefulOrderDoesNotExist,
-						"Stateful order id %+v does not exist in state.",
-						makerOrderId,
-					)
-				}
+			// Fetch the maker order from either short term orders or state
+			makerOrder, err := k.FetchOrderFromOrderId(ctx, makerOrderId, shortTermOrdersMap)
+			if err != nil {
+				return err
+			}
+			// Maker order cannot be FOK or IOC.
+			if makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
+				makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
+				return sdkerrors.Wrapf(
+					types.ErrInvalidMatchOrder,
+					"Maker order %+v cannot be FOK or IOC.",
+					makerOrder,
+				)
 			}
 		}
 		perpId := matchLiquidation.GetPerpetualId()
@@ -181,7 +196,7 @@ func (k Keeper) StatefulValidateProposedOperationMatch(
 		clobPair := matchLiquidation.ClobPairId
 		if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPair)); !found {
 			return sdkerrors.Wrapf(
-				types.ErrPerpetualDoesNotExist,
+				types.ErrInvalidClob,
 				"Clob Pair id %+v does not exist in state.",
 				clobPair,
 			)
