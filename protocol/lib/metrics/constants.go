@@ -58,6 +58,7 @@ const (
 	AcknowledgedEventInfo         = "acknowledged_event_info"
 	BridgeTokenDenom              = "bridge_token_denom"
 	CompleteBridge                = "complete_bridge"
+	DelayMsgCompleteBridge        = "delay_msg_complete_bridge"
 	GetAcknowledgeBridges         = "get_acknowledge_bridges"
 	LastBridgeEventId             = "last_bridge_event_id"
 	LastBridgeEventEthBlockHeight = "last_bridge_event_eth_block_height"
