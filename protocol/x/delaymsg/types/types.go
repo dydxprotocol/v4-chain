@@ -53,8 +53,8 @@ type DelayMsgKeeper interface {
 	// DecodeMessage decodes a message from bytes.
 	DecodeMessage(msgBytes []byte, msg *sdk.Msg) error
 
-	// GetAuthorities returns the set of authorities that can send delayed messages.
-	GetAuthorities() map[string]struct{}
+	// HasAuthority returns whether the authority is permitted to send delayed messages.
+	HasAuthority(authority string) bool
 
 	// DispatchMessagesForBlock executes all delayed messages scheduled for the given block height and deletes them.
 	DispatchMessagesForBlock(ctx sdk.Context)

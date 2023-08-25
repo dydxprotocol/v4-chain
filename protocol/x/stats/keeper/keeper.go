@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
-	"gopkg.in/typ.v4/maps"
 
 	sdklog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
@@ -42,21 +42,18 @@ func NewKeeper(
 	transientStoreKey storetypes.StoreKey,
 	authorities []string,
 ) *Keeper {
-	authoritiesMap := make(map[string]struct{}, len(authorities))
-	for _, authority := range authorities {
-		authoritiesMap[authority] = struct{}{}
-	}
 	return &Keeper{
 		cdc:               cdc,
 		epochsKeeper:      epochsKeeper,
 		storeKey:          storeKey,
 		transientStoreKey: transientStoreKey,
-		authorities:       authoritiesMap,
+		authorities:       maps.ArrayToMapInterface(authorities),
 	}
 }
 
-func (k Keeper) GetAuthorities() map[string]struct{} {
-	return maps.Clone(k.authorities)
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

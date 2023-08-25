@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"gopkg.in/typ.v4/maps"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -27,11 +26,10 @@ func (k msgServer) UpdatePerpetualFeeParams(
 	goCtx context.Context,
 	msg *types.MsgUpdatePerpetualFeeParams,
 ) (*types.MsgUpdatePerpetualFeeParamsResponse, error) {
-	if _, ok := k.GetAuthorities()[msg.Authority]; !ok {
+	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
-			"invalid authority; expected one of %s, got %s",
-			maps.Keys(k.GetAuthorities()),
+			"invalid authority %s",
 			msg.Authority,
 		)
 	}

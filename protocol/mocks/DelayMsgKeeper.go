@@ -84,22 +84,6 @@ func (_m *DelayMsgKeeper) GetAllDelayedMessages(ctx types.Context) []*delaymsgty
 	return r0
 }
 
-// GetAuthorities provides a mock function with given fields:
-func (_m *DelayMsgKeeper) GetAuthorities() map[string]struct{} {
-	ret := _m.Called()
-
-	var r0 map[string]struct{}
-	if rf, ok := ret.Get(0).(func() map[string]struct{}); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]struct{})
-		}
-	}
-
-	return r0
-}
-
 // GetBlockMessageIds provides a mock function with given fields: ctx, blockHeight
 func (_m *DelayMsgKeeper) GetBlockMessageIds(ctx types.Context, blockHeight int64) (delaymsgtypes.BlockMessageIds, bool) {
 	ret := _m.Called(ctx, blockHeight)
@@ -140,6 +124,20 @@ func (_m *DelayMsgKeeper) GetMessage(ctx types.Context, id uint32) (delaymsgtype
 	}
 
 	return r0, r1
+}
+
+// HasAuthority provides a mock function with given fields: authority
+func (_m *DelayMsgKeeper) HasAuthority(authority string) bool {
+	ret := _m.Called(authority)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(authority)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
 }
 
 // SetDelayedMessage provides a mock function with given fields: ctx, msg

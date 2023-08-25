@@ -13,10 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"gopkg.in/typ.v4/maps"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -52,10 +52,6 @@ func NewKeeper(
 	pricesKeeper types.PricesKeeper,
 	authorities []string,
 ) *Keeper {
-	authoritiesMap := make(map[string]struct{}, len(authorities))
-	for _, authority := range authorities {
-		authoritiesMap[authority] = struct{}{}
-	}
 	return &Keeper{
 		cdc:               cdc,
 		storeKey:          storeKey,
@@ -64,13 +60,13 @@ func NewKeeper(
 		bankKeeper:        bankKeeper,
 		feeTiersKeeper:    feeTiersKeeper,
 		pricesKeeper:      pricesKeeper,
-		authorities:       authoritiesMap,
+		authorities:       maps.ArrayToMapInterface(authorities),
 	}
 }
 
-// GetAuthorities returns the x/rewards module's authorities.
-func (k Keeper) GetAuthorities() map[string]struct{} {
-	return maps.Clone(k.authorities)
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

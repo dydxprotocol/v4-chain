@@ -16,9 +16,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"gopkg.in/typ.v4/maps"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
@@ -40,21 +40,18 @@ func NewKeeper(
 	blockTimeKeeper types.BlockTimeKeeper,
 	authorities []string,
 ) *Keeper {
-	authoritiesMap := make(map[string]struct{}, len(authorities))
-	for _, authority := range authorities {
-		authoritiesMap[authority] = struct{}{}
-	}
 	return &Keeper{
 		cdc:             cdc,
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
-		authorities:     authoritiesMap,
+		authorities:     maps.ArrayToMapInterface(authorities),
 	}
 }
 
-func (k Keeper) GetAuthorities() map[string]struct{} {
-	return maps.Clone(k.authorities)
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

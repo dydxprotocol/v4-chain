@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	"gopkg.in/typ.v4/maps"
 )
 
 type (
@@ -30,21 +30,17 @@ func NewKeeper(
 	router *baseapp.MsgServiceRouter,
 	authorities []string,
 ) *Keeper {
-	authoritiesMap := make(map[string]struct{}, len(authorities))
-	for _, authority := range authorities {
-		authoritiesMap[authority] = struct{}{}
-	}
 	return &Keeper{
 		cdc:         cdc,
 		storeKey:    storeKey,
-		authorities: authoritiesMap,
+		authorities: maps.ArrayToMapInterface(authorities),
 		router:      router,
 	}
 }
 
-// GetAuthorities returns the set of authorities permitted to sign delayed messages.
-func (k Keeper) GetAuthorities() map[string]struct{} {
-	return maps.Clone(k.authorities)
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 // InitializeForGenesis initializes the x/delaymsg keeper for genesis.

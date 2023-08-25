@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-	"gopkg.in/typ.v4/maps"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,11 +26,10 @@ func (k msgServer) SetVestEntry(
 	goCtx context.Context,
 	msg *types.MsgSetVestEntry,
 ) (*types.MsgSetVestEntryResponse, error) {
-	if _, ok := k.GetAuthorities()[msg.Authority]; !ok {
+	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
-			"invalid authority; expected one of %s, got %s",
-			maps.Keys(k.GetAuthorities()),
+			"invalid authority %s",
 			msg.Authority,
 		)
 	}
@@ -48,11 +46,10 @@ func (k msgServer) DeleteVestEntry(
 	goCtx context.Context,
 	msg *types.MsgDeleteVestEntry,
 ) (*types.MsgDeleteVestEntryResponse, error) {
-	if _, ok := k.GetAuthorities()[msg.Authority]; !ok {
+	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
-			"invalid authority; expected one of %s, got %s",
-			maps.Keys(k.GetAuthorities()),
+			"invalid authority %s",
 			msg.Authority,
 		)
 	}

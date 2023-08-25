@@ -7,7 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"gopkg.in/typ.v4/maps"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -29,11 +28,10 @@ func (k msgServer) UpdateDowntimeParams(
 	goCtx context.Context,
 	msg *types.MsgUpdateDowntimeParams,
 ) (*types.MsgUpdateDowntimeParamsResponse, error) {
-	if _, ok := k.GetAuthorities()[msg.Authority]; !ok {
+	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
-			"invalid authority; expected one of %s, got %s",
-			maps.Keys(k.GetAuthorities()),
+			"invalid authority %s",
 			msg.Authority,
 		)
 	}
