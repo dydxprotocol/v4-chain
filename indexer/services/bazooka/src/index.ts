@@ -42,9 +42,6 @@ export interface BazookaEventJson {
   // Reset the database and all migrations
   reset_db: boolean;
 
-  // Seed data with knex seed
-  seed: boolean;
-
   // Create all kafka topics with replication and parition counts
   create_kafka_topics: boolean;
 
@@ -76,7 +73,7 @@ export async function handler(
   startBugsnag();
 
   if (config.PREVENT_BREAKING_CHANGES_WITHOUT_FORCE && event.force !== true) {
-    if (event.clear_db === true || event.reset_db === true || event.seed === true ||
+    if (event.clear_db === true || event.reset_db === true ||
       event.create_kafka_topics === true || event.clear_kafka_topics === true ||
       event.clear_redis === true) {
       logger.error({
@@ -124,18 +121,6 @@ export async function handler(
     logger.info({
       at: 'index#handler',
       message: 'Successfully cleared database',
-    });
-  }
-
-  if (event.seed) {
-    logger.info({
-      at: 'index#handler',
-      message: 'Seeding database',
-    });
-    await dbHelpers.seedGenesis();
-    logger.info({
-      at: 'index#handler',
-      message: 'Successfully seeded database',
     });
   }
 

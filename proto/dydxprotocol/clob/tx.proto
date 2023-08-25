@@ -1,6 +1,8 @@
 syntax = "proto3";
 package dydxprotocol.clob;
 
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "dydxprotocol/clob/clob_pair.proto";
 import "dydxprotocol/clob/order.proto";
@@ -21,9 +23,25 @@ service Msg {
   rpc PlaceOrder(MsgPlaceOrder) returns (MsgPlaceOrderResponse);
   // CancelOrder allows accounts to cancel existing orders on the orderbook.
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
+  // CreateClobPair creates a new clob pair.
+  rpc CreateClobPair(MsgCreateClobPair) returns (MsgCreateClobPairResponse);
   // SetClobPairStatus
   rpc SetClobPairStatus(MsgSetClobPairStatus) returns (MsgSetClobPairStatusResponse);
 }
+
+// MsgCreateClobPair is a message used by x/gov for creating a new clob pair.
+message MsgCreateClobPair {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // The address that controls the module.
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // `clob_pair` defines parameters for the new clob pair.
+  ClobPair clob_pair = 2;
+}
+
+// MsgCreateClobPairResponse defines the CreateClobPair response type.
+message MsgCreateClobPairResponse {}
 
 // MsgProposedOperations is a message injected by block proposers to
 // specify the operations that occurred in a block.

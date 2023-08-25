@@ -49,14 +49,12 @@ func newTestHandlerOptions() HandlerOptions {
 	feeGrantKeeper := feegrantkeeper.NewKeeper(appCodec, nil, accountKeeper)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(false)
-	untriggeredConditionalOrders := make(map[types.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
 	clobKeeper := clobmodulekeeper.NewKeeper(
 		appCodec,
 		nil,
 		nil,
 		nil,
 		memClob,
-		untriggeredConditionalOrders,
 		nil,
 		nil,
 		nil,

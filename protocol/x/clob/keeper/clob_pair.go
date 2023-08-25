@@ -52,7 +52,7 @@ func (k Keeper) CreatePerpetualClobPair(
 		return clobPair, err
 	}
 
-	k.setClobPair(ctx, clobPair)
+	k.createClobPair(ctx, clobPair)
 	k.setNumClobPairs(ctx, nextId+1)
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
@@ -91,7 +91,7 @@ func (k Keeper) CreatePerpetualClobPair(
 // - SubticksPerTick:
 //   - Must be greater than zero.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
-	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
+	if !types.IsSupportedClobPairStatus(clobPair.Status) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidClobPairParameter,
 			"CLOB pair (%+v) has unsupported status %+v",
@@ -149,16 +149,53 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 	return nil
 }
 
-// setClobPair sets a specific `ClobPair` in the store from its index, and additionally creates a new orderbook
-// to store all memclob orders.
+// createOrderbook creates a new orderbook in the memclob and stores the perpetualId to clobPairId mapping
+// in memory on the keeper.
+func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
+	// Create the corresponding orderbook in the memclob.
+	k.MemClob.CreateOrderbook(ctx, clobPair)
+
+	// If this `ClobPair` is for a perpetual, add the `clobPairId` to the list of CLOB pair IDs
+	// that facilitate trading of this perpetual.
+	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {
+		perpetualId := perpetualClobMetadata.PerpetualId
+		clobPairIds, exists := k.PerpetualIdToClobPairId[perpetualId]
+		if !exists {
+			clobPairIds = make([]types.ClobPairId, 0)
+		}
+		k.PerpetualIdToClobPairId[perpetualId] = append(
+			clobPairIds,
+			clobPair.GetClobPairId(),
+		)
+	}
+}
+
+// createClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
+// This function returns an error if a value for the ClobPair's id already exists in state.
+func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) {
+	// Validate the given clob pair id is not already in use.
+	if _, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
+		panic(
+			fmt.Sprintf(
+				"ClobPair with id %+v already exists in state",
+				clobPair.GetClobPairId(),
+			),
+		)
+	}
+
+	// Write the `ClobPair` to state.
+	k.setClobPair(ctx, clobPair)
+
+	// Create the corresponding orderbook in the memclob.
+	k.createOrderbook(ctx, clobPair)
+}
+
+// setClobPair sets a specific `ClobPair` in the store from its index.
 func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 	b := k.cdc.MustMarshal(&clobPair)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
 	// Write the `ClobPair` to state.
 	store.Set(types.ClobPairKey(clobPair.GetClobPairId()), b)
-
-	// Create the corresponding orderbook in the memclob.
-	k.MemClob.CreateOrderbook(ctx, clobPair)
 }
 
 // InitMemClobOrderbooks initializes the memclob with `ClobPair`s from state.
@@ -167,7 +204,7 @@ func (k Keeper) InitMemClobOrderbooks(ctx sdk.Context) {
 	clobPairs := k.GetAllClobPair(ctx)
 	for _, clobPair := range clobPairs {
 		// Create the corresponding orderbook in the memclob.
-		k.MemClob.CreateOrderbook(
+		k.createOrderbook(
 			ctx,
 			clobPair,
 		)
@@ -181,6 +218,35 @@ func (k Keeper) setNumClobPairs(ctx sdk.Context, num uint32) {
 
 	// Set `numClobPairs`.
 	store.Set(types.KeyPrefix(types.NumClobPairsKey), lib.Uint32ToBytes(num))
+}
+
+// GetClobPairIdForPerpetual gets the first CLOB pair ID associated with the provided perpetual ID.
+// It returns an error if there are no CLOB pair IDs associated with the perpetual ID.
+func (k Keeper) GetClobPairIdForPerpetual(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (
+	clobPairId types.ClobPairId,
+	err error,
+) {
+	clobPairIds, exists := k.PerpetualIdToClobPairId[perpetualId]
+	if !exists {
+		return 0, sdkerrors.Wrapf(
+			types.ErrNoClobPairForPerpetual,
+			"Perpetual ID %d has no associated CLOB pairs",
+			perpetualId,
+		)
+	}
+
+	if len(clobPairIds) == 0 {
+		panic("GetClobPairIdForPerpetual: Perpetual ID was created without a CLOB pair ID.")
+	}
+
+	if len(clobPairIds) > 1 {
+		panic("GetClobPairIdForPerpetual: Perpetual ID was created with multiple CLOB pair IDs.")
+	}
+
+	return clobPairIds[0], nil
 }
 
 // Returns the total count of CLOB pairs, read from the store.
@@ -246,7 +312,9 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 	order types.Order,
 	clobPair types.ClobPair,
 ) error {
-	if isSupported := types.IsSupportedClobPairStatus(clobPair.Status); !isSupported {
+	if !types.IsSupportedClobPairStatus(clobPair.Status) {
+		// Validation should only be called against ClobPairs in state, implying we have a ClobPair with
+		// an unsupported status in state.
 		panic(
 			fmt.Sprintf(
 				"validateOrderAgainstClobPairStatus: clob pair status %v is not supported",
@@ -307,6 +375,53 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 			)
 		}
 	}
+
+	return nil
+}
+
+// mustGetClobPair fetches a ClobPair from state given its id.
+// This function panics if the ClobPair is not found.
+func (k Keeper) mustGetClobPair(
+	ctx sdk.Context,
+	clobPairId types.ClobPairId,
+) types.ClobPair {
+	clobPair, found := k.GetClobPair(ctx, clobPairId)
+	if !found {
+		panic(
+			fmt.Sprintf(
+				"mustGetClobPair: ClobPair with id %+v not found",
+				clobPairId,
+			),
+		)
+	}
+	return clobPair
+}
+
+// SetClobPairStatus fetches a ClobPair by id and sets its
+// Status property equal to the provided ClobPair_Status. This function returns
+// an error if the proposed status transition is not supported.
+func (k Keeper) SetClobPairStatus(
+	ctx sdk.Context,
+	clobPairId types.ClobPairId,
+	clobPairStatus types.ClobPair_Status,
+) error {
+	clobPair := k.mustGetClobPair(ctx, clobPairId)
+
+	if !types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairStatusTransition,
+			"Cannot transition from status %+v to status %+v",
+			clobPair.Status,
+			clobPairStatus,
+		)
+	}
+
+	clobPair.Status = clobPairStatus
+	if err := k.validateClobPair(ctx, &clobPair); err != nil {
+		return err
+	}
+
+	k.setClobPair(ctx, clobPair)
 
 	return nil
 }

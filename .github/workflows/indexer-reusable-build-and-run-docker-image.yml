@@ -76,7 +76,7 @@ jobs:
           DB_PORT: 5432
           NODE_ENV: test
         run: |
-          cd packages/postgres && pnpm run migrate && pnpm run seed
+          cd packages/postgres && pnpm run migrate
 
       - name: Run docker image
         id: run-image

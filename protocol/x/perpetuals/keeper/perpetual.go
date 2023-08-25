@@ -1270,6 +1270,20 @@ func (k Keeper) CreateLiquidityTier(
 	// Increase `numLiquidityTiers` by 1.
 	k.setNumLiquidityTiers(ctx, nextId+1)
 
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeLiquidityTier,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewLiquidityTierUpsertEvent(
+				nextId,
+				name,
+				initialMarginPpm,
+				maintenanceFractionPpm,
+				basePositionNotional,
+			),
+		),
+	)
+
 	return liquidityTier, nil
 }
 
@@ -1306,6 +1320,21 @@ func (k Keeper) ModifyLiquidityTier(
 
 	// Store LiquidityTier.
 	k.setLiquidityTier(ctx, liquidityTier)
+
+	// TODO(IND-364): Change this to a block event.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeLiquidityTier,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewLiquidityTierUpsertEvent(
+				id,
+				name,
+				initialMarginPpm,
+				maintenanceFractionPpm,
+				basePositionNotional,
+			),
+		),
+	)
 
 	return liquidityTier, nil
 }

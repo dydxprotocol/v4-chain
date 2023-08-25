@@ -712,14 +712,13 @@ func New(
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
-	untriggeredConditionalOrders := make(map[clobmoduletypes.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
+
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
 		keys[clobmoduletypes.StoreKey],
 		memKeys[clobmoduletypes.MemStoreKey],
 		tkeys[clobmoduletypes.TransientStoreKey],
 		memClob,
-		untriggeredConditionalOrders,
 		app.SubaccountsKeeper,
 		app.AssetsKeeper,
 		app.BlockTimeKeeper,

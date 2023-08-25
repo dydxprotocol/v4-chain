@@ -26,7 +26,7 @@ import {
   OrderRemovalReason,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
-  ClobPairStatus,
+  ClobPairStatus, LiquidityTierUpsertEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -111,6 +111,14 @@ export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
   minOrderBaseQuantums: Long.fromValue(10),
   stepBaseQuantums: Long.fromValue(10),
   liquidityTier: 0,
+};
+
+export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {
+  id: 0,
+  name: 'Large-Cap',
+  initialMarginPpm: 50000,  // 5%
+  maintenanceFractionPpm: 600000,  // 60% of IM = 3%
+  basePositionNotional: Long.fromValue(1_000_000_000_000),  // 1_000_000 USDC
 };
 
 export const defaultPreviousHeight: string = '2';

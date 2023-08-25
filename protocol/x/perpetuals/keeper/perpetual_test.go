@@ -2920,6 +2920,8 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			obtainedLt.ImpactNotional,
 		)
 	}
+	liquidityTierUpsertEvents := keepertest.GetLiquidityTierUpsertEventsFromIndexerBlock(ctx, keeper)
+	require.Len(t, liquidityTierUpsertEvents, len(constants.LiquidityTiers)*2)
 }
 
 func TestModifyLiquidityTier_Failure(t *testing.T) {

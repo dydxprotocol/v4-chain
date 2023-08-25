@@ -18,7 +18,6 @@ import {
   TendermintEventTable,
   perpetualMarketRefresher,
   LiquidityTiersTable,
-  liquidityTierRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
@@ -134,10 +133,7 @@ describe('perpetualMarketHandler', () => {
       MarketTable.create(testConstants.defaultMarket),
       LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
     ]);
-    await Promise.all([
-      marketRefresher.updateMarkets(),
-      liquidityTierRefresher.updateLiquidityTiers(),
-    ]);
+    await marketRefresher.updateMarkets();
 
     const transactionIndex: number = 0;
 

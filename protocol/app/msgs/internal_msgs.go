@@ -17,6 +17,8 @@ import (
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	vest "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -46,6 +48,18 @@ var (
 		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse":     nil,
 		"/cosmos.staking.v1beta1.MsgUpdateParams":              &staking.MsgUpdateParams{},
 		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse":      nil,
+
+		// clob
+		"/dydxprotocol.clob.MsgCreateClobPair":         &clob.MsgCreateClobPair{},
+		"/dydxprotocol.clob.MsgCreateClobPairResponse": nil,
+
+		// perpeutals
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":         &perpetuals.MsgCreatePerpetual{},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse": nil,
+
+		// prices
+		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
+		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": nil,
 
 		// bank
 		"/cosmos.bank.v1beta1.MsgSetSendEnabled":         &bank.MsgSetSendEnabled{},

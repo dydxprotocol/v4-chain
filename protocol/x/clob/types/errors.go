@@ -153,14 +153,24 @@ var (
 		32,
 		"Existing stateful order cancellation has higher-or-equal priority than the new one",
 	)
-	ErrOrderConflictsWithClobPairStatus = sdkerrors.Register(
+	ErrClobPairAlreadyExists = sdkerrors.Register(
 		ModuleName,
 		33,
+		"ClobPair with id already exists",
+	)
+	ErrOrderConflictsWithClobPairStatus = sdkerrors.Register(
+		ModuleName,
+		34,
 		"Order conflicts with ClobPair status",
+	)
+	ErrInvalidClobPairStatusTransition = sdkerrors.Register(
+		ModuleName,
+		35,
+		"Invalid ClobPair status transition",
 	)
 	ErrInvalidMsgSetClobPairStatus = sdkerrors.Register(
 		ModuleName,
-		34,
+		36,
 		"MsgSetClobPairStatus is invalid",
 	)
 

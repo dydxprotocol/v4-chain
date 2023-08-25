@@ -1,4 +1,6 @@
-import { AssetTable, assetRefresher, marketRefresher } from '@dydxprotocol-indexer/postgres';
+import {
+  AssetFromDatabase, AssetTable, assetRefresher, marketRefresher,
+} from '@dydxprotocol-indexer/postgres';
 import { AssetCreateEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { ConsolidatedKafkaEvent } from '../lib/types';
@@ -26,13 +28,13 @@ export class AssetCreationHandler extends Handler<AssetCreateEventV1> {
         this.event.marketId,
       );
     }
-    await AssetTable.create({
+    const asset: AssetFromDatabase = await AssetTable.create({
       id: this.event.id.toString(),
       symbol: this.event.symbol,
       atomicResolution: this.event.atomicResolution,
       hasMarket: this.event.hasMarket,
       marketId: this.event.marketId,
     }, { txId: this.txId });
-    await assetRefresher.updateAssets({ txId: this.txId });
+    assetRefresher.addAsset(asset);
   }
 }

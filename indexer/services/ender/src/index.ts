@@ -24,9 +24,9 @@ async function startKafka(): Promise<void> {
     assetRefresher.updateAssets(),
     marketRefresher.updateMarkets(),
   ]);
-  wrapBackgroundTask(perpetualMarketRefresher.start(), true, 'startUpdatePerpetualMarkets');
-  wrapBackgroundTask(assetRefresher.start(), true, 'startUpdateAssets');
-  wrapBackgroundTask(marketRefresher.start(), true, 'startUpdateMarkets');
+  // Ender does not need to refresh its caches in a loop because Ender is the only service that
+  // writes to the key attributes of perpetual_markets, asset_refresher, and market_refresher
+  // The only exception are the aggregated properties of perpetual_markets
   await initializeAllCaches();
 
   await connect();

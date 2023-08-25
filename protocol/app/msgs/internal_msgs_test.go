@@ -76,6 +76,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.bridge.MsgUpdateSafetyParams",
 		"/dydxprotocol.bridge.MsgUpdateSafetyParamsResponse",
 
+		// clob
+		"/dydxprotocol.clob.MsgCreateClobPair",
+		"/dydxprotocol.clob.MsgCreateClobPairResponse",
+
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage",
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse",
@@ -87,6 +91,14 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
+
+		// perpeutals
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
+
+		// prices
+		"/dydxprotocol.prices.MsgCreateOracleMarket",
+		"/dydxprotocol.prices.MsgCreateOracleMarketResponse",
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams",
