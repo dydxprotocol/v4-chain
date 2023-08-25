@@ -1,16 +1,14 @@
 import { bytesToBigInt, getPositionIsLong } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
-  Asset, AssetPosition, LiquidityTier, MarketParam, MarketPrice,
+  Asset, AssetPosition, MarketParam, MarketPrice,
 } from '@dydxprotocol-indexer/v4-protos';
 
-import { QUOTE_CURRENCY_ATOMIC_RESOLUTION } from '../../src';
 import { SubaccountCreateObjectWithId } from '../../src/db/helpers';
-import { protocolPriceToHuman, quantumsToHuman, quantumsToHumanFixedString } from '../../src/lib/protocol-translations';
+import { protocolPriceToHuman, quantumsToHumanFixedString } from '../../src/lib/protocol-translations';
 import {
   AssetFromDatabase,
   AssetPositionCreateObject,
   AssetPositionFromDatabase,
-  LiquidityTiersFromDatabase,
   MarketFromDatabase,
   SubaccountFromDatabase,
 } from '../../src/types';
@@ -39,22 +37,6 @@ export function expectAsset(
     hasMarket: asset.hasMarket,
     id: BigInt(asset.id).toString(),
     marketId: asset.marketId,
-  }));
-}
-
-export function expectLiquidityTier(
-  liquidityTierFromDb: LiquidityTiersFromDatabase,
-  liquidityTier: LiquidityTier,
-): void {
-  expect(liquidityTierFromDb).toEqual(expect.objectContaining({
-    id: liquidityTier.id,
-    name: liquidityTier.name,
-    initialMarginPpm: liquidityTier.initialMarginPpm.toString(),
-    maintenanceFractionPpm: liquidityTier.maintenanceFractionPpm.toString(),
-    basePositionNotional: quantumsToHuman(
-      liquidityTier.basePositionNotional.toString(),
-      QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-    ).toFixed(6),
   }));
 }
 

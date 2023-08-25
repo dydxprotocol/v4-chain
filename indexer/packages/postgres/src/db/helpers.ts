@@ -1,22 +1,20 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { bytesToBigInt, getPositionIsLong } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
-  Asset, AssetPosition, LiquidityTier, MarketParam, MarketPrice,
+  Asset, AssetPosition, MarketParam, MarketPrice,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import Long from 'long';
 
-import { CURRENCY_DECIMAL_PRECISION, ONE_MILLION, QUOTE_CURRENCY_ATOMIC_RESOLUTION } from '../constants';
+import { CURRENCY_DECIMAL_PRECISION, ONE_MILLION } from '../constants';
 import { setBulkRowsForUpdate } from '../helpers/stores-helpers';
-import { protocolPriceToHuman, quantumsToHuman, quantumsToHumanFixedString } from '../lib/protocol-translations';
+import { protocolPriceToHuman, quantumsToHumanFixedString } from '../lib/protocol-translations';
 import * as AssetPositionTable from '../stores/asset-position-table';
 import {
   AssetCreateObject,
   FundingIndexMap,
   IsoString,
-  LiquidityTiersColumns,
-  LiquidityTiersCreateObject,
   MarketColumns,
   MarketCreateObject,
   MarketsMap,
@@ -81,56 +79,6 @@ export function getSeedMarketsSql(): string {
           ON CONFLICT DO NOTHING`;
 }
 
-/**
- * @description Gets the SQL to seed the `liquidity_tiers` table, using the `genesis.json` file
- * from the V4 network.
- * @returns SQL statement for seeding the `liquidity_tiers` table. The SQL statement will do
- * nothing if the rows in the `liquidity_tiers` table already exist.
- */
-export function getSeedLiquidityTiersSql(): string {
-  // Get `LiquidityTier` objects from the genesis app state
-  const liquidityTiers: LiquidityTier[] = getLiquidityTiersFromGenesis();
-
-  const liquidityTierCreateObjects:
-  LiquidityTiersCreateObject[] = liquidityTiers.map((liquidityTier: LiquidityTier) => {
-    return getLiquidityTiersCreateObject(liquidityTier);
-  });
-
-  const liquidityTierColumns = _.keys(liquidityTierCreateObjects[0]) as LiquidityTiersColumns[];
-
-  const liquidityTierRows: string[] = setBulkRowsForUpdate<LiquidityTiersColumns>({
-    objectArray: liquidityTierCreateObjects,
-    columns: liquidityTierColumns,
-    stringColumns: [
-      LiquidityTiersColumns.name,
-      LiquidityTiersColumns.basePositionNotional,
-    ],
-    numericColumns: [
-      LiquidityTiersColumns.id,
-      LiquidityTiersColumns.initialMarginPpm,
-      LiquidityTiersColumns.maintenanceFractionPpm,
-    ],
-  });
-
-  return `INSERT INTO LIQUIDITY_TIERS (${liquidityTierColumns.map((col) => `"${col}"`).join(',')})
-          VALUES ${liquidityTierRows.map((liquidityTier) => `(${liquidityTier})`).join(', ')}
-          ON CONFLICT DO NOTHING`;
-}
-
-export function getLiquidityTiersCreateObject(liquidityTier: LiquidityTier):
-  LiquidityTiersCreateObject {
-  return {
-    id: liquidityTier.id,
-    name: liquidityTier.name,
-    initialMarginPpm: liquidityTier.initialMarginPpm.toString(),
-    maintenanceFractionPpm: liquidityTier.maintenanceFractionPpm.toString(),
-    basePositionNotional: quantumsToHuman(
-      liquidityTier.basePositionNotional.toString(),
-      QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-    ).toFixed(6),
-  };
-}
-
 export function getAssetCreateObject(asset: Asset): AssetCreateObject {
   return {
     id: BigInt(asset.id).toString(),
@@ -184,26 +132,6 @@ export function getMarketPricesFromGenesis(): MarketPrice[] {
     },
   );
   return marketPrices;
-}
-
-/**
- * Gets LiquidityTiers from geneis.
- * @returns
- */
-export function getLiquidityTiersFromGenesis(): LiquidityTier[] {
-  const liquidityTiers: LiquidityTier[] = genesis.app_state.perpetuals.liquidity_tiers.map(
-    (genesisLiquidityTier, index: number): LiquidityTier => {
-      return {
-        ...genesisLiquidityTier,
-        basePositionNotional: Long.fromValue(genesisLiquidityTier.base_position_notional),
-        initialMarginPpm: genesisLiquidityTier.initial_margin_ppm,
-        maintenanceFractionPpm: genesisLiquidityTier.maintenance_fraction_ppm,
-        impactNotional: Long.fromValue(genesisLiquidityTier.impact_notional),
-        id: index,
-      };
-    },
-  );
-  return liquidityTiers;
 }
 
 /**

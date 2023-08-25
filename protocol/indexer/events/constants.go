@@ -13,6 +13,7 @@ const (
 	SubtypeStatefulOrder    = "stateful_order"
 	SubtypeAsset            = "asset"
 	SubtypePerpetualMarket  = "perpetual_market"
+	SubtypeLiquidityTier    = "liquidity_tier"
 )
 
 var OnChainEventSubtypes = []string{
@@ -24,4 +25,5 @@ var OnChainEventSubtypes = []string{
 	SubtypeStatefulOrder,
 	SubtypeAsset,
 	SubtypePerpetualMarket,
+	SubtypeLiquidityTier,
 }
