@@ -33,17 +33,13 @@ jobs:
           pnpm install --loglevel warn --frozen-lockfile
           pnpm run build:all
 
-      - name: Output some data
-        run: |
-          ls; pwd; ls ~/;
-
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v3
         with:
           path: |
-            indexer/packages/kafa/node_modules
-            indexer/services/comlink/node_modules
+            indexer/packages/**/node_modules
+            indexer/services/**/node_modules
           key: ${{ runner.os }}-indexer-pnpm-${{ github.sha }}
 
       - name: Cache build
@@ -51,6 +47,6 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            indexer/packages/kafka/build
-            indexer/services/comlink/build
-          key: ${{ runner.os }}-indexer-build-{{ github.sha }}
+            indexer/packages/**/build
+            indexer/services/**/build
+          key: ${{ runner.os }}-indexer-build-${{ github.sha }}
