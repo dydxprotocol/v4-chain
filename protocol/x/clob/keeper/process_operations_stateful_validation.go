@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -24,6 +25,14 @@ func (k Keeper) StatefulValidateProposedOperations(
 			}
 		case *types.InternalOperation_ShortTermOrderPlacement:
 			order := castedOperation.ShortTermOrderPlacement.GetOrder()
+			if err := k.PerformStatefulOrderValidation(
+				ctx,
+				&order,
+				lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+				false,
+			); err != nil {
+				return err
+			}
 			placedShortTermOrders[order.GetOrderId()] = order
 		case *types.InternalOperation_OrderRemoval:
 			// Order removals are always for stateful orders that must exist.
