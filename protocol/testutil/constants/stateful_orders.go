@@ -1,7 +1,6 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -296,16 +295,16 @@ var (
 		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 	}
 	LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10 = clobtypes.Order{
-		OrderId: types.OrderId{
+		OrderId: clobtypes.OrderId{
 			SubaccountId: Carl_Num0,
 			ClientId:     0,
-			OrderFlags:   types.OrderIdFlags_LongTerm,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 			ClobPairId:   0,
 		},
-		Side:         types.Order_SIDE_SELL,
+		Side:         clobtypes.Order_SIDE_SELL,
 		Quantums:     100_000_000,
 		Subticks:     50_000_000_000,
-		GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 	}
 	LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTBT10 = clobtypes.Order{
 		OrderId: clobtypes.OrderId{
@@ -898,16 +897,16 @@ var (
 		ConditionalOrderTriggerSubticks: 49_999_000_000,
 	}
 	ConditionalOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10 = clobtypes.Order{
-		OrderId: types.OrderId{
+		OrderId: clobtypes.OrderId{
 			SubaccountId: Carl_Num0,
 			ClientId:     0,
-			OrderFlags:   types.OrderIdFlags_Conditional,
+			OrderFlags:   clobtypes.OrderIdFlags_Conditional,
 			ClobPairId:   0,
 		},
-		Side:         types.Order_SIDE_SELL,
+		Side:         clobtypes.Order_SIDE_SELL,
 		Quantums:     100_000_000,
 		Subticks:     50_000_000_000,
-		GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 	}
 	ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10 = clobtypes.Order{
 		OrderId: clobtypes.OrderId{
