@@ -138,7 +138,6 @@ func (k Keeper) StatefulValidateProposedOperationMatchOrders(
 
 	fills := matchOrder.GetFills()
 	for _, fill := range fills {
-
 		if err := k.StatefulValidateMakerFill(ctx, &fill, shortTermOrdersMap, &takerOrder); err != nil {
 			return err
 		}
