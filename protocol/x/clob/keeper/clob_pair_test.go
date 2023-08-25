@@ -436,13 +436,13 @@ func TestClobPairGetAll(t *testing.T) {
 
 func TestSetClobPairStatus(t *testing.T) {
 	testCases := map[string]struct {
-		setup         func(ks keepertest.ClobKeepersTestContext, manager *mocks.IndexerEventManager)
+		setup         func(t *testing.T, ks keepertest.ClobKeepersTestContext, manager *mocks.IndexerEventManager)
 		status        types.ClobPair_Status
 		expectedErr   string
 		expectedPanic string
 	}{
 		"Succeeds with valid status transition": {
-			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write a clob pair to the store with status initializing
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
@@ -458,12 +458,12 @@ func TestSetClobPairStatus(t *testing.T) {
 			status: types.ClobPair_STATUS_ACTIVE,
 		},
 		"Panics with missing clob pair": {
-			setup:         func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {},
+			setup:         func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {},
 			status:        types.ClobPair_STATUS_ACTIVE,
 			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
 		},
 		"Errors with unsupported transition to supported status": {
-			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				clobPair := constants.ClobPair_Btc
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
@@ -485,8 +485,7 @@ func TestSetClobPairStatus(t *testing.T) {
 					),
 				).Once().Return()
 
-				//nolint:errcheck
-				ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
@@ -495,12 +494,13 @@ func TestSetClobPairStatus(t *testing.T) {
 					clobPair.SubticksPerTick,
 					clobPair.Status,
 				)
+				require.NoError(t, err)
 			},
 			status:      types.ClobPair_STATUS_INITIALIZING,
 			expectedErr: "Cannot transition from status STATUS_ACTIVE to status STATUS_INITIALIZING",
 		},
 		"Errors with unsupported transition to unsupported status": {
-			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				clobPair := constants.ClobPair_Btc
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
@@ -522,8 +522,7 @@ func TestSetClobPairStatus(t *testing.T) {
 					),
 				).Once().Return()
 
-				//nolint:errcheck
-				ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
@@ -532,6 +531,7 @@ func TestSetClobPairStatus(t *testing.T) {
 					clobPair.SubticksPerTick,
 					clobPair.Status,
 				)
+				require.NoError(t, err)
 			},
 			status:      types.ClobPair_Status(100),
 			expectedErr: "Cannot transition from status STATUS_ACTIVE to status 100",
@@ -546,7 +546,7 @@ func TestSetClobPairStatus(t *testing.T) {
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
-			tc.setup(ks, mockIndexerEventManager)
+			tc.setup(t, ks, mockIndexerEventManager)
 
 			if tc.expectedPanic != "" {
 				require.PanicsWithValue(
