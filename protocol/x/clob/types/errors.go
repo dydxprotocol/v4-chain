@@ -165,7 +165,7 @@ var (
 	)
 	ErrInvalidClobPairStatusTransition = sdkerrors.Register(
 		ModuleName,
-		34,
+		35,
 		"Invalid ClobPair status transition",
 	)
 
