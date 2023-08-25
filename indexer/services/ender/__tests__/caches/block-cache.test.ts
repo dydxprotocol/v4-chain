@@ -2,13 +2,22 @@ import {
   BlockTable,
   CandleTable,
   OraclePriceTable,
+  assetRefresher,
   dbHelpers,
+  marketRefresher,
+  perpetualMarketRefresher,
   testConstants,
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
-import { getCurrentBlockHeight, refreshBlockCache, shouldSkipBlock } from '../../src/caches/block-cache';
-import { getCandlesMap } from '../../src/caches/candle-cache';
-import { getPriceMap } from '../../src/caches/price-cache';
+import {
+  getCurrentBlockHeight,
+  initializeAllCaches,
+  refreshBlockCache,
+  resetBlockCache,
+  shouldSkipBlock,
+} from '../../src/caches/block-cache';
+import { clearCandlesMap, getCandlesMap } from '../../src/caches/candle-cache';
+import { clearPriceMap, getPriceMap } from '../../src/caches/price-cache';
 
 describe('block-cache', () => {
   beforeAll(async () => {
@@ -23,6 +32,12 @@ describe('block-cache', () => {
 
   afterEach(async () => {
     await dbHelpers.clearData();
+    resetBlockCache();
+    clearCandlesMap();
+    clearPriceMap();
+    perpetualMarketRefresher.clear();
+    assetRefresher.clear();
+    marketRefresher.clear();
   });
 
   afterAll(async () => {
@@ -66,7 +81,32 @@ describe('block-cache', () => {
         expect(getCurrentBlockHeight()).toEqual('3');
         expect(getCandlesMap()).not.toEqual({});
         expect(getPriceMap()).not.toEqual({});
+        expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
+        expect(assetRefresher.getAssetsMap()).not.toEqual({});
+        expect(marketRefresher.getMarketsMap()).not.toEqual({});
       }
+    });
+  });
+
+  describe('initializeAllCaches', () => {
+    it('successfully initializes all caches', async () => {
+      // Validate that caches are empty
+      expect(getCurrentBlockHeight()).toEqual('-1');
+      expect(getCandlesMap()).toEqual({});
+      expect(getPriceMap()).toEqual({});
+      expect(perpetualMarketRefresher.getPerpetualMarketsMap()).toEqual({});
+      expect(assetRefresher.getAssetsMap()).toEqual({});
+      expect(marketRefresher.getMarketsMap()).toEqual({});
+
+      await initializeAllCaches();
+
+      // Validate that caches are populated
+      expect(getCurrentBlockHeight()).toEqual('2');
+      expect(getCandlesMap()).not.toEqual({});
+      expect(getPriceMap()).not.toEqual({});
+      expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
+      expect(assetRefresher.getAssetsMap()).not.toEqual({});
+      expect(marketRefresher.getMarketsMap()).not.toEqual({});
     });
   });
 });

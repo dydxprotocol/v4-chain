@@ -33,6 +33,7 @@ import {
 import { updateCandleCacheWithCandle } from '../caches/candle-cache';
 import config from '../config';
 import { BlockProcessor } from './block-processor';
+import { refreshDataCaches } from './cache-manager';
 import { CandlesGenerator } from './candles-generator';
 import {
   dateToDateTime,
@@ -126,6 +127,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     success = true;
   } catch (error) {
     await Transaction.rollback(txId);
+    await refreshDataCaches();
     stats.increment(`${config.SERVICE_NAME}.update_event_tables.failure`, 1);
     if (error instanceof ParseMessageError) {
       logger.crit({
