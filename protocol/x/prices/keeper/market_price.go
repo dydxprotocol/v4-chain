@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"math/big"
+	"sort"
 	"time"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -136,6 +137,11 @@ func (k Keeper) GetAllMarketPrices(ctx sdk.Context) []types.MarketPrice {
 		k.cdc.MustUnmarshal(iterator.Value(), &marketPrice)
 		marketPrices = append(marketPrices, marketPrice)
 	}
+
+	// Sort the market prices to return them in ascending order based on Id.
+	sort.Slice(marketPrices, func(i, j int) bool {
+		return marketPrices[i].Id < marketPrices[j].Id
+	})
 
 	return marketPrices
 }

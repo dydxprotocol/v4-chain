@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"sort"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -87,6 +89,11 @@ func (k Keeper) GetAllMarketParams(ctx sdk.Context) []types.MarketParam {
 		k.cdc.MustUnmarshal(iterator.Value(), &marketParam)
 		marketParams = append(marketParams, marketParam)
 	}
+
+	// Sort the market params to return them in ascending order based on Id.
+	sort.Slice(marketParams, func(i, j int) bool {
+		return marketParams[i].Id < marketParams[j].Id
+	})
 
 	return marketParams
 }
