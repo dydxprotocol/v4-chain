@@ -56,6 +56,10 @@ type (
 
 		placeOrderRateLimiter  rate_limit.RateLimiter[*types.MsgPlaceOrder]
 		cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder]
+
+		// The address capable of executing the MsgSetClobPairStatus message.
+		// Typically, this should be the x/gov module account.
+		govAuthority string
 	}
 )
 
@@ -117,6 +121,12 @@ func NewKeeper(
 
 func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
+}
+
+// GetGovAuthority returns the x/clob module's reference to the govAuthority address used
+// to ensure only the gov module sends MsgSetClobPairStatus messages.
+func (k Keeper) GetGovAuthority() string {
+	return k.govAuthority
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

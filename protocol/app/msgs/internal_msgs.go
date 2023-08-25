@@ -52,8 +52,10 @@ var (
 		// clob
 		"/dydxprotocol.clob.MsgCreateClobPair":         &clob.MsgCreateClobPair{},
 		"/dydxprotocol.clob.MsgCreateClobPairResponse": nil,
-
-		// perpeutals
+		"/dydxprotocol.clob.MsgSetClobPairStatus":         &clob.MsgCreateClobPair{},
+		"/dydxprotocol.clob.MsgSetClobPairStatusResponse": nil,
+		
+		// perpetuals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual":         &perpetuals.MsgCreatePerpetual{},
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse": nil,
 
@@ -96,10 +98,6 @@ var (
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage":         &delaymsg.MsgDelayMessage{},
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": nil,
-
-		// clob
-		"/dydxprotocol.clob.MsgSetClobPairStatus":  &clob.MsgSetClobPairStatus{},
-		"/dydxprotocol.clob.MsgSetClobPairStatusResponse":  nil,
 
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},

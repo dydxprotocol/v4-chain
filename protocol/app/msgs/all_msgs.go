@@ -153,8 +153,8 @@ var (
 		"/dydxprotocol.clob.MsgPlaceOrderResponse":         {},
 		"/dydxprotocol.clob.MsgProposedOperations":         {},
 		"/dydxprotocol.clob.MsgProposedOperationsResponse": {},
-		"/dydxprotocol.clob.MsgSetClobPairStatus": {},
-		"/dydxprotocol.clob.MsgSetClobPairStatusResponse": {},
+		"/dydxprotocol.clob.MsgSetClobPairStatus":          {},
+		"/dydxprotocol.clob.MsgSetClobPairStatusResponse":  {},
 
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage":         {},

@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func TestMsgSetClobPairStatus_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
 		msg           types.MsgSetClobPairStatus
@@ -15,14 +14,14 @@ func TestMsgSetClobPairStatus_ValidateBasic(t *testing.T) {
 	}{
 		"valid": {
 			msg: types.MsgSetClobPairStatus{
-				ClobPairId: 0,
-				Status: types.ClobPair_STATUS_ACTIVE,
+				ClobPairId:     0,
+				ClobPairStatus: types.ClobPair_STATUS_ACTIVE,
 			},
 		},
 		"invalid": {
 			msg: types.MsgSetClobPairStatus{
-				ClobPairId: 0,
-				Status: types.ClobPair_STATUS_UNSPECIFIED,
+				ClobPairId:     0,
+				ClobPairStatus: types.ClobPair_STATUS_UNSPECIFIED,
 			},
 			expectedError: types.ErrInvalidMsgSetClobPairStatus,
 		},
@@ -39,25 +38,3 @@ func TestMsgSetClobPairStatus_ValidateBasic(t *testing.T) {
 		})
 	}
 }
-
-// func TestMsgSetClobPairStatus_GetSigners(t *testing.T) {
-// 	tests := map[string]struct {
-// 		msg    types.MsgSetClobPairStatus
-// 		signers []sdk.AccAddress
-// 	}{
-// 		"valid": {
-// 			msg: types.MsgSetClobPairStatus{
-// 				ClobPairId: 0,
-// 				Status: types.ClobPair_STATUS_ACTIVE,
-// 			},
-// 			signers: make([]sdk.AccAddress, 0),
-// 		},
-// 	}
-
-// 	for name, tc := range tests {
-// 		t.Run(name, func(t *testing.T) {
-// 			signers := tc.msg.GetSigners()
-// 			require.Equal(t, tc.signers, signers)
-// 		})
-// 	}
-// }

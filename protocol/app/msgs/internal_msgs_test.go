@@ -79,14 +79,12 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// clob
 		"/dydxprotocol.clob.MsgCreateClobPair",
 		"/dydxprotocol.clob.MsgCreateClobPairResponse",
+		"/dydxprotocol.clob.MsgSetClobPairStatus",
+		"/dydxprotocol.clob.MsgSetClobPairStatusResponse",
 
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage",
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse",
-
-		// clob
-		"/dydxprotocol.clob.MsgSetClobPairStatus",
-		"/dydxprotocol.clob.MsgSetClobPairStatusResponse",
 
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",

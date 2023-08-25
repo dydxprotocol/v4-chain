@@ -117,4 +117,10 @@ type ClobKeeper interface {
 	GetIndexerEventManager() indexer_manager.IndexerEventManager
 	RateLimitCancelOrder(ctx sdk.Context, order *MsgCancelOrder) error
 	RateLimitPlaceOrder(ctx sdk.Context, order *MsgPlaceOrder) error
+	SetClobPairStatus(
+		ctx sdk.Context,
+		clobPairId ClobPairId,
+		status ClobPair_Status,
+	) error
+	GetGovAuthority() string
 }
