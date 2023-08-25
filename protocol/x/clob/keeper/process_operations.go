@@ -96,6 +96,10 @@ func (k Keeper) ProcessProposerOperations(
 		processProposerMatchesEvents,
 	)
 
+	// Emit stats about the proposed operations.
+	operationsStats := types.StatMsgProposedOperations(rawOperations)
+	operationsStats.EmitStats(metrics.DeliverTx)
+
 	return nil
 }
 
