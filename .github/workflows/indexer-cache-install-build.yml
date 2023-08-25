@@ -40,7 +40,7 @@ jobs:
           path: |
             indexer/packages/**/node_modules
             indexer/services/**/node_modules
-          key: ${{ runner.os }}-indexer-pnpm-${{ github.sha }}
+          key: ${{ runner.os }}-indexer-pnpm-
 
       - name: Cache build
         id: cache-build
@@ -49,4 +49,4 @@ jobs:
           path: |
             indexer/packages/**/build
             indexer/services/**/build
-          key: ${{ runner.os }}-indexer-build-${{ github.sha }}
+          key: ${{ runner.os }}-indexer-build-
