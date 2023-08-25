@@ -35,7 +35,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
           path: |
             indexer/packages/**/node_modules
@@ -44,7 +44,7 @@ jobs:
 
       - name: Cache build
         id: cache-build
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
           path: |
             indexer/packages/**/build

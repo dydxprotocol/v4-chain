@@ -24,7 +24,7 @@ jobs:
 
       - name: Restore cached node_modules
         id: restore-node-modules
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
           path: |
             indexer/packages/**/node_modules
@@ -34,7 +34,7 @@ jobs:
 
       - name: Restore cached build
         id: restore-build
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
           path: |
             indexer/packages/**/build
