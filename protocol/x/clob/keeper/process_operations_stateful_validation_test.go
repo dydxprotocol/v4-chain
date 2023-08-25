@@ -22,33 +22,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// func TestStatefulValidateProposedOperations(t *testing.T) {
-// 	// TODO(DEC-908): Set up correct `bankKeeper` mock to verify fee transfer.
-// 	tests := map[string]struct {
-// 		// Setup.
-// 		internalOperations []types.InternalOperation
-// 		// orders
-// 		statefulOrders []types.Order
-
-// 		expectedErr error
-// 	}{
-// 		"test1": {},
-// 	}
-
-// 	for name, tc := range tests {
-// 		t.Run(name, func(t *testing.T) {
-// 			memclob := memclob.NewMemClobPriceTimePriority(true)
-// 			ks := keepertest.NewClobKeepersTestContext(t, memclob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-// 			ctx := ks.Ctx.WithBlockHeight(int64(5))
-
-// 			for _, order := tc.statefulOrders {
-
-// 			}
-// 			require.Equal(t, tc.expectedProcessProposerMatchesEvents, processProposerMatchesEvents)
-// 		})
-// 	}
-// }
-
 func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T) {
 	tests := map[string]processProposerOperationsTestCase{
 		`Stateful order validation: referenced maker order does not exist in state`: {
