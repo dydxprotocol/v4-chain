@@ -37,11 +37,6 @@ func (k Keeper) ProcessProposerOperations(
 		return sdkerrors.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
 	}
 
-	// Stateful validation
-	if err := k.StatefulValidateProposedOperations(ctx, operations); err != nil {
-		return sdkerrors.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
-	}
-
 	ctx.Logger().Debug(
 		"Processing operations queue",
 		"operationsQueue",
@@ -50,7 +45,7 @@ func (k Keeper) ProcessProposerOperations(
 		ctx.BlockHeight(),
 	)
 
-	// Write results of the operations queue to state.
+	// Write results of the operations queue to state. Performs stateful validation as well.
 	if err := k.ProcessInternalOperations(ctx, operations); err != nil {
 		return err
 	}
@@ -105,7 +100,8 @@ func (k Keeper) ProcessProposerOperations(
 }
 
 // ProcessInternalOperations takes in an InternalOperations slice and writes all relevant
-// operations to state. This function assumes that the operations have passed all validation.
+// operations to state. This function assumes that the operations have passed all stateless validation.
+// This function will perform stateful validation as it processes operations.
 // The following operations modify state:
 // - Order Matches, Liquidation Matches, Deleveraging Matches
 // - Order Removals
@@ -118,6 +114,7 @@ func (k Keeper) ProcessInternalOperations(
 	operations []types.InternalOperation,
 ) error {
 	// Collect all the short-term orders placed for subsequent lookups.
+	// All short term orders in this map have passed validation.
 	placedShortTermOrders := make(map[types.OrderId]types.Order, 0)
 
 	// Write the matches to state if all stateful validation passes.
@@ -125,6 +122,9 @@ func (k Keeper) ProcessInternalOperations(
 		switch castedOperation := operation.Operation.(type) {
 		case *types.InternalOperation_Match:
 			clobMatch := castedOperation.Match
+			if err := k.StatefulValidateProposedOperationMatch(ctx, clobMatch, placedShortTermOrders); err != nil {
+				return err
+			}
 			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
 				return sdkerrors.Wrapf(
 					err,
@@ -134,12 +134,32 @@ func (k Keeper) ProcessInternalOperations(
 			}
 		case *types.InternalOperation_ShortTermOrderPlacement:
 			order := castedOperation.ShortTermOrderPlacement.GetOrder()
+			if err := k.PerformStatefulOrderValidation(
+				ctx,
+				&order,
+				lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+				false,
+			); err != nil {
+				return err
+			}
 			placedShortTermOrders[order.GetOrderId()] = order
 		case *types.InternalOperation_OrderRemoval:
 			// Remove the stateful order from state.
 			// TODO(CLOB-85): Perform additional validation on the order removal.
 			orderRemoval := castedOperation.OrderRemoval
-			k.MustRemoveStatefulOrder(ctx, orderRemoval.GetOrderId())
+
+			// Order removals are always for stateful orders that must exist.
+			orderIdToRemove := orderRemoval.GetOrderId()
+			_, found := k.GetLongTermOrderPlacement(ctx, orderIdToRemove)
+			if !found {
+				return sdkerrors.Wrapf(
+					types.ErrStatefulOrderDoesNotExist,
+					"Stateful order id %+v does not exist in state.",
+					orderIdToRemove,
+				)
+			}
+
+			k.MustRemoveStatefulOrder(ctx, orderIdToRemove)
 
 			// Emit an on-chain indexer event for Stateful Order Removal.
 			k.GetIndexerEventManager().AddTxnEvent(
@@ -147,7 +167,7 @@ func (k Keeper) ProcessInternalOperations(
 				indexerevents.SubtypeStatefulOrder,
 				indexer_manager.GetB64EncodedEventMessage(
 					indexerevents.NewStatefulOrderRemovalEvent(
-						orderRemoval.OrderId,
+						orderIdToRemove,
 						indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
 							orderRemoval.RemovalReason,
 						),
@@ -159,7 +179,7 @@ func (k Keeper) ProcessInternalOperations(
 				[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
 				1,
 				append(
-					orderRemoval.OrderId.GetOrderIdLabels(),
+					orderIdToRemove.GetOrderIdLabels(),
 					metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
 				),
 			)
@@ -462,41 +482,11 @@ func (k Keeper) MustFetchOrderFromOrderId(
 	orderId types.OrderId,
 	ordersMap map[types.OrderId]types.Order,
 ) types.Order {
-	// In the case of short term orders, fetch from the orders map.
-	// It should always exist in the orders map because short term order placement operations
-	// should precede operations with order ids that reference them.
-	if orderId.IsShortTermOrder() {
-		order, exists := ordersMap[orderId]
-		if !exists {
-			panic(
-				fmt.Sprintf("MustFetchOrderFromOrderId: failed fetching short term order for order id: %+v", orderId),
-			)
-		}
-		return order
+	order, err := k.FetchOrderFromOrderId(ctx, orderId, ordersMap)
+	if err != nil {
+		panic(err)
 	}
-
-	// For stateful orders, fetch from state.
-	if orderId.IsLongTermOrder() {
-		statefulOrderPlacement, found := k.GetLongTermOrderPlacement(ctx, orderId)
-		if !found {
-			panic(
-				fmt.Sprintf("MustFetchOrderFromOrderId: failed fetching stateful term order for order id: %+v", orderId),
-			)
-		}
-		return statefulOrderPlacement.Order
-	} else if orderId.IsConditionalOrder() {
-		conditionalOrderPlacement, found := k.GetTriggeredConditionalOrderPlacement(ctx, orderId)
-		if !found {
-			panic(
-				fmt.Sprintf("MustFetchOrderFromOrderId: failed fetching triggered conditional order for order id: %+v", orderId),
-			)
-		}
-		return conditionalOrderPlacement.Order
-	}
-
-	panic(
-		fmt.Sprintf("MustFetchOrderFromOrderId: unknown order type. order id: %+v", orderId),
-	)
+	return order
 }
 
 // GenerateProcessProposerMatchesEvents generates a `ProcessProposerMatchesEvents` object from

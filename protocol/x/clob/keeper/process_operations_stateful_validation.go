@@ -5,70 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-// StatefulValidateProposedOperations performs stateful validation on a slice of Internal Operations.
-// It is intended to be used in the DeliverTx flow before we process Internal Operations.
-func (k Keeper) StatefulValidateProposedOperations(
-	ctx sdk.Context,
-	operations []types.InternalOperation,
-) error {
-	// Collect all the short-term orders placed for subsequent lookups.
-	placedShortTermOrders := make(map[types.OrderId]types.Order, 0)
-
-	for _, operation := range operations {
-		switch castedOperation := operation.Operation.(type) {
-		case *types.InternalOperation_Match:
-			clobMatch := castedOperation.Match
-			if err := k.StatefulValidateProposedOperationMatch(ctx, clobMatch, placedShortTermOrders); err != nil {
-				return err
-			}
-		case *types.InternalOperation_ShortTermOrderPlacement:
-			order := castedOperation.ShortTermOrderPlacement.GetOrder()
-			if err := k.PerformStatefulOrderValidation(
-				ctx,
-				&order,
-				lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				false,
-			); err != nil {
-				return err
-			}
-			placedShortTermOrders[order.GetOrderId()] = order
-		case *types.InternalOperation_OrderRemoval:
-			// Order removals are always for stateful orders that must exist.
-			orderId := castedOperation.OrderRemoval.OrderId
-			_, found := k.GetLongTermOrderPlacement(ctx, orderId)
-			if !found {
-				return sdkerrors.Wrapf(
-					types.ErrStatefulOrderDoesNotExist,
-					"Stateful order id %+v does not exist in state.",
-					orderId,
-				)
-			}
-		case *types.InternalOperation_PreexistingStatefulOrder:
-			// When we fetch operations to propose, preexisting stateful orders are not included
-			// in the operations queue.
-			panic(
-				fmt.Sprintf(
-					"StatefulProposedOperationsValidation: Preexisting Stateful Orders should not exist in operations queue: %+v",
-					castedOperation.PreexistingStatefulOrder,
-				),
-			)
-		default:
-			panic(
-				fmt.Sprintf(
-					"StatefulProposedOperationsValidation: Unrecognized operation type for operation: %+v",
-					operation.GetInternalOperationTextString(),
-				),
-			)
-		}
-	}
-	return nil
-}
-
-// FetchOrderFromOrderId is a helper function that fetches a order from and order id.
+// FetchOrderFromOrderId is a helper function that fetches a order from an order id.
 // If the order id is a short term order, the map will be used to populate the order.
 // If the order id is a long term order, it will be fetched from state.
 // If the order Id is a conditional order, it will be fetched from triggered conditional order state.
