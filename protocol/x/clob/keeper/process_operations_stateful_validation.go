@@ -129,7 +129,7 @@ func (k Keeper) StatefulValidateProposedOperationMatch(
 			return sdkerrors.Wrapf(
 				types.ErrInvalidMatchOrder,
 				"Taker order %+v cannot be post only.",
-				takerOrder,
+				takerOrder.GetOrderTextString(),
 			)
 		}
 		takerIsBuy := takerOrder.IsBuy()
@@ -159,7 +159,7 @@ func (k Keeper) StatefulValidateProposedOperationMatch(
 				return sdkerrors.Wrapf(
 					types.ErrInvalidMatchOrder,
 					"Maker order %+v cannot be FOK or IOC.",
-					makerOrder,
+					makerOrder.GetOrderTextString(),
 				)
 			}
 		}
@@ -180,7 +180,7 @@ func (k Keeper) StatefulValidateProposedOperationMatch(
 				return sdkerrors.Wrapf(
 					types.ErrInvalidMatchOrder,
 					"Maker order %+v cannot be FOK or IOC.",
-					makerOrder,
+					makerOrder.GetOrderTextString(),
 				)
 			}
 		}

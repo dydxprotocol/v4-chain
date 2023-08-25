@@ -165,6 +165,120 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.GetOrderTextString(),
 			),
 		},
+		`Stateful match validation: taker order cannot be post only`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_PO,
+			},
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_PO,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
+						},
+					},
+				),
+			},
+			expectedError: sdkerrors.Wrapf(
+				types.ErrInvalidMatchOrder,
+				"Taker order %+v cannot be post only.",
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_PO.GetOrderTextString(),
+			),
+		},
+		`Stateful match validation: maker order cannot be FOK`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK,
+			},
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
+						},
+					},
+				),
+			},
+			expectedError: sdkerrors.Wrapf(
+				types.ErrInvalidMatchOrder,
+				"Maker order %+v cannot be FOK or IOC.",
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK.GetOrderTextString(),
+			),
+		},
+		`Stateful match validation: maker order cannot be IOC`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC,
+			},
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+					Timestamp: time.Unix(5, 0),
+				})
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC.OrderId,
+							FillAmount:   100_000_000, // 1 BTC
+						},
+					},
+				),
+			},
+			expectedError: sdkerrors.Wrapf(
+				types.ErrInvalidMatchOrder,
+				"Maker order %+v cannot be FOK or IOC.",
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC.GetOrderTextString(),
+			),
+		},
 		`Stateful order validation: referenced long-term order is for the wrong clob pair`: {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
