@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -11,7 +13,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 var (
@@ -42,7 +43,6 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 	require.Equal(t, []uint32{0, 1, 2}, blockMessageIds.Ids)
 
 	// Mock the bridge keeper methods called by the bridge msg server.
-	bridgeKeeper.On("GetBridgeAuthority").Return(BridgeAuthority)
 	bridgeKeeper.On("CompleteBridge", ctx, mock.Anything).Return(nil).Times(len(constants.AllMsgs))
 
 	// Dispatch messages for block 0.

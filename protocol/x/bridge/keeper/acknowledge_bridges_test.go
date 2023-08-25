@@ -7,6 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,11 +51,14 @@ func TestAcknowledgeBridges(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Initialize context, keeper, and mockDelayMsgKeeper.
 			ctx, bridgeKeeper, _, _, _, _, mockDelayMsgKeeper := keepertest.BridgeKeepers(t)
-			keepertest.MockDelayMsgMsgServerCall(
-				mockDelayMsgKeeper,
-				types.ModuleName,
-				uint32(len(tc.bridgeEvents)),
-			)
+			for i := range tc.bridgeEvents {
+				mockDelayMsgKeeper.On(
+					"DelayMessageByBlocks",
+					ctx,
+					mock.Anything,
+					mock.Anything,
+				).Return(uint32(i), nil).Once()
+			}
 
 			err := bridgeKeeper.AcknowledgeBridges(ctx, tc.bridgeEvents)
 			require.NoError(t, err)

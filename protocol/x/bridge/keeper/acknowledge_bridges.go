@@ -1,15 +1,16 @@
 package keeper
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
 // GetAcknowledgeBridges returns a `MsgAcknowledgeBridges` for recognized but not-yet-acknowledged
@@ -87,29 +88,24 @@ func (k Keeper) AcknowledgeBridges(
 	// executed `safetyParams.DelayBlocks` blocks in the future.
 	// Every `MsgDelayMsg` is independent, meaning that failure of one doesn't affect the others.
 	safetyParams := k.GetSafetyParams(ctx)
-	msgDelayMsgHandler := k.router.Handler(&delaymsgtypes.MsgDelayMessage{})
+	bridgeModuleAddressString := authtypes.NewModuleAddress(types.ModuleName).String()
 	for _, bridgeEvent := range bridgeEvents {
-		// Marshal `MsgCompleteBridge` into bytes.
-		msgCompleteBridgeBytes, err := k.cdc.Marshal(&types.MsgCompleteBridge{
-			Authority: k.GetBridgeAuthority(),
+		msgCompleteBridge := types.MsgCompleteBridge{
+			Authority: bridgeModuleAddressString,
 			Event:     bridgeEvent,
-		})
-		if err != nil {
-			ctx.Logger().Info("failed to marshal MsgCompleteBridge for bridge event", bridgeEvent, "error", err)
-			telemetry.IncrCounter(1, metrics.AcknowledgeBridges, metrics.Error, metrics.DelayMsgCompleteBridge)
-			continue
 		}
-		// Send `MsgDelayMessage` to x/delaymsg.
-		msgDelayMsg := &delaymsgtypes.MsgDelayMessage{
-			Authority:   k.GetBridgeAuthority(),
-			Msg:         msgCompleteBridgeBytes,
-			DelayBlocks: safetyParams.DelayBlocks,
-		}
-		_, err = msgDelayMsgHandler(ctx, msgDelayMsg)
+		_, err := k.delayMsgKeeper.DelayMessageByBlocks(
+			ctx,
+			&msgCompleteBridge,
+			safetyParams.DelayBlocks,
+		)
 		if err != nil {
-			ctx.Logger().Info("failed to dispatch MsgDelayMessage for bridge event", bridgeEvent, "error", err)
-			telemetry.IncrCounter(1, metrics.AcknowledgeBridges, metrics.Error, metrics.DelayMsgCompleteBridge)
-			continue
+			panic(
+				fmt.Sprintf(
+					"failed to delay completing bridge: %s",
+					err.Error(),
+				),
+			)
 		}
 	}
 

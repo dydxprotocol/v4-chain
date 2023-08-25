@@ -18,7 +18,6 @@ import (
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	"github.com/stretchr/testify/mock"
 )
 
 func DelayMsgKeepers(
@@ -141,18 +140,4 @@ func createDelayMsgKeeper(
 		authorities,
 	)
 	return k, storeKey
-}
-
-// MockDelayMsgMsgServerCall mocks, `numMsgs` number of times, keeper function calls in x/delaymsg
-// msg server's `DelayMessage`.
-func MockDelayMsgMsgServerCall(m *mocks.DelayMsgKeeper, fromModuleName string, numMsgs uint32) {
-	for i := uint32(0); i < numMsgs; i++ {
-		m.On("GetAuthorities").Return(map[string]struct{}{
-			authtypes.NewModuleAddress(fromModuleName).String(): {},
-		}).Once()
-		m.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil).Once()
-		m.On(
-			"DelayMessageByBlocks", mock.Anything, mock.Anything, mock.Anything,
-		).Return(i, nil).Once()
-	}
 }

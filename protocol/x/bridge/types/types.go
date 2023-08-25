@@ -31,6 +31,4 @@ type BridgeKeeper interface {
 
 	// Authority
 	GetGovAuthority() string
-
-	GetBridgeAuthority() string
 }

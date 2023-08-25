@@ -11,7 +11,7 @@ import (
 )
 
 func TestMsgServerCompleteBridge(t *testing.T) {
-	k, ms, ctx := setupMsgServer(t)
+	_, ms, ctx := setupMsgServer(t)
 
 	tests := map[string]struct {
 		testMsg      types.MsgCompleteBridge
@@ -20,14 +20,14 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: k.GetBridgeAuthority(),
+				Authority: constants.BridgeModuleAccAddress.String(),
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedResp: &types.MsgCompleteBridgeResponse{},
 		},
 		"Failure: invalid address": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: k.GetBridgeAuthority(),
+				Authority: constants.BridgeModuleAccAddress.String(),
 				Event: types.BridgeEvent{
 					Id:             0,
 					Coin:           sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
@@ -44,7 +44,7 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 			},
 			expectedErr: fmt.Sprintf(
 				"expected %s, got %s: Authority is invalid",
-				k.GetBridgeAuthority(),
+				constants.BridgeModuleAccAddress.String(),
 				"12345",
 			),
 		},

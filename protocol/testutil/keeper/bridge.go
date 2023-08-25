@@ -81,7 +81,7 @@ func createBridgeKeeper(
 		storeKey,
 		bridgeEventManager,
 		bankKeeper,
-		router,
+		mockDelayMsgKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 

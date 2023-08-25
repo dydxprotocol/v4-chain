@@ -91,7 +91,7 @@ func TestCompleteBridge(t *testing.T) {
 			// Assert that bridge module account's balance is as expected.
 			modAccBalance := bankKeeper.GetBalance(
 				ctx,
-				sdk.MustAccAddressFromBech32(bridgeKeeper.GetBridgeAuthority()),
+				constants.BridgeModuleAccAddress,
 				tc.bridgeEvent.Coin.Denom,
 			)
 			require.Equal(t, tc.expectedBalance.Denom, modAccBalance.Denom)
