@@ -1,18 +1,6 @@
 # Postgres
 
-Postgres package holds all postgres knex migrations, seeders, postgres models and helper functions.
-
-### Running the seeder
-
-On a machine with access to the database instance for the Indexer, update `.env` with the required
-environment variables for accessing the database instance. (See `.env.test` for an example of the
-required values).
-
-Then run:
-
-```
-pnpm run build && pnpm run seed
-```
+Postgres package holds all postgres knex migrations, postgres models and helper functions.
 
 ## Knex migration
 Add a knex migration by running `pnpm run migrate:make <create_fake_table>`
