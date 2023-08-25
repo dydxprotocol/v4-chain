@@ -42,12 +42,12 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 	// Add additional perps for objects exceeding the default perpetual count.
 	// ClobPairs and Perpetuals should be one to one.
 	perpetualsState := constants.Perpetuals_DefaultGenesisState
-	for i:= 2; i < n; i ++ {
+	for i := 2; i < n; i++ {
 		perpetualsState.Perpetuals = append(
 			perpetualsState.Perpetuals,
 			perpetualstypes.Perpetual{
 				Params: perpetualstypes.PerpetualParams{
-					Id: uint32(i),
+					Id:            uint32(i),
 					Ticker:        fmt.Sprintf("genesis_test_ticker_%d", i),
 					LiquidityTier: 0,
 				},
