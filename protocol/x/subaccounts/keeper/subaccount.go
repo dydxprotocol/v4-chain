@@ -495,6 +495,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 // `types.StillUndercollateralized` is returned. If the account was previously
 // collateralized and is now undercollateralized, `types.NewlyUndercollateralized` is
 // returned.
+//
+// Note that the inequality `newNetCollateral / newMaintenanceMargin >= curNetCollateral / curMaintenanceMargin`
+// has divide-by-zero issue when margin requirements are zero. To make sure the state
+// transition is valid, we special case this scenario and only allow state transition that improves net collateral.
 func IsValidStateTransitionForUndercollateralizedSubaccount(
 	bigCurNetCollateral *big.Int,
 	bigCurInitialMargin *big.Int,
@@ -516,7 +520,9 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 	// If the maintenance margin is zero, it means the subaccount must have no open positions, and negative net
 	// collateral. If the net collateral is not improving then this transition is not valid.
 	if bigNewMaintenanceMargin.BitLen() == 0 || bigCurMaintenanceMargin.BitLen() == 0 {
-		if bigNewMaintenanceMargin.BitLen() == 0 && bigCurMaintenanceMargin.BitLen() == 0 && bigNewNetCollateral.Cmp(bigCurNetCollateral) > 0 {
+		if bigNewMaintenanceMargin.BitLen() == 0 &&
+			bigCurMaintenanceMargin.BitLen() == 0 &&
+			bigNewNetCollateral.Cmp(bigCurNetCollateral) > 0 {
 			return types.Success
 		}
 
@@ -525,7 +531,7 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 
 	// Note that here we are effectively checking that
 	// `newNetCollateral / newMaintenanceMargin >= curNetCollateral / curMaintenanceMargin`.
-	// However, to prevent cases of divide-by-zero, we factor this as
+	// However, to avoid rounding errors, we factor this as
 	// `newNetCollateral * curMaintenanceMargin >= curNetCollateral * newMaintenanceMargin`.
 	bigCurRisk := new(big.Int).Mul(bigNewNetCollateral, bigCurMaintenanceMargin)
 	bigNewRisk := new(big.Int).Mul(bigCurNetCollateral, bigNewMaintenanceMargin)

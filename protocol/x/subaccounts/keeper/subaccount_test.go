@@ -3116,7 +3116,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 	}
 }
 
-func TestIsValidStateTransitionForUndercollateralizedSubaccount(t *testing.T) {
+func TestIsValidStateTransitionForUndercollateralizedSubaccount_ZeroMarginRequirements(t *testing.T) {
 	tests := map[string]struct {
 		bigCurNetCollateral     *big.Int
 		bigCurInitialMargin     *big.Int
