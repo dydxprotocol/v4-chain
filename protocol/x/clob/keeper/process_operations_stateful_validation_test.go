@@ -583,6 +583,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 		`Stateful order validation: referenced conditional order is for the wrong clob pair`: {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
+				&constants.EthUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -591,6 +592,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
 			},
 			triggeredConditionalOrders: []types.Order{
 				{
