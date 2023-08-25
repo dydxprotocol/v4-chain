@@ -458,7 +458,8 @@ func TestSetClobPairStatus(t *testing.T) {
 			status: types.ClobPair_STATUS_ACTIVE,
 		},
 		"Panics with missing clob pair": {
-			setup:         func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {},
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+			},
 			status:        types.ClobPair_STATUS_ACTIVE,
 			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
 		},
