@@ -473,13 +473,6 @@ func TestGenesis(t *testing.T) {
 			// Initialize the CLOB genesis state.
 			clob.InitGenesis(ctx, ks.ClobKeeper, tc.genesis)
 
-			require.True(
-				t,
-				constants.TimeT.Equal(
-					ks.ClobKeeper.MustGetBlockTimeForLastCommittedBlock(ctx),
-				),
-			)
-
 			// Export the CLOB genesis state and verify expectations.
 			got := clob.ExportGenesis(ctx, *ks.ClobKeeper)
 			require.NotNil(t, got)

@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 import {
   LiquidityTiersCreateObject, LiquidityTiersTable, protocolTranslations, liquidityTierRefresher,
 } from '@dydxprotocol-indexer/postgres';
+=======
+import { LiquidityTiersCreateObject, LiquidityTiersTable, protocolTranslations } from '@dydxprotocol-indexer/postgres';
+>>>>>>> b03ea0b83c6aa878f985d473e379348214d1c3a7
 import { LiquidityTierUpsertEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { QUOTE_CURRENCY_ATOMIC_RESOLUTION } from '../constants';
@@ -28,7 +32,10 @@ export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
       this.getLiquidityTiersCreateObject(this.event),
       { txId: this.txId },
     );
+<<<<<<< HEAD
     await liquidityTierRefresher.updateLiquidityTiers({ txId: this.txId });
+=======
+>>>>>>> b03ea0b83c6aa878f985d473e379348214d1c3a7
   }
 
   private getLiquidityTiersCreateObject(liquidityTier: LiquidityTierUpsertEventV1):

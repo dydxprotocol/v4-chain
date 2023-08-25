@@ -163,6 +163,7 @@ func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 
 // GetLiquidityTierUpsertEventsFromIndexerBlock returns the liquidityTier upsert events in the
 // Indexer Block event Kafka message.
+// TODO(IND-365): Consider using generics here to reduce duplicated code.
 func GetLiquidityTierUpsertEventsFromIndexerBlock(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,

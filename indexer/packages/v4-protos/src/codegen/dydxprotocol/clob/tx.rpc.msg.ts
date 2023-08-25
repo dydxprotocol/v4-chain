@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse } from "./tx";
+import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgCreateClobPair, MsgCreateClobPairResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -15,6 +15,9 @@ export interface Msg {
   /** CancelOrder allows accounts to cancel existing orders on the orderbook. */
 
   cancelOrder(request: MsgCancelOrder): Promise<MsgCancelOrderResponse>;
+  /** CreateClobPair creates a new clob pair. */
+
+  createClobPair(request: MsgCreateClobPair): Promise<MsgCreateClobPairResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -24,6 +27,7 @@ export class MsgClientImpl implements Msg {
     this.proposedOperations = this.proposedOperations.bind(this);
     this.placeOrder = this.placeOrder.bind(this);
     this.cancelOrder = this.cancelOrder.bind(this);
+    this.createClobPair = this.createClobPair.bind(this);
   }
 
   proposedOperations(request: MsgProposedOperations): Promise<MsgProposedOperationsResponse> {
@@ -42,6 +46,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgCancelOrder.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "CancelOrder", data);
     return promise.then(data => MsgCancelOrderResponse.decode(new _m0.Reader(data)));
+  }
+
+  createClobPair(request: MsgCreateClobPair): Promise<MsgCreateClobPairResponse> {
+    const data = MsgCreateClobPair.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Msg", "CreateClobPair", data);
+    return promise.then(data => MsgCreateClobPairResponse.decode(new _m0.Reader(data)));
   }
 
 }

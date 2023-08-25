@@ -117,7 +117,11 @@ export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {
   id: 0,
   name: 'Large-Cap',
   initialMarginPpm: 50000,  // 5%
+<<<<<<< HEAD
   maintenanceFractionPpm: 600000,  // 60% of IM
+=======
+  maintenanceFractionPpm: 600000,  // 60% of IM = 3%
+>>>>>>> b03ea0b83c6aa878f985d473e379348214d1c3a7
   basePositionNotional: Long.fromValue(1_000_000_000_000),  // 1_000_000 USDC
 };
 

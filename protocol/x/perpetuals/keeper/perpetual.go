@@ -1321,6 +1321,7 @@ func (k Keeper) ModifyLiquidityTier(
 	// Store LiquidityTier.
 	k.setLiquidityTier(ctx, liquidityTier)
 
+	// TODO(IND-364): Change this to a block event.
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeLiquidityTier,

@@ -1,9 +1,22 @@
 import { logger } from '@dydxprotocol-indexer/base';
+import { bytesToBigInt, getPositionIsLong } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  Asset, AssetPosition, MarketParam, MarketPrice,
+} from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
+import _ from 'lodash';
+import Long from 'long';
 
 import { CURRENCY_DECIMAL_PRECISION, ONE_MILLION } from '../constants';
+import { setBulkRowsForUpdate } from '../helpers/stores-helpers';
+import { protocolPriceToHuman, quantumsToHumanFixedString } from '../lib/protocol-translations';
+import * as AssetPositionTable from '../stores/asset-position-table';
 import {
+  AssetCreateObject,
   FundingIndexMap,
+  IsoString,
+  MarketColumns,
+  MarketCreateObject,
   MarketsMap,
   PerpetualMarketFromDatabase,
   PerpetualPositionFromDatabase,
@@ -11,6 +24,137 @@ import {
   TransferType,
   UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '../types';
+import genesis from './genesis.json';
+
+export interface AssetPositionCreateObjectWithId {
+  id: string,
+  subaccountId: string,
+  assetId: string,
+  size: string,
+  isLong: boolean,
+}
+
+export interface SubaccountCreateObjectWithId {
+  id: string,
+  address: string,
+  subaccountNumber: number,
+  updatedAt: IsoString,
+  updatedAtHeight: string,
+}
+
+/**
+ * @description Gets the SQL to seed the `markets` table, using the `genesis.json` file
+ * from the V4 network.
+ * @returns SQL statement for seeding the `markets` table. The SQL statement will do
+ * nothing if the rows in the `markets` table already exist.
+ */
+export function getSeedMarketsSql(): string {
+  // Get `MarketParam` and `MarketPrice` objects from the genesis app state
+  const marketParams: MarketParam[] = getMarketParamsFromGenesis();
+  const marketPrices: MarketPrice[] = getMarketPricesFromGenesis();
+
+  const marketCreateObjects: MarketCreateObject[] = [];
+  marketParams.forEach((marketParam, index) => {
+    marketCreateObjects.push(getMarketCreateObject(marketParam, marketPrices[index]));
+  });
+
+  const marketColumns = _.keys(marketCreateObjects[0]) as MarketColumns[];
+
+  const marketRows: string[] = setBulkRowsForUpdate<MarketColumns>({
+    objectArray: marketCreateObjects,
+    columns: marketColumns,
+    stringColumns: [
+      MarketColumns.pair,
+      MarketColumns.oraclePrice,
+    ],
+    numericColumns: [
+      MarketColumns.id,
+      MarketColumns.exponent,
+      MarketColumns.minPriceChangePpm,
+    ],
+  });
+
+  return `INSERT INTO MARKETS (${marketColumns.map((col) => `"${col}"`).join(',')})
+          VALUES ${marketRows.map((market) => `(${market})`).join(', ')}
+          ON CONFLICT DO NOTHING`;
+}
+
+export function getAssetCreateObject(asset: Asset): AssetCreateObject {
+  return {
+    id: BigInt(asset.id).toString(),
+    symbol: asset.symbol,
+    atomicResolution: asset.atomicResolution,
+    hasMarket: asset.hasMarket,
+    marketId: asset.marketId,
+  };
+}
+
+export function getAssetPositionCreateObject(
+  subaccountId: string,
+  assetPosition: AssetPosition,
+  atomicResolution: number,
+): AssetPositionCreateObjectWithId {
+  return {
+    id: AssetPositionTable.uuid(subaccountId, assetPosition.assetId.toString()),
+    subaccountId,
+    assetId: assetPosition.assetId.toString(),
+    size: quantumsToHumanFixedString(bytesToBigInt(assetPosition.quantums).toString(),
+      atomicResolution),
+    isLong: getPositionIsLong(assetPosition),
+  };
+}
+
+export function getMarketParamsFromGenesis(): MarketParam[] {
+  const markets: MarketParam[] = genesis.app_state.prices.market_params.map(
+    (genesisMarketParam): MarketParam => {
+      return {
+        ...genesisMarketParam,
+        minExchanges: genesisMarketParam.min_exchanges,
+        minPriceChangePpm: genesisMarketParam.min_price_change_ppm,
+        exchangeConfigJson: '',
+        id: genesisMarketParam.id,
+      };
+    },
+  );
+
+  return markets;
+}
+
+export function getMarketPricesFromGenesis(): MarketPrice[] {
+  const marketPrices: MarketPrice[] = genesis.app_state.prices.market_prices.map(
+    (genesisMarketPrice): MarketPrice => {
+      return {
+        ...genesisMarketPrice,
+        id: genesisMarketPrice.id,
+        exponent: genesisMarketPrice.exponent,
+        price: Long.fromNumber(genesisMarketPrice.price),
+      };
+    },
+  );
+  return marketPrices;
+}
+
+/**
+ * @description Given the initial `MarketParam` and `MarketPrice` objects, generate a
+ * `MarketCreateObject`.
+ * @param marketParam Initial `MarketParam` object.
+ * @param marketPrice Initial `MarketPrice` object.
+ * @returns `CreateMarketObject` corresponding to each `MarketParam`, `MarketPrice` pair passed in.
+ * Note: This function assumes the passed in `MarketParam` and `MarketPrice` objects match, and
+ * does no validation for this.
+ */
+function getMarketCreateObject(
+  marketParam: MarketParam,
+  marketPrice: MarketPrice,
+): MarketCreateObject {
+  return {
+    id: marketParam.id,
+    pair: marketParam.pair,
+    exponent: marketParam.exponent,
+    minPriceChangePpm: marketParam.minPriceChangePpm,
+    oraclePrice: protocolPriceToHuman(marketPrice.price.toString(), marketPrice.exponent),
+  };
+}
 
 /**
  * Converts a parts-per-million value to the string representation of the number. 1 ppm, or

@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"math"
 	"math/big"
 	"testing"
 	"time"
+
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,6 +19,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	feetypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -1099,7 +1101,9 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig),
 			)
 
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Timestamp: time.Unix(5, 0),
+			})
 
 			// Place all existing orders on the orderbook.
 			for _, matchableOrder := range tc.placedMatchableOrders {
@@ -1949,7 +1953,9 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationConfig),
 			)
 
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ctx.WithBlockTime(time.Unix(5, 0)))
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Timestamp: time.Unix(5, 0),
+			})
 
 			// Place all existing orders on the orderbook.
 			for _, matchableOrder := range tc.placedMatchableOrders {

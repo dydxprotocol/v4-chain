@@ -14,9 +14,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -513,7 +515,9 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 			}
 
-			ks.ClobKeeper.SetBlockTimeForLastCommittedBlock(ks.Ctx.WithBlockTime(time.Unix(5, 0)))
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
+				Timestamp: time.Unix(5, 0),
+			})
 
 			fills, deltaQuantumsRemaining := ks.ClobKeeper.OffsetSubaccountPerpetualPosition(
 				ks.Ctx,
@@ -924,6 +928,124 @@ func TestProcessDeleveraging(t *testing.T) {
 					tc.expectedOffsettingSubaccount,
 					actualOffsetting,
 				)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+func TestProcessDeleveraging_Rounding(t *testing.T) {
+	tests := map[string]struct {
+		// Setup.
+		liquidatedSubaccount satypes.Subaccount
+		offsettingSubaccount satypes.Subaccount
+		deltaQuantums        *big.Int
+
+		// Expectations.
+		expectedErr error
+	}{
+		// Rounding tests.
+		"Can deleverage short positions correctly after rounding": {
+			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+			deltaQuantums:        big.NewInt(49_999_991),
+		},
+		"Can deleverage long position correctly after rounding": {
+			liquidatedSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
+			offsettingSubaccount: constants.Carl_Num0_1BTC_Short_100000USD,
+			deltaQuantums:        big.NewInt(-49_999_991),
+		},
+		"Can deleverage short positions correctly after rounding - negative TNC": {
+			liquidatedSubaccount: satypes.Subaccount{
+				Id: &constants.Carl_Num0,
+				AssetPositions: []*satypes.AssetPosition{
+					{
+						AssetId:  0,
+						Quantums: dtypes.NewInt(45_001_000_000), // $45,001, TNC = -$4,999
+					},
+				},
+				PerpetualPositions: []*satypes.PerpetualPosition{
+					{
+						PerpetualId: 0,
+						Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+					},
+				},
+			},
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+			deltaQuantums:        big.NewInt(49_999_991),
+		},
+		"Can deleverage long positions correctly after rounding - negative TNC": {
+			liquidatedSubaccount: satypes.Subaccount{
+				Id: &constants.Dave_Num0,
+				AssetPositions: []*satypes.AssetPosition{
+					{
+						AssetId:  0,
+						Quantums: dtypes.NewInt(-50_000_000_000 - 4_999_000_000),
+					},
+				},
+				PerpetualPositions: []*satypes.PerpetualPosition{
+					{
+						PerpetualId: 0,
+						Quantums:    dtypes.NewInt(100_000_000),
+					},
+				},
+			},
+			offsettingSubaccount: constants.Carl_Num0_1BTC_Short_100000USD,
+			deltaQuantums:        big.NewInt(-49_999_991),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+			require.NoError(
+				t,
+				ks.PricesKeeper.UpdateMarketPrices(ks.Ctx, []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+					{
+						MarketId: uint32(0),
+						Price:    4_999_999_937, // Set the price to some large prime number.
+					},
+				}),
+			)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			for _, p := range []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			} {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
+				)
+				require.NoError(t, err)
+			}
+
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
+
+			err = ks.ClobKeeper.ProcessDeleveraging(
+				ks.Ctx,
+				*tc.liquidatedSubaccount.GetId(),
+				*tc.offsettingSubaccount.GetId(),
+				uint32(0),
+				tc.deltaQuantums,
+			)
+			if tc.expectedErr == nil {
+				require.NoError(t, err)
 			} else {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
 			}

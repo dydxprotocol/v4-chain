@@ -8,7 +8,10 @@ import {
 import {
   BlockTable,
   dbHelpers,
+<<<<<<< HEAD
   liquidityTierRefresher,
+=======
+>>>>>>> b03ea0b83c6aa878f985d473e379348214d1c3a7
   LiquidityTiersColumns,
   LiquidityTiersFromDatabase,
   LiquidityTiersTable,
@@ -119,9 +122,12 @@ describe('liquidityTierHandler', () => {
     expect(newLiquidityTiers.length).toEqual(1);
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
+<<<<<<< HEAD
     const liquidityTier:
     LiquidityTiersFromDatabase = liquidityTierRefresher.getLiquidityTierFromId(0);
     expect(liquidityTier).toBeDefined();
+=======
+>>>>>>> b03ea0b83c6aa878f985d473e379348214d1c3a7
   });
 
   it('updates existing liquidity tier', async () => {
@@ -134,7 +140,11 @@ describe('liquidityTierHandler', () => {
       time: defaultTime,
       txHash: defaultTxHash,
     });
+<<<<<<< HEAD
     // Confirm there is no existing liquidity tier
+=======
+    // Create existing liquidity tier
+>>>>>>> b03ea0b83c6aa878f985d473e379348214d1c3a7
     await LiquidityTiersTable.upsert(defaultLiquidityTier);
 
     await onMessage(kafkaMessage);
@@ -147,9 +157,12 @@ describe('liquidityTierHandler', () => {
     expect(newLiquidityTiers.length).toEqual(1);
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
+<<<<<<< HEAD
     const liquidityTier:
     LiquidityTiersFromDatabase = liquidityTierRefresher.getLiquidityTierFromId(0);
     expect(liquidityTier).toBeDefined();
+=======
+>>>>>>> b03ea0b83c6aa878f985d473e379348214d1c3a7
   });
 });
 
