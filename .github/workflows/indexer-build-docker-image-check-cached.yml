@@ -29,7 +29,8 @@ jobs:
           path: |
             packages/**/node_modules
             services/**/node_modules
-          key: ${{ runner.os }}-indexer-pnpm-
+          key: ${{ runner.os }}-indexer-pnpm-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-indexer-pnpm-
 
       - name: Restore cached build
         id: restore-build
@@ -38,7 +39,8 @@ jobs:
           path: |
             packages/**/build
             services/**/build
-          key: ${{ runner.os }}-indexer-build-
+          key: ${{ runner.os }}-indexer-build-{{ github.sha }}
+          restore-keys: ${{ runner.os }}-indexer-build-
           
       - if: ${{ steps.restore-node-modules.outputs.cache-hit != 'true' }}
         name: Install
