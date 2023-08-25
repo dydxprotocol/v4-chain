@@ -9,6 +9,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
+// StatefulValidateProposedOperations performs stateful validation on a slice of Internal Operations.
+// It is intended to be used in the DeliverTx flow before we process Internal Operations.
 func (k Keeper) StatefulValidateProposedOperations(
 	ctx sdk.Context,
 	operations []types.InternalOperation,
@@ -118,6 +120,11 @@ func (k Keeper) FetchOrderFromOrderId(
 	)
 }
 
+// StatefulValidateProposedOperationMatch performs stateful validation on a match orders object.
+// The following validations are performed:
+// - Validation on all match orders
+// - Validation on all match liquidations
+// - Validation that delevearging matches have a valid perpetual id
 func (k Keeper) StatefulValidateProposedOperationMatch(
 	ctx sdk.Context,
 	clobMatch *types.ClobMatch,
@@ -126,89 +133,21 @@ func (k Keeper) StatefulValidateProposedOperationMatch(
 	switch castedMatch := clobMatch.Match.(type) {
 	case *types.ClobMatch_MatchOrders:
 		matchOrder := castedMatch.MatchOrders
-		takerOrderId := matchOrder.GetTakerOrderId()
-		// Fetch the taker order from either short term orders or state
-		takerOrder, err := k.FetchOrderFromOrderId(ctx, takerOrderId, shortTermOrdersMap)
-		if err != nil {
+		if err := k.StatefulValidateProposedOperationMatchOrders(
+			ctx,
+			matchOrder,
+			shortTermOrdersMap,
+		); err != nil {
 			return err
 		}
-
-		// Taker order cannot be post only.
-		if takerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_POST_ONLY {
-			return sdkerrors.Wrapf(
-				types.ErrInvalidMatchOrder,
-				"Taker order %+v cannot be post only.",
-				takerOrder.GetOrderTextString(),
-			)
-		}
-		takerIsBuy := takerOrder.IsBuy()
-
-		fills := matchOrder.GetFills()
-		for _, fill := range fills {
-			makerOrderId := fill.GetMakerOrderId()
-			// Fetch the maker order from either short term orders or state
-			makerOrder, err := k.FetchOrderFromOrderId(ctx, makerOrderId, shortTermOrdersMap)
-			if err != nil {
-				return err
-			}
-
-			// Orders must be on different sides of the book.
-			if takerIsBuy == makerOrder.IsBuy() {
-				return sdkerrors.Wrapf(
-					types.ErrInvalidMatchOrder,
-					"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
-					takerOrder.GetOrderTextString(),
-					makerOrder.GetOrderTextString(),
-				)
-			}
-
-			// Maker order cannot be FOK or IOC.
-			if makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
-				makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
-				return sdkerrors.Wrapf(
-					types.ErrInvalidMatchOrder,
-					"Maker order %+v cannot be FOK or IOC.",
-					makerOrder.GetOrderTextString(),
-				)
-			}
-		}
-
 	case *types.ClobMatch_MatchPerpetualLiquidation:
 		matchLiquidation := castedMatch.MatchPerpetualLiquidation
-		fills := matchLiquidation.GetFills()
-		for _, fill := range fills {
-			makerOrderId := fill.GetMakerOrderId()
-			// Fetch the maker order from either short term orders or state
-			makerOrder, err := k.FetchOrderFromOrderId(ctx, makerOrderId, shortTermOrdersMap)
-			if err != nil {
-				return err
-			}
-			// Maker order cannot be FOK or IOC.
-			if makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
-				makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
-				return sdkerrors.Wrapf(
-					types.ErrInvalidMatchOrder,
-					"Maker order %+v cannot be FOK or IOC.",
-					makerOrder.GetOrderTextString(),
-				)
-			}
-		}
-		perpId := matchLiquidation.GetPerpetualId()
-		_, err := k.perpetualsKeeper.GetPerpetual(ctx, perpId)
-		if err != nil {
-			return sdkerrors.Wrapf(
-				types.ErrPerpetualDoesNotExist,
-				"Perpetual id %+v does not exist in state.",
-				perpId,
-			)
-		}
-		clobPair := matchLiquidation.ClobPairId
-		if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPair)); !found {
-			return sdkerrors.Wrapf(
-				types.ErrInvalidClob,
-				"Clob Pair id %+v does not exist in state.",
-				clobPair,
-			)
+		if err := k.StatefulValidateProposedOperationMatchLiquidation(
+			ctx,
+			matchLiquidation,
+			shortTermOrdersMap,
+		); err != nil {
+			return err
 		}
 	case *types.ClobMatch_MatchPerpetualDeleveraging:
 		perpId := castedMatch.MatchPerpetualDeleveraging.GetPerpetualId()
@@ -226,6 +165,119 @@ func (k Keeper) StatefulValidateProposedOperationMatch(
 				"StatefulValidateProposedOperationMatch: Unrecognized operation type for match: %+v",
 				clobMatch,
 			),
+		)
+	}
+	return nil
+}
+
+// StatefulValidateProposedOperationMatchOrders performs stateful validation on a match orders object.
+// The following validations are performed:
+// - Validation on any short term orders.
+// - Validation on all maker fills.
+// - Validation that taker order cannot be post only.
+func (k Keeper) StatefulValidateProposedOperationMatchOrders(
+	ctx sdk.Context,
+	matchOrder *types.MatchOrders,
+	shortTermOrdersMap map[types.OrderId]types.Order,
+) error {
+	takerOrderId := matchOrder.GetTakerOrderId()
+	// Fetch the taker order from either short term orders or state
+	takerOrder, err := k.FetchOrderFromOrderId(ctx, takerOrderId, shortTermOrdersMap)
+	if err != nil {
+		return err
+	}
+
+	// Taker order cannot be post only.
+	if takerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_POST_ONLY {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidMatchOrder,
+			"Taker order %+v cannot be post only.",
+			takerOrder.GetOrderTextString(),
+		)
+	}
+
+	fills := matchOrder.GetFills()
+	for _, fill := range fills {
+
+		if err := k.StatefulValidateMakerFill(ctx, &fill, shortTermOrdersMap, &takerOrder); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// StatefulValidateProposedOperationMatchLiquidation performs stateful validation on a match liquidation.
+// The following validations are performed:
+// - Validation on the maker fills
+// - Validation that clob pair id, perpetual id exists
+func (k Keeper) StatefulValidateProposedOperationMatchLiquidation(
+	ctx sdk.Context,
+	matchLiquidation *types.MatchPerpetualLiquidation,
+	shortTermOrdersMap map[types.OrderId]types.Order,
+) error {
+	fills := matchLiquidation.GetFills()
+	for _, fill := range fills {
+		if err := k.StatefulValidateMakerFill(ctx, &fill, shortTermOrdersMap, nil); err != nil {
+			return err
+		}
+	}
+	perpId := matchLiquidation.GetPerpetualId()
+	_, err := k.perpetualsKeeper.GetPerpetual(ctx, perpId)
+	if err != nil {
+		return sdkerrors.Wrapf(
+			types.ErrPerpetualDoesNotExist,
+			"Perpetual id %+v does not exist in state.",
+			perpId,
+		)
+	}
+	clobPair := matchLiquidation.ClobPairId
+	if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPair)); !found {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClob,
+			"Clob Pair id %+v does not exist in state.",
+			clobPair,
+		)
+	}
+	return nil
+}
+
+// StatefulValidateMakerFill performs stateful validation on a maker fill.
+// The following validations are performed:
+// - Validation on any short term orders
+// - Validation that maker order cannot be FOK or IOC
+// - Taker and Maker must be on opposite sides
+func (k Keeper) StatefulValidateMakerFill(
+	ctx sdk.Context,
+	fill *types.MakerFill,
+	shortTermOrdersMap map[types.OrderId]types.Order,
+	takerOrder *types.Order,
+) error {
+	makerOrderId := fill.GetMakerOrderId()
+	// Fetch the maker order from either short term orders or state
+	makerOrder, err := k.FetchOrderFromOrderId(ctx, makerOrderId, shortTermOrdersMap)
+	if err != nil {
+		return err
+	}
+
+	// Orders must be on different sides of the book.
+	if takerOrder != nil {
+		if takerOrder.IsBuy() == makerOrder.IsBuy() {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidMatchOrder,
+				"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
+				takerOrder.GetOrderTextString(),
+				makerOrder.GetOrderTextString(),
+			)
+		}
+	}
+
+	// Maker order cannot be FOK or IOC.
+	if makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
+		makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidMatchOrder,
+			"Maker order %+v cannot be FOK or IOC.",
+			makerOrder.GetOrderTextString(),
 		)
 	}
 	return nil
