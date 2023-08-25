@@ -27,8 +27,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            packages/**/node_modules
-            services/**/node_modules
+            indexer/packages/**/node_modules
+            indexer/services/**/node_modules
           key: ${{ runner.os }}-indexer-pnpm-${{ github.sha }}
           restore-keys: ${{ runner.os }}-indexer-pnpm-
 
@@ -37,8 +37,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            packages/**/build
-            services/**/build
+            indexer/packages/**/build
+            indexer/services/**/build
           key: ${{ runner.os }}-indexer-build-${{ github.sha }}
           restore-keys: ${{ runner.os }}-indexer-build-
           
