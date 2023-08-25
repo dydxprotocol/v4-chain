@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"gopkg.in/typ.v4/maps"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -53,11 +54,7 @@ func NewKeeper(
 }
 
 func (k Keeper) GetAuthorities() map[string]struct{} {
-	authorities := make(map[string]struct{}, len(k.authorities))
-	for authority := range k.authorities {
-		authorities[authority] = struct{}{}
-	}
-	return authorities
+	return maps.Clone(k.authorities)
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

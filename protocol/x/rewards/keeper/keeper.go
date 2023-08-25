@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"gopkg.in/typ.v4/maps"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -69,11 +70,7 @@ func NewKeeper(
 
 // GetAuthorities returns the x/rewards module's authorities.
 func (k Keeper) GetAuthorities() map[string]struct{} {
-	authorities := make(map[string]struct{}, len(k.authorities))
-	for authority := range k.authorities {
-		authorities[authority] = struct{}{}
-	}
-	return authorities
+	return maps.Clone(k.authorities)
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

@@ -1,14 +1,16 @@
 package keeper
 
 import (
-	sdklog "cosmossdk.io/log"
 	"fmt"
+
+	sdklog "cosmossdk.io/log"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"gopkg.in/typ.v4/maps"
 )
 
 type (
@@ -42,11 +44,7 @@ func NewKeeper(
 
 // GetAuthorities returns the set of authorities permitted to sign delayed messages.
 func (k Keeper) GetAuthorities() map[string]struct{} {
-	authorities := make(map[string]struct{}, len(k.authorities))
-	for authority := range k.authorities {
-		authorities[authority] = struct{}{}
-	}
-	return authorities
+	return maps.Clone(k.authorities)
 }
 
 // InitializeForGenesis initializes the x/delaymsg keeper for genesis.

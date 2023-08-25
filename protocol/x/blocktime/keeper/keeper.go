@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
+	"gopkg.in/typ.v4/maps"
 
 	sdklog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -45,11 +46,7 @@ func NewKeeper(
 }
 
 func (k Keeper) GetAuthorities() map[string]struct{} {
-	authorities := make(map[string]struct{}, len(k.authorities))
-	for authority := range k.authorities {
-		authorities[authority] = struct{}{}
-	}
-	return authorities
+	return maps.Clone(k.authorities)
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
