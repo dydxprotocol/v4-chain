@@ -246,7 +246,7 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 	order types.Order,
 	clobPair types.ClobPair,
 ) error {
-	if !types.IsSupportedClobPairStatus(clobPair.Status){
+	if !types.IsSupportedClobPairStatus(clobPair.Status) {
 		// Validation should only be called against ClobPairs in state, implying we have a ClobPair with
 		// an unsupported status in state.
 		panic(
