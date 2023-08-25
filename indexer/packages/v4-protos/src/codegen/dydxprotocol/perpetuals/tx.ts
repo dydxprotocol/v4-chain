@@ -1,5 +1,36 @@
+import { PerpetualParams, PerpetualParamsSDKType } from "./perpetual";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
+/** MsgCreatePerpetual is a message used by x/gov to create a new perpetual. */
+
+export interface MsgCreatePerpetual {
+  /** The address that controls the module. */
+  authority: string;
+  /** `params` defines parameters for the new perpetual market. */
+
+  params?: PerpetualParams;
+}
+/** MsgCreatePerpetual is a message used by x/gov to create a new perpetual. */
+
+export interface MsgCreatePerpetualSDKType {
+  /** The address that controls the module. */
+  authority: string;
+  /** `params` defines parameters for the new perpetual market. */
+
+  params?: PerpetualParamsSDKType;
+}
+/**
+ * MsgCreatePerpetualResponse defines the CreatePerpetual
+ * response type.
+ */
+
+export interface MsgCreatePerpetualResponse {}
+/**
+ * MsgCreatePerpetualResponse defines the CreatePerpetual
+ * response type.
+ */
+
+export interface MsgCreatePerpetualResponseSDKType {}
 /**
  * FundingPremium represents a funding premium value for a perpetual
  * market. Can be used to represent a premium vote or a premium sample.
@@ -46,6 +77,95 @@ export interface MsgAddPremiumVotesResponse {}
  */
 
 export interface MsgAddPremiumVotesResponseSDKType {}
+
+function createBaseMsgCreatePerpetual(): MsgCreatePerpetual {
+  return {
+    authority: "",
+    params: undefined
+  };
+}
+
+export const MsgCreatePerpetual = {
+  encode(message: MsgCreatePerpetual, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.params !== undefined) {
+      PerpetualParams.encode(message.params, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgCreatePerpetual {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgCreatePerpetual();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.params = PerpetualParams.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgCreatePerpetual>): MsgCreatePerpetual {
+    const message = createBaseMsgCreatePerpetual();
+    message.authority = object.authority ?? "";
+    message.params = object.params !== undefined && object.params !== null ? PerpetualParams.fromPartial(object.params) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgCreatePerpetualResponse(): MsgCreatePerpetualResponse {
+  return {};
+}
+
+export const MsgCreatePerpetualResponse = {
+  encode(_: MsgCreatePerpetualResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgCreatePerpetualResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgCreatePerpetualResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgCreatePerpetualResponse>): MsgCreatePerpetualResponse {
+    const message = createBaseMsgCreatePerpetualResponse();
+    return message;
+  }
+
+};
 
 function createBaseFundingPremium(): FundingPremium {
   return {

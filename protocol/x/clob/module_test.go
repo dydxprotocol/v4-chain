@@ -155,7 +155,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 9)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 11)
 	mockRegistry.AssertExpectations(t)
 }
 

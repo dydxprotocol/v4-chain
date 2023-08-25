@@ -28,6 +28,6 @@ func TestRegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	types.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 3)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 5)
 	mockRegistry.AssertExpectations(t)
 }
