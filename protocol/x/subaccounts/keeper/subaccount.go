@@ -460,7 +460,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			}
 
 			// Determine whether the state transition is valid.
-			result = isValidStateTransitionForUndercollateralizedSubaccount(
+			result = IsValidStateTransitionForUndercollateralizedSubaccount(
 				bigCurNetCollateral,
 				bigCurInitialMargin,
 				bigCurMaintenanceMargin,
@@ -480,7 +480,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	return success, successPerUpdate, nil
 }
 
-// isValidStateTransitionForUndercollateralizedSubaccount returns an `UpdateResult`
+// IsValidStateTransitionForUndercollateralizedSubaccount returns an `UpdateResult`
 // denoting whether this state transition is valid. This function accepts the collateral and
 // margin requirements of a subaccount before and after an update ("cur" and
 // "new", respectively).
@@ -495,7 +495,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 // `types.StillUndercollateralized` is returned. If the account was previously
 // collateralized and is now undercollateralized, `types.NewlyUndercollateralized` is
 // returned.
-func isValidStateTransitionForUndercollateralizedSubaccount(
+func IsValidStateTransitionForUndercollateralizedSubaccount(
 	bigCurNetCollateral *big.Int,
 	bigCurInitialMargin *big.Int,
 	bigCurMaintenanceMargin *big.Int,
@@ -515,8 +515,8 @@ func isValidStateTransitionForUndercollateralizedSubaccount(
 
 	// If the maintenance margin is zero, it means the subaccount must have no open positions, and negative net
 	// collateral. If the net collateral is not improving then this transition is not valid.
-	if bigNewMaintenanceMargin.BitLen() == 0 {
-		if bigNewNetCollateral.Cmp(bigCurNetCollateral) > 0 {
+	if bigNewMaintenanceMargin.BitLen() == 0 || bigCurMaintenanceMargin.BitLen() == 0 {
+		if bigNewMaintenanceMargin.BitLen() == 0 && bigCurMaintenanceMargin.BitLen() == 0 && bigNewNetCollateral.Cmp(bigCurNetCollateral) > 0 {
 			return types.Success
 		}
 
