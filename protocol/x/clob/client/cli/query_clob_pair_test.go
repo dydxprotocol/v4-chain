@@ -51,7 +51,7 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 		clobPair := types.ClobPair{
 			Id: uint32(i),
 			Metadata: &types.ClobPair_PerpetualClobMetadata{
-				PerpetualClobMetadata: &types.PerpetualClobMetadata{PerpetualId: 0},
+				PerpetualClobMetadata: &types.PerpetualClobMetadata{PerpetualId: uint32(i)},
 			},
 			SubticksPerTick:  5,
 			StepBaseQuantums: 5,
