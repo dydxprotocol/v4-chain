@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"testing"
+
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,10 +16,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	bridgekeeper "github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	"testing"
+	"github.com/stretchr/testify/mock"
 )
 
 func DelayMsgKeepers(
@@ -49,8 +50,8 @@ func DelayMsgKeepers(
 
 		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
-		bridgeKeeper, _, _, _ =
-			createBridgeKeeper(stateStore, db, cdc, transientStoreKey, bankKeeper)
+		bridgeKeeper, _, _, _, _ =
+			createBridgeKeeper(stateStore, db, registry, cdc, transientStoreKey, bankKeeper)
 
 		// Register bridge keeper msg server for msg routing.
 		bridgetypes.RegisterMsgServer(router, bridgekeeper.NewMsgServerImpl(bridgeKeeper))
@@ -140,4 +141,18 @@ func createDelayMsgKeeper(
 		authorities,
 	)
 	return k, storeKey
+}
+
+// MockDelayMsgMsgServerCall mocks, `numMsgs` number of times, keeper function calls in x/delaymsg
+// msg server's `DelayMessage`.
+func MockDelayMsgMsgServerCall(m *mocks.DelayMsgKeeper, fromModuleName string, numMsgs uint32) {
+	for i := uint32(0); i < numMsgs; i++ {
+		m.On("GetAuthorities").Return(map[string]struct{}{
+			authtypes.NewModuleAddress(fromModuleName).String(): {},
+		}).Once()
+		m.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil).Once()
+		m.On(
+			"DelayMessageByBlocks", mock.Anything, mock.Anything, mock.Anything,
+		).Return(i, nil).Once()
+	}
 }

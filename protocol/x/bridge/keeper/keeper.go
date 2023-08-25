@@ -7,6 +7,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,6 +22,7 @@ type (
 		storeKey           storetypes.StoreKey
 		bridgeEventManager *bridgeserver.BridgeEventManager
 		bankKeeper         types.BankKeeper
+		router             *baseapp.MsgServiceRouter
 
 		// The address capable of executing MsgUpdateEventParams, MsgUpdateProposeParams, and
 		// MsgUpdateSafetyParams messages. Typically, this should be the x/gov module account.
@@ -36,6 +38,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	bridgeEventManager *bridgeserver.BridgeEventManager,
 	bankKeeper types.BankKeeper,
+	router *baseapp.MsgServiceRouter,
 	govAuthority string,
 ) *Keeper {
 	return &Keeper{
@@ -43,6 +46,7 @@ func NewKeeper(
 		storeKey:           storeKey,
 		bridgeEventManager: bridgeEventManager,
 		bankKeeper:         bankKeeper,
+		router:             router,
 		govAuthority:       govAuthority,
 		bridgeAuthority:    authtypes.NewModuleAddress(types.ModuleName).String(),
 	}

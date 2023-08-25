@@ -60,7 +60,7 @@ func TestCompleteBridge(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Initialize context and keeper.
-			ctx, bridgeKeeper, _, _, _, bankKeeper := keepertest.BridgeKeepers(t)
+			ctx, bridgeKeeper, _, _, _, bankKeeper, _ := keepertest.BridgeKeepers(t)
 			// Fund bridge module account with enought balance.
 			err := bankKeeper.MintCoins(
 				ctx,

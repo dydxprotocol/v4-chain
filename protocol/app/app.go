@@ -630,6 +630,7 @@ func New(
 		keys[bridgemoduletypes.StoreKey],
 		bridgeEventManager,
 		app.BankKeeper,
+		bApp.MsgServiceRouter(),
 		// set the gov module account as the authority for updating parameters.
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)

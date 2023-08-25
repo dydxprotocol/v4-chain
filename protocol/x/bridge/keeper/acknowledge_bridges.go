@@ -9,6 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
 // GetAcknowledgeBridges returns a `MsgAcknowledgeBridges` for recognized but not-yet-acknowledged
@@ -82,12 +83,33 @@ func (k Keeper) AcknowledgeBridges(
 		return nil
 	}
 
-	// TODO: for each bridge event, send a message to x/delay-msg, wrapping
-	// a `MsgCompleteBridge`. (CORE-453)
-	// For now, we just mint tokens immediately.
+	// For each bridge event, send to x/delaymsg a `MsgDelayMsg` that wraps a `MsgCompleteBridge` to be
+	// executed `safetyParams.DelayBlocks` blocks in the future.
+	// Every `MsgDelayMsg` is independent, meaning that failure of one doesn't affect the others.
+	safetyParams := k.GetSafetyParams(ctx)
+	msgDelayMsgHandler := k.router.Handler(&delaymsgtypes.MsgDelayMessage{})
 	for _, bridgeEvent := range bridgeEvents {
-		if err = k.CompleteBridge(ctx, bridgeEvent); err != nil {
-			ctx.Logger().Error("failed to complete bridge event", "id", bridgeEvent.Id, "error", err)
+		// Marshal `MsgCompleteBridge` into bytes.
+		msgCompleteBridgeBytes, err := k.cdc.Marshal(&types.MsgCompleteBridge{
+			Authority: k.GetBridgeAuthority(),
+			Event:     bridgeEvent,
+		})
+		if err != nil {
+			ctx.Logger().Info("failed to marshal MsgCompleteBridge for bridge event", bridgeEvent, "error", err)
+			telemetry.IncrCounter(1, metrics.AcknowledgeBridges, metrics.Error, metrics.DelayMsgCompleteBridge)
+			continue
+		}
+		// Send `MsgDelayMessage` to x/delaymsg.
+		msgDelayMsg := &delaymsgtypes.MsgDelayMessage{
+			Authority:   k.GetBridgeAuthority(),
+			Msg:         msgCompleteBridgeBytes,
+			DelayBlocks: safetyParams.DelayBlocks,
+		}
+		_, err = msgDelayMsgHandler(ctx, msgDelayMsg)
+		if err != nil {
+			ctx.Logger().Info("failed to dispatch MsgDelayMessage for bridge event", bridgeEvent, "error", err)
+			telemetry.IncrCounter(1, metrics.AcknowledgeBridges, metrics.Error, metrics.DelayMsgCompleteBridge)
+			continue
 		}
 	}
 
