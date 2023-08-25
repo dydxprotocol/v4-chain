@@ -10,18 +10,13 @@ import (
 
 func TestStatMsgProposedOperations(t *testing.T) {
 	tests := map[string]struct {
-		operations []types.InternalOperation
+		operations []types.OperationRaw
 		expected   types.OperationsStats
 	}{
 		"Successfully increments each stat when seen in the list of operations": {
-			operations: []types.InternalOperation{
+			operations: []types.OperationRaw{
 				{
-					Operation: &types.InternalOperation_ShortTermOrderPlacement{
-						ShortTermOrderPlacement: types.NewMsgPlaceOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16),
-					},
-				},
-				{
-					Operation: &types.InternalOperation_Match{
+					Operation: &types.OperationRaw_Match{
 						Match: &types.ClobMatch{
 							Match: &types.ClobMatch_MatchOrders{
 								MatchOrders: &types.MatchOrders{
@@ -38,7 +33,7 @@ func TestStatMsgProposedOperations(t *testing.T) {
 					},
 				},
 				{
-					Operation: &types.InternalOperation_Match{
+					Operation: &types.OperationRaw_Match{
 						Match: &types.ClobMatch{
 							Match: &types.ClobMatch_MatchOrders{
 								MatchOrders: &types.MatchOrders{
@@ -55,7 +50,7 @@ func TestStatMsgProposedOperations(t *testing.T) {
 					},
 				},
 				{
-					Operation: &types.InternalOperation_Match{
+					Operation: &types.OperationRaw_Match{
 						Match: &types.ClobMatch{
 							Match: &types.ClobMatch_MatchPerpetualLiquidation{
 								MatchPerpetualLiquidation: &types.MatchPerpetualLiquidation{
@@ -76,7 +71,7 @@ func TestStatMsgProposedOperations(t *testing.T) {
 					},
 				},
 				{
-					Operation: &types.InternalOperation_Match{
+					Operation: &types.OperationRaw_Match{
 						Match: &types.ClobMatch{
 							Match: &types.ClobMatch_MatchPerpetualDeleveraging{
 								MatchPerpetualDeleveraging: &types.MatchPerpetualDeleveraging{
@@ -94,7 +89,7 @@ func TestStatMsgProposedOperations(t *testing.T) {
 					},
 				},
 				{
-					Operation: &types.InternalOperation_OrderRemoval{
+					Operation: &types.OperationRaw_OrderRemoval{
 						OrderRemoval: &types.OrderRemoval{
 							OrderId:       constants.LongTermOrderId_Alice_Num0_ClientId0_Clob0,
 							RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
@@ -102,7 +97,7 @@ func TestStatMsgProposedOperations(t *testing.T) {
 					},
 				},
 				{
-					Operation: &types.InternalOperation_OrderRemoval{
+					Operation: &types.OperationRaw_OrderRemoval{
 						OrderRemoval: &types.OrderRemoval{
 							OrderId:       constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_SL_15.OrderId,
 							RemovalReason: types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
@@ -110,7 +105,7 @@ func TestStatMsgProposedOperations(t *testing.T) {
 					},
 				},
 				{
-					Operation: &types.InternalOperation_OrderRemoval{
+					Operation: &types.OperationRaw_OrderRemoval{
 						OrderRemoval: &types.OrderRemoval{
 							OrderId:       constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell5_Price5_GTBT10.OrderId,
 							RemovalReason: types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
