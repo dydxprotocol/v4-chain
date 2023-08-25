@@ -62,7 +62,6 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 					clientCtx.HomeDir,
 					inBuf,
 					clientCtx.Codec,
-					// TODO(DEC-1131): specify options.
 				)
 				if err != nil {
 					return err
