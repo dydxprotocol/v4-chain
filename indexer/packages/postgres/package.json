@@ -25,8 +25,7 @@
     "build": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",
-    "test": "NODE_ENV=test jest --runInBand --forceExit",
-    "seed": "knex seed:run"
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
   },
   "repository": {
     "type": "git",
