@@ -670,7 +670,7 @@ func (k Keeper) CalculateSubaccountPnLForMatches(
 				// TODO(CLOB-742): This whole function is currently not being called since deleveraging and funding
 				// are excluded from MEV calculations. Re-enable deleveraging and funding in MEV calculation.
 				matchDeleveraging := match.MatchPerpetualDeleveraging
-				clobPairId, err := k.MemClob.GetClobPairForPerpetual(ctx, matchDeleveraging.PerpetualId)
+				clobPairId, err := k.GetClobPairIdForPerpetual(ctx, matchDeleveraging.PerpetualId)
 				if err != nil {
 					return err
 				}

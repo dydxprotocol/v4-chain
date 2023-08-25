@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
@@ -38,7 +39,22 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 	cfg.GenesisState[pricestypes.ModuleName] = pricesBuf
 
 	// Init Perpetuals genesis state.
+	// Add additional perps for objects exceeding the default perpetual count.
+	// ClobPairs and Perpetuals should be one to one.
 	perpetualsState := constants.Perpetuals_DefaultGenesisState
+	for i := 2; i < n; i++ {
+		perpetualsState.Perpetuals = append(
+			perpetualsState.Perpetuals,
+			perpetualstypes.Perpetual{
+				Params: perpetualstypes.PerpetualParams{
+					Id:            uint32(i),
+					Ticker:        fmt.Sprintf("genesis_test_ticker_%d", i),
+					LiquidityTier: 0,
+				},
+				FundingIndex: dtypes.ZeroInt(),
+			},
+		)
+	}
 	perpetualsBuf, perpetualsErr := cfg.Codec.MarshalJSON(&perpetualsState)
 	require.NoError(t, perpetualsErr)
 	cfg.GenesisState[perpetualstypes.ModuleName] = perpetualsBuf
@@ -51,7 +67,7 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 		clobPair := types.ClobPair{
 			Id: uint32(i),
 			Metadata: &types.ClobPair_PerpetualClobMetadata{
-				PerpetualClobMetadata: &types.PerpetualClobMetadata{PerpetualId: 0},
+				PerpetualClobMetadata: &types.PerpetualClobMetadata{PerpetualId: uint32(i)},
 			},
 			SubticksPerTick:  5,
 			StepBaseQuantums: 5,

@@ -17,7 +17,7 @@ func (k Keeper) GetPricePremiumForPerpetual(
 	premiumPpm int32,
 	err error,
 ) {
-	clobPairId, err := k.MemClob.GetClobPairForPerpetual(ctx, perpetualId)
+	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
 	if err != nil {
 		return 0, err
 	}
