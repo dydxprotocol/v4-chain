@@ -10,9 +10,10 @@ import (
 const (
 	// `minGasPrice` defines the default `minimum-gas-prices` attribute in validator's `app.toml` file.
 	// `ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5` is constructed as micro USDC.
+	// The recommended minimum gas price is 0.025 micro USDC.
 	// `dv4tnt` is a placeholder for the stake token of the dYdX chain. Before this software is published
-	// for genesis, `dv4tnt` should be replaced with the stake token, and the associated gas price should
-	// be updated factoring the denom unit (how many stake tokens is a full coin).
+	// for genesis, `dv4tnt` should be replaced with the chain stake token. It's also recommended that
+	// the min gas price in stake token is roughly the same in value as 0.025 micro USDC.
 	minGasPrice = "0.025ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5,0.025dv4tnt"
 )
 
