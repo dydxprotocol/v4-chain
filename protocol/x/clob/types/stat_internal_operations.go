@@ -14,9 +14,10 @@ type OperationsStats struct {
 	MatchedShortTermOrdersCount            uint
 	MatchedLongTermOrdersCount             uint
 	MatchedConditionalOrdersCount          uint
-	RegularMatchesCount                    uint
-	LiquidationMatchesCount                uint
-	DeleveragingMatchesCount               uint
+	TakerOrdersCount                       uint
+	LiquidationOrdersCount                 uint
+	DeleveragingOperationsCount            uint
+	TotalFillsCount                        uint
 	LongTermOrderRemovalsCount             uint
 	ConditionalOrderRemovalsCount          uint
 	UniqueSubaccountsLiquidated            uint
@@ -47,16 +48,18 @@ func StatMsgProposedOperations(
 		case *OperationRaw_Match:
 			switch castedOperation.Match.Match.(type) {
 			case *ClobMatch_MatchOrders:
-				stats.RegularMatchesCount++
+				stats.TakerOrdersCount++
 
 				stats.StatMatchedOrderId(castedOperation.Match.GetMatchOrders().GetTakerOrderId())
 				for _, makerOrderId := range castedOperation.Match.GetMatchOrders().GetFills() {
+					stats.TotalFillsCount++
 					stats.StatMatchedOrderId(makerOrderId.GetMakerOrderId())
 				}
 			case *ClobMatch_MatchPerpetualLiquidation:
-				stats.LiquidationMatchesCount++
+				stats.LiquidationOrdersCount++
 
 				for _, makerOrderId := range castedOperation.Match.GetMatchPerpetualLiquidation().GetFills() {
+					stats.TotalFillsCount++
 					stats.StatMatchedOrderId(makerOrderId.GetMakerOrderId())
 				}
 
@@ -66,7 +69,7 @@ func StatMsgProposedOperations(
 					stats.uniqueSubaccountsLiquidated[liquidated] = true
 				}
 			case *ClobMatch_MatchPerpetualDeleveraging:
-				stats.DeleveragingMatchesCount++
+				stats.DeleveragingOperationsCount++
 
 				deleveraged := castedOperation.Match.GetMatchPerpetualDeleveraging().GetLiquidated()
 				if _, exists := stats.uniqueSubaccountsDeleveraged[deleveraged]; !exists {
@@ -120,16 +123,20 @@ func (stats *OperationsStats) EmitStats(abciCallback string) {
 			value: float32(stats.MatchedConditionalOrdersCount),
 		},
 		{
-			keys:  []string{ModuleName, metrics.NumFills},
-			value: float32(stats.RegularMatchesCount),
+			keys:  []string{ModuleName, metrics.NumMatchTakerOrders},
+			value: float32(stats.TakerOrdersCount),
 		},
 		{
 			keys:  []string{ModuleName, metrics.NumMatchedLiquidationOrders},
-			value: float32(stats.LiquidationMatchesCount),
+			value: float32(stats.LiquidationOrdersCount),
 		},
 		{
 			keys:  []string{ModuleName, metrics.NumMatchPerpDeleveragingOperations},
-			value: float32(stats.DeleveragingMatchesCount),
+			value: float32(stats.DeleveragingOperationsCount),
+		},
+		{
+			keys:  []string{ModuleName, metrics.NumFills},
+			value: float32(stats.TotalFillsCount),
 		},
 		{
 			keys:  []string{ModuleName, metrics.NumLongTermOrderRemovals},

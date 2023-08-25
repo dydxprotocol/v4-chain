@@ -118,9 +118,10 @@ func TestStatMsgProposedOperations(t *testing.T) {
 				MatchedShortTermOrdersCount:            1,
 				MatchedLongTermOrdersCount:             1,
 				MatchedConditionalOrdersCount:          2,
-				RegularMatchesCount:                    2,
-				LiquidationMatchesCount:                1,
-				DeleveragingMatchesCount:               1,
+				TakerOrdersCount:                       2,
+				LiquidationOrdersCount:                 1,
+				DeleveragingOperationsCount:            1,
+				TotalFillsCount:                        3,
 				LongTermOrderRemovalsCount:             2,
 				ConditionalOrderRemovalsCount:          1,
 				UniqueSubaccountsDeleveraged:           1,
@@ -138,9 +139,10 @@ func TestStatMsgProposedOperations(t *testing.T) {
 			require.Equal(t, tt.expected.MatchedShortTermOrdersCount, stats.MatchedShortTermOrdersCount)
 			require.Equal(t, tt.expected.MatchedLongTermOrdersCount, stats.MatchedLongTermOrdersCount)
 			require.Equal(t, tt.expected.MatchedConditionalOrdersCount, stats.MatchedConditionalOrdersCount)
-			require.Equal(t, tt.expected.RegularMatchesCount, stats.RegularMatchesCount)
-			require.Equal(t, tt.expected.LiquidationMatchesCount, stats.LiquidationMatchesCount)
-			require.Equal(t, tt.expected.DeleveragingMatchesCount, stats.DeleveragingMatchesCount)
+			require.Equal(t, tt.expected.TakerOrdersCount, stats.TakerOrdersCount)
+			require.Equal(t, tt.expected.LiquidationOrdersCount, stats.LiquidationOrdersCount)
+			require.Equal(t, tt.expected.DeleveragingOperationsCount, stats.DeleveragingOperationsCount)
+			require.Equal(t, tt.expected.TotalFillsCount, stats.TotalFillsCount)
 			require.Equal(t, tt.expected.LongTermOrderRemovalsCount, stats.LongTermOrderRemovalsCount)
 			require.Equal(t, tt.expected.ConditionalOrderRemovalsCount, stats.ConditionalOrderRemovalsCount)
 			require.Equal(t, tt.expected.UniqueSubaccountsLiquidated, stats.UniqueSubaccountsLiquidated)
