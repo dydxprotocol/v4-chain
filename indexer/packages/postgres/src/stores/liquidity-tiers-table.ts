@@ -99,3 +99,14 @@ export async function update(
   // The objection types mistakenly think the query returns an array of liquidityTiers.
   return updatedLiquidityTiers as unknown as (LiquidityTiersFromDatabase | undefined);
 }
+
+export async function upsert(
+  tierToUpsert: LiquidityTiersCreateObject,
+  options: Options = { txId: undefined },
+): Promise<LiquidityTiersFromDatabase> {
+  const tiers: LiquidityTiersModel[] = await LiquidityTiersModel.query(
+    Transaction.get(options.txId),
+  ).upsert(tierToUpsert).returning('*');
+  // should only ever be one tier
+  return tiers[0];
+}

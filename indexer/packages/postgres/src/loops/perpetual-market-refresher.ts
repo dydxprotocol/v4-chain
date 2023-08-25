@@ -136,3 +136,21 @@ export function getTickerToPerpetualMarketForTest(): Record<string, PerpetualMar
 export function getPerpetualMarketsMap(): PerpetualMarketsMap {
   return idToPerpetualMarket;
 }
+
+export function addPerpetualMarket(perpetualMarket: PerpetualMarketFromDatabase): void {
+  if (perpetualMarket.id in idToPerpetualMarket) {
+    throw new Error(`Perpetual market with id ${perpetualMarket.id} already exists`);
+  }
+
+  if (perpetualMarket.clobPairId in clobPairIdToPerpetualMarket) {
+    throw new Error(`Perpetual market with clob pair id ${perpetualMarket.clobPairId} already exists`);
+  }
+
+  if (perpetualMarket.ticker in tickerToPerpetualMarket) {
+    throw new Error(`Perpetual market with ticker ${perpetualMarket.ticker} already exists`);
+  }
+
+  idToPerpetualMarket[perpetualMarket.id] = perpetualMarket;
+  clobPairIdToPerpetualMarket[perpetualMarket.clobPairId] = perpetualMarket;
+  tickerToPerpetualMarket[perpetualMarket.ticker] = perpetualMarket;
+}

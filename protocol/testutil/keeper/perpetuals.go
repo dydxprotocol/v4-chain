@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -157,4 +159,32 @@ func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 
 		require.NoError(t, err)
 	}
+}
+
+// GetLiquidityTierUpsertEventsFromIndexerBlock returns the liquidityTier upsert events in the
+// Indexer Block event Kafka message.
+// TODO(IND-365): Consider using generics here to reduce duplicated code.
+func GetLiquidityTierUpsertEventsFromIndexerBlock(
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+) []*indexerevents.LiquidityTierUpsertEventV1 {
+	var liquidityTierEvents []*indexerevents.LiquidityTierUpsertEventV1
+	block := keeper.GetIndexerEventManager().ProduceBlock(ctx)
+	if block == nil {
+		return liquidityTierEvents
+	}
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeLiquidityTier {
+			continue
+		}
+		bytes := indexer_manager.GetBytesFromEventData(event.Data)
+		unmarshaler := common.UnmarshalerImpl{}
+		var liquidityTierEvent indexerevents.LiquidityTierUpsertEventV1
+		err := unmarshaler.Unmarshal(bytes, &liquidityTierEvent)
+		if err != nil {
+			panic(err)
+		}
+		liquidityTierEvents = append(liquidityTierEvents, &liquidityTierEvent)
+	}
+	return liquidityTierEvents
 }

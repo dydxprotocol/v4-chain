@@ -9,26 +9,41 @@ import {
   getTickerToPerpetualMarketForTest,
   isValidPerpetualMarketTicker,
   updatePerpetualMarkets,
+  clear,
+  addPerpetualMarket,
+  getPerpetualMarketFromId,
 } from '../../src/loops/perpetual-market-refresher';
 import { PerpetualMarketColumns, PerpetualMarketFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
 import _ from 'lodash';
+import { defaultPerpetualMarket } from '../helpers/constants';
 
 describe('perpetual_markets_refresher', () => {
   let perpetualMarkets: PerpetualMarketFromDatabase[];
   const invalidTicker: string = 'INVALID-INVALID';
   const invalidClobPairId: string = '4125';
 
+  const newId: string = '3';
+  const newTicker: string = 'NEW-TICKER';
+  const newClobPairId: string = '3';
+
   beforeAll(async () => {
     await migrate();
     await seedData();
+  });
+
+  beforeEach(async () => {
     await updatePerpetualMarkets();
     perpetualMarkets = await PerpetualMarketTable.findAll(
       {},
       [],
       { readReplica: true },
     );
+  });
+
+  afterEach(async () => {
+    await clear();
   });
 
   afterAll(async () => {
@@ -134,6 +149,60 @@ describe('perpetual_markets_refresher', () => {
 
     it('returns undefined for invalid clob pair id', () => {
       expect(getPerpetualMarketFromClobPairId(invalidClobPairId)).toBeUndefined();
+    });
+  });
+
+  describe('addPerpetualMarket', () => {
+    it.each([
+      [
+        'id',
+        {
+          ...defaultPerpetualMarket,
+          clobPairId: newClobPairId,
+          ticker: newTicker,
+        },
+        `Perpetual market with id ${defaultPerpetualMarket.id} already exists`,
+      ],
+      [
+        'clobPairId',
+        {
+          ...defaultPerpetualMarket,
+          id: newId,
+          ticker: newTicker,
+        },
+        `Perpetual market with clob pair id ${defaultPerpetualMarket.clobPairId} already exists`,
+      ],
+      [
+        'ticker',
+        {
+          ...defaultPerpetualMarket,
+          id: newId,
+          clobPairId: newClobPairId,
+        },
+        `Perpetual market with ticker ${defaultPerpetualMarket.ticker} already exists`,
+      ],
+    ])(
+      'fails to add perpetual market with duplicate %s',
+      (
+        _ignore: string,
+        perpetualMarket: PerpetualMarketFromDatabase,
+        errorMessage: string,
+      ) => {
+        expect(() => {
+          addPerpetualMarket(perpetualMarket);
+        }).toThrow(errorMessage);
+      },
+    );
+
+    it('successfully adds perpetual market', () => {
+      addPerpetualMarket({
+        ...defaultPerpetualMarket,
+        id: newId,
+        clobPairId: newClobPairId,
+        ticker: newTicker,
+      });
+
+      expect(getPerpetualMarketFromId(newId)).not.toBeUndefined();
     });
   });
 });

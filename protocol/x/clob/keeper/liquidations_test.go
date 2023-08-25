@@ -4114,75 +4114,6 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			expectedClobPair: constants.ClobPair_Eth,
 			expectedQuantums: constants.PerpetualPosition_OneTenthEthLong.GetBigQuantums(),
 		},
-		`Full position size and first CLOB pair are returned when subaccount has one long perpetual
-		position and multiple CLOB pairs for a perpetual`: {
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			liquidationConfig: constants.LiquidationsConfig_No_Limit,
-
-			//	The definition order matters here
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc,
-				{
-					StepBaseQuantums: 5,
-					Status:           types.ClobPair_STATUS_ACTIVE,
-					SubticksPerTick:  7,
-					Metadata: &types.ClobPair_PerpetualClobMetadata{
-						PerpetualClobMetadata: &types.PerpetualClobMetadata{
-							PerpetualId: constants.PerpetualPosition_OneBTCLong.PerpetualId,
-						},
-					},
-				},
-			},
-
-			expectedClobPair: constants.ClobPair_Btc,
-			expectedQuantums: constants.PerpetualPosition_OneTenthEthLong.GetBigQuantums(),
-		},
-		`Full position size of first perpetual and first CLOB pair are returned when subaccount has
-		multiple perpetual positions and multiple CLOB pairs for a perpetual`: {
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthEthLong,
-				&constants.PerpetualPosition_OneBTCShort,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			},
-			liquidationConfig: constants.LiquidationsConfig_No_Limit,
-
-			//	The definition order matters here
-			clobPairs: []types.ClobPair{
-				{
-					StepBaseQuantums: 5,
-					Status:           types.ClobPair_STATUS_ACTIVE,
-					SubticksPerTick:  7,
-					Metadata: &types.ClobPair_PerpetualClobMetadata{
-						PerpetualClobMetadata: &types.PerpetualClobMetadata{
-							PerpetualId: constants.PerpetualPosition_OneTenthEthLong.PerpetualId,
-						},
-					},
-				},
-				constants.ClobPair_Btc,
-				constants.ClobPair_Eth,
-			},
-
-			expectedClobPair: types.ClobPair{
-				Id:               0,
-				StepBaseQuantums: 5,
-				Status:           types.ClobPair_STATUS_ACTIVE,
-				SubticksPerTick:  7,
-				Metadata: &types.ClobPair_PerpetualClobMetadata{
-					PerpetualClobMetadata: &types.PerpetualClobMetadata{
-						PerpetualId: constants.PerpetualPosition_OneTenthEthLong.PerpetualId,
-					},
-				},
-			},
-			expectedQuantums: constants.PerpetualPosition_OneTenthEthLong.GetBigQuantums(),
-		},
 		`Full position size of max uint64 of perpetual and CLOB pair are returned when subaccount
 		has one long perpetual position at max position size`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -4369,8 +4300,7 @@ func TestGetPerpetualPositionToLiquidate_PanicsClobPairNotInState(t *testing.T) 
 	}
 	ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
 
-	// Create the orderbook in the memclob.
-	memClob.CreateOrderbook(ks.Ctx, constants.ClobPair_Btc)
+	ks.ClobKeeper.PerpetualIdToClobPairId[0] = []types.ClobPairId{0}
 
 	require.PanicsWithError(
 		t,

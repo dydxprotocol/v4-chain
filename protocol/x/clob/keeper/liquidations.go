@@ -163,6 +163,8 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// `-DNNV - (TNC * (abs(DMMR) / TMMR))`.
 	// To calculate this, we must first fetch the following values:
 	// - DNNV (delta position net notional value).
+	//   - Note that this is calculated from PNNV (position net notional value) and
+	//     PNNVAD (position net notional value after delta).
 	// - TNC (total net collateral).
 	// - DMMR (delta maintenance margin requirement).
 	// - TMMR (total maintenance margin requirement).
@@ -175,16 +177,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		return nil, err
 	}
 
-	negDnnvBig, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		perpetualId,
-		new(big.Int).Neg(deltaQuantums),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Position size is necessary for calculating DMMR.
+	// Position size is necessary for calculating DNNV and DMMR.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	position, _ := subaccount.GetPerpetualPositionForId(perpetualId)
 	psBig := position.GetBigQuantums()
@@ -202,7 +195,31 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		)
 	}
 
-	// `DMMR = PMMR - PMMRAD`, where `PMMRAD` is the perpetual's maintenance margin requirement
+	// `DNNV = PNNVAD - PNNV`, where `PNNVAD` is the perpetual's net notional
+	// with a position size of `PS + deltaQuantums`.
+	// Note that we are intentionally not calculating `DNNV` from `deltaQuantums`
+	// directly to avoid rounding errors.
+	pnnvBig, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		perpetualId,
+		psBig,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	pnnvadBig, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		perpetualId,
+		new(big.Int).Add(psBig, deltaQuantums),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	dnnvBig := new(big.Int).Sub(pnnvadBig, pnnvBig)
+
+	// `DMMR = PMMRAD - PMMR`, where `PMMRAD` is the perpetual's maintenance margin requirement
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we cannot directly calculate `DMMR` from `deltaQuantums` because the maintenance
 	// margin requirement function could be non-linear.
@@ -223,14 +240,14 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		return nil, err
 	}
 
-	absDmmrBig := new(big.Int).Sub(pmmrBig, pmmradBig)
-	// `absDmmrBig` should never be negative if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
-	if absDmmrBig.Sign() == -1 {
-		panic("GetBankruptcyPriceInQuoteQuantums: abs(DMMR) is negative")
+	dmmrBig := new(big.Int).Sub(pmmradBig, pmmrBig)
+	// `dmmrBig` should never be positive if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
+	if dmmrBig.Sign() == 1 {
+		panic("GetBankruptcyPriceInQuoteQuantums: DMMR is positive")
 	}
 
 	// Calculate `TNC * abs(DMMR) / TMMR`.
-	tncMulDmmrBig := new(big.Int).Mul(tncBig, absDmmrBig)
+	tncMulDmmrBig := new(big.Int).Mul(tncBig, new(big.Int).Abs(dmmrBig))
 	// This calculation is intentionally rounded down to negative infinity to ensure the
 	// final result is rounded towards positive-infinity. This works because of the following:
 	// - This is the only division in the equation.
@@ -240,7 +257,10 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	quoteQuantumsBeforeBankruptcyBig := new(big.Int).Div(tncMulDmmrBig, tmmrBig)
 
 	// Calculate `-DNNV - TNC * abs(DMMR) / TMMR`.
-	bankruptcyPriceQuoteQuantumsBig := new(big.Int).Sub(negDnnvBig, quoteQuantumsBeforeBankruptcyBig)
+	bankruptcyPriceQuoteQuantumsBig := new(big.Int).Sub(
+		new(big.Int).Neg(dnnvBig),
+		quoteQuantumsBeforeBankruptcyBig,
+	)
 
 	return bankruptcyPriceQuoteQuantumsBig, nil
 }
@@ -368,7 +388,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	insuranceFundDeltaQuoteQuantums *big.Int,
 	err error,
 ) {
-	clobPairId, err := k.MemClob.GetClobPairForPerpetual(ctx, perpetualId)
+	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
 	if err != nil {
 		panic(fmt.Errorf("GetLiquidationInsuranceFundDelta: CLOB pair not found for perpetual %d", perpetualId))
 	}
@@ -476,7 +496,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	perpetualPosition := subaccount.PerpetualPositions[0]
-	clobPairId, err := k.MemClob.GetClobPairForPerpetual(
+	clobPairId, err := k.GetClobPairIdForPerpetual(
 		ctx,
 		perpetualPosition.PerpetualId,
 	)
