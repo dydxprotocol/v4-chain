@@ -26,11 +26,10 @@ func (k msgServer) SetVestEntry(
 	goCtx context.Context,
 	msg *types.MsgSetVestEntry,
 ) (*types.MsgSetVestEntryResponse, error) {
-	if k.GetAuthority() != msg.Authority {
+	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
-			"invalid authority; expected %s, got %s",
-			k.GetAuthority(),
+			"invalid authority %s",
 			msg.Authority,
 		)
 	}
@@ -47,11 +46,10 @@ func (k msgServer) DeleteVestEntry(
 	goCtx context.Context,
 	msg *types.MsgDeleteVestEntry,
 ) (*types.MsgDeleteVestEntryResponse, error) {
-	if k.GetAuthority() != msg.Authority {
+	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
-			"invalid authority; expected %s, got %s",
-			k.GetAuthority(),
+			"invalid authority %s",
 			msg.Authority,
 		)
 	}

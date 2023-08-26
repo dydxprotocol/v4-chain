@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
@@ -30,9 +31,7 @@ type (
 		epochsKeeper      types.EpochsKeeper
 		storeKey          storetypes.StoreKey
 		transientStoreKey storetypes.StoreKey
-
-		// The address capable of updating params. Typically the x/gov module account.
-		authority string
+		authorities       map[string]struct{}
 	}
 )
 
@@ -41,19 +40,20 @@ func NewKeeper(
 	epochsKeeper types.EpochsKeeper,
 	storeKey storetypes.StoreKey,
 	transientStoreKey storetypes.StoreKey,
-	authority string,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:               cdc,
 		epochsKeeper:      epochsKeeper,
 		storeKey:          storeKey,
 		transientStoreKey: transientStoreKey,
-		authority:         authority,
+		authorities:       maps.ArrayToMapInterface(authorities),
 	}
 }
 
-func (k Keeper) GetAuthority() string {
-	return k.authority
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
