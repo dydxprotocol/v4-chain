@@ -50,17 +50,17 @@ func StatMsgProposedOperations(
 			case *ClobMatch_MatchOrders:
 				stats.TakerOrdersCount++
 
-				stats.StatMatchedOrderId(castedOperation.Match.GetMatchOrders().GetTakerOrderId())
+				stats.statMatchedOrderId(castedOperation.Match.GetMatchOrders().GetTakerOrderId())
 				for _, makerOrderId := range castedOperation.Match.GetMatchOrders().GetFills() {
 					stats.TotalFillsCount++
-					stats.StatMatchedOrderId(makerOrderId.GetMakerOrderId())
+					stats.statMatchedOrderId(makerOrderId.GetMakerOrderId())
 				}
 			case *ClobMatch_MatchPerpetualLiquidation:
 				stats.LiquidationOrdersCount++
 
 				for _, makerOrderId := range castedOperation.Match.GetMatchPerpetualLiquidation().GetFills() {
 					stats.TotalFillsCount++
-					stats.StatMatchedOrderId(makerOrderId.GetMakerOrderId())
+					stats.statMatchedOrderId(makerOrderId.GetMakerOrderId())
 				}
 
 				liquidated := castedOperation.Match.GetMatchPerpetualLiquidation().GetLiquidated()
@@ -174,9 +174,9 @@ func (stats *OperationsStats) EmitStats(abciCallback string) {
 	}
 }
 
-// StatMatchedOrderId updates the number of unique matched order IDs. If the order ID was already
+// statMatchedOrderId updates the number of unique matched order IDs. If the order ID was already
 // matched it will early return. Note this function should only be called with matched order IDs.
-func (stats *OperationsStats) StatMatchedOrderId(orderId OrderId) {
+func (stats *OperationsStats) statMatchedOrderId(orderId OrderId) {
 	if _, exists := stats.uniqueMatchedOrderIds[orderId]; exists {
 		return
 	}

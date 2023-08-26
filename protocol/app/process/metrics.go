@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -96,6 +95,6 @@ func recordSuccessMetrics(ctx sdk.Context, txs *ProcessProposalTxs, totalNumTxs 
 // recordMsgProposedOperationsMetrics reports metrics on a `MsgProposedOperations`
 // object. It is used in the process_proposal module.
 func recordMsgProposedOperationsMetrics(ctx sdk.Context, msg *clobtypes.MsgProposedOperations) {
-	operationsStats := types.StatMsgProposedOperations(msg.GetOperationsQueue())
+	operationsStats := clobtypes.StatMsgProposedOperations(msg.GetOperationsQueue())
 	operationsStats.EmitStats(metrics.ProcessProposal)
 }
