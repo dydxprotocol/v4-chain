@@ -625,17 +625,6 @@ func New(
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
 
-	app.BridgeKeeper = *bridgemodulekeeper.NewKeeper(
-		appCodec,
-		keys[bridgemoduletypes.StoreKey],
-		bridgeEventManager,
-		app.BankKeeper,
-		app.DelayMsgKeeper,
-		// set the gov module account as the authority for updating parameters.
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
-
 	app.DelayMsgKeeper = *delaymsgmodulekeeper.NewKeeper(
 		appCodec,
 		keys[delaymsgmoduletypes.StoreKey],
@@ -647,6 +636,17 @@ func New(
 		},
 	)
 	delayMsgModule := delaymsgmodule.NewAppModule(appCodec, app.DelayMsgKeeper)
+
+	app.BridgeKeeper = *bridgemodulekeeper.NewKeeper(
+		appCodec,
+		keys[bridgemoduletypes.StoreKey],
+		bridgeEventManager,
+		app.BankKeeper,
+		app.DelayMsgKeeper,
+		// set the gov module account as the authority for updating parameters.
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
 	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
 		appCodec,
