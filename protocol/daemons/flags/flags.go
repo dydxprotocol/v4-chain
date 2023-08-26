@@ -172,6 +172,9 @@ func GetDaemonFlagValuesFromOptions(
 	if v, ok := appOpts.Get(FlagBridgeDaemonLoopDelayMs).(uint32); ok {
 		result.Bridge.LoopDelayMs = v
 	}
+	if v, ok := appOpts.Get(FlagBridgeDaemonEthRpcEndpoint).(string); ok {
+		result.Bridge.EthRpcEndpoint = v
+	}
 
 	// Liquidation Daemon.
 	if v, ok := appOpts.Get(FlagLiquidationDaemonEnabled).(bool); ok {

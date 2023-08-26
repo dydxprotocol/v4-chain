@@ -46,6 +46,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 
 	optsMap[flags.FlagBridgeDaemonEnabled] = true
 	optsMap[flags.FlagBridgeDaemonLoopDelayMs] = uint32(1111)
+	optsMap[flags.FlagBridgeDaemonEthRpcEndpoint] = "test-eth-rpc-endpoint"
 
 	optsMap[flags.FlagLiquidationDaemonEnabled] = true
 	optsMap[flags.FlagLiquidationDaemonLoopDelayMs] = uint32(2222)
@@ -69,6 +70,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	// Bridge Daemon.
 	require.Equal(t, optsMap[flags.FlagBridgeDaemonEnabled], r.Bridge.Enabled)
 	require.Equal(t, optsMap[flags.FlagBridgeDaemonLoopDelayMs], r.Bridge.LoopDelayMs)
+	require.Equal(t, optsMap[flags.FlagBridgeDaemonEthRpcEndpoint], r.Bridge.EthRpcEndpoint)
 
 	// Liquidation Daemon.
 	require.Equal(t, optsMap[flags.FlagLiquidationDaemonEnabled], r.Liquidation.Enabled)
