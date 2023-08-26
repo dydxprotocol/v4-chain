@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -16,8 +15,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	delaymsgkeeper "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
 func BridgeKeepers(
@@ -42,7 +39,7 @@ func BridgeKeepers(
 		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
 		keeper, storeKey, mockTimeProvider, bridgeEventManager, mockDelayMsgKeeper =
-			createBridgeKeeper(stateStore, db, registry, cdc, transientStoreKey, bankKeeper)
+			createBridgeKeeper(stateStore, db, cdc, transientStoreKey, bankKeeper)
 		return []GenesisInitializer{keeper}
 	})
 
@@ -52,7 +49,6 @@ func BridgeKeepers(
 func createBridgeKeeper(
 	stateStore storetypes.CommitMultiStore,
 	db *tmdb.MemDB,
-	registry codectypes.InterfaceRegistry,
 	cdc *codec.ProtoCodec,
 	transientStoreKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
@@ -69,12 +65,7 @@ func createBridgeKeeper(
 	mockTimeProvider := &mocks.TimeProvider{}
 	bridgeEventManager := bridgeserver_types.NewBridgeEventManager(mockTimeProvider)
 
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(registry)
-	delaymsgtypes.RegisterInterfaces(registry)
-	// Register delay msg server for msg routing.
 	mockDelayMsgKeeper := &mocks.DelayMsgKeeper{}
-	delaymsgtypes.RegisterMsgServer(router, delaymsgkeeper.NewMsgServerImpl(mockDelayMsgKeeper))
 
 	k := keeper.NewKeeper(
 		cdc,

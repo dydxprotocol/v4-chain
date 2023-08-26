@@ -15,12 +15,12 @@ func (k msgServer) CompleteBridge(
 	msg *types.MsgCompleteBridge,
 ) (*types.MsgCompleteBridgeResponse, error) {
 	// MsgCompleteBridge's authority should be bridge module.
-	bridge_module_address_string := authtypes.NewModuleAddress(types.ModuleName).String()
-	if bridge_module_address_string != msg.Authority {
+	bridgeModuleAddressString := authtypes.NewModuleAddress(types.ModuleName).String()
+	if bridgeModuleAddressString != msg.Authority {
 		return nil, errors.Wrapf(
 			types.ErrInvalidAuthority,
 			"expected %s, got %s",
-			bridge_module_address_string,
+			bridgeModuleAddressString,
 			msg.Authority,
 		)
 	}

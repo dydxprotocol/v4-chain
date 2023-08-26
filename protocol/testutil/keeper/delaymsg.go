@@ -50,7 +50,7 @@ func DelayMsgKeepers(
 		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
 		bridgeKeeper, _, _, _, _ =
-			createBridgeKeeper(stateStore, db, registry, cdc, transientStoreKey, bankKeeper)
+			createBridgeKeeper(stateStore, db, cdc, transientStoreKey, bankKeeper)
 
 		// Register bridge keeper msg server for msg routing.
 		bridgetypes.RegisterMsgServer(router, bridgekeeper.NewMsgServerImpl(bridgeKeeper))
