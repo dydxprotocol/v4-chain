@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"cosmossdk.io/simapp/params"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
@@ -268,15 +269,17 @@ func (a appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
-	version := version.NewInfo()
-	telemetry.IncrCounterWithLabels(
-		[]string{metrics.AppVersionAndGitCommit},
-		1,
-		[]gometrics.Label{
-			metrics.GetLabelForStringValue(metrics.Version, version.Version),
-			metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
-		},
-	)
+	if strings.HasPrefix(chainID, "dydx-testnet") {
+		version := version.NewInfo()
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.AppVersionAndGitCommit},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.Version, version.Version),
+				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
+			},
+		)
+	}
 
 	return dydxapp.New(
 		logger,
