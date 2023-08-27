@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/simapp/params"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
+	gometrics "github.com/armon/go-metrics"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
@@ -25,7 +26,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -36,6 +39,7 @@ import (
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
@@ -262,6 +266,16 @@ func (a appCreator) newApp(
 	snapshotOptions := snapshottypes.NewSnapshotOptions(
 		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
+	)
+
+	version := version.NewInfo()
+	telemetry.IncrCounterWithLabels(
+		[]string{metrics.AppVersionAndGitCommit},
+		1,
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.Version, version.Version),
+			metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
+		},
 	)
 
 	return dydxapp.New(
