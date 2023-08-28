@@ -486,7 +486,8 @@ func (m *MsgSetClobPairStatus) GetClobPairStatus() ClobPair_Status {
 	return ClobPair_STATUS_UNSPECIFIED
 }
 
-// MsgSetClobPairStatusResponse is a response type used for setting ClobPair's status.
+// MsgSetClobPairStatusResponse is a response type used for setting a ClobPair's
+// status.
 type MsgSetClobPairStatusResponse struct {
 }
 
@@ -716,7 +717,7 @@ type MsgClient interface {
 	CancelOrder(ctx context.Context, in *MsgCancelOrder, opts ...grpc.CallOption) (*MsgCancelOrderResponse, error)
 	// CreateClobPair creates a new clob pair.
 	CreateClobPair(ctx context.Context, in *MsgCreateClobPair, opts ...grpc.CallOption) (*MsgCreateClobPairResponse, error)
-	// SetClobPairStatus
+	// SetClobPairStatus sets the status of a clob pair.
 	SetClobPairStatus(ctx context.Context, in *MsgSetClobPairStatus, opts ...grpc.CallOption) (*MsgSetClobPairStatusResponse, error)
 }
 
@@ -784,7 +785,7 @@ type MsgServer interface {
 	CancelOrder(context.Context, *MsgCancelOrder) (*MsgCancelOrderResponse, error)
 	// CreateClobPair creates a new clob pair.
 	CreateClobPair(context.Context, *MsgCreateClobPair) (*MsgCreateClobPairResponse, error)
-	// SetClobPairStatus
+	// SetClobPairStatus sets the status of a clob pair.
 	SetClobPairStatus(context.Context, *MsgSetClobPairStatus) (*MsgSetClobPairStatusResponse, error)
 }
 
