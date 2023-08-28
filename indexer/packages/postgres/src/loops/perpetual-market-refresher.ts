@@ -81,11 +81,7 @@ export function getClobPairIdFromTicker(ticker: string): string | undefined {
     ticker,
   );
 
-  if (perpetualMarket !== undefined) {
-    return perpetualMarket.clobPairId;
-  }
-
-  return undefined;
+  return perpetualMarket?.clobPairId;
 }
 
 /**
@@ -98,11 +94,8 @@ export function getPerpetualMarketTicker(clobPairId: string): string | undefined
   const perpetualMarket: PerpetualMarketFromDatabase | undefined = getPerpetualMarketFromClobPairId(
     clobPairId,
   );
-  if (perpetualMarket !== undefined) {
-    return perpetualMarket.ticker;
-  }
 
-  return undefined;
+  return perpetualMarket?.ticker;
 }
 
 /**
