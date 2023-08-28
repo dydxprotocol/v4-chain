@@ -506,24 +506,6 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	return nil
 }
 
-// MustFetchOrderFromOrderId fetches an Order object given an orderId. If it is a short term order,
-// `ordersMap` will be used to populate the order. If it is a stateful order, read from state.
-// Note that this function is meant to be used for operation processing during DeliverTx and does not
-// fetch untriggered conditional orders.
-//
-// Function will panic if for any reason, the order cannot be searched up.
-func (k Keeper) MustFetchOrderFromOrderId(
-	ctx sdk.Context,
-	orderId types.OrderId,
-	ordersMap map[types.OrderId]types.Order,
-) types.Order {
-	order, err := k.FetchOrderFromOrderId(ctx, orderId, ordersMap)
-	if err != nil {
-		panic(err)
-	}
-	return order
-}
-
 // GenerateProcessProposerMatchesEvents generates a `ProcessProposerMatchesEvents` object from
 // an operations queue.
 // Currently, it sets the `OrderIdsFilledInLastBlock` field and the `BlockHeight` field.
