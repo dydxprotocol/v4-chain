@@ -19,6 +19,7 @@ export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
       this.updatePerpetual(),
       this.generateTimingStatsOptions('update_perpetual'),
     );
+    // TODO(IND-374): Send update to markets websocket channel.
     return [];
   }
 
