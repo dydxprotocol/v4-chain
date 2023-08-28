@@ -84,9 +84,8 @@ func (k Keeper) AcknowledgeBridges(
 		return nil
 	}
 
-	// For each bridge event, send to x/delaymsg a `MsgDelayMsg` that wraps a `MsgCompleteBridge` to be
-	// executed `safetyParams.DelayBlocks` blocks in the future.
-	// Every `MsgDelayMsg` is independent, meaning that failure of one doesn't affect the others.
+	// For each bridge event, delay a `MsgCompleteBridge` to be executed `safetyParams.DelayBlocks`
+	// blocks in the future. Panic if fails to delay any of the messages.
 	safetyParams := k.GetSafetyParams(ctx)
 	bridgeModuleAddressString := authtypes.NewModuleAddress(types.ModuleName).String()
 	for _, bridgeEvent := range bridgeEvents {
