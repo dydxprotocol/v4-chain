@@ -29,7 +29,7 @@ func (lc *LiquidationsConfig) Validate() error {
 
 	// Validate the SpreadToMaintenanceMarginRatioPpm.
 	spreadToMaintenanceMarginRatioPpm := lc.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm
-	if spreadToMaintenanceMarginRatioPpm == 0 || spreadToMaintenanceMarginRatioPpm > lib.OneMillion {
+	if spreadToMaintenanceMarginRatioPpm == 0 {
 		return sdkerrors.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid SpreadToMaintenanceMarginRatioPpm",
