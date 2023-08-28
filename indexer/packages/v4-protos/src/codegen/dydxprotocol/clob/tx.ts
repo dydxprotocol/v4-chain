@@ -1,5 +1,5 @@
 import { Order, OrderSDKType, OrderId, OrderIdSDKType } from "./order";
-import { ClobPair, ClobPairSDKType, ClobPair_Status } from "./clob_pair";
+import { ClobPair, ClobPairSDKType, ClobPair_Status, ClobPair_StatusSDKType } from "./clob_pair";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
 import { OrderRemoval, OrderRemovalSDKType } from "./order_removals";
 import * as _m0 from "protobufjs/minimal";
