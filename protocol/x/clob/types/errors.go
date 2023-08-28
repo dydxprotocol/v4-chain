@@ -168,6 +168,11 @@ var (
 		35,
 		"Invalid ClobPair status transition",
 	)
+	ErrOperationConflictsWithClobPairStatus = sdkerrors.Register(
+		ModuleName,
+		36,
+		"Operation conflicts with ClobPair status",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(

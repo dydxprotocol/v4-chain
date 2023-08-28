@@ -121,6 +121,10 @@ func (k Keeper) ProcessInternalOperations(
 
 	// Write the matches to state if all stateful validation passes.
 	for _, operation := range operations {
+		if err := k.validateInternalOperationAgainstClobPairStatus(ctx, operation); err != nil {
+			return err
+		}
+
 		switch castedOperation := operation.Operation.(type) {
 		case *types.InternalOperation_Match:
 			clobMatch := castedOperation.Match
