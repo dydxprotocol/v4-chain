@@ -1,6 +1,8 @@
 package delaymsg_test
 
 import (
+	"fmt"
+	"github.com/cometbft/cometbft/libs/log"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -67,15 +69,163 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 	require.True(t, bridgeKeeper.AssertExpectations(t))
 }
 
+func setupMockKeeperNoMessages(ctx sdk.Context, k *mocks.DelayMsgKeeper) {
+	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{}, false).Once()
+}
+
+func HandlerSuccess(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
+	return &sdk.Result{}, nil
+}
+
+func HandlerFailure(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
+	return &sdk.Result{}, fmt.Errorf("failed to handle message")
+}
+
+// mockSuccessRouter returns a handler that succeeds on all calls.
+func mockSuccessRouter(ctx sdk.Context) *mocks.MsgRouter {
+	router := &mocks.MsgRouter{}
+	router.On("Handler", mock.Anything).Return(HandlerSuccess).Times(3)
+	return router
+}
+
+// mockFailingRouter returns a handler that fails on the first call, then returns a handler
+// that succeeds on the next two.
+func mockFailingRouter(ctx sdk.Context) *mocks.MsgRouter {
+	router := mocks.MsgRouter{}
+	router.On("Handler", mock.Anything).Return(HandlerFailure).Once()
+	router.On("Handler", mock.Anything).Return(HandlerSuccess).Times(2)
+	return &router
+}
+
+func setupMockKeeperMessageNotFound(ctx sdk.Context, k *mocks.DelayMsgKeeper) {
+	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+		Ids: []uint32{0, 1, 2},
+	}, true).Once()
+
+	// Second message is not found.
+	k.On("GetMessage", ctx, uint32(0)).Return(types.DelayedMessage{}, true).Once()
+	k.On("GetMessage", ctx, uint32(1)).Return(types.DelayedMessage{}, false).Once()
+	k.On("GetMessage", ctx, uint32(2)).Return(types.DelayedMessage{}, true).Once()
+
+	// 2 messages are decoded and routed.
+	k.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil).Times(2)
+
+	msgRouter := mockSuccessRouter(ctx)
+	k.On("Router").Return(msgRouter).Times(2)
+
+	// For error logging.
+	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
+
+	// All deletes are called.
+	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(1)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(2)).Return(nil).Once()
+}
+
+func setupMockKeeperDecodeFailure(ctx sdk.Context, k *mocks.DelayMsgKeeper) {
+	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+		Ids: []uint32{0, 1, 2},
+	}, true).Once()
+
+	// All messages found.
+	k.On("GetMessage", ctx, mock.Anything).Return(types.DelayedMessage{}, true).Times(3)
+
+	// First decode fails.
+	k.On("DecodeMessage", mock.Anything, mock.Anything).Return(fmt.Errorf("failed to decode message")).Once()
+	k.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil).Times(2)
+
+	// 2 messages are routed.
+	msgRouter := mockSuccessRouter(ctx)
+	k.On("Router").Return(msgRouter).Times(2)
+
+	// For error logging.
+	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
+
+	// All deletes are called.
+	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(1)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(2)).Return(nil).Once()
+}
+
+func setupMockKeeperExecutionFailure(ctx sdk.Context, k *mocks.DelayMsgKeeper) {
+	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+		Ids: []uint32{0, 1, 2},
+	}, true).Once()
+
+	// All messages found.
+	k.On("GetMessage", ctx, mock.Anything).Return(types.DelayedMessage{}, true).Times(3)
+
+	// All messages are decoded.
+	k.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil).Times(3)
+
+	// 1st message fails to execute. Following 2 succeed.
+	successRouter := mockSuccessRouter(ctx)
+	failureRouter := mockFailingRouter(ctx)
+	k.On("Router").Return(failureRouter).Times(1)
+	k.On("Router").Return(successRouter).Times(2)
+
+	// For error logging.
+	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
+
+	// All deletes are called.
+	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(1)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(2)).Return(nil).Once()
+}
+
+func setupMockKeeperDeletionFailure(ctx sdk.Context, k *mocks.DelayMsgKeeper) {
+	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+		Ids: []uint32{0, 1, 2},
+	}, true).Once()
+
+	// All messages found.
+	k.On("GetMessage", ctx, mock.Anything).Return(types.DelayedMessage{}, true).Times(3)
+
+	// All messages are decoded.
+	k.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil).Times(3)
+
+	// All messages are routed.
+	k.On("Router").Return(mockSuccessRouter(ctx)).Times(3)
+
+	// For error logging.
+	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
+
+	// All deletes are called. 2nd delete fails.
+	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(1)).Return(fmt.Errorf("Deletion failure")).Once()
+	k.On("DeleteMessage", ctx, uint32(2)).Return(nil).Once()
+}
+
 func TestDispatchMessageForBlock_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		setupMocks func(ctx sdk.Context, k *mocks.DelayMsgKeeper)
 	}{
-		"No messages - dispatch terminates with no action":                {},
-		"Unexpected message not found does not affect remaining messages": {},
-		"Decode failure does not affect remaining messages":               {},
-		"Execution error does not affect remaining messages":              {},
-		"Deletion failure does not affect deletion of remaining messages": {},
+		"No messages - dispatch terminates with no action": {
+			setupMocks: setupMockKeeperNoMessages,
+		},
+		"Unexpected message not found does not affect remaining messages": {
+			setupMocks: setupMockKeeperMessageNotFound,
+		},
+		"Decode failure does not affect remaining messages": {
+			setupMocks: setupMockKeeperDecodeFailure,
+		},
+		"Execution error does not affect remaining messages": {
+			setupMocks: setupMockKeeperExecutionFailure,
+		},
+		"Deletion failure does not affect deletion of remaining messages": {
+			setupMocks: setupMockKeeperDeletionFailure,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			k := &mocks.DelayMsgKeeper{}
+			ctx := sdktest.NewContextWithBlockHeightAndTime(0, time.Now())
+			tc.setupMocks(ctx, k)
+
+			delaymsg.DispatchMessagesForBlock(k, ctx)
+
+			k.AssertExpectations(t)
+		})
 	}
 }
 

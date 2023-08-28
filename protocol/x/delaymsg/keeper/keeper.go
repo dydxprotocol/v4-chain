@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
@@ -50,7 +51,7 @@ func (k Keeper) GetAuthorities() map[string]struct{} {
 }
 
 // Router returns the x/delaymsg router.
-func (k Keeper) Router() *baseapp.MsgServiceRouter {
+func (k Keeper) Router() lib.MsgRouter {
 	return k.router
 }
 

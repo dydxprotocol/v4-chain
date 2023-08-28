@@ -2,8 +2,8 @@ package types
 
 import (
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 type DelayMsgKeeper interface {
@@ -62,5 +62,5 @@ type DelayMsgKeeper interface {
 
 	Logger(ctx sdk.Context) log.Logger
 
-	Router() *baseapp.MsgServiceRouter
+	Router() lib.MsgRouter
 }

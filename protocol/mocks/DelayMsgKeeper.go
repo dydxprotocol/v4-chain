@@ -3,9 +3,10 @@
 package mocks
 
 import (
-	log "github.com/cometbft/cometbft/libs/log"
-	baseapp "github.com/cosmos/cosmos-sdk/baseapp"
+	lib "github.com/dydxprotocol/v4-chain/protocol/lib"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+
+	log "github.com/cometbft/cometbft/libs/log"
 
 	mock "github.com/stretchr/testify/mock"
 
@@ -157,15 +158,15 @@ func (_m *DelayMsgKeeper) Logger(ctx types.Context) log.Logger {
 }
 
 // Router provides a mock function with given fields:
-func (_m *DelayMsgKeeper) Router() *baseapp.MsgServiceRouter {
+func (_m *DelayMsgKeeper) Router() lib.MsgRouter {
 	ret := _m.Called()
 
-	var r0 *baseapp.MsgServiceRouter
-	if rf, ok := ret.Get(0).(func() *baseapp.MsgServiceRouter); ok {
+	var r0 lib.MsgRouter
+	if rf, ok := ret.Get(0).(func() lib.MsgRouter); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*baseapp.MsgServiceRouter)
+			r0 = ret.Get(0).(lib.MsgRouter)
 		}
 	}
 
