@@ -6,11 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitfinex",
-      "ticker": "tARBUSD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "ARBUSDT",
       "adjustByMarket": "USDT-USD"

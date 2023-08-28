@@ -6,15 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"SHIBUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tSHIB:USD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "SHIBUSDT",
       "adjustByMarket": "USDT-USD"
@@ -30,11 +21,6 @@
     {
       "exchangeName": "Gate",
       "ticker": "SHIB_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Huobi",
-      "ticker": "shibusdt",
       "adjustByMarket": "USDT-USD"
     },
     {

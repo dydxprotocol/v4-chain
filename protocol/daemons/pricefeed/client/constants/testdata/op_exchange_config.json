@@ -20,11 +20,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Huobi",
-      "ticker": "opusdt",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Kucoin",
       "ticker": "OP-USDT",
       "adjustByMarket": "USDT-USD"

@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"XRPUSD\""
-    },
-    {
       "exchangeName": "Bitfinex",
       "ticker": "tXRPUSD",
       "adjustByMarket": "USDT-USD"

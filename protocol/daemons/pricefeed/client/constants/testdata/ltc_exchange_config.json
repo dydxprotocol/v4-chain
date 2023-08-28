@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"LTCUSD\""
-    },
-    {
       "exchangeName": "Bitstamp",
       "ticker": "LTC/USD"
     },
@@ -23,6 +19,10 @@
       "ticker": "LTC-USD"
     },
     {
+      "exchangeName": "CryptoCom",
+      "ticker": "LTC_USD"
+    },
+    {
       "exchangeName": "Huobi",
       "ticker": "ltcusdt",
       "adjustByMarket": "USDT-USD"
@@ -34,6 +34,11 @@
     {
       "exchangeName": "Kucoin",
       "ticker": "LTC-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "LTC_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

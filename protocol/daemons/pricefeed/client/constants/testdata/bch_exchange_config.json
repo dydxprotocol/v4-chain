@@ -6,16 +6,16 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"BCHUSD\""
-    },
-    {
       "exchangeName": "Bitstamp",
       "ticker": "BCH/USD"
     },
     {
       "exchangeName": "CoinbasePro",
       "ticker": "BCH-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "BCH_USD"
     },
     {
       "exchangeName": "Gate",
@@ -30,6 +30,11 @@
     {
       "exchangeName": "Kraken",
       "ticker": "BCHUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "BCH-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",

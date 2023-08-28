@@ -1,22 +1,12 @@
 {
   "exchanges": [
     {
-      "exchangeName": "Bitfinex",
-      "ticker": "tBLUR:USD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "BLUR-USD"
     },
     {
       "exchangeName": "Gate",
       "ticker": "BLUR_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Huobi",
-      "ticker": "blurusdt",
       "adjustByMarket": "USDT-USD"
     },
     {

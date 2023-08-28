@@ -6,15 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"FILUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tFILUSD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "FIL-USD"
     },

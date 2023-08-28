@@ -6,8 +6,9 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"UNIUSD\""
+      "exchangeName": "Bybit",
+      "ticker": "UNIUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
@@ -15,20 +16,6 @@
     },
     {
       "exchangeName": "Gate",
-      "ticker": "UNI_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Huobi",
-      "ticker": "uniusdt",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Kraken",
-      "ticker": "UNIUSD"
-    },
-    {
-      "exchangeName": "Mexc",
       "ticker": "UNI_USDT",
       "adjustByMarket": "USDT-USD"
     },

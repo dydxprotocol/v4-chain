@@ -6,17 +6,13 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"APEUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tAPEUSD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "APE-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "APE_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Gate",
@@ -24,18 +20,8 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Huobi",
-      "ticker": "apeusdt",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Kraken",
       "ticker": "APEUSD"
-    },
-    {
-      "exchangeName": "Kucoin",
-      "ticker": "APE-USDT",
-      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Mexc",

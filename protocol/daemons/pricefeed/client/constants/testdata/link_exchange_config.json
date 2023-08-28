@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"LINKUSD\""
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "LINKUSDT",
       "adjustByMarket": "USDT-USD"
@@ -23,17 +19,17 @@
       "ticker": "LINK_USD"
     },
     {
-      "exchangeName": "Huobi",
-      "ticker": "linkusdt",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Kraken",
       "ticker": "LINKUSD"
     },
     {
       "exchangeName": "Kucoin",
       "ticker": "LINK-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "LINK_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

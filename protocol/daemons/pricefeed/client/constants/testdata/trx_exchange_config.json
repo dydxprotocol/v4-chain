@@ -6,11 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitfinex",
-      "ticker": "tTRXUSD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "TRXUSDT",
       "adjustByMarket": "USDT-USD"
@@ -23,6 +18,16 @@
     {
       "exchangeName": "Huobi",
       "ticker": "trxusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "TRX-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "TRX_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

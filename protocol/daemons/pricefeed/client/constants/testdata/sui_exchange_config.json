@@ -6,14 +6,17 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitfinex",
-      "ticker": "SUIUSD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "SUIUSDT",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "SUI-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "SUI_USD"
     },
     {
       "exchangeName": "Gate",
@@ -24,10 +27,6 @@
       "exchangeName": "Huobi",
       "ticker": "suiusdt",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Kraken",
-      "ticker": "SUIUSD"
     },
     {
       "exchangeName": "Kucoin",
