@@ -269,13 +269,14 @@ func (a appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
-	if strings.HasPrefix(chainID, "dydx-testnet") {
+	// Report app version and git commit in non-dev and non-staging environments.
+	if !strings.Contains(chainID, "dev") && !strings.Contains(chainID, "staging") {
 		version := version.NewInfo()
 		telemetry.IncrCounterWithLabels(
 			[]string{metrics.AppVersionAndGitCommit},
 			1,
 			[]gometrics.Label{
-				metrics.GetLabelForStringValue(metrics.Version, version.Version),
+				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
 				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
 			},
 		)

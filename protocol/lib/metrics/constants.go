@@ -3,6 +3,7 @@ package metrics
 // Keep the metric fields alphabetized within each category.
 const (
 	// Common.
+	AppVersion             = "app_version"
 	AppVersionAndGitCommit = "app_version_and_git_commit"
 	BlockHeight            = "block_height"
 	Count                  = "count"
@@ -29,7 +30,6 @@ const (
 	Success                = "success"
 	Valid                  = "valid"
 	ValidateBasic          = "validate_basic"
-	Version                = "version"
 	Yes                    = "yes"
 	CheckTx                = "check_tx"
 	DeliverTx              = "deliver_tx"
