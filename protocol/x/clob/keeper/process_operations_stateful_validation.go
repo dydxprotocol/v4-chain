@@ -60,127 +60,8 @@ func (k Keeper) FetchOrderFromOrderId(
 	)
 }
 
-// StatefulValidateProposedOperationMatch performs stateful validation on a match orders object.
-// The following validations are performed:
-// - Validation on all match orders
-// - Validation on all match liquidations
-// - Validation that delevearging matches have a valid perpetual id
-func (k Keeper) StatefulValidateProposedOperationMatch(
-	ctx sdk.Context,
-	clobMatch *types.ClobMatch,
-	shortTermOrdersMap map[types.OrderId]types.Order,
-) error {
-	switch castedMatch := clobMatch.Match.(type) {
-	case *types.ClobMatch_MatchOrders:
-		matchOrder := castedMatch.MatchOrders
-		if err := k.StatefulValidateProposedOperationMatchOrders(
-			ctx,
-			matchOrder,
-			shortTermOrdersMap,
-		); err != nil {
-			return err
-		}
-	case *types.ClobMatch_MatchPerpetualLiquidation:
-		matchLiquidation := castedMatch.MatchPerpetualLiquidation
-		if err := k.StatefulValidateProposedOperationMatchLiquidation(
-			ctx,
-			matchLiquidation,
-			shortTermOrdersMap,
-		); err != nil {
-			return err
-		}
-	case *types.ClobMatch_MatchPerpetualDeleveraging:
-		perpId := castedMatch.MatchPerpetualDeleveraging.GetPerpetualId()
-		_, err := k.perpetualsKeeper.GetPerpetual(ctx, perpId)
-		if err != nil {
-			return sdkerrors.Wrapf(
-				types.ErrPerpetualDoesNotExist,
-				"Perpetual id %+v does not exist in state.",
-				perpId,
-			)
-		}
-	default:
-		panic(
-			fmt.Sprintf(
-				"StatefulValidateProposedOperationMatch: Unrecognized operation type for match: %+v",
-				clobMatch,
-			),
-		)
-	}
-	return nil
-}
-
-// StatefulValidateProposedOperationMatchOrders performs stateful validation on a match orders object.
-// The following validations are performed:
-// - Validation on any short term orders.
-// - Validation on all maker fills.
-// - Validation that taker order cannot be post only.
-func (k Keeper) StatefulValidateProposedOperationMatchOrders(
-	ctx sdk.Context,
-	matchOrder *types.MatchOrders,
-	shortTermOrdersMap map[types.OrderId]types.Order,
-) error {
-	takerOrderId := matchOrder.GetTakerOrderId()
-	// Fetch the taker order from either short term orders or state
-	takerOrder, err := k.FetchOrderFromOrderId(ctx, takerOrderId, shortTermOrdersMap)
-	if err != nil {
-		return err
-	}
-
-	// Taker order cannot be post only.
-	if takerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_POST_ONLY {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidMatchOrder,
-			"Taker order %+v cannot be post only.",
-			takerOrder.GetOrderTextString(),
-		)
-	}
-
-	fills := matchOrder.GetFills()
-	for _, fill := range fills {
-		if err := k.StatefulValidateMakerFill(ctx, &fill, shortTermOrdersMap, &takerOrder); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// StatefulValidateProposedOperationMatchLiquidation performs stateful validation on a match liquidation.
-// The following validations are performed:
-// - Validation on the maker fills
-// - Validation that clob pair id, perpetual id exists
-func (k Keeper) StatefulValidateProposedOperationMatchLiquidation(
-	ctx sdk.Context,
-	matchLiquidation *types.MatchPerpetualLiquidation,
-	shortTermOrdersMap map[types.OrderId]types.Order,
-) error {
-	fills := matchLiquidation.GetFills()
-	for _, fill := range fills {
-		if err := k.StatefulValidateMakerFill(ctx, &fill, shortTermOrdersMap, nil); err != nil {
-			return err
-		}
-	}
-	perpId := matchLiquidation.GetPerpetualId()
-	_, err := k.perpetualsKeeper.GetPerpetual(ctx, perpId)
-	if err != nil {
-		return sdkerrors.Wrapf(
-			types.ErrPerpetualDoesNotExist,
-			"Perpetual id %+v does not exist in state.",
-			perpId,
-		)
-	}
-	clobPair := matchLiquidation.ClobPairId
-	if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPair)); !found {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClob,
-			"Clob Pair id %+v does not exist in state.",
-			clobPair,
-		)
-	}
-	return nil
-}
-
 // StatefulValidateMakerFill performs stateful validation on a maker fill.
+// Additionally, it returns the maker order referenced in the fill.
 // The following validations are performed:
 // - Validation on any short term orders
 // - Validation that maker order cannot be FOK or IOC
@@ -190,18 +71,18 @@ func (k Keeper) StatefulValidateMakerFill(
 	fill *types.MakerFill,
 	shortTermOrdersMap map[types.OrderId]types.Order,
 	takerOrder *types.Order,
-) error {
+) (makerOrder types.Order, err error) {
 	makerOrderId := fill.GetMakerOrderId()
 	// Fetch the maker order from either short term orders or state
-	makerOrder, err := k.FetchOrderFromOrderId(ctx, makerOrderId, shortTermOrdersMap)
+	makerOrder, err = k.FetchOrderFromOrderId(ctx, makerOrderId, shortTermOrdersMap)
 	if err != nil {
-		return err
+		return makerOrder, err
 	}
 
 	// Orders must be on different sides of the book.
 	if takerOrder != nil {
 		if takerOrder.IsBuy() == makerOrder.IsBuy() {
-			return sdkerrors.Wrapf(
+			return makerOrder, sdkerrors.Wrapf(
 				types.ErrInvalidMatchOrder,
 				"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
 				takerOrder.GetOrderTextString(),
@@ -213,11 +94,11 @@ func (k Keeper) StatefulValidateMakerFill(
 	// Maker order cannot be FOK or IOC.
 	if makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
 		makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
-		return sdkerrors.Wrapf(
+		return makerOrder, sdkerrors.Wrapf(
 			types.ErrInvalidMatchOrder,
 			"Maker order %+v cannot be FOK or IOC.",
 			makerOrder.GetOrderTextString(),
 		)
 	}
-	return nil
+	return makerOrder, nil
 }

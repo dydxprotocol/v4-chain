@@ -122,9 +122,6 @@ func (k Keeper) ProcessInternalOperations(
 		switch castedOperation := operation.Operation.(type) {
 		case *types.InternalOperation_Match:
 			clobMatch := castedOperation.Match
-			if err := k.StatefulValidateProposedOperationMatch(ctx, clobMatch, placedShortTermOrders); err != nil {
-				return err
-			}
 			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
 				return sdkerrors.Wrapf(
 					err,
@@ -206,7 +203,6 @@ func (k Keeper) ProcessInternalOperations(
 
 // PersistMatchToState takes in an ClobMatch and writes the match to state. A map of orderId
 // to Order is required to fetch the whole Order object for short term orders.
-// Function will panic if any orderId referenced in clobMatch cannot be found.
 func (k Keeper) PersistMatchToState(
 	ctx sdk.Context,
 	clobMatch *types.ClobMatch,
@@ -245,17 +241,35 @@ func (k Keeper) PersistMatchToState(
 
 // PersistMatchOrdersToState writes a MatchOrders object to state and emits an onchain
 // indexer event for the match.
-// Function will panic if any orderId referenced in matchOrders cannot be found.
 func (k Keeper) PersistMatchOrdersToState(
 	ctx sdk.Context,
 	matchOrders *types.MatchOrders,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
+	takerOrderId := matchOrders.GetTakerOrderId()
+	// Fetch the taker order from either short term orders or state
+	takerOrder, err := k.FetchOrderFromOrderId(ctx, takerOrderId, ordersMap)
+	if err != nil {
+		return err
+	}
+
+	// Taker order cannot be post only.
+	if takerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_POST_ONLY {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidMatchOrder,
+			"Taker order %+v cannot be post only.",
+			takerOrder.GetOrderTextString(),
+		)
+	}
+
 	makerFills := matchOrders.GetFills()
-	takerOrder := k.MustFetchOrderFromOrderId(ctx, matchOrders.GetTakerOrderId(), ordersMap)
 
 	for _, makerFill := range makerFills {
-		makerOrder := k.MustFetchOrderFromOrderId(ctx, makerFill.GetMakerOrderId(), ordersMap)
+		// Fetch the maker order and statefully validate fill.
+		makerOrder, err := k.StatefulValidateMakerFill(ctx, &makerFill, ordersMap, &takerOrder)
+		if err != nil {
+			return err
+		}
 
 		matchWithOrders := types.MatchWithOrders{
 			TakerOrder: &takerOrder,
@@ -263,7 +277,7 @@ func (k Keeper) PersistMatchOrdersToState(
 			FillAmount: satypes.BaseQuantums(makerFill.GetFillAmount()),
 		}
 
-		_, _, _, _, err := k.ProcessSingleMatch(ctx, &matchWithOrders)
+		_, _, _, _, err = k.ProcessSingleMatch(ctx, &matchWithOrders)
 		if err != nil {
 			return err
 		}
@@ -308,7 +322,7 @@ func (k Keeper) PersistMatchOrdersToState(
 }
 
 // PersistMatchLiquidationToState writes a MatchPerpetualLiquidation event and updates the keeper transient store.
-// Function will panic if any orderId referenced in matchOrders cannot be matchLiquidation.
+// It also performs stateful validation on the matchLiquidations object.
 func (k Keeper) PersistMatchLiquidationToState(
 	ctx sdk.Context,
 	matchLiquidation *types.MatchPerpetualLiquidation,
@@ -326,14 +340,35 @@ func (k Keeper) PersistMatchLiquidationToState(
 		)
 	}
 
+	perpId := matchLiquidation.GetPerpetualId()
+	_, err = k.perpetualsKeeper.GetPerpetual(ctx, perpId)
+	if err != nil {
+		return sdkerrors.Wrapf(
+			types.ErrPerpetualDoesNotExist,
+			"Perpetual id %+v does not exist in state.",
+			perpId,
+		)
+	}
+	clobPair := matchLiquidation.ClobPairId
+	if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPair)); !found {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClob,
+			"Clob Pair id %+v does not exist in state.",
+			clobPair,
+		)
+	}
+
 	takerOrder, err := k.ConstructTakerOrderFromMatchPerpetualLiquidation(ctx, matchLiquidation)
 	if err != nil {
 		return err
 	}
 
 	for _, fill := range matchLiquidation.GetFills() {
-		makerOrderId := fill.GetMakerOrderId()
-		makerOrder := k.MustFetchOrderFromOrderId(ctx, makerOrderId, ordersMap)
+		// Fetch the maker order and statefully validate fill.
+		makerOrder, err := k.StatefulValidateMakerFill(ctx, &fill, ordersMap, nil)
+		if err != nil {
+			return err
+		}
 
 		matchWithOrders := types.MatchWithOrders{
 			MakerOrder: &makerOrder,
@@ -346,7 +381,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 		}
 
 		// Write the position updates and state fill amounts for this match.
-		_, _, _, _, err := k.ProcessSingleMatch(
+		_, _, _, _, err = k.ProcessSingleMatch(
 			ctx,
 			&matchWithOrders,
 		)
