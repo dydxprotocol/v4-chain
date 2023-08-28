@@ -732,6 +732,8 @@ func New(
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgCancelOrder](),
+		// set the governance module account as the authority for MsgSetClobPairStatus
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	clobModule := clobmodule.NewAppModule(
 		appCodec,

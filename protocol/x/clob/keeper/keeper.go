@@ -85,6 +85,7 @@ func NewKeeper(
 	clobFlags flags.ClobFlags,
 	placeOrderRateLimiter rate_limit.RateLimiter[*types.MsgPlaceOrder],
 	cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder],
+	govAuthority string,
 ) *Keeper {
 	keeper := &Keeper{
 		cdc:                          cdc,
