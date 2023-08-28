@@ -1,5 +1,5 @@
 import { Order, OrderSDKType, OrderId, OrderIdSDKType } from "./order";
-import { ClobPair, ClobPairSDKType } from "./clob_pair";
+import { ClobPair, ClobPairSDKType, ClobPair_Status } from "./clob_pair";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
 import { OrderRemoval, OrderRemovalSDKType } from "./order_removals";
 import * as _m0 from "protobufjs/minimal";
@@ -122,6 +122,40 @@ export interface MsgCancelOrderResponse {}
 /** MsgCancelOrderResponse is a response type used for canceling orders. */
 
 export interface MsgCancelOrderResponseSDKType {}
+/** MsgSetClobPairStatus is a request type used for setting a ClobPair's status. */
+
+export interface MsgSetClobPairStatus {
+  authority: string;
+  /** clob_pair_id is the ID of the ClobPair to set the status of. */
+
+  clobPairId: number;
+  /** clob_pair_status is the ClobPair_Status to set the ClobPair to. */
+
+  clobPairStatus: ClobPair_Status;
+}
+/** MsgSetClobPairStatus is a request type used for setting a ClobPair's status. */
+
+export interface MsgSetClobPairStatusSDKType {
+  authority: string;
+  /** clob_pair_id is the ID of the ClobPair to set the status of. */
+
+  clob_pair_id: number;
+  /** clob_pair_status is the ClobPair_Status to set the ClobPair to. */
+
+  clob_pair_status: ClobPair_StatusSDKType;
+}
+/**
+ * MsgSetClobPairStatusResponse is a response type used for setting a ClobPair's
+ * status.
+ */
+
+export interface MsgSetClobPairStatusResponse {}
+/**
+ * MsgSetClobPairStatusResponse is a response type used for setting a ClobPair's
+ * status.
+ */
+
+export interface MsgSetClobPairStatusResponseSDKType {}
 /**
  * OperationRaw represents an operation in the proposed operations.
  * Note that the `order_placement` operation is a signed message.
@@ -484,6 +518,105 @@ export const MsgCancelOrderResponse = {
 
   fromPartial(_: DeepPartial<MsgCancelOrderResponse>): MsgCancelOrderResponse {
     const message = createBaseMsgCancelOrderResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgSetClobPairStatus(): MsgSetClobPairStatus {
+  return {
+    authority: "",
+    clobPairId: 0,
+    clobPairStatus: 0
+  };
+}
+
+export const MsgSetClobPairStatus = {
+  encode(message: MsgSetClobPairStatus, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.clobPairId !== 0) {
+      writer.uint32(16).uint32(message.clobPairId);
+    }
+
+    if (message.clobPairStatus !== 0) {
+      writer.uint32(24).int32(message.clobPairStatus);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetClobPairStatus {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetClobPairStatus();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 3:
+          message.clobPairStatus = (reader.int32() as any);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgSetClobPairStatus>): MsgSetClobPairStatus {
+    const message = createBaseMsgSetClobPairStatus();
+    message.authority = object.authority ?? "";
+    message.clobPairId = object.clobPairId ?? 0;
+    message.clobPairStatus = object.clobPairStatus ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseMsgSetClobPairStatusResponse(): MsgSetClobPairStatusResponse {
+  return {};
+}
+
+export const MsgSetClobPairStatusResponse = {
+  encode(_: MsgSetClobPairStatusResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetClobPairStatusResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetClobPairStatusResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgSetClobPairStatusResponse>): MsgSetClobPairStatusResponse {
+    const message = createBaseMsgSetClobPairStatusResponse();
     return message;
   }
 
