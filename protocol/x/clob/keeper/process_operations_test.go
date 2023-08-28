@@ -1218,7 +1218,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				),
 			},
 			// write clob pair to state with unsupported status
-			setupState: func (ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
@@ -1258,7 +1258,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_Init,
 			},
-			preExistingStatefulOrders:  []types.Order{
+			preExistingStatefulOrders: []types.Order{
 				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 			},
 			rawOperations: []types.OperationRaw{

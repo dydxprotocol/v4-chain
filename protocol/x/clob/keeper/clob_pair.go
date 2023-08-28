@@ -437,36 +437,36 @@ func (k Keeper) getInternalOperationClobPairId(
 	err error,
 ) {
 	switch castedOperation := internalOperation.Operation.(type) {
-		case *types.InternalOperation_Match:
-			switch castedMatch := castedOperation.Match.Match.(type) {
-				case *types.ClobMatch_MatchOrders:
-					clobPairId = types.ClobPairId(castedMatch.MatchOrders.TakerOrderId.ClobPairId)
-				case *types.ClobMatch_MatchPerpetualLiquidation:
-					clobPairId = types.ClobPairId(castedMatch.MatchPerpetualLiquidation.ClobPairId)
-				case *types.ClobMatch_MatchPerpetualDeleveraging:
-					clobPairId, err = k.GetClobPairIdForPerpetual(
-						ctx,
-						castedMatch.MatchPerpetualDeleveraging.PerpetualId,
-					)
-			}
-		case *types.InternalOperation_ShortTermOrderPlacement:
-			clobPairId = types.ClobPairId(castedOperation.ShortTermOrderPlacement.Order.OrderId.ClobPairId)
-		case *types.InternalOperation_OrderRemoval:
-			clobPairId = types.ClobPairId(castedOperation.OrderRemoval.OrderId.ClobPairId)
-		case *types.InternalOperation_PreexistingStatefulOrder:
-			// this helper is only used in ProcessOperations (DeliverTx) which should not contain
-			// this operation type, so panic.
-			panic(
-				"getInternalOperationClobPairId: should never be called for preexisting stateful order " +
+	case *types.InternalOperation_Match:
+		switch castedMatch := castedOperation.Match.Match.(type) {
+		case *types.ClobMatch_MatchOrders:
+			clobPairId = types.ClobPairId(castedMatch.MatchOrders.TakerOrderId.ClobPairId)
+		case *types.ClobMatch_MatchPerpetualLiquidation:
+			clobPairId = types.ClobPairId(castedMatch.MatchPerpetualLiquidation.ClobPairId)
+		case *types.ClobMatch_MatchPerpetualDeleveraging:
+			clobPairId, err = k.GetClobPairIdForPerpetual(
+				ctx,
+				castedMatch.MatchPerpetualDeleveraging.PerpetualId,
+			)
+		}
+	case *types.InternalOperation_ShortTermOrderPlacement:
+		clobPairId = types.ClobPairId(castedOperation.ShortTermOrderPlacement.Order.OrderId.ClobPairId)
+	case *types.InternalOperation_OrderRemoval:
+		clobPairId = types.ClobPairId(castedOperation.OrderRemoval.OrderId.ClobPairId)
+	case *types.InternalOperation_PreexistingStatefulOrder:
+		// this helper is only used in ProcessOperations (DeliverTx) which should not contain
+		// this operation type, so panic.
+		panic(
+			"getInternalOperationClobPairId: should never be called for preexisting stateful order " +
 				"internal operations",
-			)
-		default:
-			panic(
-				fmt.Sprintf(
-					"getInternalOperationClobPairId: Unrecognized operation type for operation: %+v",
-					internalOperation.GetInternalOperationTextString(),
-				),
-			)
+		)
+	default:
+		panic(
+			fmt.Sprintf(
+				"getInternalOperationClobPairId: Unrecognized operation type for operation: %+v",
+				internalOperation.GetInternalOperationTextString(),
+			),
+		)
 	}
 
 	return clobPairId, err
@@ -505,17 +505,17 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 
 	// Branch validation logic for each supported status.
 	switch clobPair.Status {
-		case types.ClobPair_STATUS_ACTIVE:
-			return nil
-		case types.ClobPair_STATUS_INITIALIZING:
-			if _, isOrderRemoval := internalOperation.GetOperation().(*types.InternalOperation_OrderRemoval); !isOrderRemoval {
-				return sdkerrors.Wrapf(
-						types.ErrOperationConflictsWithClobPairStatus,
-						"Operation %+v invalid for ClobPair with id %+v in post-only mode",
-						internalOperation,
-						clobPairId,
-				)
-			}
+	case types.ClobPair_STATUS_ACTIVE:
+		return nil
+	case types.ClobPair_STATUS_INITIALIZING:
+		if _, isOrderRemoval := internalOperation.GetOperation().(*types.InternalOperation_OrderRemoval); !isOrderRemoval {
+			return sdkerrors.Wrapf(
+				types.ErrOperationConflictsWithClobPairStatus,
+				"Operation %+v invalid for ClobPair with id %+v in post-only mode",
+				internalOperation,
+				clobPairId,
+			)
+		}
 	}
 
 	return nil
