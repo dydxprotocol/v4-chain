@@ -1193,6 +1193,8 @@ func (k Keeper) SetPremiumVotes(
 // For each vote, it checks that:
 // - The perpetual Id is valid.
 // - The premium vote value is correctly clamped.
+// This function also silently zeros the premium vote value for perpetuals whose ClobPair is initializing. This prevents an
+// errant premium vote for an initalizing market from failing the whole transaction.
 func (k Keeper) PerformStatefulPremiumVotesValidation(
 	ctx sdk.Context,
 	msg *types.MsgAddPremiumVotes,
@@ -1218,6 +1220,18 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 		if err != nil {
 			return err
 		}
+
+		// Zero values for perpetuals whose ClobPair is initializing
+		if isInitializing, err := k.perpetualClobPairInitializingChecker.IsPerpetualClobPairInitializing(ctx, vote.PerpetualId); err != nil {
+			return sdkerrors.Wrapf(
+				err,
+				"PerformStatefulPremiumVotesValidation: failed to determine ClobPair status for perpetual with id %d",
+				vote.PerpetualId,
+			)
+		} else if isInitializing { // zero the value if the ClobPair is initializing
+			vote.PremiumPpm = 0
+		}
+
 		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
 		maxAbsPremiumVotePpm := lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perpetual.Params.LiquidityTier))
 		// Check premium vote value is within bounds.
