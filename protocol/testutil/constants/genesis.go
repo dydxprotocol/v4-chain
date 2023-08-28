@@ -250,7 +250,7 @@ const GenesisState = `{
             "perpetual_id": 0
           },
           "quantum_conversion_exponent": -8,
-          "status": "STATUS_ACTIVE",
+          "status": "ACTIVE",
           "step_base_quantums": 10,
           "subticks_per_tick": 10000
         },
@@ -260,7 +260,7 @@ const GenesisState = `{
             "perpetual_id": 1
           },
           "quantum_conversion_exponent": -9,
-          "status": "STATUS_ACTIVE",
+          "status": "ACTIVE",
           "step_base_quantums": 1000,
           "subticks_per_tick": 100000
         }

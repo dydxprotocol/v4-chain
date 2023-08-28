@@ -80,23 +80,23 @@ paths:
                     status:
                       type: string
                       enum:
-                        - STATUS_UNSPECIFIED
-                        - STATUS_ACTIVE
-                        - STATUS_PAUSED
-                        - STATUS_CANCEL_ONLY
-                        - STATUS_POST_ONLY
-                      default: STATUS_UNSPECIFIED
+                        - UNSPECIFIED
+                        - ACTIVE
+                        - PAUSED
+                        - CANCEL_ONLY
+                        - POST_ONLY
+                      default: UNSPECIFIED
                       description: |-
                         Status of the CLOB.
 
-                         - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                         - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+                         - UNSPECIFIED: Default value. This value is invalid and unused.
+                         - ACTIVE: ACTIVE behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
-                         - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+                         - PAUSED: PAUSED behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
-                         - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+                         - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
-                         - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+                         - POST_ONLY: POST_ONLY behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
                     maker_fee_ppm:
                       type: integer
@@ -295,23 +295,23 @@ paths:
                   status:
                     type: string
                     enum:
-                      - STATUS_UNSPECIFIED
-                      - STATUS_ACTIVE
-                      - STATUS_PAUSED
-                      - STATUS_CANCEL_ONLY
-                      - STATUS_POST_ONLY
-                    default: STATUS_UNSPECIFIED
+                      - UNSPECIFIED
+                      - ACTIVE
+                      - PAUSED
+                      - CANCEL_ONLY
+                      - POST_ONLY
+                    default: UNSPECIFIED
                     description: |-
                       Status of the CLOB.
 
-                       - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                       - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+                       - UNSPECIFIED: Default value. This value is invalid and unused.
+                       - ACTIVE: ACTIVE behavior is unfinalized.
                       TODO(DEC-600): update this documentation.
-                       - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+                       - PAUSED: PAUSED behavior is unfinalized.
                       TODO(DEC-600): update this documentation.
-                       - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+                       - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
                       TODO(DEC-600): update this documentation.
-                       - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+                       - POST_ONLY: POST_ONLY behavior is unfinalized.
                       TODO(DEC-600): update this documentation.
                   maker_fee_ppm:
                     type: integer
@@ -876,23 +876,23 @@ paths:
                             status:
                               type: string
                               enum:
-                                - STATUS_UNSPECIFIED
-                                - STATUS_ACTIVE
-                                - STATUS_PAUSED
-                                - STATUS_CANCEL_ONLY
-                                - STATUS_POST_ONLY
-                              default: STATUS_UNSPECIFIED
+                                - UNSPECIFIED
+                                - ACTIVE
+                                - PAUSED
+                                - CANCEL_ONLY
+                                - POST_ONLY
+                              default: UNSPECIFIED
                               description: |-
                                 Status of the CLOB.
 
-                                 - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                                 - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+                                 - UNSPECIFIED: Default value. This value is invalid and unused.
+                                 - ACTIVE: ACTIVE behavior is unfinalized.
                                 TODO(DEC-600): update this documentation.
-                                 - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+                                 - PAUSED: PAUSED behavior is unfinalized.
                                 TODO(DEC-600): update this documentation.
-                                 - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+                                 - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
                                 TODO(DEC-600): update this documentation.
-                                 - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+                                 - POST_ONLY: POST_ONLY behavior is unfinalized.
                                 TODO(DEC-600): update this documentation.
                             maker_fee_ppm:
                               type: integer
@@ -39737,23 +39737,23 @@ definitions:
           status:
             type: string
             enum:
-              - STATUS_UNSPECIFIED
-              - STATUS_ACTIVE
-              - STATUS_PAUSED
-              - STATUS_CANCEL_ONLY
-              - STATUS_POST_ONLY
-            default: STATUS_UNSPECIFIED
+              - UNSPECIFIED
+              - ACTIVE
+              - PAUSED
+              - CANCEL_ONLY
+              - POST_ONLY
+            default: UNSPECIFIED
             description: |-
               Status of the CLOB.
 
-               - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-               - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+               - UNSPECIFIED: Default value. This value is invalid and unused.
+               - ACTIVE: ACTIVE behavior is unfinalized.
               TODO(DEC-600): update this documentation.
-               - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+               - PAUSED: PAUSED behavior is unfinalized.
               TODO(DEC-600): update this documentation.
-               - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+               - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
               TODO(DEC-600): update this documentation.
-               - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+               - POST_ONLY: POST_ONLY behavior is unfinalized.
               TODO(DEC-600): update this documentation.
           maker_fee_ppm:
             type: integer
@@ -39826,23 +39826,23 @@ definitions:
       status:
         type: string
         enum:
-          - STATUS_UNSPECIFIED
-          - STATUS_ACTIVE
-          - STATUS_PAUSED
-          - STATUS_CANCEL_ONLY
-          - STATUS_POST_ONLY
-        default: STATUS_UNSPECIFIED
+          - UNSPECIFIED
+          - ACTIVE
+          - PAUSED
+          - CANCEL_ONLY
+          - POST_ONLY
+        default: UNSPECIFIED
         description: |-
           Status of the CLOB.
 
-           - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-           - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+           - UNSPECIFIED: Default value. This value is invalid and unused.
+           - ACTIVE: ACTIVE behavior is unfinalized.
           TODO(DEC-600): update this documentation.
-           - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+           - PAUSED: PAUSED behavior is unfinalized.
           TODO(DEC-600): update this documentation.
-           - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+           - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
           TODO(DEC-600): update this documentation.
-           - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+           - POST_ONLY: POST_ONLY behavior is unfinalized.
           TODO(DEC-600): update this documentation.
       maker_fee_ppm:
         type: integer
@@ -39858,23 +39858,23 @@ definitions:
   dydxprotocol.clob.ClobPair.Status:
     type: string
     enum:
-      - STATUS_UNSPECIFIED
-      - STATUS_ACTIVE
-      - STATUS_PAUSED
-      - STATUS_CANCEL_ONLY
-      - STATUS_POST_ONLY
-    default: STATUS_UNSPECIFIED
+      - UNSPECIFIED
+      - ACTIVE
+      - PAUSED
+      - CANCEL_ONLY
+      - POST_ONLY
+    default: UNSPECIFIED
     description: |-
       Status of the CLOB.
 
-       - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-       - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+       - UNSPECIFIED: Default value. This value is invalid and unused.
+       - ACTIVE: ACTIVE behavior is unfinalized.
       TODO(DEC-600): update this documentation.
-       - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+       - PAUSED: PAUSED behavior is unfinalized.
       TODO(DEC-600): update this documentation.
-       - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+       - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
       TODO(DEC-600): update this documentation.
-       - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+       - POST_ONLY: POST_ONLY behavior is unfinalized.
       TODO(DEC-600): update this documentation.
   dydxprotocol.clob.EquityTierLimit:
     type: object
@@ -40372,23 +40372,23 @@ definitions:
                     status:
                       type: string
                       enum:
-                        - STATUS_UNSPECIFIED
-                        - STATUS_ACTIVE
-                        - STATUS_PAUSED
-                        - STATUS_CANCEL_ONLY
-                        - STATUS_POST_ONLY
-                      default: STATUS_UNSPECIFIED
+                        - UNSPECIFIED
+                        - ACTIVE
+                        - PAUSED
+                        - CANCEL_ONLY
+                        - POST_ONLY
+                      default: UNSPECIFIED
                       description: |-
                         Status of the CLOB.
 
-                         - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                         - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+                         - UNSPECIFIED: Default value. This value is invalid and unused.
+                         - ACTIVE: ACTIVE behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
-                         - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+                         - PAUSED: PAUSED behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
-                         - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+                         - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
-                         - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+                         - POST_ONLY: POST_ONLY behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
                     maker_fee_ppm:
                       type: integer
@@ -40646,23 +40646,23 @@ definitions:
                 status:
                   type: string
                   enum:
-                    - STATUS_UNSPECIFIED
-                    - STATUS_ACTIVE
-                    - STATUS_PAUSED
-                    - STATUS_CANCEL_ONLY
-                    - STATUS_POST_ONLY
-                  default: STATUS_UNSPECIFIED
+                    - UNSPECIFIED
+                    - ACTIVE
+                    - PAUSED
+                    - CANCEL_ONLY
+                    - POST_ONLY
+                  default: UNSPECIFIED
                   description: |-
                     Status of the CLOB.
 
-                     - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                     - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+                     - UNSPECIFIED: Default value. This value is invalid and unused.
+                     - ACTIVE: ACTIVE behavior is unfinalized.
                     TODO(DEC-600): update this documentation.
-                     - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+                     - PAUSED: PAUSED behavior is unfinalized.
                     TODO(DEC-600): update this documentation.
-                     - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+                     - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
                     TODO(DEC-600): update this documentation.
-                     - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+                     - POST_ONLY: POST_ONLY behavior is unfinalized.
                     TODO(DEC-600): update this documentation.
                 maker_fee_ppm:
                   type: integer
@@ -40763,23 +40763,23 @@ definitions:
             status:
               type: string
               enum:
-                - STATUS_UNSPECIFIED
-                - STATUS_ACTIVE
-                - STATUS_PAUSED
-                - STATUS_CANCEL_ONLY
-                - STATUS_POST_ONLY
-              default: STATUS_UNSPECIFIED
+                - UNSPECIFIED
+                - ACTIVE
+                - PAUSED
+                - CANCEL_ONLY
+                - POST_ONLY
+              default: UNSPECIFIED
               description: |-
                 Status of the CLOB.
 
-                 - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                 - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+                 - UNSPECIFIED: Default value. This value is invalid and unused.
+                 - ACTIVE: ACTIVE behavior is unfinalized.
                 TODO(DEC-600): update this documentation.
-                 - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+                 - PAUSED: PAUSED behavior is unfinalized.
                 TODO(DEC-600): update this documentation.
-                 - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+                 - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
                 TODO(DEC-600): update this documentation.
-                 - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+                 - POST_ONLY: POST_ONLY behavior is unfinalized.
                 TODO(DEC-600): update this documentation.
             maker_fee_ppm:
               type: integer
@@ -40886,23 +40886,23 @@ definitions:
           status:
             type: string
             enum:
-              - STATUS_UNSPECIFIED
-              - STATUS_ACTIVE
-              - STATUS_PAUSED
-              - STATUS_CANCEL_ONLY
-              - STATUS_POST_ONLY
-            default: STATUS_UNSPECIFIED
+              - UNSPECIFIED
+              - ACTIVE
+              - PAUSED
+              - CANCEL_ONLY
+              - POST_ONLY
+            default: UNSPECIFIED
             description: |-
               Status of the CLOB.
 
-               - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-               - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
+               - UNSPECIFIED: Default value. This value is invalid and unused.
+               - ACTIVE: ACTIVE behavior is unfinalized.
               TODO(DEC-600): update this documentation.
-               - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
+               - PAUSED: PAUSED behavior is unfinalized.
               TODO(DEC-600): update this documentation.
-               - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
+               - CANCEL_ONLY: CANCEL_ONLY behavior is unfinalized.
               TODO(DEC-600): update this documentation.
-               - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
+               - POST_ONLY: POST_ONLY behavior is unfinalized.
               TODO(DEC-600): update this documentation.
           maker_fee_ppm:
             type: integer
