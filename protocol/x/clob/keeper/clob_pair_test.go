@@ -356,7 +356,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 				{
 					clobPair: *clobtest.GenerateClobPair(
 						clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED),
-						clobtest.WithId(100), // unused id
+						clobtest.WithId(99999), // unused id
 					),
 					expectedErr: "has unsupported status STATUS_UNSPECIFIED",
 				},
@@ -385,7 +385,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 				{
 					clobPair: *clobtest.GenerateClobPair(
 						clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED),
-						clobtest.WithId(100), // unused id
+						clobtest.WithId(99999), // unused id
 					),
 					expectedErr: "has unsupported status STATUS_UNSPECIFIED",
 				},
