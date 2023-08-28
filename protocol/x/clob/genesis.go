@@ -21,6 +21,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 		}
 		_, err = k.CreatePerpetualClobPair(
 			ctx,
+			elem.Id,
 			perpetualId,
 			satypes.BaseQuantums(elem.MinOrderBaseQuantums),
 			satypes.BaseQuantums(elem.StepBaseQuantums),

@@ -124,7 +124,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-	k.setNumClobPairs(ctx, uint32(0))
 }
 
 // InitMemStore initializes the memstore of the `clob` keeper.

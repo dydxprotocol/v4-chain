@@ -5,11 +5,20 @@ import (
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
 const (
-	// TODO(CORE-189): Support additional tokens for gas.
-	minGasPrice = "0ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
+	// `minGasPriceUusdc` is default minimum gas price in micro USDC.
+	minGasPriceUusdc = "0.025" + assettypes.UusdcDenom
+	// `minGasPriceStakeToken` is the default minimum gas price in stake token.
+	// TODO(GENESIS): `dv4tnt` is a placeholder for the stake token of the dYdX chain.
+	// Before this software is published for genesis, `dv4tnt` should be replaced with
+	// the chain stake token. It's also recommended that the min gas price in stake token
+	// is roughly the same in value as 0.025 micro USDC.
+	minGasPriceStakeToken = "0.025dv4tnt"
+	// `minGasPrice` defines the default `minimum-gas-prices` attribute in validator's `app.toml` file.
+	MinGasPrice = minGasPriceUusdc + "," + minGasPriceStakeToken
 )
 
 // DydxAppConfig specifies dYdX app specific config.
@@ -38,7 +47,7 @@ func initAppConfig() (string, interface{}) {
 	//   own app.toml to override, or use this default value.
 	//
 	// In simapp, we set the min gas prices to 0.
-	srvCfg.MinGasPrices = minGasPrice
+	srvCfg.MinGasPrices = MinGasPrice
 
 	appConfig := DydxAppConfig{
 		Config: *srvCfg,
