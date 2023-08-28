@@ -33,6 +33,7 @@ const (
 	Yes                    = "yes"
 	CheckTx                = "check_tx"
 	DeliverTx              = "deliver_tx"
+	ProcessProposal        = "process_proposal"
 
 	// Common (Daemons).
 	MainTaskLoop = "main_task_loop"
