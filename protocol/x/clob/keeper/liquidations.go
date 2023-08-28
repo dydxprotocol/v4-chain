@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -85,11 +86,12 @@ func (k Keeper) PlacePerpetualLiquidation(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	telemetry.IncrCounter(
-		1,
-		metrics.Liquidations,
-		metrics.PlacePerpetualLiquidation,
-		metrics.Count,
+	telemetry.IncrCounterWithLabels(
+		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.BaseQuantums},
+		float32(liquidationOrder.GetBaseQuantums()),
+		[]gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
+		},
 	)
 
 	orderSizeOptimisticallyFilledFromMatchingQuantums,
@@ -536,25 +538,8 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 		bigMaxSubaccountNotionalLiquidatable,
 	)
 
-	bigQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		perpetualPosition.PerpetualId,
-		perpetualPosition.GetBigQuantums(),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	bigAbsQuoteQuantums := new(big.Int).Abs(bigQuoteQuantums)
-	// Return the full position to avoid any rounding errors.
-	if bigAbsQuoteQuantums.Cmp(bigMaxNotionalLiquidatable) <= 0 ||
-		perpetualPosition.GetBigQuantums().CmpAbs(
-			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
-		) <= 0 {
-		return clobPair, perpetualPosition.GetBigQuantums(), nil
-	}
-
-	bigQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
+	// Convert the max notional liquidatable to base quantums.
+	bigBaseQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
 		ctx,
 		perpetualPosition.PerpetualId,
 		bigMaxNotionalLiquidatable,
@@ -564,18 +549,26 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	// Round to the nearest step size.
-	bigQuantumsToLiquidate = lib.BigIntRoundToMultiple(
-		bigQuantumsToLiquidate,
+	bigBaseQuantumsToLiquidate = lib.BigIntRoundToMultiple(
+		bigBaseQuantumsToLiquidate,
 		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		false,
 	)
 
+	// Clamp the base quantums to liquidate to the step size and the size of the position
+	// in case there's rounding errors.
+	bigBaseQuantumsToLiquidate = lib.BigIntClamp(
+		bigBaseQuantumsToLiquidate,
+		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
+		new(big.Int).Abs(perpetualPosition.GetBigQuantums()),
+	)
+
 	// Negate the position size if it's short.
 	if !perpetualPosition.GetIsLong() {
-		bigQuantumsToLiquidate.Neg(bigQuantumsToLiquidate)
+		bigBaseQuantumsToLiquidate.Neg(bigBaseQuantumsToLiquidate)
 	}
 
-	return clobPair, bigQuantumsToLiquidate, nil
+	return clobPair, bigBaseQuantumsToLiquidate, nil
 }
 
 // GetMaxLiquidatableNotionalAndInsuranceLost returns the maximum notional that the subaccount can liquidate

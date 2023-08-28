@@ -82,6 +82,7 @@ const (
 
 	// CLOB.
 	AddPerpetualFillAmount                       = "add_perpetual_fill_amount"
+	BaseQuantums                                 = "base_quantums"
 	BestAskClobPair                              = "best_ask_clob_pair"
 	BestBidClobPair                              = "best_bid_clob_pair"
 	CancelOrder                                  = "cancel_order"

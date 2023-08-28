@@ -3829,6 +3829,65 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			expectedClobPair: constants.ClobPair_Btc,
 			expectedQuantums: new(big.Int).SetUint64(5_000_000),
 		},
+		`returned position size is rounded down to the nearest clob.stepBaseQuantums`: {
+			perpetualPositions: []*satypes.PerpetualPosition{
+				{
+					PerpetualId: 0,
+					Quantums:    dtypes.NewInt(140),
+				},
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			liquidationConfig: types.LiquidationsConfig{
+				MaxLiquidationFeePpm: 5_000,
+				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				PositionBlockLimits: types.PositionBlockLimits{
+					MinPositionNotionalLiquidated:   1,
+					MaxPositionPortionLiquidatedPpm: 100_000,
+				},
+				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+			},
+
+			clobPairs: []types.ClobPair{
+				// StepBaseQuantums is 5.
+				constants.ClobPair_Btc,
+			},
+
+			expectedClobPair: constants.ClobPair_Btc,
+			// 140 * 10% = 14, which is rounded down to 10.
+			expectedQuantums: new(big.Int).SetUint64(10),
+		},
+		`returned position size is at least clob.stepBaseQuantums`: {
+			perpetualPositions: []*satypes.PerpetualPosition{
+				{
+					PerpetualId: 0,
+					Quantums:    dtypes.NewInt(20),
+				},
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			liquidationConfig: types.LiquidationsConfig{
+				MaxLiquidationFeePpm: 5_000,
+				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				PositionBlockLimits: types.PositionBlockLimits{
+					MinPositionNotionalLiquidated:   1,
+					MaxPositionPortionLiquidatedPpm: 100_000,
+				},
+				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+			},
+
+			clobPairs: []types.ClobPair{
+				// StepBaseQuantums is 5.
+				constants.ClobPair_Btc,
+			},
+
+			expectedClobPair: constants.ClobPair_Btc,
+			// 20 * 10% = 2, however, clobPair.StepBaseQuantum is 5,
+			// so the returned position size is 5.
+			expectedQuantums: new(big.Int).SetUint64(5),
+		},
 		`Full position is returned when position smaller than subaccount limit`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
 				&constants.PerpetualPosition_OneTenthBTCLong, // 0.1 BTC, $5,000 notional
