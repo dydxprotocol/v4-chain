@@ -164,19 +164,19 @@ func orderToIndexerOrder_GoodTilBlockTime(
 	}
 }
 
-func ConvertToClobPairStatus(status clobtypes.ClobPair_Status) ClobPairStatus {
+func ConvertToClobPairStatus(status clobtypes.ClobPairStatus) ClobPairStatus {
 	switch status {
-	case clobtypes.ClobPair_STATUS_UNSPECIFIED:
+	case clobtypes.ClobPairStatus_UNSPECIFIED:
 		return ClobPairStatus_CLOB_PAIR_STATUS_UNSPECIFIED
-	case clobtypes.ClobPair_STATUS_ACTIVE:
+	case clobtypes.ClobPairStatus_ACTIVE:
 		return ClobPairStatus_CLOB_PAIR_STATUS_ACTIVE
-	case clobtypes.ClobPair_STATUS_PAUSED:
+	case clobtypes.ClobPairStatus_PAUSED:
 		return ClobPairStatus_CLOB_PAIR_STATUS_PAUSED
-	case clobtypes.ClobPair_STATUS_CANCEL_ONLY:
+	case clobtypes.ClobPairStatus_CANCEL_ONLY:
 		return ClobPairStatus_CLOB_PAIR_STATUS_CANCEL_ONLY
-	case clobtypes.ClobPair_STATUS_POST_ONLY:
+	case clobtypes.ClobPairStatus_POST_ONLY:
 		return ClobPairStatus_CLOB_PAIR_STATUS_POST_ONLY
-	case clobtypes.ClobPair_STATUS_INITIALIZING:
+	case clobtypes.ClobPairStatus_INITIALIZING:
 		return ClobPairStatus_CLOB_PAIR_STATUS_INITIALIZING
 	default:
 		panic("invalid clob pair status")

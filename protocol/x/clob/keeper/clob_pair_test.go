@@ -46,7 +46,7 @@ func createNClobPair(
 		}
 		items[i].SubticksPerTick = 5
 		items[i].StepBaseQuantums = 5
-		items[i].Status = types.ClobPair_STATUS_ACTIVE
+		items[i].Status = types.ClobPairStatus_ACTIVE
 
 		// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 		// the indexer event manager to expect these events.
@@ -242,12 +242,12 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 			expectedErr: "invalid ClobPair parameter: SubticksPerTick must be > 0.",
 		},
 		"CLOB pair is invalid when the status is unspecified": {
-			clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
+			clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPairStatus_UNSPECIFIED)),
 			expectedErr: "has unsupported status STATUS_UNSPECIFIED",
 		},
 		"CLOB pair status is not supported": {
 			clobPair: *clobtest.GenerateClobPair(
-				clobtest.WithStatus(types.ClobPair_STATUS_PAUSED),
+				clobtest.WithStatus(types.ClobPairStatus_UNSPECIFIED),
 			),
 			expectedErr: "has unsupported status STATUS_PAUSED",
 		},
@@ -364,7 +364,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 			clobPairs: []CreationExpectation{
 				{clobPair: constants.ClobPair_Btc},
 				{
-					clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
+					clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPairStatus_UNSPECIFIED)),
 					expectedErr: "has unsupported status STATUS_UNSPECIFIED",
 				},
 			},
@@ -376,7 +376,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 		"Can create a CLOB pair after failing to create one": {
 			clobPairs: []CreationExpectation{
 				{
-					clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
+					clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPairStatus_UNSPECIFIED)),
 					expectedErr: "has unsupported status STATUS_UNSPECIFIED",
 				},
 				{clobPair: constants.ClobPair_Btc},
@@ -390,7 +390,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 			clobPairs: []CreationExpectation{
 				{clobPair: constants.ClobPair_Btc},
 				{
-					clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPair_STATUS_UNSPECIFIED)),
+					clobPair:    *clobtest.GenerateClobPair(clobtest.WithStatus(types.ClobPairStatus_UNSPECIFIED)),
 					expectedErr: "has unsupported status STATUS_UNSPECIFIED",
 				},
 				{clobPair: constants.ClobPair_Eth},
@@ -565,7 +565,7 @@ func TestClobPairGetAll(t *testing.T) {
 func TestSetClobPairStatus(t *testing.T) {
 	testCases := map[string]struct {
 		setup         func(t *testing.T, ks keepertest.ClobKeepersTestContext, manager *mocks.IndexerEventManager)
-		status        types.ClobPair_Status
+		status        types.ClobPairStatus
 		expectedErr   string
 		expectedPanic string
 	}{
@@ -577,18 +577,18 @@ func TestSetClobPairStatus(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
 
 				clobPair := constants.ClobPair_Btc
-				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
+				clobPair.Status = types.ClobPairStatus_INITIALIZING
 				b := cdc.MustMarshal(&clobPair)
 				store.Set(types.ClobPairKey(
 					types.ClobPairId(clobPair.Id),
 				), b)
 			},
-			status: types.ClobPair_STATUS_ACTIVE,
+			status: types.ClobPairStatus_ACTIVE,
 		},
 		"Panics with missing clob pair": {
 			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 			},
-			status:        types.ClobPair_STATUS_ACTIVE,
+			status:        types.ClobPairStatus_ACTIVE,
 			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
 		},
 		"Errors with unsupported transition to supported status": {
@@ -625,7 +625,7 @@ func TestSetClobPairStatus(t *testing.T) {
 				)
 				require.NoError(t, err)
 			},
-			status:      types.ClobPair_STATUS_INITIALIZING,
+			status:      types.ClobPairStatus_INITIALIZING,
 			expectedErr: "Cannot transition from status STATUS_ACTIVE to status STATUS_INITIALIZING",
 		},
 		"Errors with unsupported transition to unsupported status": {
@@ -662,7 +662,7 @@ func TestSetClobPairStatus(t *testing.T) {
 				)
 				require.NoError(t, err)
 			},
-			status:      types.ClobPair_Status(100),
+			status:      types.ClobPairStatus(100),
 			expectedErr: "Cannot transition from status STATUS_ACTIVE to status 100",
 		},
 	}

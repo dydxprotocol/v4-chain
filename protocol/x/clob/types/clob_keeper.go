@@ -27,7 +27,7 @@ type ClobKeeper interface {
 		stepSizeInBaseQuantums satypes.BaseQuantums,
 		quantumConversionExponent int32,
 		subticksPerTick uint32,
-		status ClobPair_Status,
+		status ClobPairStatus,
 	) (
 		ClobPair,
 		error,
@@ -120,7 +120,7 @@ type ClobKeeper interface {
 	SetClobPairStatus(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
-		status ClobPair_Status,
+		status ClobPairStatus,
 	) error
 	GetGovAuthority() string
 }

@@ -28,7 +28,7 @@ func (k Keeper) CreatePerpetualClobPair(
 	stepSizeBaseQuantums satypes.BaseQuantums,
 	quantumConversionExponent int32,
 	subticksPerTick uint32,
-	status types.ClobPair_Status,
+	status types.ClobPairStatus,
 ) (types.ClobPair, error) {
 	nextId := k.GetNumClobPairs(ctx)
 
@@ -324,7 +324,7 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 	}
 
 	switch clobPair.Status {
-	case types.ClobPair_STATUS_INITIALIZING:
+	case types.ClobPairStatus_INITIALIZING:
 		// Reject stateful orders. Short-term orders expire within the ShortBlockWindow, ensuring
 		// stale short term order expiration. Stateful orders are rejected to prevent long-term orders
 		// from controlling the price at which new orders can be placed. This is necessary when all orders
@@ -398,12 +398,12 @@ func (k Keeper) mustGetClobPair(
 }
 
 // SetClobPairStatus fetches a ClobPair by id and sets its
-// Status property equal to the provided ClobPair_Status. This function returns
+// Status property equal to the provided ClobPairStatus. This function returns
 // an error if the proposed status transition is not supported.
 func (k Keeper) SetClobPairStatus(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
-	clobPairStatus types.ClobPair_Status,
+	clobPairStatus types.ClobPairStatus,
 ) error {
 	clobPair := k.mustGetClobPair(ctx, clobPairId)
 

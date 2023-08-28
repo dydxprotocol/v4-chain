@@ -71,7 +71,7 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 			},
 			SubticksPerTick:  5,
 			StepBaseQuantums: 5,
-			Status:           types.ClobPair_STATUS_ACTIVE,
+			Status:           types.ClobPairStatus_ACTIVE,
 		}
 		nullify.Fill(&clobPair) //nolint:staticcheck
 		state.ClobPairs = append(state.ClobPairs, clobPair)

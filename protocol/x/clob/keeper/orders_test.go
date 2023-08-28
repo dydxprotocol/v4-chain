@@ -478,7 +478,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:                    types.ClobPair_STATUS_ACTIVE,
+					Status:                    types.ClobPairStatus_ACTIVE,
 					StepBaseQuantums:          10,
 					SubticksPerTick:           100,
 					QuantumConversionExponent: -1,
@@ -1527,7 +1527,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			},
 			expectedErr: types.ErrInvalidPlaceOrder.Error(),
 		},
-		"Fails with long-term order and ClobPair_Status of INITIALIZING": {
+		"Fails with long-term order and ClobPairStatus of INITIALIZING": {
 			clobPairs: []types.ClobPair{
 				{
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -1535,7 +1535,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:           types.ClobPair_STATUS_INITIALIZING,
+					Status:           types.ClobPairStatus_INITIALIZING,
 					StepBaseQuantums: 10,
 					SubticksPerTick:  10,
 				},
@@ -1543,7 +1543,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			order:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
 			expectedErr: "must not be stateful for clob pair with status",
 		},
-		"Fails with conditional order and ClobPair_Status of INITIALIZING": {
+		"Fails with conditional order and ClobPairStatus of INITIALIZING": {
 			clobPairs: []types.ClobPair{
 				{
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -1551,7 +1551,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:           types.ClobPair_STATUS_INITIALIZING,
+					Status:           types.ClobPairStatus_INITIALIZING,
 					StepBaseQuantums: 10,
 					SubticksPerTick:  10,
 				},
@@ -1559,7 +1559,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			order:       constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 			expectedErr: "must not be stateful for clob pair with status",
 		},
-		"Fails with short-term non-post-only order and ClobPair_Status of INITIALIZING": {
+		"Fails with short-term non-post-only order and ClobPairStatus of INITIALIZING": {
 			clobPairs: []types.ClobPair{
 				{
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -1567,7 +1567,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:           types.ClobPair_STATUS_INITIALIZING,
+					Status:           types.ClobPairStatus_INITIALIZING,
 					StepBaseQuantums: 10,
 					SubticksPerTick:  10,
 				},
@@ -1575,7 +1575,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			order:       constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16,
 			expectedErr: "must be post-only for clob pair with status",
 		},
-		"Fails with short-term post-only bid above oracle price and ClobPair_Status of INITIALIZING": {
+		"Fails with short-term post-only bid above oracle price and ClobPairStatus of INITIALIZING": {
 			clobPairs: []types.ClobPair{
 				{
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -1583,7 +1583,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:           types.ClobPair_STATUS_INITIALIZING,
+					Status:           types.ClobPairStatus_INITIALIZING,
 					StepBaseQuantums: 10,
 					SubticksPerTick:  1,
 				},
@@ -1598,7 +1598,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			},
 			expectedErr: "must be less than or equal to oracle price subticks",
 		},
-		"Fails with short-term post-only ask below oracle price and ClobPair_Status of INITIALIZING": {
+		"Fails with short-term post-only ask below oracle price and ClobPairStatus of INITIALIZING": {
 			clobPairs: []types.ClobPair{
 				{
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -1606,7 +1606,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:           types.ClobPair_STATUS_INITIALIZING,
+					Status:           types.ClobPairStatus_INITIALIZING,
 					StepBaseQuantums: 10,
 					SubticksPerTick:  1,
 				},
@@ -1621,7 +1621,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			},
 			expectedErr: "must be greater than or equal to oracle price subticks",
 		},
-		"Succeeds with short-term post-only bid below oracle price and ClobPair_Status of INITIALIZING": {
+		"Succeeds with short-term post-only bid below oracle price and ClobPairStatus of INITIALIZING": {
 			clobPairs: []types.ClobPair{
 				{
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -1629,7 +1629,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:           types.ClobPair_STATUS_INITIALIZING,
+					Status:           types.ClobPairStatus_INITIALIZING,
 					StepBaseQuantums: 10,
 					SubticksPerTick:  1,
 				},
@@ -1643,7 +1643,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
 			},
 		},
-		"Succeeds with short-term post-only ask above oracle price and ClobPair_Status of INITIALIZING": {
+		"Succeeds with short-term post-only ask above oracle price and ClobPairStatus of INITIALIZING": {
 			clobPairs: []types.ClobPair{
 				{
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -1651,7 +1651,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:           types.ClobPair_STATUS_INITIALIZING,
+					Status:           types.ClobPairStatus_INITIALIZING,
 					StepBaseQuantums: 10,
 					SubticksPerTick:  1,
 				},
@@ -1665,7 +1665,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
 			},
 		},
-		"Succeeds with short-term post-only bid equal to oracle price and ClobPair_Status of INITIALIZING": {
+		"Succeeds with short-term post-only bid equal to oracle price and ClobPairStatus of INITIALIZING": {
 			clobPairs: []types.ClobPair{
 				{
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -1673,7 +1673,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:           types.ClobPair_STATUS_INITIALIZING,
+					Status:           types.ClobPairStatus_INITIALIZING,
 					StepBaseQuantums: 10,
 					SubticksPerTick:  1,
 				},
@@ -1687,7 +1687,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
 			},
 		},
-		"Succeeds with short-term post-only ask equal to oracle price and ClobPair_Status of INITIALIZING": {
+		"Succeeds with short-term post-only ask equal to oracle price and ClobPairStatus of INITIALIZING": {
 			clobPairs: []types.ClobPair{
 				{
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -1695,7 +1695,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:           types.ClobPair_STATUS_INITIALIZING,
+					Status:           types.ClobPairStatus_INITIALIZING,
 					StepBaseQuantums: 10,
 					SubticksPerTick:  1,
 				},
@@ -1722,7 +1722,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 								PerpetualId: 0,
 							},
 						},
-						Status:           types.ClobPair_STATUS_ACTIVE,
+						Status:           types.ClobPairStatus_ACTIVE,
 						StepBaseQuantums: 12,
 						SubticksPerTick:  39,
 					},

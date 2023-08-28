@@ -1,128 +1,128 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
-/** Status of the CLOB. */
+/** ClobPairStatus represents the status of a CLOB. */
 
-export enum ClobPair_Status {
-  /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
-  STATUS_UNSPECIFIED = 0,
+export enum ClobPairStatus {
+  /** UNSPECIFIED - Default value. This value is invalid and unused. */
+  UNSPECIFIED = 0,
 
-  /** STATUS_ACTIVE - STATUS_ACTIVE represents an active clob pair. */
-  STATUS_ACTIVE = 1,
+  /** ACTIVE - ACTIVE represents an active clob pair. */
+  ACTIVE = 1,
 
   /**
-   * STATUS_PAUSED - STATUS_PAUSED behavior is unfinalized.
+   * PAUSED - PAUSED behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_PAUSED = 2,
+  PAUSED = 2,
 
   /**
-   * STATUS_CANCEL_ONLY - STATUS_CANCEL_ONLY behavior is unfinalized.
+   * CANCEL_ONLY - CANCEL_ONLY behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_CANCEL_ONLY = 3,
+  CANCEL_ONLY = 3,
 
   /**
-   * STATUS_POST_ONLY - STATUS_POST_ONLY behavior is unfinalized.
+   * POST_ONLY - POST_ONLY behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_POST_ONLY = 4,
+  POST_ONLY = 4,
 
   /**
-   * STATUS_INITIALIZING - STATUS_INITIALIZING represents a newly-added clob pair.
+   * INITIALIZING - INITIALIZING represents a newly-added clob pair.
    * Clob pairs in this state only accept orders which are
    * both short-term and post-only.
    */
-  STATUS_INITIALIZING = 5,
+  INITIALIZING = 5,
   UNRECOGNIZED = -1,
 }
-/** Status of the CLOB. */
+/** ClobPairStatus represents the status of a CLOB. */
 
-export enum ClobPair_StatusSDKType {
-  /** STATUS_UNSPECIFIED - Default value. This value is invalid and unused. */
-  STATUS_UNSPECIFIED = 0,
+export enum ClobPairStatusSDKType {
+  /** UNSPECIFIED - Default value. This value is invalid and unused. */
+  UNSPECIFIED = 0,
 
-  /** STATUS_ACTIVE - STATUS_ACTIVE represents an active clob pair. */
-  STATUS_ACTIVE = 1,
+  /** ACTIVE - ACTIVE represents an active clob pair. */
+  ACTIVE = 1,
 
   /**
-   * STATUS_PAUSED - STATUS_PAUSED behavior is unfinalized.
+   * PAUSED - PAUSED behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_PAUSED = 2,
+  PAUSED = 2,
 
   /**
-   * STATUS_CANCEL_ONLY - STATUS_CANCEL_ONLY behavior is unfinalized.
+   * CANCEL_ONLY - CANCEL_ONLY behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_CANCEL_ONLY = 3,
+  CANCEL_ONLY = 3,
 
   /**
-   * STATUS_POST_ONLY - STATUS_POST_ONLY behavior is unfinalized.
+   * POST_ONLY - POST_ONLY behavior is unfinalized.
    * TODO(DEC-600): update this documentation.
    */
-  STATUS_POST_ONLY = 4,
+  POST_ONLY = 4,
 
   /**
-   * STATUS_INITIALIZING - STATUS_INITIALIZING represents a newly-added clob pair.
+   * INITIALIZING - INITIALIZING represents a newly-added clob pair.
    * Clob pairs in this state only accept orders which are
    * both short-term and post-only.
    */
-  STATUS_INITIALIZING = 5,
+  INITIALIZING = 5,
   UNRECOGNIZED = -1,
 }
-export function clobPair_StatusFromJSON(object: any): ClobPair_Status {
+export function clobPairStatusFromJSON(object: any): ClobPairStatus {
   switch (object) {
     case 0:
-    case "STATUS_UNSPECIFIED":
-      return ClobPair_Status.STATUS_UNSPECIFIED;
+    case "UNSPECIFIED":
+      return ClobPairStatus.UNSPECIFIED;
 
     case 1:
-    case "STATUS_ACTIVE":
-      return ClobPair_Status.STATUS_ACTIVE;
+    case "ACTIVE":
+      return ClobPairStatus.ACTIVE;
 
     case 2:
-    case "STATUS_PAUSED":
-      return ClobPair_Status.STATUS_PAUSED;
+    case "PAUSED":
+      return ClobPairStatus.PAUSED;
 
     case 3:
-    case "STATUS_CANCEL_ONLY":
-      return ClobPair_Status.STATUS_CANCEL_ONLY;
+    case "CANCEL_ONLY":
+      return ClobPairStatus.CANCEL_ONLY;
 
     case 4:
-    case "STATUS_POST_ONLY":
-      return ClobPair_Status.STATUS_POST_ONLY;
+    case "POST_ONLY":
+      return ClobPairStatus.POST_ONLY;
 
     case 5:
-    case "STATUS_INITIALIZING":
-      return ClobPair_Status.STATUS_INITIALIZING;
+    case "INITIALIZING":
+      return ClobPairStatus.INITIALIZING;
 
     case -1:
     case "UNRECOGNIZED":
     default:
-      return ClobPair_Status.UNRECOGNIZED;
+      return ClobPairStatus.UNRECOGNIZED;
   }
 }
-export function clobPair_StatusToJSON(object: ClobPair_Status): string {
+export function clobPairStatusToJSON(object: ClobPairStatus): string {
   switch (object) {
-    case ClobPair_Status.STATUS_UNSPECIFIED:
-      return "STATUS_UNSPECIFIED";
+    case ClobPairStatus.UNSPECIFIED:
+      return "UNSPECIFIED";
 
-    case ClobPair_Status.STATUS_ACTIVE:
-      return "STATUS_ACTIVE";
+    case ClobPairStatus.ACTIVE:
+      return "ACTIVE";
 
-    case ClobPair_Status.STATUS_PAUSED:
-      return "STATUS_PAUSED";
+    case ClobPairStatus.PAUSED:
+      return "PAUSED";
 
-    case ClobPair_Status.STATUS_CANCEL_ONLY:
-      return "STATUS_CANCEL_ONLY";
+    case ClobPairStatus.CANCEL_ONLY:
+      return "CANCEL_ONLY";
 
-    case ClobPair_Status.STATUS_POST_ONLY:
-      return "STATUS_POST_ONLY";
+    case ClobPairStatus.POST_ONLY:
+      return "POST_ONLY";
 
-    case ClobPair_Status.STATUS_INITIALIZING:
-      return "STATUS_INITIALIZING";
+    case ClobPairStatus.INITIALIZING:
+      return "INITIALIZING";
 
-    case ClobPair_Status.UNRECOGNIZED:
+    case ClobPairStatus.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
   }
@@ -199,7 +199,9 @@ export interface ClobPair {
   /** Minimum size of an order on the CLOB, in base quantums. */
 
   minOrderBaseQuantums: Long;
-  status: ClobPair_Status;
+  /** Status of the CLOB. */
+
+  status: ClobPairStatus;
 }
 /**
  * ClobPair represents a single CLOB pair for a given product
@@ -231,7 +233,9 @@ export interface ClobPairSDKType {
   /** Minimum size of an order on the CLOB, in base quantums. */
 
   min_order_base_quantums: Long;
-  status: ClobPair_StatusSDKType;
+  /** Status of the CLOB. */
+
+  status: ClobPairStatusSDKType;
 }
 
 function createBasePerpetualClobMetadata(): PerpetualClobMetadata {

@@ -415,7 +415,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 									PerpetualId: 0,
 								},
 							},
-							Status:           types.ClobPair_STATUS_ACTIVE,
+							Status:           types.ClobPairStatus_ACTIVE,
 							StepBaseQuantums: 12,
 							SubticksPerTick:  39,
 						},

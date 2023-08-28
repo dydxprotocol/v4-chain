@@ -16,7 +16,7 @@ var (
 		StepBaseQuantums:          10,
 		SubticksPerTick:           100,
 		QuantumConversionExponent: -8,
-		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
+		Status:                    clobtypes.ClobPairStatus_ACTIVE,
 	}
 	ClobPair_Btc = clobtypes.ClobPair{
 		Id: 0,
@@ -28,7 +28,7 @@ var (
 		StepBaseQuantums:          5,
 		SubticksPerTick:           5,
 		QuantumConversionExponent: -8,
-		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
+		Status:                    clobtypes.ClobPairStatus_ACTIVE,
 	}
 	ClobPair_Eth = clobtypes.ClobPair{
 		Id: 1,
@@ -40,7 +40,7 @@ var (
 		StepBaseQuantums:          1000,
 		SubticksPerTick:           1000,
 		QuantumConversionExponent: -9,
-		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
+		Status:                    clobtypes.ClobPairStatus_ACTIVE,
 	}
 	ClobPair_Eth_No_Fee = clobtypes.ClobPair{
 		Id: 1,
@@ -52,7 +52,7 @@ var (
 		StepBaseQuantums:          1000,
 		SubticksPerTick:           1000,
 		QuantumConversionExponent: -9,
-		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
+		Status:                    clobtypes.ClobPairStatus_ACTIVE,
 	}
 	ClobPair_Asset = clobtypes.ClobPair{
 		Id: 100,
@@ -65,7 +65,7 @@ var (
 		StepBaseQuantums:          1000,
 		SubticksPerTick:           100,
 		QuantumConversionExponent: 10,
-		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
+		Status:                    clobtypes.ClobPairStatus_ACTIVE,
 	}
 	ClobPair_Btc2 = clobtypes.ClobPair{
 		Id: 101,
@@ -77,7 +77,7 @@ var (
 		StepBaseQuantums:          100,
 		SubticksPerTick:           1000,
 		QuantumConversionExponent: -8,
-		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
+		Status:                    clobtypes.ClobPairStatus_ACTIVE,
 	}
 	ClobPair_Btc3 = clobtypes.ClobPair{
 		Id: 0,
@@ -89,6 +89,6 @@ var (
 		StepBaseQuantums:          10,
 		SubticksPerTick:           100,
 		QuantumConversionExponent: -8,
-		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
+		Status:                    clobtypes.ClobPairStatus_ACTIVE,
 	}
 )

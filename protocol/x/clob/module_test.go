@@ -328,7 +328,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				uint32(0),
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-				clob_types.ClobPair_STATUS_ACTIVE,
+				clob_types.ClobPairStatus_ACTIVE,
 				0,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
 				uint32(100),
@@ -351,7 +351,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.Equal(t, uint32(0), clobPairs[0].GetPerpetualClobMetadata().PerpetualId)
 	require.Equal(t, uint32(100), clobPairs[0].SubticksPerTick)
 	require.Equal(t, uint64(5), clobPairs[0].StepBaseQuantums)
-	require.Equal(t, clob_types.ClobPair_STATUS_ACTIVE, clobPairs[0].Status)
+	require.Equal(t, clob_types.ClobPairStatus_ACTIVE, clobPairs[0].Status)
 
 	liquidationsConfig := keeper.GetLiquidationsConfig(ctx)
 	require.Equal(t, uint32(5_000), liquidationsConfig.MaxLiquidationFeePpm)

@@ -114,7 +114,7 @@ func TestGenesis(t *testing.T) {
 						Id:               uint32(0),
 						StepBaseQuantums: 5,
 						SubticksPerTick:  5,
-						Status:           types.ClobPair_STATUS_ACTIVE,
+						Status:           types.ClobPairStatus_ACTIVE,
 					},
 					{
 						Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -125,7 +125,7 @@ func TestGenesis(t *testing.T) {
 						Id:               uint32(1),
 						StepBaseQuantums: 5,
 						SubticksPerTick:  5,
-						Status:           types.ClobPair_STATUS_ACTIVE,
+						Status:           types.ClobPairStatus_ACTIVE,
 					},
 				},
 				LiquidationsConfig: types.LiquidationsConfig{
@@ -173,7 +173,7 @@ func TestGenesis(t *testing.T) {
 						Metadata:         nil,
 						StepBaseQuantums: 5,
 						SubticksPerTick:  5,
-						Status:           types.ClobPair_STATUS_ACTIVE,
+						Status:           types.ClobPairStatus_ACTIVE,
 					},
 					{
 						Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -184,7 +184,7 @@ func TestGenesis(t *testing.T) {
 						Id:               uint32(1),
 						StepBaseQuantums: 5,
 						SubticksPerTick:  5,
-						Status:           types.ClobPair_STATUS_ACTIVE,
+						Status:           types.ClobPairStatus_ACTIVE,
 					},
 				},
 				LiquidationsConfig: types.LiquidationsConfig{
@@ -213,7 +213,7 @@ func TestGenesis(t *testing.T) {
 						Id:               uint32(0),
 						StepBaseQuantums: 5,
 						SubticksPerTick:  5,
-						Status:           types.ClobPair_STATUS_ACTIVE,
+						Status:           types.ClobPairStatus_ACTIVE,
 					},
 					{
 						Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -224,7 +224,7 @@ func TestGenesis(t *testing.T) {
 						Id:               uint32(1),
 						StepBaseQuantums: 5,
 						SubticksPerTick:  5,
-						Status:           types.ClobPair_STATUS_ACTIVE,
+						Status:           types.ClobPairStatus_ACTIVE,
 					},
 				},
 				LiquidationsConfig: types.LiquidationsConfig{

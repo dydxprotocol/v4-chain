@@ -28,7 +28,7 @@ func WithStepBaseQuantums(bq satypes.BaseQuantums) ClobModifierOption {
 	}
 }
 
-func WithStatus(status clobtypes.ClobPair_Status) ClobModifierOption {
+func WithStatus(status clobtypes.ClobPairStatus) ClobModifierOption {
 	return func(cp *clobtypes.ClobPair) {
 		cp.Status = status
 	}
@@ -79,7 +79,7 @@ func GenerateClobPair(optionalModifications ...ClobModifierOption) *clobtypes.Cl
 		StepBaseQuantums:          5,
 		SubticksPerTick:           10,
 		QuantumConversionExponent: -8,
-		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
+		Status:                    clobtypes.ClobPairStatus_ACTIVE,
 	}
 
 	for _, opt := range optionalModifications {

@@ -1,5 +1,5 @@
 import { Order, OrderSDKType, OrderId, OrderIdSDKType } from "./order";
-import { ClobPair, ClobPairSDKType, ClobPair_Status, ClobPair_StatusSDKType } from "./clob_pair";
+import { ClobPair, ClobPairSDKType, ClobPairStatus, ClobPairStatusSDKType } from "./clob_pair";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
 import { OrderRemoval, OrderRemovalSDKType } from "./order_removals";
 import * as _m0 from "protobufjs/minimal";
@@ -131,7 +131,7 @@ export interface MsgSetClobPairStatus {
   clobPairId: number;
   /** clob_pair_status is the ClobPair_Status to set the ClobPair to. */
 
-  clobPairStatus: ClobPair_Status;
+  clobPairStatus: ClobPairStatus;
 }
 /** MsgSetClobPairStatus is a request type used for setting a ClobPair's status. */
 
@@ -142,7 +142,7 @@ export interface MsgSetClobPairStatusSDKType {
   clob_pair_id: number;
   /** clob_pair_status is the ClobPair_Status to set the ClobPair to. */
 
-  clob_pair_status: ClobPair_StatusSDKType;
+  clob_pair_status: ClobPairStatusSDKType;
 }
 /**
  * MsgSetClobPairStatusResponse is a response type used for setting a ClobPair's

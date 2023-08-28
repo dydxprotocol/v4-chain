@@ -92,7 +92,7 @@ message MsgSetClobPairStatus {
   uint32 clob_pair_id = 2;
 
   // clob_pair_status is the ClobPair_Status to set the ClobPair to.
-  ClobPair.Status clob_pair_status = 3;
+  ClobPairStatus clob_pair_status = 3;
 }
 
 // MsgSetClobPairStatusResponse is a response type used for setting a ClobPair's

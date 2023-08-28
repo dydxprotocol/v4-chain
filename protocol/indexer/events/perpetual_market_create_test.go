@@ -14,7 +14,7 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		0,
 		"BTC",
 		0,
-		clobtypes.ClobPair_STATUS_ACTIVE,
+		clobtypes.ClobPairStatus_ACTIVE,
 		-8,
 		8,
 		5,

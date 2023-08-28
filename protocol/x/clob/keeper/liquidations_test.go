@@ -3960,7 +3960,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 							PerpetualId: 0,
 						},
 					},
-					Status:                    types.ClobPair_STATUS_ACTIVE,
+					Status:                    types.ClobPairStatus_ACTIVE,
 					StepBaseQuantums:          3, // step size is 3
 					SubticksPerTick:           100,
 					QuantumConversionExponent: -8,
@@ -3974,7 +3974,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 						PerpetualId: 0,
 					},
 				},
-				Status:                    types.ClobPair_STATUS_ACTIVE,
+				Status:                    types.ClobPairStatus_ACTIVE,
 				StepBaseQuantums:          3, // step size is 3
 				SubticksPerTick:           100,
 				QuantumConversionExponent: -8,

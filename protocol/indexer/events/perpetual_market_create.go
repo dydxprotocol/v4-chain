@@ -12,7 +12,7 @@ func NewPerpetualMarketCreateEvent(
 	clobPairId uint32,
 	ticker string,
 	marketId uint32,
-	status types.ClobPair_Status,
+	status types.ClobPairStatus,
 	quantumConversionExponent int32,
 	atomicResolution int32,
 	subticksPerTick uint32,

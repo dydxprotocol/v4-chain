@@ -59,7 +59,7 @@ func genRandomClob(
 	clobPair.Metadata = &perpetualClobMetadata
 
 	// TODO(DEC-977): Specify `Status` in `RandomizedGenState`.
-	clobPair.Status = types.ClobPair_STATUS_ACTIVE
+	clobPair.Status = types.ClobPairStatus_ACTIVE
 
 	return clobPair
 }

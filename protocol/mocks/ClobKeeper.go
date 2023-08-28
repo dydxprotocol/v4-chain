@@ -91,21 +91,21 @@ func (_m *ClobKeeper) ConvertFillablePriceToSubticks(ctx types.Context, fillable
 }
 
 // CreatePerpetualClobPair provides a mock function with given fields: ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status
-func (_m *ClobKeeper) CreatePerpetualClobPair(ctx types.Context, perpetualId uint32, minOrderInBaseQuantums subaccountstypes.BaseQuantums, stepSizeInBaseQuantums subaccountstypes.BaseQuantums, quantumConversionExponent int32, subticksPerTick uint32, status clobtypes.ClobPair_Status) (clobtypes.ClobPair, error) {
+func (_m *ClobKeeper) CreatePerpetualClobPair(ctx types.Context, perpetualId uint32, minOrderInBaseQuantums subaccountstypes.BaseQuantums, stepSizeInBaseQuantums subaccountstypes.BaseQuantums, quantumConversionExponent int32, subticksPerTick uint32, status clobtypes.ClobPairStatus) (clobtypes.ClobPair, error) {
 	ret := _m.Called(ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 
 	var r0 clobtypes.ClobPair
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) (clobtypes.ClobPair, error)); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPairStatus) (clobtypes.ClobPair, error)); ok {
 		return rf(ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) clobtypes.ClobPair); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPairStatus) clobtypes.ClobPair); ok {
 		r0 = rf(ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 	} else {
 		r0 = ret.Get(0).(clobtypes.ClobPair)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) error); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPairStatus) error); ok {
 		r1 = rf(ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 	} else {
 		r1 = ret.Error(1)
@@ -791,11 +791,11 @@ func (_m *ClobKeeper) RemoveOrderFillAmount(ctx types.Context, orderId clobtypes
 }
 
 // SetClobPairStatus provides a mock function with given fields: ctx, clobPairId, status
-func (_m *ClobKeeper) SetClobPairStatus(ctx types.Context, clobPairId clobtypes.ClobPairId, status clobtypes.ClobPair_Status) error {
+func (_m *ClobKeeper) SetClobPairStatus(ctx types.Context, clobPairId clobtypes.ClobPairId, status clobtypes.ClobPairStatus) error {
 	ret := _m.Called(ctx, clobPairId, status)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, clobtypes.ClobPair_Status) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, clobtypes.ClobPairStatus) error); ok {
 		r0 = rf(ctx, clobPairId, status)
 	} else {
 		r0 = ret.Error(0)
