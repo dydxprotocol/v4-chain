@@ -10,11 +10,6 @@
       "ticker": "\"CRVUSD\""
     },
     {
-      "exchangeName": "Bybit",
-      "ticker": "CRVUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "CRV-USD"
     },

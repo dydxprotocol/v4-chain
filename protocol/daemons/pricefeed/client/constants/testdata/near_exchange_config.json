@@ -10,11 +10,6 @@
       "ticker": "\"NEARUSD\""
     },
     {
-      "exchangeName": "Bybit",
-      "ticker": "NEARUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "NEAR-USD"
     },

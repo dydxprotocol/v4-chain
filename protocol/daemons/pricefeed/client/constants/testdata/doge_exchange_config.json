@@ -10,6 +10,11 @@
       "ticker": "\"DOGEUSD\""
     },
     {
+      "exchangeName": "Bybit",
+      "ticker": "DOGEUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "Gate",
       "ticker": "DOGE_USDT",
       "adjustByMarket": "USDT-USD"

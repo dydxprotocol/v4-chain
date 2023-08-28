@@ -15,15 +15,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "APE/USD"
-    },
-    {
-      "exchangeName": "Bybit",
-      "ticker": "APEUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "APE-USD"
     },

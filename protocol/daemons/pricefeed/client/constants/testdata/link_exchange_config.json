@@ -10,6 +10,11 @@
       "ticker": "\"LINKUSD\""
     },
     {
+      "exchangeName": "Bybit",
+      "ticker": "LINKUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "CoinbasePro",
       "ticker": "LINK-USD"
     },

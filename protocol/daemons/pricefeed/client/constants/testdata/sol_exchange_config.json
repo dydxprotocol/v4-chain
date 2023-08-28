@@ -15,6 +15,11 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Bybit",
+      "ticker": "SOLUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "CoinbasePro",
       "ticker": "SOL-USD"
     },

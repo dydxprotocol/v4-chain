@@ -10,6 +10,10 @@
       "ticker": "\"LTCUSD\""
     },
     {
+      "exchangeName": "Bitstamp",
+      "ticker": "LTC/USD"
+    },
+    {
       "exchangeName": "Bybit",
       "ticker": "LTCUSDT",
       "adjustByMarket": "USDT-USD"

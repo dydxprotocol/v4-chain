@@ -10,11 +10,6 @@
       "ticker": "\"UNIUSD\""
     },
     {
-      "exchangeName": "Bybit",
-      "ticker": "UNIUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "UNI-USD"
     },

@@ -15,6 +15,15 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Bitstamp",
+      "ticker": "ADA/USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "ADAUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "CoinbasePro",
       "ticker": "ADA-USD"
     },

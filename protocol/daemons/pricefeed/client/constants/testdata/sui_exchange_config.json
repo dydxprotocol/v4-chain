@@ -11,10 +11,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "SUI/USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "SUIUSDT",
       "adjustByMarket": "USDT-USD"

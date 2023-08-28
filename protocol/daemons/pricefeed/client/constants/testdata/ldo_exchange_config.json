@@ -15,15 +15,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "LDO/USD"
-    },
-    {
-      "exchangeName": "Bybit",
-      "ticker": "LDOUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "LDO-USD"
     },

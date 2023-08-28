@@ -11,11 +11,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bybit",
-      "ticker": "PEPEUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Gate",
       "ticker": "PEPE_USDT",
       "adjustByMarket": "USDT-USD"

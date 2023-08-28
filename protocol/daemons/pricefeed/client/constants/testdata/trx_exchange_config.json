@@ -11,6 +11,11 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Bybit",
+      "ticker": "TRXUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "Gate",
       "ticker": "TRX_USDT",
       "adjustByMarket": "USDT-USD"

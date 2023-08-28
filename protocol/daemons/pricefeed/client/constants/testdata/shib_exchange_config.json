@@ -15,10 +15,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "SHIB/USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "SHIBUSDT",
       "adjustByMarket": "USDT-USD"

@@ -10,11 +10,6 @@
       "ticker": "\"ATOMUSD\""
     },
     {
-      "exchangeName": "Bybit",
-      "ticker": "ATOMUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "ATOM-USD"
     },
