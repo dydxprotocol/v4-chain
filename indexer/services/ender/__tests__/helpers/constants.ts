@@ -26,7 +26,7 @@ import {
   OrderRemovalReason,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
-  ClobPairStatus, LiquidityTierUpsertEventV1,
+  ClobPairStatus, LiquidityTierUpsertEventV1, UpdatePerpetualEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -119,6 +119,14 @@ export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {
   initialMarginPpm: 50000,  // 5%
   maintenanceFractionPpm: 600000,  // 60% of IM = 3%
   basePositionNotional: Long.fromValue(1_000_000_000_000),  // 1_000_000 USDC
+};
+
+export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
+  id: 0,
+  ticker: 'BTC-USD2',
+  marketId: 1,
+  atomicResolution: -8,
+  liquidityTier: 1,
 };
 
 export const defaultPreviousHeight: string = '2';

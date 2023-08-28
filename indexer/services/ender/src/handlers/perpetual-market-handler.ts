@@ -45,7 +45,7 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
       this.getPerpetualMarketCreateObject(this.event),
       { txId: this.txId },
     );
-    perpetualMarketRefresher.addPerpetualMarket(perpetualMarket);
+    perpetualMarketRefresher.upsertPerpetualMarket(perpetualMarket);
   }
 
   /**

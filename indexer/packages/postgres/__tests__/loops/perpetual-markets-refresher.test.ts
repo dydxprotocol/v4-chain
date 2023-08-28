@@ -10,7 +10,7 @@ import {
   isValidPerpetualMarketTicker,
   updatePerpetualMarkets,
   clear,
-  addPerpetualMarket,
+  upsertPerpetualMarket,
   getPerpetualMarketFromId,
 } from '../../src/loops/perpetual-market-refresher';
 import { PerpetualMarketColumns, PerpetualMarketFromDatabase } from '../../src/types';
@@ -18,6 +18,7 @@ import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
 import _ from 'lodash';
 import { defaultPerpetualMarket } from '../helpers/constants';
+import { perpetualMarketRefresher } from '../../src';
 
 describe('perpetual_markets_refresher', () => {
   let perpetualMarkets: PerpetualMarketFromDatabase[];
@@ -152,50 +153,9 @@ describe('perpetual_markets_refresher', () => {
     });
   });
 
-  describe('addPerpetualMarket', () => {
-    it.each([
-      [
-        'id',
-        {
-          ...defaultPerpetualMarket,
-          clobPairId: newClobPairId,
-          ticker: newTicker,
-        },
-        `Perpetual market with id ${defaultPerpetualMarket.id} already exists`,
-      ],
-      [
-        'clobPairId',
-        {
-          ...defaultPerpetualMarket,
-          id: newId,
-          ticker: newTicker,
-        },
-        `Perpetual market with clob pair id ${defaultPerpetualMarket.clobPairId} already exists`,
-      ],
-      [
-        'ticker',
-        {
-          ...defaultPerpetualMarket,
-          id: newId,
-          clobPairId: newClobPairId,
-        },
-        `Perpetual market with ticker ${defaultPerpetualMarket.ticker} already exists`,
-      ],
-    ])(
-      'fails to add perpetual market with duplicate %s',
-      (
-        _ignore: string,
-        perpetualMarket: PerpetualMarketFromDatabase,
-        errorMessage: string,
-      ) => {
-        expect(() => {
-          addPerpetualMarket(perpetualMarket);
-        }).toThrow(errorMessage);
-      },
-    );
-
+  describe('upsertPerpetualMarket', () => {
     it('successfully adds perpetual market', () => {
-      addPerpetualMarket({
+      upsertPerpetualMarket({
         ...defaultPerpetualMarket,
         id: newId,
         clobPairId: newClobPairId,
@@ -203,6 +163,24 @@ describe('perpetual_markets_refresher', () => {
       });
 
       expect(getPerpetualMarketFromId(newId)).not.toBeUndefined();
+    });
+
+    it('successfully updates perpetual market', async () => {
+      await perpetualMarketRefresher.updatePerpetualMarkets();
+      expect(getPerpetualMarketFromId(defaultPerpetualMarket.id)).not.toBeUndefined();
+      expect(getPerpetualMarketFromId(defaultPerpetualMarket.id)?.clobPairId).toEqual(
+        defaultPerpetualMarket.clobPairId,
+      );
+
+      upsertPerpetualMarket({
+        ...defaultPerpetualMarket,
+        id: newId,
+        clobPairId: newClobPairId,
+      });
+
+      expect(getPerpetualMarketFromId(defaultPerpetualMarket.id)?.clobPairId).toEqual(
+        newClobPairId,
+      );
     });
   });
 });
