@@ -2,10 +2,11 @@ package keeper_test
 
 import (
 	"errors"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 	"testing"
+
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -179,6 +180,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
+				tc.args.clobPair.Id,
 				clobtest.MustPerpetualId(tc.args.clobPair),
 				satypes.BaseQuantums(tc.args.clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(tc.args.clobPair.StepBaseQuantums),

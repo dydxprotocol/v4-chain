@@ -16,6 +16,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -36,9 +37,8 @@ type (
 		// Neeeded for retrieve market price of rewards token.
 		pricesKeeper types.PricesKeeper
 
-		// the address capable of executing a MsgUpdateParams message. Typically, this
-		// should be the x/gov module account.
-		authority string
+		// the addresses capable of executing a MsgUpdateParams message.
+		authorities map[string]struct{}
 	}
 )
 
@@ -50,7 +50,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	feeTiersKeeper types.FeeTiersKeeper,
 	pricesKeeper types.PricesKeeper,
-	authority string,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:               cdc,
@@ -60,13 +60,13 @@ func NewKeeper(
 		bankKeeper:        bankKeeper,
 		feeTiersKeeper:    feeTiersKeeper,
 		pricesKeeper:      pricesKeeper,
-		authority:         authority,
+		authorities:       maps.ArrayToMapInterface(authorities),
 	}
 }
 
-// GetAuthority returns the x/rewards module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

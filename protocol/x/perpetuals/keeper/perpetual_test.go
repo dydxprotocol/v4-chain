@@ -370,7 +370,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
 			basePositionNotional:            uint64(oneTrillion),
 			bigExpectedInitialMarginPpm:     big.NewInt(7_777),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(3_888),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(3_889),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 4": {
 			price:                           5_555,
@@ -526,7 +526,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums * marginAdjustmentPpm / 1_000_000 / 1_000_000
 			// = 50_000 * 9_200_311_488 * 9_591_825 / 1_000_000 / 1_000_000 ~= 4_412_388_886
 			bigExpectedInitialMarginPpm:     big.NewInt(4_412_388_886),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(2_647_433_331),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(2_647_433_332),
 		},
 		"InitialMargin 25%, MaintenanceMargin 15%, atomic resolution 6, margin adjusted and IM capped at 100% of notional": {
 			price:                        123_456,
@@ -541,7 +541,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// = sqrt(9_200_311_488 * (OneMillion * OneMillion) / 100_000_000) ~= 9_591_825
 			// After adjustment, initial margin is capped at 100% of notional (quote quantums).
 			bigExpectedInitialMarginPpm:     big.NewInt(9_200_311_488),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(5_520_186_892),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(5_520_186_893),
 		},
 		"InitialMargin 10_000 BIPs (max), MaintenanceMargin 10_000 BIPs (max), atomic resolution 6, margin adjusted": {
 			price:                           5_555,

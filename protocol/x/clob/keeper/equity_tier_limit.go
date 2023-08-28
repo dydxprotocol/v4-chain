@@ -61,13 +61,22 @@ func (k *Keeper) InitializeEquityTierLimit(
 }
 
 // ValidateSubaccountEquityTierLimitForNewOrder returns an error if adding the order would exceed the equity
-// tier limit on how many open orders a subaccount can have.
+// tier limit on how many open orders a subaccount can have. Fill-or-kill and immediate-or-cancel orders never
+// rest on the book and will always be allowed as they do not apply to the number of open orders that equity
+// tier limits enforce.
 //
 // Note that the method is dependent on whether we are executing on `checkState` or on `deliverState` for
 // stateful orders. During `checkState` we rely on the uncommitted order count to tell us how many stateful
 // orders exist outside of the MemClob. For `deliverState` we use the `ProcessProposerMatchesEvents`
 // to find out how many orders (minus removals) exists outside of the `MemClob`.
 func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, order types.Order) error {
+	// Always allow FoK or IoC orders as they will either fill immediately or be cancelled and won't rest on
+	// the book.
+	if order.TimeInForce == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
+		order.TimeInForce == types.Order_TIME_IN_FORCE_IOC {
+		return nil
+	}
+
 	var equityTierLimits []types.EquityTierLimit
 	var filter func(types.OrderId) bool
 	if order.IsShortTermOrder() {

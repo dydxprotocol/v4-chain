@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
@@ -28,7 +29,7 @@ func TestMsgServer(t *testing.T) {
 }
 
 func TestMsgUpdateParams(t *testing.T) {
-	k, ms, ctx := setupMsgServer(t)
+	_, ms, ctx := setupMsgServer(t)
 
 	testCases := []struct {
 		name      string
@@ -39,7 +40,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgUpdateParams{
-				Authority: k.GetAuthority(),
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				Params:    types.DefaultGenesis().Params,
 			},
 			expErr: false,
@@ -56,7 +57,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "invalid params: negative duration",
 			input: &types.MsgUpdateParams{
-				Authority: k.GetAuthority(),
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				Params: types.Params{
 					WindowDuration: -1,
 				},

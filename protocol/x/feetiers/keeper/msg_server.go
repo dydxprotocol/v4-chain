@@ -7,7 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 )
 
 type msgServer struct {
@@ -22,10 +22,10 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (k msgServer) UpdateParams(
+func (k msgServer) UpdatePerpetualFeeParams(
 	goCtx context.Context,
-	msg *types.MsgUpdateParams,
-) (*types.MsgUpdateParamsResponse, error) {
+	msg *types.MsgUpdatePerpetualFeeParams,
+) (*types.MsgUpdatePerpetualFeeParamsResponse, error) {
 	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -35,9 +35,9 @@ func (k msgServer) UpdateParams(
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.SetParams(ctx, msg.Params); err != nil {
+	if err := k.SetPerpetualFeeParams(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgUpdateParamsResponse{}, nil
+	return &types.MsgUpdatePerpetualFeeParamsResponse{}, nil
 }

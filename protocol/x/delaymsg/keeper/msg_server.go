@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
@@ -21,8 +22,7 @@ func (k msgServer) DelayMessage(
 ) (*types.MsgDelayMessageResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	authorities := k.GetAuthorities()
-	if _, ok := authorities[msg.GetAuthority()]; !ok {
+	if !k.HasAuthority(msg.GetAuthority()) {
 		panic(fmt.Errorf(
 			"%v is not recognized as a valid authority for sending delayed messages",
 			msg.GetAuthority(),

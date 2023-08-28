@@ -1479,6 +1479,7 @@ func setupProcessProposerOperationsTestCase(
 
 		_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 			ctx,
+			clobPair.Id,
 			clobtest.MustPerpetualId(clobPair),
 			satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 			satypes.BaseQuantums(clobPair.StepBaseQuantums),

@@ -5,9 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 )
 
 type msgServer struct {
@@ -22,10 +24,10 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (k msgServer) UpdateParams(
+func (k msgServer) UpdateDowntimeParams(
 	goCtx context.Context,
-	msg *types.MsgUpdateParams,
-) (*types.MsgUpdateParamsResponse, error) {
+	msg *types.MsgUpdateDowntimeParams,
+) (*types.MsgUpdateDowntimeParamsResponse, error) {
 	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -35,9 +37,16 @@ func (k msgServer) UpdateParams(
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.SetParams(ctx, msg.Params); err != nil {
+	if err := k.SetDowntimeParams(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgUpdateParamsResponse{}, nil
+	return &types.MsgUpdateDowntimeParamsResponse{}, nil
+}
+
+func (k msgServer) IsDelayedBlock(
+	goCtx context.Context,
+	msg *types.MsgIsDelayedBlock,
+) (*types.MsgIsDelayedBlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "IsDelayedBlock not implemented")
 }
