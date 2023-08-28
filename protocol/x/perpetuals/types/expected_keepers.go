@@ -26,6 +26,16 @@ type PricePremiumGetter interface {
 	)
 }
 
+type PerpetualClobPairInitializingChecker interface {
+	IsPerpetualClobPairInitializing(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (
+		isInitializing bool,
+		err error,
+	)
+}
+
 // AccountKeeper defines the expected account keeper used for simulations.
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI

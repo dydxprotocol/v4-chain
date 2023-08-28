@@ -394,24 +394,47 @@ func (k Keeper) SetClobPairStatus(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 	clobPairStatus types.ClobPair_Status,
-) error {
-	clobPair := k.mustGetClobPair(ctx, clobPairId)
+	) error {
+		clobPair := k.mustGetClobPair(ctx, clobPairId)
+		
+		if !types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus) {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidClobPairStatusTransition,
+				"Cannot transition from status %+v to status %+v",
+				clobPair.Status,
+				clobPairStatus,
+			)
+		}
+		
+		clobPair.Status = clobPairStatus
+		if err := k.validateClobPair(ctx, &clobPair); err != nil {
+			return err
+		}
+		
+		k.setClobPair(ctx, clobPair)
+		
+		return nil
+	}
 
-	if !types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus) {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairStatusTransition,
-			"Cannot transition from status %+v to status %+v",
-			clobPair.Status,
-			clobPairStatus,
+// IsPerpetualClobPairInitializing returns true if the ClobPair associated with the provided perpetual id is
+// has the initializing status.
+func (k Keeper) IsPerpetualClobPairInitializing(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (bool, error) {
+	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
+	if err != nil {
+		return false, err
+	}
+
+	clobPair, found := k.GetClobPair(ctx, clobPairId)
+	if !found {
+		return false, sdkerrors.Wrapf(
+			types.ErrInvalidClob,
+			"GetPerpetualClobPairStatus: did not find clob pair with id = %d",
+			clobPairId,
 		)
 	}
 
-	clobPair.Status = clobPairStatus
-	if err := k.validateClobPair(ctx, &clobPair); err != nil {
-		return err
-	}
-
-	k.setClobPair(ctx, clobPair)
-
-	return nil
+	return clobPair.Status == types.ClobPair_STATUS_INITIALIZING, nil
 }

@@ -762,6 +762,7 @@ func New(
 		liquidatableSubaccountIds,
 	)
 	app.PerpetualsKeeper.SetPricePremiumGetter(app.ClobKeeper)
+	app.PerpetualsKeeper.SetPerpetualClobPairInitializingChecker(app.ClobKeeper)
 
 	app.SendingKeeper = *sendingmodulekeeper.NewKeeper(
 		appCodec,
