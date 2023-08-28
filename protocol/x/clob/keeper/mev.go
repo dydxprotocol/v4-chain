@@ -427,7 +427,8 @@ func (k Keeper) InitializeCumulativePnLs(
 }
 
 // GetMEVDataFromOperations returns the MEV matches and MEV liquidations from the provided
-// operations queue. It returns an error if a short-term order cannot be decoded.
+// operations queue. It returns an error if a short-term order cannot be decoded. Panics if
+// an order cannot be found.
 func (k Keeper) GetMEVDataFromOperations(
 	ctx sdk.Context,
 	operations []types.OperationRaw,

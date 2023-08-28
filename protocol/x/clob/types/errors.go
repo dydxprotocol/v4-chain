@@ -168,6 +168,11 @@ var (
 		35,
 		"Invalid ClobPair status transition",
 	)
+	ErrPerpetualDoesNotExist = sdkerrors.Register(
+		ModuleName,
+		36,
+		"Perpetual does not exist in state",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(
