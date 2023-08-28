@@ -174,7 +174,6 @@ describe('perpetual_markets_refresher', () => {
 
       upsertPerpetualMarket({
         ...defaultPerpetualMarket,
-        id: newId,
         clobPairId: newClobPairId,
       });
 
