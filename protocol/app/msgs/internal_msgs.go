@@ -50,11 +50,11 @@ var (
 		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse":      nil,
 
 		// clob
-		"/dydxprotocol.clob.MsgCreateClobPair":         &clob.MsgCreateClobPair{},
-		"/dydxprotocol.clob.MsgCreateClobPairResponse": nil,
-		"/dydxprotocol.clob.MsgSetClobPairStatus":         &clob.MsgCreateClobPair{},
+		"/dydxprotocol.clob.MsgCreateClobPair":            &clob.MsgCreateClobPair{},
+		"/dydxprotocol.clob.MsgCreateClobPairResponse":    nil,
+		"/dydxprotocol.clob.MsgSetClobPairStatus":         &clob.MsgSetClobPairStatus{},
 		"/dydxprotocol.clob.MsgSetClobPairStatusResponse": nil,
-		
+
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual":         &perpetuals.MsgCreatePerpetual{},
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse": nil,
