@@ -62,10 +62,7 @@ export async function updatePerpetualMarkets(options?: Options): Promise<void> {
  */
 export function isValidPerpetualMarketTicker(ticker: string): boolean {
   return _.some(idToPerpetualMarket, (perpetualMarket: PerpetualMarketFromDatabase) => {
-    if (perpetualMarket.ticker === ticker) {
-      return true;
-    }
-    return false;
+    return perpetualMarket.ticker === ticker;
   });
 }
 
@@ -80,11 +77,14 @@ export function getPerpetualMarketsList(): PerpetualMarketFromDatabase[] {
  * with the given clob pair id, undefined is returned.
  */
 export function getClobPairIdFromTicker(ticker: string): string | undefined {
-  for (const perpetualMarket of getPerpetualMarketsList()) {
-    if (perpetualMarket.ticker === ticker) {
-      return perpetualMarket.clobPairId;
-    }
+  const perpetualMarket: PerpetualMarketFromDatabase | undefined = getPerpetualMarketFromTicker(
+    ticker,
+  );
+
+  if (perpetualMarket !== undefined) {
+    return perpetualMarket.clobPairId;
   }
+
   return undefined;
 }
 
@@ -95,11 +95,13 @@ export function getClobPairIdFromTicker(ticker: string): string | undefined {
  * with the given clob pair id, undefined is returned.
  */
 export function getPerpetualMarketTicker(clobPairId: string): string | undefined {
-  for (const perpetualMarket of getPerpetualMarketsList()) {
-    if (perpetualMarket.clobPairId === clobPairId) {
-      return perpetualMarket.ticker;
-    }
+  const perpetualMarket: PerpetualMarketFromDatabase | undefined = getPerpetualMarketFromClobPairId(
+    clobPairId,
+  );
+  if (perpetualMarket !== undefined) {
+    return perpetualMarket.ticker;
   }
+
   return undefined;
 }
 
@@ -109,12 +111,12 @@ export function getPerpetualMarketTicker(clobPairId: string): string | undefined
 export function getPerpetualMarketFromTicker(
   ticker: string,
 ): PerpetualMarketFromDatabase | undefined {
-  for (const perpetualMarket of getPerpetualMarketsList()) {
-    if (perpetualMarket.ticker === ticker) {
-      return perpetualMarket;
-    }
-  }
-  return undefined;
+  return _.find(
+    getPerpetualMarketsList(),
+    (perpetualMarket: PerpetualMarketFromDatabase) => {
+      return perpetualMarket.ticker === ticker;
+    },
+  );
 }
 
 /**
@@ -123,12 +125,12 @@ export function getPerpetualMarketFromTicker(
 export function getPerpetualMarketFromClobPairId(
   clobPairId: string,
 ): PerpetualMarketFromDatabase | undefined {
-  for (const perpetualMarket of getPerpetualMarketsList()) {
-    if (perpetualMarket.clobPairId === clobPairId) {
-      return perpetualMarket;
-    }
-  }
-  return undefined;
+  return _.find(
+    getPerpetualMarketsList(),
+    (perpetualMarket: PerpetualMarketFromDatabase) => {
+      return perpetualMarket.clobPairId === clobPairId;
+    },
+  );
 }
 
 /**
