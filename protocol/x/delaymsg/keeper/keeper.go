@@ -49,6 +49,11 @@ func (k Keeper) GetAuthorities() map[string]struct{} {
 	return authorities
 }
 
+// Router returns the x/delaymsg router.
+func (k Keeper) Router() *baseapp.MsgServiceRouter {
+	return k.router
+}
+
 // InitializeForGenesis initializes the x/delaymsg keeper for genesis.
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 	k.SetNumMessages(ctx, 0)

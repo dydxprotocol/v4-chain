@@ -3,7 +3,10 @@
 package mocks
 
 import (
+	log "github.com/cometbft/cometbft/libs/log"
+	baseapp "github.com/cosmos/cosmos-sdk/baseapp"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -61,11 +64,6 @@ func (_m *DelayMsgKeeper) DeleteMessage(ctx types.Context, id uint32) error {
 	}
 
 	return r0
-}
-
-// DispatchMessagesForBlock provides a mock function with given fields: ctx
-func (_m *DelayMsgKeeper) DispatchMessagesForBlock(ctx types.Context) {
-	_m.Called(ctx)
 }
 
 // GetAllDelayedMessages provides a mock function with given fields: ctx
@@ -140,6 +138,38 @@ func (_m *DelayMsgKeeper) GetMessage(ctx types.Context, id uint32) (delaymsgtype
 	}
 
 	return r0, r1
+}
+
+// Logger provides a mock function with given fields: ctx
+func (_m *DelayMsgKeeper) Logger(ctx types.Context) log.Logger {
+	ret := _m.Called(ctx)
+
+	var r0 log.Logger
+	if rf, ok := ret.Get(0).(func(types.Context) log.Logger); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(log.Logger)
+		}
+	}
+
+	return r0
+}
+
+// Router provides a mock function with given fields:
+func (_m *DelayMsgKeeper) Router() *baseapp.MsgServiceRouter {
+	ret := _m.Called()
+
+	var r0 *baseapp.MsgServiceRouter
+	if rf, ok := ret.Get(0).(func() *baseapp.MsgServiceRouter); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*baseapp.MsgServiceRouter)
+		}
+	}
+
+	return r0
 }
 
 // SetDelayedMessage provides a mock function with given fields: ctx, msg
