@@ -23,6 +23,7 @@ import (
 // Returns the newly created CLOB pair and an error if one occurs.
 func (k Keeper) CreatePerpetualClobPair(
 	ctx sdk.Context,
+	clobPairId uint32,
 	perpetualId uint32,
 	minOrderBaseQuantums satypes.BaseQuantums,
 	stepSizeBaseQuantums satypes.BaseQuantums,
@@ -30,7 +31,15 @@ func (k Keeper) CreatePerpetualClobPair(
 	subticksPerTick uint32,
 	status types.ClobPair_Status,
 ) (types.ClobPair, error) {
-	nextId := k.GetNumClobPairs(ctx)
+	// If the desired CLOB pair ID is already in use, return an error.
+	if clobPair, exists := k.GetClobPair(ctx, types.ClobPairId(clobPairId)); exists {
+		return types.ClobPair{}, sdkerrors.Wrapf(
+			types.ErrClobPairAlreadyExists,
+			"id=%v, existing clob pair=%v",
+			clobPairId,
+			clobPair,
+		)
+	}
 
 	clobPair := types.ClobPair{
 		Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -38,7 +47,7 @@ func (k Keeper) CreatePerpetualClobPair(
 				PerpetualId: perpetualId,
 			},
 		},
-		Id:                        nextId,
+		Id:                        clobPairId,
 		StepBaseQuantums:          stepSizeBaseQuantums.ToUint64(),
 		QuantumConversionExponent: quantumConversionExponent,
 		SubticksPerTick:           subticksPerTick,
@@ -53,14 +62,13 @@ func (k Keeper) CreatePerpetualClobPair(
 	}
 
 	k.createClobPair(ctx, clobPair)
-	k.setNumClobPairs(ctx, nextId+1)
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
 		indexer_manager.GetB64EncodedEventMessage(
 			indexerevents.NewPerpetualMarketCreateEvent(
 				perpetualId,
-				nextId,
+				clobPairId,
 				perpetual.Params.Ticker,
 				perpetual.Params.MarketId,
 				status,
@@ -211,15 +219,6 @@ func (k Keeper) InitMemClobOrderbooks(ctx sdk.Context) {
 	}
 }
 
-// Sets the total count of CLOB pairs in the store to `num`.
-func (k Keeper) setNumClobPairs(ctx sdk.Context, num uint32) {
-	// Get necessary stores.
-	store := ctx.KVStore(k.storeKey)
-
-	// Set `numClobPairs`.
-	store.Set(types.KeyPrefix(types.NumClobPairsKey), lib.Uint32ToBytes(num))
-}
-
 // GetClobPairIdForPerpetual gets the first CLOB pair ID associated with the provided perpetual ID.
 // It returns an error if there are no CLOB pair IDs associated with the perpetual ID.
 func (k Keeper) GetClobPairIdForPerpetual(
@@ -247,15 +246,6 @@ func (k Keeper) GetClobPairIdForPerpetual(
 	}
 
 	return clobPairIds[0], nil
-}
-
-// Returns the total count of CLOB pairs, read from the store.
-func (k Keeper) GetNumClobPairs(
-	ctx sdk.Context,
-) uint32 {
-	store := ctx.KVStore(k.storeKey)
-	numClobPairBytes := store.Get(types.KeyPrefix(types.NumClobPairsKey))
-	return lib.BytesToUint32(numClobPairBytes)
 }
 
 // GetClobPair returns a clobPair from its index
