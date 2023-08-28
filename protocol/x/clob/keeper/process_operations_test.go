@@ -1188,7 +1188,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
-			rawOperations: []types.OperationRaw{ // doesn't matter what operation this is, will fail on missing clob pair
+			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRaw(
 					&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
 					[]types.MakerFill{
@@ -1206,7 +1206,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
-			rawOperations: []types.OperationRaw{ // doesn't matter what operation this is, will fail on unsupported clob pair status
+			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRaw(
 					&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
 					[]types.MakerFill{
@@ -1237,7 +1237,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_Init,
 			},
-			rawOperations: []types.OperationRaw{ // doesn't matter what operation this is, will fail on missing clob pair
+			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRaw(
 					&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
 					[]types.MakerFill{
