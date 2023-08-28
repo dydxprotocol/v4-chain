@@ -31,6 +31,11 @@ func (k Keeper) GetPricePremiumForPerpetual(
 		)
 	}
 
+	// Zero premium if ClobPair is in initializing mode.
+	if clobPair.Status == types.ClobPair_STATUS_INITIALIZING {
+		return 0, nil
+	}
+
 	return k.MemClob.GetPricePremium(
 		ctx,
 		clobPair,
