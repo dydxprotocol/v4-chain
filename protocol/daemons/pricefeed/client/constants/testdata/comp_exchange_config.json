@@ -15,10 +15,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "CoinbasePro",
-      "ticker": "COMP-USD"
-    },
-    {
       "exchangeName": "Huobi",
       "ticker": "compusdt",
       "adjustByMarket": "USDT-USD"

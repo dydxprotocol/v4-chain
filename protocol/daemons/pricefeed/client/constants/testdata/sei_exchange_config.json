@@ -2,35 +2,36 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"1INCHUSDT\"",
+      "ticker": "\"SEIUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"1INCHUSD\""
+      "exchangeName": "Bybit",
+      "ticker": "SEIUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "1INCH-USD"
+      "ticker": "SEI-USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "1INCH_USDT",
+      "ticker": "SEI_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
-      "ticker": "1inchusdt",
+      "ticker": "seiusdt",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "1INCH-USDT",
+      "ticker": "SEI-USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Okx",
-      "ticker": "1INCH-USDT",
+      "exchangeName": "Mexc",
+      "ticker": "SEI_USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

@@ -2,36 +2,46 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"XMRUSDT\"",
+      "ticker": "\"PEPEUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bitfinex",
-      "ticker": "tXMRUSD",
+      "ticker": "PEPE:USD",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "PEPEUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "XMR_USDT",
+      "ticker": "PEPE_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "pepeusdt",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
-      "ticker": "XXMRZUSD"
+      "ticker": "PEPEUSD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "XMR-USDT",
+      "ticker": "PEPE-USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Mexc",
-      "ticker": "XMR_USDT",
+      "ticker": "PEPE_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "XMR-USDT",
+      "ticker": "PEPE-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

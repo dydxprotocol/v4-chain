@@ -2,39 +2,50 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"YFIUSDT\"",
+      "ticker": "\"ARBUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"YFIUSD\""
-    },
-    {
       "exchangeName": "Bitfinex",
-      "ticker": "tYFIUSD",
+      "ticker": "tARBUSD",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bybit",
-      "ticker": "YFIUSDT",
+      "ticker": "ARBUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "YFI-USD"
+      "ticker": "ARB-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "ARB_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
-      "ticker": "yfiusdt",
+      "ticker": "arbusdt",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
-      "ticker": "YFIUSD"
+      "ticker": "ARBUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "ARB-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "ARB_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "YFI-USDT",
+      "ticker": "ARB-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

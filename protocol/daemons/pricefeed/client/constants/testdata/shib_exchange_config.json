@@ -2,62 +2,62 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"XLMUSDT\"",
+      "ticker": "\"SHIBUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "BinanceUS",
-      "ticker": "\"XLMUSD\""
+      "ticker": "\"SHIBUSD\""
     },
     {
       "exchangeName": "Bitfinex",
-      "ticker": "tXLMUSD",
+      "ticker": "tSHIB:USD",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bitstamp",
-      "ticker": "XLM/USD"
+      "ticker": "SHIB/USD"
     },
     {
       "exchangeName": "Bybit",
-      "ticker": "XLMUSDT",
+      "ticker": "SHIBUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "XLM-USD"
+      "ticker": "SHIB-USD"
     },
     {
       "exchangeName": "CryptoCom",
-      "ticker": "XLM_USD"
+      "ticker": "SHIB_USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "XLM_USDT",
+      "ticker": "SHIB_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
-      "ticker": "xlmusdt",
+      "ticker": "shibusdt",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
-      "ticker": "XXLMZUSD"
+      "ticker": "SHIBUSD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "XLM-USDT",
+      "ticker": "SHIB-USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Mexc",
-      "ticker": "XLM_USDT",
+      "ticker": "SHIB_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "XLM-USDT",
+      "ticker": "SHIB-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

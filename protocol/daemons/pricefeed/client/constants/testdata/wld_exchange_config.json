@@ -2,35 +2,37 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"ICPUSDT\"",
+      "ticker": "\"WLDUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"ICPUSD\""
-    },
-    {
-      "exchangeName": "CoinbasePro",
-      "ticker": "ICP-USD"
+      "exchangeName": "Bybit",
+      "ticker": "WLDUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "ICP_USDT",
+      "ticker": "WLD_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
-      "ticker": "icpusdt",
+      "ticker": "wldusdt",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "ICP-USDT",
+      "ticker": "WLD-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "WLD_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "ICP-USDT",
+      "ticker": "WLD-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

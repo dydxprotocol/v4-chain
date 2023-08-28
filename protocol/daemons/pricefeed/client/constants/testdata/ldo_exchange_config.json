@@ -2,62 +2,58 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"XLMUSDT\"",
+      "ticker": "\"LDOUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "BinanceUS",
-      "ticker": "\"XLMUSD\""
+      "ticker": "\"LDOUSD\""
     },
     {
       "exchangeName": "Bitfinex",
-      "ticker": "tXLMUSD",
+      "ticker": "LDOUSD",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bitstamp",
-      "ticker": "XLM/USD"
+      "ticker": "LDO/USD"
     },
     {
       "exchangeName": "Bybit",
-      "ticker": "XLMUSDT",
+      "ticker": "LDOUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "XLM-USD"
-    },
-    {
-      "exchangeName": "CryptoCom",
-      "ticker": "XLM_USD"
+      "ticker": "LDO-USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "XLM_USDT",
+      "ticker": "LDO_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
-      "ticker": "xlmusdt",
+      "ticker": "ldousdt",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
-      "ticker": "XXLMZUSD"
+      "ticker": "LDOUSD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "XLM-USDT",
+      "ticker": "LDO-USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Mexc",
-      "ticker": "XLM_USDT",
+      "ticker": "LDO_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "XLM-USDT",
+      "ticker": "LDO-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]
