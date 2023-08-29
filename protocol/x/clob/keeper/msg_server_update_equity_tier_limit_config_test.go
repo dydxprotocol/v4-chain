@@ -79,12 +79,12 @@ func TestUpdateEquityTierLimitConfig(t *testing.T) {
 	proposal, err := gov.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			&clobtypes.MsgUpdateEquityTierLimitConfiguration{
-				//Authority:             constants.AliceAccAddress.String(),
+				//Authority:             tApp.App.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String(),
 				EquityTierLimitConfig: expectedConfig,
 			},
 		},
 		sdk.NewCoins(sdk.NewInt64Coin(assets.AssetUsdc.Denom, 1_000_000)),
-		tApp.App.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String(),
+		constants.AliceAccAddress.String(),
 		"metadata",
 		"title",
 		"summary",
@@ -95,7 +95,7 @@ func TestUpdateEquityTierLimitConfig(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning:        tApp.App.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String(),
+			AccAddressForSigning:        constants.AliceAccAddress.String(),
 			AccSequenceNumberForSigning: 0,
 			Gas:                         1_000_000,
 		},
@@ -105,18 +105,7 @@ func TestUpdateEquityTierLimitConfig(t *testing.T) {
 
 	ctx = tApp.AdvanceToBlock(
 		2,
-		testapp.AdvanceToBlockOptions{
-			//DeliverTxsOverride: [][]byte{
-			//	testapp.MustMakeCheckTxsWithClobMsg(
-			//		ctx,
-			//		tApp.App,
-			//		clobtypes.MsgUpdateEquityTierLimitConfiguration{
-			//			Authority:             constants.AliceAccAddress.String(),
-			//			EquityTierLimitConfig: expectedConfig,
-			//		},
-			//	)[0].Tx,
-			//},
-		},
+		testapp.AdvanceToBlockOptions{},
 	)
 	require.Equal(t, expectedConfig, tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx))
 
