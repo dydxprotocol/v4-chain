@@ -13,7 +13,7 @@ func (k msgServer) CompleteBridge(
 	goCtx context.Context,
 	msg *types.MsgCompleteBridge,
 ) (*types.MsgCompleteBridgeResponse, error) {
-	if _, ok := k.Keeper.GetAuthorities()[msg.GetAuthority()]; !ok {
+	if !k.Keeper.HasAuthority(msg.GetAuthority()) {
 		return nil, errors.Wrapf(
 			types.ErrInvalidAuthority,
 			"message authority %s is not valid for sending complete bridge messages",

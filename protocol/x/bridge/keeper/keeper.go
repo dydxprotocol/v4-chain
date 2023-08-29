@@ -47,9 +47,10 @@ func NewKeeper(
 	}
 }
 
-// GetAuthorities returns the set of authorities permitted to sign delayed messages.
-func (k Keeper) GetAuthorities() map[string]struct{} {
-	return k.authorities
+// HasAuthority returns whether `authority` exists in `k.authorities`.
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

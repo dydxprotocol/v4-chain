@@ -30,5 +30,5 @@ type BridgeKeeper interface {
 	UpdateSafetyParams(ctx sdk.Context, params SafetyParams) error
 
 	// Authority.
-	GetAuthorities() map[string]struct{}
+	HasAuthority(authority string) bool
 }

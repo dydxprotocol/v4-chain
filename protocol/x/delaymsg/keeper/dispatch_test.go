@@ -46,11 +46,7 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 
 	// Mock the bridge keeper methods called by the bridge msg server.
 	bridgeKeeper.On("CompleteBridge", ctx, mock.Anything).Return(nil).Times(len(constants.AllMsgs))
-	bridgeKeeper.On("GetAuthorities").Return(
-		map[string]struct{}{
-			DelayMsgAuthority: {},
-		},
-	).Times(len(constants.AllMsgs))
+	bridgeKeeper.On("HasAuthority", DelayMsgAuthority).Return(true).Times(len(constants.AllMsgs))
 
 	// Dispatch messages for block 0.
 	delaymsg.DispatchMessagesForBlock(ctx)

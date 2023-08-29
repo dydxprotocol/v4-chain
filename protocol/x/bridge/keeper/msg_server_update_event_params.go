@@ -13,7 +13,7 @@ func (k msgServer) UpdateEventParams(
 	goCtx context.Context,
 	msg *types.MsgUpdateEventParams,
 ) (*types.MsgUpdateEventParamsResponse, error) {
-	if _, ok := k.Keeper.GetAuthorities()[msg.GetAuthority()]; !ok {
+	if !k.Keeper.HasAuthority(msg.GetAuthority()) {
 		return nil, errors.Wrapf(
 			types.ErrInvalidAuthority,
 			"message authority %s is not valid for sending update event params messages",

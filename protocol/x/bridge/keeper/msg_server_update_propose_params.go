@@ -13,7 +13,7 @@ func (k msgServer) UpdateProposeParams(
 	goCtx context.Context,
 	msg *types.MsgUpdateProposeParams,
 ) (*types.MsgUpdateProposeParamsResponse, error) {
-	if _, ok := k.Keeper.GetAuthorities()[msg.GetAuthority()]; !ok {
+	if !k.Keeper.HasAuthority(msg.GetAuthority()) {
 		return nil, errors.Wrapf(
 			types.ErrInvalidAuthority,
 			"message authority %s is not valid for sending update propose params messages",

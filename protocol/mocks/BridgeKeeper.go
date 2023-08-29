@@ -56,22 +56,6 @@ func (_m *BridgeKeeper) GetAcknowledgedEventInfo(ctx types.Context) bridgetypes.
 	return r0
 }
 
-// GetAuthorities provides a mock function with given fields:
-func (_m *BridgeKeeper) GetAuthorities() map[string]struct{} {
-	ret := _m.Called()
-
-	var r0 map[string]struct{}
-	if rf, ok := ret.Get(0).(func() map[string]struct{}); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]struct{})
-		}
-	}
-
-	return r0
-}
-
 // GetEventParams provides a mock function with given fields: ctx
 func (_m *BridgeKeeper) GetEventParams(ctx types.Context) bridgetypes.EventParams {
 	ret := _m.Called(ctx)
@@ -123,6 +107,20 @@ func (_m *BridgeKeeper) GetSafetyParams(ctx types.Context) bridgetypes.SafetyPar
 		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(bridgetypes.SafetyParams)
+	}
+
+	return r0
+}
+
+// HasAuthority provides a mock function with given fields: authority
+func (_m *BridgeKeeper) HasAuthority(authority string) bool {
+	ret := _m.Called(authority)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(authority)
+	} else {
+		r0 = ret.Get(0).(bool)
 	}
 
 	return r0
