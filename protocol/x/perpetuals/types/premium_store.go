@@ -24,20 +24,18 @@ func NewPremiumStoreFromMarketPremiumMap(
 		NumPremiums: numPremiums,
 	}
 
-	// Get a list of sorted perpetual Ids.
-	perpetualIds := []uint32{}
-	for perpId := range m {
-		perpetualIds = append(perpetualIds, perpId)
+	// Get a list of sorted MarketPremiums.
+	premiumList := []MarketPremiums{}
+	for _, premium := range m {
+		premiumList = append(premiumList, premium)
 	}
-	sort.Slice(perpetualIds, func(i, j int) bool {
-		return perpetualIds[i] < perpetualIds[j]
+	sort.Slice(premiumList, func(i, j int) bool {
+		return premiumList[i].GetPerpetualId() < premiumList[j].GetPerpetualId()
 	})
 
-	// Iterate through the sorted list of perpetual Ids and add market premiums.
-	for _, perpId := range perpetualIds {
-		ret.AllMarketPremiums = append(ret.AllMarketPremiums,
-			m[perpId],
-		)
+	return &PremiumStore{
+		NumPremiums:       numPremiums,
+		AllMarketPremiums: premiumList,
 	}
 	return &ret
 }

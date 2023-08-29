@@ -36,7 +36,7 @@ func (k Keeper) CreatePerpetual(
 	liquidityTier uint32,
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
-	if found := k.HasPerpetual(ctx, id); found {
+	if k.HasPerpetual(ctx, id) {
 		return types.Perpetual{}, sdkerrors.Wrap(
 			types.ErrPerpetualAlreadyExists,
 			lib.Uint32ToString(id),
@@ -974,7 +974,7 @@ func (k Keeper) addToPremiumStore(
 	marketPremiumsMap := premiumStore.GetMarketPremiumsMap()
 
 	for _, sample := range newSamples {
-		if found := k.HasPerpetual(ctx, sample.PerpetualId); !found {
+		if !k.HasPerpetual(ctx, sample.PerpetualId) {
 			return sdkerrors.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"perpetual ID = %d",
