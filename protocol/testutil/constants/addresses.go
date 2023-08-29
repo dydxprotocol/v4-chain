@@ -5,8 +5,6 @@ import (
 )
 
 var (
-	GovAccAddress = sdk.AccAddress(GovPrivateKey.PubKey().Address())
-
 	AliceAccAddress  = sdk.AccAddress(AlicePrivateKey.PubKey().Address())
 	BobAccAddress    = sdk.AccAddress(BobPrivateKey.PubKey().Address())
 	CarlAccAddress   = sdk.AccAddress(CarlPrivateKey.PubKey().Address())

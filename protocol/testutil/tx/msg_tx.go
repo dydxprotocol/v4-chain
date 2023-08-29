@@ -35,10 +35,6 @@ func MustGetSignerAddress(msg sdk.Msg) string {
 		return v.Sender
 	case *sendingtypes.MsgWithdrawFromSubaccount:
 		return v.Sender.Owner
-	case *clobtypes.MsgUpdateBlockRateLimitConfiguration:
-		return v.Authority
-	case *clobtypes.MsgUpdateEquityTierLimitConfiguration:
-		return v.Authority
 	default:
 		panic(fmt.Errorf("Not a supported type %T", msg))
 	}
