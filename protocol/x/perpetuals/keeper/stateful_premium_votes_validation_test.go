@@ -3,10 +3,17 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
+
+type IsPerpetualClobPairInitializingResp struct {
+	isPerpetualClobPairInitializing bool
+	isPerpetualClobPairInitializingErr error
+}
 
 func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 	// In below test cases, perpetual 0 is associated with liquidity tier 0,
@@ -20,6 +27,7 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
 		votes         []types.FundingPremium
+		isPerpetualClobPairInitializingResp *IsPerpetualClobPairInitializingResp
 		numPerpetuals int
 		expectedErr   error
 	}{
@@ -117,11 +125,57 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 			numPerpetuals: 4,
 			expectedErr:   types.ErrPremiumVoteNotClamped,
 		},
+		"Error: fails to determine clob pair status": {
+			votes: []types.FundingPremium{
+				{
+					PerpetualId: 0,
+					PremiumPpm:  0,
+				},
+			},
+			isPerpetualClobPairInitializingResp: &IsPerpetualClobPairInitializingResp{
+				isPerpetualClobPairInitializing: false,
+				isPerpetualClobPairInitializingErr: clobtypes.ErrInvalidClob,
+			},
+			numPerpetuals: 1,
+			expectedErr: clobtypes.ErrInvalidClob,
+		},
+		"Valid: zeros the premium vote if the clob pair is initializing": {
+			votes: []types.FundingPremium{
+				{
+					PerpetualId: 0,
+					PremiumPpm:  1,
+				},
+			},
+			isPerpetualClobPairInitializingResp: &IsPerpetualClobPairInitializingResp{
+				isPerpetualClobPairInitializing: true,
+				isPerpetualClobPairInitializingErr: nil,
+			},
+			numPerpetuals: 1,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+			mockPCPIC := &mocks.PerpetualClobPairInitializingChecker{}
+			ctx, k, pricesKeeper, _, _ := keepertest.PerpetualsKeepersWithClobHelpers(
+				t,
+				nil,
+				mockPCPIC,
+			)
+
+			// set mock expectations
+			for _, vote := range tc.votes {
+				isInitializing := false
+				var err error
+				if tc.isPerpetualClobPairInitializingResp != nil {
+					isInitializing = tc.isPerpetualClobPairInitializingResp.isPerpetualClobPairInitializing
+					err = tc.isPerpetualClobPairInitializingResp.isPerpetualClobPairInitializingErr
+				}
+				mockPCPIC.On("IsPerpetualClobPairInitializing", ctx, vote.PerpetualId).Once().Return(
+					isInitializing,
+					err,
+				)
+			}
 
 			_, err := createLiquidityTiersAndNPerpetuals(t, ctx, k, pricesKeeper, tc.numPerpetuals)
 			require.NoError(t, err)
