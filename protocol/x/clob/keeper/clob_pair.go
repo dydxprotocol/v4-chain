@@ -420,3 +420,95 @@ func (k Keeper) SetClobPairStatus(
 
 	return nil
 }
+
+// getInternalOperationClobPairId returns the ClobPairId associated with the operation. This function
+// will panic if called for a PreexistingStatefulOrder internal operation since this operation type
+// should never be included in MsgProposedOperations.
+func (k Keeper) getInternalOperationClobPairId(
+	ctx sdk.Context,
+	internalOperation types.InternalOperation,
+) (
+	clobPairId types.ClobPairId,
+	err error,
+) {
+	switch castedOperation := internalOperation.Operation.(type) {
+	case *types.InternalOperation_Match:
+		switch castedMatch := castedOperation.Match.Match.(type) {
+		case *types.ClobMatch_MatchOrders:
+			clobPairId = types.ClobPairId(castedMatch.MatchOrders.TakerOrderId.ClobPairId)
+		case *types.ClobMatch_MatchPerpetualLiquidation:
+			clobPairId = types.ClobPairId(castedMatch.MatchPerpetualLiquidation.ClobPairId)
+		case *types.ClobMatch_MatchPerpetualDeleveraging:
+			clobPairId, err = k.GetClobPairIdForPerpetual(
+				ctx,
+				castedMatch.MatchPerpetualDeleveraging.PerpetualId,
+			)
+		}
+	case *types.InternalOperation_ShortTermOrderPlacement:
+		clobPairId = types.ClobPairId(castedOperation.ShortTermOrderPlacement.Order.OrderId.ClobPairId)
+	case *types.InternalOperation_OrderRemoval:
+		clobPairId = types.ClobPairId(castedOperation.OrderRemoval.OrderId.ClobPairId)
+	case *types.InternalOperation_PreexistingStatefulOrder:
+		// this helper is only used in ProcessOperations (DeliverTx) which should not contain
+		// this operation type, so panic.
+		panic(
+			"getInternalOperationClobPairId: should never be called for preexisting stateful order " +
+				"internal operations",
+		)
+	default:
+		panic(
+			fmt.Sprintf(
+				"getInternalOperationClobPairId: Unrecognized operation type for operation: %+v",
+				internalOperation.GetInternalOperationTextString(),
+			),
+		)
+	}
+
+	return clobPairId, err
+}
+
+// validateInternalOperationAgainstClobPairStatus validates that an internal
+// operation is valid for its associated ClobPair's current status. This function will panic if the
+// ClobPair cannot be found or if the ClobPair's status is not supported.
+// Returns an error if one is encountered during validation.
+func (k Keeper) validateInternalOperationAgainstClobPairStatus(
+	ctx sdk.Context,
+	internalOperation types.InternalOperation,
+) error {
+	clobPairId, err := k.getInternalOperationClobPairId(ctx, internalOperation)
+	if err != nil {
+		return err
+	}
+
+	// Fail if the ClobPair cannot be found.
+	clobPair, found := k.GetClobPair(ctx, clobPairId)
+	if !found {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClob,
+			"CLOB pair ID %d not found in state",
+			clobPairId,
+		)
+	}
+
+	// Verify ClobPair fetched from state has a supported status.
+	if !types.IsSupportedClobPairStatus(clobPair.Status) {
+		panic(
+			"validateInternalOperationAgainstClobPairStatus: ClobPair's status is not supported",
+		)
+	}
+
+	// Branch validation logic for supported statuses requiring validation.
+	switch clobPair.Status {
+	case types.ClobPair_STATUS_INITIALIZING:
+		// All operations are invalid for initializing clob pairs.
+		return sdkerrors.Wrapf(
+			types.ErrOperationConflictsWithClobPairStatus,
+			"Operation %s invalid for ClobPair with id %d with status %s",
+			internalOperation.GetInternalOperationTextString(),
+			clobPairId,
+			types.ClobPair_STATUS_INITIALIZING,
+		)
+	}
+
+	return nil
+}

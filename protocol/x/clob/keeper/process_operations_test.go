@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -1181,6 +1184,107 @@ func TestProcessProposerOperations(t *testing.T) {
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 			),
+		},
+		"Fails with clob pair not found": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+					[]types.MakerFill{
+						{
+							FillAmount:   5,
+							MakerOrderId: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+						},
+					},
+				),
+			},
+			expectedError: types.ErrInvalidClob,
+		},
+		"Panics with unsupported clob pair status": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+					[]types.MakerFill{
+						{
+							FillAmount:   5,
+							MakerOrderId: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+						},
+					},
+				),
+			},
+			// write clob pair to state with unsupported status
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				b := cdc.MustMarshal(&constants.ClobPair_Btc_Paused)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(constants.ClobPair_Btc_Paused.Id),
+				), b)
+			},
+			expectedPanics: "validateInternalOperationAgainstClobPairStatus: ClobPair's status is not supported",
+		},
+		"Fails with clob match for market in initializing mode": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Init,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+					[]types.MakerFill{
+						{
+							FillAmount:   5,
+							MakerOrderId: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+						},
+					},
+				),
+			},
+			expectedError: types.ErrOperationConflictsWithClobPairStatus,
+		},
+		"Fails with short term order placement for market in initializing mode": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Init,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+				),
+			},
+			expectedError: types.ErrOperationConflictsWithClobPairStatus,
+		},
+		"Fails with order removal for market in initializing mode": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Init,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewOrderRemovalOperationRaw(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
+				),
+			},
+			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
 	}
 

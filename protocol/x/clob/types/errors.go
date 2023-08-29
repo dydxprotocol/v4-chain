@@ -168,9 +168,14 @@ var (
 		35,
 		"Invalid ClobPair status transition",
 	)
-	ErrPerpetualDoesNotExist = sdkerrors.Register(
+	ErrOperationConflictsWithClobPairStatus = sdkerrors.Register(
 		ModuleName,
 		36,
+		"Operation conflicts with ClobPair status",
+	)
+	ErrPerpetualDoesNotExist = sdkerrors.Register(
+		ModuleName,
+		37,
 		"Perpetual does not exist in state",
 	)
 
