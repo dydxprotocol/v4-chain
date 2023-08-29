@@ -7,8 +7,6 @@ import (
 const (
 	// PerpetualKeyPrefix is the prefix to retrieve all Perpetual
 	PerpetualKeyPrefix = "Perpetual/value/"
-	// NumPerpetualsKey is the prefix to retrieve the cardinality of Perpetuals
-	NumPerpetualsKey = "Perpetual/num/"
 	// PerpetualKeyPrefix is the prefix to retrieve all funding premium samples
 	FundingSamplesKeyPrefix = "Perpetual/funding/"
 	// FundingRateClampFactorKey is the key to retrieve funding rate clamp factor

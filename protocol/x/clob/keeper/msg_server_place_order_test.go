@@ -97,6 +97,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			perpetual := constants.BtcUsd_100PercentMarginRequirement
 			_, err := ks.PerpetualsKeeper.CreatePerpetual(
 				ks.Ctx,
+				perpetual.Params.Id,
 				perpetual.Params.Ticker,
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
@@ -238,6 +239,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 			perpetual := constants.BtcUsd_100PercentMarginRequirement
 			_, err := ks.PerpetualsKeeper.CreatePerpetual(
 				ctx,
+				perpetual.Params.Id,
 				perpetual.Params.Ticker,
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,

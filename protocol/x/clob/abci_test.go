@@ -666,6 +666,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			} {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
+					p.Params.Id,
 					p.Params.Ticker,
 					p.Params.MarketId,
 					p.Params.AtomicResolution,
@@ -1340,6 +1341,7 @@ func TestPrepareCheckState(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Params.Id,
 					p.Params.Ticker,
 					p.Params.MarketId,
 					p.Params.AtomicResolution,
