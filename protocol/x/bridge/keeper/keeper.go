@@ -26,6 +26,9 @@ type (
 		// The address capable of executing MsgUpdateEventParams, MsgUpdateProposeParams, and
 		// MsgUpdateSafetyParams messages. Typically, this should be the x/gov module account.
 		govAuthority string
+		// The address capable of executing MsgCompleteBridge messages. Typically, this should
+		// be the x/delaymsg module account.
+		delayMsgAuthority string
 	}
 )
 
@@ -36,6 +39,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	delayMsgKeeper delaymsgtypes.DelayMsgKeeper,
 	govAuthority string,
+	delayMsgAuthority string,
 ) *Keeper {
 	return &Keeper{
 		cdc:                cdc,
@@ -44,12 +48,18 @@ func NewKeeper(
 		bankKeeper:         bankKeeper,
 		delayMsgKeeper:     delayMsgKeeper,
 		govAuthority:       govAuthority,
+		delayMsgAuthority:  delayMsgAuthority,
 	}
 }
 
 // GetGovAuthority returns the x/bridge module's authority for updating parameters.
 func (k Keeper) GetGovAuthority() string {
 	return k.govAuthority
+}
+
+// GetDelayMsgAuthority returns the x/bridge module's authority for completing bridges.
+func (k Keeper) GetDelayMsgAuthority() string {
+	return k.delayMsgAuthority
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

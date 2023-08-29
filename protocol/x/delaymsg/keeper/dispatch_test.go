@@ -19,6 +19,8 @@ var (
 	BridgeAuthority      = authtypes.NewModuleAddress(bridgetypes.ModuleName).String()
 	BridgeAccountAddress = sdk.MustAccAddressFromBech32(BridgeAuthority)
 
+	DelayMsgAuthority = authtypes.NewModuleAddress(types.ModuleName).String()
+
 	BridgeGenesisAccountBalance = sdk.NewCoin("dv4tnt", sdk.NewInt(1000000000))
 	AliceInitialAccountBalance  = sdk.NewCoin("dv4tnt", sdk.NewInt(99500000000))
 
@@ -44,6 +46,7 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 
 	// Mock the bridge keeper methods called by the bridge msg server.
 	bridgeKeeper.On("CompleteBridge", ctx, mock.Anything).Return(nil).Times(len(constants.AllMsgs))
+	bridgeKeeper.On("GetDelayMsgAuthority").Return(DelayMsgAuthority).Times(len(constants.AllMsgs))
 
 	// Dispatch messages for block 0.
 	delaymsg.DispatchMessagesForBlock(ctx)
@@ -58,7 +61,7 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 func generateBridgeEventMsgBytes(t *testing.T, event bridgetypes.BridgeEvent) []byte {
 	_, k, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 	msgCompleteBridge := bridgetypes.MsgCompleteBridge{
-		Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+		Authority: authtypes.NewModuleAddress(types.ModuleName).String(),
 		Event:     event,
 	}
 	bytes, err := k.EncodeMessage(&msgCompleteBridge)

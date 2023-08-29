@@ -31,4 +31,6 @@ type BridgeKeeper interface {
 
 	// Authority
 	GetGovAuthority() string
+
+	GetDelayMsgAuthority() string
 }

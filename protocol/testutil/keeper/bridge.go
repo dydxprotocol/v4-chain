@@ -15,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
 func BridgeKeepers(
@@ -74,6 +75,7 @@ func createBridgeKeeper(
 		bankKeeper,
 		mockDelayMsgKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
 	)
 
 	return k, storeKey, mockTimeProvider, bridgeEventManager, mockDelayMsgKeeper

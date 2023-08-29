@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 )
@@ -36,7 +37,7 @@ var (
 	}
 
 	// Public
-	BridgeModuleAccAddress = authtypes.NewModuleAddress(types.ModuleName)
+	DelayMsgModuleAccAddress = authtypes.NewModuleAddress(delaymsgtypes.ModuleName)
 	// Bridge Event.
 	BridgeEvent_Id0_Height0 = types.BridgeEvent{
 		Id:             0,

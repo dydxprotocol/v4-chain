@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
@@ -14,13 +13,12 @@ func (k msgServer) CompleteBridge(
 	goCtx context.Context,
 	msg *types.MsgCompleteBridge,
 ) (*types.MsgCompleteBridgeResponse, error) {
-	// MsgCompleteBridge's authority should be bridge module.
-	bridgeModuleAddressString := authtypes.NewModuleAddress(types.ModuleName).String()
-	if bridgeModuleAddressString != msg.Authority {
+	// MsgCompleteBridge's authority should be delaymsg module.
+	if k.Keeper.GetDelayMsgAuthority() != msg.Authority {
 		return nil, errors.Wrapf(
 			types.ErrInvalidAuthority,
 			"expected %s, got %s",
-			bridgeModuleAddressString,
+			k.Keeper.GetDelayMsgAuthority(),
 			msg.Authority,
 		)
 	}
