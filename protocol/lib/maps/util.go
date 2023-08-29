@@ -61,3 +61,11 @@ func AreMapsEqual[K comparable, V comparable](a map[K]V, b map[K]V) bool {
 
 	return true
 }
+
+func ArrayToMapInterface[T comparable](list []T) map[T]struct{} {
+	ret := make(map[T]struct{}, len(list))
+	for _, v := range list {
+		ret[v] = struct{}{}
+	}
+	return ret
+}

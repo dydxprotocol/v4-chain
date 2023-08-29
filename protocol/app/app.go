@@ -622,6 +622,11 @@ func New(
 	app.BlockTimeKeeper = *blocktimemodulekeeper.NewKeeper(
 		appCodec,
 		keys[blocktimemoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
 
@@ -661,8 +666,11 @@ func New(
 		app.EpochsKeeper,
 		keys[statsmoduletypes.StoreKey],
 		tkeys[statsmoduletypes.TransientStoreKey],
-		// set the governance module account as the authority for conducting upgrades
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
 
@@ -670,6 +678,11 @@ func New(
 		appCodec,
 		app.StatsKeeper,
 		keys[feetiersmoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
 
@@ -678,8 +691,11 @@ func New(
 		keys[vestmoduletypes.StoreKey],
 		app.BankKeeper,
 		app.BlockTimeKeeper,
-		// set the governance module account as the authority for conducting upgrades
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	vestModule := vestmodule.NewAppModule(appCodec, app.VestKeeper)
 
@@ -691,8 +707,11 @@ func New(
 		app.BankKeeper,
 		app.FeeTiersKeeper,
 		app.PricesKeeper,
-		// set the governance module account as the authority for conducting upgrades
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	rewardsModule := rewardsmodule.NewAppModule(appCodec, app.RewardsKeeper)
 
@@ -712,14 +731,13 @@ func New(
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
-	untriggeredConditionalOrders := make(map[clobmoduletypes.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
+
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
 		keys[clobmoduletypes.StoreKey],
 		memKeys[clobmoduletypes.MemStoreKey],
 		tkeys[clobmoduletypes.TransientStoreKey],
 		memClob,
-		untriggeredConditionalOrders,
 		app.SubaccountsKeeper,
 		app.AssetsKeeper,
 		app.BlockTimeKeeper,

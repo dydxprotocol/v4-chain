@@ -1,5 +1,6 @@
 import {
   PerpetualMarketCreateObject,
+  PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   PerpetualMarketStatus,
   PerpetualMarketTable,
@@ -35,16 +36,16 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
       this.createPerpetualMarket(),
       this.generateTimingStatsOptions('create_perpetual_market'),
     );
-    // TODO: Send update to markets websocket channel.
+    // TODO(IND-374): Send update to markets websocket channel.
     return [];
   }
 
   private async createPerpetualMarket(): Promise<void> {
-    await PerpetualMarketTable.create(
+    const perpetualMarket: PerpetualMarketFromDatabase = await PerpetualMarketTable.create(
       this.getPerpetualMarketCreateObject(this.event),
       { txId: this.txId },
     );
-    await perpetualMarketRefresher.updatePerpetualMarkets({ txId: this.txId });
+    perpetualMarketRefresher.upsertPerpetualMarket(perpetualMarket);
   }
 
   /**

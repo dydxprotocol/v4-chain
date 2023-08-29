@@ -427,7 +427,8 @@ func (k Keeper) InitializeCumulativePnLs(
 }
 
 // GetMEVDataFromOperations returns the MEV matches and MEV liquidations from the provided
-// operations queue. It returns an error if a short-term order cannot be decoded.
+// operations queue. It returns an error if a short-term order cannot be decoded. Panics if
+// an order cannot be found.
 func (k Keeper) GetMEVDataFromOperations(
 	ctx sdk.Context,
 	operations []types.OperationRaw,
@@ -670,7 +671,7 @@ func (k Keeper) CalculateSubaccountPnLForMatches(
 				// TODO(CLOB-742): This whole function is currently not being called since deleveraging and funding
 				// are excluded from MEV calculations. Re-enable deleveraging and funding in MEV calculation.
 				matchDeleveraging := match.MatchPerpetualDeleveraging
-				clobPairId, err := k.MemClob.GetClobPairForPerpetual(ctx, matchDeleveraging.PerpetualId)
+				clobPairId, err := k.GetClobPairIdForPerpetual(ctx, matchDeleveraging.PerpetualId)
 				if err != nil {
 					return err
 				}

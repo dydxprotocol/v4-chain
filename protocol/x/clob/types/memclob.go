@@ -35,13 +35,6 @@ type MemClob interface {
 		subaccountId satypes.SubaccountId,
 		filter func(OrderId) bool,
 	) uint32
-	GetClobPairForPerpetual(
-		ctx sdk.Context,
-		perpetualId uint32,
-	) (
-		clobPairId ClobPairId,
-		err error,
-	)
 	GetOperationsToReplay(
 		ctx sdk.Context,
 	) (

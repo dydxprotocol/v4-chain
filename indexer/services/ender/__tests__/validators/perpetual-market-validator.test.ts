@@ -86,12 +86,12 @@ describe('perpetual-market-validator', () => {
 });
 
 function createBlock(
-  assetCreateEvent: PerpetualMarketCreateEventV1,
+  perpetualMarketEvent: PerpetualMarketCreateEventV1,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.PERPETUAL_MARKET,
     binaryToBase64String(
-      PerpetualMarketCreateEventV1.encode(assetCreateEvent).finish(),
+      PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
     ),
     0,
     0,

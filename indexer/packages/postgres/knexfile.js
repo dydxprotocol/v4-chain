@@ -6,12 +6,6 @@ module.exports = {
   migrations: {
     directory: './src/db/migrations/migration_files/',
   },
-  seeds: {
-    loadExtensions: ['.js'],
-    // needs to load files from build/ since src/db/seeds/helpers.ts has dependencies
-    // and only build directory copied in Dockerfile
-    directory: './build/src/db/seeds',
-  },
   client: 'pg',
   connection: {
     host: process.env.DB_HOSTNAME,

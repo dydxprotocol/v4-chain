@@ -26,11 +26,10 @@ func (k msgServer) UpdateParams(
 	goCtx context.Context,
 	msg *types.MsgUpdateParams,
 ) (*types.MsgUpdateParamsResponse, error) {
-	if k.GetAuthority() != msg.Authority {
+	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
-			"invalid authority; expected %s, got %s",
-			k.GetAuthority(),
+			"invalid authority %s",
 			msg.Authority,
 		)
 	}

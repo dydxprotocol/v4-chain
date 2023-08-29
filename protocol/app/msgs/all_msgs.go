@@ -147,6 +147,8 @@ var (
 		// clob
 		"/dydxprotocol.clob.MsgCancelOrder":                {},
 		"/dydxprotocol.clob.MsgCancelOrderResponse":        {},
+		"/dydxprotocol.clob.MsgCreateClobPair":             {},
+		"/dydxprotocol.clob.MsgCreateClobPairResponse":     {},
 		"/dydxprotocol.clob.MsgPlaceOrder":                 {},
 		"/dydxprotocol.clob.MsgPlaceOrderResponse":         {},
 		"/dydxprotocol.clob.MsgProposedOperations":         {},
@@ -163,8 +165,12 @@ var (
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":         {},
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse": {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":         {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse": {},
 
 		// prices
+		"/dydxprotocol.prices.MsgCreateOracleMarket":         {},
+		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": {},
 		"/dydxprotocol.prices.MsgUpdateMarketPrices":         {},
 		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse": {},
 

@@ -176,7 +176,6 @@ func createClobKeeper(
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	transientStoreKey := sdk.NewTransientStoreKey(types.TransientStoreKey)
-	untriggeredConditionalOrders := make(map[types.ClobPairId]*keeper.UntriggeredConditionalOrders)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
@@ -188,7 +187,6 @@ func createClobKeeper(
 		memKey,
 		transientStoreKey,
 		memClob,
-		untriggeredConditionalOrders,
 		saKeeper,
 		aKeeper,
 		blockTimeKeeper,

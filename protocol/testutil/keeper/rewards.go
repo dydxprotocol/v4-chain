@@ -11,6 +11,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	rewardskeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
@@ -35,6 +36,10 @@ func createRewardsKeeper(
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
 
+	authorities := []string{
+		authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	}
 	k := rewardskeeper.NewKeeper(
 		cdc,
 		storeKey,
@@ -43,7 +48,7 @@ func createRewardsKeeper(
 		bankKeeper,
 		feeTiersKeeper,
 		pricesKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authorities,
 	)
 
 	return k, storeKey
