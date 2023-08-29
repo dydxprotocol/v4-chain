@@ -11,7 +11,7 @@
 
 > Sovereign Blockchain built using Cosmos SDK & CometBFT for v4 of the dYdX Protocol.
 
-TODO(DEC-2060): add info/resources around V4.
+TODO(CORE-512): add info/resources around V4.
 
 ## Get started
 

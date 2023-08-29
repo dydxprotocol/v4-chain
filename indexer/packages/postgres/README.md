@@ -9,4 +9,4 @@ Run the migration with `pnpm run migrate`
 
 In order to migrate in v4 dev and staging, you must redeploy and run bazooka.
 
-TODO(DEC-2060): Add info/resources around bazooka.
+TODO(CORE-512): Add info/resources around bazooka.

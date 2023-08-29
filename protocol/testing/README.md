@@ -10,7 +10,7 @@ Overall, the steps involve:
 
 Currently, step 1 is a manual process and steps 2, 3 and 4 are automated within the scripts (`local.sh`, `dev.sh`, and `staging.sh`).
 
-TODO(DEC-2060): add info/resources around cloud setup.
+TODO(CORE-512): add info/resources around cloud setup.
 
 # [Manual] Add new validator node keys to `dev.sh` or `staging.sh`
 

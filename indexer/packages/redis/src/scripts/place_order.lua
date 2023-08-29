@@ -1,4 +1,4 @@
--- TODO(DEC-2060): add info/resources around caches.
+-- TODO(CORE-512): add info/resources around caches.
 
 -- Key for the value in the orders cache, see `src/caches/orders-cache.ts` for more details
 local orderKey = KEYS[1];

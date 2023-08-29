@@ -100,7 +100,7 @@ export async function getRealizedFunding(
  * totalPnl = Pnl of fills + total value of open positions - realized funding
  * - unrealized funding - fees paid.
  *
- * TODO(DEC-2060): Add info/resources around Pnl validation.
+ * TODO(CORE-512): Add info/resources around Pnl validation.
  *
  * @param subaccountId
  * @param effectiveBeforeOrAtHeight
