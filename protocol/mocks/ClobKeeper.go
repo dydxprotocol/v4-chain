@@ -438,6 +438,34 @@ func (_m *ClobKeeper) GetSubaccountLiquidationInfo(ctx types.Context, subaccount
 	return r0
 }
 
+// InitializeBlockRateLimit provides a mock function with given fields: ctx, config
+func (_m *ClobKeeper) InitializeBlockRateLimit(ctx types.Context, config clobtypes.BlockRateLimitConfiguration) error {
+	ret := _m.Called(ctx, config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.BlockRateLimitConfiguration) error); ok {
+		r0 = rf(ctx, config)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// InitializeEquityTierLimit provides a mock function with given fields: ctx, config
+func (_m *ClobKeeper) InitializeEquityTierLimit(ctx types.Context, config clobtypes.EquityTierLimitConfiguration) error {
+	ret := _m.Called(ctx, config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.EquityTierLimitConfiguration) error); ok {
+		r0 = rf(ctx, config)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // IsLiquidatable provides a mock function with given fields: ctx, subaccountId
 func (_m *ClobKeeper) IsLiquidatable(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (bool, error) {
 	ret := _m.Called(ctx, subaccountId)
