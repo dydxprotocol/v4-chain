@@ -79,7 +79,7 @@ func TestUpdateEquityTierLimitConfig(t *testing.T) {
 	proposal, err := gov.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			&clobtypes.MsgUpdateEquityTierLimitConfiguration{
-				//Authority:             tApp.App.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String(),
+				Authority:             tApp.App.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String(),
 				EquityTierLimitConfig: expectedConfig,
 			},
 		},
@@ -103,10 +103,12 @@ func TestUpdateEquityTierLimitConfig(t *testing.T) {
 	))
 	require.True(t, response.IsOK())
 
+	// Must add a bunch of votes gov.NewMsgVote(...) and possibly wait till the vote passes before we would
+	// see the outcome of the vote. See https://docs.cosmos.network/main/modules/gov#messages
+
 	ctx = tApp.AdvanceToBlock(
 		2,
 		testapp.AdvanceToBlockOptions{},
 	)
 	require.Equal(t, expectedConfig, tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx))
-
 }
