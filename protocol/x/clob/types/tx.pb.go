@@ -526,10 +526,12 @@ func (*OperationRaw) XXX_OneofWrappers() []interface{} {
 	}
 }
 
-// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration request type.
+// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+// request type.
 type MsgUpdateEquityTierLimitConfiguration struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// Defines the equity tier limit configuration to update to. All fields must be set.
+	// Defines the equity tier limit configuration to update to. All fields must
+	// be set.
 	EquityTierLimitConfig EquityTierLimitConfiguration `protobuf:"bytes,2,opt,name=equity_tier_limit_config,json=equityTierLimitConfig,proto3" json:"equity_tier_limit_config"`
 }
 
@@ -580,7 +582,8 @@ func (m *MsgUpdateEquityTierLimitConfiguration) GetEquityTierLimitConfig() Equit
 	return EquityTierLimitConfiguration{}
 }
 
-// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration response type.
+// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+// response type.
 type MsgUpdateEquityTierLimitConfigurationResponse struct {
 }
 
@@ -621,10 +624,12 @@ func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateEquityTierLimitConfigurationResponse proto.InternalMessageInfo
 
-// MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration request type.
+// MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+// request type.
 type MsgUpdateBlockRateLimitConfiguration struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// Defines the block rate limit configuration to update to. All fields must be set.
+	// Defines the block rate limit configuration to update to. All fields must be
+	// set.
 	BlockRateLimitConfig BlockRateLimitConfiguration `protobuf:"bytes,3,opt,name=block_rate_limit_config,json=blockRateLimitConfig,proto3" json:"block_rate_limit_config"`
 }
 
@@ -675,7 +680,8 @@ func (m *MsgUpdateBlockRateLimitConfiguration) GetBlockRateLimitConfig() BlockRa
 	return BlockRateLimitConfiguration{}
 }
 
-// MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration response type.
+// MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+// response type.
 type MsgUpdateBlockRateLimitConfigurationResponse struct {
 }
 
@@ -814,9 +820,11 @@ type MsgClient interface {
 	CancelOrder(ctx context.Context, in *MsgCancelOrder, opts ...grpc.CallOption) (*MsgCancelOrderResponse, error)
 	// CreateClobPair creates a new clob pair.
 	CreateClobPair(ctx context.Context, in *MsgCreateClobPair, opts ...grpc.CallOption) (*MsgCreateClobPairResponse, error)
-	// UpdateEquityTierLimitConfiguration updates the equity tier limit configuration in state.
+	// UpdateEquityTierLimitConfiguration updates the equity tier limit
+	// configuration in state.
 	UpdateEquityTierLimitConfiguration(ctx context.Context, in *MsgUpdateEquityTierLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateEquityTierLimitConfigurationResponse, error)
-	// UpdateBlockRateLimitConfiguration updates the block rate limit configuration in state.
+	// UpdateBlockRateLimitConfiguration updates the block rate limit
+	// configuration in state.
 	UpdateBlockRateLimitConfiguration(ctx context.Context, in *MsgUpdateBlockRateLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateBlockRateLimitConfigurationResponse, error)
 }
 
@@ -893,9 +901,11 @@ type MsgServer interface {
 	CancelOrder(context.Context, *MsgCancelOrder) (*MsgCancelOrderResponse, error)
 	// CreateClobPair creates a new clob pair.
 	CreateClobPair(context.Context, *MsgCreateClobPair) (*MsgCreateClobPairResponse, error)
-	// UpdateEquityTierLimitConfiguration updates the equity tier limit configuration in state.
+	// UpdateEquityTierLimitConfiguration updates the equity tier limit
+	// configuration in state.
 	UpdateEquityTierLimitConfiguration(context.Context, *MsgUpdateEquityTierLimitConfiguration) (*MsgUpdateEquityTierLimitConfigurationResponse, error)
-	// UpdateBlockRateLimitConfiguration updates the block rate limit configuration in state.
+	// UpdateBlockRateLimitConfiguration updates the block rate limit
+	// configuration in state.
 	UpdateBlockRateLimitConfiguration(context.Context, *MsgUpdateBlockRateLimitConfiguration) (*MsgUpdateBlockRateLimitConfigurationResponse, error)
 }
 

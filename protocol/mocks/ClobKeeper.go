@@ -438,6 +438,20 @@ func (_m *ClobKeeper) GetSubaccountLiquidationInfo(ctx types.Context, subaccount
 	return r0
 }
 
+// HasAuthority provides a mock function with given fields: authority
+func (_m *ClobKeeper) HasAuthority(authority string) bool {
+	ret := _m.Called(authority)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(authority)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 // InitializeBlockRateLimit provides a mock function with given fields: ctx, config
 func (_m *ClobKeeper) InitializeBlockRateLimit(ctx types.Context, config clobtypes.BlockRateLimitConfiguration) error {
 	ret := _m.Called(ctx, config)

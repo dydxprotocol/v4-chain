@@ -35,6 +35,7 @@ type ClobKeeper interface {
 	)
 	GetAllClobPair(ctx sdk.Context) (list []ClobPair)
 	GetClobPair(ctx sdk.Context, id ClobPairId) (val ClobPair, found bool)
+	HasAuthority(authority string) bool
 	PlaceShortTermOrder(ctx sdk.Context, msg *MsgPlaceOrder) (
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 		orderStatus OrderStatus,

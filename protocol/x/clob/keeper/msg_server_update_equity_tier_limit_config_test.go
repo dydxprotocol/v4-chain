@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"github.com/cometbft/cometbft/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -71,14 +73,25 @@ func TestUpdateEquityTierLimitConfig(t *testing.T) {
 	}
 
 	ctx := tApp.InitChain()
-	require.NotEqual(t, expectedConfig, tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx))
 
-	request := clobtypes.MsgUpdateEquityTierLimitConfiguration{
+	originalConfig := tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx)
+	require.NotEqual(t, expectedConfig, originalConfig)
+	handler := tApp.App.MsgServiceRouter().Handler(&clobtypes.MsgUpdateEquityTierLimitConfiguration{})
+
+	requestWithoutAuthority := clobtypes.MsgUpdateEquityTierLimitConfiguration{
+		Authority:             "fake authority",
 		EquityTierLimitConfig: expectedConfig,
 	}
-	handler := tApp.App.MsgServiceRouter().Handler(&request)
-	_, err := handler(ctx, &request)
-	require.NoError(t, err)
+	_, err := handler(ctx, &requestWithoutAuthority)
+	require.Error(t, err, "invalid authority")
+	require.Equal(t, originalConfig, tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx))
 
+	requestWithAuthority := clobtypes.MsgUpdateEquityTierLimitConfiguration{
+		Authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		EquityTierLimitConfig: expectedConfig,
+	}
+	_, err = handler(ctx, &requestWithAuthority)
+	require.NoError(t, err)
 	require.Equal(t, expectedConfig, tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx))
+
 }
