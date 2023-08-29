@@ -14,7 +14,7 @@ func (msg *MsgSetClobPairStatus) GetSigners() []sdk.AccAddress {
 }
 
 func (msg *MsgSetClobPairStatus) ValidateBasic() error {
-	if !IsSupportedClobPairStatus(msg.ClobPairStatus) {
+	if !IsSupportedClobPairStatus(ClobPair_Status(msg.ClobPairStatus)) {
 		return sdkerrors.Wrapf(
 			ErrInvalidMsgSetClobPairStatus,
 			"Unsupported ClobPair status: %+v",

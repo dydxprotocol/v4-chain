@@ -15,13 +15,13 @@ func TestMsgSetClobPairStatus_ValidateBasic(t *testing.T) {
 		"valid": {
 			msg: types.MsgSetClobPairStatus{
 				ClobPairId:     0,
-				ClobPairStatus: types.ClobPair_STATUS_ACTIVE,
+				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
 			},
 		},
 		"invalid": {
 			msg: types.MsgSetClobPairStatus{
 				ClobPairId:     0,
-				ClobPairStatus: types.ClobPair_STATUS_UNSPECIFIED,
+				ClobPairStatus: int32(types.ClobPair_STATUS_UNSPECIFIED),
 			},
 			expectedError: types.ErrInvalidMsgSetClobPairStatus,
 		},

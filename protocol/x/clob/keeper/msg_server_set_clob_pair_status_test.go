@@ -30,7 +30,7 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 		"Success": {
 			testMsg: types.MsgSetClobPairStatus{
 				ClobPairId:     0,
-				ClobPairStatus: types.ClobPair_STATUS_ACTIVE,
+				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext) {
 				registry := codectypes.NewInterfaceRegistry()
@@ -52,7 +52,7 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 		"Panic: clob pair not found": {
 			testMsg: types.MsgSetClobPairStatus{
 				ClobPairId:     0,
-				ClobPairStatus: types.ClobPair_STATUS_ACTIVE,
+				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
 			},
 			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
 		},
@@ -60,7 +60,7 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 			testMsg: types.MsgSetClobPairStatus{
 				Authority:      "12345",
 				ClobPairId:     0,
-				ClobPairStatus: types.ClobPair_STATUS_ACTIVE,
+				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext) {
 				// write default btc clob pair to state
