@@ -659,7 +659,7 @@ func New(
 		app.EpochsKeeper,
 		app.IndexerEventManager,
 	)
-	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper, app.AccountKeeper, app.BankKeeper)
+	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, &app.PerpetualsKeeper, app.AccountKeeper, app.BankKeeper)
 
 	app.StatsKeeper = *statsmodulekeeper.NewKeeper(
 		appCodec,
