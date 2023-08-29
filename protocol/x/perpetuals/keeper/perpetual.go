@@ -1222,7 +1222,9 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 		}
 
 		// Zero values for perpetuals whose ClobPair is initializing
-		if isInitializing, err := k.perpetualClobPairInitializingChecker.IsPerpetualClobPairInitializing(ctx, vote.PerpetualId); err != nil {
+		if isInitializing, err := k.perpetualClobPairInitializingChecker.IsPerpetualClobPairInitializing(
+			ctx, vote.PerpetualId,
+		); err != nil {
 			return sdkerrors.Wrapf(
 				err,
 				"PerformStatefulPremiumVotesValidation: failed to determine ClobPair status for perpetual with id %d",
