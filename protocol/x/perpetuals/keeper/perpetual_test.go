@@ -27,6 +27,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -315,6 +316,61 @@ func TestGetPerpetual_Success(t *testing.T) {
 	}
 }
 
+func TestHasPerpetual(t *testing.T) {
+	// Setup context and keepers
+	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+
+	// Create liquidity tiers and perpetuals
+	keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
+
+	perps := []types.Perpetual{
+		*perptest.GeneratePerpetual(perptest.WithId(0)),
+		*perptest.GeneratePerpetual(perptest.WithId(5)),
+		*perptest.GeneratePerpetual(perptest.WithId(20)),
+		*perptest.GeneratePerpetual(perptest.WithId(999)),
+	}
+
+	_, err := pricesKeeper.CreateMarket(
+		ctx,
+		// `ExchangeConfigJson` is left unset as it is not used by the server.
+		pricestypes.MarketParam{
+			Id:                0,
+			Pair:              "marketName",
+			Exponent:          -10,
+			MinExchanges:      uint32(1),
+			MinPriceChangePpm: uint32(50),
+		},
+		pricestypes.MarketPrice{
+			Id:       0,
+			Exponent: -10,
+			Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+		},
+	)
+	require.NoError(t, err)
+
+	for perp := range perps {
+		_, err := keeper.CreatePerpetual(
+			ctx,
+			perps[perp].Params.Id,
+			perps[perp].Params.Ticker,
+			perps[perp].Params.MarketId,
+			perps[perp].Params.AtomicResolution,
+			perps[perp].Params.DefaultFundingPpm,
+			perps[perp].Params.LiquidityTier,
+		)
+		require.NoError(t, err)
+	}
+
+	for _, perp := range perps {
+		// Test if HasPerpetual correctly identifies an existing perpetual
+		found := keeper.HasPerpetual(ctx, perp.Params.Id)
+		require.True(t, found, "Expected to find perpetual with id %d, but it was not found", perp.Params.Id)
+	}
+
+	found := keeper.HasPerpetual(ctx, 9999)
+	require.False(t, found, "Expected not to find perpetual with id 9999, but it was found")
+}
+
 func TestGetPerpetual_NotFound(t *testing.T) {
 	ctx, keeper, _, _, _ := keepertest.PerpetualsKeepers(t)
 	nonExistentPerpetualId := uint32(0)
@@ -335,6 +391,66 @@ func TestGetPerpetuals_Success(t *testing.T) {
 	require.ElementsMatch(t,
 		nullify.Fill(perps),                        //nolint:staticcheck
 		nullify.Fill(keeper.GetAllPerpetuals(ctx)), //nolint:staticcheck
+	)
+}
+
+func TestGetAllPerpetuals_Sorted(t *testing.T) {
+	// Setup context and keepers
+	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+
+	// Create liquidity tiers and perpetuals
+	keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
+
+	perps := []types.Perpetual{
+		*perptest.GeneratePerpetual(perptest.WithId(999)),
+		*perptest.GeneratePerpetual(perptest.WithId(5)),
+		*perptest.GeneratePerpetual(perptest.WithId(0)),
+		*perptest.GeneratePerpetual(perptest.WithId(20)),
+		*perptest.GeneratePerpetual(perptest.WithId(1)),
+	}
+
+	_, err := pricesKeeper.CreateMarket(
+		ctx,
+		// `ExchangeConfigJson` is left unset as it is not used by the server.
+		pricestypes.MarketParam{
+			Id:                0,
+			Pair:              "marketName",
+			Exponent:          -10,
+			MinExchanges:      uint32(1),
+			MinPriceChangePpm: uint32(50),
+		},
+		pricestypes.MarketPrice{
+			Id:       0,
+			Exponent: -10,
+			Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+		},
+	)
+	require.NoError(t, err)
+
+	for perp := range perps {
+		_, err := keeper.CreatePerpetual(
+			ctx,
+			perps[perp].Params.Id,
+			perps[perp].Params.Ticker,
+			perps[perp].Params.MarketId,
+			perps[perp].Params.AtomicResolution,
+			perps[perp].Params.DefaultFundingPpm,
+			perps[perp].Params.LiquidityTier,
+		)
+		require.NoError(t, err)
+	}
+
+	got := keeper.GetAllPerpetuals(ctx)
+	require.Equal(
+		t,
+		[]types.Perpetual{
+			*perptest.GeneratePerpetual(perptest.WithId(0)),
+			*perptest.GeneratePerpetual(perptest.WithId(1)),
+			*perptest.GeneratePerpetual(perptest.WithId(5)),
+			*perptest.GeneratePerpetual(perptest.WithId(20)),
+			*perptest.GeneratePerpetual(perptest.WithId(999)),
+		},
+		got,
 	)
 }
 
@@ -2442,11 +2558,11 @@ func TestAddPremiums_NonExistingPerpetuals(t *testing.T) {
 
 		err = tc.addPremiumFunc(keeper, ctx, newPremiums)
 		require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
-		require.EqualError(t,
+		require.Error(t,
 			err,
 			sdkerrors.Wrapf(
 				types.ErrPerpetualDoesNotExist,
-				"Perpetual Id from new sample: %d",
+				"perpetual ID = %d",
 				1000,
 			).Error(),
 		)

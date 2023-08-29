@@ -223,7 +223,6 @@ func TestNewPremiumStoreFromMarketPremiumMap(t *testing.T) {
 			tc.expectedPremiumStore,
 			*types.NewPremiumStoreFromMarketPremiumMap(
 				tc.marketPremiumsMap,
-				tc.allPerpetuals,
 				numPremiums,
 			),
 		)

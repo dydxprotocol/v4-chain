@@ -1,6 +1,7 @@
 package perpetuals
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -44,6 +45,7 @@ func GeneratePerpetual(optionalModifications ...PerpetualModifierOption) *perpty
 			DefaultFundingPpm: 0,
 			LiquidityTier:     0,
 		},
+		FundingIndex: dtypes.ZeroInt(),
 	}
 
 	for _, opt := range optionalModifications {

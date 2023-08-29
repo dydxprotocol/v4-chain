@@ -1,5 +1,9 @@
 package types
 
+import (
+	"sort"
+)
+
 // GetMarketPremiumsMap converts the `MarketPremiums` list stored in
 // `PremiumStore` to a map form `perpetualId` to `MarketPremiums`.
 func (ps *PremiumStore) GetMarketPremiumsMap() map[uint32]MarketPremiums {
@@ -14,21 +18,25 @@ func (ps *PremiumStore) GetMarketPremiumsMap() map[uint32]MarketPremiums {
 // from a MarketPremiumMap.
 func NewPremiumStoreFromMarketPremiumMap(
 	m map[uint32]MarketPremiums,
-	allPerpetuals []Perpetual,
 	numPremiums uint32,
 ) *PremiumStore {
 	ret := PremiumStore{
 		NumPremiums: numPremiums,
 	}
-	for _, perp := range allPerpetuals {
-		marketPremiums, found := m[perp.GetId()]
-		if !found {
-			// `PrmeiumStore` is used as a sparse matrix, so a perpetual Id not
-			// being found inherently means all premiums for the market were zeros.
-			continue
-		}
+
+	// Get a list of sorted perpetual Ids.
+	perpetualIds := []uint32{}
+	for perpId := range m {
+		perpetualIds = append(perpetualIds, perpId)
+	}
+	sort.Slice(perpetualIds, func(i, j int) bool {
+		return perpetualIds[i] < perpetualIds[j]
+	})
+
+	// Iterate through the sorted list of perpetual Ids and add market premiums.
+	for _, perpId := range perpetualIds {
 		ret.AllMarketPremiums = append(ret.AllMarketPremiums,
-			marketPremiums,
+			m[perpId],
 		)
 	}
 	return &ret

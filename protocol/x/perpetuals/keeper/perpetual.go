@@ -35,12 +35,11 @@ func (k Keeper) CreatePerpetual(
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 ) (types.Perpetual, error) {
-	// Get perpetual.
-	if perpetual, err := k.GetPerpetual(ctx, id); err == nil {
-		return perpetual, sdkerrors.Wrapf(
+	// Check if perpetual exists.
+	if found := k.HasPerpetual(ctx, id); found {
+		return types.Perpetual{}, sdkerrors.Wrap(
 			types.ErrPerpetualAlreadyExists,
-			"id: %v, perpetual: %v",
-			id, perpetual,
+			lib.Uint32ToString(id),
 		)
 	}
 
@@ -72,6 +71,15 @@ func (k Keeper) CreatePerpetual(
 	k.SetEmptyPremiumVotes(ctx)
 
 	return perpetual, nil
+}
+
+// HasPerpetual checks if a perpetual exists in the store.
+func (k Keeper) HasPerpetual(
+	ctx sdk.Context,
+	id uint32,
+) (found bool) {
+	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
+	return perpetualStore.Has(types.PerpetualKey(id))
 }
 
 func (k Keeper) ModifyPerpetual(
@@ -146,6 +154,10 @@ func (k Keeper) GetAllPerpetuals(ctx sdk.Context) (list []types.Perpetual) {
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
+
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Params.Id < list[j].Params.Id
+	})
 
 	return list
 }
@@ -962,10 +974,10 @@ func (k Keeper) addToPremiumStore(
 	marketPremiumsMap := premiumStore.GetMarketPremiumsMap()
 
 	for _, sample := range newSamples {
-		if _, err := k.GetPerpetual(ctx, sample.PerpetualId); err != nil {
+		if found := k.HasPerpetual(ctx, sample.PerpetualId); !found {
 			return sdkerrors.Wrapf(
 				types.ErrPerpetualDoesNotExist,
-				"Perpetual Id from new sample: %d",
+				"perpetual ID = %d",
 				sample.PerpetualId,
 			)
 		}
@@ -985,8 +997,7 @@ func (k Keeper) addToPremiumStore(
 		ctx,
 		*types.NewPremiumStoreFromMarketPremiumMap(
 			marketPremiumsMap,
-			k.GetAllPerpetuals(ctx),
-			premiumStore.NumPremiums+1, // increment NumPerpetuals
+			premiumStore.NumPremiums+1, // increment NumPremiums
 		),
 		key,
 	)
