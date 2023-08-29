@@ -204,7 +204,7 @@ func PrepareCheckState(
 	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
 	start := time.Now()
 	sort.Sort(types.SortedLiquidationOrders(liquidationOrders))
-	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.OffsettingSubaccountPerpetualPosition)
+	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.SortLiquidationOrders)
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
