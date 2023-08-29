@@ -19,3 +19,14 @@ func TestGenesis(t *testing.T) {
 
 	require.ElementsMatch(t, genesisState.MarketParams, got.MarketParams)
 }
+
+func TestInitGenesisEmitsMarketUpdates(t *testing.T) {
+	ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
+
+	prices.InitGenesis(ctx, *k, constants.Prices_DefaultGenesisState)
+
+	// Verify expected market update events.
+	for _, marketPrice := range constants.Prices_DefaultGenesisState.MarketPrices {
+		keepertest.AssertMarketPriceUpdateEventInIndexerBlock(t, k, ctx, marketPrice)
+	}
+}
