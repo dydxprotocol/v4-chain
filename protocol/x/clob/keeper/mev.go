@@ -19,8 +19,8 @@ import (
 )
 
 type MevTelemetryConfig struct {
-	Enabled bool
-	Host string
+	Enabled    bool
+	Host       string
 	Identifier string
 }
 
