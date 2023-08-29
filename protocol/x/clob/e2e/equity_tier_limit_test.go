@@ -2,6 +2,7 @@ package clob_test
 
 import (
 	"github.com/cometbft/cometbft/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -408,6 +409,8 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 				if tc.expectError {
 					require.False(t, response.IsOK())
 					require.Contains(t, response.Log, "Opening order would exceed equity tier limit of 1.")
+
+					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, &tApp, ctx)
 				} else {
 					require.True(t, response.IsOK())
 				}
@@ -570,6 +573,8 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 				if tc.expectError {
 					require.False(t, response.IsOK())
 					require.Contains(t, response.Log, "Opening order would exceed equity tier limit of 1.")
+
+					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, &tApp, ctx)
 				} else {
 					require.True(t, response.IsOK())
 				}
@@ -888,5 +893,20 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 			// Ensure that any succesful transactions can be delivered.
 			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 		})
+	}
+}
+
+func checkThatFoKOrderIsNotBlockedByEquityTierLimits(t *testing.T, tApp *testapp.TestApp, ctx sdk.Context) {
+	for _, fokTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+			constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK,
+			testapp.DefaultGenesis(),
+		)),
+	) {
+		fokResponse := tApp.CheckTx(fokTx)
+		require.False(t, fokResponse.IsOK())
+		require.Contains(t, fokResponse.Log, "FillOrKill order could not be fully filled")
 	}
 }
