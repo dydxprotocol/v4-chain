@@ -47,6 +47,7 @@ func FullNodeProcessProposalHandler(
 			return response
 		}
 
+		// Measure MEV metrics if enabled.
 		if clobKeeper.RecordMevMetricsIsEnabled() {
 			clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
 		}
