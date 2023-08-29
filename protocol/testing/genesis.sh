@@ -959,8 +959,8 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${NATIVE_TOKEN}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "${BRIDGE_MODACC_BALANCE}"
 
-    # Use ATOM-USD as test oracle price of the reward token.
-	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v '13'
+	# Use ATOM-USD as test oracle price of the reward token.
+	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v '11'
 
 	# Update clob module.
 	# Clob: BTC-USD
@@ -1407,6 +1407,7 @@ function update_genesis_use_test_exchange() {
 	EOF
 	)
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[0].exchange_config_json' -v "$btc_exchange_config_json"
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[0].min_exchanges' -v '1'
 
 	eth_exchange_config_json=$(cat <<-EOF
 	{
@@ -1420,6 +1421,7 @@ function update_genesis_use_test_exchange() {
 	EOF
 	)
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[1].exchange_config_json' -v "$eth_exchange_config_json"
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[1].min_exchanges' -v '1'
 
 	link_exchange_config_json=$(cat <<-EOF
 	{
@@ -1433,13 +1435,14 @@ function update_genesis_use_test_exchange() {
 	EOF
 	)
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[2].exchange_config_json' -v "$link_exchange_config_json"
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[2].min_exchanges' -v '1'
 
-  # All remaining markets can just use the LINK ticker so the daemon will start. All markets must have at least 1
-  # exchange. An alternative here would be to remove other markets and associated clob pairs, perpetuals, etc, but this
-  # seems simpler.
+	# All remaining markets can just use the LINK ticker so the daemon will start. All markets must have at least 1
+	# exchange. With only one exchange configured, there should not be enough prices to meet the minimum exchange
+	# count, and these markets will not have index prices.
 	for market_idx in {3..33}
 	do
-			dasel put -t string -f "$GENESIS" ".app_state.prices.market_params.[$market_idx].exchange_config_json" -v "$link_exchange_config_json"
+		dasel put -t string -f "$GENESIS" ".app_state.prices.market_params.[$market_idx].exchange_config_json" -v "$link_exchange_config_json"
 	done
 }
 
