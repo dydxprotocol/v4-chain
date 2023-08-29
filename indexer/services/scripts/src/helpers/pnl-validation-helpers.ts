@@ -101,6 +101,7 @@ export async function getRealizedFunding(
  * - unrealized funding - fees paid.
  *
  * TODO(CORE-512): Add info/resources around Pnl validation.
+ * Doc: https://www.notion.so/dydx/Pnl-Validation-f0eaf64149a84bcdbe26d194350a5de6
  *
  * @param subaccountId
  * @param effectiveBeforeOrAtHeight

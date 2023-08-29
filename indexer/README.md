@@ -66,7 +66,7 @@ NOTE: `pnpm` allows running scripts across all directories using the `-r` flag o
 
 ## Protos
 
-Protos can be found in `v4-chain/proto/` [here](https://github.com/dydxprotocol/v4-chain/tree/main/proto).
+Protos can be found in `proto/` [here](https://github.com/dydxprotocol/v4-chain/tree/main/proto).
 
 ## Running unit tests
 

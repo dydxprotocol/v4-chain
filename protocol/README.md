@@ -11,7 +11,7 @@
 
 > Sovereign Blockchain built using Cosmos SDK & CometBFT for v4 of the dYdX Protocol.
 
-TODO(CORE-512): add info/resources around V4.
+TODO(CORE-512): add info/resources around V4. [Doc](https://www.notion.so/dydx/V4-36a9f30eee1d478cb88e0c50860fdbee)
 
 ## Get started
 
@@ -77,7 +77,7 @@ We currently lint the following YAML files in the [`Lint` CI job](https://github
 
 #### Protos
 
-Protos can be found in `v4-chain/proto/` [here](https://github.com/dydxprotocol/v4-chain/tree/main/proto).
+Protos can be found in `proto/` [here](https://github.com/dydxprotocol/v4-chain/tree/main/proto).
 
 #### Genesis
 

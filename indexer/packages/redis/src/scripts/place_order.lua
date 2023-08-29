@@ -1,4 +1,5 @@
 -- TODO(CORE-512): add info/resources around caches.
+-- Doc: https://www.notion.so/dydx/Indexer-Technical-Spec-a6b15644502048f994c98dee35b96e96#61d5f8ca5117476caab78b3f0691b1d0
 
 -- Key for the value in the orders cache, see `src/caches/orders-cache.ts` for more details
 local orderKey = KEYS[1];

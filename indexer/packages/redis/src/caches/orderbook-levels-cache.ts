@@ -12,7 +12,8 @@ import { deleteZeroPriceLevelScript, getOrderbookSideScript, incrementOrderbookL
 // Cache of orderbook levels for each clob pair
 // Each side of each exchange pair is an HSET with the hash = price, and value = total size of
 // orders at the price in quantums
-// TODO(CORE-512): add info/resources around caches.
+// TODO(CORE-512): add info/resources around caches. Doc:
+// https://www.notion.so/dydx/Indexer-Technical-Spec-a6b15644502048f994c98dee35b96e96#61d5f8ca5117476caab78b3f0691b1d0
 export const ORDERS_CACHE_KEY_PREFIX: string = 'v4/orderbookLevels/';
 
 /**
