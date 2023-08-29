@@ -486,23 +486,20 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 	}
 
 	// Verify ClobPair fetched from state has a supported status.
-	isSupported := types.IsSupportedClobPairStatus(clobPair.Status)
-	if !isSupported {
+	if !types.IsSupportedClobPairStatus(clobPair.Status) {
 		panic(
 			"validateInternalOperationAgainstClobPairStatus: ClobPair's status is not supported",
 		)
 	}
 
-	// Branch validation logic for each supported status.
+	// Branch validation logic for supported statuses requiring validation.
 	switch clobPair.Status {
-	case types.ClobPair_STATUS_ACTIVE:
-		return nil
 	case types.ClobPair_STATUS_INITIALIZING:
 		// All operations are invalid for initializing clob pairs.
 		return sdkerrors.Wrapf(
 			types.ErrOperationConflictsWithClobPairStatus,
-			"Operation %+v invalid for ClobPair with id %+v with status %+v",
-			internalOperation,
+			"Operation %s invalid for ClobPair with id %d with status %s",
+			internalOperation.GetInternalOperationTextString(),
 			clobPairId,
 			types.ClobPair_STATUS_INITIALIZING,
 		)
