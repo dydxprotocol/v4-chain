@@ -12,6 +12,7 @@ import { PerpetualMarketValidator } from '../validators/perpetual-market-validat
 import { StatefulOrderValidator } from '../validators/stateful-order-validator';
 import { SubaccountUpdateValidator } from '../validators/subaccount-update-validator';
 import { TransferValidator } from '../validators/transfer-validator';
+import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
 import { BatchedHandlers } from './batched-handlers';
@@ -21,7 +22,6 @@ import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
 import {
   DydxIndexerSubtypes, EventMessage, EventProtoWithType, GroupedEvents,
 } from './types';
-import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 
 const TXN_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
   [DydxIndexerSubtypes.ORDER_FILL.toString()]: OrderFillValidator,

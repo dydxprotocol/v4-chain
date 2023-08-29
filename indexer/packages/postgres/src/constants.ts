@@ -6,7 +6,12 @@ import OrderModel from './models/order-model';
 import PerpetualMarketModel from './models/perpetual-market-model';
 import PerpetualPositionModel from './models/perpetual-position-model';
 import SubaccountModel from './models/subaccount-model';
-import { APITimeInForce, CandleResolution, PerpetualMarketStatus, TimeInForce } from './types';
+import {
+  APITimeInForce,
+  CandleResolution,
+  PerpetualMarketStatus,
+  TimeInForce,
+} from './types';
 
 export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 
@@ -89,7 +94,8 @@ export type SpecifiedClobPairStatus =
   Exclude<ClobPairStatus, ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED> &
   Exclude<ClobPairStatus, ClobPairStatus.UNRECOGNIZED>;
 
-export const CLOB_STATUS_TO_MARKET_STATUS: Record<SpecifiedClobPairStatus, PerpetualMarketStatus> = {
+export const CLOB_STATUS_TO_MARKET_STATUS:
+Record<SpecifiedClobPairStatus, PerpetualMarketStatus> = {
   [ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE]: PerpetualMarketStatus.ACTIVE,
   [ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY]: PerpetualMarketStatus.CANCEL_ONLY,
   [ClobPairStatus.CLOB_PAIR_STATUS_PAUSED]: PerpetualMarketStatus.PAUSED,

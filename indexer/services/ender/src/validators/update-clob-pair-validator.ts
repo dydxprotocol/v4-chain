@@ -31,4 +31,3 @@ export class UpdateClobPairValidator extends Validator<UpdateClobPairEventV1> {
     return [handler];
   }
 }
-

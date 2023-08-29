@@ -169,4 +169,3 @@ function createKafkaMessageFromUpdateClobPairEvent({
   const binaryBlock: Uint8Array = IndexerTendermintBlock.encode(block).finish();
   return createKafkaMessage(Buffer.from(binaryBlock));
 }
-
