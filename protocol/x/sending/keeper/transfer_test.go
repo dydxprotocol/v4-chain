@@ -127,6 +127,7 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	for _, p := range perpetuals {
 		_, err := perpKeeper.CreatePerpetual(
 			ctx,
+			p.Params.Id,
 			p.Params.Ticker,
 			p.Params.MarketId,
 			p.Params.AtomicResolution,
@@ -250,6 +251,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 	for _, p := range perpetuals {
 		_, err := perpKeeper.CreatePerpetual(
 			ctx,
+			p.Params.Id,
 			p.Params.Ticker,
 			p.Params.MarketId,
 			p.Params.AtomicResolution,

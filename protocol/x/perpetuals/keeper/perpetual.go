@@ -28,19 +28,26 @@ import (
 // or if the `marketId` does not exist.
 func (k Keeper) CreatePerpetual(
 	ctx sdk.Context,
+	id uint32,
 	ticker string,
 	marketId uint32,
 	atomicResolution int32,
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 ) (types.Perpetual, error) {
-	// Get the `nextId`.
-	nextId := k.GetNumPerpetuals(ctx)
+	// Get perpetual.
+	if perpetual, err := k.GetPerpetual(ctx, id); err == nil {
+		return perpetual, sdkerrors.Wrapf(
+			types.ErrPerpetualAlreadyExists,
+			"id: %v, perpetual: %v",
+			id, perpetual,
+		)
+	}
 
 	// Create the perpetual.
 	perpetual := types.Perpetual{
 		Params: types.PerpetualParams{
-			Id:                nextId,
+			Id:                id,
 			Ticker:            ticker,
 			MarketId:          marketId,
 			AtomicResolution:  atomicResolution,
@@ -60,9 +67,6 @@ func (k Keeper) CreatePerpetual(
 
 	// Store the new perpetual.
 	k.setPerpetual(ctx, perpetual)
-
-	// Store the new `numPerpetuals`.
-	k.setNumPerpetuals(ctx, nextId+1)
 
 	k.SetEmptyPremiumSamples(ctx)
 	k.SetEmptyPremiumVotes(ctx)
@@ -114,13 +118,6 @@ func (k Keeper) getUint32InStore(
 	return lib.BytesToUint32(numBytes)
 }
 
-// GetNumPerpetuals returns the number of perpetuals created.
-func (k Keeper) GetNumPerpetuals(
-	ctx sdk.Context,
-) uint32 {
-	return k.getUint32InStore(ctx, types.NumPerpetualsKey)
-}
-
 // GetPerpetual returns a perpetual from its id.
 func (k Keeper) GetPerpetual(
 	ctx sdk.Context,
@@ -138,20 +135,19 @@ func (k Keeper) GetPerpetual(
 }
 
 // GetAllPerpetuals returns all perpetuals, sorted by perpetual Id.
-func (k Keeper) GetAllPerpetuals(ctx sdk.Context) []types.Perpetual {
-	num := k.GetNumPerpetuals(ctx)
-	perpetuals := make([]types.Perpetual, num)
+func (k Keeper) GetAllPerpetuals(ctx sdk.Context) (list []types.Perpetual) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
-	for i := uint32(0); i < num; i++ {
-		perpetual, err := k.GetPerpetual(ctx, i)
-		if err != nil {
-			panic(err)
-		}
+	defer iterator.Close()
 
-		perpetuals[i] = perpetual
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Perpetual
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
 	}
 
-	return perpetuals
+	return list
 }
 
 // processStoredPremiums combines all stored premiums into a single premium value
@@ -165,7 +161,7 @@ func (k Keeper) GetAllPerpetuals(ctx sdk.Context) []types.Perpetual {
 // - `filterFunc`: a function that takes in a list of premium values and filter
 // out some values.
 // - `minNumPremiumsRequired`: minimum number of premium values required for each
-// market. Padding will be added if `NumPerpetuals < minNumPremiumsRequired`.
+// market. Padding will be added if `NumPremiums < minNumPremiumsRequired`.
 func (k Keeper) processStoredPremiums(
 	ctx sdk.Context,
 	newEpochInfo epochstypes.EpochInfo,
@@ -260,8 +256,10 @@ func (k Keeper) processPremiumVotesIntoSamples(
 	newSamples := []types.FundingPremium{}
 	newSamplesForEvent := []indexerevents.FundingUpdateV1{}
 
-	for perpId := uint32(0); perpId < k.GetNumPerpetuals(ctx); perpId++ {
-		summarizedPremium, found := perpIdToSummarizedPremium[perpId]
+	allPerps := k.GetAllPerpetuals(ctx)
+
+	for _, perp := range allPerps {
+		summarizedPremium, found := perpIdToSummarizedPremium[perp.GetId()]
 		if !found {
 			summarizedPremium = 0
 		}
@@ -279,7 +277,7 @@ func (k Keeper) processPremiumVotesIntoSamples(
 				),
 				metrics.GetLabelForIntValue(
 					metrics.PerpetualId,
-					int(perpId),
+					int(perp.GetId()),
 				),
 				// TODO(DEC-1071): Add epoch number as label.
 			},
@@ -288,14 +286,14 @@ func (k Keeper) processPremiumVotesIntoSamples(
 		// Append all samples (including zeros) to `newSamplesForEvent`, since
 		// the indexer should forward all sample values to users.
 		newSamplesForEvent = append(newSamplesForEvent, indexerevents.FundingUpdateV1{
-			PerpetualId:     perpId,
+			PerpetualId:     perp.GetId(),
 			FundingValuePpm: summarizedPremium,
 		})
 
 		if summarizedPremium != 0 {
 			// Append non-zero sample to `PremiumSample` storage.
 			newSamples = append(newSamples, types.FundingPremium{
-				PerpetualId: perpId,
+				PerpetualId: perp.GetId(),
 				PremiumPpm:  summarizedPremium,
 			})
 		}
@@ -963,11 +961,8 @@ func (k Keeper) addToPremiumStore(
 
 	marketPremiumsMap := premiumStore.GetMarketPremiumsMap()
 
-	numPerpetuals := k.GetNumPerpetuals(ctx)
-
 	for _, sample := range newSamples {
-		// Invariant: perpetualId < numPerpetuals
-		if sample.PerpetualId >= numPerpetuals {
+		if _, err := k.GetPerpetual(ctx, sample.PerpetualId); err != nil {
 			return sdkerrors.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"Perpetual Id from new sample: %d",
@@ -990,7 +985,7 @@ func (k Keeper) addToPremiumStore(
 		ctx,
 		*types.NewPremiumStoreFromMarketPremiumMap(
 			marketPremiumsMap,
-			numPerpetuals,
+			k.GetAllPerpetuals(ctx),
 			premiumStore.NumPremiums+1, // increment NumPerpetuals
 		),
 		key,
@@ -1071,14 +1066,6 @@ func (k Keeper) setUint32InStore(
 
 	// Set key value pair
 	store.Set(types.KeyPrefix(key), lib.Uint32ToBytes(num))
-}
-
-func (k Keeper) setNumPerpetuals(
-	ctx sdk.Context,
-	num uint32,
-) {
-	// Set `numPerpetuals`
-	k.setUint32InStore(ctx, types.NumPerpetualsKey, num)
 }
 
 // GetPerpetualAndMarketPrice retrieves a Perpetual by its id and its corresponding MarketPrice.
@@ -1199,12 +1186,11 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 ) (
 	err error,
 ) {
-	numPerpetuals := k.GetNumPerpetuals(ctx)
 	liquidityTierToMaxAbsPremiumVotePpm := k.getLiquidityTiertoMaxAbsPremiumVotePpm(ctx)
 
 	for _, vote := range msg.Votes {
 		// Check that the perpetual Id is valid.
-		if vote.PerpetualId >= numPerpetuals {
+		if _, err := k.GetPerpetual(ctx, vote.PerpetualId); err != nil {
 			return sdkerrors.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"perpetualId = %d",

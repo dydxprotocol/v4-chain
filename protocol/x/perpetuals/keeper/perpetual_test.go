@@ -59,6 +59,7 @@ func createNPerpetuals(
 
 		perpetual, err := keeper.CreatePerpetual(
 			ctx,
+			uint32(i),                        // Id
 			fmt.Sprintf("%v", i),             // Ticker
 			uint32(i),                        // MarketId
 			int32(i),                         // AtomicResolution
@@ -223,6 +224,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			_, err := keeper.CreatePerpetual(
 				ctx,
+				tc.id,
 				tc.ticker,
 				tc.marketId,
 				tc.atomicResolution,
@@ -334,17 +336,6 @@ func TestGetPerpetuals_Success(t *testing.T) {
 		nullify.Fill(perps),                        //nolint:staticcheck
 		nullify.Fill(keeper.GetAllPerpetuals(ctx)), //nolint:staticcheck
 	)
-}
-
-func TestGetAllPerpetuals_MissingPerpetual(t *testing.T) {
-	ctx, keeper, _, _, storeKey := keepertest.PerpetualsKeepers(t)
-
-	// Write some bad data to the store
-	store := ctx.KVStore(storeKey)
-	store.Set(types.KeyPrefix(types.NumPerpetualsKey), lib.Uint32ToBytes(20))
-
-	// Expect a panic
-	require.Panics(t, func() { keeper.GetAllPerpetuals(ctx) })
 }
 
 func TestGetMarginRequirements_Success(t *testing.T) {
@@ -617,6 +608,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
 				ctx,
+				0,                               // PerpetualId
 				"getMarginRequirementsTicker",   // Ticker
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
@@ -794,14 +786,14 @@ func TestGetNetNotional_Success(t *testing.T) {
 		},
 	}
 
-	// Test suite setup.
-	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-	// Create liquidity tiers.
-	keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
-
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			// Test suite setup.
+			ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
+
 			// Create a new market param and price.
 			marketId := uint32(0)
 			_, err := pricesKeeper.CreateMarket(
@@ -824,6 +816,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
 				ctx,
+				0,                               // PerpetualId
 				"GetNetNotionalTicker",          // Ticker
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
@@ -959,14 +952,13 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 		},
 	}
 
-	// Test suite setup.
-	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-	// Create liquidity tiers.
-	keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
-
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			// Test suite setup.
+			ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
 			// Create a new market param and price.
 			marketId := pricesKeeper.GetNumMarkets(ctx)
 			_, err := pricesKeeper.CreateMarket(
@@ -989,6 +981,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
 				ctx,
+				0,                               // PerpetualId
 				"GetNetNotionalTicker",          // Ticker
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
@@ -1124,14 +1117,13 @@ func TestGetNetCollateral_Success(t *testing.T) {
 		},
 	}
 
-	// Test suite setup.
-	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-	// Create liquidity tiers.
-	keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
-
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			// Test suite setup.
+			ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
 			// Test setup.
 			// Create a new market.
 			marketId := pricesKeeper.GetNumMarkets(ctx)
@@ -1155,6 +1147,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			// Create `Perpetual` struct with baseAssetAtomicResolution and marketId.
 			perpetual, err := keeper.CreatePerpetual(
 				ctx,
+				0,                               // PerpetualId
 				"GetNetCollateralTicker",        // Ticker
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
@@ -1310,14 +1303,14 @@ func TestGetSettlement_Success(t *testing.T) {
 		},
 	}
 
-	// Test suite setup.
-	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-	// Create liquidity tiers.
-	keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
-
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			// Test suite setup.
+			ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
+
 			perps, err := createNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
 			require.NoError(t, err)
 
@@ -1531,7 +1524,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"625"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: 1_000,
 					FundingIndex:    dtypes.NewInt(625),
 				},
@@ -1548,7 +1541,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"-625"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: -1_000,
 					FundingIndex:    dtypes.NewInt(-625),
 				},
@@ -1567,7 +1560,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"937500"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: 1_500_000,
 					FundingIndex:    dtypes.NewInt(937500),
 				},
@@ -1585,7 +1578,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"-937500"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: -1_500_000,
 					FundingIndex:    dtypes.NewInt(-937500),
 				},
@@ -1603,7 +1596,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"1250"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: 2_000,
 					FundingIndex:    dtypes.NewInt(1250),
 				},
@@ -1621,7 +1614,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"75000"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution_20IM_18MM.GetId(),
 					FundingValuePpm: 120_000,
 					FundingIndex:    dtypes.NewInt(75000),
 				},
@@ -1639,7 +1632,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"-75000"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution_20IM_18MM.GetId(),
 					FundingValuePpm: -120_000,
 					FundingIndex:    dtypes.NewInt(-75000),
 				},
@@ -1658,7 +1651,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"75000"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution_20IM_18MM.GetId(),
 					FundingValuePpm: 120_000,
 					FundingIndex:    dtypes.NewInt(75000),
 				},
@@ -1676,7 +1669,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"-75000"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution_20IM_18MM.GetId(),
 					FundingValuePpm: -120_000,
 					FundingIndex:    dtypes.NewInt(-75000),
 				},
@@ -1694,7 +1687,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"0"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_100PercentMarginRequirement.GetId(),
 					FundingValuePpm: 0,
 					FundingIndex:    dtypes.NewInt(0),
 				},
@@ -1718,12 +1711,12 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: 1_000,
 					FundingIndex:    dtypes.NewInt(625),
 				},
 				{
-					PerpetualId:     1,
+					PerpetualId:     constants.EthUsd_0DefaultFunding_9AtomicResolution.GetId(),
 					FundingValuePpm: 1_000,
 					FundingIndex:    dtypes.NewInt(375),
 				},
@@ -1741,7 +1734,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"312"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: 500,
 					FundingIndex:    dtypes.NewInt(312),
 				},
@@ -1758,7 +1751,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"312"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: 500,
 					FundingIndex:    dtypes.NewInt(312),
 				},
@@ -1775,7 +1768,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"1250"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0_001Percent_DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: 2_000, // 0.001% (premium) + 0.001% (default funding)
 					FundingIndex:    dtypes.NewInt(1250),
 				},
@@ -1795,7 +1788,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"1250"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: 2_000,
 					FundingIndex:    dtypes.NewInt(1250),
 				},
@@ -1812,7 +1805,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"37500000000000000"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_0AtomicResolution.GetId(),
 					FundingValuePpm: 6_000_000,
 					FundingIndex:    dtypes.NewInt(37500000000000000),
 				},
@@ -1828,7 +1821,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"0"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_0DefaultFunding_0AtomicResolution.GetId(),
 					FundingValuePpm: 0,
 					FundingIndex:    dtypes.NewInt(0),
 				},
@@ -1844,7 +1837,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			expectedFundingIndexDeltaStrings: []string{"-625"},
 			fundingRatesAndIndices: []indexerevents.FundingUpdateV1{
 				{
-					PerpetualId:     0,
+					PerpetualId:     constants.BtcUsd_NegativeDefaultFunding_10AtomicResolution.GetId(),
 					FundingValuePpm: -1000,
 					FundingIndex:    dtypes.NewInt(-625),
 				},
@@ -1871,6 +1864,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 			for i, p := range tc.testPerpetuals {
 				perp, err := perpsKeeper.CreatePerpetual(
 					ctx,
+					p.Params.Id,
 					p.Params.Ticker,
 					p.Params.MarketId,
 					p.Params.AtomicResolution,

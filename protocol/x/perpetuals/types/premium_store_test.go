@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
@@ -92,11 +93,15 @@ func TestNewPremiumStoreFromMarketPremiumMap(t *testing.T) {
 
 	tests := map[string]struct {
 		marketPremiumsMap    map[uint32]types.MarketPremiums
-		numPerpetuals        uint32
+		allPerpetuals        []types.Perpetual
 		expectedPremiumStore types.PremiumStore
 	}{
 		"3 perpetuals from 0 to 2": {
-			numPerpetuals: 3,
+			allPerpetuals: []types.Perpetual{
+				*perptest.GeneratePerpetual(perptest.WithId(0)),
+				*perptest.GeneratePerpetual(perptest.WithId(1)),
+				*perptest.GeneratePerpetual(perptest.WithId(2)),
+			},
 			marketPremiumsMap: map[uint32]types.MarketPremiums{
 				2: {
 					PerpetualId: 2,
@@ -129,8 +134,14 @@ func TestNewPremiumStoreFromMarketPremiumMap(t *testing.T) {
 				},
 			},
 		},
-		"3 perpetuals from 0 to 2, numPerpetuals = 5": {
-			numPerpetuals: 5,
+		"perpetuals from 0 to 4 in state, store premiums for 0, 1, 2": {
+			allPerpetuals: []types.Perpetual{
+				*perptest.GeneratePerpetual(perptest.WithId(0)),
+				*perptest.GeneratePerpetual(perptest.WithId(1)),
+				*perptest.GeneratePerpetual(perptest.WithId(2)),
+				*perptest.GeneratePerpetual(perptest.WithId(3)),
+				*perptest.GeneratePerpetual(perptest.WithId(4)),
+			},
 			marketPremiumsMap: map[uint32]types.MarketPremiums{
 				2: {
 					PerpetualId: 2,
@@ -163,8 +174,7 @@ func TestNewPremiumStoreFromMarketPremiumMap(t *testing.T) {
 				},
 			},
 		},
-		"Some perpetuals not present; some with empty entries": {
-			numPerpetuals: 6,
+		"0 to 6 perpetuals in state, 0, 2, 5 have non-zero market premiums": {
 			marketPremiumsMap: map[uint32]types.MarketPremiums{
 				0: {
 					PerpetualId: 0,
@@ -178,6 +188,14 @@ func TestNewPremiumStoreFromMarketPremiumMap(t *testing.T) {
 					PerpetualId: 5,
 					Premiums:    []int32{0},
 				},
+			},
+			allPerpetuals: []types.Perpetual{
+				*perptest.GeneratePerpetual(perptest.WithId(0)),
+				*perptest.GeneratePerpetual(perptest.WithId(1)),
+				*perptest.GeneratePerpetual(perptest.WithId(2)),
+				*perptest.GeneratePerpetual(perptest.WithId(3)),
+				*perptest.GeneratePerpetual(perptest.WithId(4)),
+				*perptest.GeneratePerpetual(perptest.WithId(5)),
 			},
 			expectedPremiumStore: types.PremiumStore{
 				NumPremiums: numPremiums,
@@ -205,7 +223,7 @@ func TestNewPremiumStoreFromMarketPremiumMap(t *testing.T) {
 			tc.expectedPremiumStore,
 			*types.NewPremiumStoreFromMarketPremiumMap(
 				tc.marketPremiumsMap,
-				tc.numPerpetuals,
+				tc.allPerpetuals,
 				numPremiums,
 			),
 		)

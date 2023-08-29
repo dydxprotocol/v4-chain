@@ -14,14 +14,14 @@ func (ps *PremiumStore) GetMarketPremiumsMap() map[uint32]MarketPremiums {
 // from a MarketPremiumMap.
 func NewPremiumStoreFromMarketPremiumMap(
 	m map[uint32]MarketPremiums,
-	numPerpetuals uint32,
+	allPerpetuals []Perpetual,
 	numPremiums uint32,
 ) *PremiumStore {
 	ret := PremiumStore{
 		NumPremiums: numPremiums,
 	}
-	for perpId := uint32(0); perpId < numPerpetuals; perpId++ {
-		marketPremiums, found := m[perpId]
+	for _, perp := range allPerpetuals {
+		marketPremiums, found := m[perp.GetId()]
 		if !found {
 			// `PrmeiumStore` is used as a sparse matrix, so a perpetual Id not
 			// being found inherently means all premiums for the market were zeros.
