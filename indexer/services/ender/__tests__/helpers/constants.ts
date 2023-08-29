@@ -134,8 +134,8 @@ export const defaultUpdateClobPairEvent: UpdateClobPairEventV1 = {
   status: ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE,
   quantumConversionExponent: -7,
   subticksPerTick: 1000,
-  minOrderBaseQuantums: Long.fromValue(100),
-  stepBaseQuantums: Long.fromValue(100),
+  minOrderBaseQuantums: Long.fromValue(100, true),
+  stepBaseQuantums: Long.fromValue(100, true),
 };
 
 export const defaultPreviousHeight: string = '2';
