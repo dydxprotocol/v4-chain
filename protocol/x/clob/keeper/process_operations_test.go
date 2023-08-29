@@ -1252,7 +1252,22 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
-		"Succeds with order removal for market in initializing mode": {
+		"Fails with short term order placement for market in initializing mode": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Init,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+				),
+			},
+			expectedError: types.ErrOperationConflictsWithClobPairStatus,
+		},
+		"Fails with order removal for market in initializing mode": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -1269,12 +1284,7 @@ func TestProcessProposerOperations(t *testing.T) {
 					types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
 				),
 			},
-			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				BlockHeight: blockHeight,
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-				},
-			},
+			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
 	}
 

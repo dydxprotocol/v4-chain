@@ -498,14 +498,14 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 	case types.ClobPair_STATUS_ACTIVE:
 		return nil
 	case types.ClobPair_STATUS_INITIALIZING:
-		if _, isOrderRemoval := internalOperation.GetOperation().(*types.InternalOperation_OrderRemoval); !isOrderRemoval {
-			return sdkerrors.Wrapf(
-				types.ErrOperationConflictsWithClobPairStatus,
-				"Operation %+v invalid for ClobPair with id %+v in post-only mode",
-				internalOperation,
-				clobPairId,
-			)
-		}
+		// All operations are invalid for initializing clob pairs.
+		return sdkerrors.Wrapf(
+			types.ErrOperationConflictsWithClobPairStatus,
+			"Operation %+v invalid for ClobPair with id %+v with status %+v",
+			internalOperation,
+			clobPairId,
+			types.ClobPair_STATUS_INITIALIZING,
+		)
 	}
 
 	return nil
