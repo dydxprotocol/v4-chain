@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -60,7 +61,7 @@ func TestCompleteBridge(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Initialize context and keeper.
-			ctx, bridgeKeeper, _, _, _, bankKeeper := keepertest.BridgeKeepers(t)
+			ctx, bridgeKeeper, _, _, _, bankKeeper, _ := keepertest.BridgeKeepers(t)
 			// Fund bridge module account with enought balance.
 			err := bankKeeper.MintCoins(
 				ctx,
@@ -91,7 +92,7 @@ func TestCompleteBridge(t *testing.T) {
 			// Assert that bridge module account's balance is as expected.
 			modAccBalance := bankKeeper.GetBalance(
 				ctx,
-				sdk.MustAccAddressFromBech32(bridgeKeeper.GetBridgeAuthority()),
+				authtypes.NewModuleAddress(types.ModuleName),
 				tc.bridgeEvent.Coin.Denom,
 			)
 			require.Equal(t, tc.expectedBalance.Denom, modAccBalance.Denom)

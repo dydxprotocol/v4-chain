@@ -66,7 +66,7 @@ func TestDecodeAcknowledgeBridgesTx(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, k, _, _, _, _ := keepertest.BridgeKeepers(t)
+			ctx, k, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			abt, err := process.DecodeAcknowledgeBridgesTx(ctx, k, encodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
@@ -188,7 +188,7 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, _, _, _, _, _ := keepertest.BridgeKeepers(t)
+			ctx, _, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", ctx).Return(tc.acknowledgedEventInfo)
 			mockBridgeKeeper.On("GetRecognizedEventInfo", ctx).Return(tc.recognizedEventInfo)
@@ -234,7 +234,7 @@ func TestAcknowledgeBridgesTx_GetMsg(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			var msg sdk.Msg
 			if tc.txBytes != nil {
-				ctx, k, _, _, _, _ := keepertest.BridgeKeepers(t)
+				ctx, k, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 				abt, err := process.DecodeAcknowledgeBridgesTx(ctx, k, constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 				require.NoError(t, err)
 				msg = abt.GetMsg()

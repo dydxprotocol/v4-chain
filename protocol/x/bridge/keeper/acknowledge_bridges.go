@@ -1,14 +1,17 @@
 package keeper
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
 // GetAcknowledgeBridges returns a `MsgAcknowledgeBridges` for recognized but not-yet-acknowledged
@@ -82,12 +85,28 @@ func (k Keeper) AcknowledgeBridges(
 		return nil
 	}
 
-	// TODO: for each bridge event, send a message to x/delay-msg, wrapping
-	// a `MsgCompleteBridge`. (CORE-453)
-	// For now, we just mint tokens immediately.
+	// For each bridge event, delay a `MsgCompleteBridge` to be executed `safetyParams.DelayBlocks`
+	// blocks in the future. Panic if fails to delay any of the messages.
+	safetyParams := k.GetSafetyParams(ctx)
+	delayMsgModuleAccAddrString := authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String()
 	for _, bridgeEvent := range bridgeEvents {
-		if err = k.CompleteBridge(ctx, bridgeEvent); err != nil {
-			ctx.Logger().Error("failed to complete bridge event", "id", bridgeEvent.Id, "error", err)
+		// delaymsg module should be the authority for completing bridges.
+		msgCompleteBridge := types.MsgCompleteBridge{
+			Authority: delayMsgModuleAccAddrString,
+			Event:     bridgeEvent,
+		}
+		_, err := k.delayMsgKeeper.DelayMessageByBlocks(
+			ctx,
+			&msgCompleteBridge,
+			safetyParams.DelayBlocks,
+		)
+		if err != nil {
+			panic(
+				fmt.Sprintf(
+					"failed to delay completing bridge: %s",
+					err.Error(),
+				),
+			)
 		}
 	}
 

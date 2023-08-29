@@ -45,7 +45,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, _, _, bridgeEventManager, bankKeeper := keeper.BridgeKeepers(t)
+	ctx, keeper, _, _, bridgeEventManager, bankKeeper, _ := keeper.BridgeKeepers(t)
 
 	return bridge.NewAppModule(
 		appCodec,

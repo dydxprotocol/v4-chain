@@ -17,12 +17,13 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"time"
 )
 
 var (
 	BridgeAuthority      = authtypes.NewModuleAddress(bridgetypes.ModuleName).String()
 	BridgeAccountAddress = sdk.MustAccAddressFromBech32(BridgeAuthority)
+
+	DelayMsgAuthority = authtypes.NewModuleAddress(types.ModuleName).String()
 
 	BridgeGenesisAccountBalance = sdk.NewCoin("dv4tnt", sdk.NewInt(1000000000))
 	AliceInitialAccountBalance  = sdk.NewCoin("dv4tnt", sdk.NewInt(99500000000))
@@ -48,8 +49,8 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 	require.Equal(t, []uint32{0, 1, 2}, blockMessageIds.Ids)
 
 	// Mock the bridge keeper methods called by the bridge msg server.
-	bridgeKeeper.On("GetBridgeAuthority").Return(BridgeAuthority)
 	bridgeKeeper.On("CompleteBridge", ctx, mock.Anything).Return(nil).Times(len(constants.AllMsgs))
+	bridgeKeeper.On("HasAuthority", DelayMsgAuthority).Return(true).Times(len(constants.AllMsgs))
 
 	// Dispatch messages for block 0.
 
@@ -225,7 +226,7 @@ func TestDispatchMessageForBlock_Mixed(t *testing.T) {
 func generateBridgeEventMsgBytes(t *testing.T, event bridgetypes.BridgeEvent) []byte {
 	_, k, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 	msgCompleteBridge := bridgetypes.MsgCompleteBridge{
-		Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+		Authority: authtypes.NewModuleAddress(types.ModuleName).String(),
 		Event:     event,
 	}
 	bytes, err := k.EncodeMessage(&msgCompleteBridge)

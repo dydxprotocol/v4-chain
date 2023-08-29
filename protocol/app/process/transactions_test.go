@@ -106,7 +106,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			_, bridgeKeeper, _, _, _, _ := keepertest.BridgeKeepers(t)
+			_, bridgeKeeper, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			// Run.
@@ -188,7 +188,7 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
-			_, bridgeKeeper, _, _, _, _ := keepertest.BridgeKeepers(t)
+			_, bridgeKeeper, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 
 			// Run.
 			ppt, err := process.DecodeProcessProposalTxs(
