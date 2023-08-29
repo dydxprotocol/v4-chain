@@ -1222,6 +1222,8 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 		}
 
 		// Zero values for perpetuals whose ClobPair is initializing
+		fmt.Printf("pricePremiumGetter: %+v", k.pricePremiumGetter)
+		fmt.Printf("perpetualClobPairInitializingChecker: %+v", k.perpetualClobPairInitializingChecker)
 		if isInitializing, err := k.perpetualClobPairInitializingChecker.IsPerpetualClobPairInitializing(
 			ctx, vote.PerpetualId,
 		); err != nil {
@@ -1232,6 +1234,7 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 			)
 		} else if isInitializing { // zero the value if the ClobPair is initializing
 			vote.PremiumPpm = 0
+			continue
 		}
 
 		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
