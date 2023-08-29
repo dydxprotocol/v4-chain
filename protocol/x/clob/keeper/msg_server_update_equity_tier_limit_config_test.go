@@ -93,5 +93,4 @@ func TestUpdateEquityTierLimitConfig(t *testing.T) {
 	_, err = handler(ctx, &requestWithAuthority)
 	require.NoError(t, err)
 	require.Equal(t, expectedConfig, tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx))
-
 }
