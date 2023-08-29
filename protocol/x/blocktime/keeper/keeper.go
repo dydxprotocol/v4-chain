@@ -11,6 +11,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 )
@@ -22,19 +23,27 @@ const (
 
 type (
 	Keeper struct {
-		cdc      codec.BinaryCodec
-		storeKey storetypes.StoreKey
+		cdc         codec.BinaryCodec
+		storeKey    storetypes.StoreKey
+		authorities map[string]struct{}
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
+		cdc:         cdc,
+		storeKey:    storeKey,
+		authorities: maps.ArrayToMapInterface(authorities),
 	}
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

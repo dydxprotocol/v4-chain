@@ -90,23 +90,20 @@ func (_m *ClobKeeper) ConvertFillablePriceToSubticks(ctx types.Context, fillable
 	return r0
 }
 
-// CreatePerpetualClobPair provides a mock function with given fields: ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status
-func (_m *ClobKeeper) CreatePerpetualClobPair(ctx types.Context, perpetualId uint32, minOrderInBaseQuantums subaccountstypes.BaseQuantums, stepSizeInBaseQuantums subaccountstypes.BaseQuantums, quantumConversionExponent int32, subticksPerTick uint32, status clobtypes.ClobPair_Status) (clobtypes.ClobPair, error) {
-	ret := _m.Called(ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
+// CreatePerpetualClobPair provides a mock function with given fields: ctx, clobPairId, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status
+func (_m *ClobKeeper) CreatePerpetualClobPair(ctx types.Context, clobPairId uint32, perpetualId uint32, minOrderInBaseQuantums subaccountstypes.BaseQuantums, stepSizeInBaseQuantums subaccountstypes.BaseQuantums, quantumConversionExponent int32, subticksPerTick uint32, status clobtypes.ClobPair_Status) (clobtypes.ClobPair, error) {
+	ret := _m.Called(ctx, clobPairId, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 
 	var r0 clobtypes.ClobPair
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) (clobtypes.ClobPair, error)); ok {
-		return rf(ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) clobtypes.ClobPair); ok {
-		r0 = rf(ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) clobtypes.ClobPair); ok {
+		r0 = rf(ctx, clobPairId, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 	} else {
 		r0 = ret.Get(0).(clobtypes.ClobPair)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) error); ok {
-		r1 = rf(ctx, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) error); ok {
+		r1 = rf(ctx, clobPairId, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -119,8 +116,8 @@ func (_m *ClobKeeper) DeleteLongTermOrderPlacement(ctx types.Context, orderId cl
 	_m.Called(ctx, orderId)
 }
 
-// GetAllClobPair provides a mock function with given fields: ctx
-func (_m *ClobKeeper) GetAllClobPair(ctx types.Context) []clobtypes.ClobPair {
+// GetAllClobPairs provides a mock function with given fields: ctx
+func (_m *ClobKeeper) GetAllClobPairs(ctx types.Context) []clobtypes.ClobPair {
 	ret := _m.Called(ctx)
 
 	var r0 []clobtypes.ClobPair
@@ -389,20 +386,6 @@ func (_m *ClobKeeper) GetMaxLiquidatableNotionalAndInsuranceLost(ctx types.Conte
 	return r0, r1, r2
 }
 
-// GetNumClobPairs provides a mock function with given fields: ctx
-func (_m *ClobKeeper) GetNumClobPairs(ctx types.Context) uint32 {
-	ret := _m.Called(ctx)
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func(types.Context) uint32); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	return r0
-}
-
 // GetPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
 func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (clobtypes.ClobPair, *big.Int, error) {
 	ret := _m.Called(ctx, subaccountId)
@@ -491,6 +474,48 @@ func (_m *ClobKeeper) GetSubaccountLiquidationInfo(ctx types.Context, subaccount
 		r0 = rf(ctx, subaccountId)
 	} else {
 		r0 = ret.Get(0).(clobtypes.SubaccountLiquidationInfo)
+	}
+
+	return r0
+}
+
+// HasAuthority provides a mock function with given fields: authority
+func (_m *ClobKeeper) HasAuthority(authority string) bool {
+	ret := _m.Called(authority)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(authority)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// InitializeBlockRateLimit provides a mock function with given fields: ctx, config
+func (_m *ClobKeeper) InitializeBlockRateLimit(ctx types.Context, config clobtypes.BlockRateLimitConfiguration) error {
+	ret := _m.Called(ctx, config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.BlockRateLimitConfiguration) error); ok {
+		r0 = rf(ctx, config)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// InitializeEquityTierLimit provides a mock function with given fields: ctx, config
+func (_m *ClobKeeper) InitializeEquityTierLimit(ctx types.Context, config clobtypes.EquityTierLimitConfiguration) error {
+	ret := _m.Called(ctx, config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.EquityTierLimitConfiguration) error); ok {
+		r0 = rf(ctx, config)
+	} else {
+		r0 = ret.Error(0)
 	}
 
 	return r0

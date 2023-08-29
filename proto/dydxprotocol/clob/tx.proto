@@ -4,10 +4,12 @@ package dydxprotocol.clob;
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
+import "dydxprotocol/clob/block_rate_limit_config.proto";
 import "dydxprotocol/clob/clob_pair.proto";
+import "dydxprotocol/clob/equity_tier_limit_config.proto";
+import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/order_removals.proto";
-import "dydxprotocol/clob/matches.proto";
 
 // this line is used by starport scaffolding # proto/tx/import
 
@@ -28,6 +30,14 @@ service Msg {
   // SetClobPairStatus sets the status of a clob pair.
   rpc SetClobPairStatus(MsgSetClobPairStatus)
       returns (MsgSetClobPairStatusResponse);
+  // UpdateEquityTierLimitConfiguration updates the equity tier limit
+  // configuration in state.
+  rpc UpdateEquityTierLimitConfiguration(MsgUpdateEquityTierLimitConfiguration)
+      returns (MsgUpdateEquityTierLimitConfigurationResponse);
+  // UpdateBlockRateLimitConfiguration updates the block rate limit
+  // configuration in state.
+  rpc UpdateBlockRateLimitConfiguration(MsgUpdateBlockRateLimitConfiguration)
+      returns (MsgUpdateBlockRateLimitConfigurationResponse);
 }
 
 // MsgCreateClobPair is a message used by x/gov for creating a new clob pair.
@@ -110,3 +120,35 @@ message OperationRaw {
     OrderRemoval order_removal = 3;
   }
 }
+
+// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+// request type.
+message MsgUpdateEquityTierLimitConfiguration {
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // Defines the equity tier limit configuration to update to. All fields must
+  // be set.
+  EquityTierLimitConfiguration equity_tier_limit_config = 2
+      [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+// response type.
+message MsgUpdateEquityTierLimitConfigurationResponse {}
+
+// MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+// request type.
+message MsgUpdateBlockRateLimitConfiguration {
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // Defines the block rate limit configuration to update to. All fields must be
+  // set.
+  BlockRateLimitConfiguration block_rate_limit_config = 3
+      [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+// response type.
+message MsgUpdateBlockRateLimitConfigurationResponse {}

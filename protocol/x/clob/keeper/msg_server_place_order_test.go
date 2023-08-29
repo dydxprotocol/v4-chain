@@ -97,6 +97,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			perpetual := constants.BtcUsd_100PercentMarginRequirement
 			_, err := ks.PerpetualsKeeper.CreatePerpetual(
 				ks.Ctx,
+				perpetual.Params.Id,
 				perpetual.Params.Ticker,
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
@@ -115,7 +116,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 				indexer_manager.GetB64EncodedEventMessage(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						clobtest.MustPerpetualId(clobPair),
-						ks.ClobKeeper.GetNumClobPairs(ks.Ctx),
+						clobPair.Id,
 						perpetual.Params.Ticker,
 						perpetual.Params.MarketId,
 						clobPair.Status,
@@ -130,6 +131,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
+				clobPair.Id,
 				clobtest.MustPerpetualId(clobPair),
 				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
@@ -237,6 +239,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 			perpetual := constants.BtcUsd_100PercentMarginRequirement
 			_, err := ks.PerpetualsKeeper.CreatePerpetual(
 				ctx,
+				perpetual.Params.Id,
 				perpetual.Params.Ticker,
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
@@ -268,6 +271,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				clobPair.Id,
 				clobtest.MustPerpetualId(clobPair),
 				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),

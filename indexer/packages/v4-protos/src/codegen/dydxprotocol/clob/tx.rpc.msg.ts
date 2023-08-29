@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgSetClobPairStatus, MsgSetClobPairStatusResponse } from "./tx";
+import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -18,9 +18,18 @@ export interface Msg {
   /** CreateClobPair creates a new clob pair. */
 
   createClobPair(request: MsgCreateClobPair): Promise<MsgCreateClobPairResponse>;
-  /** SetClobPairStatus sets the status of a clob pair. */
+  /**
+   * UpdateEquityTierLimitConfiguration updates the equity tier limit
+   * configuration in state.
+   */
 
-  setClobPairStatus(request: MsgSetClobPairStatus): Promise<MsgSetClobPairStatusResponse>;
+  updateEquityTierLimitConfiguration(request: MsgUpdateEquityTierLimitConfiguration): Promise<MsgUpdateEquityTierLimitConfigurationResponse>;
+  /**
+   * UpdateBlockRateLimitConfiguration updates the block rate limit
+   * configuration in state.
+   */
+
+  updateBlockRateLimitConfiguration(request: MsgUpdateBlockRateLimitConfiguration): Promise<MsgUpdateBlockRateLimitConfigurationResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -31,7 +40,8 @@ export class MsgClientImpl implements Msg {
     this.placeOrder = this.placeOrder.bind(this);
     this.cancelOrder = this.cancelOrder.bind(this);
     this.createClobPair = this.createClobPair.bind(this);
-    this.setClobPairStatus = this.setClobPairStatus.bind(this);
+    this.updateEquityTierLimitConfiguration = this.updateEquityTierLimitConfiguration.bind(this);
+    this.updateBlockRateLimitConfiguration = this.updateBlockRateLimitConfiguration.bind(this);
   }
 
   proposedOperations(request: MsgProposedOperations): Promise<MsgProposedOperationsResponse> {
@@ -58,10 +68,16 @@ export class MsgClientImpl implements Msg {
     return promise.then(data => MsgCreateClobPairResponse.decode(new _m0.Reader(data)));
   }
 
-  setClobPairStatus(request: MsgSetClobPairStatus): Promise<MsgSetClobPairStatusResponse> {
-    const data = MsgSetClobPairStatus.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.clob.Msg", "SetClobPairStatus", data);
-    return promise.then(data => MsgSetClobPairStatusResponse.decode(new _m0.Reader(data)));
+  updateEquityTierLimitConfiguration(request: MsgUpdateEquityTierLimitConfiguration): Promise<MsgUpdateEquityTierLimitConfigurationResponse> {
+    const data = MsgUpdateEquityTierLimitConfiguration.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateEquityTierLimitConfiguration", data);
+    return promise.then(data => MsgUpdateEquityTierLimitConfigurationResponse.decode(new _m0.Reader(data)));
+  }
+
+  updateBlockRateLimitConfiguration(request: MsgUpdateBlockRateLimitConfiguration): Promise<MsgUpdateBlockRateLimitConfigurationResponse> {
+    const data = MsgUpdateBlockRateLimitConfiguration.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateBlockRateLimitConfiguration", data);
+    return promise.then(data => MsgUpdateBlockRateLimitConfigurationResponse.decode(new _m0.Reader(data)));
   }
 
 }

@@ -51,7 +51,10 @@ func (k *Keeper) InitalizeBlockRateLimitFromStateIfExists(ctx sdk.Context) {
 
 // InitializeBlockRateLimit initializes the block rate limit configuration in state and uses
 // the configuration to initialize the `placeOrderRateLimiter` and `cancelOrderRateLimiter`.
-// This function should only be called from CLOB genesis.
+// This function should only be called from CLOB genesis or when a block rate limit configuration
+// change is accepted via governance.
+//
+// Note that any previously tracked rates will be reset.
 func (k *Keeper) InitializeBlockRateLimit(
 	ctx sdk.Context,
 	config types.BlockRateLimitConfiguration,

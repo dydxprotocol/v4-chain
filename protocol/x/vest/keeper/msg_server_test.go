@@ -31,7 +31,7 @@ func TestMsgServer(t *testing.T) {
 }
 
 func TestMsgSetVestEntry(t *testing.T) {
-	k, ms, ctx := setupMsgServer(t)
+	_, ms, ctx := setupMsgServer(t)
 
 	testCases := []struct {
 		name        string
@@ -41,7 +41,7 @@ func TestMsgSetVestEntry(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgSetVestEntry{
-				Authority: k.GetAuthority(),
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				Entry:     TestValidEntry,
 			},
 			expectedErr: "",

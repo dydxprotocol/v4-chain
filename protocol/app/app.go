@@ -622,18 +622,13 @@ func New(
 	app.BlockTimeKeeper = *blocktimemodulekeeper.NewKeeper(
 		appCodec,
 		keys[blocktimemoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
-
-	app.BridgeKeeper = *bridgemodulekeeper.NewKeeper(
-		appCodec,
-		keys[bridgemoduletypes.StoreKey],
-		bridgeEventManager,
-		app.BankKeeper,
-		// set the gov module account as the authority for updating parameters.
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
 	app.DelayMsgKeeper = *delaymsgmodulekeeper.NewKeeper(
 		appCodec,
@@ -646,6 +641,20 @@ func New(
 		},
 	)
 	delayMsgModule := delaymsgmodule.NewAppModule(appCodec, app.DelayMsgKeeper)
+
+	app.BridgeKeeper = *bridgemodulekeeper.NewKeeper(
+		appCodec,
+		keys[bridgemoduletypes.StoreKey],
+		bridgeEventManager,
+		app.BankKeeper,
+		app.DelayMsgKeeper,
+		// gov module and delayMsg module accounts are allowed to send messages to the bridge module.
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+		},
+	)
+	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
 	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
 		appCodec,
@@ -661,8 +670,11 @@ func New(
 		app.EpochsKeeper,
 		keys[statsmoduletypes.StoreKey],
 		tkeys[statsmoduletypes.TransientStoreKey],
-		// set the governance module account as the authority for conducting upgrades
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
 
@@ -670,6 +682,11 @@ func New(
 		appCodec,
 		app.StatsKeeper,
 		keys[feetiersmoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
 
@@ -678,8 +695,11 @@ func New(
 		keys[vestmoduletypes.StoreKey],
 		app.BankKeeper,
 		app.BlockTimeKeeper,
-		// set the governance module account as the authority for conducting upgrades
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	vestModule := vestmodule.NewAppModule(appCodec, app.VestKeeper)
 
@@ -691,8 +711,11 @@ func New(
 		app.BankKeeper,
 		app.FeeTiersKeeper,
 		app.PricesKeeper,
-		// set the governance module account as the authority for conducting upgrades
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	rewardsModule := rewardsmodule.NewAppModule(appCodec, app.RewardsKeeper)
 
@@ -718,6 +741,11 @@ func New(
 		keys[clobmoduletypes.StoreKey],
 		memKeys[clobmoduletypes.MemStoreKey],
 		tkeys[clobmoduletypes.TransientStoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 		memClob,
 		app.SubaccountsKeeper,
 		app.AssetsKeeper,

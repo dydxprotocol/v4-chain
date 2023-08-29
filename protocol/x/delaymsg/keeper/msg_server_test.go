@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -11,7 +13,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 var (
@@ -22,6 +23,10 @@ var (
 
 	ValidAuthorities = map[string]struct{}{
 		AcceptedAuthority: {},
+	}
+	IsValidAuthority = func(authority string) bool {
+		_, ok := ValidAuthorities[authority]
+		return ok
 	}
 
 	ValidDelayMsg = &types.MsgDelayMessage{
@@ -39,19 +44,22 @@ var (
 func setupMockWithValidReturnValues(ctx sdk.Context, mck *mocks.DelayMsgKeeper) {
 	mck.On("DelayMessageByBlocks", ctx, mock.Anything, mock.Anything).Return(TestMsgId, nil)
 	mck.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil)
-	mck.On("GetAuthorities").Return(ValidAuthorities)
+	mck.On("HasAuthority", mock.MatchedBy(IsValidAuthority)).Return(true)
+	mck.On("HasAuthority", mock.Anything).Return(false)
 }
 
 func setupMockWithDecodeFailure(ctx sdk.Context, mck *mocks.DelayMsgKeeper) {
 	mck.On("DelayMessageByBlocks", ctx, mock.Anything, mock.Anything).Return(TestMsgId, nil)
 	mck.On("DecodeMessage", mock.Anything, mock.Anything).Return(TestError)
-	mck.On("GetAuthorities").Return(ValidAuthorities)
+	mck.On("HasAuthority", mock.MatchedBy(IsValidAuthority)).Return(true)
+	mck.On("HasAuthority", mock.Anything).Return(false)
 }
 
 func setupMockWithDelayMessageFailure(ctx sdk.Context, mck *mocks.DelayMsgKeeper) {
 	mck.On("DelayMessageByBlocks", ctx, mock.Anything, mock.Anything).Return(TestMsgId, TestError)
 	mck.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil)
-	mck.On("GetAuthorities").Return(ValidAuthorities)
+	mck.On("HasAuthority", mock.MatchedBy(IsValidAuthority)).Return(true)
+	mck.On("HasAuthority", mock.Anything).Return(false)
 }
 
 func TestDelayMessage(t *testing.T) {

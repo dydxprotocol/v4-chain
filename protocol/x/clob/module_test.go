@@ -156,7 +156,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 13)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 17)
 	mockRegistry.AssertExpectations(t)
 }
 
@@ -345,7 +345,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	result := am.InitGenesis(ctx, cdc, gs)
 	require.Equal(t, 0, len(result))
 
-	clobPairs := keeper.GetAllClobPair(ctx)
+	clobPairs := keeper.GetAllClobPairs(ctx)
 	require.Equal(t, 1, len(clobPairs))
 	require.Equal(t, uint32(0), clobPairs[0].Id)
 	require.Equal(t, uint32(0), clobPairs[0].GetPerpetualClobMetadata().PerpetualId)

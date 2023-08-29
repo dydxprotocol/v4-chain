@@ -81,6 +81,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.clob.MsgCreateClobPairResponse",
 		"/dydxprotocol.clob.MsgSetClobPairStatus",
 		"/dydxprotocol.clob.MsgSetClobPairStatusResponse",
+		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration",
+		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse",
+		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration",
+		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse",
 
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage",

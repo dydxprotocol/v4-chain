@@ -18,6 +18,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
@@ -28,7 +29,7 @@ type (
 		storeKey        storetypes.StoreKey
 		bankKeeper      types.BankKeeper
 		blockTimeKeeper types.BlockTimeKeeper
-		authority       string
+		authorities     map[string]struct{}
 	}
 )
 
@@ -37,24 +38,24 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
-	authority string,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:             cdc,
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
-		authority:       authority,
+		authorities:     maps.ArrayToMapInterface(authorities),
 	}
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-// GetAuthority returns the x/vest module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // Process vesting for all vest entries. Intended to be called in BeginBlocker.

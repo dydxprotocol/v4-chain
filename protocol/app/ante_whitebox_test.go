@@ -1,6 +1,7 @@
 package app
 
 import (
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"reflect"
 	"testing"
 
@@ -54,6 +55,10 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		nil,
 		nil,
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 		memClob,
 		nil,
 		nil,

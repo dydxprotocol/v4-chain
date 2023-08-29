@@ -627,6 +627,202 @@ func (*OperationRaw) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+// request type.
+type MsgUpdateEquityTierLimitConfiguration struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Defines the equity tier limit configuration to update to. All fields must
+	// be set.
+	EquityTierLimitConfig EquityTierLimitConfiguration `protobuf:"bytes,2,opt,name=equity_tier_limit_config,json=equityTierLimitConfig,proto3" json:"equity_tier_limit_config"`
+}
+
+func (m *MsgUpdateEquityTierLimitConfiguration) Reset()         { *m = MsgUpdateEquityTierLimitConfiguration{} }
+func (m *MsgUpdateEquityTierLimitConfiguration) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateEquityTierLimitConfiguration) ProtoMessage()    {}
+func (*MsgUpdateEquityTierLimitConfiguration) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{9}
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateEquityTierLimitConfiguration.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateEquityTierLimitConfiguration.Merge(m, src)
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateEquityTierLimitConfiguration.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateEquityTierLimitConfiguration proto.InternalMessageInfo
+
+func (m *MsgUpdateEquityTierLimitConfiguration) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateEquityTierLimitConfiguration) GetEquityTierLimitConfig() EquityTierLimitConfiguration {
+	if m != nil {
+		return m.EquityTierLimitConfig
+	}
+	return EquityTierLimitConfiguration{}
+}
+
+// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+// response type.
+type MsgUpdateEquityTierLimitConfigurationResponse struct {
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) Reset() {
+	*m = MsgUpdateEquityTierLimitConfigurationResponse{}
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUpdateEquityTierLimitConfigurationResponse) ProtoMessage() {}
+func (*MsgUpdateEquityTierLimitConfigurationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{10}
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateEquityTierLimitConfigurationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateEquityTierLimitConfigurationResponse.Merge(m, src)
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateEquityTierLimitConfigurationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateEquityTierLimitConfigurationResponse proto.InternalMessageInfo
+
+// MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+// request type.
+type MsgUpdateBlockRateLimitConfiguration struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Defines the block rate limit configuration to update to. All fields must be
+	// set.
+	BlockRateLimitConfig BlockRateLimitConfiguration `protobuf:"bytes,3,opt,name=block_rate_limit_config,json=blockRateLimitConfig,proto3" json:"block_rate_limit_config"`
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) Reset()         { *m = MsgUpdateBlockRateLimitConfiguration{} }
+func (m *MsgUpdateBlockRateLimitConfiguration) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateBlockRateLimitConfiguration) ProtoMessage()    {}
+func (*MsgUpdateBlockRateLimitConfiguration) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{11}
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateBlockRateLimitConfiguration.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateBlockRateLimitConfiguration.Merge(m, src)
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateBlockRateLimitConfiguration.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateBlockRateLimitConfiguration proto.InternalMessageInfo
+
+func (m *MsgUpdateBlockRateLimitConfiguration) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) GetBlockRateLimitConfig() BlockRateLimitConfiguration {
+	if m != nil {
+		return m.BlockRateLimitConfig
+	}
+	return BlockRateLimitConfiguration{}
+}
+
+// MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+// response type.
+type MsgUpdateBlockRateLimitConfigurationResponse struct {
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) Reset() {
+	*m = MsgUpdateBlockRateLimitConfigurationResponse{}
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUpdateBlockRateLimitConfigurationResponse) ProtoMessage() {}
+func (*MsgUpdateBlockRateLimitConfigurationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{12}
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateBlockRateLimitConfigurationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateBlockRateLimitConfigurationResponse.Merge(m, src)
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateBlockRateLimitConfigurationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateBlockRateLimitConfigurationResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgCreateClobPair)(nil), "dydxprotocol.clob.MsgCreateClobPair")
 	proto.RegisterType((*MsgCreateClobPairResponse)(nil), "dydxprotocol.clob.MsgCreateClobPairResponse")
@@ -639,61 +835,71 @@ func init() {
 	proto.RegisterType((*MsgSetClobPairStatus)(nil), "dydxprotocol.clob.MsgSetClobPairStatus")
 	proto.RegisterType((*MsgSetClobPairStatusResponse)(nil), "dydxprotocol.clob.MsgSetClobPairStatusResponse")
 	proto.RegisterType((*OperationRaw)(nil), "dydxprotocol.clob.OperationRaw")
+	proto.RegisterType((*MsgUpdateEquityTierLimitConfiguration)(nil), "dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration")
+	proto.RegisterType((*MsgUpdateEquityTierLimitConfigurationResponse)(nil), "dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse")
+	proto.RegisterType((*MsgUpdateBlockRateLimitConfiguration)(nil), "dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration")
+	proto.RegisterType((*MsgUpdateBlockRateLimitConfigurationResponse)(nil), "dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/clob/tx.proto", fileDescriptor_19b9e2c0de4ab64a) }
 
 var fileDescriptor_19b9e2c0de4ab64a = []byte{
-	// 769 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x95, 0x4f, 0x4f, 0xdb, 0x48,
-	0x14, 0xc0, 0xed, 0x05, 0x16, 0xf2, 0x12, 0xb2, 0xc1, 0xcb, 0x2e, 0xc1, 0x40, 0x12, 0xa2, 0x15,
-	0x9b, 0x5d, 0x2d, 0xf1, 0x36, 0x45, 0xa8, 0x6a, 0xd5, 0x43, 0x83, 0x5a, 0x85, 0x43, 0x44, 0x6a,
-	0x38, 0x54, 0xed, 0xc1, 0x72, 0xec, 0xa9, 0x63, 0xd5, 0xce, 0xb8, 0x9e, 0x09, 0x85, 0x6b, 0xfb,
-	0x05, 0x7a, 0xe9, 0x97, 0xe8, 0xa9, 0x87, 0x1e, 0xfa, 0x11, 0x38, 0xa2, 0x9e, 0x38, 0x55, 0x15,
-	0x1c, 0xfa, 0x35, 0xaa, 0xf1, 0x9f, 0x89, 0x53, 0x3b, 0x02, 0xf5, 0x92, 0x78, 0xde, 0xfc, 0xde,
-	0xff, 0xf7, 0x6c, 0x90, 0xcd, 0x53, 0xf3, 0xc4, 0xf3, 0x31, 0xc5, 0x06, 0x76, 0x14, 0xc3, 0xc1,
-	0x7d, 0x85, 0x9e, 0x34, 0x03, 0x81, 0xb4, 0x94, 0xbc, 0x6b, 0xb2, 0x3b, 0x79, 0xd5, 0xc0, 0xc4,
-	0xc5, 0x44, 0x0b, 0xa4, 0x4a, 0x78, 0x08, 0x69, 0x79, 0x25, 0x3c, 0x29, 0x2e, 0xb1, 0x94, 0xe3,
-	0x5b, 0xec, 0x2f, 0xba, 0x58, 0xb6, 0xb0, 0x85, 0x43, 0x05, 0xf6, 0x14, 0x49, 0x37, 0xd3, 0x8e,
-	0xd9, 0x8f, 0xe6, 0xe9, 0xb6, 0x1f, 0x21, 0x1b, 0x69, 0x04, 0xfb, 0x26, 0x8a, 0xaf, 0xb7, 0xa6,
-	0x5c, 0x6b, 0x3e, 0x72, 0xf1, 0xb1, 0xee, 0xc4, 0x81, 0x55, 0xd3, 0x9c, 0xab, 0x53, 0x63, 0x80,
-	0x22, 0xa0, 0xfe, 0x4e, 0x84, 0xa5, 0x2e, 0xb1, 0xf6, 0x7c, 0xa4, 0x53, 0xb4, 0xe7, 0xe0, 0x7e,
-	0x4f, 0xb7, 0x7d, 0x69, 0x17, 0x72, 0xfa, 0x88, 0x0e, 0xb0, 0x6f, 0xd3, 0xd3, 0xb2, 0x58, 0x13,
-	0x1b, 0xb9, 0x76, 0xf9, 0xf3, 0xc7, 0xed, 0xe5, 0x28, 0xe9, 0x07, 0xa6, 0xe9, 0x23, 0x42, 0x0e,
-	0xa9, 0x6f, 0x0f, 0x2d, 0x75, 0x8c, 0x4a, 0x77, 0x20, 0xc7, 0x13, 0x29, 0xff, 0x52, 0x13, 0x1b,
-	0xf9, 0xd6, 0x5a, 0x33, 0x55, 0xc9, 0x66, 0xec, 0x47, 0x5d, 0x30, 0xa2, 0xa7, 0xbb, 0xc5, 0xd7,
-	0xdf, 0x3e, 0xfc, 0x3b, 0xb6, 0x54, 0x5f, 0x83, 0xd5, 0x54, 0x58, 0x2a, 0x22, 0x1e, 0x1e, 0x12,
-	0x54, 0xb7, 0xe1, 0x8f, 0x2e, 0xb1, 0x7a, 0x3e, 0xf6, 0x30, 0x41, 0xe6, 0x81, 0x87, 0x7c, 0x9d,
-	0xda, 0x78, 0x48, 0xa4, 0x1e, 0x94, 0x30, 0x3f, 0x69, 0x2f, 0x47, 0x68, 0x84, 0xca, 0x62, 0x6d,
-	0xa6, 0x91, 0x6f, 0x55, 0x33, 0xc2, 0xe0, 0x8a, 0xaa, 0xfe, 0xaa, 0x3d, 0x7b, 0xf6, 0xa5, 0x2a,
-	0xa8, 0xbf, 0x8d, 0xd5, 0x1f, 0x33, 0xed, 0x7a, 0x15, 0x36, 0x32, 0x5d, 0xf1, 0x58, 0x1e, 0xc2,
-	0x22, 0x03, 0x1c, 0xdd, 0x40, 0x07, 0xac, 0x03, 0xd2, 0x0e, 0xcc, 0x05, 0xad, 0x08, 0xea, 0x96,
-	0x6f, 0x95, 0xb3, 0x1c, 0xb3, 0xfb, 0xc8, 0x63, 0x08, 0xd7, 0x57, 0xc2, 0x94, 0xb8, 0x19, 0x6e,
-	0xff, 0x93, 0x08, 0x45, 0x56, 0x09, 0x7d, 0x68, 0x20, 0x27, 0xf4, 0x70, 0x0f, 0x16, 0xc2, 0x66,
-	0xdb, 0x66, 0xe4, 0x44, 0x9e, 0xe6, 0x64, 0xdf, 0x8c, 0xdc, 0xcc, 0xe3, 0xf0, 0x28, 0x6d, 0x41,
-	0xd1, 0xc2, 0xd8, 0xd4, 0xa8, 0xed, 0x68, 0x7d, 0x07, 0x1b, 0x2f, 0x82, 0x3e, 0x2d, 0x76, 0x04,
-	0xb5, 0xc0, 0xe4, 0x47, 0xb6, 0xd3, 0x66, 0x52, 0x49, 0x81, 0xdf, 0x27, 0x39, 0x8d, 0xda, 0x2e,
-	0x2a, 0xcf, 0xd4, 0xc4, 0xc6, 0x7c, 0x47, 0x50, 0x4b, 0x49, 0xf8, 0xc8, 0x76, 0x51, 0xbb, 0x94,
-	0x30, 0x8c, 0x87, 0x08, 0x3f, 0xaf, 0x97, 0xe1, 0xcf, 0xc9, 0xc8, 0x79, 0x52, 0xef, 0x45, 0x58,
-	0xee, 0x12, 0xeb, 0x10, 0xd1, 0xb8, 0xb7, 0x87, 0x54, 0xa7, 0x23, 0xf2, 0xd3, 0x83, 0x57, 0x83,
-	0x02, 0x1f, 0x3c, 0x56, 0x96, 0x20, 0x27, 0x15, 0xe2, 0xf1, 0xda, 0x37, 0xa5, 0x06, 0x94, 0xc6,
-	0x04, 0x09, 0xbc, 0x05, 0xc9, 0xcc, 0xa9, 0x45, 0x63, 0x22, 0x86, 0xd4, 0x28, 0x56, 0x60, 0x3d,
-	0x2b, 0x56, 0x9e, 0xcc, 0x85, 0x08, 0x85, 0xe4, 0x28, 0xb1, 0x09, 0x08, 0x96, 0x2c, 0x6a, 0xce,
-	0xfa, 0x94, 0x0d, 0xe8, 0x32, 0xa6, 0x23, 0xa8, 0x21, 0x2c, 0xdd, 0x07, 0x99, 0x0c, 0xb0, 0x4f,
-	0x35, 0x8a, 0x7c, 0x57, 0x0b, 0x1b, 0xec, 0xb1, 0x79, 0x70, 0xd1, 0x90, 0x06, 0x09, 0x15, 0x3a,
-	0x82, 0xba, 0x12, 0x30, 0x47, 0xc8, 0x77, 0x83, 0x8a, 0xf6, 0x62, 0x40, 0x7a, 0x04, 0x8b, 0x13,
-	0x6f, 0x80, 0x20, 0xb9, 0x29, 0x73, 0x1f, 0xf6, 0x22, 0xc0, 0x58, 0xdf, 0x71, 0xe2, 0xdc, 0xce,
-	0x43, 0x8e, 0xef, 0x40, 0xeb, 0xcd, 0x2c, 0xcc, 0x74, 0x89, 0x25, 0x79, 0x20, 0x65, 0x6c, 0x5b,
-	0x23, 0xc3, 0x76, 0xe6, 0xb2, 0xc8, 0xff, 0xdf, 0x94, 0x8c, 0x8b, 0x2a, 0x3d, 0x01, 0x48, 0xec,
-	0x54, 0x6d, 0x8a, 0x3e, 0x27, 0xe4, 0xc6, 0x75, 0x04, 0xb7, 0xfc, 0x0c, 0xf2, 0xc9, 0x65, 0xda,
-	0xcc, 0x56, 0x4c, 0x20, 0xf2, 0x3f, 0xd7, 0x22, 0xdc, 0xb8, 0x09, 0xc5, 0x1f, 0x5e, 0xa5, 0x7f,
-	0x4d, 0x51, 0x9e, 0xa0, 0xe4, 0xff, 0x6e, 0x42, 0x71, 0x2f, 0x2e, 0x2c, 0xa5, 0x57, 0xe7, 0xef,
-	0x6c, 0x13, 0x29, 0x50, 0x56, 0x6e, 0x08, 0xc6, 0xee, 0xda, 0xbd, 0xb3, 0xcb, 0x8a, 0x78, 0x7e,
-	0x59, 0x11, 0xbf, 0x5e, 0x56, 0xc4, 0xb7, 0x57, 0x15, 0xe1, 0xfc, 0xaa, 0x22, 0x5c, 0x5c, 0x55,
-	0x84, 0xa7, 0xbb, 0x96, 0x4d, 0x07, 0xa3, 0x7e, 0xd3, 0xc0, 0xae, 0x32, 0xf1, 0xa5, 0x39, 0xde,
-	0xd9, 0x36, 0x06, 0xba, 0x3d, 0x54, 0xb8, 0xe4, 0x24, 0xfa, 0xc0, 0x9e, 0x7a, 0x88, 0xf4, 0x7f,
-	0x0d, 0xc4, 0xb7, 0xbf, 0x07, 0x00, 0x00, 0xff, 0xff, 0x80, 0x13, 0x3e, 0x66, 0x82, 0x07, 0x00,
-	0x00,
+	// 873 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x4f, 0x6f, 0xdc, 0x44,
+	0x14, 0xb7, 0x09, 0xa5, 0xcd, 0xdb, 0x24, 0xa4, 0x26, 0x25, 0xae, 0x4b, 0x37, 0x1b, 0xab, 0x54,
+	0x0b, 0x6a, 0xd6, 0x25, 0x54, 0xa5, 0x02, 0x21, 0x60, 0xa3, 0xa2, 0x20, 0xb1, 0xea, 0x62, 0x82,
+	0x84, 0xe0, 0x60, 0x79, 0xed, 0xa9, 0x77, 0x54, 0xdb, 0xe3, 0x8e, 0x67, 0x43, 0x72, 0xe5, 0x13,
+	0x70, 0xe1, 0x88, 0xc4, 0x47, 0xe0, 0xc0, 0x81, 0x8f, 0xd0, 0x63, 0xc5, 0x85, 0x48, 0x48, 0x80,
+	0x92, 0x03, 0x5f, 0x03, 0xcd, 0xd8, 0x9e, 0x78, 0xb1, 0xbd, 0xbb, 0x8a, 0x7a, 0xd9, 0xf5, 0xbc,
+	0xf9, 0xfd, 0xde, 0x9f, 0xdf, 0xbc, 0x37, 0x36, 0x18, 0xfe, 0xb1, 0x7f, 0x94, 0x50, 0xc2, 0x88,
+	0x47, 0x42, 0xcb, 0x0b, 0xc9, 0xc8, 0x62, 0x47, 0x3d, 0x61, 0xd0, 0xae, 0x96, 0xf7, 0x7a, 0x7c,
+	0xcf, 0xb8, 0xee, 0x91, 0x34, 0x22, 0xa9, 0x23, 0xac, 0x56, 0xb6, 0xc8, 0xd0, 0xc6, 0x66, 0xb6,
+	0xb2, 0xa2, 0x34, 0xb0, 0x0e, 0xdf, 0xe1, 0x7f, 0xf9, 0xc6, 0x46, 0x40, 0x02, 0x92, 0x11, 0xf8,
+	0x53, 0x6e, 0xb5, 0xaa, 0x81, 0x47, 0x21, 0xf1, 0x9e, 0x38, 0xd4, 0x65, 0xc8, 0x09, 0x71, 0x84,
+	0x99, 0xe3, 0x91, 0xf8, 0x31, 0x2e, 0xdc, 0x6c, 0x57, 0x09, 0xfc, 0xc7, 0x49, 0x5c, 0x4c, 0x73,
+	0xc8, 0xdd, 0x2a, 0x04, 0x3d, 0x9d, 0x60, 0x76, 0xec, 0x30, 0x8c, 0x68, 0x9d, 0xd3, 0xad, 0x2a,
+	0x23, 0x72, 0x99, 0x37, 0x46, 0x45, 0x55, 0x37, 0xab, 0x00, 0x42, 0x7d, 0x54, 0x44, 0xbc, 0xdd,
+	0xb0, 0xed, 0x50, 0x14, 0x91, 0x43, 0x37, 0xcc, 0xdd, 0x98, 0x3f, 0xaa, 0x70, 0x75, 0x90, 0x06,
+	0x7b, 0x14, 0xb9, 0x0c, 0xed, 0x85, 0x64, 0x34, 0x74, 0x31, 0xd5, 0xee, 0xc3, 0xb2, 0x3b, 0x61,
+	0x63, 0x42, 0x31, 0x3b, 0xd6, 0xd5, 0x8e, 0xda, 0x5d, 0xee, 0xeb, 0xbf, 0xff, 0xba, 0xb3, 0x91,
+	0xeb, 0xfa, 0x89, 0xef, 0x53, 0x94, 0xa6, 0x5f, 0x32, 0x8a, 0xe3, 0xc0, 0x3e, 0x87, 0x6a, 0x0f,
+	0x60, 0x59, 0x96, 0xae, 0xbf, 0xd4, 0x51, 0xbb, 0xad, 0xdd, 0x1b, 0xbd, 0xca, 0x61, 0xf5, 0x8a,
+	0x38, 0xf6, 0x15, 0x2f, 0x7f, 0x7a, 0x7f, 0xed, 0xfb, 0x7f, 0x7f, 0x79, 0xfb, 0xdc, 0x93, 0x79,
+	0x03, 0xae, 0x57, 0xd2, 0xb2, 0x51, 0x9a, 0x90, 0x38, 0x45, 0x26, 0x86, 0x6b, 0x83, 0x34, 0x18,
+	0x52, 0x92, 0x90, 0x14, 0xf9, 0x8f, 0x12, 0x44, 0x5d, 0x86, 0x49, 0x9c, 0x6a, 0x43, 0x58, 0x27,
+	0x72, 0xe5, 0x3c, 0x9d, 0xa0, 0x09, 0xd2, 0xd5, 0xce, 0x52, 0xb7, 0xb5, 0xbb, 0x55, 0x93, 0x86,
+	0x24, 0xda, 0xee, 0x77, 0xfd, 0x97, 0x9f, 0xfd, 0xb5, 0xa5, 0xd8, 0xaf, 0x9e, 0xd3, 0xbf, 0xe0,
+	0x6c, 0x73, 0x0b, 0x6e, 0xd6, 0x86, 0x92, 0xb9, 0x3c, 0x84, 0x55, 0x0e, 0x08, 0x5d, 0x0f, 0x3d,
+	0xe2, 0x02, 0x6b, 0xf7, 0xe0, 0x92, 0x50, 0x5a, 0xe8, 0xd6, 0xda, 0xd5, 0xeb, 0x02, 0xf3, 0xfd,
+	0x3c, 0x62, 0x06, 0x36, 0x37, 0xb3, 0x92, 0xa4, 0x1b, 0xe9, 0xff, 0x37, 0x15, 0xd6, 0xb8, 0x12,
+	0x6e, 0xec, 0xa1, 0x30, 0x8b, 0xf0, 0x01, 0x5c, 0xc9, 0xce, 0x12, 0xfb, 0x79, 0x10, 0xa3, 0x29,
+	0xc8, 0x67, 0x7e, 0x1e, 0xe6, 0x32, 0xc9, 0x96, 0xda, 0x6d, 0x58, 0x0b, 0x08, 0xf1, 0x1d, 0x86,
+	0x43, 0x47, 0xf4, 0xb5, 0x38, 0xa7, 0xd5, 0x7d, 0xc5, 0x5e, 0xe1, 0xf6, 0x03, 0x1c, 0xf6, 0xb9,
+	0x55, 0xb3, 0xe0, 0xb5, 0x69, 0x9c, 0xc3, 0x70, 0x84, 0xf4, 0xa5, 0x8e, 0xda, 0xbd, 0xbc, 0xaf,
+	0xd8, 0xeb, 0x65, 0xf0, 0x01, 0x8e, 0x50, 0x7f, 0xbd, 0xe4, 0x98, 0xc4, 0x88, 0x3c, 0x36, 0x75,
+	0x78, 0x7d, 0x3a, 0x73, 0x59, 0xd4, 0x89, 0x0a, 0x2b, 0x65, 0xf5, 0xb9, 0x68, 0xa2, 0xbd, 0xf3,
+	0x7a, 0xde, 0x68, 0x68, 0x9a, 0x01, 0xc7, 0xec, 0x2b, 0x76, 0x06, 0xd6, 0x3e, 0x04, 0x23, 0x1d,
+	0x13, 0xca, 0x1c, 0x86, 0x68, 0xe4, 0x64, 0x9a, 0x24, 0x5c, 0xc2, 0x08, 0xc5, 0x4c, 0xd4, 0xb5,
+	0xb2, 0xaf, 0xd8, 0x9b, 0x02, 0x73, 0x80, 0x68, 0x24, 0x92, 0x18, 0x16, 0x00, 0xed, 0x53, 0x58,
+	0x9d, 0x9a, 0x09, 0x51, 0x5c, 0x43, 0xab, 0x64, 0xe9, 0x0b, 0x18, 0x97, 0x8a, 0x94, 0xd6, 0xfd,
+	0x16, 0x2c, 0xcb, 0xb6, 0x31, 0xff, 0x56, 0xe1, 0xcd, 0x41, 0x1a, 0x7c, 0x95, 0xf8, 0x2e, 0x43,
+	0x0f, 0xc5, 0x90, 0x1f, 0x60, 0x44, 0x3f, 0xe7, 0x23, 0xbe, 0x27, 0x26, 0x7c, 0x92, 0x21, 0x2f,
+	0x3c, 0x64, 0x31, 0xe8, 0x4d, 0x97, 0x47, 0x3e, 0x73, 0x56, 0x4d, 0x05, 0xb3, 0x52, 0xc9, 0x7b,
+	0xe4, 0x1a, 0xaa, 0xc3, 0x54, 0x46, 0xd3, 0x82, 0x9d, 0x85, 0x0a, 0x94, 0xa7, 0xfd, 0xa7, 0x0a,
+	0xb7, 0x24, 0x43, 0x34, 0x8c, 0xed, 0x32, 0xf4, 0x02, 0x15, 0x79, 0x02, 0x9b, 0x0d, 0x57, 0x74,
+	0x7e, 0xa4, 0xbd, 0x1a, 0x41, 0x66, 0x24, 0x92, 0xeb, 0xb1, 0x31, 0xaa, 0x81, 0x54, 0xe4, 0xe8,
+	0xc1, 0x9d, 0x45, 0x8a, 0x2b, 0xd4, 0xd8, 0xfd, 0xe3, 0x12, 0x2c, 0x0d, 0xd2, 0x40, 0x4b, 0x40,
+	0xab, 0xb9, 0xc1, 0xba, 0x35, 0x99, 0xd6, 0x5e, 0x40, 0xc6, 0xdd, 0x45, 0x91, 0x45, 0x64, 0xed,
+	0x6b, 0x80, 0xd2, 0x3d, 0xd5, 0x69, 0xe0, 0x4b, 0x84, 0xd1, 0x9d, 0x87, 0x90, 0x9e, 0xbf, 0x85,
+	0x56, 0xf9, 0x82, 0xda, 0xae, 0x27, 0x96, 0x20, 0xc6, 0x5b, 0x73, 0x21, 0xd2, 0xb9, 0x0f, 0x6b,
+	0xff, 0x7b, 0x3d, 0xdd, 0x6a, 0x20, 0x4f, 0xa1, 0x8c, 0x3b, 0x8b, 0xa0, 0x64, 0x94, 0x9f, 0x55,
+	0x30, 0x17, 0x18, 0xda, 0x07, 0xf5, 0x4e, 0xe7, 0x33, 0x8d, 0x8f, 0x2f, 0xca, 0x94, 0x29, 0xfe,
+	0xa4, 0xc2, 0xf6, 0xfc, 0x21, 0x7a, 0x6f, 0x56, 0x9c, 0x19, 0x44, 0xe3, 0xa3, 0x0b, 0x12, 0x8b,
+	0xfc, 0xfa, 0xc3, 0x67, 0xa7, 0x6d, 0xf5, 0xf9, 0x69, 0x5b, 0xfd, 0xe7, 0xb4, 0xad, 0xfe, 0x70,
+	0xd6, 0x56, 0x9e, 0x9f, 0xb5, 0x95, 0x93, 0xb3, 0xb6, 0xf2, 0xcd, 0xfd, 0x00, 0xb3, 0xf1, 0x64,
+	0xd4, 0xf3, 0x48, 0x34, 0xfd, 0x79, 0x75, 0x78, 0x6f, 0xc7, 0x1b, 0xbb, 0x38, 0xb6, 0xa4, 0xe5,
+	0x28, 0xff, 0xd6, 0x3b, 0x4e, 0x50, 0x3a, 0x7a, 0x45, 0x98, 0xdf, 0xfd, 0x2f, 0x00, 0x00, 0xff,
+	0xff, 0x5d, 0x0e, 0x5c, 0x8c, 0x0d, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -719,6 +925,12 @@ type MsgClient interface {
 	CreateClobPair(ctx context.Context, in *MsgCreateClobPair, opts ...grpc.CallOption) (*MsgCreateClobPairResponse, error)
 	// SetClobPairStatus sets the status of a clob pair.
 	SetClobPairStatus(ctx context.Context, in *MsgSetClobPairStatus, opts ...grpc.CallOption) (*MsgSetClobPairStatusResponse, error)
+	// UpdateEquityTierLimitConfiguration updates the equity tier limit
+	// configuration in state.
+	UpdateEquityTierLimitConfiguration(ctx context.Context, in *MsgUpdateEquityTierLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateEquityTierLimitConfigurationResponse, error)
+	// UpdateBlockRateLimitConfiguration updates the block rate limit
+	// configuration in state.
+	UpdateBlockRateLimitConfiguration(ctx context.Context, in *MsgUpdateBlockRateLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateBlockRateLimitConfigurationResponse, error)
 }
 
 type msgClient struct {
@@ -765,6 +977,24 @@ func (c *msgClient) CreateClobPair(ctx context.Context, in *MsgCreateClobPair, o
 	return out, nil
 }
 
+func (c *msgClient) UpdateEquityTierLimitConfiguration(ctx context.Context, in *MsgUpdateEquityTierLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateEquityTierLimitConfigurationResponse, error) {
+	out := new(MsgUpdateEquityTierLimitConfigurationResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/UpdateEquityTierLimitConfiguration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateBlockRateLimitConfiguration(ctx context.Context, in *MsgUpdateBlockRateLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateBlockRateLimitConfigurationResponse, error) {
+	out := new(MsgUpdateBlockRateLimitConfigurationResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/UpdateBlockRateLimitConfiguration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) SetClobPairStatus(ctx context.Context, in *MsgSetClobPairStatus, opts ...grpc.CallOption) (*MsgSetClobPairStatusResponse, error) {
 	out := new(MsgSetClobPairStatusResponse)
 	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/SetClobPairStatus", in, out, opts...)
@@ -787,6 +1017,12 @@ type MsgServer interface {
 	CreateClobPair(context.Context, *MsgCreateClobPair) (*MsgCreateClobPairResponse, error)
 	// SetClobPairStatus sets the status of a clob pair.
 	SetClobPairStatus(context.Context, *MsgSetClobPairStatus) (*MsgSetClobPairStatusResponse, error)
+	// UpdateEquityTierLimitConfiguration updates the equity tier limit
+	// configuration in state.
+	UpdateEquityTierLimitConfiguration(context.Context, *MsgUpdateEquityTierLimitConfiguration) (*MsgUpdateEquityTierLimitConfigurationResponse, error)
+	// UpdateBlockRateLimitConfiguration updates the block rate limit
+	// configuration in state.
+	UpdateBlockRateLimitConfiguration(context.Context, *MsgUpdateBlockRateLimitConfiguration) (*MsgUpdateBlockRateLimitConfigurationResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -807,6 +1043,12 @@ func (*UnimplementedMsgServer) CreateClobPair(ctx context.Context, req *MsgCreat
 }
 func (*UnimplementedMsgServer) SetClobPairStatus(ctx context.Context, req *MsgSetClobPairStatus) (*MsgSetClobPairStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetClobPairStatus not implemented")
+}
+func (*UnimplementedMsgServer) UpdateEquityTierLimitConfiguration(ctx context.Context, req *MsgUpdateEquityTierLimitConfiguration) (*MsgUpdateEquityTierLimitConfigurationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateEquityTierLimitConfiguration not implemented")
+}
+func (*UnimplementedMsgServer) UpdateBlockRateLimitConfiguration(ctx context.Context, req *MsgUpdateBlockRateLimitConfiguration) (*MsgUpdateBlockRateLimitConfigurationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateBlockRateLimitConfiguration not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -903,6 +1145,42 @@ func _Msg_SetClobPairStatus_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateEquityTierLimitConfiguration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateEquityTierLimitConfiguration)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateEquityTierLimitConfiguration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.clob.Msg/UpdateEquityTierLimitConfiguration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateEquityTierLimitConfiguration(ctx, req.(*MsgUpdateEquityTierLimitConfiguration))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateBlockRateLimitConfiguration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateBlockRateLimitConfiguration)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateBlockRateLimitConfiguration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.clob.Msg/UpdateBlockRateLimitConfiguration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateBlockRateLimitConfiguration(ctx, req.(*MsgUpdateBlockRateLimitConfiguration))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.clob.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -926,6 +1204,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetClobPairStatus",
 			Handler:    _Msg_SetClobPairStatus_Handler,
+		},
+		{
+			MethodName: "UpdateEquityTierLimitConfiguration",
+			Handler:    _Msg_UpdateEquityTierLimitConfiguration_Handler,
+		},
+		{
+			MethodName: "UpdateBlockRateLimitConfiguration",
+			Handler:    _Msg_UpdateBlockRateLimitConfiguration_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1356,6 +1642,132 @@ func (m *OperationRaw_OrderRemoval) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	}
 	return len(dAtA) - i, nil
 }
+func (m *MsgUpdateEquityTierLimitConfiguration) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateEquityTierLimitConfiguration) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateEquityTierLimitConfiguration) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.EquityTierLimitConfig.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.BlockRateLimitConfig.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1552,6 +1964,53 @@ func (m *OperationRaw_OrderRemoval) Size() (n int) {
 		l = m.OrderRemoval.Size()
 		n += 1 + l + sovTx(uint64(l))
 	}
+	return n
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.EquityTierLimitConfig.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.BlockRateLimitConfig.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -2462,6 +2921,336 @@ func (m *OperationRaw) Unmarshal(dAtA []byte) error {
 			}
 			m.Operation = &OperationRaw_OrderRemoval{v}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateEquityTierLimitConfiguration: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateEquityTierLimitConfiguration: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EquityTierLimitConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.EquityTierLimitConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateEquityTierLimitConfigurationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateEquityTierLimitConfigurationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateBlockRateLimitConfiguration: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateBlockRateLimitConfiguration: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlockRateLimitConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.BlockRateLimitConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateBlockRateLimitConfigurationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateBlockRateLimitConfigurationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

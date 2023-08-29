@@ -1,5 +1,7 @@
 import { Order, OrderSDKType, OrderId, OrderIdSDKType } from "./order";
-import { ClobPair, ClobPairSDKType, ClobPair_Status, ClobPair_StatusSDKType } from "./clob_pair";
+import { ClobPair, ClobPairSDKType } from "./clob_pair";
+import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
+import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
 import { OrderRemoval, OrderRemovalSDKType } from "./order_removals";
 import * as _m0 from "protobufjs/minimal";
@@ -176,6 +178,86 @@ export interface OperationRawSDKType {
   short_term_order_placement?: Uint8Array;
   order_removal?: OrderRemovalSDKType;
 }
+/**
+ * MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+ * request type.
+ */
+
+export interface MsgUpdateEquityTierLimitConfiguration {
+  authority: string;
+  /**
+   * Defines the equity tier limit configuration to update to. All fields must
+   * be set.
+   */
+
+  equityTierLimitConfig?: EquityTierLimitConfiguration;
+}
+/**
+ * MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+ * request type.
+ */
+
+export interface MsgUpdateEquityTierLimitConfigurationSDKType {
+  authority: string;
+  /**
+   * Defines the equity tier limit configuration to update to. All fields must
+   * be set.
+   */
+
+  equity_tier_limit_config?: EquityTierLimitConfigurationSDKType;
+}
+/**
+ * MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+ * response type.
+ */
+
+export interface MsgUpdateEquityTierLimitConfigurationResponse {}
+/**
+ * MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+ * response type.
+ */
+
+export interface MsgUpdateEquityTierLimitConfigurationResponseSDKType {}
+/**
+ * MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+ * request type.
+ */
+
+export interface MsgUpdateBlockRateLimitConfiguration {
+  authority: string;
+  /**
+   * Defines the block rate limit configuration to update to. All fields must be
+   * set.
+   */
+
+  blockRateLimitConfig?: BlockRateLimitConfiguration;
+}
+/**
+ * MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+ * request type.
+ */
+
+export interface MsgUpdateBlockRateLimitConfigurationSDKType {
+  authority: string;
+  /**
+   * Defines the block rate limit configuration to update to. All fields must be
+   * set.
+   */
+
+  block_rate_limit_config?: BlockRateLimitConfigurationSDKType;
+}
+/**
+ * MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+ * response type.
+ */
+
+export interface MsgUpdateBlockRateLimitConfigurationResponse {}
+/**
+ * MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+ * response type.
+ */
+
+export interface MsgUpdateBlockRateLimitConfigurationResponseSDKType {}
 
 function createBaseMsgCreateClobPair(): MsgCreateClobPair {
   return {
@@ -682,6 +764,184 @@ export const OperationRaw = {
     message.match = object.match !== undefined && object.match !== null ? ClobMatch.fromPartial(object.match) : undefined;
     message.shortTermOrderPlacement = object.shortTermOrderPlacement ?? undefined;
     message.orderRemoval = object.orderRemoval !== undefined && object.orderRemoval !== null ? OrderRemoval.fromPartial(object.orderRemoval) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateEquityTierLimitConfiguration(): MsgUpdateEquityTierLimitConfiguration {
+  return {
+    authority: "",
+    equityTierLimitConfig: undefined
+  };
+}
+
+export const MsgUpdateEquityTierLimitConfiguration = {
+  encode(message: MsgUpdateEquityTierLimitConfiguration, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.equityTierLimitConfig !== undefined) {
+      EquityTierLimitConfiguration.encode(message.equityTierLimitConfig, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateEquityTierLimitConfiguration {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateEquityTierLimitConfiguration();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.equityTierLimitConfig = EquityTierLimitConfiguration.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateEquityTierLimitConfiguration>): MsgUpdateEquityTierLimitConfiguration {
+    const message = createBaseMsgUpdateEquityTierLimitConfiguration();
+    message.authority = object.authority ?? "";
+    message.equityTierLimitConfig = object.equityTierLimitConfig !== undefined && object.equityTierLimitConfig !== null ? EquityTierLimitConfiguration.fromPartial(object.equityTierLimitConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateEquityTierLimitConfigurationResponse(): MsgUpdateEquityTierLimitConfigurationResponse {
+  return {};
+}
+
+export const MsgUpdateEquityTierLimitConfigurationResponse = {
+  encode(_: MsgUpdateEquityTierLimitConfigurationResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateEquityTierLimitConfigurationResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateEquityTierLimitConfigurationResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateEquityTierLimitConfigurationResponse>): MsgUpdateEquityTierLimitConfigurationResponse {
+    const message = createBaseMsgUpdateEquityTierLimitConfigurationResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateBlockRateLimitConfiguration(): MsgUpdateBlockRateLimitConfiguration {
+  return {
+    authority: "",
+    blockRateLimitConfig: undefined
+  };
+}
+
+export const MsgUpdateBlockRateLimitConfiguration = {
+  encode(message: MsgUpdateBlockRateLimitConfiguration, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.blockRateLimitConfig !== undefined) {
+      BlockRateLimitConfiguration.encode(message.blockRateLimitConfig, writer.uint32(26).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateBlockRateLimitConfiguration {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateBlockRateLimitConfiguration();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 3:
+          message.blockRateLimitConfig = BlockRateLimitConfiguration.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateBlockRateLimitConfiguration>): MsgUpdateBlockRateLimitConfiguration {
+    const message = createBaseMsgUpdateBlockRateLimitConfiguration();
+    message.authority = object.authority ?? "";
+    message.blockRateLimitConfig = object.blockRateLimitConfig !== undefined && object.blockRateLimitConfig !== null ? BlockRateLimitConfiguration.fromPartial(object.blockRateLimitConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateBlockRateLimitConfigurationResponse(): MsgUpdateBlockRateLimitConfigurationResponse {
+  return {};
+}
+
+export const MsgUpdateBlockRateLimitConfigurationResponse = {
+  encode(_: MsgUpdateBlockRateLimitConfigurationResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateBlockRateLimitConfigurationResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateBlockRateLimitConfigurationResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateBlockRateLimitConfigurationResponse>): MsgUpdateBlockRateLimitConfigurationResponse {
+    const message = createBaseMsgUpdateBlockRateLimitConfigurationResponse();
     return message;
   }
 

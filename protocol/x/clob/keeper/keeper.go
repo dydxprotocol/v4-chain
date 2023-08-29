@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"sync/atomic"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
@@ -26,6 +27,7 @@ type (
 		storeKey          storetypes.StoreKey
 		memKey            storetypes.StoreKey
 		transientStoreKey storetypes.StoreKey
+		authorities       map[string]struct{}
 
 		MemClob                      types.MemClob
 		UntriggeredConditionalOrders map[types.ClobPairId]*UntriggeredConditionalOrders
@@ -71,6 +73,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	memKey storetypes.StoreKey,
 	liquidationsStoreKey storetypes.StoreKey,
+	authorities []string,
 	memClob types.MemClob,
 	subaccountsKeeper types.SubaccountsKeeper,
 	assetsKeeper types.AssetsKeeper,
@@ -92,6 +95,7 @@ func NewKeeper(
 		storeKey:                     storeKey,
 		memKey:                       memKey,
 		transientStoreKey:            liquidationsStoreKey,
+		authorities:                  maps.ArrayToMapInterface(authorities),
 		MemClob:                      memClob,
 		UntriggeredConditionalOrders: make(map[types.ClobPairId]*UntriggeredConditionalOrders),
 		PerpetualIdToClobPairId:      make(map[uint32][]types.ClobPairId),
@@ -120,6 +124,11 @@ func NewKeeper(
 	return keeper
 }
 
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
+}
+
 func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
@@ -135,7 +144,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-	k.setNumClobPairs(ctx, uint32(0))
 }
 
 // InitMemStore initializes the memstore of the `clob` keeper.
