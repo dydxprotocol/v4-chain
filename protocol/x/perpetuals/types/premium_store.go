@@ -20,10 +20,6 @@ func NewPremiumStoreFromMarketPremiumMap(
 	m map[uint32]MarketPremiums,
 	numPremiums uint32,
 ) *PremiumStore {
-	ret := PremiumStore{
-		NumPremiums: numPremiums,
-	}
-
 	// Get a list of sorted MarketPremiums.
 	premiumList := []MarketPremiums{}
 	for _, premium := range m {
@@ -37,5 +33,4 @@ func NewPremiumStoreFromMarketPremiumMap(
 		NumPremiums:       numPremiums,
 		AllMarketPremiums: premiumList,
 	}
-	return &ret
 }
