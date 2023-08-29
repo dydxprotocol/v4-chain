@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,18 +49,15 @@ func TestAcknowledgeBridges(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Initialize context and keeper.
-			ctx, bridgeKeeper, _, _, _, mockBankKeeper := keepertest.BridgeKeepersWithMockBankKeeper(t)
-			// TODO: remove below mockings once integrated with x/delaymsg (CORE-453)
-			// Mock sending coin of each bridge event.
-			for _, bridgeEvent := range tc.bridgeEvents {
-				mockBankKeeper.On(
-					"SendCoinsFromModuleToAccount",
+			// Initialize context, keeper, and mockDelayMsgKeeper.
+			ctx, bridgeKeeper, _, _, _, _, mockDelayMsgKeeper := keepertest.BridgeKeepers(t)
+			for i := range tc.bridgeEvents {
+				mockDelayMsgKeeper.On(
+					"DelayMessageByBlocks",
 					ctx,
-					types.ModuleName,
-					sdk.MustAccAddressFromBech32(bridgeEvent.Address),
-					sdk.Coins{bridgeEvent.Coin},
-				).Return(nil).Once()
+					mock.Anything,
+					mock.Anything,
+				).Return(uint32(i), nil).Once()
 			}
 
 			err := bridgeKeeper.AcknowledgeBridges(ctx, tc.bridgeEvents)
@@ -71,7 +68,7 @@ func TestAcknowledgeBridges(t *testing.T) {
 			require.Equal(t, tc.expectedAEI, aei)
 
 			// Assert mock expectations.
-			mockBankKeeper.AssertExpectations(t)
+			mockDelayMsgKeeper.AssertExpectations(t)
 		})
 	}
 }
@@ -212,7 +209,7 @@ func TestGetAcknowledgeBridges(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper, bridgeEventManager, and mockTimeProvider.
-			ctx, bridgeKeeper, _, mockTimeProvider, bridgeEventManager, _ := keepertest.BridgeKeepers(t)
+			ctx, bridgeKeeper, _, mockTimeProvider, bridgeEventManager, _, _ := keepertest.BridgeKeepers(t)
 			err := bridgeKeeper.SetAcknowledgedEventInfo(ctx, tc.acknowledgedEventInfo)
 			require.NoError(t, err)
 			err = bridgeKeeper.UpdateProposeParams(ctx, tc.proposeParams)

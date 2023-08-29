@@ -44,7 +44,7 @@ func TestMsgServerAcknowledgeBridges(t *testing.T) {
 			// Initialize Mocks and Context.
 			mockKeeper := &mocks.BridgeKeeper{}
 			msgServer := keeper.NewMsgServerImpl(mockKeeper)
-			ctx, _, _, _, _, _ := keepertest.BridgeKeepers(t)
+			ctx, _, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			tc.setupMocks(ctx, mockKeeper)
 			goCtx := sdk.WrapSDKContext(ctx)
 

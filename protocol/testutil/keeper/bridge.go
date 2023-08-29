@@ -15,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
 func BridgeKeepers(
@@ -26,6 +27,7 @@ func BridgeKeepers(
 	mockTimeProvider *mocks.TimeProvider,
 	bridgeEventManager *bridgeserver_types.BridgeEventManager,
 	bankKeeper *bankkeeper.BaseKeeper,
+	mockDelayMsgKeeper *mocks.DelayMsgKeeper,
 ) {
 	ctx = initKeepers(t, func(
 		db *tmdb.MemDB,
@@ -37,38 +39,12 @@ func BridgeKeepers(
 		// Define necessary keepers here for unit tests
 		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
-		keeper, storeKey, mockTimeProvider, bridgeEventManager =
+		keeper, storeKey, mockTimeProvider, bridgeEventManager, mockDelayMsgKeeper =
 			createBridgeKeeper(stateStore, db, cdc, transientStoreKey, bankKeeper)
 		return []GenesisInitializer{keeper}
 	})
 
-	return ctx, keeper, storeKey, mockTimeProvider, bridgeEventManager, bankKeeper
-}
-
-func BridgeKeepersWithMockBankKeeper(
-	t testing.TB,
-) (
-	ctx sdk.Context,
-	keeper *keeper.Keeper,
-	storeKey storetypes.StoreKey,
-	mockTimeProvider *mocks.TimeProvider,
-	bridgeEventManager *bridgeserver_types.BridgeEventManager,
-	mockBankKeeper *mocks.BankKeeper,
-) {
-	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
-		registry codectypes.InterfaceRegistry,
-		cdc *codec.ProtoCodec,
-		stateStore storetypes.CommitMultiStore,
-		transientStoreKey storetypes.StoreKey,
-	) []GenesisInitializer {
-		mockBankKeeper = &mocks.BankKeeper{}
-		keeper, storeKey, mockTimeProvider, bridgeEventManager =
-			createBridgeKeeper(stateStore, db, cdc, transientStoreKey, mockBankKeeper)
-		return []GenesisInitializer{keeper}
-	})
-
-	return ctx, keeper, storeKey, mockTimeProvider, bridgeEventManager, mockBankKeeper
+	return ctx, keeper, storeKey, mockTimeProvider, bridgeEventManager, bankKeeper, mockDelayMsgKeeper
 }
 
 func createBridgeKeeper(
@@ -82,6 +58,7 @@ func createBridgeKeeper(
 	storetypes.StoreKey,
 	*mocks.TimeProvider,
 	*bridgeserver_types.BridgeEventManager,
+	*mocks.DelayMsgKeeper,
 ) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -89,13 +66,19 @@ func createBridgeKeeper(
 	mockTimeProvider := &mocks.TimeProvider{}
 	bridgeEventManager := bridgeserver_types.NewBridgeEventManager(mockTimeProvider)
 
+	mockDelayMsgKeeper := &mocks.DelayMsgKeeper{}
+
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
 		bridgeEventManager,
 		bankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		mockDelayMsgKeeper,
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+		},
 	)
 
-	return k, storeKey, mockTimeProvider, bridgeEventManager
+	return k, storeKey, mockTimeProvider, bridgeEventManager, mockDelayMsgKeeper
 }
