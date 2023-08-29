@@ -47,7 +47,9 @@ func FullNodeProcessProposalHandler(
 			return response
 		}
 
-		clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
+		if clobKeeper.RecordMevMetricsIsEnabled() {
+			clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
+		}
 
 		return response
 	}
