@@ -741,6 +741,11 @@ func New(
 		keys[clobmoduletypes.StoreKey],
 		memKeys[clobmoduletypes.MemStoreKey],
 		tkeys[clobmoduletypes.TransientStoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 		memClob,
 		app.SubaccountsKeeper,
 		app.AssetsKeeper,
