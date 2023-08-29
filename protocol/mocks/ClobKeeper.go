@@ -113,8 +113,8 @@ func (_m *ClobKeeper) DeleteLongTermOrderPlacement(ctx types.Context, orderId cl
 	_m.Called(ctx, orderId)
 }
 
-// GetAllClobPair provides a mock function with given fields: ctx
-func (_m *ClobKeeper) GetAllClobPair(ctx types.Context) []clobtypes.ClobPair {
+// GetAllClobPairs provides a mock function with given fields: ctx
+func (_m *ClobKeeper) GetAllClobPairs(ctx types.Context) []clobtypes.ClobPair {
 	ret := _m.Called(ctx)
 
 	var r0 []clobtypes.ClobPair

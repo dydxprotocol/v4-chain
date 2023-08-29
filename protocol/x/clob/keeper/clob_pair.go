@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -209,7 +210,7 @@ func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 // InitMemClobOrderbooks initializes the memclob with `ClobPair`s from state.
 // This is called during app initialization in `app.go`, before any ABCI calls are received.
 func (k Keeper) InitMemClobOrderbooks(ctx sdk.Context) {
-	clobPairs := k.GetAllClobPair(ctx)
+	clobPairs := k.GetAllClobPairs(ctx)
 	for _, clobPair := range clobPairs {
 		// Create the corresponding orderbook in the memclob.
 		k.createOrderbook(
@@ -279,8 +280,8 @@ func (k Keeper) RemoveClobPair(
 	))
 }
 
-// GetAllClobPair returns all clobPair
-func (k Keeper) GetAllClobPair(ctx sdk.Context) (list []types.ClobPair) {
+// GetAllClobPairs returns all clobPair, sorted by ClobPair id.
+func (k Keeper) GetAllClobPairs(ctx sdk.Context) (list []types.ClobPair) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
@@ -291,6 +292,10 @@ func (k Keeper) GetAllClobPair(ctx sdk.Context) (list []types.ClobPair) {
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
+
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Id < list[j].Id
+	})
 
 	return
 }
