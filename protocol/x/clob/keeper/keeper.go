@@ -99,9 +99,9 @@ func NewKeeper(
 		indexerEventManager:          indexerEventManager,
 		memStoreInitialized:          &atomic.Bool{},
 		txDecoder:                    txDecoder,
-		mevTelemetryConfig:           MevTelemetryConfig{
-			Enabled: clobFlags.MevTelemetryEnabled,
-			Host: clobFlags.MevTelemetryHost,
+		mevTelemetryConfig: MevTelemetryConfig{
+			Enabled:    clobFlags.MevTelemetryEnabled,
+			Host:       clobFlags.MevTelemetryHost,
 			Identifier: clobFlags.MevTelemetryIdentifier,
 		},
 		MaxLiquidationOrdersPerBlock: clobFlags.MaxLiquidationOrdersPerBlock,
