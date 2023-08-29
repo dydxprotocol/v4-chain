@@ -56,15 +56,17 @@ func (_m *BridgeKeeper) GetAcknowledgedEventInfo(ctx types.Context) bridgetypes.
 	return r0
 }
 
-// GetDelayMsgAuthority provides a mock function with given fields:
-func (_m *BridgeKeeper) GetDelayMsgAuthority() string {
+// GetAuthorities provides a mock function with given fields:
+func (_m *BridgeKeeper) GetAuthorities() map[string]struct{} {
 	ret := _m.Called()
 
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
+	var r0 map[string]struct{}
+	if rf, ok := ret.Get(0).(func() map[string]struct{}); ok {
 		r0 = rf()
 	} else {
-		r0 = ret.Get(0).(string)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]struct{})
+		}
 	}
 
 	return r0
@@ -79,20 +81,6 @@ func (_m *BridgeKeeper) GetEventParams(ctx types.Context) bridgetypes.EventParam
 		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(bridgetypes.EventParams)
-	}
-
-	return r0
-}
-
-// GetGovAuthority provides a mock function with given fields:
-func (_m *BridgeKeeper) GetGovAuthority() string {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
 	}
 
 	return r0

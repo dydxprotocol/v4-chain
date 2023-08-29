@@ -74,8 +74,10 @@ func createBridgeKeeper(
 		bridgeEventManager,
 		bankKeeper,
 		mockDelayMsgKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+		},
 	)
 
 	return k, storeKey, mockTimeProvider, bridgeEventManager, mockDelayMsgKeeper

@@ -11,6 +11,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bridgeserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
@@ -23,12 +24,8 @@ type (
 		bankKeeper         types.BankKeeper
 		delayMsgKeeper     delaymsgtypes.DelayMsgKeeper
 
-		// The address capable of executing MsgUpdateEventParams, MsgUpdateProposeParams, and
-		// MsgUpdateSafetyParams messages. Typically, this should be the x/gov module account.
-		govAuthority string
-		// The address capable of executing MsgCompleteBridge messages. Typically, this should
-		// be the x/delaymsg module account.
-		delayMsgAuthority string
+		// authorities stores addresses capable of sending a bridge message.
+		authorities map[string]struct{}
 	}
 )
 
@@ -38,8 +35,7 @@ func NewKeeper(
 	bridgeEventManager *bridgeserver.BridgeEventManager,
 	bankKeeper types.BankKeeper,
 	delayMsgKeeper delaymsgtypes.DelayMsgKeeper,
-	govAuthority string,
-	delayMsgAuthority string,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:                cdc,
@@ -47,19 +43,13 @@ func NewKeeper(
 		bridgeEventManager: bridgeEventManager,
 		bankKeeper:         bankKeeper,
 		delayMsgKeeper:     delayMsgKeeper,
-		govAuthority:       govAuthority,
-		delayMsgAuthority:  delayMsgAuthority,
+		authorities:        lib.SliceToSet(authorities),
 	}
 }
 
-// GetGovAuthority returns the x/bridge module's authority for updating parameters.
-func (k Keeper) GetGovAuthority() string {
-	return k.govAuthority
-}
-
-// GetDelayMsgAuthority returns the x/bridge module's authority for completing bridges.
-func (k Keeper) GetDelayMsgAuthority() string {
-	return k.delayMsgAuthority
+// GetAuthorities returns the set of authorities permitted to sign delayed messages.
+func (k Keeper) GetAuthorities() map[string]struct{} {
+	return k.authorities
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

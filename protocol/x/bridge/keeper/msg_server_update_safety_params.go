@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
@@ -14,12 +13,11 @@ func (k msgServer) UpdateSafetyParams(
 	goCtx context.Context,
 	msg *types.MsgUpdateSafetyParams,
 ) (*types.MsgUpdateSafetyParamsResponse, error) {
-	if k.Keeper.GetGovAuthority() != msg.Authority {
+	if _, ok := k.Keeper.GetAuthorities()[msg.GetAuthority()]; !ok {
 		return nil, errors.Wrapf(
-			govtypes.ErrInvalidSigner,
-			"invalid authority: expected %s, got %s",
-			k.Keeper.GetGovAuthority(),
-			msg.Authority,
+			types.ErrInvalidAuthority,
+			"message authority %s is not valid for sending update safety params messages",
+			msg.GetAuthority(),
 		)
 	}
 

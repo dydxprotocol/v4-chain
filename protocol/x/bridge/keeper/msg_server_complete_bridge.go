@@ -13,12 +13,10 @@ func (k msgServer) CompleteBridge(
 	goCtx context.Context,
 	msg *types.MsgCompleteBridge,
 ) (*types.MsgCompleteBridgeResponse, error) {
-	// MsgCompleteBridge's authority should be delaymsg module.
-	if k.Keeper.GetDelayMsgAuthority() != msg.Authority {
+	if _, ok := k.Keeper.GetAuthorities()[msg.GetAuthority()]; !ok {
 		return nil, errors.Wrapf(
 			types.ErrInvalidAuthority,
-			"expected %s, got %s",
-			k.Keeper.GetDelayMsgAuthority(),
+			"message authority %s is not valid for sending complete bridge messages",
 			msg.Authority,
 		)
 	}

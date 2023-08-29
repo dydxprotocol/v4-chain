@@ -20,14 +20,14 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: constants.DelayMsgModuleAccAddress.String(),
+				Authority: constants.DelayMsgModuleAccAddressString,
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedResp: &types.MsgCompleteBridgeResponse{},
 		},
 		"Failure: invalid address": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: constants.DelayMsgModuleAccAddress.String(),
+				Authority: constants.DelayMsgModuleAccAddressString,
 				Event: types.BridgeEvent{
 					Id:             0,
 					Coin:           sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
@@ -43,8 +43,7 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedErr: fmt.Sprintf(
-				"expected %s, got %s: Authority is invalid",
-				constants.DelayMsgModuleAccAddress.String(),
+				"message authority %s is not valid for sending complete bridge messages",
 				"12345",
 			),
 		},

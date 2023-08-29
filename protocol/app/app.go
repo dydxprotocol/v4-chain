@@ -643,10 +643,11 @@ func New(
 		bridgeEventManager,
 		app.BankKeeper,
 		app.DelayMsgKeeper,
-		// set the gov module account as the authority for updating parameters.
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		// set the delayMsg module account as the authority for completing bridges.
-		authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+		// gov module and delayMsg module accounts are allowed to send messages to the bridge module.
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+		},
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
