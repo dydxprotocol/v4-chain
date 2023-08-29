@@ -29,8 +29,6 @@ type BridgeKeeper interface {
 
 	UpdateSafetyParams(ctx sdk.Context, params SafetyParams) error
 
-	// Authority
-	GetGovAuthority() string
-
-	GetBridgeAuthority() string
+	// Authority.
+	HasAuthority(authority string) bool
 }
