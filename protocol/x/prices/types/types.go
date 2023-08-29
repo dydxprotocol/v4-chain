@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 )
 
 type PricesKeeper interface {
@@ -43,4 +44,7 @@ type PricesKeeper interface {
 
 	// Misc.
 	Logger(ctx sdk.Context) log.Logger
+
+	InitializeForGenesis(ctx sdk.Context)
+	GetIndexerEventManager() indexer_manager.IndexerEventManager
 }
