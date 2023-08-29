@@ -72,9 +72,7 @@ func (k *Keeper) InitializeEquityTierLimit(
 func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, order types.Order) error {
 	// Always allow short-term FoK or IoC orders as they will either fill immediately or be cancelled and won't rest on
 	// the book.
-	if order.IsShortTermOrder() &&
-		(order.TimeInForce == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
-			order.TimeInForce == types.Order_TIME_IN_FORCE_IOC) {
+	if order.IsShortTermOrder() && order.RequiresImmediateExecution() {
 		return nil
 	}
 

@@ -216,6 +216,34 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			advanceBlock: true,
 			expectError:  true,
 		},
+		"Conditional IoC order would exceed max open stateful orders across blocks": {
+			firstOrder: MustScaleOrder(
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				testapp.DefaultGenesis(),
+			),
+			secondOrder: MustScaleOrder(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price50_GTBT10_StopLoss51_FOK,
+				testapp.DefaultGenesis(),
+			),
+			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
+				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
+					{
+						UsdTncRequired: dtypes.NewInt(0),
+						Limit:          0,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(5_000_000_000), // $5,000
+						Limit:          1,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(70_000_000_000), // $70,000
+						Limit:          100,
+					},
+				},
+			},
+			advanceBlock: true,
+			expectError:  true,
+		},
 		"Order cancellation prevents exceeding max open short-term orders for short-term order in same block": {
 			firstOrder: MustScaleOrder(
 				constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
