@@ -270,6 +270,11 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	}).WithTesting(t).Build()
 	ctx := tApp.InitChain()
 
+	// Sanity check: the delayed message is in the keeper scheduled for block 2.
+	blockMessageIds, found := tApp.App.DelayMsgKeeper.GetBlockMessageIds(ctx, 2)
+	require.True(t, found)
+	require.Equal(t, []uint32{0}, blockMessageIds.Ids)
+
 	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
 
 	// Sanity check: at block 1, balances are as expected before the message is sent.
@@ -282,4 +287,8 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
 	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
 	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, AliceExpectedAccountBalance)
+
+	// Assert: the message has been deleted from the keeper.
+	_, found = tApp.App.DelayMsgKeeper.GetBlockMessageIds(ctx, 2)
+	require.False(t, found)
 }
