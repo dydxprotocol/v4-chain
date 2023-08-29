@@ -125,6 +125,20 @@ func (_m *DelayMsgKeeper) GetMessage(ctx types.Context, id uint32) (delaymsgtype
 	return r0, r1
 }
 
+// HasAuthority provides a mock function with given fields: authority
+func (_m *DelayMsgKeeper) HasAuthority(authority string) bool {
+	ret := _m.Called(authority)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(authority)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 // Logger provides a mock function with given fields: ctx
 func (_m *DelayMsgKeeper) Logger(ctx types.Context) log.Logger {
 	ret := _m.Called(ctx)
@@ -152,16 +166,6 @@ func (_m *DelayMsgKeeper) Router() lib.MsgRouter {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(lib.MsgRouter)
 		}
-
-// HasAuthority provides a mock function with given fields: authority
-func (_m *DelayMsgKeeper) HasAuthority(authority string) bool {
-	ret := _m.Called(authority)
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(string) bool); ok {
-		r0 = rf(authority)
-	} else {
-		r0 = ret.Get(0).(bool)
 	}
 
 	return r0
