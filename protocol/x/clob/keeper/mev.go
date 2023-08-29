@@ -333,7 +333,7 @@ func (k Keeper) GetClobMetadata(
 	clobMidPrices = make(map[types.ClobPairId]types.Subticks)
 	clobPairs = make(map[types.ClobPairId]types.ClobPair)
 
-	for _, clobPair := range k.GetAllClobPair(ctx) {
+	for _, clobPair := range k.GetAllClobPairs(ctx) {
 		clobPairId := clobPair.GetClobPairId()
 		var midPriceSubticks types.Subticks
 

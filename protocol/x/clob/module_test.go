@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
@@ -344,7 +345,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	result := am.InitGenesis(ctx, cdc, gs)
 	require.Equal(t, 0, len(result))
 
-	clobPairs := keeper.GetAllClobPair(ctx)
+	clobPairs := keeper.GetAllClobPairs(ctx)
 	require.Equal(t, 1, len(clobPairs))
 	require.Equal(t, uint32(0), clobPairs[0].Id)
 	require.Equal(t, uint32(0), clobPairs[0].GetPerpetualClobMetadata().PerpetualId)

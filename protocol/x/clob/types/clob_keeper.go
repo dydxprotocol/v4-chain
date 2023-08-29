@@ -33,7 +33,7 @@ type ClobKeeper interface {
 		ClobPair,
 		error,
 	)
-	GetAllClobPair(ctx sdk.Context) (list []ClobPair)
+	GetAllClobPairs(ctx sdk.Context) (list []ClobPair)
 	GetClobPair(ctx sdk.Context, id ClobPairId) (val ClobPair, found bool)
 	HasAuthority(authority string) bool
 	PlaceShortTermOrder(ctx sdk.Context, msg *MsgPlaceOrder) (
