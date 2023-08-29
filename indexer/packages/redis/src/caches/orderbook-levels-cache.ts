@@ -35,7 +35,7 @@ export async function updatePriceLevel({
   humanPrice: string,
   sizeDeltaInQuantums: string,
   client: RedisClient,
-  // TODO(DEC-1314): Return a string once redis client is updated to use `stringNumbers` option.
+// TODO(DEC-1314): Return a string once redis client is updated to use `stringNumbers` option.
 }): Promise<number> {
   const updatedQuantums: number = await incrementOrderbookLevel(
     ticker,
@@ -111,27 +111,27 @@ async function incrementOrderbookLevel(
     priceLevel,
     delta,
   ) => {
-      return new Promise((resolve, reject) => {
-        const callback: Callback<number> = (
-          err: Error | null,
-          results: number,
-        ) => {
-          if (err) {
-            return reject(err);
-          }
-          return resolve(results);
-        };
-        client.evalsha(
-          incrementOrderbookLevelScript.hash,
-          numKeys,
-          orderbookKey,
-          lastUpdatedKey,
-          priceLevel,
-          delta,
-          callback,
-        );
-      });
-    };
+    return new Promise((resolve, reject) => {
+      const callback: Callback<number> = (
+        err: Error | null,
+        results: number,
+      ) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(results);
+      };
+      client.evalsha(
+        incrementOrderbookLevelScript.hash,
+        numKeys,
+        orderbookKey,
+        lastUpdatedKey,
+        priceLevel,
+        delta,
+        callback,
+      );
+    });
+  };
   evalAsync = evalAsync.bind(client);
 
   return evalAsync(
@@ -210,12 +210,12 @@ export async function getOrderBookLevels(
     bids,
     asks,
   ]: [
-      PriceLevel[],
-      PriceLevel[],
-    ] = await Promise.all([
-      getOrderbookSide(ticker, OrderSide.BUY, client, removeZeros),
-      getOrderbookSide(ticker, OrderSide.SELL, client, removeZeros),
-    ]);
+    PriceLevel[],
+    PriceLevel[],
+  ] = await Promise.all([
+    getOrderbookSide(ticker, OrderSide.BUY, client, removeZeros),
+    getOrderbookSide(ticker, OrderSide.SELL, client, removeZeros),
+  ]);
 
   // Sort bids in descending order. Sort asks in ascending order.
   if (options.sortSides === true) {
@@ -301,27 +301,27 @@ export async function deleteZeroPriceLevel({
     lastUpdatedKey,
     priceLevel,
   ) => {
-      return new Promise((resolve, reject) => {
-        const callback: Callback<number> = (
-          err: Error | null,
-          results: number,
-        ) => {
-          if (err) {
-            return reject(err);
-          }
-          const deleted: number = results;
-          return resolve(deleted === 1);
-        };
-        client.evalsha(
-          deleteZeroPriceLevelScript.hash,
-          numKeys,
-          orderbookKey,
-          lastUpdatedKey,
-          priceLevel,
-          callback,
-        );
-      });
-    };
+    return new Promise((resolve, reject) => {
+      const callback: Callback<number> = (
+        err: Error | null,
+        results: number,
+      ) => {
+        if (err) {
+          return reject(err);
+        }
+        const deleted: number = results;
+        return resolve(deleted === 1);
+      };
+      client.evalsha(
+        deleteZeroPriceLevelScript.hash,
+        numKeys,
+        orderbookKey,
+        lastUpdatedKey,
+        priceLevel,
+        callback,
+      );
+    });
+  };
   evalAsync = evalAsync.bind(client);
 
   return evalAsync(
@@ -362,25 +362,25 @@ export async function getOrderbookSideData({
     orderbookKey,
     lastUpdatedKey,
   ) => {
-      return new Promise((resolve, reject) => {
-        const callback: Callback<string[][]> = (
-          err: Error | null,
-          results: string[][],
-        ) => {
-          if (err) {
-            return reject(err);
-          }
-          return resolve(results);
-        };
-        client.evalsha(
-          getOrderbookSideScript.hash,
-          numKeys,
-          orderbookKey,
-          lastUpdatedKey,
-          callback,
-        );
-      });
-    };
+    return new Promise((resolve, reject) => {
+      const callback: Callback<string[][]> = (
+        err: Error | null,
+        results: string[][],
+      ) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(results);
+      };
+      client.evalsha(
+        getOrderbookSideScript.hash,
+        numKeys,
+        orderbookKey,
+        lastUpdatedKey,
+        callback,
+      );
+    });
+  };
   evalAsync = evalAsync.bind(client);
 
   const rawRedisResults: string[][] = await evalAsync(
@@ -394,8 +394,8 @@ export async function getOrderbookSideData({
   // The 1st list is a flat array of alternating key-value pairs representing prices and quantums.
   // The 2nd is a flat array of alternating key-value pairs representing prices and lastUpdated
   // values.
-  const quantumsMapping: { [field: string]: string } = _.fromPairs(_.chunk(rawRedisResults[0], 2));
-  const lastUpdatedMapping: { [field: string]: string } = _.fromPairs(_.chunk(rawRedisResults[1], 2));
+  const quantumsMapping: {[field: string]: string} = _.fromPairs(_.chunk(rawRedisResults[0], 2));
+  const lastUpdatedMapping: {[field: string]: string} = _.fromPairs(_.chunk(rawRedisResults[1], 2));
 
   return convertToPriceLevels(quantumsMapping, lastUpdatedMapping);
 
@@ -428,8 +428,8 @@ async function getOrderbookSide(
 }
 
 function convertToPriceLevels(
-  price2QuantumsMapping: { [field: string]: string },
-  price2LastUpdatedMapping: { [field: string]: string },
+  price2QuantumsMapping: {[field: string]: string},
+  price2LastUpdatedMapping: {[field: string]: string},
 ): PriceLevel[] {
   const quantumsKeys: string[] = _.keys(price2QuantumsMapping);
   const lastUpdatedKeys: string[] = _.keys(price2LastUpdatedMapping);

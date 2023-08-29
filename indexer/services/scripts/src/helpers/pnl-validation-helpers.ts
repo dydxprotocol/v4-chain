@@ -25,15 +25,15 @@ export async function getUnsettledFunding(
 ): Promise<Big> {
   await perpetualMarketRefresher.updatePerpetualMarkets();
   const openSizeWithFundingIndices: OpenSizeWithFundingIndex[] = await
-    FillTable.getOpenSizeWithFundingIndex(subaccountId, effectiveBeforeOrAtHeight);
+  FillTable.getOpenSizeWithFundingIndex(subaccountId, effectiveBeforeOrAtHeight);
 
   const lastFundingIndexMap: FundingIndexMap = await
-    FundingIndexUpdatesTable.findFundingIndexMap(
-      effectiveBeforeOrAtHeight,
-      {
-        readReplica: true,
-      },
-    );
+  FundingIndexUpdatesTable.findFundingIndexMap(
+    effectiveBeforeOrAtHeight,
+    {
+      readReplica: true,
+    },
+  );
   const getClobPairId = (perpetualId: string): string => {
     return perpetualMarketRefresher.getPerpetualMarketFromId(perpetualId)!.clobPairId;
   };
@@ -77,17 +77,17 @@ export async function getRealizedFunding(
   effectiveBeforeOrAtHeight: string,
 ): Promise<Big> {
   const clobPairs: string[] = await
-    FillTable.getClobPairs(subaccountId, effectiveBeforeOrAtHeight);
+  FillTable.getClobPairs(subaccountId, effectiveBeforeOrAtHeight);
 
   let totalSettledFunding: Big = new Big(0);
 
   for (const clobPairId of clobPairs) {
     const orderedFillsWithFundingIndices: OrderedFillsWithFundingIndices[] = await
-      FillTable.getOrderedFillsWithFundingIndices(
-        clobPairId,
-        subaccountId,
-        effectiveBeforeOrAtHeight,
-      );
+    FillTable.getOrderedFillsWithFundingIndices(
+      clobPairId,
+      subaccountId,
+      effectiveBeforeOrAtHeight,
+    );
     const settledFunding: Big = FillTable.getSettledFunding(orderedFillsWithFundingIndices);
     totalSettledFunding = totalSettledFunding.add(settledFunding);
   }
@@ -116,18 +116,18 @@ export async function getPnl(
     unrealizedFunding,
     feesPaid,
   ]: [
-      Big,
-      Big,
-      Big,
-      Big,
-      Big,
-    ] = await Promise.all([
-      FillTable.getCostOfFills(subaccountId, effectiveBeforeOrAtHeight),
-      FillTable.getTotalValueOfOpenPositions(subaccountId, effectiveBeforeOrAtHeight),
-      getRealizedFunding(subaccountId, effectiveBeforeOrAtHeight),
-      getUnsettledFunding(subaccountId, effectiveBeforeOrAtHeight),
-      FillTable.getFeesPaid(subaccountId, effectiveBeforeOrAtHeight),
-    ]);
+    Big,
+    Big,
+    Big,
+    Big,
+    Big,
+  ] = await Promise.all([
+    FillTable.getCostOfFills(subaccountId, effectiveBeforeOrAtHeight),
+    FillTable.getTotalValueOfOpenPositions(subaccountId, effectiveBeforeOrAtHeight),
+    getRealizedFunding(subaccountId, effectiveBeforeOrAtHeight),
+    getUnsettledFunding(subaccountId, effectiveBeforeOrAtHeight),
+    FillTable.getFeesPaid(subaccountId, effectiveBeforeOrAtHeight),
+  ]);
   return pnlOfFills
     .add(totalValueOfOpenPositions)
     .sub(realizedFunding)
@@ -144,7 +144,7 @@ export async function validatePnl(
   pnlUuid: string,
 ): Promise<void> {
   const pnlTick: PnlTicksFromDatabase | undefined = await
-    PnlTicksTable.findById(pnlUuid, { readReplica: true });
+  PnlTicksTable.findById(pnlUuid, { readReplica: true });
   if (pnlTick === undefined) {
     console.log(`Pnl tick with uuid ${pnlUuid} not found.`);
     return;
@@ -175,10 +175,10 @@ export async function validatePnlForSubaccount(
   subaccountId: string,
 ): Promise<void> {
   const pnlTicks: PnlTicksFromDatabase[] = await
-    PnlTicksTable.findAll(
-      { subaccountId: [subaccountId] },
-      [],
-      { readReplica: true, orderBy: [[PnlTicksColumns.blockHeight, Ordering.ASC]] });
+  PnlTicksTable.findAll(
+    { subaccountId: [subaccountId] },
+    [],
+    { readReplica: true, orderBy: [[PnlTicksColumns.blockHeight, Ordering.ASC]] });
   for (const pnlTick of pnlTicks) {
     await validatePnl(pnlTick.id);
   }
