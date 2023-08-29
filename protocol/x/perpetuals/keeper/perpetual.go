@@ -1193,8 +1193,8 @@ func (k Keeper) SetPremiumVotes(
 // For each vote, it checks that:
 // - The perpetual Id is valid.
 // - The premium vote value is correctly clamped.
-// This function also silently zeros the premium vote value for perpetuals whose ClobPair is initializing. This prevents an
-// errant premium vote for an initalizing market from failing the whole transaction.
+// This function also silently zeros the premium vote value for perpetuals whose ClobPair is initializing.
+// This prevents an errant premium vote for an initalizing market from failing the whole transaction.
 func (k Keeper) PerformStatefulPremiumVotesValidation(
 	ctx sdk.Context,
 	msg *types.MsgAddPremiumVotes,
