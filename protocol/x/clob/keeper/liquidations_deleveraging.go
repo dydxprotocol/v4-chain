@@ -23,7 +23,7 @@ import (
 func (k Keeper) GetInsuranceFundBalance(
 	ctx sdk.Context,
 ) (
-	balance uint64,
+	balance *big.Int,
 ) {
 	usdcAsset, err := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
 	if err != nil {
@@ -36,38 +36,53 @@ func (k Keeper) GetInsuranceFundBalance(
 		usdcAsset.Denom,
 	)
 
-	floatBalance, _ := new(big.Float).SetUint64(insuranceFundBalance.Amount.Uint64()).Float32()
+	floatBalance, _ := new(big.Float).SetInt(insuranceFundBalance.Amount.BigInt()).Float32()
 	telemetry.ModuleSetGauge(
 		types.ModuleName,
 		floatBalance,
 		metrics.InsuranceFundBalance,
 	)
-	// Return the amount as uint64. `Uint64` panics if amount
-	// cannot be represented in a uint64.
-	return insuranceFundBalance.Amount.Uint64()
+
+	// Return as big.Int.
+	return insuranceFundBalance.Amount.BigInt()
 }
 
-// ShouldPerformDeleveraging returns true if deleveraging needs to occur.
-// Specifically, this function returns true if both of the following are true:
-// - The `insuranceFundDelta` is negative.
-// - The insurance fund balance is less than `MaxInsuranceFundQuantumsForDeleveraging` or `abs(insuranceFundDelta)`.
+// ShouldPerformDeleveraging returns true if the proposer should try to deleverage an account
+// given a `insuranceFundDelta` change to the insurance fund balance that would occur as a
+// result of liquidating the account.
+//
+// This function returns true if-and-only-if each of the following is true:
+// - The `insuranceFundDelta` is negative
+// - The insurance fund balance is less-than-or-equal-to `MaxInsuranceFundQuantumsForDeleveraging`
+// - The insurance fund balance is less-than `abs(insuranceFundDelta)`
 func (k Keeper) ShouldPerformDeleveraging(
 	ctx sdk.Context,
 	insuranceFundDelta *big.Int,
 ) (
 	shouldPerformDeleveraging bool,
 ) {
+	// Do not deleverage if the insurance fund can increase from a liquidation.
 	if insuranceFundDelta.Sign() >= 0 {
 		return false
 	}
 
-	currentInsuranceFundBalance := new(big.Int).SetUint64(k.GetInsuranceFundBalance(ctx))
-
+	// Get the current balance of the insurance fund and the liquidation configuration.
+	currentBalance := k.GetInsuranceFundBalance(ctx)
 	liquidationConfig := k.GetLiquidationsConfig(ctx)
-	bigMaxInsuranceFundForDeleveraging := new(big.Int).SetUint64(liquidationConfig.MaxInsuranceFundQuantumsForDeleveraging)
+	maxBalance := new(big.Int).SetUint64(liquidationConfig.MaxInsuranceFundQuantumsForDeleveraging)
 
-	return new(big.Int).Add(currentInsuranceFundBalance, insuranceFundDelta).Sign() < 0 ||
-		currentInsuranceFundBalance.Cmp(bigMaxInsuranceFundForDeleveraging) < 0
+	// Do not deleverage if the insurance fund balance is greater than the maximum for deleveraging.
+	if currentBalance.Cmp(maxBalance) > 0 {
+		return false
+	}
+
+	// Do not deleverage if the insurance fund can absorb the loss from the liquidation.
+	if new(big.Int).Add(currentBalance, insuranceFundDelta).Sign() >= 0 {
+		return false
+	}
+
+	// Otherwise, return true
+	return true
 }
 
 // OffsetSubaccountPerpetualPosition iterates over all subaccounts and use those with positions
@@ -103,10 +118,13 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		ctx,
 		func(offsettingSubaccount satypes.Subaccount) (finished bool) {
 			numSubaccountsIterated++
-			offsettingPosition, _ := offsettingSubaccount.GetPerpetualPositionForId(perpetualId)
-			bigOffsettingPositionQuantums := offsettingPosition.GetBigQuantums()
+			offsettingPosition, opExists := offsettingSubaccount.GetPerpetualPositionForId(perpetualId)
 
 			// Skip subaccounts that do not have a position in the opposite direction as the liquidated subaccount.
+			if !opExists {
+				return false
+			}
+			bigOffsettingPositionQuantums := offsettingPosition.GetBigQuantums()
 			if deltaQuantumsRemaining.Sign() != bigOffsettingPositionQuantums.Sign() {
 				return false
 			}
