@@ -15,13 +15,13 @@ import (
 
 type (
 	Keeper struct {
-		cdc                 codec.BinaryCodec
-		storeKey            storetypes.StoreKey
-		pricesKeeper        types.PricesKeeper
-		epochsKeeper        types.EpochsKeeper
-		pricePremiumGetter  types.PricePremiumGetter
-		perpetualClobPairInitializingChecker	    types.PerpetualClobPairInitializingChecker
-		indexerEventManager indexer_manager.IndexerEventManager
+		cdc                                  codec.BinaryCodec
+		storeKey                             storetypes.StoreKey
+		pricesKeeper                         types.PricesKeeper
+		epochsKeeper                         types.EpochsKeeper
+		pricePremiumGetter                   types.PricePremiumGetter
+		perpetualClobPairInitializingChecker types.PerpetualClobPairInitializingChecker
+		indexerEventManager                  indexer_manager.IndexerEventManager
 	}
 )
 

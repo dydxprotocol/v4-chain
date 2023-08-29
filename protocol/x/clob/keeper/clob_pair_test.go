@@ -761,10 +761,10 @@ func TestGetClobPairIdForPerpetual_PanicsMultipleClobPairIds(t *testing.T) {
 
 func TestIsPerpetualClobPairInitializing(t *testing.T) {
 	testCases := map[string]struct {
-		clobPair *types.ClobPair
+		clobPair                *types.ClobPair
 		perpetualIdToClobPairId map[uint32][]types.ClobPairId
-		expectedErr error
-	} {
+		expectedErr             error
+	}{
 		"Errors when perpetual has no clob pairs": {
 			expectedErr: types.ErrNoClobPairForPerpetual,
 		},

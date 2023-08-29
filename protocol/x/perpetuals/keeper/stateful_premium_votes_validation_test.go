@@ -11,7 +11,7 @@ import (
 )
 
 type IsPerpetualClobPairInitializingResp struct {
-	isPerpetualClobPairInitializing bool
+	isPerpetualClobPairInitializing    bool
 	isPerpetualClobPairInitializingErr error
 }
 
@@ -26,10 +26,10 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 	// liquidity tier 4: 60_000_000 * (50% - 40%) = 6_000_000
 	tests := map[string]struct {
 		// Setup.
-		votes         []types.FundingPremium
+		votes                               []types.FundingPremium
 		isPerpetualClobPairInitializingResp *IsPerpetualClobPairInitializingResp
-		numPerpetuals int
-		expectedErr   error
+		numPerpetuals                       int
+		expectedErr                         error
 	}{
 		"Valid: empty votes": {
 			votes:         []types.FundingPremium{},
@@ -133,11 +133,11 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 				},
 			},
 			isPerpetualClobPairInitializingResp: &IsPerpetualClobPairInitializingResp{
-				isPerpetualClobPairInitializing: false,
+				isPerpetualClobPairInitializing:    false,
 				isPerpetualClobPairInitializingErr: clobtypes.ErrInvalidClob,
 			},
 			numPerpetuals: 1,
-			expectedErr: clobtypes.ErrInvalidClob,
+			expectedErr:   clobtypes.ErrInvalidClob,
 		},
 		"Valid: zeros the premium vote if the clob pair is initializing": {
 			votes: []types.FundingPremium{
@@ -147,7 +147,7 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 				},
 			},
 			isPerpetualClobPairInitializingResp: &IsPerpetualClobPairInitializingResp{
-				isPerpetualClobPairInitializing: true,
+				isPerpetualClobPairInitializing:    true,
 				isPerpetualClobPairInitializingErr: nil,
 			},
 			numPerpetuals: 1,
