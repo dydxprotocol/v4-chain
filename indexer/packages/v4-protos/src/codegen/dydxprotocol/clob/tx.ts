@@ -133,7 +133,7 @@ export interface MsgSetClobPairStatus {
   clobPairId: number;
   /** clob_pair_status is the ClobPair_Status to set the ClobPair to. */
 
-  clobPairStatus: ClobPair_Status;
+  clobPairStatus: number;
 }
 /** MsgSetClobPairStatus is a request type used for setting a ClobPair's status. */
 
@@ -144,7 +144,7 @@ export interface MsgSetClobPairStatusSDKType {
   clob_pair_id: number;
   /** clob_pair_status is the ClobPair_Status to set the ClobPair to. */
 
-  clob_pair_status: ClobPair_StatusSDKType;
+  clob_pair_status: number;
 }
 /**
  * MsgSetClobPairStatusResponse is a response type used for setting a ClobPair's
@@ -648,7 +648,7 @@ export const MsgSetClobPairStatus = {
           break;
 
         case 3:
-          message.clobPairStatus = (reader.int32() as any);
+          message.clobPairStatus = reader.int32();
           break;
 
         default:
