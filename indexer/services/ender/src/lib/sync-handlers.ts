@@ -8,11 +8,12 @@ import { ConsolidatedKafkaEvent, DydxIndexerSubtypes, EventMessage } from './typ
 
 // type alias for an array of handlers.
 type HandlerBatch = Handler<EventMessage>[];
-export const SyncSubtypes: DydxIndexerSubtypes[] = [
+export const SYNCHRONOUS_SUBTYPES: DydxIndexerSubtypes[] = [
   DydxIndexerSubtypes.MARKET,
   DydxIndexerSubtypes.ASSET,
   DydxIndexerSubtypes.LIQUIDITY_TIER,
   DydxIndexerSubtypes.PERPETUAL_MARKET,
+  DydxIndexerSubtypes.UPDATE_PERPETUAL,
 ];
 
 /**
@@ -42,7 +43,7 @@ export class SyncHandlers {
     indexerSubtype: DydxIndexerSubtypes,
     handler: Handler<EventMessage>,
   ): void {
-    if (!SyncSubtypes.includes(indexerSubtype)) {
+    if (!SYNCHRONOUS_SUBTYPES.includes(indexerSubtype)) {
       logger.error({
         at: 'SyncHandlers#addHandler',
         message: `Invalid indexerSubtype: ${indexerSubtype}`,

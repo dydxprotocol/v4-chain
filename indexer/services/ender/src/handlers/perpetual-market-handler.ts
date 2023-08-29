@@ -36,7 +36,7 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
       this.createPerpetualMarket(),
       this.generateTimingStatsOptions('create_perpetual_market'),
     );
-    // TODO: Send update to markets websocket channel.
+    // TODO(IND-374): Send update to markets websocket channel.
     return [];
   }
 
@@ -45,7 +45,7 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
       this.getPerpetualMarketCreateObject(this.event),
       { txId: this.txId },
     );
-    perpetualMarketRefresher.addPerpetualMarket(perpetualMarket);
+    perpetualMarketRefresher.upsertPerpetualMarket(perpetualMarket);
   }
 
   /**
