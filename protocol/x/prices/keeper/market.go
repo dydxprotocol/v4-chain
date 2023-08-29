@@ -49,17 +49,6 @@ func (k Keeper) CreateMarket(
 			),
 		),
 	)
-	marketPriceUpdates := GenerateMarketPriceUpdateEvents([]types.MarketPrice{marketPrice})
-	for _, update := range marketPriceUpdates {
-		k.GetIndexerEventManager().AddTxnEvent(
-			ctx,
-			indexerevents.SubtypeMarket,
-			indexer_manager.GetB64EncodedEventMessage(
-				update,
-			),
-		)
-	}
-
 	return marketParam, nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/stretchr/testify/mock"
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
@@ -72,6 +73,9 @@ func createPricesKeeper(
 
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
+	mockMsgSender.On("SendOnchainData", mock.Anything).Return()
+	mockMsgSender.On("SendOffchainData", mock.Anything).Return()
+
 	mockIndexerEventsManager := indexer_manager.NewIndexerEventManager(mockMsgSender, transientStoreKey, true)
 
 	k := keeper.NewKeeper(
