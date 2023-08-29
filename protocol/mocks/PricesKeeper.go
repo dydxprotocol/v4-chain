@@ -4,8 +4,6 @@ package mocks
 
 import (
 	log "github.com/cometbft/cometbft/libs/log"
-	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-
 	mock "github.com/stretchr/testify/mock"
 
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -94,22 +92,6 @@ func (_m *PricesKeeper) GetAllMarketPrices(ctx types.Context) []pricestypes.Mark
 	return r0
 }
 
-// GetIndexerEventManager provides a mock function with given fields:
-func (_m *PricesKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
-	ret := _m.Called()
-
-	var r0 indexer_manager.IndexerEventManager
-	if rf, ok := ret.Get(0).(func() indexer_manager.IndexerEventManager); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(indexer_manager.IndexerEventManager)
-		}
-	}
-
-	return r0
-}
-
 // GetMarketParam provides a mock function with given fields: ctx, id
 func (_m *PricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestypes.MarketParam, error) {
 	ret := _m.Called(ctx, id)
@@ -150,11 +132,6 @@ func (_m *PricesKeeper) GetMarketPrice(ctx types.Context, id uint32) (pricestype
 	}
 
 	return r0, r1
-}
-
-// InitializeForGenesis provides a mock function with given fields: ctx
-func (_m *PricesKeeper) InitializeForGenesis(ctx types.Context) {
-	_m.Called(ctx)
 }
 
 // Logger provides a mock function with given fields: ctx
