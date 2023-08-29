@@ -217,3 +217,17 @@ func AssertMarketCreateEventInIndexerBlock(
 	)
 	require.Contains(t, marketEvents, expectedEvent)
 }
+
+func AssertMarketPriceUpdateEventInIndexerBlock(
+	t *testing.T,
+	k *keeper.Keeper,
+	ctx sdk.Context,
+	updatedMarketPrice types.MarketPrice,
+) {
+	marketEvents := getMarketEventsFromIndexerBlock(ctx, k)
+	expectedEvent := indexerevents.NewMarketPriceUpdateEvent(
+		updatedMarketPrice.Id,
+		updatedMarketPrice.Price,
+	)
+	require.Contains(t, marketEvents, expectedEvent)
+}

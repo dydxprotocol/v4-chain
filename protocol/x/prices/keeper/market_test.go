@@ -51,6 +51,7 @@ func TestCreateMarket(t *testing.T) {
 
 	// Verify expected market event.
 	keepertest.AssertMarketCreateEventInIndexerBlock(t, keeper, ctx, marketParam)
+	keepertest.AssertMarketPriceUpdateEventInIndexerBlock(t, keeper, ctx, marketPrice)
 }
 
 func TestCreateMarket_Errors(t *testing.T) {
