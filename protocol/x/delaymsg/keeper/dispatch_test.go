@@ -289,6 +289,10 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, AliceExpectedAccountBalance)
 
 	// Assert: the message has been deleted from the keeper.
+	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
+	require.False(t, found)
+
+	// The block message ids have also been deleted.
 	_, found = tApp.App.DelayMsgKeeper.GetBlockMessageIds(ctx, 2)
 	require.False(t, found)
 }
