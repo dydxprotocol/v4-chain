@@ -1,4 +1,4 @@
-import { CandleMessage_Resolution } from '@dydxprotocol-indexer/v4-protos';
+import { CandleMessage_Resolution, ClobPairStatus } from '@dydxprotocol-indexer/v4-protos';
 
 import AssetPositionModel from './models/asset-position-model';
 import FillModel from './models/fill-model';
@@ -6,7 +6,7 @@ import OrderModel from './models/order-model';
 import PerpetualMarketModel from './models/perpetual-market-model';
 import PerpetualPositionModel from './models/perpetual-position-model';
 import SubaccountModel from './models/subaccount-model';
-import { APITimeInForce, CandleResolution, TimeInForce } from './types';
+import { APITimeInForce, CandleResolution, PerpetualMarketStatus, TimeInForce } from './types';
 
 export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 
@@ -84,3 +84,15 @@ export const SQL_TO_JSON_DEFINED_MODELS = [
 
 // Precision for numerical values representing money sent to websockets/API.
 export const CURRENCY_DECIMAL_PRECISION: number = 6;
+
+export type SpecifiedClobPairStatus =
+  Exclude<ClobPairStatus, ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED> &
+  Exclude<ClobPairStatus, ClobPairStatus.UNRECOGNIZED>;
+
+export const CLOB_STATUS_TO_MARKET_STATUS: Record<SpecifiedClobPairStatus, PerpetualMarketStatus> = {
+  [ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE]: PerpetualMarketStatus.ACTIVE,
+  [ClobPairStatus.CLOB_PAIR_STATUS_CANCEL_ONLY]: PerpetualMarketStatus.CANCEL_ONLY,
+  [ClobPairStatus.CLOB_PAIR_STATUS_PAUSED]: PerpetualMarketStatus.PAUSED,
+  [ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY]: PerpetualMarketStatus.POST_ONLY,
+  [ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING]: PerpetualMarketStatus.INITIALIZING,
+};

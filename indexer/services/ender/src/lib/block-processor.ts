@@ -21,6 +21,7 @@ import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
 import {
   DydxIndexerSubtypes, EventMessage, EventProtoWithType, GroupedEvents,
 } from './types';
+import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 
 const TXN_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
   [DydxIndexerSubtypes.ORDER_FILL.toString()]: OrderFillValidator,
@@ -32,6 +33,7 @@ const TXN_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitialize
   [DydxIndexerSubtypes.PERPETUAL_MARKET.toString()]: PerpetualMarketValidator,
   [DydxIndexerSubtypes.LIQUIDITY_TIER.toString()]: LiquidityTierValidator,
   [DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()]: UpdatePerpetualValidator,
+  [DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()]: UpdateClobPairValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {

@@ -20,6 +20,7 @@ import {
   PerpetualMarketCreateEventV1,
   LiquidityTierUpsertEventV1,
   UpdatePerpetualEventV1,
+  UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
@@ -148,6 +149,13 @@ export function indexerTendermintEventToEventProtoWithType(
       return {
         type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
         eventProto: UpdatePerpetualEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+      };
+    }
+    case (DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()): {
+      return {
+        type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+        eventProto: UpdateClobPairEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
       };
     }
