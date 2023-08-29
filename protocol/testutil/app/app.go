@@ -601,7 +601,7 @@ func (tApp *TestApp) PrepareProposal() abcitypes.ResponsePrepareProposal {
 
 // MustMakeCheckTxsWithClobMsg creates one signed RequestCheckTx for each msg passed in.
 // The messsage must use one of the hard-coded well known subaccount owners otherwise this will panic.
-func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancelOrder](
+func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancelOrder | clobtypes.MsgUpdateBlockRateLimitConfiguration | clobtypes.MsgUpdateEquityTierLimitConfiguration](
 	ctx sdk.Context,
 	app *app.App,
 	messages ...T,
@@ -614,6 +614,10 @@ func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancel
 		case clobtypes.MsgPlaceOrder:
 			m = &v
 		case clobtypes.MsgCancelOrder:
+			m = &v
+		case clobtypes.MsgUpdateBlockRateLimitConfiguration:
+			m = &v
+		case clobtypes.MsgUpdateEquityTierLimitConfiguration:
 			m = &v
 		default:
 			panic(fmt.Errorf("MustMakeCheckTxsWithClobMsg: Unknown message type %T", msg))

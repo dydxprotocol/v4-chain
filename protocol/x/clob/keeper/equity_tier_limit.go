@@ -33,7 +33,8 @@ func (k Keeper) GetEquityTierLimitConfiguration(
 }
 
 // InitializeEquityTierLimit initializes the equity tier limit configuration in state.
-// This function should only be called from CLOB genesis.
+// This function should only be called from CLOB genesis or when an equity tier limit configuration
+// change is accepted via governance.
 func (k *Keeper) InitializeEquityTierLimit(
 	ctx sdk.Context,
 	config types.EquityTierLimitConfiguration,

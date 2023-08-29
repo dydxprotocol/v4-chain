@@ -1,6 +1,8 @@
 package msgs
 
-import "github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+)
 
 var (
 	// AllTypeMessages is a list of all messages and types that are used in the app.
@@ -145,14 +147,18 @@ var (
 		"/dydxprotocol.bridge.MsgUpdateSafetyParamsResponse":  {},
 
 		// clob
-		"/dydxprotocol.clob.MsgCancelOrder":                {},
-		"/dydxprotocol.clob.MsgCancelOrderResponse":        {},
-		"/dydxprotocol.clob.MsgCreateClobPair":             {},
-		"/dydxprotocol.clob.MsgCreateClobPairResponse":     {},
-		"/dydxprotocol.clob.MsgPlaceOrder":                 {},
-		"/dydxprotocol.clob.MsgPlaceOrderResponse":         {},
-		"/dydxprotocol.clob.MsgProposedOperations":         {},
-		"/dydxprotocol.clob.MsgProposedOperationsResponse": {},
+		"/dydxprotocol.clob.MsgCancelOrder":                                {},
+		"/dydxprotocol.clob.MsgCancelOrderResponse":                        {},
+		"/dydxprotocol.clob.MsgCreateClobPair":                             {},
+		"/dydxprotocol.clob.MsgCreateClobPairResponse":                     {},
+		"/dydxprotocol.clob.MsgPlaceOrder":                                 {},
+		"/dydxprotocol.clob.MsgPlaceOrderResponse":                         {},
+		"/dydxprotocol.clob.MsgProposedOperations":                         {},
+		"/dydxprotocol.clob.MsgProposedOperationsResponse":                 {},
+		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration":          {},
+		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse":  {},
+		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration":         {},
+		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": {},
 
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage":         {},

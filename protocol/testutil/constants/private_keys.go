@@ -15,12 +15,14 @@ var (
 	BobPrivateKey   = privateKeyFromMnenomic(BobMnenomic)
 	CarlPrivateKey  = privateKeyFromMnenomic(CarlMnenomic)
 	DavePrivateKey  = privateKeyFromMnenomic(DaveMnenomic)
+	GovPrivateKey   = privateKeyFromMnenomic(DaveMnenomic)
 
 	privateKeyMap = map[string]cryptotypes.PrivKey{
 		AliceAccAddress.String(): AlicePrivateKey,
 		BobAccAddress.String():   BobPrivateKey,
 		CarlAccAddress.String():  CarlPrivateKey,
 		DaveAccAddress.String():  DavePrivateKey,
+		GovAccAddress.String():   GovPrivateKey, //"dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
 	}
 )
 
