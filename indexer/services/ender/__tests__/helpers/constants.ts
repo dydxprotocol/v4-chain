@@ -26,7 +26,7 @@ import {
   OrderRemovalReason,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
-  ClobPairStatus, LiquidityTierUpsertEventV1, UpdatePerpetualEventV1,
+  ClobPairStatus, LiquidityTierUpsertEventV1, UpdatePerpetualEventV1, UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -127,6 +127,15 @@ export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
   marketId: 1,
   atomicResolution: -8,
   liquidityTier: 1,
+};
+
+export const defaultUpdateClobPairEvent: UpdateClobPairEventV1 = {
+  clobPairId: 1,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE,
+  quantumConversionExponent: -7,
+  subticksPerTick: 1000,
+  minOrderBaseQuantums: Long.fromValue(100, true),
+  stepBaseQuantums: Long.fromValue(100, true),
 };
 
 export const defaultPreviousHeight: string = '2';

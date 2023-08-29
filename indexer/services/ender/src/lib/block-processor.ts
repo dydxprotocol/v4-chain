@@ -12,6 +12,7 @@ import { PerpetualMarketValidator } from '../validators/perpetual-market-validat
 import { StatefulOrderValidator } from '../validators/stateful-order-validator';
 import { SubaccountUpdateValidator } from '../validators/subaccount-update-validator';
 import { TransferValidator } from '../validators/transfer-validator';
+import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
 import { BatchedHandlers } from './batched-handlers';
@@ -32,6 +33,7 @@ const TXN_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitialize
   [DydxIndexerSubtypes.PERPETUAL_MARKET.toString()]: PerpetualMarketValidator,
   [DydxIndexerSubtypes.LIQUIDITY_TIER.toString()]: LiquidityTierValidator,
   [DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()]: UpdatePerpetualValidator,
+  [DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()]: UpdateClobPairValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {

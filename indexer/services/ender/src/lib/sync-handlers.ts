@@ -14,6 +14,7 @@ export const SYNCHRONOUS_SUBTYPES: DydxIndexerSubtypes[] = [
   DydxIndexerSubtypes.LIQUIDITY_TIER,
   DydxIndexerSubtypes.PERPETUAL_MARKET,
   DydxIndexerSubtypes.UPDATE_PERPETUAL,
+  DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
 ];
 
 /**

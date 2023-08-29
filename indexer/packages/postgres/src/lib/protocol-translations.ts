@@ -4,18 +4,21 @@ import {
   IndexerOrder_Side,
   IndexerOrder_TimeInForce,
   IndexerOrder_ConditionType,
+  ClobPairStatus,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
 
 import {
+  CLOB_STATUS_TO_MARKET_STATUS,
   FUNDING_RATE_FROM_PROTOCOL_IN_HOURS,
   PPM_EXPONENT,
   QUOTE_CURRENCY_ATOMIC_RESOLUTION,
 } from '../constants';
 import {
-  IsoString, OrderSide, OrderType, PerpetualMarketFromDatabase, TimeInForce,
+  IsoString, OrderSide, OrderType, PerpetualMarketFromDatabase, PerpetualMarketStatus, TimeInForce,
 } from '../types';
+import { InvalidClobPairStatusError } from './errors';
 
 // Mapping from the TimeInForce enum from the protocol to the TimeInForce enum in the Indexer
 const PROTOCOL_TIF_TO_INDEXER_TIF_MAP: Record<IndexerOrder_TimeInForce, TimeInForce> = {
@@ -343,4 +346,16 @@ export function orderTypeToProtocolConditionType(
   }
 
   return ORDER_TYPE_TO_CONDITION_TYPE_MAP[orderType];
+}
+
+export function clobStatusToMarketStatus(clobPairStatus: ClobPairStatus): PerpetualMarketStatus {
+  if (
+    clobPairStatus !== ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED &&
+    clobPairStatus !== ClobPairStatus.UNRECOGNIZED &&
+    clobPairStatus in CLOB_STATUS_TO_MARKET_STATUS
+  ) {
+    return CLOB_STATUS_TO_MARKET_STATUS[clobPairStatus];
+  } else {
+    throw new InvalidClobPairStatusError(clobPairStatus);
+  }
 }

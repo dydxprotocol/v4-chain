@@ -29,6 +29,7 @@ import {
   PerpetualMarketCreateEventV1,
   LiquidityTierUpsertEventV1,
   UpdatePerpetualEventV1,
+  UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -53,6 +54,7 @@ export enum DydxIndexerSubtypes {
   PERPETUAL_MARKET = 'perpetual_market',
   LIQUIDITY_TIER = 'liquidity_tier',
   UPDATE_PERPETUAL = 'update_perpetual',
+  UPDATE_CLOB_PAIR = 'update_clob_pair',
 }
 
 // Generic interface used for creating the Handler objects
@@ -102,6 +104,10 @@ export type EventProtoWithType = {
 } | {
   type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
   eventProto: UpdatePerpetualEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+} | {
+  type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+  eventProto: UpdateClobPairEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
 });
 

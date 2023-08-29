@@ -15,6 +15,7 @@ const (
 	SubtypePerpetualMarket  = "perpetual_market"
 	SubtypeLiquidityTier    = "liquidity_tier"
 	SubtypeUpdatePerpetual  = "update_perpetual"
+	SubtypeUpdateClobPair   = "update_clob_pair"
 )
 
 var OnChainEventSubtypes = []string{
