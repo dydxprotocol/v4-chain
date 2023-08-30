@@ -108,8 +108,11 @@ func TestQueryMessage(t *testing.T) {
 				var resp types.QueryMessageResponse
 				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
 
+				err := resp.Message.UnpackInterfaces(ctx.Codec)
+				require.NoError(t, err)
 				msg, err := resp.Message.GetMessage()
 				require.NoError(t, err)
+
 				require.Equal(t, tc.expectedMsg, msg.(*types2.MsgCompleteBridge))
 			}
 		})
