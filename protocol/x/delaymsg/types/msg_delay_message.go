@@ -6,7 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// MsgDelayMessage implements the UnpackInterfaces method for unpacking Msg.
+// MsgDelayMessage implements the UnpackInterfaces method for unpacking Msg, which is encoded as an Any type.
+// Implementing this interface is necessary to decode the Msg, see https://docs.cosmos.network/v0.45/core/encoding.html
 var _ codec.UnpackInterfacesMessage = &MsgDelayMessage{}
 
 func (msg *MsgDelayMessage) GetSigners() []sdk.AccAddress {
