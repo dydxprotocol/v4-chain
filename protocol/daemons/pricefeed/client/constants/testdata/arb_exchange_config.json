@@ -2,43 +2,45 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"BCHUSDT\"",
+      "ticker": "\"ARBUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "BCH/USD"
+      "exchangeName": "Bybit",
+      "ticker": "ARBUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "BCH-USD"
-    },
-    {
-      "exchangeName": "CryptoCom",
-      "ticker": "BCH_USD"
+      "ticker": "ARB-USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "BCH_USDT",
+      "ticker": "ARB_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
-      "ticker": "bchusdt",
+      "ticker": "arbusdt",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
-      "ticker": "BCHUSD"
+      "ticker": "ARBUSD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "BCH-USDT",
+      "ticker": "ARB-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "ARB_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "BCH-USDT",
+      "ticker": "ARB-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

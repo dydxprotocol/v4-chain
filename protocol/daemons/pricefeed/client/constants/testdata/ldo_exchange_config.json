@@ -2,17 +2,21 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"AVAXUSDT\"",
+      "ticker": "\"LDOUSDT\"",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "LDO-USD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "AVAX-USDT",
+      "ticker": "LDO-USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Okx",
-      "ticker": "AVAX-USDT",
+      "exchangeName": "Mexc",
+      "ticker": "LDO_USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

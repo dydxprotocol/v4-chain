@@ -1,5 +1,5 @@
 [[exchanges]]
 ExchangeId = "TestExchange"
-IntervalMs = 2000
-TimeoutMs = 3000
-MaxQueries = 3
+IntervalMs = 1000
+TimeoutMs = 1000
+MaxQueries = 33

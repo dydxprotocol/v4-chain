@@ -2,43 +2,58 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"BCHUSDT\"",
+      "ticker": "\"XRPUSDT\"",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bitfinex",
+      "ticker": "tXRPUSD",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bitstamp",
-      "ticker": "BCH/USD"
+      "ticker": "XRP/USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "XRPUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "BCH-USD"
+      "ticker": "XRP-USD"
     },
     {
       "exchangeName": "CryptoCom",
-      "ticker": "BCH_USD"
+      "ticker": "XRP_USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "BCH_USDT",
+      "ticker": "XRP_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
-      "ticker": "bchusdt",
+      "ticker": "xrpusdt",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
-      "ticker": "BCHUSD"
+      "ticker": "XXRPZUSD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "BCH-USDT",
+      "ticker": "XRP-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "XRP_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "BCH-USDT",
+      "ticker": "XRP-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

@@ -22,54 +22,54 @@ const (
 	MARKET_AVAX_USD types.MarketId = 7
 	// MARKET_FIL_USD is the id for the FIL-USD market pair.
 	MARKET_FIL_USD types.MarketId = 8
-	// MARKET_AAVE_USD is the id for the AAVE-USD market pair.
-	MARKET_AAVE_USD types.MarketId = 9
 	// MARKET_LTC_USD is the id for the LTC-USD market pair.
-	MARKET_LTC_USD types.MarketId = 10
+	MARKET_LTC_USD types.MarketId = 9
 	// MARKET_DOGE_USD is the id for the DOGE-USD market pair.
-	MARKET_DOGE_USD types.MarketId = 11
-	// MARKET_ICP_USD is the id for the ICP-USD market pair.
-	MARKET_ICP_USD types.MarketId = 12
+	MARKET_DOGE_USD types.MarketId = 10
 	// MARKET_ATOM_USD is the id for the ATOM-USD market pair.
-	MARKET_ATOM_USD types.MarketId = 13
+	MARKET_ATOM_USD types.MarketId = 11
 	// MARKET_DOT_USD is the id for the DOT-USD market pair.
-	MARKET_DOT_USD types.MarketId = 14
-	// MARKET_XTZ_USD is the id for the XTZ-USD market pair.
-	MARKET_XTZ_USD types.MarketId = 15
+	MARKET_DOT_USD types.MarketId = 12
 	// MARKET_UNI_USD is the id for the UNI-USD market pair.
-	MARKET_UNI_USD types.MarketId = 16
+	MARKET_UNI_USD types.MarketId = 13
 	// MARKET_BCH_USD is the id for the BCH-USD market pair.
-	MARKET_BCH_USD types.MarketId = 17
-	// MARKET_EOS_USD is the id for the EOS-USD market pair.
-	MARKET_EOS_USD types.MarketId = 18
+	MARKET_BCH_USD types.MarketId = 14
 	// MARKET_TRX_USD is the id for the TRX-USD market pair.
-	MARKET_TRX_USD types.MarketId = 19
-	// MARKET_ALGO_USD is the id for the ALGO-USD market pair.
-	MARKET_ALGO_USD types.MarketId = 20
+	MARKET_TRX_USD types.MarketId = 15
 	// MARKET_NEAR_USD is the id for the NEAR-USD market pair.
-	MARKET_NEAR_USD types.MarketId = 21
-	// MARKET_SNX_USD is the id for the SNX-USD market pair.
-	MARKET_SNX_USD types.MarketId = 22
+	MARKET_NEAR_USD types.MarketId = 16
 	// MARKET_MKR_USD is the id for the MKR-USD market pair.
-	MARKET_MKR_USD types.MarketId = 23
-	// MARKET_SUSHI_USD is the id for the SUSHI-USD market pair.
-	MARKET_SUSHI_USD types.MarketId = 24
+	MARKET_MKR_USD types.MarketId = 17
 	// MARKET_XLM_USD is the id for the XLM-USD market pair.
-	MARKET_XLM_USD types.MarketId = 25
-	// MARKET_XMR_USD is the id for the XMR-USD market pair.
-	MARKET_XMR_USD types.MarketId = 26
+	MARKET_XLM_USD types.MarketId = 18
 	// MARKET_ETC_USD is the id for the ETC-USD market pair.
-	MARKET_ETC_USD types.MarketId = 27
-	// MARKET_1INCH_USD is the id for the 1INCH-USD market pair.
-	MARKET_1INCH_USD types.MarketId = 28
+	MARKET_ETC_USD types.MarketId = 19
 	// MARKET_COMP_USD is the id for the COMP-USD market pair.
-	MARKET_COMP_USD types.MarketId = 29
-	// MARKET_ZEC_USD is the id for the ZEC-USD market pair.
-	MARKET_ZEC_USD types.MarketId = 30
-	// MARKET_ZRX_USD is the id for the ZRX-USD market pair.
-	MARKET_ZRX_USD types.MarketId = 31
-	// MARKET_YFI_USD is the id for the YFI-USD market pair.
-	MARKET_YFI_USD types.MarketId = 32
+	MARKET_COMP_USD types.MarketId = 20
+	// MARKET_WLD_USD is the id for the WLD-USD market pair.
+	MARKET_WLD_USD types.MarketId = 21
+	// MARKET_APE_USD is the id for the APE-USD market pair.
+	MARKET_APE_USD types.MarketId = 22
+	// MARKET_APT_USD is the id for the APT-USD market pair.
+	MARKET_APT_USD types.MarketId = 23
+	// MARKET_ARB_USD is the id for the ARB-USD market pair.
+	MARKET_ARB_USD types.MarketId = 24
+	// MARKET_BLUR_USD is the id for the BLUR-USD market pair.
+	MARKET_BLUR_USD types.MarketId = 25
+	// MARKET_LDO_USD is the id for the LDO-USD market pair.
+	MARKET_LDO_USD types.MarketId = 26
+	// MARKET_OP_USD is the id for the OP-USD market pair.
+	MARKET_OP_USD types.MarketId = 27
+	// MARKET_PEPE_USD is the id for the PEPE-USD market pair.
+	MARKET_PEPE_USD types.MarketId = 28
+	// MARKET_SEI_USD is the id for the SEI-USD market pair.
+	MARKET_SEI_USD types.MarketId = 29
+	// MARKET_SHIB_USD is the id for the SHIB-USD market pair.
+	MARKET_SHIB_USD types.MarketId = 30
+	// MARKET_SUI_USD is the id for the SUI-USD market pair.
+	MARKET_SUI_USD types.MarketId = 31
+	// MARKET_XRP_USD is the id for the XRP-USD market pair.
+	MARKET_XRP_USD types.MarketId = 32
 
 	// Testing markets used in local, staging, dev
 	// MARKET_TEST_USD is the id used for the TEST-USD market pair.

@@ -2,35 +2,45 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"MATICUSDT\"",
+      "ticker": "\"SUIUSDT\"",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "SUIUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "MATIC-USD"
+      "ticker": "SUI-USD"
     },
     {
       "exchangeName": "CryptoCom",
-      "ticker": "MATIC_USD"
+      "ticker": "SUI_USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "MATIC_USDT",
+      "ticker": "SUI_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
-      "ticker": "maticusdt",
+      "ticker": "suiusdt",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "MATIC-USDT",
+      "ticker": "SUI-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "SUI_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "MATIC-USDT",
+      "ticker": "SUI-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

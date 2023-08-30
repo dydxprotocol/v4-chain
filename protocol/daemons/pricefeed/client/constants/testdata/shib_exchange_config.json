@@ -2,39 +2,44 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"SNXUSDT\"",
+      "ticker": "\"SHIBUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"SNXUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tSNXUSD",
+      "exchangeName": "Bybit",
+      "ticker": "SHIBUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "SNX-USD"
+      "ticker": "SHIB-USD"
     },
     {
-      "exchangeName": "Huobi",
-      "ticker": "snxusdt",
+      "exchangeName": "CryptoCom",
+      "ticker": "SHIB_USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "SHIB_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
-      "ticker": "SNXUSD"
+      "ticker": "SHIBUSD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "SNX-USDT",
+      "ticker": "SHIB-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "SHIB_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "SNX-USDT",
+      "ticker": "SHIB-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

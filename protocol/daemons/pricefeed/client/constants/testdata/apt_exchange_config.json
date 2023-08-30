@@ -2,35 +2,36 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"ICPUSDT\"",
+      "ticker": "\"APTUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"ICPUSD\""
+      "exchangeName": "Bitfinex",
+      "ticker": "tAPTUSD",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "APTUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "ICP-USD"
+      "ticker": "APT-USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "ICP_USDT",
+      "ticker": "APT_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
-      "ticker": "icpusdt",
+      "ticker": "aptusdt",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Kucoin",
-      "ticker": "ICP-USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Okx",
-      "ticker": "ICP-USDT",
+      "exchangeName": "Mexc",
+      "ticker": "APT_USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

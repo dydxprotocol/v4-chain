@@ -7,7 +7,8 @@
     },
     {
       "exchangeName": "BinanceUS",
-      "ticker": "\"BTCUSD\""
+      "ticker": "\"BTCUSD\"",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bitfinex",
@@ -34,6 +35,11 @@
     {
       "exchangeName": "Kraken",
       "ticker": "XXBTZUSD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "BTC_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",

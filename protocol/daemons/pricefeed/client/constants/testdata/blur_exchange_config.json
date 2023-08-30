@@ -1,27 +1,31 @@
 {
   "exchanges": [
     {
-      "exchangeName": "Binance",
-      "ticker": "\"CRVUSDT\"",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
-      "ticker": "CRV-USD"
+      "ticker": "BLUR-USD"
     },
     {
       "exchangeName": "Gate",
-      "ticker": "CRV_USDT",
+      "ticker": "BLUR_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Kraken",
+      "ticker": "BLURUSD"
+    },
+    {
       "exchangeName": "Kucoin",
-      "ticker": "CRV-USDT",
+      "ticker": "BLUR-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "BLUR_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "CRV-USDT",
+      "ticker": "BLUR-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]
