@@ -10,7 +10,6 @@ import (
 // expected that this function is called at the end of every block.
 func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 	blockMessageIds, found := k.GetBlockMessageIds(ctx, ctx.BlockHeight())
-	k.Logger(ctx).Info("DispatchMessagesForBlock", "blockMessageIds", blockMessageIds, "found", found, "height", ctx.BlockHeight())
 
 	// If there are no delayed messages scheduled for this block, return.
 	if !found {
