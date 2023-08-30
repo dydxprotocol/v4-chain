@@ -23,7 +23,6 @@ const (
 	Negative               = "negative"
 	No                     = "no"
 	NonDeterministic       = "non_deterministic"
-	PerBlock               = "per_block"
 	Positive               = "positive"
 	Received               = "received"
 	Rejected               = "rejected"
