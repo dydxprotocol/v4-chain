@@ -1,3 +1,4 @@
+import { Any, AnySDKType } from "../../google/protobuf/any";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /** MsgDelayMessage is a request type for the DelayMessage method. */
@@ -6,7 +7,7 @@ export interface MsgDelayMessage {
   authority: string;
   /** The message to be delayed. */
 
-  msg: Uint8Array;
+  msg?: Any;
   /** The number of blocks to delay the message for. */
 
   delayBlocks: number;
@@ -17,7 +18,7 @@ export interface MsgDelayMessageSDKType {
   authority: string;
   /** The message to be delayed. */
 
-  msg: Uint8Array;
+  msg?: AnySDKType;
   /** The number of blocks to delay the message for. */
 
   delay_blocks: number;
@@ -38,7 +39,7 @@ export interface MsgDelayMessageResponseSDKType {
 function createBaseMsgDelayMessage(): MsgDelayMessage {
   return {
     authority: "",
-    msg: new Uint8Array(),
+    msg: undefined,
     delayBlocks: 0
   };
 }
@@ -49,8 +50,8 @@ export const MsgDelayMessage = {
       writer.uint32(10).string(message.authority);
     }
 
-    if (message.msg.length !== 0) {
-      writer.uint32(18).bytes(message.msg);
+    if (message.msg !== undefined) {
+      Any.encode(message.msg, writer.uint32(18).fork()).ldelim();
     }
 
     if (message.delayBlocks !== 0) {
@@ -74,7 +75,7 @@ export const MsgDelayMessage = {
           break;
 
         case 2:
-          message.msg = reader.bytes();
+          message.msg = Any.decode(reader, reader.uint32());
           break;
 
         case 3:
@@ -93,7 +94,7 @@ export const MsgDelayMessage = {
   fromPartial(object: DeepPartial<MsgDelayMessage>): MsgDelayMessage {
     const message = createBaseMsgDelayMessage();
     message.authority = object.authority ?? "";
-    message.msg = object.msg ?? new Uint8Array();
+    message.msg = object.msg !== undefined && object.msg !== null ? Any.fromPartial(object.msg) : undefined;
     message.delayBlocks = object.delayBlocks ?? 0;
     return message;
   }
