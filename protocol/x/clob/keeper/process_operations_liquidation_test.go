@@ -2352,6 +2352,7 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			insuranceFundBalance: 0, // Insurance fund is empty
 			expectedError:        types.ErrInsuranceFundHasInsufficientFunds,
 		},
+		// Since this is not resulting in an error, this test is broken (not testing what it thinks it's testing).
 		"Fails when insurance fund is non empty but does not have enough to cover liquidation": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
