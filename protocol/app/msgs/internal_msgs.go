@@ -52,8 +52,8 @@ var (
 		// clob
 		"/dydxprotocol.clob.MsgCreateClobPair":                             &clob.MsgCreateClobPair{},
 		"/dydxprotocol.clob.MsgCreateClobPairResponse":                     nil,
-		"/dydxprotocol.clob.MsgSetClobPairStatus":         &clob.MsgSetClobPairStatus{},
-		"/dydxprotocol.clob.MsgSetClobPairStatusResponse": nil,
+		"/dydxprotocol.clob.MsgSetClobPairStatus":                          &clob.MsgSetClobPairStatus{},
+		"/dydxprotocol.clob.MsgSetClobPairStatusResponse":                  nil,
 		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration":          &clob.MsgUpdateBlockRateLimitConfiguration{},
 		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse":  nil,
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration":         &clob.MsgUpdateEquityTierLimitConfiguration{},
