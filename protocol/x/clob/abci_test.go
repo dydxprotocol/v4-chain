@@ -3,6 +3,7 @@ package clob_test
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"sort"
 	"testing"
 	"time"
@@ -22,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -1317,6 +1319,12 @@ func TestPrepareCheckState(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(types.InsuranceFundName),
+				constants.Usdc.Denom,
+			).Return(sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,
