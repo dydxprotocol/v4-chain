@@ -1,8 +1,11 @@
 package metrics
 
 import (
-	"github.com/stretchr/testify/require"
+	"math"
+	"math/big"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestIncrCountMetricWithLabelsDoesntPanic(t *testing.T) {
@@ -33,6 +36,35 @@ func TestNewBinaryStringLabel(t *testing.T) {
 			label := NewBinaryStringLabel(tc.name, tc.condition)
 			require.Equal(t, tc.name, label.Name)
 			require.Equal(t, tc.expectedLabelValue, label.Value)
+		})
+	}
+}
+
+func TestGetMetricValueFromBigInt(t *testing.T) {
+	tests := map[string]struct {
+		input    *big.Int
+		expected float32
+	}{
+		"zero": {
+			input:    big.NewInt(0),
+			expected: float32(0),
+		},
+		"positive": {
+			input:    big.NewInt(1234),
+			expected: float32(1234),
+		},
+		"negative": {
+			input:    big.NewInt(-1234),
+			expected: float32(-1234),
+		},
+		"overflow": {
+			input:    new(big.Int).SetUint64(math.MaxUint64),
+			expected: float32(1.8446744e+19),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, tc.expected, GetMetricValueFromBigInt(tc.input))
 		})
 	}
 }

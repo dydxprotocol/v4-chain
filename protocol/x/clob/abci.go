@@ -2,7 +2,6 @@ package clob
 
 import (
 	"fmt"
-	"math/big"
 	"sort"
 	"time"
 
@@ -222,10 +221,9 @@ func PrepareCheckState(
 		}
 	}
 
-	insuranceFundBalance, _ := new(big.Float).SetUint64(keeper.GetInsuranceFundBalance(ctx)).Float32()
 	telemetry.ModuleSetGauge(
 		types.ModuleName,
-		insuranceFundBalance,
+		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
 		metrics.InsuranceFundBalance,
 	)
 

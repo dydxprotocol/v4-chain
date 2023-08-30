@@ -110,21 +110,17 @@ func (k Keeper) PlacePerpetualLiquidation(
 		metrics.Count,
 	)
 
-	liquidationOrderSize, _ := new(big.Float).SetUint64(liquidationOrder.GetBaseQuantums().ToUint64()).Float32()
 	telemetry.IncrCounterWithLabels(
 		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.BaseQuantums},
-		liquidationOrderSize,
+		metrics.GetMetricValueFromBigInt(liquidationOrder.GetBaseQuantums().ToBigInt()),
 		[]gometrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
 		},
 	)
 
-	optimisticallyFilled, _ := new(big.Float).SetUint64(
-		orderSizeOptimisticallyFilledFromMatchingQuantums.ToUint64(),
-	).Float32()
 	telemetry.IncrCounterWithLabels(
 		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Filled, metrics.BaseQuantums},
-		optimisticallyFilled,
+		metrics.GetMetricValueFromBigInt(orderSizeOptimisticallyFilledFromMatchingQuantums.ToBigInt()),
 		[]gometrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
 		},
