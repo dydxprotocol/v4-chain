@@ -222,7 +222,7 @@ func PrepareCheckState(
 		}
 	}
 
-	insuranceFundBalance, _ := new(big.Float).SetUint64(keeper.GetInsuranceFundBalance(ctx)).Float32()
+	insuranceFundBalance, _ := new(big.Float).SetInt(keeper.GetInsuranceFundBalance(ctx)).Float32()
 	telemetry.ModuleSetGauge(
 		types.ModuleName,
 		insuranceFundBalance,

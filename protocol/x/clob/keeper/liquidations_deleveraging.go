@@ -22,22 +22,20 @@ import (
 func (k Keeper) GetInsuranceFundBalance(
 	ctx sdk.Context,
 ) (
-	balance uint64,
+	balance *big.Int,
 ) {
 	usdcAsset, err := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
 	if err != nil {
 		panic("GetInsuranceFundBalance: Usdc asset not found in state")
 	}
-
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
 		authtypes.NewModuleAddress(types.InsuranceFundName),
 		usdcAsset.Denom,
 	)
 
-	// Return the amount as uint64. `Uint64` panics if amount
-	// cannot be represented in a uint64.
-	return insuranceFundBalance.Amount.Uint64()
+	// Return as big.Int.
+	return insuranceFundBalance.Amount.BigInt()
 }
 
 // ShouldPerformDeleveraging returns true if deleveraging needs to occur.
@@ -54,7 +52,7 @@ func (k Keeper) ShouldPerformDeleveraging(
 		return false
 	}
 
-	currentInsuranceFundBalance := new(big.Int).SetUint64(k.GetInsuranceFundBalance(ctx))
+	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx)
 
 	liquidationConfig := k.GetLiquidationsConfig(ctx)
 	bigMaxInsuranceFundForDeleveraging := new(big.Int).SetUint64(liquidationConfig.MaxInsuranceFundQuantumsForDeleveraging)
