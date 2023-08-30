@@ -9,7 +9,7 @@ import (
 // It returns an error if any of the liquidation config fields fail the following validation:
 // - `maxLiquidationFee == 0 || maxLiquidationFee > 1_000_000`.
 // - `bankruptcyAdjustmentPpm < 1_000_000`.
-// - `spreadToMaintenanceMarginRatioPpm == 0 || spreadToMaintenanceMarginRatioPpm > 1_000_000`.
+// - `spreadToMaintenanceMarginRatioPpm == 0.
 // - `maxPositionPortionLiquidatedPpm == 0 || maxPositionPortionLiquidatedPpm > 1_000_000`.
 // - `maxNotionalLiquidated == 0`.
 // - `maxQuantumsInsuranceLost == 0`.

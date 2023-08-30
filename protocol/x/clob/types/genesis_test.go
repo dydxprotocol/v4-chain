@@ -139,6 +139,19 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedError: errors.New(
 				"0 is not a valid SpreadToMaintenanceMarginRatioPpm: Proposed LiquidationsConfig is invalid"),
 		},
+		"spread to maintenance margin ratio of greater than one million is valid": {
+			genState: &types.GenesisState{
+				LiquidationsConfig: types.LiquidationsConfig{
+					MaxLiquidationFeePpm: 100_00,
+					FillablePriceConfig: types.FillablePriceConfig{
+						BankruptcyAdjustmentPpm:           lib.OneMillion,
+						SpreadToMaintenanceMarginRatioPpm: lib.OneMillion + 1,
+					},
+					PositionBlockLimits:   constants.PositionBlockLimits_Default,
+					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+				},
+			},
+		},
 		"bankruptcy adjustment ppm of 0 is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
