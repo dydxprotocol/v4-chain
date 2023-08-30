@@ -41,6 +41,13 @@ function edit_genesis() {
 		EXCHANGE_CONFIG_JSON_DIR="exchange_config"
 	fi
 
+	DELAY_MSG_JSON_DIR="$5"
+	if [ -z "$DELAY_MSG_JSON_DIR" ]; then
+		# Default to using exchange_config folder within the current directory.
+		DELAY_MSG_JSON_DIR="delaymsg_config"
+	fi
+
+
 	# Update crisis module.
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
 
@@ -1369,6 +1376,20 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].limit' -v '200'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].usd_tnc_required' -v '100000000000'
+
+
+  # Fee Tiers
+  # Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.num_messages' -v '1'
+	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
+
+	delaymsg=$(cat "$DELAY_MSG_JSON_DIR/perpetual_fee_params_msg.json" | jq -c '.')
+	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].msg' -v "$delaymsg"
+	# Schedule the message to execute in ~7 days (at 1.6s per block.)
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '378000'
+	# Uncomment the following to schedule the message to execute in ~120 days (at 1.6s per block.)
+	# dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6480000'
 }
 
 function add_subaccount() {
