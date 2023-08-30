@@ -61,7 +61,7 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
 
     const market: MarketFromDatabase | undefined = await MarketTable.findById(
       castedMarketPriceUpdateMessage.marketId,
-      { txId: this.txId},
+      { txId: this.txId },
     );
 
     if (market === undefined) {

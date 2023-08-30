@@ -26,7 +26,7 @@ export function createKafkaMessageFromMarketEvent({
   txHash: string,
 }): KafkaMessage {
   const events: IndexerTendermintEvent[] = [];
-  for(let eventIndex: number = 0; eventIndex < marketEvents.length; eventIndex++) {
+  for (let eventIndex: number = 0; eventIndex < marketEvents.length; eventIndex++) {
     events.push(
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.MARKET,
@@ -35,7 +35,7 @@ export function createKafkaMessageFromMarketEvent({
         ),
         transactionIndex,
         eventIndex,
-      )
+      ),
     );
   }
 
