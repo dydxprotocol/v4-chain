@@ -679,12 +679,6 @@
           "status": {
             "$ref": "#/components/schemas/PerpetualMarketStatus"
           },
-          "baseAsset": {
-            "type": "string"
-          },
-          "quoteAsset": {
-            "type": "string"
-          },
           "lastPrice": {
             "type": "string"
           },
@@ -711,15 +705,6 @@
             "type": "string"
           },
           "basePositionNotional": {
-            "type": "string"
-          },
-          "basePositionSize": {
-            "type": "string"
-          },
-          "incrementalPositionSize": {
-            "type": "string"
-          },
-          "maxPositionSize": {
             "type": "string"
           },
           "openInterest": {
@@ -756,8 +741,6 @@
           "clobPairId",
           "ticker",
           "status",
-          "baseAsset",
-          "quoteAsset",
           "lastPrice",
           "oraclePrice",
           "priceChange24H",
@@ -767,9 +750,6 @@
           "initialMarginFraction",
           "maintenanceMarginFraction",
           "basePositionNotional",
-          "basePositionSize",
-          "incrementalPositionSize",
-          "maxPositionSize",
           "openInterest",
           "atomicResolution",
           "quantumConversionExponent",

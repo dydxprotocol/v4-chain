@@ -192,14 +192,9 @@ export interface TradingPerpetualMarketMessage {
   ticker?: string;
   marketId?: number;
   status?: PerpetualMarketStatus;
-  baseAsset?: string;
-  quoteAsset?: string;
   initialMarginFraction?: string;
   maintenanceMarginFraction?: string;
   basePositionNotional?: string;
-  basePositionSize?: string;
-  incrementalPositionSize?: string;
-  maxPositionSize?: string;
   openInterest?: string;
   quantumConversionExponent?: number;
   atomicResolution?: number;

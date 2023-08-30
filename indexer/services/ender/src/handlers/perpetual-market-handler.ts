@@ -48,20 +48,11 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
       ticker: perpetualMarketCreateEventV1.ticker,
       marketId: perpetualMarketCreateEventV1.marketId,
       status: protocolTranslations.clobStatusToMarketStatus(perpetualMarketCreateEventV1.status),
-      // TODO(DEC-744): Remove base asset, quote asset.
-      baseAsset: '',
-      quoteAsset: '',
-      // TODO(DEC-745): Initialized as 0, will be updated by roundtable task to valid values.
       lastPrice: '0',
       priceChange24H: '0',
       trades24H: 0,
       volume24H: '0',
-      // TODO(DEC-746): Add funding index update events and logic to indexer.
       nextFundingRate: '0',
-      // TODO(DEC-744): Remove base, incremental and maxPositionSize if not available in V4.
-      basePositionSize: '0',
-      incrementalPositionSize: '0',
-      maxPositionSize: '0',
       openInterest: '0',
       quantumConversionExponent: perpetualMarketCreateEventV1.quantumConversionExponent,
       atomicResolution: perpetualMarketCreateEventV1.atomicResolution,
