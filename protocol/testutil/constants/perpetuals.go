@@ -111,6 +111,7 @@ var Perpetuals_GenesisState_ParamsOnly = perptypes.GenesisState{
 var (
 	BtcUsd_InvalidMarketId = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD invalid market Id",
 			MarketId:          uint32(9999),
 			AtomicResolution:  int32(-10),
@@ -121,6 +122,7 @@ var (
 	}
 	BtcUsd_0DefaultFunding_0AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD 0 percent default funding, 0 atomic resolution",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(0),
@@ -131,6 +133,7 @@ var (
 	}
 	BtcUsd_NegativeDefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD -0.001 percent percent default funding",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(-10),
@@ -141,6 +144,7 @@ var (
 	}
 	BtcUsd_0DefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD 0 percent default funding",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(-10),
@@ -151,6 +155,7 @@ var (
 	}
 	BtcUsd_0DefaultFunding_10AtomicResolution_20IM_18MM = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD 0 percent default funding, 20% IM, 18% MM",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(-10),
@@ -161,6 +166,7 @@ var (
 	}
 	BtcUsd_0_001Percent_DefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                10000,
 			Ticker:            "BTC-USD 0.001 percent default funding",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(-10),
@@ -171,6 +177,7 @@ var (
 	}
 	BtcUsd_SmallMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD small margin requirement",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(-8),
@@ -181,6 +188,7 @@ var (
 	}
 	BtcUsd_100PercentMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD 100% margin requirement",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(-8),
@@ -191,6 +199,7 @@ var (
 	}
 	BtcUsd_50PercentInitial_40PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD 50/40 margin requirements",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(-8),
@@ -201,6 +210,7 @@ var (
 	}
 	BtcUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD 20/10 margin requirements",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(-8),
@@ -210,6 +220,7 @@ var (
 	}
 	BtcUsd_NoMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                0,
 			Ticker:            "BTC-USD no margin requirement",
 			MarketId:          uint32(0),
 			AtomicResolution:  int32(-8),
@@ -220,6 +231,7 @@ var (
 	}
 	EthUsd_0DefaultFunding_9AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                1,
 			Ticker:            "ETH-USD default fundingm, -9 atomic resolution",
 			MarketId:          uint32(1),
 			AtomicResolution:  int32(-9),
@@ -230,6 +242,7 @@ var (
 	}
 	EthUsd_NoMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                1,
 			Ticker:            "ETH-USD no margin requirement",
 			MarketId:          uint32(1),
 			AtomicResolution:  int32(-9),
@@ -240,6 +253,7 @@ var (
 	}
 	EthUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                1,
 			Ticker:            "ETH-USD 20/10 margin requirements",
 			MarketId:          uint32(1),
 			AtomicResolution:  int32(-9),
@@ -250,6 +264,7 @@ var (
 	}
 	EthUsd_100PercentMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                1,
 			Ticker:            "ETH-USD 100/100 margin requirements",
 			MarketId:          uint32(1),
 			AtomicResolution:  int32(-9),
@@ -260,6 +275,7 @@ var (
 	}
 	SolUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
+			Id:                2,
 			Ticker:            "SOL-USD 20/10 margin requirements",
 			MarketId:          uint32(2),
 			AtomicResolution:  int32(-9),

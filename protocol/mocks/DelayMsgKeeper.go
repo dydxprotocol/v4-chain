@@ -3,7 +3,11 @@
 package mocks
 
 import (
+	lib "github.com/dydxprotocol/v4-chain/protocol/lib"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+
+	log "github.com/cometbft/cometbft/libs/log"
+
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -61,11 +65,6 @@ func (_m *DelayMsgKeeper) DeleteMessage(ctx types.Context, id uint32) error {
 	}
 
 	return r0
-}
-
-// DispatchMessagesForBlock provides a mock function with given fields: ctx
-func (_m *DelayMsgKeeper) DispatchMessagesForBlock(ctx types.Context) {
-	_m.Called(ctx)
 }
 
 // GetAllDelayedMessages provides a mock function with given fields: ctx
@@ -135,6 +134,38 @@ func (_m *DelayMsgKeeper) HasAuthority(authority string) bool {
 		r0 = rf(authority)
 	} else {
 		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// Logger provides a mock function with given fields: ctx
+func (_m *DelayMsgKeeper) Logger(ctx types.Context) log.Logger {
+	ret := _m.Called(ctx)
+
+	var r0 log.Logger
+	if rf, ok := ret.Get(0).(func(types.Context) log.Logger); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(log.Logger)
+		}
+	}
+
+	return r0
+}
+
+// Router provides a mock function with given fields:
+func (_m *DelayMsgKeeper) Router() lib.MsgRouter {
+	ret := _m.Called()
+
+	var r0 lib.MsgRouter
+	if rf, ok := ret.Get(0).(func() lib.MsgRouter); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(lib.MsgRouter)
+		}
 	}
 
 	return r0

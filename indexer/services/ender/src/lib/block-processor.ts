@@ -12,11 +12,13 @@ import { PerpetualMarketValidator } from '../validators/perpetual-market-validat
 import { StatefulOrderValidator } from '../validators/stateful-order-validator';
 import { SubaccountUpdateValidator } from '../validators/subaccount-update-validator';
 import { TransferValidator } from '../validators/transfer-validator';
+import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
+import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
 import { BatchedHandlers } from './batched-handlers';
 import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
-import { SyncHandlers, SyncSubtypes } from './sync-handlers';
+import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
 import {
   DydxIndexerSubtypes, EventMessage, EventProtoWithType, GroupedEvents,
 } from './types';
@@ -30,6 +32,8 @@ const TXN_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitialize
   [DydxIndexerSubtypes.ASSET.toString()]: AssetValidator,
   [DydxIndexerSubtypes.PERPETUAL_MARKET.toString()]: PerpetualMarketValidator,
   [DydxIndexerSubtypes.LIQUIDITY_TIER.toString()]: LiquidityTierValidator,
+  [DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()]: UpdatePerpetualValidator,
+  [DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()]: UpdateClobPairValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
@@ -160,7 +164,7 @@ export class BlockProcessor {
     );
 
     _.map(handlers, (handler: Handler<EventMessage>) => {
-      if (Object.values(SyncSubtypes).includes(eventProtoWithType.type as DydxIndexerSubtypes)) {
+      if (SYNCHRONOUS_SUBTYPES.includes(eventProtoWithType.type as DydxIndexerSubtypes)) {
         this.syncHandlers.addHandler(eventProtoWithType.type, handler);
       } else {
         this.batchedHandlers.addHandler(handler);

@@ -333,7 +333,7 @@ func (k Keeper) GetClobMetadata(
 	clobMidPrices = make(map[types.ClobPairId]types.Subticks)
 	clobPairs = make(map[types.ClobPairId]types.ClobPair)
 
-	for _, clobPair := range k.GetAllClobPair(ctx) {
+	for _, clobPair := range k.GetAllClobPairs(ctx) {
 		clobPairId := clobPair.GetClobPairId()
 		var midPriceSubticks types.Subticks
 
@@ -427,7 +427,8 @@ func (k Keeper) InitializeCumulativePnLs(
 }
 
 // GetMEVDataFromOperations returns the MEV matches and MEV liquidations from the provided
-// operations queue. It returns an error if a short-term order cannot be decoded.
+// operations queue. It returns an error if a short-term order cannot be decoded. Panics if
+// an order cannot be found.
 func (k Keeper) GetMEVDataFromOperations(
 	ctx sdk.Context,
 	operations []types.OperationRaw,

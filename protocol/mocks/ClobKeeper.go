@@ -113,8 +113,8 @@ func (_m *ClobKeeper) DeleteLongTermOrderPlacement(ctx types.Context, orderId cl
 	_m.Called(ctx, orderId)
 }
 
-// GetAllClobPair provides a mock function with given fields: ctx
-func (_m *ClobKeeper) GetAllClobPair(ctx types.Context) []clobtypes.ClobPair {
+// GetAllClobPairs provides a mock function with given fields: ctx
+func (_m *ClobKeeper) GetAllClobPairs(ctx types.Context) []clobtypes.ClobPair {
 	ret := _m.Called(ctx)
 
 	var r0 []clobtypes.ClobPair
@@ -433,6 +433,48 @@ func (_m *ClobKeeper) GetSubaccountLiquidationInfo(ctx types.Context, subaccount
 		r0 = rf(ctx, subaccountId)
 	} else {
 		r0 = ret.Get(0).(clobtypes.SubaccountLiquidationInfo)
+	}
+
+	return r0
+}
+
+// HasAuthority provides a mock function with given fields: authority
+func (_m *ClobKeeper) HasAuthority(authority string) bool {
+	ret := _m.Called(authority)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(authority)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// InitializeBlockRateLimit provides a mock function with given fields: ctx, config
+func (_m *ClobKeeper) InitializeBlockRateLimit(ctx types.Context, config clobtypes.BlockRateLimitConfiguration) error {
+	ret := _m.Called(ctx, config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.BlockRateLimitConfiguration) error); ok {
+		r0 = rf(ctx, config)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// InitializeEquityTierLimit provides a mock function with given fields: ctx, config
+func (_m *ClobKeeper) InitializeEquityTierLimit(ctx types.Context, config clobtypes.EquityTierLimitConfiguration) error {
+	ret := _m.Called(ctx, config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.EquityTierLimitConfiguration) error); ok {
+		r0 = rf(ctx, config)
+	} else {
+		r0 = ret.Error(0)
 	}
 
 	return r0

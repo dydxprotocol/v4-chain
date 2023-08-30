@@ -81,7 +81,7 @@ func SimulateMsgPlaceOrder(
 		subaccountId := *subAccount.GetId()
 
 		// Get all clob pairs.
-		clobPairs := k.GetAllClobPair(ctx)
+		clobPairs := k.GetAllClobPairs(ctx)
 		if len(clobPairs) < 1 {
 			panic(fmt.Errorf("SimulateMsgPlaceOrder: Simulation has no CLOB pairs available"))
 		}

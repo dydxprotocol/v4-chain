@@ -84,6 +84,11 @@ var (
 		16,
 		"Impact notional is zero",
 	)
+	ErrPerpetualAlreadyExists = sdkerrors.Register(
+		ModuleName,
+		17,
+		"Perpetual already exists",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding      = sdkerrors.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

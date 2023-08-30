@@ -33,7 +33,8 @@ func (k Keeper) GetEquityTierLimitConfiguration(
 }
 
 // InitializeEquityTierLimit initializes the equity tier limit configuration in state.
-// This function should only be called from CLOB genesis.
+// This function should only be called from CLOB genesis or when an equity tier limit configuration
+// change is accepted via governance.
 func (k *Keeper) InitializeEquityTierLimit(
 	ctx sdk.Context,
 	config types.EquityTierLimitConfiguration,
@@ -61,8 +62,8 @@ func (k *Keeper) InitializeEquityTierLimit(
 }
 
 // ValidateSubaccountEquityTierLimitForNewOrder returns an error if adding the order would exceed the equity
-// tier limit on how many open orders a subaccount can have. Fill-or-kill and immediate-or-cancel orders never
-// rest on the book and will always be allowed as they do not apply to the number of open orders that equity
+// tier limit on how many open orders a subaccount can have. Short-term fill-or-kill and immediate-or-cancel orders
+// never rest on the book and will always be allowed as they do not apply to the number of open orders that equity
 // tier limits enforce.
 //
 // Note that the method is dependent on whether we are executing on `checkState` or on `deliverState` for
@@ -70,10 +71,9 @@ func (k *Keeper) InitializeEquityTierLimit(
 // orders exist outside of the MemClob. For `deliverState` we use the `ProcessProposerMatchesEvents`
 // to find out how many orders (minus removals) exists outside of the `MemClob`.
 func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, order types.Order) error {
-	// Always allow FoK or IoC orders as they will either fill immediately or be cancelled and won't rest on
+	// Always allow short-term FoK or IoC orders as they will either fill immediately or be cancelled and won't rest on
 	// the book.
-	if order.TimeInForce == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
-		order.TimeInForce == types.Order_TIME_IN_FORCE_IOC {
+	if order.IsShortTermOrder() && order.RequiresImmediateExecution() {
 		return nil
 	}
 
