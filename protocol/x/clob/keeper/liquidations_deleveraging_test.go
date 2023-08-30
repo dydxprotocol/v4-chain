@@ -52,7 +52,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 			assets: []assettypes.Asset{
 				*constants.Usdc,
 			},
-			insuranceFundBalance:         new(big.Int).Add(
+			insuranceFundBalance: new(big.Int).Add(
 				new(big.Int).SetUint64(math.MaxUint64),
 				new(big.Int).SetUint64(math.MaxUint64),
 			),
