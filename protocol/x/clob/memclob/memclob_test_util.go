@@ -85,7 +85,6 @@ func createCollatCheckExpectationsFromPendingMatches(
 				{
 					RemainingQuantums: expectedMatch.matchedQuantums,
 					IsBuy:             expectedMatch.makerOrder.IsBuy(),
-					IsTaker:           false,
 					Subticks:          subticks,
 					ClobPairId:        clobPairId,
 				},
@@ -94,7 +93,6 @@ func createCollatCheckExpectationsFromPendingMatches(
 				{
 					RemainingQuantums: expectedMatch.matchedQuantums,
 					IsBuy:             expectedMatch.takerOrder.IsBuy(),
-					IsTaker:           true,
 					Subticks:          subticks,
 					ClobPairId:        clobPairId,
 				},
@@ -113,7 +111,6 @@ func createCollatCheckExpectationsFromPendingMatches(
 			{
 				RemainingQuantums: addToOrderbookSize,
 				IsBuy:             order.IsBuy(),
-				IsTaker:           false,
 				Subticks:          order.GetOrderSubticks(),
 				ClobPairId:        clobPairId,
 			},
