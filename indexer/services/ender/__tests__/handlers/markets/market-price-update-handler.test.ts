@@ -105,7 +105,7 @@ describe('marketPriceUpdateHandler', () => {
       },
     };
     const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvent: marketPriceUpdate,
+      marketEvents: [marketPriceUpdate],
       transactionIndex,
       height: defaultHeight,
       time: defaultTime,
@@ -127,11 +127,11 @@ describe('marketPriceUpdateHandler', () => {
     expect(producerSendMock.mock.calls.length).toEqual(0);
   });
 
-  it('successfully inserts new oracle price', async () => {
+  it('successfully inserts new oracle price for existing market', async () => {
     const transactionIndex: number = 0;
 
     const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvent: defaultMarketPriceUpdate,
+      marketEvents: [defaultMarketPriceUpdate],
       transactionIndex,
       height: defaultHeight,
       time: defaultTime,
@@ -144,6 +144,60 @@ describe('marketPriceUpdateHandler', () => {
 
     expectOraclePriceMatchesEvent(
       defaultMarketPriceUpdate as MarketPriceUpdateEventMessage,
+      oraclePrice,
+      market,
+      defaultHeight,
+    );
+
+    expect(getPrice(oraclePrice.marketId)).toEqual(oraclePrice.price);
+
+    const contents: MarketMessageContents = generateOraclePriceContents(
+      oraclePrice,
+      market.pair,
+    );
+
+    expectMarketKafkaMessage({
+      producerSendMock,
+      contents: JSON.stringify(contents),
+    });
+  });
+
+  it('successfully inserts new oracle price for market created in same block', async () => {
+    const transactionIndex: number = 0;
+    const newMarketId: number = 3000;
+
+    // Include an event to create the market
+    const marketCreate: MarketEventV1 = {
+      marketId: newMarketId,
+      marketCreate: {
+        base: {
+          pair: 'NEWTOKEN-USD',
+          minPriceChangePpm: 500,
+        },
+        exponent: -5,
+      },
+    };
+    const marketPriceUpdate: MarketEventV1 = {
+      marketId: newMarketId,
+      priceUpdate: {
+        priceWithExponent: Long.fromValue(50000000),
+      },
+    };
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
+      marketEvents: [marketCreate, marketPriceUpdate],
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    await onMessage(kafkaMessage);
+
+    const { market, oraclePrice } = await getDbState(marketPriceUpdate);
+
+    expectOraclePriceMatchesEvent(
+      marketPriceUpdate as MarketPriceUpdateEventMessage,
       oraclePrice,
       market,
       defaultHeight,
