@@ -35,12 +35,6 @@ func (k Keeper) GetInsuranceFundBalance(
 		usdcAsset.Denom,
 	)
 
-	floatBalance, _ := new(big.Float).SetUint64(insuranceFundBalance.Amount.Uint64()).Float32()
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		floatBalance,
-		metrics.InsuranceFundBalance,
-	)
 	// Return the amount as uint64. `Uint64` panics if amount
 	// cannot be represented in a uint64.
 	return insuranceFundBalance.Amount.Uint64()
