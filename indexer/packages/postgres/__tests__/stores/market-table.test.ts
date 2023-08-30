@@ -103,7 +103,7 @@ describe('Market store', () => {
 
   it('Successfully updates a market created in the same transaction', async () => {
     const txId: number = await Transaction.start();
-    await MarketTable.create(defaultMarket, { txId } );
+    await MarketTable.create(defaultMarket, { txId });
     const market: MarketFromDatabase | undefined = await MarketTable.update(
       {
         id: defaultMarket.id,
