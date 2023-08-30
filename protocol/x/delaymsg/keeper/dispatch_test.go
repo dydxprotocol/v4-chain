@@ -161,6 +161,43 @@ func setupMockKeeperExecutionFailure(t *testing.T, ctx sdk.Context, k *mocks.Del
 	k.On("DeleteMessage", ctx, uint32(2)).Return(nil).Once()
 }
 
+func setupMockKeeperDecodeFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
+	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+		Ids: []uint32{0, 1, 2},
+	}, true).Once()
+
+	nonMsgAnyProto, err := codectypes.NewAnyWithValue(&types.BlockMessageIds{})
+	require.NoError(t, err)
+
+	// All messages found.
+	k.On("GetMessage", ctx, uint32(0)).Return(types.DelayedMessage{
+		Id:          0,
+		Msg:         delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+		BlockHeight: 0,
+	}, true).Once()
+	k.On("GetMessage", ctx, uint32(1)).Return(types.DelayedMessage{
+		Id:          1,
+		Msg:         nonMsgAnyProto,
+		BlockHeight: 0,
+	}, true).Once()
+	k.On("GetMessage", ctx, uint32(2)).Return(types.DelayedMessage{
+		Id:          2,
+		Msg:         delaymsg.EncodeMessageToAny(t, constants.TestMsg3),
+		BlockHeight: 0,
+	}, true).Once()
+
+	// 2 messages are routed.
+	k.On("Router").Return(mockSuccessRouter(ctx)).Times(2)
+
+	// For error logging.
+	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
+
+	// All deletes are called. 2nd delete fails.
+	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(1)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(2)).Return(nil).Once()
+}
+
 func setupMockKeeperDeletionFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
 	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
@@ -207,6 +244,9 @@ func TestDispatchMessageForBlock_Mixed(t *testing.T) {
 		},
 		"Execution error does not affect remaining messages": {
 			setupMocks: setupMockKeeperExecutionFailure,
+		},
+		"Decode failure does not affect remaining messages": {
+			setupMocks: setupMockKeeperDecodeFailure,
 		},
 		"Deletion failure does not affect deletion of remaining messages": {
 			setupMocks: setupMockKeeperDeletionFailure,
