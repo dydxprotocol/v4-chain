@@ -47,9 +47,7 @@ type (
 
 		MaxLiquidationOrdersPerBlock uint32
 
-		// mev telemetry config
-		mevTelemetryHost       string
-		mevTelemetryIdentifier string
+		mevTelemetryConfig MevTelemetryConfig
 
 		// txValidation decoder and antehandler
 		txDecoder sdk.TxDecoder
@@ -105,8 +103,11 @@ func NewKeeper(
 		indexerEventManager:          indexerEventManager,
 		memStoreInitialized:          &atomic.Bool{},
 		txDecoder:                    txDecoder,
-		mevTelemetryHost:             clobFlags.MevTelemetryHost,
-		mevTelemetryIdentifier:       clobFlags.MevTelemetryIdentifier,
+		mevTelemetryConfig: MevTelemetryConfig{
+			Enabled:    clobFlags.MevTelemetryEnabled,
+			Host:       clobFlags.MevTelemetryHost,
+			Identifier: clobFlags.MevTelemetryIdentifier,
+		},
 		MaxLiquidationOrdersPerBlock: clobFlags.MaxLiquidationOrdersPerBlock,
 		placeOrderRateLimiter:        placeOrderRateLimiter,
 		cancelOrderRateLimiter:       cancelOrderRateLimiter,
