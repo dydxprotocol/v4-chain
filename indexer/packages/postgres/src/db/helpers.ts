@@ -89,11 +89,28 @@ export function getUnrealizedPnl(
     });
     return Big(0).toFixed(CURRENCY_DECIMAL_PRECISION);
   }
-  return (
+  try {
+    return (
+      Big(position.size).times(
+        Big(marketsMap[perpetualMarket.marketId].oraclePrice!).minus(position.entryPrice),
+      )
+    ).toFixed(CURRENCY_DECIMAL_PRECISION);
+  } catch (error) {
+    logger.info({
+      at: 'getUnrealizedPnl',
+      message: 'Ran into an error when calculating unrealizedPnl',
+      position,
+      perpetualMarket,
+      market: marketsMap[perpetualMarket.marketId],
+      error,
+    });
+    throw error;
+  }
+  /*return (
     Big(position.size).times(
       Big(marketsMap[perpetualMarket.marketId].oraclePrice!).minus(position.entryPrice),
     )
-  ).toFixed(CURRENCY_DECIMAL_PRECISION);
+  ).toFixed(CURRENCY_DECIMAL_PRECISION);*/
 }
 
 /**

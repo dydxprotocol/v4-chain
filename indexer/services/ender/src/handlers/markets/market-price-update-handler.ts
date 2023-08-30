@@ -61,7 +61,9 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
 
     const market: MarketFromDatabase | undefined = await MarketTable.findById(
       castedMarketPriceUpdateMessage.marketId,
+      { txId: this.txId},
     );
+
     if (market === undefined) {
       this.logAndThrowParseMessageError(
         'Market in MarketPriceUpdateEventMessage doesn\'t exist',
@@ -76,7 +78,7 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
 
     const updatedMarket:
     MarketFromDatabase | undefined = await MarketTable
-      .update(updateObject);
+      .update(updateObject, { txId: this.txId });
     if (updatedMarket === undefined) {
       this.logAndThrowParseMessageError(
         'Failed to update market in markets table',
@@ -90,7 +92,7 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
     castedMarketPriceUpdateMessage: MarketPriceUpdateEventMessage,
   ): Promise<{oraclePrice: OraclePriceFromDatabase, pair: string}> {
     const market: MarketFromDatabase | undefined = await MarketTable
-      .findById(castedMarketPriceUpdateMessage.marketId);
+      .findById(castedMarketPriceUpdateMessage.marketId, { txId: this.txId });
     if (market === undefined) {
       this.logAndThrowParseMessageError(
         'MarketPriceUpdateEvent contains a non-existent market id',
