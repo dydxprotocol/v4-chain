@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -21,7 +22,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:          2,
-						Msg:         []byte("test"),
+						Msg:         delaymsg.CreateTestAnyMsg(t),
 						BlockHeight: 1,
 					},
 				},
@@ -51,7 +52,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						Id:          1,
 						BlockHeight: 1,
-						Msg:         []byte{},
+						Msg:         nil,
 					},
 				},
 			},
@@ -66,12 +67,12 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						Id:          1,
 						BlockHeight: 1,
-						Msg:         []byte("test"),
+						Msg:         delaymsg.CreateTestAnyMsg(t),
 					},
 					{
 						Id:          1,
 						BlockHeight: 2,
-						Msg:         []byte("test2"),
+						Msg:         delaymsg.CreateTestAnyMsg(t),
 					},
 				},
 			},
@@ -84,17 +85,17 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						Id:          0,
 						BlockHeight: 34,
-						Msg:         []byte("test"),
+						Msg:         delaymsg.CreateTestAnyMsg(t),
 					},
 					{
 						Id:          2,
 						BlockHeight: 5,
-						Msg:         []byte("test2"),
+						Msg:         delaymsg.CreateTestAnyMsg(t),
 					},
 					{
 						Id:          4,
 						BlockHeight: 88,
-						Msg:         []byte("test3"),
+						Msg:         delaymsg.CreateTestAnyMsg(t),
 					},
 				},
 			},

@@ -636,7 +636,6 @@ func New(
 		bApp.MsgServiceRouter(),
 		// Permit delayed messages to be signed by the following modules.
 		[]string{
-			authtypes.NewModuleAddress(bridgemoduletypes.ModuleName).String(),
 			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		},
 	)

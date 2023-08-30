@@ -1,8 +1,10 @@
 package keeper_test
 
 import (
+	types2 "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
@@ -40,12 +42,12 @@ func TestNumMessages(t *testing.T) {
 func TestMessage(t *testing.T) {
 	tests := map[string]struct {
 		delayedMessage sdk.Msg
-		bytes          []byte
+		expectedMsg    *types2.Any
 	}{
 		"Not found": {},
 		"Found": {
 			delayedMessage: constants.TestMsg1,
-			bytes:          constants.Msg1Bytes,
+			expectedMsg:    delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
 		},
 	}
 	for name, tc := range tests {
@@ -64,7 +66,7 @@ func TestMessage(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, &types.DelayedMessage{
 					Id:          0,
-					Msg:         tc.bytes,
+					Msg:         tc.expectedMsg,
 					BlockHeight: 1,
 				}, resp.Message)
 			}

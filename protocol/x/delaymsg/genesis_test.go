@@ -1,6 +1,7 @@
 package delaymsg_test
 
 import (
+	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -21,17 +22,17 @@ func TestInitGenesis(t *testing.T) {
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:          3,
-						Msg:         []byte("foo"),
+						Msg:         testutildelaymsg.CreateTestAnyMsg(t),
 						BlockHeight: 10,
 					},
 					{
 						Id:          7,
-						Msg:         []byte("bar"),
+						Msg:         testutildelaymsg.CreateTestAnyMsg(t),
 						BlockHeight: 15,
 					},
 					{
 						Id:          11,
-						Msg:         []byte("baz"),
+						Msg:         testutildelaymsg.CreateTestAnyMsg(t),
 						BlockHeight: 10,
 					},
 				},
