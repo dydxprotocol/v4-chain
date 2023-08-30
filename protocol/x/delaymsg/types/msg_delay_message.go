@@ -36,5 +36,9 @@ func (msg *MsgDelayMessage) GetMessage() (sdk.Msg, error) {
 	if cached == nil {
 		return nil, fmt.Errorf("any cached value is nil, delayed messages must be correctly packed any values")
 	}
-	return cached.(sdk.Msg), nil
+	casted, ok := cached.(sdk.Msg)
+	if !ok {
+		return nil, fmt.Errorf("cached value is not a sdk.Msg")
+	}
+	return casted, nil
 }
