@@ -1386,7 +1386,10 @@ function edit_genesis() {
 
 	delaymsg=$(cat "$DELAY_MSG_JSON_DIR/perpetual_fee_params_msg.json" | jq -c '.')
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].msg' -v "$delaymsg"
-	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6480000'
+	# Schedule the message to execute in ~7 days (at 1.6s per block.)
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '378000'
+	# Uncomment the following to schedule the message to execute in ~120 days (at 1.6s per block.)
+	# dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6480000'
 }
 
 function add_subaccount() {
