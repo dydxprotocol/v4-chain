@@ -3,9 +3,11 @@ package keeper_test
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
@@ -124,6 +126,16 @@ func TestDelayMessageByBlocks_NoHandlerFound(t *testing.T) {
 	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 	_, err := delaymsg.DelayMessageByBlocks(ctx, constants.InvalidMsg, blockDelay1)
 	require.ErrorContains(t, err, "/testpb.TestMsg: Message not recognized by router")
+}
+
+func TestDelayMsgByBlocks_InvalidSigners(t *testing.T) {
+	invalidSignerMsg := &bridgetypes.MsgCompleteBridge{
+		Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+		Event:     constants.BridgeEvent_Id0_Height0,
+	}
+	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+	_, err := delaymsg.DelayMessageByBlocks(ctx, invalidSignerMsg, blockDelay1)
+	require.ErrorContains(t, err, "message signer must be delaymsg module address: Invalid signer")
 }
 
 func TestDeleteMessage_NotFound(t *testing.T) {

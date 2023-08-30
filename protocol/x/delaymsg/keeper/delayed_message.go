@@ -1,10 +1,12 @@
 package keeper
 
 import (
+	"bytes"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"sort"
@@ -129,6 +131,26 @@ func (k Keeper) SetDelayedMessage(
 	return nil
 }
 
+// validateSigners validates that the message has exactly one signer, and that the signer is the delaymsg module
+// address.
+func validateSigners(msg sdk.Msg) error {
+	signers := msg.GetSigners()
+	if len(signers) != 1 {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidSigner,
+			"message must have exactly one signer",
+		)
+	}
+	moduleAddress := authtypes.NewModuleAddress(types.ModuleName)
+	if !bytes.Equal(signers[0], moduleAddress) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidSigner,
+			"message signer must be delaymsg module address",
+		)
+	}
+	return nil
+}
+
 // DelayMessageByBlocks registers an sdk.Msg to be executed after blockDelay blocks.
 func (k Keeper) DelayMessageByBlocks(
 	ctx sdk.Context,
@@ -153,6 +175,10 @@ func (k Keeper) DelayMessageByBlocks(
 			"message failed basic validation: %v",
 			err,
 		)
+	}
+
+	if err := validateSigners(msg); err != nil {
+		return 0, err
 	}
 
 	nextId := k.GetNumMessages(ctx)
