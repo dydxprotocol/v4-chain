@@ -99,7 +99,7 @@ export async function sendStatefulOrderMessages() {
         return OffChainUpdateV1.fromPartial({
           orderUpdate: {
             orderId,
-            totalFilledQuantums: Long.fromValue(totalFilledQuantumsMap[uuid]),
+            totalFilledQuantums: Long.fromValue(totalFilledQuantumsMap[uuid], true),
           },
         });
       }).filter(Boolean) as OffChainUpdateV1[];

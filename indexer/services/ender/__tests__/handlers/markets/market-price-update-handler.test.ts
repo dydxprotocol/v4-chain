@@ -65,7 +65,7 @@ describe('marketPriceUpdateHandler', () => {
       const marketEvent: MarketEventV1 = {
         marketId: 0,
         priceUpdate: {
-          priceWithExponent: Long.fromValue(1),
+          priceWithExponent: Long.fromValue(1, true),
         },
       };
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
@@ -101,7 +101,7 @@ describe('marketPriceUpdateHandler', () => {
     const marketPriceUpdate: MarketEventV1 = {
       marketId: 5,
       priceUpdate: {
-        priceWithExponent: Long.fromValue(50000000),
+        priceWithExponent: Long.fromValue(50000000, true),
       },
     };
     const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
