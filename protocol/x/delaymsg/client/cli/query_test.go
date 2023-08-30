@@ -5,8 +5,11 @@ package cli_test
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
@@ -76,7 +79,7 @@ func TestQueryNumMessages(t *testing.T) {
 func TestQueryMessage(t *testing.T) {
 	tests := map[string]struct {
 		state       *types.GenesisState
-		expectedMsg *types.DelayedMessage
+		expectedMsg sdk.Msg
 	}{
 		"Default: 0": {
 			state: types.DefaultGenesis(),
@@ -87,14 +90,11 @@ func TestQueryMessage(t *testing.T) {
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:  0,
-						Msg: constants.Msg1Bytes,
+						Msg: delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
 					},
 				},
 			},
-			expectedMsg: &types.DelayedMessage{
-				Id:  0,
-				Msg: constants.Msg1Bytes,
-			},
+			expectedMsg: constants.TestMsg1,
 		},
 	}
 	for name, tc := range tests {
@@ -107,7 +107,13 @@ func TestQueryMessage(t *testing.T) {
 				require.NoError(t, err)
 				var resp types.QueryMessageResponse
 				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
-				require.Equal(t, tc.expectedMsg, resp.Message)
+
+				err := resp.Message.UnpackInterfaces(ctx.Codec)
+				require.NoError(t, err)
+				msg, err := resp.Message.GetMessage()
+				require.NoError(t, err)
+
+				require.Equal(t, tc.expectedMsg, msg.(*bridgetypes.MsgCompleteBridge))
 			}
 		})
 	}
@@ -127,7 +133,7 @@ func TestQueryBlockMessageIds(t *testing.T) {
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:          0,
-						Msg:         constants.Msg1Bytes,
+						Msg:         delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
 						BlockHeight: 10,
 					},
 				},

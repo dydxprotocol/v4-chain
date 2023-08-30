@@ -24,8 +24,8 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 			continue
 		}
 
-		var msg sdk.Msg
-		if err := k.DecodeMessage(delayedMsg.Msg, &msg); err != nil {
+		msg, err := delayedMsg.GetMessage()
+		if err != nil {
 			k.Logger(ctx).Error("failed to decode delayed message with id %v: %v", id, err)
 			continue
 		}
