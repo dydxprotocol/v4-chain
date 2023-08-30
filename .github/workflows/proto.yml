@@ -1,0 +1,116 @@
+name: Protobuf
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      # The protos themselves
+      - '**.proto'
+      # Any generated code
+      - '**.pb.go'
+      - '**.pb.gw.go'
+      - 'indexer/packages/v4-protos/**'
+      # Code that affects generation
+      - 'dydxjs/**'
+      - 'dydxpy/**'
+      - 'proto/**'
+      - 'indexer/package.json'
+      - 'protocol/scripts/protoc**'
+  push:
+    branches:
+      - main
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
+      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.13.3
+      options: --user root
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - name: format
+        run: |
+          git config --global --add safe.directory /__w/v4-chain/v4-chain
+          find ./ -name "*.proto" -exec clang-format -i {} \;
+          git diff --exit-code
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.13.3
+      options: --user root
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - name: lint
+        run: buf lint --error-format=json
+  check-bc-breaking:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.13.3
+      options: --user root
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+        # For push and PR cases, there's a different way to fetch the branch to compare with
+      - name: check-bc-breaking
+        run: |
+          git config --global --add safe.directory /__w/v4-chain/v4-chain
+          git fetch origin ${{ github.event.pull_request.base.sha || github.event.before }}
+          buf breaking --against .git#branch=${{ github.event.pull_request.base.sha || github.event.before }}
+  protocol-gen:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.11.5
+      options: --user root
+    steps:
+      - uses: actions/checkout@v3
+      - run: git config --global --add safe.directory /__w/v4-chain/v4-chain
+      - run: sh ./protocol/scripts/protocgen.sh && git diff --exit-code
+  indexer-gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - working-directory: ./indexer
+        run: |
+          npm install -g pnpm@6.34.0
+          pnpm install --loglevel warn --frozen-lockfile
+          cd packages/v4-protos && npm run build:verify-proto
+  dydxpy-gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - run: |
+          BIN="/usr/local/bin" && \
+          VERSION="1.26.1" && \
+          curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
+          chmod +x "${BIN}/buf"
+      - run: pip install -r ./dydxpy/requirements.txt
+      - run: make dydxpy-gen
+  dydxjs-gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: |
+          BIN="/usr/local/bin" && \
+          VERSION="1.26.1" && \
+          curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
+          chmod +x "${BIN}/buf"
+      - working-directory: ./dydxjs
+        run: |
+          npm install
+          npm run transpile
+          npm run build

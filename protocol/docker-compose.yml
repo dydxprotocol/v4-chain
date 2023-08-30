@@ -1,0 +1,101 @@
+version: "3"
+
+services:
+  dydxprotocold0:
+    image: local:dydxprotocol
+    build:
+      context: .
+      dockerfile: ./testing/testnet-local/Dockerfile
+      args:
+        RUNNER_IMAGE: alpine:3.16
+        GO_VERSION: 1.19
+    entrypoint:
+      - dydxprotocold
+      - start
+      - --log_level
+      # Note that only this validator has a log-level of `info`; other validators use `error` by default.
+      # Change to `debug` for more verbose log-level.
+      - info 
+      - --home
+      - /dydxprotocol/chain/.alice
+      - --p2p.persistent_peers 
+      - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+    environment:
+      # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
+      - DD_ENV=localnet_${USER}
+      - DD_AGENT_HOST=datadog-agent
+    volumes:
+      - ./localnet/dydxprotocol0:/dydxprotocol/chain/.alice/data
+    ports:
+      - 26657:26657
+      - 9090:9090
+      - 1317:1317
+  
+  dydxprotocold1:
+    image: local:dydxprotocol
+    entrypoint:
+       - dydxprotocold
+       - start
+       - --log_level
+       - error
+       - --home
+       - /dydxprotocol/chain/.bob
+       - --p2p.persistent_peers 
+       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+    environment:
+      # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
+      - DD_ENV=localnet_${USER}
+      - DD_AGENT_HOST=datadog-agent
+    volumes:
+      - ./localnet/dydxprotocol1:/dydxprotocol/chain/.bob/data
+    ports:
+      - 26658:26657
+ 
+  dydxprotocold2:
+    image: local:dydxprotocol
+    entrypoint:
+       - dydxprotocold
+       - start
+       - --log_level
+       - error
+       - --home
+       - /dydxprotocol/chain/.carl
+       - --p2p.persistent_peers 
+       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+    environment:
+      # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
+      - DD_ENV=localnet_${USER}
+      - DD_AGENT_HOST=datadog-agent
+    volumes:
+      - ./localnet/dydxprotocol2:/dydxprotocol/chain/.carl/data
+  
+  dydxprotocold3:
+    image: local:dydxprotocol
+    entrypoint:
+       - dydxprotocold
+       - start
+       - --log_level
+       - error
+       - --home
+       - /dydxprotocol/chain/.dave
+       - --p2p.persistent_peers 
+       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+    environment:
+      # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
+      - DD_ENV=localnet_${USER}
+      - DD_AGENT_HOST=datadog-agent
+    volumes:
+      - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
+
+  datadog-agent:
+    image: datadog/agent:7
+    environment:
+      # See https://docs.datadoghq.com/containers/docker/?tab=standard#environment-variables for agent configuration
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - 8125:8215
+      - 8126:8126

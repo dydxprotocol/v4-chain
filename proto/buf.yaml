@@ -1,0 +1,30 @@
+# This module represents buf.build/dydxprotocol/v4
+version: v1
+name: buf.build/dydxprotocol/v4
+deps:
+  # Use version recommended in https://github.com/cosmos/cosmos-sdk/blob/main/proto/README.md
+  - buf.build/cosmos/cosmos-sdk:v0.47.0
+  # Latest release was in Dec 2021, https://buf.build/cosmos/cosmos-proto/commits/main
+  - buf.build/cosmos/cosmos-proto:1935555c206d4afb9e94615dfd0fad31
+  # Latest release was in Oct 2022, https://buf.build/cosmos/gogo-proto/commits/main
+  - buf.build/cosmos/gogo-proto:34d970b699f84aa382f3c29773a60836
+  - buf.build/googleapis/googleapis:75b4300737fb4efca0831636be94e517
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT
+    - COMMENTS
+    - FILE_LOWER_SNAKE_CASE
+  except:
+    - UNARY_RPC
+    - COMMENT_ENUM
+    - COMMENT_ENUM_VALUE
+    - COMMENT_FIELD
+    - SERVICE_SUFFIX
+    - PACKAGE_VERSION_SUFFIX
+    - RPC_REQUEST_STANDARD_NAME
+  ignore:
+    - tendermint
+  allow_comment_ignores: true

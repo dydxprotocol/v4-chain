@@ -1,0 +1,47 @@
+syntax = "proto3";
+package dydxprotocol.subaccounts;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Queries a Subaccount by id
+  rpc Subaccount(QueryGetSubaccountRequest) returns (QuerySubaccountResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/subaccounts/subaccount/{owner}/{number}";
+  }
+
+  // Queries a list of Subaccount items.
+  rpc SubaccountAll(QueryAllSubaccountRequest)
+      returns (QuerySubaccountAllResponse) {
+    option (google.api.http).get = "/dydxprotocol/subaccounts/subaccount";
+  }
+}
+
+// QueryGetSubaccountRequest is request type for the Query RPC method.
+message QueryGetSubaccountRequest {
+  string owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  uint32 number = 2;
+}
+
+// QuerySubaccountResponse is response type for the Query RPC method.
+message QuerySubaccountResponse {
+  Subaccount subaccount = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryAllSubaccountRequest is request type for the Query RPC method.
+message QueryAllSubaccountRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QuerySubaccountAllResponse is response type for the Query RPC method.
+message QuerySubaccountAllResponse {
+  repeated Subaccount subaccount = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

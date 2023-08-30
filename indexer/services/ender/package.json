@@ -1,0 +1,56 @@
+{
+  "name": "ender",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/index",
+  "scripts": {
+    "start": "node --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
+    "build": "rm -rf build/ && tsc && cp -r src/scripts build/src/scripts",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "coverage": "pnpm test -- --coverage",
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@dydxprotocol-indexer/base": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/kafka": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/redis": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
+    "big.js": "^6.0.2",
+    "dd-trace": "^3.32.1",
+    "dotenv-flow": "^3.2.0",
+    "jest-mock-extended": "^3.0.5",
+    "kafkajs": "^2.1.0",
+    "lodash": "^4.17.21",
+    "long": "^5.2.1",
+    "luxon": "^3.0.1",
+    "pg": "^8.7.3"
+  },
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@types/big.js": "^6.1.5",
+    "@types/jest": "^28.1.4",
+    "@types/lodash": "^4.14.182",
+    "@types/luxon": "^3.0.0",
+    "@types/node": "^18.0.3",
+    "@types/pg": "^8.6.5",
+    "jest": "^28.1.2",
+    "ts-node": "^10.8.2",
+    "tsconfig-paths": "^4.0.0",
+    "typescript": "^4.7.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dydxprotocol/indexer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
+  },
+  "homepage": "https://github.com/dydxprotocol/indexer#readme"
+}

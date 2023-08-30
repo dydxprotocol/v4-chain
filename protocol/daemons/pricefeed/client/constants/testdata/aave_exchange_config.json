@@ -1,0 +1,36 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "\"AAVEUSDT\"",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "BinanceUS",
+      "ticker": "\"AAVEUSD\""
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "AAVE-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "aaveusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "AAVEUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "AAVE-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "AAVE-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

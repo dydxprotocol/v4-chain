@@ -1,0 +1,36 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "\"ALGOUSDT\"",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "BinanceUS",
+      "ticker": "\"ALGOUSD\""
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "ALGO-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "algousdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "ALGOUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "ALGO-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "ALGO-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

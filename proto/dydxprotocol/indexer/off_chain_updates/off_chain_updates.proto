@@ -1,0 +1,90 @@
+syntax = "proto3";
+package dydxprotocol.indexer.off_chain_updates;
+
+import "dydxprotocol/indexer/shared/removal_reason.proto";
+import "dydxprotocol/indexer/protocol/v1/clob.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates";
+
+// Do not make any breaking changes to these protos, a new version should be
+// created if a breaking change is needed.
+
+// OrderPlace messages contain the order placed/replaced.
+message OrderPlaceV1 {
+  dydxprotocol.indexer.protocol.v1.IndexerOrder order = 1;
+  OrderPlacementStatus placement_status = 2;
+
+  // OrderPlacementStatus is an enum for the resulting status after an order is
+  // placed.
+  enum OrderPlacementStatus {
+    // Default value, this is invalid and unused.
+    ORDER_PLACEMENT_STATUS_UNSPECIFIED = 0;
+    // A best effort opened order is one that has only been confirmed to be
+    // placed on the V4 node sending the off-chain update message.
+    // The cases where this happens includes:
+    // - The V4 node places an order in it's in-memory orderbook during the
+    //   CheckTx flow.
+    // A best effort placed order may not have been placed on other V4
+    // nodes including other V4 validator nodes and may still be excluded in
+    // future order matches.
+    ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED = 1;
+    // An opened order is one that is confirmed to be placed on all V4 nodes
+    // (discounting dishonest V4 nodes) and will be included in any future
+    // order matches.
+    // This status is used internally by the indexer and will not be sent
+    // out by protocol.
+    ORDER_PLACEMENT_STATUS_OPENED = 2;
+  }
+}
+
+// OrderRemove messages contain the id of the order removed, the reason for the
+// removal and the resulting status from the removal.
+message OrderRemoveV1 {
+  dydxprotocol.indexer.protocol.v1.IndexerOrderId removed_order_id = 1;
+  dydxprotocol.indexer.shared.OrderRemovalReason reason = 2;
+  OrderRemovalStatus removal_status = 3;
+
+  // OrderRemovalStatus is an enum for the resulting status after an order is
+  // removed.
+  enum OrderRemovalStatus {
+    // Default value, this is invalid and unused.
+    ORDER_REMOVAL_STATUS_UNSPECIFIED = 0;
+    // A best effort canceled order is one that has only been confirmed to be
+    // removed on the V4 node sending the off-chain update message.
+    // The cases where this happens includes:
+    // - the order was removed due to the V4 node receiving a CancelOrder
+    //   transaction for the order.
+    // - the order was removed due to being undercollateralized during
+    //   optimistic matching.
+    // A best effort canceled order may not have been removed on other V4
+    // nodes including other V4 validator nodes and may still be included in
+    // future order matches.
+    ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED = 1;
+    // A canceled order is one that is confirmed to be removed on all V4 nodes
+    // (discounting dishonest V4 nodes) and will not be included in any future
+    // order matches.
+    // The cases where this happens includes:
+    // - the order is expired.
+    ORDER_REMOVAL_STATUS_CANCELED = 2;
+    // An order was fully-filled. Only sent by the Indexer for stateful orders.
+    ORDER_REMOVAL_STATUS_FILLED = 3;
+  }
+}
+
+// OrderUpdate messages contain the id of the order being updated, and the
+// updated total filled quantums of the order.
+message OrderUpdateV1 {
+  dydxprotocol.indexer.protocol.v1.IndexerOrderId order_id = 1;
+  uint64 total_filled_quantums = 2;
+}
+
+// An OffChainUpdate message is the message type which will be sent on Kafka to
+// the Indexer.
+message OffChainUpdateV1 {
+  // Contains one of an OrderPlaceV1, OrderRemoveV1, and OrderUpdateV1 message.
+  oneof update_message {
+    OrderPlaceV1 order_place = 1;
+    OrderRemoveV1 order_remove = 2;
+    OrderUpdateV1 order_update = 3;
+  }
+}

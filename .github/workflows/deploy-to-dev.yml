@@ -1,0 +1,223 @@
+name: Deploy to Dev Environment
+
+on:  # yamllint disable-line rule:truthy
+  workflow_run:
+    workflows: ["Protocol Build & Push Image to AWS ECR"]
+    types:
+      - completed
+
+jobs:
+  deploy-to-dev:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV }}
+          aws-region: us-east-2
+
+      - name: Get Commit Hash
+        run: echo "git_hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_ENV
+
+      - name: Print Commit Hash
+        run: echo "Git short commit hash is ${{ env.git_hash }}"
+
+      - name: Deploy to dev environment using Orb lambda
+        id: dev-deploy
+        uses: dydxprotocol/invoke-aws-lambda@master
+        with:
+          HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
+          MAX_RETRIES: 3
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV }}
+          REGION: us-east-2
+          FunctionName: orb_lambda_function
+          Payload: |
+            {
+              "imageTag": "${{ env.git_hash }}",
+              "options": {
+                "job": "deploy-network-service",
+                "postToSlack": true,
+                "username": "Github",
+                "isCi": true
+              }
+            }
+
+  deploy-to-dev2:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV2 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV2 }}
+          aws-region: us-east-2
+
+      - name: Get Commit Hash
+        run: echo "git_hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_ENV
+
+      - name: Print Commit Hash
+        run: echo "Git short commit hash is ${{ env.git_hash }}"
+
+      - name: Deploy to dev2 environment using Orb lambda
+        id: dev2-deploy
+        uses: dydxprotocol/invoke-aws-lambda@master
+        with:
+          HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
+          MAX_RETRIES: 3
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV2 }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV2 }}
+          REGION: us-east-2
+          FunctionName: orb_lambda_function
+          Payload: |
+            {
+              "imageTag": "${{ env.git_hash }}",
+              "options": {
+                "job": "deploy-network-service",
+                "postToSlack": true,
+                "username": "Github",
+                "isCi": true
+              }
+            }
+
+  deploy-to-dev3:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV3 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV3 }}
+          aws-region: us-east-2
+
+      - name: Get Commit Hash
+        run: echo "git_hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_ENV
+
+      - name: Print Commit Hash
+        run: echo "Git short commit hash is ${{ env.git_hash }}"
+
+      - name: Deploy to dev3 environment using Orb lambda
+        id: dev3-deploy
+        uses: dydxprotocol/invoke-aws-lambda@master
+        with:
+          HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
+          MAX_RETRIES: 3
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV3 }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV3 }}
+          REGION: us-east-2
+          FunctionName: orb_lambda_function
+          Payload: |
+            {
+              "imageTag": "${{ env.git_hash }}",
+              "options": {
+                "job": "deploy-network-service",
+                "postToSlack": true,
+                "username": "Github",
+                "isCi": true
+              }
+            }
+
+  deploy-to-dev4:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV4 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV4 }}
+          aws-region: us-east-2
+
+      - name: Get Commit Hash
+        run: echo "git_hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_ENV
+
+      - name: Print Commit Hash
+        run: echo "Git short commit hash is ${{ env.git_hash }}"
+
+      - name: Deploy to dev4 environment using Orb lambda
+        id: dev4-deploy
+        uses: dydxprotocol/invoke-aws-lambda@master
+        with:
+          HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
+          MAX_RETRIES: 3
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV4 }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV4 }}
+          REGION: us-east-2
+          FunctionName: orb_lambda_function
+          Payload: |
+            {
+              "imageTag": "${{ env.git_hash }}",
+              "options": {
+                "job": "deploy-network-service",
+                "postToSlack": true,
+                "username": "Github",
+                "isCi": true
+              }
+            }
+
+  deploy-to-dev5:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV5 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV5 }}
+          aws-region: us-east-2
+
+      - name: Get Commit Hash
+        run: echo "git_hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_ENV
+
+      - name: Print Commit Hash
+        run: echo "Git short commit hash is ${{ env.git_hash }}"
+
+      - name: Deploy to dev5 environment using Orb lambda
+        id: dev5-deploy
+        uses: dydxprotocol/invoke-aws-lambda@master
+        with:
+          HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
+          MAX_RETRIES: 3
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_DEV5 }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_DEV5 }}
+          REGION: us-east-2
+          FunctionName: orb_lambda_function
+          Payload: |
+            {
+              "imageTag": "${{ env.git_hash }}",
+              "options": {
+                "job": "deploy-network-service",
+                "postToSlack": true,
+                "username": "Github",
+                "isCi": true
+              }
+            }

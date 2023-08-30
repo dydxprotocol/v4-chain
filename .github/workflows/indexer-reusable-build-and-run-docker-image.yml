@@ -1,0 +1,94 @@
+name: Indexer reusable build and run docker image for ECS service
+
+on:
+  workflow_call:
+    inputs:
+      SERVICE:
+        required: true
+        type: string
+
+jobs:
+  build-and-push-service:
+    name: (${{ inputs.SERVICE }}) Check docker image build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
+    services:
+      postgres:
+        image: postgres:12-alpine
+        env:
+          POSTGRES_PASSWORD: dydxserver123
+          POSTGRES_USER: dydx_test
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:5.0.6-alpine
+        ports: 
+          - 6379:6379
+      kafka:
+        image: blacktop/kafka:2.6
+        env:
+          KAFKA_ADVERTISED_HOST_NAME: localhost
+          KAFKA_CREATE_TOPICS: 
+            "to-ender:1:1,\
+            to-vulcan:1:1,\
+            to-websockets-orderbooks:1:1,\
+            to-websockets-subaccounts:1:1,\
+            to-websockets-trades:1:1,\
+            to-websockets-markets:1:1,\
+            to-websockets-candles:1:1"
+        ports:
+          - 9092:9092
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install pnpm
+        run:
+          npm install -g pnpm@6.34.0
+
+      - name: Build and install
+        run: |
+          pnpm install --loglevel warn --frozen-lockfile
+          pnpm run build:prod:all
+
+      - name: Build docker image
+        id: build-image
+        env:
+          SERVICE: ${{ inputs.SERVICE }}
+        run: |
+          commit_hash=$(git rev-parse --short HEAD)
+          DOCKER_BUILDKIT=1 docker build \
+            --platform amd64 \
+            -t service-base \
+            -f Dockerfile.service.remote \
+            --build-arg service=$SERVICE .
+
+      - name: Setup database
+        id: setup-database
+        env:
+          DB_PORT: 5432
+          NODE_ENV: test
+        run: |
+          cd packages/postgres && pnpm run migrate
+
+      - name: Run docker image
+        id: run-image
+        env:
+          SERVICE: ${{ inputs.SERVICE }}
+        # `timeout` sends a `SIGTERM` to the process, resulting in the exit code 124, so we need to
+        # ignore exit code 124.
+        run: |
+          timeout 30 docker run -e DB_PORT='5432' \
+          -e REDIS_URL='redis://localhost:6379' \
+          -e RATE_LIMIT_REDIS_URL='redis://localhost:6379' \
+          -e NODE_ENV='test' \
+          --network="host" \
+          service-base || ( [[ $? -eq 124 ]] && \
+            echo "Service container ran for 30 seconds with no errors" )

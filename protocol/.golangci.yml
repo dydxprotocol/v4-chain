@@ -1,0 +1,32 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gofmt
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - lll
+    - revive
+    - staticcheck
+    - typecheck
+    - unused
+    - whitespace
+    - errorlint
+linters-settings:
+  revive:
+    rules:
+      - name: duplicated-imports
+        severity: warning
+        disabled: false
+      - name: range-val-address
+        severity: warning
+        disabled: false
+  importas:
+    # List of aliases
+    alias:
+      - pkg: github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types
+        alias: satypes
+      - pkg: github.com/dydxprotocol/v4-chain/protocol/testutil/constants
+        alias: constants

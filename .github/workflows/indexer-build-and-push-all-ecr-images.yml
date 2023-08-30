@@ -1,0 +1,59 @@
+name: Indexer Build & Push ECR Images
+
+on: # yamllint disable-line rule:truthy
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: true
+        type: string
+
+jobs:
+  # Build and push
+  call-build-and-push-ecs-service-ender:
+    uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      SERVICE: ender
+    secrets: inherit
+
+  call-build-and-push-ecs-service-comlink:
+    uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      SERVICE: comlink
+    secrets: inherit
+
+  call-build-and-push-ecs-service-socks:
+    uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      SERVICE: socks
+    secrets: inherit
+
+  call-build-and-push-ecs-service-roundtable:
+    uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      SERVICE: roundtable
+    secrets: inherit
+
+  call-build-and-push-vulcan:
+    uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      SERVICE: vulcan
+    secrets: inherit
+
+  call-build-and-push-bazooka-lambda:
+    uses: ./.github/workflows/indexer-build-and-push-lambda.yml
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      SERVICE: bazooka
+    secrets: inherit
+
+  call-build-and-push-auxo-lambda:
+    uses: ./.github/workflows/indexer-build-and-push-lambda.yml
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      SERVICE: auxo
+    secrets: inherit

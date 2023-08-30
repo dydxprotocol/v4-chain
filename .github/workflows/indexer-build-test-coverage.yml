@@ -1,0 +1,30 @@
+name: Indexer Build, Test & Coverage
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - 'indexer/**'
+  push:
+    branches:
+      - main
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
+      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+# Ensure only a single instance of this workflow is running, and cancel any that are in-progress
+# before this workflow instance starts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # Build and run tests
+  test:
+    uses: ./.github/workflows/indexer-reusable-build-and-run-with-pg-redis-kafka.yml
+    with:
+      COMMAND: pnpm run test:all
+    secrets: inherit
+  # TODO(roy): Temporarily disabled. Doesn't run on CI for some reason.
+  # Build and run coverage
+  # coverage:
+  #   uses: ./.github/workflows/indexer-reusable-build-and-run-with-pg-redis-kafka.yml
+  #   with:
+  #     COMMAND: pnpm run coverage:all
+  #   secrets: inherit

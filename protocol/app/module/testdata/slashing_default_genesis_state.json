@@ -1,0 +1,11 @@
+{
+  "params":{
+    "signed_blocks_window":"3000",
+    "min_signed_per_window":"0.050000000000000000",
+    "downtime_jail_duration":"60s",
+    "slash_fraction_double_sign":"0.000000000000000000",
+    "slash_fraction_downtime":"0.000000000000000000"
+  },
+  "signing_infos":[],
+  "missed_blocks":[]
+}

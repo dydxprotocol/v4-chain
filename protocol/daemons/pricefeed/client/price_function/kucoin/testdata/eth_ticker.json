@@ -1,0 +1,18 @@
+{
+    "symbol":"ETH-USDT",
+    "symbolName":"ETH-USDT",
+    "buy":"1646.22",
+    "sell":"1646.23",
+    "changeRate":"-0.0538",
+    "changePrice":"-93.64",
+    "high":"1750.37",
+    "low":"1630.7",
+    "vol":"48382.6736837",
+    "volValue":"81785550.1766849042",
+    "last":"1646.23",
+    "averagePrice":"1741.63106495",
+    "takerFeeRate":"0.001",
+    "makerFeeRate":"0.001",
+    "takerCoefficient":"1",
+    "makerCoefficient":"1"
+}

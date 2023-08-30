@@ -1,0 +1,68 @@
+name: Indexer Build and push Lambda
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: true
+        type: string
+      SERVICE:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+jobs:
+  build-and-push-lambda:
+    name: (${{ inputs.SERVICE }}) Build and Push Lambda
+    environment: ${{ inputs.ENVIRONMENT }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Install pnpm
+        run:
+          npm install -g pnpm@6.34.0
+
+      - name: Build and install
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+          pnpm install --loglevel warn --frozen-lockfile
+          pnpm run build:prod:all
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.ENVIRONMENT }}-indexer-${{ inputs.SERVICE }}
+        run: |
+          current_time=$(date '+%Y%m%d%H%M')
+          commit_hash=$(git rev-parse --short HEAD)
+          DOCKER_BUILDKIT=1 docker build \
+            --platform amd64 \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
+            -f Dockerfile.${{ inputs.SERVICE }}.remote .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags

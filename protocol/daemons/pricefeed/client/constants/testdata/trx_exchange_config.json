@@ -1,0 +1,29 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "\"TRXUSDT\"",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bitfinex",
+      "ticker": "tTRXUSD",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "TRX_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "trxusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "TRX-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

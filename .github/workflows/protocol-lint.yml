@@ -1,0 +1,48 @@
+name: Protocol Lint
+# Lint runs all linting jobs.
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - 'protocol/**'
+  push:
+    branches:
+      - main
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
+      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+
+# Ensure only a single instance of this workflow is running, and cancel any that are in-progress
+# before this workflow instance starts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # Validates that the YAML files in the V4 repository are formatted properly.
+  # The `validate-yaml` job will pass without running if no YAML files have been modified.
+  validate-yaml:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
+    steps:
+      - uses: actions/checkout@v3
+      - name: Validate config YAML file
+        run: >
+          yamllint .golangci.yml .github/workflows/**.yml
+          buf.work.yaml
+  # Runs golangci-lint over the entire repository.
+  # The `golangci` job will pass without running if no *.{go, mod, sum} files have been modified.
+  golangci:
+    name: golangci-lint
+    defaults:
+      run:
+        working-directory: ./protocol
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Run golangci-lint
+        run: make lint

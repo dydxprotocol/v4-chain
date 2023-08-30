@@ -1,0 +1,38 @@
+name: Indexer API Documentation Check
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - 'indexer/**'
+  push:
+    branches:
+      - main
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
+      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+jobs:
+  run_command:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install pnpm
+        run:
+          npm install -g pnpm@6.34.0
+
+      - name: Build and install
+        run: |
+          pnpm install --loglevel warn --frozen-lockfile
+          pnpm run build:all
+
+      - name: Compare API Documentation
+        run: |
+          cd services/comlink/
+          git diff --exit-code
