@@ -45,37 +45,8 @@ func TestBlockedAddresses(t *testing.T) {
 		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true,
 		"dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq": true,
 		"dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5": true,
-		"dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv": true,
 	}
 	require.Equal(t, expectedBlockedAddresses, app.BlockedAddresses())
-}
-
-func TestWhitelistedModuleAddresses(t *testing.T) {
-	expectedAddresses := map[string]bool{
-		"dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp": true,
-		"dydx16wrau2x4tsg033xfrrdpae6kxfn9kyuerr5jjp": true,
-		"dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq": true,
-		"dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6": true,
-		"dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky": true,
-	}
-	require.Equal(t, expectedAddresses, app.WhitelistedModuleAddresses())
-}
-
-// Check each module account is either blocked or whitelisted.
-func TestModuleAccountsBlockedOrWhitelisted(t *testing.T) {
-	moduleAccs := app.GetMaccPerms()
-	whitelistedAddrs := app.WhitelistedModuleAddresses()
-	blockedAddrs := app.BlockedAddresses()
-
-	require.Equal(t, len(moduleAccs), len(whitelistedAddrs)+len(blockedAddrs))
-
-	for acc := range moduleAccs {
-		address := authtypes.NewModuleAddress(acc).String()
-		_, whitelisted := whitelistedAddrs[address]
-		_, blocked := blockedAddrs[address]
-		// Each module account should be either whitelisted or blocked, but not both.
-		require.NotEqual(t, whitelisted, blocked)
-	}
 }
 
 func TestMaccPerms(t *testing.T) {

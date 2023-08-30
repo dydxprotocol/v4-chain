@@ -39,21 +39,10 @@ var (
 	// unexpected violation of invariants (for example, https://github.com/cosmos/cosmos-sdk/issues/4795)
 	blockedModuleAccounts = map[string]bool{
 		authtypes.FeeCollectorName:     true,
-		bridgemoduletypes.ModuleName:   true,
 		distrtypes.ModuleName:          true,
 		stakingtypes.BondedPoolName:    true,
 		stakingtypes.NotBondedPoolName: true,
 		ibctransfertypes.ModuleName:    true,
-	}
-	// Module accounts which are not blocked. These include:
-	// - governance module account (needed for https://github.com/cosmos/cosmos-sdk/pull/12852)
-	// - dYdX custom module accounts
-	whitelistedModuleAccounts = map[string]bool{
-		govtypes.ModuleName:                    true,
-		satypes.ModuleName:                     true,
-		clobmoduletypes.InsuranceFundName:      true,
-		rewardsmoduletypes.TreasuryAccountName: true,
-		rewardsmoduletypes.VesterAccountName:   true,
 	}
 )
 
@@ -75,11 +64,6 @@ func BlockedAddresses() map[string]bool {
 	// By default, returns all the app's blocked module account addresses.
 	// Other regular addresses can also be added here.
 	return moduleAccToAddress(blockedModuleAccounts)
-}
-
-// WhitelistedModuleAddresses returns all the app's unblocked module account addresses.
-func WhitelistedModuleAddresses() map[string]bool {
-	return moduleAccToAddress(whitelistedModuleAccounts)
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
