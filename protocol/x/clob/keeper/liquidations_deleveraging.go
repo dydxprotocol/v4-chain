@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"time"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -224,9 +225,10 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"offsettingBankruptcyPriceQuoteQuantums", offsettingBankruptcyPrice,
 					"offsettingTnc", offsettingTnc,
 				)
-				telemetry.IncrCounter(
+				telemetry.IncrCounterWithLabels(
+					[]string{types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count},
 					1,
-					types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
+					[]gometrics.Label{metrics.GetLabelForIntValue(metrics.BlockHeight, int(ctx.BlockHeight()))},
 				)
 			}
 			return deltaQuantumsRemaining.Sign() == 0
@@ -234,19 +236,38 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		rand,
 	)
 
-	telemetry.SetGauge(
+	mode := metrics.DeliverTx
+	blockHeight := ctx.BlockHeight()
+	if ctx.IsCheckTx() {
+		mode = metrics.CheckTx
+		blockHeight += 1
+	}
+
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.NumSubaccountsIterated, metrics.Count},
 		float32(numSubaccountsIterated),
-		metrics.NumSubaccountsIterated, metrics.Count,
+		[]gometrics.Label{
+			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+		},
 	)
 
 	if deltaQuantumsRemaining.Sign() == 0 {
 		// Deleveraging was successful.
-		telemetry.IncrCounter(1, types.ModuleName, metrics.Deleveraging, metrics.Success, metrics.Count)
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, mode, metrics.Deleveraging, metrics.Success, metrics.Count},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(metrics.BlockHeight, int(blockHeight)),
+			},
+		)
 	} else {
 		// Not enough offsetting subaccounts to fully offset the liquidated subaccount's position.
-		telemetry.IncrCounter(
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, mode, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count},
 			1,
-			types.ModuleName, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count,
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(metrics.BlockHeight, int(blockHeight)),
+			},
 		)
 		ctx.Logger().Error(
 			sdkerrors.Wrapf(

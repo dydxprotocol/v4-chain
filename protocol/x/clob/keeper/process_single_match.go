@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -46,13 +45,13 @@ func (k Keeper) ProcessSingleMatch(
 ) {
 	if matchWithOrders.TakerOrder.IsLiquidation() {
 		defer func() {
-			if errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) && !takerUpdateResult.IsSuccess() {
+			if err == nil && !takerUpdateResult.IsSuccess() {
 				takerSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, matchWithOrders.TakerOrder.GetSubaccountId())
 				takerTnc, takerIMR, takerMMR, _ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 					ctx,
 					satypes.Update{SubaccountId: *takerSubaccount.Id},
 				)
-				ctx.Logger().Error(
+				ctx.Logger().Info(
 					"collateralization check failed for liquidation",
 					"takerSubaccount", fmt.Sprintf("%+v", takerSubaccount),
 					"takerTNC", takerTnc,

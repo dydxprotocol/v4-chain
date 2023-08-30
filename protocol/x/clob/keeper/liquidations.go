@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/big"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -86,12 +85,11 @@ func (k Keeper) PlacePerpetualLiquidation(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	telemetry.IncrCounterWithLabels(
-		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.BaseQuantums},
-		float32(liquidationOrder.GetBaseQuantums()),
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
-		},
+	telemetry.IncrCounter(
+		1,
+		metrics.Liquidations,
+		metrics.PlacePerpetualLiquidation,
+		metrics.Count,
 	)
 
 	orderSizeOptimisticallyFilledFromMatchingQuantums,
