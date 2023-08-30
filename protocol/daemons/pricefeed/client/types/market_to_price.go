@@ -70,6 +70,8 @@ func (mtp *MarketToPrice) GetAllPrices() []MarketPriceTimestamp {
 
 // GetValidPriceForMarket returns the most recent valid price for a market for an exchange.
 func (mtp *MarketToPrice) GetValidPriceForMarket(marketId MarketId, cutoffTime time.Time) (uint64, bool) {
+	mtp.RLock()
+	defer mtp.RUnlock()
 	price, exists := mtp.MarketToPriceTimestamp[marketId]
 	if !exists {
 		return 0, false
