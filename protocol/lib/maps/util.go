@@ -77,7 +77,7 @@ func ArrayToMapInterface[T comparable](list []T) map[T]struct{} {
 // Returns:
 //
 //	A new map containing all the keys and values from originalMap.
-func Copy[K comparable, V any](originalMap map[K]V) map[K]V {
+func ShallowCopy[K comparable, V any](originalMap map[K]V) map[K]V {
 	if originalMap == nil {
 		return nil
 	}

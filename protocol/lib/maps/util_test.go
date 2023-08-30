@@ -267,7 +267,7 @@ func TestCopy(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			copiedMap := maps.Copy(tc.inputMap)
+			copiedMap := maps.ShallowCopy(tc.inputMap)
 			require.Equal(t, tc.expectedOutput, copiedMap)
 
 			// If the original map is modified, it should not affect the copied map

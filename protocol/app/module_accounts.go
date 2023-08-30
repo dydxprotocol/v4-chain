@@ -22,17 +22,24 @@ func init() {
 var (
 	// Module account permissions. Contains all module accounts on dYdX chain.
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:             nil,
-		bridgemoduletypes.ModuleName:           {authtypes.Minter},
-		distrtypes.ModuleName:                  nil,
-		stakingtypes.BondedPoolName:            {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:         {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                    {authtypes.Burner},
-		ibctransfertypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
-		satypes.ModuleName:                     nil,
-		clobmoduletypes.InsuranceFundName:      nil,
+		// -------- Native SDK module accounts --------
+		authtypes.FeeCollectorName:     nil,
+		distrtypes.ModuleName:          nil,
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:            {authtypes.Burner},
+		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		// -------- dYdX custom module accounts --------
+		// bridge module account mints tokens for bridged funds.
+		bridgemoduletypes.ModuleName: {authtypes.Minter},
+		// subaccounts module account holds tokens for all subaccounts.
+		satypes.ModuleName: nil,
+		// clob insurance fund account manages insurance fund for liquidations.
+		clobmoduletypes.InsuranceFundName: nil,
+		// rewards treasury account distribute funds trading accounts.
 		rewardsmoduletypes.TreasuryAccountName: nil,
-		rewardsmoduletypes.VesterAccountName:   nil,
+		// rewards vester account vest rewards tokens into the rewards treasury.
+		rewardsmoduletypes.VesterAccountName: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all native SDK module accounts are blocked. This prevents
@@ -56,7 +63,7 @@ func moduleAccToAddress[V any](accs map[string]V) map[string]bool {
 
 // GetMaccPerms returns a copy of the module account permissions
 func GetMaccPerms() map[string][]string {
-	return maps.Copy(maccPerms)
+	return maps.ShallowCopy(maccPerms)
 }
 
 // BlockedAddresses returns all the app's blocked account addresses.
