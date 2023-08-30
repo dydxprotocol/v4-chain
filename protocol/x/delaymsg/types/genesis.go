@@ -7,7 +7,10 @@ import (
 
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
-	return &GenesisState{}
+	return &GenesisState{
+		NumMessages:     0,
+		DelayedMessages: []*DelayedMessage{},
+	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any
