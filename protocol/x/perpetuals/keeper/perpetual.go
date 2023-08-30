@@ -1227,9 +1227,12 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 				"PerformStatefulPremiumVotesValidation: failed to determine ClobPair status for perpetual with id %d",
 				vote.PerpetualId,
 			)
-		} else if isInitializing { // zero the value if the ClobPair is initializing
-			vote.PremiumPpm = 0
-			continue
+		} else if isInitializing { // reject premium votes for initializing perpetuals
+			return sdkerrors.Wrapf(
+				types.ErrPremiumVoteForInitializingMarket,
+				"PerformStatefulPremiumVotesValidation: no premium vote should be included for initializing perpetual with id %d",
+				vote.PerpetualId,
+			)
 		}
 
 		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).

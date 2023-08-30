@@ -139,7 +139,7 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 			numPerpetuals: 1,
 			expectedErr:   clobtypes.ErrInvalidClob,
 		},
-		"Valid: zeros the premium vote if the clob pair is initializing": {
+		"Error: rejects the premium vote if the clob pair is initializing": {
 			votes: []types.FundingPremium{
 				{
 					PerpetualId: 0,
@@ -151,6 +151,7 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 				isPerpetualClobPairInitializingErr: nil,
 			},
 			numPerpetuals: 1,
+			expectedErr:   types.ErrPremiumVoteForInitializingMarket,
 		},
 	}
 	for name, tc := range tests {
