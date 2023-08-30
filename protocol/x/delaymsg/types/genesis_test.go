@@ -2,6 +2,11 @@ package types_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
@@ -111,4 +116,16 @@ func TestGenesisState_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestDefaultGenesis validates the literal contents of the default genesis.
+func TestDefaultGenesis(t *testing.T) {
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	feetierstypes.RegisterInterfaces(interfaceRegistry)
+
+	defaultGenesisString := string(cdc.MustMarshalJSON(types.DefaultGenesis()))
+
+	expected := pricefeed.ReadJsonTestFile(t, "default_genesis.json")
+	require.Equal(t, expected, defaultGenesisString)
 }

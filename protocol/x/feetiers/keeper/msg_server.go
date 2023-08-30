@@ -26,6 +26,8 @@ func (k msgServer) UpdatePerpetualFeeParams(
 	goCtx context.Context,
 	msg *types.MsgUpdatePerpetualFeeParams,
 ) (*types.MsgUpdatePerpetualFeeParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	k.Logger(ctx).Info("UpdatePerpetualFeeParams", "msg", msg)
 	if !k.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -34,7 +36,6 @@ func (k msgServer) UpdatePerpetualFeeParams(
 		)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.SetPerpetualFeeParams(ctx, msg.Params); err != nil {
 		return nil, err
 	}

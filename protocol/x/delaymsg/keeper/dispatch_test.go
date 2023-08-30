@@ -16,6 +16,7 @@ import (
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -338,6 +339,35 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	// The block message ids have also been deleted.
 	_, found = tApp.App.DelayMsgKeeper.GetBlockMessageIds(ctx, 2)
 	require.False(t, found)
+}
+
+func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		// Update the genesis state to execute the perpetual fee params update at block 2.
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *types.GenesisState) {
+				defaultGenesis := types.DefaultGenesis()
+				genesisState.NumMessages = defaultGenesis.NumMessages
+				genesisState.DelayedMessages = defaultGenesis.DelayedMessages
+				genesisState.DelayedMessages[0].BlockHeight = 2
+			},
+		)
+		return genesis
+	}).WithTesting(t).Build()
+	ctx := tApp.InitChain()
+
+	resp, err := tApp.App.FeeTiersKeeper.PerpetualFeeParams(ctx, &feetierstypes.QueryPerpetualFeeParamsRequest{})
+	require.NoError(t, err)
+	require.Equal(t, feetierstypes.PromotionalParams(), resp.Params)
+
+	// Advance to block 2 and invoke delayed message to complete bridge.
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
+	resp, err = tApp.App.FeeTiersKeeper.PerpetualFeeParams(ctx, &feetierstypes.QueryPerpetualFeeParamsRequest{})
+	require.NoError(t, err)
+	require.Equal(t, feetierstypes.StandardParams(), resp.Params)
 }
 
 func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
