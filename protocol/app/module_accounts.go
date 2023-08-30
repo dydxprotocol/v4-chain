@@ -15,7 +15,6 @@ import (
 )
 
 func init() {
-	// This package does not contain the `app/config` package in its import chain, and therefore needs to call
 	// SetAddressPrefixes() explicitly in order to set the `dydx` address prefixes.
 	config.SetAddressPrefixes()
 }
@@ -36,6 +35,8 @@ var (
 		rewardsmoduletypes.VesterAccountName:   nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
+	// By default, all native SDK module accounts are blocked. This prevents
+	// unexpected violation of invariants (for example, https://github.com/cosmos/cosmos-sdk/issues/4795)
 	blockedModuleAccounts = map[string]bool{
 		authtypes.FeeCollectorName:     true,
 		bridgemoduletypes.ModuleName:   true,
@@ -44,7 +45,7 @@ var (
 		stakingtypes.NotBondedPoolName: true,
 		ibctransfertypes.ModuleName:    true,
 	}
-	// Module accounts which are not blocked. This includes:
+	// Module accounts which are not blocked. These include:
 	// - governance module account (needed for https://github.com/cosmos/cosmos-sdk/pull/12852)
 	// - dYdX custom module accounts
 	whitelistedModuleAccounts = map[string]bool{
