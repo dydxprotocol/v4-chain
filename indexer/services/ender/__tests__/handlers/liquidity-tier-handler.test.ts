@@ -16,15 +16,21 @@ import {
   TendermintEventTable,
   testConstants,
   protocolTranslations,
+  liquidityTierRefresher,
+  PerpetualMarketFromDatabase,
+  perpetualMarketRefresher,
+  PerpetualMarketTable,
+  MarketTable,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
-import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
   binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
+  expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
 import { LiquidityTierHandler } from '../../src/handlers/liquidity-tier-handler';
 import {
@@ -32,6 +38,7 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { defaultLiquidityTier } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import _ from 'lodash';
 
 describe('liquidityTierHandler', () => {
   beforeAll(async () => {
@@ -57,6 +64,8 @@ describe('liquidityTierHandler', () => {
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    liquidityTierRefresher.clear();
+    perpetualMarketRefresher.clear();
   });
 
   afterAll(async () => {
@@ -107,7 +116,9 @@ describe('liquidityTierHandler', () => {
     });
     // Confirm there is no existing liquidity tier
     await expectNoExistingLiquidityTiers();
+    await perpetualMarketRefresher.updatePerpetualMarkets();
 
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
     await onMessage(kafkaMessage);
 
     const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
@@ -118,6 +129,8 @@ describe('liquidityTierHandler', () => {
     expect(newLiquidityTiers.length).toEqual(1);
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
+    validateLiquidityTierRefresher(defaultLiquidityTierUpsertEvent);
+    expectKafkaMessages(producerSendMock, liquidityTierEvent, 0);
   });
 
   it('updates existing liquidity tier', async () => {
@@ -133,6 +146,18 @@ describe('liquidityTierHandler', () => {
     // Create existing liquidity tier
     await LiquidityTiersTable.upsert(defaultLiquidityTier);
 
+    // create perpetual market with existing liquidity tier to test websockets
+    await Promise.all([
+      MarketTable.create(testConstants.defaultMarket),
+      MarketTable.create(testConstants.defaultMarket2),
+    ]);
+    await Promise.all([
+      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket),
+      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket2),
+    ]);
+    await perpetualMarketRefresher.updatePerpetualMarkets();
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
     await onMessage(kafkaMessage);
 
     const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
@@ -143,6 +168,8 @@ describe('liquidityTierHandler', () => {
     expect(newLiquidityTiers.length).toEqual(1);
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
+    validateLiquidityTierRefresher(defaultLiquidityTierUpsertEvent);
+    expectKafkaMessages(producerSendMock, liquidityTierEvent, 2);
   });
 });
 
@@ -223,4 +250,43 @@ async function expectNoExistingLiquidityTiers() {
     });
 
   expect(liquidityTiers.length).toEqual(0);
+}
+
+function validateLiquidityTierRefresher(
+  liquidityTierEvent: LiquidityTierUpsertEventV1,
+) {
+  const liquidityTier:
+  LiquidityTiersFromDatabase = liquidityTierRefresher.getLiquidityTierFromId(
+    liquidityTierEvent.id,
+  );
+
+  expect(liquidityTier).toEqual({
+    id: liquidityTierEvent.id,
+    name: liquidityTierEvent.name,
+    initialMarginPpm: liquidityTierEvent.initialMarginPpm.toString(),
+    maintenanceFractionPpm: liquidityTierEvent.maintenanceFractionPpm.toString(),
+    basePositionNotional: protocolTranslations.quantumsToHuman(
+      liquidityTierEvent.basePositionNotional.toString(),
+      QUOTE_CURRENCY_ATOMIC_RESOLUTION,
+    ).toFixed(6),
+  });
+}
+
+function expectKafkaMessages(
+  producerSendMock: jest.SpyInstance,
+  liquidityTier: LiquidityTierUpsertEventV1,
+  numPerpetualMarkets: number,
+) {
+  const perpetualMarkets: PerpetualMarketFromDatabase[] = _.filter(
+    perpetualMarketRefresher.getPerpetualMarketsList(),
+    (perpetualMarket: PerpetualMarketFromDatabase) => {
+      return perpetualMarket.liquidityTierId === liquidityTier.id;
+    },
+  );
+  expect(perpetualMarkets.length).toEqual(numPerpetualMarkets);
+
+  if (perpetualMarkets.length === 0) {
+    return;
+  }
+  expectPerpetualMarketKafkaMessage(producerSendMock, perpetualMarkets);
 }
