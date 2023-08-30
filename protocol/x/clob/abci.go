@@ -2,6 +2,7 @@ package clob
 
 import (
 	"fmt"
+	"math/big"
 	"sort"
 	"time"
 
@@ -220,6 +221,13 @@ func PrepareCheckState(
 			panic(err)
 		}
 	}
+
+	insuranceFundBalance, _ := new(big.Float).SetUint64(keeper.GetInsuranceFundBalance(ctx)).Float32()
+	telemetry.ModuleSetGauge(
+		types.ModuleName,
+		insuranceFundBalance,
+		metrics.InsuranceFundBalance,
+	)
 
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)

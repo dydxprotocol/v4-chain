@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -85,13 +86,6 @@ func (k Keeper) PlacePerpetualLiquidation(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	telemetry.IncrCounter(
-		1,
-		metrics.Liquidations,
-		metrics.PlacePerpetualLiquidation,
-		metrics.Count,
-	)
-
 	orderSizeOptimisticallyFilledFromMatchingQuantums,
 		orderStatus,
 		offchainUpdates,
@@ -107,6 +101,33 @@ func (k Keeper) PlacePerpetualLiquidation(
 		ctx,
 		liquidationOrder.GetSubaccountId(),
 		liquidationOrder.MustGetLiquidatedPerpetualId(),
+	)
+
+	telemetry.IncrCounter(
+		1,
+		metrics.Liquidations,
+		metrics.PlacePerpetualLiquidation,
+		metrics.Count,
+	)
+
+	liquidationOrderSize, _ := new(big.Float).SetUint64(liquidationOrder.GetBaseQuantums().ToUint64()).Float32()
+	telemetry.IncrCounterWithLabels(
+		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.BaseQuantums},
+		liquidationOrderSize,
+		[]gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
+		},
+	)
+
+	optimisticallyFilled, _ := new(big.Float).SetUint64(
+		orderSizeOptimisticallyFilledFromMatchingQuantums.ToUint64(),
+	).Float32()
+	telemetry.IncrCounterWithLabels(
+		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Filled, metrics.BaseQuantums},
+		optimisticallyFilled,
+		[]gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
+		},
 	)
 
 	k.SendOffchainMessages(offchainUpdates, nil, metrics.SendPlacePerpetualLiquidationOffchainUpdates)
