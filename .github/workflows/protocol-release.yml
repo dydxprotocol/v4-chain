@@ -1,12 +1,13 @@
 name: Release
 # This workflow helps with creating releases.
-# This job will only be triggered when a release tag (vX.X.X) or release candidate tag (vX.X.X-rcX) is pushed
+# This job will only be triggered when a protocol release tag is pushed
 on:  # yamllint disable-line rule:truthy
   push:
     # Sequence of patterns matched against refs/tags
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"  # e.g.: v1.0.1
-      - "v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"  # e.g.: v1.0.1-rc1
+      - "protocol/v[0-9]+.[0-9]+.[0-9]+"  # e.g.: protocol/v1.0.1
+      - "protocol/v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"  # e.g.: protocol/v1.0.1-rc1
+      - "protocol/v[0-9]+.[0-9]+.[0-9]+-dev[0-9]+"  # e.g.: protocol/v1.0.1-dev1
 
 jobs:
   protocol-release:
@@ -103,7 +104,7 @@ jobs:
         run: make dydxpy-gen
 
       - name: Set Env from Tag (remove 'v' prefix)
-        run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | tr '-' '.')" >> $GITHUB_ENV
+        run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/protocol/v} | tr '-' '.')" >> $GITHUB_ENV
 
       - name: Update version in setup.py
         run: echo $VERSION; sed -i "s/0.0.0/$VERSION/g" setup.py
@@ -146,7 +147,7 @@ jobs:
           chmod +x "${BIN}/buf"
 
       - name: Set Env from Tag to follow semver
-        run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed -r 's/(.*-[[:alpha:]]+)([[:digit:]]+)/\1.\2/')" >> $GITHUB_ENV
+        run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/protocol/v} | sed -r 's/(.*-[[:alpha:]]+)([[:digit:]]+)/\1.\2/')" >> $GITHUB_ENV
 
       - name: Update version in package.json
         run: echo $VERSION; sed -i "s/0.0.0/$VERSION/g" package.json
