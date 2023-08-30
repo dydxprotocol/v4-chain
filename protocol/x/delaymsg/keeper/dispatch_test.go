@@ -341,7 +341,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	require.False(t, found)
 }
 
-// TestSendDelayedPerpetualFeeParamsUpdate tests that the delayed message default genesis state, which contains a
+// TestSendDelayedPerpetualFeeParamsUpdate tests that the delayed message testApp genesis state, which contains a
 // message to update the x/feetiers perpetual fee params after ~120 days of blocks, is executed correctly. In this
 // test, we modify the genesis state to apply the parameter update on block 2 to validate that the update is applied
 // correctly.
