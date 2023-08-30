@@ -86,6 +86,14 @@ func (k Keeper) PlacePerpetualLiquidation(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
+	telemetry.IncrCounterWithLabels(
+		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.BaseQuantums},
+		float32(liquidationOrder.GetBaseQuantums()),
+		[]gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
+		},
+	)
+
 	orderSizeOptimisticallyFilledFromMatchingQuantums,
 		orderStatus,
 		offchainUpdates,
@@ -104,23 +112,6 @@ func (k Keeper) PlacePerpetualLiquidation(
 	)
 
 	k.SendOffchainMessages(offchainUpdates, nil, metrics.SendPlacePerpetualLiquidationOffchainUpdates)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Count},
-		1,
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
-		},
-	)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.BaseQuantums},
-		float32(liquidationOrder.GetBaseQuantums()),
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
-		},
-	)
-
 	return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, err
 }
 
