@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	types2 "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
@@ -42,7 +42,7 @@ func TestNumMessages(t *testing.T) {
 func TestMessage(t *testing.T) {
 	tests := map[string]struct {
 		delayedMessage sdk.Msg
-		expectedMsg    *types2.Any
+		expectedMsg    *codectypes.Any
 	}{
 		"Not found": {},
 		"Found": {
