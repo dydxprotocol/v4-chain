@@ -1369,6 +1369,99 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].limit' -v '200'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].usd_tnc_required' -v '100000000000'
+
+
+  # Fee Tiers
+  # Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.num_messages' -v '1'
+	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
+
+	delaymsg=$(cat <<-EOF
+	{
+		"@type":"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+		"authority":"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+		"params":{
+			"tiers":[
+				{
+					"name":"1",
+					"absolute_volume_requirement":"0",
+					"total_volume_share_requirement_ppm":0,
+					"maker_volume_share_requirement_ppm":0,
+					"maker_fee_ppm":100,
+					"taker_fee_ppm":500
+				},
+				{
+					"name":"2",
+					"absolute_volume_requirement":"1000000000000",
+					"total_volume_share_requirement_ppm":0,
+					"maker_volume_share_requirement_ppm":0,
+					"maker_fee_ppm":100,
+					"taker_fee_ppm":450
+				},
+				{
+					"name":"3",
+					"absolute_volume_requirement":"5000000000000",
+					"total_volume_share_requirement_ppm":0,
+					"maker_volume_share_requirement_ppm":0,
+					"maker_fee_ppm":50,
+					"taker_fee_ppm":400
+				},
+				{
+					"name":"4",
+					"absolute_volume_requirement":"25000000000000",
+					"total_volume_share_requirement_ppm":0,
+					"maker_volume_share_requirement_ppm":0,
+					"maker_fee_ppm":0,
+					"taker_fee_ppm":350
+				},
+				{
+					"name":"5",
+					"absolute_volume_requirement":"125000000000000",
+					"total_volume_share_requirement_ppm":0,
+					"maker_volume_share_requirement_ppm":0,
+					"maker_fee_ppm":0,
+					"taker_fee_ppm":300
+				},
+				{
+					"name":"6",
+					"absolute_volume_requirement":"125000000000000",
+					"total_volume_share_requirement_ppm":5000,
+					"maker_volume_share_requirement_ppm":0,
+					"maker_fee_ppm":-50,
+					"taker_fee_ppm":250
+				},
+				{
+					"name":"7",
+					"absolute_volume_requirement":"125000000000000",
+					"total_volume_share_requirement_ppm":5000,
+					"maker_volume_share_requirement_ppm":10000,
+					"maker_fee_ppm":-90,
+					"taker_fee_ppm":250
+				},
+				{
+					"name":"8",
+					"absolute_volume_requirement":"125000000000000",
+					"total_volume_share_requirement_ppm":5000,
+					"maker_volume_share_requirement_ppm":20000,
+					"maker_fee_ppm":-110,
+					"taker_fee_ppm":250
+				},
+				{
+					"name":"9",
+					"absolute_volume_requirement":"125000000000000",
+					"total_volume_share_requirement_ppm":5000,
+					"maker_volume_share_requirement_ppm":40000,
+					"maker_fee_ppm":-110,
+					"taker_fee_ppm":250
+				}
+			]
+		}
+	}
+	EOF
+	)
+	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].msg' -v "$delaymsg"
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6480000'
 }
 
 function add_subaccount() {
