@@ -18,10 +18,24 @@ func TestMsgSetClobPairStatus_ValidateBasic(t *testing.T) {
 				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
 			},
 		},
-		"invalid": {
+		"invalid unsupported status": {
 			msg: types.MsgSetClobPairStatus{
 				ClobPairId:     0,
 				ClobPairStatus: int32(types.ClobPair_STATUS_UNSPECIFIED),
+			},
+			expectedError: types.ErrInvalidMsgSetClobPairStatus,
+		},
+		"invalid negative out of bounds status": {
+			msg: types.MsgSetClobPairStatus{
+				ClobPairId:     0,
+				ClobPairStatus: -1,
+			},
+			expectedError: types.ErrInvalidMsgSetClobPairStatus,
+		},
+		"invalid positive out of bounds status": {
+			msg: types.MsgSetClobPairStatus{
+				ClobPairId:     0,
+				ClobPairStatus: 100,
 			},
 			expectedError: types.ErrInvalidMsgSetClobPairStatus,
 		},

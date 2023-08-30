@@ -1,9 +1,10 @@
 package app
 
 import (
-	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"reflect"
 	"testing"
+
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
@@ -73,7 +74,6 @@ func newTestHandlerOptions() HandlerOptions {
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
 		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
-		"",
 	)
 	return HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{

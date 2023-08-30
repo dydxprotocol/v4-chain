@@ -3,8 +3,9 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"sync/atomic"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
@@ -58,10 +59,6 @@ type (
 
 		placeOrderRateLimiter  rate_limit.RateLimiter[*types.MsgPlaceOrder]
 		cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder]
-
-		// The address capable of updating ClobPairs.
-		// Typically, this should be the x/gov module account.
-		govAuthority string
 	}
 )
 
@@ -88,7 +85,6 @@ func NewKeeper(
 	clobFlags flags.ClobFlags,
 	placeOrderRateLimiter rate_limit.RateLimiter[*types.MsgPlaceOrder],
 	cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder],
-	govAuthority string,
 ) *Keeper {
 	keeper := &Keeper{
 		cdc:                          cdc,
@@ -131,12 +127,6 @@ func (k Keeper) HasAuthority(authority string) bool {
 
 func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
-}
-
-// GetGovAuthority returns the x/clob module's reference to the govAuthority address used
-// to ensure only the gov module can send messages related to updating ClobPairs.
-func (k Keeper) GetGovAuthority() string {
-	return k.govAuthority
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

@@ -95,13 +95,16 @@ func (_m *ClobKeeper) CreatePerpetualClobPair(ctx types.Context, clobPairId uint
 	ret := _m.Called(ctx, clobPairId, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 
 	var r0 clobtypes.ClobPair
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) (clobtypes.ClobPair, error)); ok {
+		return rf(ctx, clobPairId, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
+	}
 	if rf, ok := ret.Get(0).(func(types.Context, uint32, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) clobtypes.ClobPair); ok {
 		r0 = rf(ctx, clobPairId, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 	} else {
 		r0 = ret.Get(0).(clobtypes.ClobPair)
 	}
 
-	var r1 error
 	if rf, ok := ret.Get(1).(func(types.Context, uint32, uint32, subaccountstypes.BaseQuantums, subaccountstypes.BaseQuantums, int32, uint32, clobtypes.ClobPair_Status) error); ok {
 		r1 = rf(ctx, clobPairId, perpetualId, minOrderInBaseQuantums, stepSizeInBaseQuantums, quantumConversionExponent, subticksPerTick, status)
 	} else {
@@ -206,20 +209,6 @@ func (_m *ClobKeeper) GetFillablePrice(ctx types.Context, subaccountId subaccoun
 	}
 
 	return r0, r1
-}
-
-// GetGovAuthority provides a mock function with given fields:
-func (_m *ClobKeeper) GetGovAuthority() string {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	return r0
 }
 
 // GetIndexerEventManager provides a mock function with given fields:

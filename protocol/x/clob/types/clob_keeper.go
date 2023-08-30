@@ -125,5 +125,4 @@ type ClobKeeper interface {
 		clobPairId ClobPairId,
 		status ClobPair_Status,
 	) error
-	GetGovAuthority() string
 }

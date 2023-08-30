@@ -1,13 +1,14 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -21,14 +22,15 @@ import (
 
 func TestMsgServerSetClobPairStatus(t *testing.T) {
 	tests := map[string]struct {
-		testMsg        types.MsgSetClobPairStatus
-		setup          func(ks keepertest.ClobKeepersTestContext)
-		expectedResp   *types.MsgSetClobPairStatusResponse
-		getExpectedErr func(ks keepertest.ClobKeepersTestContext) string
-		expectedPanic  string
+		testMsg       types.MsgSetClobPairStatus
+		setup         func(ks keepertest.ClobKeepersTestContext)
+		expectedResp  *types.MsgSetClobPairStatusResponse
+		expectedErr   error
+		expectedPanic string
 	}{
 		"Success": {
 			testMsg: types.MsgSetClobPairStatus{
+				Authority:      authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				ClobPairId:     0,
 				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
 			},
@@ -45,12 +47,10 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 				), b)
 			},
 			expectedResp: &types.MsgSetClobPairStatusResponse{},
-			getExpectedErr: func(ks keepertest.ClobKeepersTestContext) string {
-				return ""
-			},
 		},
 		"Panic: clob pair not found": {
 			testMsg: types.MsgSetClobPairStatus{
+				Authority:      authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				ClobPairId:     0,
 				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
 			},
@@ -58,7 +58,7 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 		},
 		"Error: invalid authority": {
 			testMsg: types.MsgSetClobPairStatus{
-				Authority:      "12345",
+				Authority:      "foobar",
 				ClobPairId:     0,
 				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
 			},
@@ -73,13 +73,7 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 					types.ClobPairId(constants.ClobPair_Btc.Id),
 				), b)
 			},
-			getExpectedErr: func(ks keepertest.ClobKeepersTestContext) string {
-				return fmt.Sprintf(
-					"invalid authority: expected %s, got %s",
-					ks.ClobKeeper.GetGovAuthority(),
-					"12345",
-				)
-			},
+			expectedErr: govtypes.ErrInvalidSigner,
 		},
 	}
 
@@ -107,9 +101,8 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 				resp, err := msgServer.SetClobPairStatus(wrappedCtx, &tc.testMsg)
 				require.Equal(t, tc.expectedResp, resp)
 
-				expectedErr := tc.getExpectedErr(ks)
-				if expectedErr != "" {
-					require.ErrorContains(t, err, expectedErr)
+				if tc.expectedErr != nil {
+					require.ErrorIs(t, err, tc.expectedErr)
 				} else {
 					require.NoError(t, err)
 				}
