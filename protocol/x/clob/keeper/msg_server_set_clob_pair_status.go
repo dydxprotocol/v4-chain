@@ -23,7 +23,11 @@ func (k msgServer) SetClobPairStatus(
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.Keeper.SetClobPairStatus(ctx, types.ClobPairId(msg.GetClobPairId()), types.ClobPair_Status(msg.GetClobPairStatus())); err != nil {
+	if err := k.Keeper.SetClobPairStatus(
+		ctx,
+		types.ClobPairId(msg.GetClobPairId()), 
+		types.ClobPair_Status(msg.GetClobPairStatus()),
+	); err != nil {
 		return nil, err
 	}
 
