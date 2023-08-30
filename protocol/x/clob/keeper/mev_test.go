@@ -871,6 +871,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Params.Id,
 					p.Params.Ticker,
 					p.Params.MarketId,
 					p.Params.AtomicResolution,
@@ -889,6 +890,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			for _, clobPair := range tc.clobPairs {
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
+					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
@@ -1210,6 +1212,7 @@ func TestGetMidPrices(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Params.Id,
 					p.Params.Ticker,
 					p.Params.MarketId,
 					p.Params.AtomicResolution,
@@ -1228,6 +1231,7 @@ func TestGetMidPrices(t *testing.T) {
 			for _, clobPair := range tc.clobPairs {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
+					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),

@@ -466,10 +466,6 @@ func TestGenesis(t *testing.T) {
 			require.Equal(t, tc.genesis.LiquidationsConfig, got.LiquidationsConfig)
 			require.Equal(t, tc.genesis.BlockRateLimitConfig, got.BlockRateLimitConfig)
 			require.Equal(t, tc.genesis.EquityTierLimitConfig, got.EquityTierLimitConfig)
-
-			// The number of CLOB pairs in the store should match the amount created thus far.
-			numClobPairs := ks.ClobKeeper.GetNumClobPairs(ctx)
-			require.Equal(t, uint32(len(got.ClobPairs)), numClobPairs)
 		})
 	}
 }

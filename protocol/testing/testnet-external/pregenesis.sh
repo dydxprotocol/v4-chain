@@ -95,7 +95,7 @@ cleanup_tmp_dir() {
 # Set public-testnet specific genesis params.
 function overwrite_genesis_public_testnet() {
 	# Overwrite with public-testnet specific params.
-	# See https://www.notion.so/dydx/AC-Priv-Genesis-Parameters-d2321636dd494ee49cc95b7825cbbc98?pvs=4.
+	# TODO(CORE-512): add info/resources around genesis params.
 	
 	# Slashing params
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.signed_blocks_window' -v '12000' # ~5 hr

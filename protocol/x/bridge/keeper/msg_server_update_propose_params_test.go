@@ -5,12 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMsgServerUpdateProposeParams(t *testing.T) {
-	k, ms, ctx := setupMsgServer(t)
+	_, ms, ctx := setupMsgServer(t)
 
 	tests := map[string]struct {
 		testMsg      types.MsgUpdateProposeParams
@@ -19,7 +20,7 @@ func TestMsgServerUpdateProposeParams(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgUpdateProposeParams{
-				Authority: k.GetGovAuthority(),
+				Authority: constants.GovModuleAccAddressString,
 				Params: types.ProposeParams{
 					MaxBridgesPerBlock:           3,
 					ProposeDelayDuration:         time.Second,
@@ -40,8 +41,7 @@ func TestMsgServerUpdateProposeParams(t *testing.T) {
 				},
 			},
 			expectedErr: fmt.Sprintf(
-				"invalid authority: expected %s, got %s",
-				k.GetGovAuthority(),
+				"message authority %s is not valid for sending update propose params messages",
 				"12345",
 			),
 		},

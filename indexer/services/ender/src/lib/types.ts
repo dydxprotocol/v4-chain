@@ -28,6 +28,8 @@ import {
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
   LiquidityTierUpsertEventV1,
+  UpdatePerpetualEventV1,
+  UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -39,7 +41,8 @@ export interface EventHandlerData {
   txId: number,
 }
 
-// Type sourced from protocol https://github.com/dydxprotocol/v4/blob/main/indexer/events/constants.go
+// Type sourced from protocol:
+// https://github.com/dydxprotocol/v4-chain/blob/main/protocol/indexer/events/constants.go
 export enum DydxIndexerSubtypes {
   ORDER_FILL = 'order_fill',
   SUBACCOUNT_UPDATE = 'subaccount_update',
@@ -50,6 +53,8 @@ export enum DydxIndexerSubtypes {
   ASSET = 'asset',
   PERPETUAL_MARKET = 'perpetual_market',
   LIQUIDITY_TIER = 'liquidity_tier',
+  UPDATE_PERPETUAL = 'update_perpetual',
+  UPDATE_CLOB_PAIR = 'update_clob_pair',
 }
 
 // Generic interface used for creating the Handler objects
@@ -95,6 +100,14 @@ export type EventProtoWithType = {
 } | {
   type: DydxIndexerSubtypes.LIQUIDITY_TIER,
   eventProto: LiquidityTierUpsertEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+} | {
+  type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+  eventProto: UpdatePerpetualEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+} | {
+  type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+  eventProto: UpdateClobPairEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
 });
 

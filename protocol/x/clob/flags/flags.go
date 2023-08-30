@@ -11,6 +11,7 @@ import (
 type ClobFlags struct {
 	MaxLiquidationOrdersPerBlock uint32
 
+	MevTelemetryEnabled    bool
 	MevTelemetryHost       string
 	MevTelemetryIdentifier string
 }
@@ -21,6 +22,7 @@ const (
 	MaxLiquidationOrdersPerBlock = "max-liquidation-orders-per-block"
 
 	// Mev.
+	MevTelemetryEnabled    = "mev-telemetry-enabled"
 	MevTelemetryHost       = "mev-telemetry-host"
 	MevTelemetryIdentifier = "mev-telemetry-identifier"
 )
@@ -29,6 +31,7 @@ const (
 const (
 	DefaultMaxLiquidationOrdersPerBlock = 35
 
+	DefaultMevTelemetryEnabled    = false
 	DefaultMevTelemetryHost       = ""
 	DefaultMevTelemetryIdentifier = ""
 )
@@ -45,6 +48,11 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 			DefaultMaxLiquidationOrdersPerBlock,
 		),
 	)
+	cmd.Flags().Bool(
+		MevTelemetryEnabled,
+		DefaultMevTelemetryEnabled,
+		"Runs the MEV Telemetry collection agent if true.",
+	)
 	cmd.Flags().String(
 		MevTelemetryHost,
 		DefaultMevTelemetryHost,
@@ -60,6 +68,7 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 func GetDefaultClobFlags() ClobFlags {
 	return ClobFlags{
 		MaxLiquidationOrdersPerBlock: DefaultMaxLiquidationOrdersPerBlock,
+		MevTelemetryEnabled:          DefaultMevTelemetryEnabled,
 		MevTelemetryHost:             DefaultMevTelemetryHost,
 		MevTelemetryIdentifier:       DefaultMevTelemetryIdentifier,
 	}
@@ -74,6 +83,10 @@ func GetClobFlagValuesFromOptions(
 	result := GetDefaultClobFlags()
 
 	// Populate the flags if they exist.
+	if v, ok := appOpts.Get(MevTelemetryEnabled).(bool); ok {
+		result.MevTelemetryEnabled = v
+	}
+
 	if v, ok := appOpts.Get(MevTelemetryHost).(string); ok {
 		result.MevTelemetryHost = v
 	}

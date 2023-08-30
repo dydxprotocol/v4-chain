@@ -8,17 +8,15 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
-// CompleteBridge finalizes a bridge by minting coins to an address.
+// CompleteBridge finalizes a bridge by transferring coins to an address.
 func (k msgServer) CompleteBridge(
 	goCtx context.Context,
 	msg *types.MsgCompleteBridge,
 ) (*types.MsgCompleteBridgeResponse, error) {
-	// MsgCompleteBridge's authority should be bridge module.
-	if k.Keeper.GetBridgeAuthority() != msg.Authority {
+	if !k.Keeper.HasAuthority(msg.GetAuthority()) {
 		return nil, errors.Wrapf(
 			types.ErrInvalidAuthority,
-			"expected %s, got %s",
-			k.Keeper.GetBridgeAuthority(),
+			"message authority %s is not valid for sending complete bridge messages",
 			msg.Authority,
 		)
 	}

@@ -71,7 +71,7 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			_, bridgeKeeper, _, _, _, _ := keepertest.BridgeKeepers(t)
+			_, bridgeKeeper, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
@@ -79,6 +79,7 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			mockClobKeeper := &mocks.ProcessClobKeeper{}
+			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			handler := process.FullNodeProcessProposalHandler(

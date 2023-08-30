@@ -7,8 +7,6 @@ import (
 const (
 	// ClobPairKeyPrefix is the prefix to retrieve all ClobPair
 	ClobPairKeyPrefix = "ClobPair/value/"
-	// NumClobPairsKey is the prefix to retrieve the cardinality of ClobPairs
-	NumClobPairsKey = "ClobPair/num/"
 )
 
 // ClobPairKey returns the store key to retrieve a ClobPair from the index fields
