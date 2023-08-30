@@ -16,6 +16,7 @@ import {
   TendermintEventTable,
   testConstants,
   protocolTranslations,
+  liquidityTierRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
@@ -57,6 +58,7 @@ describe('liquidityTierHandler', () => {
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    liquidityTierRefresher.clear();
   });
 
   afterAll(async () => {
@@ -118,6 +120,7 @@ describe('liquidityTierHandler', () => {
     expect(newLiquidityTiers.length).toEqual(1);
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
+    validateLiquidityTierRefresher(defaultLiquidityTierUpsertEvent);
   });
 
   it('updates existing liquidity tier', async () => {
@@ -143,6 +146,7 @@ describe('liquidityTierHandler', () => {
     expect(newLiquidityTiers.length).toEqual(1);
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
+    validateLiquidityTierRefresher(defaultLiquidityTierUpsertEvent);
   });
 });
 
@@ -223,4 +227,24 @@ async function expectNoExistingLiquidityTiers() {
     });
 
   expect(liquidityTiers.length).toEqual(0);
+}
+
+function validateLiquidityTierRefresher(
+  liquidityTierEvent: LiquidityTierUpsertEventV1,
+) {
+  const liquidityTier:
+  LiquidityTiersFromDatabase = liquidityTierRefresher.getLiquidityTierFromId(
+    liquidityTierEvent.id,
+  );
+
+  expect(liquidityTier).toEqual({
+    id: liquidityTierEvent.id,
+    name: liquidityTierEvent.name,
+    initialMarginPpm: liquidityTierEvent.initialMarginPpm.toString(),
+    maintenanceFractionPpm: liquidityTierEvent.maintenanceFractionPpm.toString(),
+    basePositionNotional: protocolTranslations.quantumsToHuman(
+      liquidityTierEvent.basePositionNotional.toString(),
+      QUOTE_CURRENCY_ATOMIC_RESOLUTION,
+    ).toFixed(6),
+  });
 }

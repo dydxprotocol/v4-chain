@@ -3,6 +3,7 @@ import {
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
   dbHelpers,
+  liquidityTierRefresher,
   perpetualMarketRefresher,
   protocolTranslations,
   testMocks,
@@ -25,12 +26,14 @@ import {
   binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
+  expectMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import { UpdateClobPairHandler } from '../../src/handlers/update-clob-pair-handler';
-import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
+import { generatePerpetualMarketMessage } from '../../src/helpers/kafka-helper';
 
 describe('update-clob-pair-handler', () => {
   beforeAll(async () => {
@@ -44,12 +47,14 @@ describe('update-clob-pair-handler', () => {
     await testMocks.seedData();
     updateBlockCache(defaultPreviousHeight);
     await perpetualMarketRefresher.updatePerpetualMarkets();
+    await liquidityTierRefresher.updateLiquidityTiers();
   });
 
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
     perpetualMarketRefresher.clear();
+    liquidityTierRefresher.clear();
   });
 
   afterAll(async () => {
@@ -97,6 +102,7 @@ describe('update-clob-pair-handler', () => {
       time: defaultTime,
       txHash: defaultTxHash,
     });
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
     await onMessage(kafkaMessage);
 
     const perpetualMarketId: string = perpetualMarketRefresher.getPerpetualMarketFromClobPairId(
@@ -115,6 +121,7 @@ describe('update-clob-pair-handler', () => {
       stepBaseQuantums: defaultUpdateClobPairEvent.stepBaseQuantums.toNumber(),
     }));
     expectTimingStats();
+    expectPerpetualMarketKafkaMessage(producerSendMock, perpetualMarket!);
   });
 });
 
@@ -168,4 +175,14 @@ function createKafkaMessageFromUpdateClobPairEvent({
 
   const binaryBlock: Uint8Array = IndexerTendermintBlock.encode(block).finish();
   return createKafkaMessage(Buffer.from(binaryBlock));
+}
+
+function expectPerpetualMarketKafkaMessage(
+  producerSendMock: jest.SpyInstance,
+  perpetualMarket: PerpetualMarketFromDatabase,
+) {
+  expectMarketKafkaMessage({
+    producerSendMock,
+    contents: JSON.stringify(generatePerpetualMarketMessage(perpetualMarket)),
+  });
 }

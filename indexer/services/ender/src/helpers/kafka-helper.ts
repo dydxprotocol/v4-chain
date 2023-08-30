@@ -23,6 +23,8 @@ import {
   PerpetualPositionFromDatabase,
   AssetPositionSubaccountMessageContents,
   SubaccountTable,
+  LiquidityTiersFromDatabase,
+  liquidityTierRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { SubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -293,5 +295,38 @@ export function generateOrderSubaccountMessage(
     goodTilBlock: order.goodTilBlock,
     goodTilBlockTime: order.goodTilBlockTime,
     ticker,
+  };
+}
+
+export function generatePerpetualMarketMessage(
+  perpetualMarket: PerpetualMarketFromDatabase,
+): MarketMessageContents {
+  const liquidityTier: LiquidityTiersFromDatabase = liquidityTierRefresher.getLiquidityTierFromId(
+    perpetualMarket.liquidityTierId,
+  );
+
+  return {
+    trading: {
+      [perpetualMarket.ticker]: {
+        id: perpetualMarket.id,
+        clobPairId: perpetualMarket.clobPairId.toString(),
+        ticker: perpetualMarket.ticker,
+        marketId: perpetualMarket.marketId,
+        status: perpetualMarket.status,
+        quantumConversionExponent: perpetualMarket.quantumConversionExponent,
+        atomicResolution: perpetualMarket.atomicResolution,
+        subticksPerTick: perpetualMarket.subticksPerTick,
+        minOrderBaseQuantums: perpetualMarket.minOrderBaseQuantums,
+        stepBaseQuantums: perpetualMarket.stepBaseQuantums,
+        initialMarginFraction: helpers.ppmToString(Number(liquidityTier.initialMarginPpm)),
+        maintenanceMarginFraction: helpers.ppmToString(
+          helpers.getMaintenanceMarginPpm(
+            Number(liquidityTier.initialMarginPpm),
+            Number(liquidityTier.maintenanceFractionPpm),
+          ),
+        ),
+        basePositionNotional: liquidityTier.basePositionNotional,
+      },
+    },
   };
 }

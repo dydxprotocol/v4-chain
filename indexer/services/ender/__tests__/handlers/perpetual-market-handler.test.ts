@@ -18,15 +18,16 @@ import {
   TendermintEventTable,
   perpetualMarketRefresher,
   LiquidityTiersTable,
+  liquidityTierRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
-import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
   binaryToBase64String,
   createIndexerTendermintBlock,
-  createIndexerTendermintEvent, expectPerpetualMarket,
+  createIndexerTendermintEvent, expectMarketKafkaMessage, expectPerpetualMarket,
 } from '../helpers/indexer-proto-helpers';
 import { PerpetualMarketCreationHandler } from '../../src/handlers/perpetual-market-handler';
 import {
@@ -37,6 +38,7 @@ import {
   defaultTxHash,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
+import { generatePerpetualMarketMessage } from '../../src/helpers/kafka-helper';
 
 describe('perpetualMarketHandler', () => {
   beforeAll(async () => {
@@ -62,6 +64,7 @@ describe('perpetualMarketHandler', () => {
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    liquidityTierRefresher.clear();
   });
 
   afterAll(async () => {
@@ -133,6 +136,7 @@ describe('perpetualMarketHandler', () => {
       MarketTable.create(testConstants.defaultMarket),
       LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
     ]);
+    await liquidityTierRefresher.updateLiquidityTiers();
     await marketRefresher.updateMarkets();
 
     const transactionIndex: number = 0;
@@ -148,6 +152,7 @@ describe('perpetualMarketHandler', () => {
     // Confirm there is no existing perpetualMarket.
     await expectNoExistingPerpetualMarkets();
 
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
     await onMessage(kafkaMessage);
 
     const newPerpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
@@ -161,6 +166,7 @@ describe('perpetualMarketHandler', () => {
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromId('0');
     expect(perpetualMarket).toBeDefined();
     expectPerpetualMarket(perpetualMarket!, perpetualMarketEvent);
+    expectPerpetualMarketKafkaMessage(producerSendMock, perpetualMarket!);
   });
 });
 
@@ -243,4 +249,14 @@ async function expectNoExistingPerpetualMarkets() {
     });
 
   expect(perpetualMarkets.length).toEqual(0);
+}
+
+function expectPerpetualMarketKafkaMessage(
+  producerSendMock: jest.SpyInstance,
+  perpetualMarket: PerpetualMarketFromDatabase,
+) {
+  expectMarketKafkaMessage({
+    producerSendMock,
+    contents: JSON.stringify(generatePerpetualMarketMessage(perpetualMarket)),
+  });
 }
