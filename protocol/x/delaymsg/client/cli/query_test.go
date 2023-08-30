@@ -9,7 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
-	types2 "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
@@ -106,14 +106,14 @@ func TestQueryMessage(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				var resp types.QueryMessageResponse
-				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+				require.NoError(t, ctx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &resp))
 
-				err := resp.Message.UnpackInterfaces(ctx.Codec)
-				require.NoError(t, err)
+				//err := resp.Message.UnpackInterfaces(ctx.Codec)
+				//require.NoError(t, err)
 				msg, err := resp.Message.GetMessage()
 				require.NoError(t, err)
 
-				require.Equal(t, tc.expectedMsg, msg.(*types2.MsgCompleteBridge))
+				require.Equal(t, tc.expectedMsg, msg.(*bridgetypes.MsgCompleteBridge))
 			}
 		})
 	}
