@@ -513,7 +513,7 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 	return nil
 }
 
-// IsPerpetualClobPairInitializing returns true if the ClobPair associated with the provided perpetual id is
+// IsPerpetualClobPairInitializing returns true if the ClobPair associated with the provided perpetual id
 // has the initializing status.
 func (k Keeper) IsPerpetualClobPairInitializing(
 	ctx sdk.Context,
