@@ -69,3 +69,11 @@ func ArrayToMapInterface[T comparable](list []T) map[T]struct{} {
 	}
 	return ret
 }
+
+func Copy[K comparable, V any](originalMap map[K]V) map[K]V {
+	newMap := make(map[K]V)
+	for k, v := range originalMap {
+		newMap[k] = v
+	}
+	return newMap
+}
