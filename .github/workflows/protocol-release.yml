@@ -22,7 +22,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3.3.0
       - name: set tag env
-        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        run: echo "VERSION=${GITHUB_REF#refs/tags/protocol/}" >> $GITHUB_ENV
       - name: install go
         uses: actions/setup-go@v3
         with:
