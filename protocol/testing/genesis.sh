@@ -41,6 +41,13 @@ function edit_genesis() {
 		EXCHANGE_CONFIG_JSON_DIR="exchange_config"
 	fi
 
+	DELAY_MSG_JSON_DIR="$5"
+	if [ -z "$DELAY_MSG_JSON_DIR" ]; then
+		# Default to using exchange_config folder within the current directory.
+		DELAY_MSG_JSON_DIR="delaymsg_config"
+	fi
+
+
 	# Update crisis module.
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
 
@@ -1377,89 +1384,7 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
 
-	delaymsg=$(cat <<-EOF
-	{
-		"@type":"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
-		"authority":"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
-		"params":{
-			"tiers":[
-				{
-					"name":"1",
-					"absolute_volume_requirement":"0",
-					"total_volume_share_requirement_ppm":0,
-					"maker_volume_share_requirement_ppm":0,
-					"maker_fee_ppm":100,
-					"taker_fee_ppm":500
-				},
-				{
-					"name":"2",
-					"absolute_volume_requirement":"1000000000000",
-					"total_volume_share_requirement_ppm":0,
-					"maker_volume_share_requirement_ppm":0,
-					"maker_fee_ppm":100,
-					"taker_fee_ppm":450
-				},
-				{
-					"name":"3",
-					"absolute_volume_requirement":"5000000000000",
-					"total_volume_share_requirement_ppm":0,
-					"maker_volume_share_requirement_ppm":0,
-					"maker_fee_ppm":50,
-					"taker_fee_ppm":400
-				},
-				{
-					"name":"4",
-					"absolute_volume_requirement":"25000000000000",
-					"total_volume_share_requirement_ppm":0,
-					"maker_volume_share_requirement_ppm":0,
-					"maker_fee_ppm":0,
-					"taker_fee_ppm":350
-				},
-				{
-					"name":"5",
-					"absolute_volume_requirement":"125000000000000",
-					"total_volume_share_requirement_ppm":0,
-					"maker_volume_share_requirement_ppm":0,
-					"maker_fee_ppm":0,
-					"taker_fee_ppm":300
-				},
-				{
-					"name":"6",
-					"absolute_volume_requirement":"125000000000000",
-					"total_volume_share_requirement_ppm":5000,
-					"maker_volume_share_requirement_ppm":0,
-					"maker_fee_ppm":-50,
-					"taker_fee_ppm":250
-				},
-				{
-					"name":"7",
-					"absolute_volume_requirement":"125000000000000",
-					"total_volume_share_requirement_ppm":5000,
-					"maker_volume_share_requirement_ppm":10000,
-					"maker_fee_ppm":-90,
-					"taker_fee_ppm":250
-				},
-				{
-					"name":"8",
-					"absolute_volume_requirement":"125000000000000",
-					"total_volume_share_requirement_ppm":5000,
-					"maker_volume_share_requirement_ppm":20000,
-					"maker_fee_ppm":-110,
-					"taker_fee_ppm":250
-				},
-				{
-					"name":"9",
-					"absolute_volume_requirement":"125000000000000",
-					"total_volume_share_requirement_ppm":5000,
-					"maker_volume_share_requirement_ppm":40000,
-					"maker_fee_ppm":-110,
-					"taker_fee_ppm":250
-				}
-			]
-		}
-	}
-	EOF
-	)
+	delaymsg=$(cat "$DELAY_MSG_JSON_DIR/perpetual_fee_params_msg.json" | jq -c '.')
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].msg' -v "$delaymsg"
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6480000'
 }
