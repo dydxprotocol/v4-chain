@@ -70,7 +70,17 @@ func ArrayToMapInterface[T comparable](list []T) map[T]struct{} {
 	return ret
 }
 
+// Copy returns a shallow copy of originalMap.
+// Parameters:
+//   - originalMap: The map to be copied.
+//
+// Returns:
+//
+//	A new map containing all the keys and values from originalMap.
 func Copy[K comparable, V any](originalMap map[K]V) map[K]V {
+	if originalMap == nil {
+		return nil
+	}
 	newMap := make(map[K]V)
 	for k, v := range originalMap {
 		newMap[k] = v

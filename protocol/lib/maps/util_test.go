@@ -272,9 +272,7 @@ func TestCopy(t *testing.T) {
 
 			// If the original map is modified, it should not affect the copied map
 			if tc.inputMap != nil {
-				for k := range tc.inputMap {
-					tc.inputMap[k] *= 2
-				}
+				tc.inputMap["new_key"] = 100
 				require.NotEqual(t, tc.inputMap, copiedMap)
 			}
 		})
