@@ -26,9 +26,9 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
       this.generateTimingStatsOptions('create_perpetual_market'),
     );
     return [
-      this.generateConsolidatedMarketKafkaEvent(JSON.stringify(
-        generatePerpetualMarketMessage(perpetualMarket),
-      )),
+      this.generateConsolidatedMarketKafkaEvent(
+        JSON.stringify(generatePerpetualMarketMessage([perpetualMarket])),
+      ),
     ];
   }
 

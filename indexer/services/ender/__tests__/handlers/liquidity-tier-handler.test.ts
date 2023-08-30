@@ -17,15 +17,18 @@ import {
   testConstants,
   protocolTranslations,
   liquidityTierRefresher,
+  PerpetualMarketFromDatabase,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
-import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
   binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
+  expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
 import { LiquidityTierHandler } from '../../src/handlers/liquidity-tier-handler';
 import {
@@ -33,6 +36,7 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { defaultLiquidityTier } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import _ from 'lodash';
 
 describe('liquidityTierHandler', () => {
   beforeAll(async () => {
@@ -110,6 +114,7 @@ describe('liquidityTierHandler', () => {
     // Confirm there is no existing liquidity tier
     await expectNoExistingLiquidityTiers();
 
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
     await onMessage(kafkaMessage);
 
     const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
@@ -121,6 +126,7 @@ describe('liquidityTierHandler', () => {
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
     validateLiquidityTierRefresher(defaultLiquidityTierUpsertEvent);
+    expectKafkaMessages(producerSendMock, liquidityTierEvent);
   });
 
   it('updates existing liquidity tier', async () => {
@@ -136,6 +142,7 @@ describe('liquidityTierHandler', () => {
     // Create existing liquidity tier
     await LiquidityTiersTable.upsert(defaultLiquidityTier);
 
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
     await onMessage(kafkaMessage);
 
     const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
@@ -147,6 +154,7 @@ describe('liquidityTierHandler', () => {
     expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
     expectTimingStats();
     validateLiquidityTierRefresher(defaultLiquidityTierUpsertEvent);
+    expectKafkaMessages(producerSendMock, liquidityTierEvent);
   });
 });
 
@@ -247,4 +255,21 @@ function validateLiquidityTierRefresher(
       QUOTE_CURRENCY_ATOMIC_RESOLUTION,
     ).toFixed(6),
   });
+}
+
+function expectKafkaMessages(
+  producerSendMock: jest.SpyInstance,
+  liquidityTier: LiquidityTierUpsertEventV1,
+) {
+  const perpetualMarkets: PerpetualMarketFromDatabase[] = _.filter(
+    perpetualMarketRefresher.getPerpetualMarketsList(),
+    (perpetualMarket: PerpetualMarketFromDatabase) => {
+      return perpetualMarket.liquidityTierId === liquidityTier.id;
+    },
+  );
+
+  if (perpetualMarkets.length === 0) {
+    return;
+  }
+  expectPerpetualMarketKafkaMessage(producerSendMock, perpetualMarkets);
 }

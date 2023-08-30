@@ -24,9 +24,9 @@ export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
       this.generateTimingStatsOptions('update_perpetual'),
     );
     return [
-      this.generateConsolidatedMarketKafkaEvent(JSON.stringify(
-        generatePerpetualMarketMessage(perpetualMarket),
-      )),
+      this.generateConsolidatedMarketKafkaEvent(
+        JSON.stringify(generatePerpetualMarketMessage([perpetualMarket])),
+      ),
     ];
   }
 
@@ -45,6 +45,7 @@ export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
         'Could not find perpetual market with corresponding updatePerpetualEvent.id',
         { event: this.event },
       );
+      // This assert should never be hit because a ParseMessageError should be thrown above.
       assert(false);
     }
 

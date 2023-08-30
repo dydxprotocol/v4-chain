@@ -53,6 +53,7 @@ import _ from 'lodash';
 import {
   convertPerpetualPosition,
   generateFillSubaccountMessage,
+  generatePerpetualMarketMessage,
   generatePerpetualPositionsContents,
   isLiquidation,
 } from '../../src/helpers/kafka-helper';
@@ -186,6 +187,16 @@ export function expectSubaccountKafkaMessage({
     contents: JSON.parse(expectedSubaccountMessage.contents),
   };
   expect(subaccountMessageJsons).toContainEqual(expectedSubaccountMessageJson);
+}
+
+export function expectPerpetualMarketKafkaMessage(
+  producerSendMock: jest.SpyInstance,
+  perpetualMarkets: PerpetualMarketFromDatabase[],
+) {
+  expectMarketKafkaMessage({
+    producerSendMock,
+    contents: JSON.stringify(generatePerpetualMarketMessage(perpetualMarkets)),
+  });
 }
 
 export function expectMarketKafkaMessage({

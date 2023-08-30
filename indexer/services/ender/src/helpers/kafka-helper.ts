@@ -25,6 +25,10 @@ import {
   SubaccountTable,
   LiquidityTiersFromDatabase,
   liquidityTierRefresher,
+  LiquidityTiersMap,
+  PerpetualMarketColumns,
+  TradingPerpetualMarketMessage,
+  TradingMarketMessageContents,
 } from '@dydxprotocol-indexer/postgres';
 import { SubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -299,15 +303,17 @@ export function generateOrderSubaccountMessage(
 }
 
 export function generatePerpetualMarketMessage(
-  perpetualMarket: PerpetualMarketFromDatabase,
+  perpetualMarkets: PerpetualMarketFromDatabase[],
 ): MarketMessageContents {
-  const liquidityTier: LiquidityTiersFromDatabase = liquidityTierRefresher.getLiquidityTierFromId(
-    perpetualMarket.liquidityTierId,
-  );
+  const liquidityTierMap: LiquidityTiersMap = liquidityTierRefresher.getLiquidityTiersMap();
 
-  return {
-    trading: {
-      [perpetualMarket.ticker]: {
+  const tradingMarketMessageContents: TradingMarketMessageContents = _.chain(perpetualMarkets)
+    .keyBy(PerpetualMarketColumns.ticker)
+    .mapValues((perpetualMarket: PerpetualMarketFromDatabase): TradingPerpetualMarketMessage => {
+      const liquidityTier:
+      LiquidityTiersFromDatabase = liquidityTierMap[perpetualMarket.liquidityTierId];
+
+      return {
         id: perpetualMarket.id,
         clobPairId: perpetualMarket.clobPairId.toString(),
         ticker: perpetualMarket.ticker,
@@ -326,7 +332,11 @@ export function generatePerpetualMarketMessage(
           ),
         ),
         basePositionNotional: liquidityTier.basePositionNotional,
-      },
-    },
+      };
+    })
+    .value();
+
+  return {
+    trading: tradingMarketMessageContents,
   };
 }

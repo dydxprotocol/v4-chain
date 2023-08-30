@@ -26,14 +26,13 @@ import {
   binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
-  expectMarketKafkaMessage,
+  expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import { UpdateClobPairHandler } from '../../src/handlers/update-clob-pair-handler';
 import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
-import { generatePerpetualMarketMessage } from '../../src/helpers/kafka-helper';
 
 describe('update-clob-pair-handler', () => {
   beforeAll(async () => {
@@ -121,7 +120,7 @@ describe('update-clob-pair-handler', () => {
       stepBaseQuantums: defaultUpdateClobPairEvent.stepBaseQuantums.toNumber(),
     }));
     expectTimingStats();
-    expectPerpetualMarketKafkaMessage(producerSendMock, perpetualMarket!);
+    expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
   });
 });
 
@@ -175,14 +174,4 @@ function createKafkaMessageFromUpdateClobPairEvent({
 
   const binaryBlock: Uint8Array = IndexerTendermintBlock.encode(block).finish();
   return createKafkaMessage(Buffer.from(binaryBlock));
-}
-
-function expectPerpetualMarketKafkaMessage(
-  producerSendMock: jest.SpyInstance,
-  perpetualMarket: PerpetualMarketFromDatabase,
-) {
-  expectMarketKafkaMessage({
-    producerSendMock,
-    contents: JSON.stringify(generatePerpetualMarketMessage(perpetualMarket)),
-  });
 }
