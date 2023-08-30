@@ -18,20 +18,6 @@ type DelayMsgKeeper struct {
 	mock.Mock
 }
 
-// DecodeMessage provides a mock function with given fields: msgBytes, msg
-func (_m *DelayMsgKeeper) DecodeMessage(msgBytes []byte, msg *types.Msg) error {
-	ret := _m.Called(msgBytes, msg)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func([]byte, *types.Msg) error); ok {
-		r0 = rf(msgBytes, msg)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // DelayMessageByBlocks provides a mock function with given fields: ctx, msg, blockDelay
 func (_m *DelayMsgKeeper) DelayMessageByBlocks(ctx types.Context, msg types.Msg, blockDelay uint32) (uint32, error) {
 	ret := _m.Called(ctx, msg, blockDelay)

@@ -129,12 +129,6 @@ func (k Keeper) SetDelayedMessage(
 	return nil
 }
 
-// EncodeMessage encodes a sdk.Msg into bytes. This method is added to the keeper
-// for ease of testing.
-func (k Keeper) EncodeMessage(msg sdk.Msg) ([]byte, error) {
-	return k.cdc.MarshalInterface(msg)
-}
-
 // DelayMessageByBlocks registers an sdk.Msg to be executed after blockDelay blocks.
 func (k Keeper) DelayMessageByBlocks(
 	ctx sdk.Context,
