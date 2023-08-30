@@ -123,7 +123,7 @@ func (k Keeper) PlacePerpetualLiquidation(
 		orderSizeOptimisticallyFilledFromMatchingQuantums.ToUint64(),
 	).Float32()
 	telemetry.IncrCounterWithLabels(
-		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.OptimisticallyFilled, metrics.BaseQuantums},
+		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Filled, metrics.BaseQuantums},
 		optimisticallyFilled,
 		[]gometrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),

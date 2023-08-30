@@ -254,7 +254,7 @@ const (
 	SubaccountsNotLiquidatable            = "subaccounts_not_liquidatable"
 	LiquidationOrderNotionalQuoteQuantums = "liquidation_order_notional_quote_quantums"
 	Liquidated                            = "liquidated"
-	OptimisticallyFilled                  = "optimistically_filled"
+	Filled                                = "filled"
 	SubaccountMaxInsuranceLost            = "exceeds_subaccount_max_insurance_lost"
 	SubaccountMaxNotionalLiquidated       = "exceeds_subaccount_max_notional_liquidated"
 	LiquidationRequiresDeleveraging       = "liquidation_requires_deleveraging"
