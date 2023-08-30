@@ -13,7 +13,7 @@ func (k msgServer) SetClobPairStatus(
 	goCtx context.Context,
 	msg *types.MsgSetClobPairStatus,
 ) (*types.MsgSetClobPairStatusResponse, error) {
-	if !k.Keeper.HasAuthority(msg.GetAuthority()) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority %s",

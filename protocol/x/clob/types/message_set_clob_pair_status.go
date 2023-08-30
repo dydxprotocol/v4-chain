@@ -13,6 +13,7 @@ func (msg *MsgSetClobPairStatus) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+// ValidateBasic validates that the message's ClobPair status is a supported status.
 func (msg *MsgSetClobPairStatus) ValidateBasic() error {
 	if !IsSupportedClobPairStatus(ClobPair_Status(msg.ClobPairStatus)) {
 		return sdkerrors.Wrapf(

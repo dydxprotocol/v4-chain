@@ -27,7 +27,9 @@ service Msg {
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
   // CreateClobPair creates a new clob pair.
   rpc CreateClobPair(MsgCreateClobPair) returns (MsgCreateClobPairResponse);
-  // SetClobPairStatus sets the status of a clob pair.
+  // SetClobPairStatus sets the status of a clob pair. Should return an error
+  // if the authority is not in the clob keeper's set of authorities,
+  // if the ClobPair does not exist, or if the status transition is unsupported.
   rpc SetClobPairStatus(MsgSetClobPairStatus)
       returns (MsgSetClobPairStatusResponse);
   // UpdateEquityTierLimitConfiguration updates the equity tier limit
@@ -101,7 +103,9 @@ message MsgSetClobPairStatus {
   // clob_pair_id is the ID of the ClobPair to set the status of.
   uint32 clob_pair_id = 2;
 
-  // clob_pair_status is the ClobPair_Status to set the ClobPair to.
+  // clob_pair_status is the ClobPair_Status to set the ClobPair to. This currently does
+  // not directly reference the ClobPair.Status enum because of proto generation errors in
+  // typescript.
   int32 clob_pair_status = 3;
 }
 
