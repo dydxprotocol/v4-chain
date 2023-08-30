@@ -209,7 +209,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		app.AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
 		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
-		dydxApp.ModuleAccountAddrs(),
+		app.ModuleAccountAddrs(),
 		config,
 		dydxApp.AppCodec(),
 	)
@@ -281,7 +281,7 @@ func TestFullAppSimulation(t *testing.T) {
 		app.AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
 		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
-		dydxApp.ModuleAccountAddrs(),
+		app.ModuleAccountAddrs(),
 		config,
 		dydxApp.AppCodec(),
 	)
@@ -356,7 +356,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
 				simtypes.RandomAccounts,
 				simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
-				dydxApp.ModuleAccountAddrs(),
+				app.ModuleAccountAddrs(),
 				config,
 				dydxApp.AppCodec(),
 			)
