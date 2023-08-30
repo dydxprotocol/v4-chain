@@ -106,10 +106,10 @@ func TestQueryMessage(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				var resp types.QueryMessageResponse
-				require.NoError(t, ctx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &resp))
+				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
 
-				//err := resp.Message.UnpackInterfaces(ctx.Codec)
-				//require.NoError(t, err)
+				err := resp.Message.UnpackInterfaces(ctx.Codec)
+				require.NoError(t, err)
 				msg, err := resp.Message.GetMessage()
 				require.NoError(t, err)
 
