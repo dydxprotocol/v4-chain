@@ -56,7 +56,7 @@ describe('marketCreateHandler', () => {
       const marketEvent: MarketEventV1 = {
         marketId: 0,
         priceUpdate: {
-          priceWithExponent: Long.fromValue(1),
+          priceWithExponent: Long.fromValue(1, true),
         },
       };
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(

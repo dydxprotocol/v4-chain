@@ -258,7 +258,9 @@ describe('OrderUpdateHandler', () => {
           ...redisTestConstants.orderUpdate,
           orderUpdate: {
             ...redisTestConstants.orderUpdate.orderUpdate,
-            totalFilledQuantums: redisTestConstants.defaultOrder.quantums.add(Long.fromValue(100)),
+            totalFilledQuantums: redisTestConstants.defaultOrder.quantums.add(
+              Long.fromValue(100, true),
+            ),
           },
         };
         await handleOrderUpdate(exceedsFilledUpdate);
@@ -310,7 +312,9 @@ describe('OrderUpdateHandler', () => {
           ...redisTestConstants.orderUpdate,
           orderUpdate: {
             ...redisTestConstants.orderUpdate.orderUpdate,
-            totalFilledQuantums: redisTestConstants.defaultOrder.quantums.add(Long.fromValue(100)),
+            totalFilledQuantums: redisTestConstants.defaultOrder.quantums.add(
+              Long.fromValue(100, true),
+            ),
           },
         };
         await handleOrderUpdate(exceedsFilledUpdate);
