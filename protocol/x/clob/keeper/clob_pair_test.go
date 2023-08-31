@@ -816,7 +816,7 @@ func TestIsPerpetualClobPairInitializing(t *testing.T) {
 	testCases := map[string]struct {
 		clobPair                *types.ClobPair
 		perpetualIdToClobPairId map[uint32][]types.ClobPairId
-		resp 				    bool
+		resp                    bool
 		expectedErr             error
 	}{
 		"Errors when perpetual has no clob pairs": {
@@ -833,14 +833,14 @@ func TestIsPerpetualClobPairInitializing(t *testing.T) {
 				0: {types.ClobPairId(0)},
 			},
 			clobPair: &constants.ClobPair_Btc_Init,
-			resp: false,
+			resp:     false,
 		},
 		"Succeeds when clob pair is not initializing": {
 			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
 				0: {types.ClobPairId(0)},
 			},
 			clobPair: &constants.ClobPair_Btc,
-			resp: true,
+			resp:     true,
 		},
 	}
 

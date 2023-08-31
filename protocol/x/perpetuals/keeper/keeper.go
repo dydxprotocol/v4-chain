@@ -15,12 +15,12 @@ import (
 
 type (
 	Keeper struct {
-		cdc                                  codec.BinaryCodec
-		storeKey                             storetypes.StoreKey
-		pricesKeeper                         types.PricesKeeper
-		epochsKeeper                         types.EpochsKeeper
-		clobKeeper                           types.PerpetualsClobKeeper
-		indexerEventManager                  indexer_manager.IndexerEventManager
+		cdc                 codec.BinaryCodec
+		storeKey            storetypes.StoreKey
+		pricesKeeper        types.PricesKeeper
+		epochsKeeper        types.EpochsKeeper
+		clobKeeper          types.PerpetualsClobKeeper
+		indexerEventManager indexer_manager.IndexerEventManager
 	}
 )
 

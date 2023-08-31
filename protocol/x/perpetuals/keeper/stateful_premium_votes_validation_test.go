@@ -26,10 +26,10 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 	// liquidity tier 4: 60_000_000 * (50% - 40%) = 6_000_000
 	tests := map[string]struct {
 		// Setup.
-		votes                               []types.FundingPremium
+		votes                         []types.FundingPremium
 		isPerpetualClobPairActiveResp *IsPerpetualClobPairActiveResp
-		numPerpetuals                       int
-		expectedErr                         error
+		numPerpetuals                 int
+		expectedErr                   error
 	}{
 		"Valid: empty votes": {
 			votes:         []types.FundingPremium{},
