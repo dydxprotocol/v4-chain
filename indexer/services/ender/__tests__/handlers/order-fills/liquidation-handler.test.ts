@@ -115,7 +115,7 @@ describe('LiquidationHandler', () => {
   const defaultHeight: string = '3';
   const defaultDateTime: DateTime = DateTime.utc(2022, 6, 1, 12, 1, 1, 2);
   const defaultTime: Timestamp = {
-    seconds: Long.fromValue(Math.floor(defaultDateTime.toSeconds())),
+    seconds: Long.fromValue(Math.floor(defaultDateTime.toSeconds()), true),
     nanos: (defaultDateTime.toMillis() % SECONDS_IN_MILLIS) * MILLIS_IN_NANOS,
   };
   const defaultTxHash: string = '0x32343534306431622d306461302d343831322d613730372d3965613162336162';

@@ -71,7 +71,7 @@ describe('perpetual-market-validator', () => {
         'throws error on perpetual market create event missing stepBaseQuantums',
         {
           ...defaultPerpetualMarketCreateEvent,
-          stepBaseQuantums: Long.fromValue(0),
+          stepBaseQuantums: Long.fromValue(0, true),
         } as PerpetualMarketCreateEventV1,
         'PerpetualMarketCreateEvent stepBaseQuantums is not populated',
       ],

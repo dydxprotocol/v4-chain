@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,9 +31,6 @@ var (
 		return ok
 	}
 
-	ValidDelayMsg = &types.MsgDelayMessage{
-		Authority: AcceptedAuthority,
-	}
 	InvalidDelayMsg = &types.MsgDelayMessage{
 		Authority: InvalidAuthority,
 	}
@@ -43,26 +42,22 @@ var (
 
 func setupMockWithValidReturnValues(ctx sdk.Context, mck *mocks.DelayMsgKeeper) {
 	mck.On("DelayMessageByBlocks", ctx, mock.Anything, mock.Anything).Return(TestMsgId, nil)
-	mck.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil)
-	mck.On("HasAuthority", mock.MatchedBy(IsValidAuthority)).Return(true)
-	mck.On("HasAuthority", mock.Anything).Return(false)
-}
-
-func setupMockWithDecodeFailure(ctx sdk.Context, mck *mocks.DelayMsgKeeper) {
-	mck.On("DelayMessageByBlocks", ctx, mock.Anything, mock.Anything).Return(TestMsgId, nil)
-	mck.On("DecodeMessage", mock.Anything, mock.Anything).Return(TestError)
 	mck.On("HasAuthority", mock.MatchedBy(IsValidAuthority)).Return(true)
 	mck.On("HasAuthority", mock.Anything).Return(false)
 }
 
 func setupMockWithDelayMessageFailure(ctx sdk.Context, mck *mocks.DelayMsgKeeper) {
 	mck.On("DelayMessageByBlocks", ctx, mock.Anything, mock.Anything).Return(TestMsgId, TestError)
-	mck.On("DecodeMessage", mock.Anything, mock.Anything).Return(nil)
 	mck.On("HasAuthority", mock.MatchedBy(IsValidAuthority)).Return(true)
 	mck.On("HasAuthority", mock.Anything).Return(false)
 }
 
 func TestDelayMessage(t *testing.T) {
+	validDelayMsg := &types.MsgDelayMessage{
+		Authority: AcceptedAuthority,
+		Msg:       delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+	}
+
 	tests := map[string]struct {
 		msg         *types.MsgDelayMessage
 		setupMocks  func(ctx sdk.Context, mck *mocks.DelayMsgKeeper)
@@ -70,7 +65,7 @@ func TestDelayMessage(t *testing.T) {
 	}{
 		"Success": {
 			setupMocks: setupMockWithValidReturnValues,
-			msg:        ValidDelayMsg,
+			msg:        validDelayMsg,
 		},
 		"Panics when signed by invalid authority": {
 			setupMocks: setupMockWithValidReturnValues,
@@ -82,14 +77,9 @@ func TestDelayMessage(t *testing.T) {
 				InvalidAuthority,
 			),
 		},
-		"Panics if message does not decode": {
-			setupMocks:  setupMockWithDecodeFailure,
-			msg:         ValidDelayMsg,
-			expectedErr: fmt.Errorf("UnmarshalInterface for DelayedMessage failed, err = %w", TestError),
-		},
 		"Panics if DelayMessageByBlocks returns an error": {
 			setupMocks:  setupMockWithDelayMessageFailure,
-			msg:         ValidDelayMsg,
+			msg:         validDelayMsg,
 			expectedErr: fmt.Errorf("DelayMessageByBlocks failed, err  = %w", TestError),
 		},
 	}

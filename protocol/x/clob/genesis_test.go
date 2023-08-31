@@ -256,7 +256,7 @@ func TestGenesis(t *testing.T) {
 			expectedErr:     "0 is not a valid SpreadToMaintenanceMarginRatioPpm",
 			expectedErrType: types.ErrInvalidLiquidationsConfig,
 		},
-		"Genesis state is invalid when spread to maintenance margin ratio ppm is greater than one million": {
+		"Genesis state is valid when spread to maintenance margin ratio ppm is greater than one million": {
 			genesis: types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
 					MaxLiquidationFeePpm: 5_000,
@@ -268,8 +268,6 @@ func TestGenesis(t *testing.T) {
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
-			expectedErr:     "1000001 is not a valid SpreadToMaintenanceMarginRatioPpm",
-			expectedErrType: types.ErrInvalidLiquidationsConfig,
 		},
 		"Genesis state is invalid when bankruptcy adjustment ppm is less than one million": {
 			genesis: types.GenesisState{

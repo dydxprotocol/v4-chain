@@ -6,17 +6,26 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"ADAUSD\""
-    },
-    {
       "exchangeName": "Bitfinex",
       "ticker": "tADAUSD",
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Bitstamp",
+      "ticker": "ADA/USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "ADAUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "CoinbasePro",
       "ticker": "ADA-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "ADA_USD"
     },
     {
       "exchangeName": "Gate",
@@ -35,6 +44,11 @@
     {
       "exchangeName": "Kucoin",
       "ticker": "ADA-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "ADA_USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

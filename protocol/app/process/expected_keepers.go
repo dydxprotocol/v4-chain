@@ -26,6 +26,7 @@ type ProcessPricesKeeper interface {
 
 // ProcessClobKeeper defines the expected clob keeper used for `ProcessProposal`.
 type ProcessClobKeeper interface {
+	RecordMevMetricsIsEnabled() bool
 	RecordMevMetrics(
 		ctx sdk.Context,
 		stakingKeeper ProcessStakingKeeper,

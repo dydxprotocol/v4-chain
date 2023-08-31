@@ -211,8 +211,6 @@ export interface PerpetualMarketResponseObject {
   clobPairId: string;
   ticker: string;
   status: PerpetualMarketStatus;
-  baseAsset: string;
-  quoteAsset: string;
   lastPrice: string;
   oraclePrice: string;
   priceChange24H: string;
@@ -222,9 +220,6 @@ export interface PerpetualMarketResponseObject {
   initialMarginFraction: string;
   maintenanceMarginFraction: string;
   basePositionNotional: string;
-  basePositionSize: string;
-  incrementalPositionSize: string;
-  maxPositionSize: string;
   openInterest: string;
   atomicResolution: number;
   quantumConversionExponent: number;

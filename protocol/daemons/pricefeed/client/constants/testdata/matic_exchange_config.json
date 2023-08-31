@@ -6,12 +6,12 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"MATICUSD\""
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "MATIC-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "MATIC_USD"
     },
     {
       "exchangeName": "Gate",

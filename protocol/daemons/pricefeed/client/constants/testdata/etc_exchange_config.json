@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"ETCUSD\""
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "ETC-USD"
     },
@@ -17,15 +13,6 @@
       "exchangeName": "Gate",
       "ticker": "ETC_USDT",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Huobi",
-      "ticker": "etcusdt",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Kraken",
-      "ticker": "XETCZUSD"
     },
     {
       "exchangeName": "Okx",

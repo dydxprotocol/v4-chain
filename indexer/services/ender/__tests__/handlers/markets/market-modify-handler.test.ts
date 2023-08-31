@@ -49,7 +49,7 @@ describe('marketModifyHandler', () => {
       const marketEvent: MarketEventV1 = {
         marketId: 0,
         priceUpdate: {
-          priceWithExponent: Long.fromValue(1),
+          priceWithExponent: Long.fromValue(1, true),
         },
       };
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
@@ -84,7 +84,7 @@ describe('marketModifyHandler', () => {
     const transactionIndex: number = 0;
 
     const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvent: defaultMarketModify,
+      marketEvents: [defaultMarketModify],
       transactionIndex,
       height: defaultHeight,
       time: defaultTime,
@@ -104,10 +104,10 @@ describe('marketModifyHandler', () => {
     const transactionIndex: number = 0;
 
     const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvent: {
+      marketEvents: [{
         ...defaultMarketModify,
         marketId: 5,
-      },
+      }],
       transactionIndex,
       height: defaultHeight,
       time: defaultTime,

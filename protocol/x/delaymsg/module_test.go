@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
+	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,12 +25,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	// Exchange config json is left empty as it is not validated by the server.
-	// This genesis state is formatted to export back to itself. It explicitly defines all fields using valid defaults.
-	validGenesisState = `{"delayed_messages":[{"id":1,"msg":"YWFh","block_height":"100"}],"num_messages":2}`
 )
 
 func createAppModule(t *testing.T) delaymsg.AppModule {
@@ -130,8 +126,8 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 		},
 		"Invalid state": {
 			genesisJson: `{"num_messages":1,` +
-				`"delayed_messages":[{"id": 1,"msg":"YWFh","block_height":1}]}`,
-			expectedErr: "delayed message id exceeds total number of messages: Invalid genesis state",
+				`"delayed_messages":[{"id": 1,"block_height":1}]}`,
+			expectedErr: "invalid delayed message at index 0 with id 1: Delayed msg is nil: Invalid genesis state",
 		},
 	}
 	for name, tc := range tests {
@@ -152,6 +148,9 @@ func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
 
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	bridgetypes.RegisterInterfaces(interfaceRegistry)
+
+	validGenesisState := pricefeed.ReadJsonTestFile(t, "valid_genesis_state.json")
 
 	h := json.RawMessage(validGenesisState)
 
@@ -260,6 +259,10 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	bridgetypes.RegisterInterfaces(interfaceRegistry)
+
+	validGenesisState := pricefeed.ReadJsonTestFile(t, "valid_genesis_state.json")
+
 	gs := json.RawMessage(validGenesisState)
 
 	result := am.InitGenesis(ctx, cdc, gs)
@@ -272,7 +275,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, uint32(1), delayedMessage.Id)
 	require.Equal(t, int64(100), delayedMessage.BlockHeight)
-	require.Equal(t, []byte("aaa"), delayedMessage.Msg)
+	require.Equal(t, testutildelaymsg.CreateTestAnyMsg(t), delayedMessage.Msg)
 
 	blockIds, found := keeper.GetBlockMessageIds(ctx, 100)
 	require.True(t, found)
