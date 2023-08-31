@@ -48,6 +48,26 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 			},
 			expectedResp: &types.MsgSetClobPairStatusResponse{},
 		},
+		"Error: unsupported status transition": {
+			testMsg: types.MsgSetClobPairStatus{
+				Authority:      authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				ClobPairId:     0,
+				ClobPairStatus: int32(types.ClobPair_STATUS_INITIALIZING),
+			},
+			setup: func(ks keepertest.ClobKeepersTestContext) {
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				// Write clob pair to state with clob pair id 0 and status initializing.
+				clobPair := constants.ClobPair_Btc
+				clobPair.Status = types.ClobPair_STATUS_ACTIVE
+				b := cdc.MustMarshal(&clobPair)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(constants.ClobPair_Btc.Id),
+				), b)
+			},
+			expectedErr: types.ErrInvalidClobPairStatusTransition,
+		},
 		"Panic: clob pair not found": {
 			testMsg: types.MsgSetClobPairStatus{
 				Authority:      authtypes.NewModuleAddress(govtypes.ModuleName).String(),
