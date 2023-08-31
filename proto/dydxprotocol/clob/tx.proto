@@ -10,6 +10,7 @@ import "dydxprotocol/clob/equity_tier_limit_config.proto";
 import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/order_removals.proto";
+import "dydxprotocol/clob/liquidations_config.proto";
 
 // this line is used by starport scaffolding # proto/tx/import
 
@@ -35,6 +36,9 @@ service Msg {
   // configuration in state.
   rpc UpdateBlockRateLimitConfiguration(MsgUpdateBlockRateLimitConfiguration)
       returns (MsgUpdateBlockRateLimitConfigurationResponse);
+    // UpdateLiquidationsConfig updates the liquidations configuration in state.
+  rpc UpdateLiquidationsConfig(MsgUpdateLiquidationsConfig)
+      returns (MsgUpdateLiquidationsConfigResponse);
 }
 
 // MsgCreateClobPair is a message used by x/gov for creating a new clob pair.
@@ -132,3 +136,19 @@ message MsgUpdateBlockRateLimitConfiguration {
 // MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
 // response type.
 message MsgUpdateBlockRateLimitConfigurationResponse {}
+
+// MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig request type.
+message MsgUpdateLiquidationsConfig {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // The address that controls the module.
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // Defines the liquidations configuration to update to. All fields must
+  // be set.
+  LiquidationsConfig liquidations_config = 2
+      [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type.
+message MsgUpdateLiquidationsConfigResponse {}
