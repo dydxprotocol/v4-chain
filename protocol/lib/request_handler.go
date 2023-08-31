@@ -25,8 +25,6 @@ func NewRequestHandlerImpl(client *http.Client) *RequestHandlerImpl {
 // Get wraps `http.Get` which makes an HTTP GET request to a URL and returns a response.
 func (r *RequestHandlerImpl) Get(ctx context.Context, url string) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	// Disable gzip compression to avoid having to decompress the response.
-	req.Header.Add("Accept-Encoding", "identity")
 	if err != nil {
 		return nil, err
 	}
