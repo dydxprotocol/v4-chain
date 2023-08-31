@@ -160,6 +160,34 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			advanceBlock: true,
 			expectError:  true,
 		},
+		"Long-term order would exceed max open stateful orders (due to untriggered conditional order) across blocks": {
+			firstOrder: MustScaleOrder(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20,
+				testapp.DefaultGenesis(),
+			),
+			secondOrder: MustScaleOrder(
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				testapp.DefaultGenesis(),
+			),
+			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
+				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
+					{
+						UsdTncRequired: dtypes.NewInt(0),
+						Limit:          0,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(5_000_000_000), // $5,000
+						Limit:          1,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(70_000_000_000), // $70,000
+						Limit:          100,
+					},
+				},
+			},
+			advanceBlock: true,
+			expectError:  true,
+		},
 		"Conditional order would exceed max open stateful orders across blocks": {
 			firstOrder: MustScaleOrder(
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -304,6 +332,37 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 				},
 			},
 		},
+		"Order cancellation of untriggered order prevents exceeding max open stateful orders for long-term order in " +
+			"same block": {
+			firstOrder: MustScaleOrder(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20,
+				testapp.DefaultGenesis(),
+			),
+			secondOrder: MustScaleOrder(
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				testapp.DefaultGenesis(),
+			),
+			cancellation: clobtypes.NewMsgCancelOrderStateful(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20.GetGoodTilBlockTime(),
+			),
+			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
+				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
+					{
+						UsdTncRequired: dtypes.NewInt(0),
+						Limit:          0,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(5_000_000_000), // $5,000
+						Limit:          1,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(70_000_000_000), // $70,000
+						Limit:          100,
+					},
+				},
+			},
+		},
 		"Order cancellation prevents exceeding max open stateful orders for conditional order in same block": {
 			firstOrder: MustScaleOrder(
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -377,6 +436,38 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			cancellation: clobtypes.NewMsgCancelOrderStateful(
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetGoodTilBlockTime(),
+			),
+			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
+				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
+					{
+						UsdTncRequired: dtypes.NewInt(0),
+						Limit:          0,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(5_000_000_000), // $5,000
+						Limit:          1,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(70_000_000_000), // $70,000
+						Limit:          100,
+					},
+				},
+			},
+			advanceBlock: true,
+		},
+		"Order cancellation of untriggered order prevents exceeding max open stateful orders for long-term order " +
+			"across blocks": {
+			firstOrder: MustScaleOrder(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20,
+				testapp.DefaultGenesis(),
+			),
+			secondOrder: MustScaleOrder(
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				testapp.DefaultGenesis(),
+			),
+			cancellation: clobtypes.NewMsgCancelOrderStateful(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20.GetGoodTilBlockTime(),
 			),
 			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
 				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
