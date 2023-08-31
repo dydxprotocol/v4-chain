@@ -401,6 +401,33 @@ func (k Keeper) UpdateClobPair(
 ) error {
 	oldClobPair := k.mustGetClobPair(ctx, types.ClobPairId(clobPair.Id))
 
+	// Note, only perpetual clob pairs are currently supported. Neither the old nor the
+	// new clob pair should be spot.
+	if clobPair.MustGetPerpetualId() != oldClobPair.MustGetPerpetualId() {
+		return sdkerrors.Wrap(
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: cannot update ClobPair perpetual id",
+		)
+	}
+	if clobPair.StepBaseQuantums != oldClobPair.StepBaseQuantums {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: cannot update ClobPair step base quantums",
+		)
+	}
+	if clobPair.SubticksPerTick != oldClobPair.SubticksPerTick {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: cannot update ClobPair subticks per tick",
+		)
+	}
+	if clobPair.QuantumConversionExponent != oldClobPair.QuantumConversionExponent {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: cannot update ClobPair quantum conversion exponent",
+		)
+	}
+
 	oldStatus := oldClobPair.Status
 	newStatus := clobPair.Status
 	if oldStatus != newStatus && !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {

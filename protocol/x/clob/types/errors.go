@@ -183,6 +183,11 @@ var (
 		38,
 		"MsgUpdateClobPair is invalid",
 	)
+	ErrInvalidClobPairUpdate = sdkerrors.Register(
+		ModuleName,
+		39,
+		"ClobPair update is invalid",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(

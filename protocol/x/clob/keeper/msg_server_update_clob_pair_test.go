@@ -22,16 +22,30 @@ import (
 
 func TestMsgServerUpdateClobPair(t *testing.T) {
 	tests := map[string]struct {
+		msg           *types.MsgUpdateClobPair
 		authority     string
-		status        types.ClobPair_Status
+		clobPair      types.ClobPair
 		setup         func(ks keepertest.ClobKeepersTestContext)
 		expectedResp  *types.MsgUpdateClobPairResponse
 		expectedErr   error
 		expectedPanic string
 	}{
 		"Success": {
-			authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-			status:    types.ClobPair_STATUS_ACTIVE,
+			msg: &types.MsgUpdateClobPair{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				ClobPair: &types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           5,
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
 			setup: func(ks keepertest.ClobKeepersTestContext) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
@@ -46,14 +60,28 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			expectedResp: &types.MsgUpdateClobPairResponse{},
 		},
-		"Error: unsupported status transition": {
+		"Error: unsupported status transition from active to initializing": {
 			authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-			status:    types.ClobPair_STATUS_INITIALIZING,
+			msg: &types.MsgUpdateClobPair{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				ClobPair: &types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           5,
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_INITIALIZING,
+				},
+			},
 			setup: func(ks keepertest.ClobKeepersTestContext) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
-				// Write clob pair to state with clob pair id 0 and status initializing.
+				// Write clob pair to state with clob pair id 0 and status active.
 				clobPair := constants.ClobPair_Btc
 				clobPair.Status = types.ClobPair_STATUS_ACTIVE
 				b := cdc.MustMarshal(&clobPair)
@@ -64,13 +92,39 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			expectedErr: types.ErrInvalidClobPairStatusTransition,
 		},
 		"Panic: clob pair not found": {
-			authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-			status:        types.ClobPair_STATUS_ACTIVE,
+			msg: &types.MsgUpdateClobPair{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				ClobPair: &types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           5,
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
 			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
 		},
 		"Error: invalid authority": {
-			authority: "foobar",
-			status:    types.ClobPair_STATUS_ACTIVE,
+			msg: &types.MsgUpdateClobPair{
+				Authority: "foobar",
+				ClobPair: &types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           5,
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
 			setup: func(ks keepertest.ClobKeepersTestContext) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
@@ -83,6 +137,122 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				), b)
 			},
 			expectedErr: govtypes.ErrInvalidSigner,
+		},
+		"Error: cannot update metadata with new perpetual id": {
+			msg: &types.MsgUpdateClobPair{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				ClobPair: &types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 1,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           5,
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
+			setup: func(ks keepertest.ClobKeepersTestContext) {
+				// write default btc clob pair to state
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				// Write clob pair to state with clob pair id 0 and status initializing.
+				b := cdc.MustMarshal(&constants.ClobPair_Btc)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(constants.ClobPair_Btc.Id),
+				), b)
+			},
+			expectedErr: types.ErrInvalidClobPairUpdate,
+		},
+		"Error: cannot update step base quantums": {
+			msg: &types.MsgUpdateClobPair{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				ClobPair: &types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 1,
+						},
+					},
+					StepBaseQuantums:          10,
+					SubticksPerTick:           5,
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
+			setup: func(ks keepertest.ClobKeepersTestContext) {
+				// write default btc clob pair to state
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				// Write clob pair to state with clob pair id 0 and status initializing.
+				b := cdc.MustMarshal(&constants.ClobPair_Btc)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(constants.ClobPair_Btc.Id),
+				), b)
+			},
+			expectedErr: types.ErrInvalidClobPairUpdate,
+		},
+		"Error: cannot update subticks per tick": {
+			msg: &types.MsgUpdateClobPair{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				ClobPair: &types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 1,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           10,
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
+			setup: func(ks keepertest.ClobKeepersTestContext) {
+				// write default btc clob pair to state
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				// Write clob pair to state with clob pair id 0 and status initializing.
+				b := cdc.MustMarshal(&constants.ClobPair_Btc)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(constants.ClobPair_Btc.Id),
+				), b)
+			},
+			expectedErr: types.ErrInvalidClobPairUpdate,
+		},
+		"Error: cannot update quantum converstion exponent": {
+			msg: &types.MsgUpdateClobPair{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				ClobPair: &types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 1,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           5,
+					QuantumConversionExponent: -4,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
+			setup: func(ks keepertest.ClobKeepersTestContext) {
+				// write default btc clob pair to state
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				// Write clob pair to state with clob pair id 0 and status initializing.
+				b := cdc.MustMarshal(&constants.ClobPair_Btc)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(constants.ClobPair_Btc.Id),
+				), b)
+			},
+			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
 	}
 
@@ -101,20 +271,13 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			msgServer := keeper.NewMsgServerImpl(k)
 			wrappedCtx := sdk.WrapSDKContext(ks.Ctx)
 
-			clobPair := constants.ClobPair_Btc
-			clobPair.Status = tc.status
-			msg := types.MsgUpdateClobPair{
-				Authority: tc.authority,
-				ClobPair:  &clobPair,
-			}
-
 			if tc.expectedPanic != "" {
 				require.PanicsWithValue(t, tc.expectedPanic, func() {
-					_, err := msgServer.UpdateClobPair(wrappedCtx, &msg)
+					_, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
 					require.NoError(t, err)
 				})
 			} else {
-				resp, err := msgServer.UpdateClobPair(wrappedCtx, &msg)
+				resp, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
 				require.Equal(t, tc.expectedResp, resp)
 
 				if tc.expectedErr != nil {
