@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type IsPerpetualClobPairInitializingResp struct {
-	isPerpetualClobPairInitializing    bool
-	isPerpetualClobPairInitializingErr error
+type IsPerpetualClobPairActiveResp struct {
+	isPerpetualClobPairActive    bool
+	isPerpetualClobPairActiveErr error
 }
 
 func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
@@ -27,7 +27,7 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
 		votes                               []types.FundingPremium
-		isPerpetualClobPairInitializingResp *IsPerpetualClobPairInitializingResp
+		isPerpetualClobPairActiveResp *IsPerpetualClobPairActiveResp
 		numPerpetuals                       int
 		expectedErr                         error
 	}{
@@ -132,9 +132,8 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 					PremiumPpm:  0,
 				},
 			},
-			isPerpetualClobPairInitializingResp: &IsPerpetualClobPairInitializingResp{
-				isPerpetualClobPairInitializing:    false,
-				isPerpetualClobPairInitializingErr: clobtypes.ErrInvalidClob,
+			isPerpetualClobPairActiveResp: &IsPerpetualClobPairActiveResp{
+				isPerpetualClobPairActiveErr: clobtypes.ErrInvalidClob,
 			},
 			numPerpetuals: 1,
 			expectedErr:   clobtypes.ErrInvalidClob,
@@ -146,34 +145,33 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 					PremiumPpm:  1,
 				},
 			},
-			isPerpetualClobPairInitializingResp: &IsPerpetualClobPairInitializingResp{
-				isPerpetualClobPairInitializing:    true,
-				isPerpetualClobPairInitializingErr: nil,
+			isPerpetualClobPairActiveResp: &IsPerpetualClobPairActiveResp{
+				isPerpetualClobPairActive:    false,
+				isPerpetualClobPairActiveErr: nil,
 			},
 			numPerpetuals: 1,
-			expectedErr:   types.ErrPremiumVoteForInitializingMarket,
+			expectedErr:   types.ErrPremiumVoteForNonActiveMarket,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			mockPCPIC := &mocks.PerpetualClobPairInitializingChecker{}
+			mockPCPIC := &mocks.PerpetualsClobKeeper{}
 			ctx, k, pricesKeeper, _, _ := keepertest.PerpetualsKeepersWithClobHelpers(
 				t,
-				nil,
 				mockPCPIC,
 			)
 
 			// set mock expectations
 			for _, vote := range tc.votes {
-				isInitializing := false
+				isActive := true
 				var err error
-				if tc.isPerpetualClobPairInitializingResp != nil {
-					isInitializing = tc.isPerpetualClobPairInitializingResp.isPerpetualClobPairInitializing
-					err = tc.isPerpetualClobPairInitializingResp.isPerpetualClobPairInitializingErr
+				if tc.isPerpetualClobPairActiveResp != nil {
+					isActive = tc.isPerpetualClobPairActiveResp.isPerpetualClobPairActive
+					err = tc.isPerpetualClobPairActiveResp.isPerpetualClobPairActiveErr
 				}
-				mockPCPIC.On("IsPerpetualClobPairInitializing", ctx, vote.PerpetualId).Once().Return(
-					isInitializing,
+				mockPCPIC.On("IsPerpetualClobPairActive", ctx, vote.PerpetualId).Once().Return(
+					isActive,
 					err,
 				)
 			}

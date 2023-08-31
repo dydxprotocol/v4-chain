@@ -89,10 +89,10 @@ var (
 		17,
 		"Perpetual already exists",
 	)
-	ErrPremiumVoteForInitializingMarket = sdkerrors.Register(
+	ErrPremiumVoteForNonActiveMarket = sdkerrors.Register(
 		ModuleName,
 		18,
-		"Premium votes are disallowed for initializing markets",
+		"Premium votes are disallowed for non active markets",
 	)
 
 	// Errors for Not Implemented

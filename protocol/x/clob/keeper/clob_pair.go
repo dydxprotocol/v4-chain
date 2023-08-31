@@ -513,9 +513,9 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 	return nil
 }
 
-// IsPerpetualClobPairInitializing returns true if the ClobPair associated with the provided perpetual id
-// has the initializing status.
-func (k Keeper) IsPerpetualClobPairInitializing(
+// IsPerpetualClobPairActive returns true if the ClobPair associated with the provided perpetual id
+// has the active status. Returns an error if the ClobPair cannot be found.
+func (k Keeper) IsPerpetualClobPairActive(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (bool, error) {
@@ -533,5 +533,5 @@ func (k Keeper) IsPerpetualClobPairInitializing(
 		)
 	}
 
-	return clobPair.Status == types.ClobPair_STATUS_INITIALIZING, nil
+	return clobPair.Status == types.ClobPair_STATUS_ACTIVE, nil
 }

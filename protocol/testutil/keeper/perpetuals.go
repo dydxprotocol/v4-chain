@@ -35,14 +35,12 @@ func PerpetualsKeepers(
 	return PerpetualsKeepersWithClobHelpers(
 		t,
 		nil,
-		nil,
 	)
 }
 
 func PerpetualsKeepersWithClobHelpers(
 	t testing.TB,
-	pricePremiumGetter types.PricePremiumGetter,
-	perpetualClobPairInitializingChecker types.PerpetualClobPairInitializingChecker,
+	clobKeeper types.PerpetualsClobKeeper,
 ) (
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
@@ -66,8 +64,7 @@ func PerpetualsKeepersWithClobHelpers(
 			cdc,
 			pricesKeeper,
 			epochsKeeper,
-			pricePremiumGetter,
-			perpetualClobPairInitializingChecker,
+			clobKeeper,
 			transientStoreKey,
 		)
 
@@ -86,8 +83,7 @@ func createPerpetualsKeeperWithClobHelpers(
 	cdc *codec.ProtoCodec,
 	pk *priceskeeper.Keeper,
 	ek *epochskeeper.Keeper,
-	ppg types.PricePremiumGetter,
-	pcpic types.PerpetualClobPairInitializingChecker,
+	pck types.PerpetualsClobKeeper,
 	transientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
@@ -106,8 +102,7 @@ func createPerpetualsKeeperWithClobHelpers(
 		mockIndexerEventsManager,
 	)
 
-	k.SetPricePremiumGetter(ppg)
-	k.SetPerpetualClobPairInitializingChecker(pcpic)
+	k.SetClobKeeper(pck)
 
 	return k, storeKey
 }
@@ -120,7 +115,7 @@ func createPerpetualsKeeper(
 	ek *epochskeeper.Keeper,
 	transientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	return createPerpetualsKeeperWithClobHelpers(stateStore, db, cdc, pk, ek, nil, nil, transientStoreKey)
+	return createPerpetualsKeeperWithClobHelpers(stateStore, db, cdc, pk, ek, nil, transientStoreKey)
 }
 
 // PopulateTestPremiumStore populates either `PremiumVotes` (`isVote` is true) or

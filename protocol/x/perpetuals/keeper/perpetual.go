@@ -459,7 +459,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		liquidityTier := lib.MustGetValue(allLiquidityTiers, uint(perp.Params.LiquidityTier))
 		bigImpactNotionalQuoteQuantums := new(big.Int).SetUint64(liquidityTier.ImpactNotional)
 
-		premiumPpm, err := k.pricePremiumGetter.GetPricePremiumForPerpetual(
+		premiumPpm, err := k.clobKeeper.GetPricePremiumForPerpetual(
 			ctx,
 			perp.Params.Id,
 			types.GetPricePremiumParams{
@@ -1218,8 +1218,8 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 			return err
 		}
 
-		// Zero values for perpetuals whose ClobPair is initializing
-		if isInitializing, err := k.perpetualClobPairInitializingChecker.IsPerpetualClobPairInitializing(
+		// Zero values for perpetuals whose ClobPair is not active
+		if isActive, err := k.clobKeeper.IsPerpetualClobPairActive(
 			ctx, vote.PerpetualId,
 		); err != nil {
 			return sdkerrors.Wrapf(
@@ -1227,10 +1227,10 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 				"PerformStatefulPremiumVotesValidation: failed to determine ClobPair status for perpetual with id %d",
 				vote.PerpetualId,
 			)
-		} else if isInitializing { // reject premium votes for initializing perpetuals
+		} else if !isActive { // reject premium votes for non active markets
 			return sdkerrors.Wrapf(
-				types.ErrPremiumVoteForInitializingMarket,
-				"PerformStatefulPremiumVotesValidation: no premium vote should be included for initializing perpetual with id %d",
+				types.ErrPremiumVoteForNonActiveMarket,
+				"PerformStatefulPremiumVotesValidation: no premium vote should be included for inactive perpetual with id %d",
 				vote.PerpetualId,
 			)
 		}

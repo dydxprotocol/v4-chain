@@ -19,8 +19,7 @@ type (
 		storeKey                             storetypes.StoreKey
 		pricesKeeper                         types.PricesKeeper
 		epochsKeeper                         types.EpochsKeeper
-		pricePremiumGetter                   types.PricePremiumGetter
-		perpetualClobPairInitializingChecker types.PerpetualClobPairInitializingChecker
+		clobKeeper                           types.PerpetualsClobKeeper
 		indexerEventManager                  indexer_manager.IndexerEventManager
 	}
 )
@@ -45,22 +44,13 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 
-// SetPricePremiumGetter sets the `PricePremiumGetter` reference, which is a Clob Keeper,
+// SetClobKeeper sets the `PerpetualsClobKeeper` reference, which is a Clob Keeper,
 // for this Perpetuals Keeper.
 // This method is called after the Perpetuals Keeper struct is initialized.
 // This reference is set with an explicit method call rather than during `NewKeeper`
 // due to the bidirectional dependency between the Perpetuals Keeper and the Clob Keeper.
-func (k *Keeper) SetPricePremiumGetter(getter types.PricePremiumGetter) {
-	k.pricePremiumGetter = getter
-}
-
-// SetPerpetualClobPairInitializingChecker sets the `PerpetualClobPairInitializingChecker`
-// reference, which is a Clob Keeper, for this Perpetuals Keeper.
-// This method is called after the Perpetuals Keeper struct is initialized.
-// This reference is set with an explicit method call rather than during `NewKeeper`
-// due to the bidirectional dependency between the Perpetuals Keeper and the Clob Keeper.
-func (k *Keeper) SetPerpetualClobPairInitializingChecker(checker types.PerpetualClobPairInitializingChecker) {
-	k.perpetualClobPairInitializingChecker = checker
+func (k *Keeper) SetClobKeeper(getter types.PerpetualsClobKeeper) {
+	k.clobKeeper = getter
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
