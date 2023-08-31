@@ -41,7 +41,21 @@ var (
 		// This covers both capitalized and not capitalized "internal error".
 		"[Ii]nternal error",
 
+		// INTERNAL_ERROR status code is returned when a remote endpoint closes a http2 stream and indicates an error
+		// on the side of the remote endpoint.
+		"INTERNAL_ERROR",
+
 		"SYS_ERROR",
+
+		// This can sometimes occur with TLS errors, or could arise as a result of gzip decompression by the go
+		// http2 library.
+		"unexpected EOF",
+
+		// Server closed connection. Could be due to rate limiting.
+		"http2: client connection force closed via ClientConn.Close",
+
+		// Mecx-specific error response
+		"mexc response code is not 200",
 	}
 )
 
