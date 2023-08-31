@@ -18,7 +18,8 @@ func (msg *MsgSetClobPairStatus) ValidateBasic() error {
 	if !IsSupportedClobPairStatus(ClobPair_Status(msg.ClobPairStatus)) {
 		return sdkerrors.Wrapf(
 			ErrInvalidMsgSetClobPairStatus,
-			"Unsupported ClobPair status: %+v",
+			"Cannot set status for ClobPair with id %d to unsupported ClobPair status %s",
+			msg.ClobPairId,
 			msg.ClobPairStatus,
 		)
 	}
