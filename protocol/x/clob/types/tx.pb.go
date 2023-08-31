@@ -428,7 +428,9 @@ type MsgSetClobPairStatus struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// clob_pair_id is the ID of the ClobPair to set the status of.
 	ClobPairId uint32 `protobuf:"varint,2,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
-	// clob_pair_status is the ClobPair_Status to set the ClobPair to.
+	// clob_pair_status is the ClobPair_Status to set the ClobPair to. This currently does
+	// not directly reference the ClobPair.Status enum because of proto generation errors in
+	// typescript.
 	ClobPairStatus int32 `protobuf:"varint,3,opt,name=clob_pair_status,json=clobPairStatus,proto3" json:"clob_pair_status,omitempty"`
 }
 
@@ -928,7 +930,9 @@ type MsgClient interface {
 	CancelOrder(ctx context.Context, in *MsgCancelOrder, opts ...grpc.CallOption) (*MsgCancelOrderResponse, error)
 	// CreateClobPair creates a new clob pair.
 	CreateClobPair(ctx context.Context, in *MsgCreateClobPair, opts ...grpc.CallOption) (*MsgCreateClobPairResponse, error)
-	// SetClobPairStatus sets the status of a clob pair.
+	// SetClobPairStatus sets the status of a clob pair. Should return an error
+	// if the authority is not in the clob keeper's set of authorities,
+	// if the ClobPair does not exist, or if the status transition is unsupported.
 	SetClobPairStatus(ctx context.Context, in *MsgSetClobPairStatus, opts ...grpc.CallOption) (*MsgSetClobPairStatusResponse, error)
 	// UpdateEquityTierLimitConfiguration updates the equity tier limit
 	// configuration in state.
@@ -1020,7 +1024,9 @@ type MsgServer interface {
 	CancelOrder(context.Context, *MsgCancelOrder) (*MsgCancelOrderResponse, error)
 	// CreateClobPair creates a new clob pair.
 	CreateClobPair(context.Context, *MsgCreateClobPair) (*MsgCreateClobPairResponse, error)
-	// SetClobPairStatus sets the status of a clob pair.
+	// SetClobPairStatus sets the status of a clob pair. Should return an error
+	// if the authority is not in the clob keeper's set of authorities,
+	// if the ClobPair does not exist, or if the status transition is unsupported.
 	SetClobPairStatus(context.Context, *MsgSetClobPairStatus) (*MsgSetClobPairStatusResponse, error)
 	// UpdateEquityTierLimitConfiguration updates the equity tier limit
 	// configuration in state.
