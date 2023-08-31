@@ -215,7 +215,6 @@ func (k Keeper) PlaceStatefulOrder(
 				{
 					RemainingQuantums: order.GetBaseQuantums(),
 					IsBuy:             order.IsBuy(),
-					IsTaker:           true,
 					Subticks:          order.GetOrderSubticks(),
 					ClobPairId:        order.GetClobPairId(),
 				},

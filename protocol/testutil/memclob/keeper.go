@@ -368,7 +368,6 @@ func (f *FakeMemClobKeeper) ProcessSingleMatch(
 	subaccountMatchedOrders[matchWithOrders.MakerOrder.GetSubaccountId()] = []types.PendingOpenOrder{{
 		RemainingQuantums: fillAmount,
 		IsBuy:             makerOrder.IsBuy(),
-		IsTaker:           false,
 		Subticks:          makerOrder.GetOrderSubticks(),
 		ClobPairId:        makerOrder.GetClobPairId(),
 	}}
@@ -376,7 +375,6 @@ func (f *FakeMemClobKeeper) ProcessSingleMatch(
 	subaccountMatchedOrders[matchWithOrders.TakerOrder.GetSubaccountId()] = []types.PendingOpenOrder{{
 		RemainingQuantums: fillAmount,
 		IsBuy:             takerOrder.IsBuy(),
-		IsTaker:           true,
 		Subticks:          makerOrder.GetOrderSubticks(),
 		ClobPairId:        takerOrder.GetClobPairId(),
 	}}

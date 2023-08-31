@@ -40,7 +40,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetBaseQuantums(),
 								IsBuy:             constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.IsBuy(),
-								IsTaker:           false,
 								Subticks:          constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderSubticks(),
 								ClobPairId:        constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetClobPairId(),
 							},
@@ -82,7 +81,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 10,
 								IsBuy:             false,
-								IsTaker:           false,
 								Subticks:          15,
 								ClobPairId:        0,
 							},
@@ -91,7 +89,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 10,
 								IsBuy:             true,
-								IsTaker:           true,
 								Subticks:          15,
 								ClobPairId:        0,
 							},
@@ -108,7 +105,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 15,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -179,7 +175,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -188,7 +183,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -205,7 +199,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 40,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -214,7 +207,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 40,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -299,7 +291,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -308,7 +299,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -387,7 +377,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -396,7 +385,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -413,7 +401,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 40,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -422,7 +409,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 40,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -499,7 +485,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -508,7 +493,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -525,7 +509,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 40,
 								IsBuy:             false,
-								IsTaker:           false,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -594,7 +577,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -603,7 +585,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          30,
 								ClobPairId:        0,
 							},
@@ -652,7 +633,6 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 							{
 								RemainingQuantums: constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.GetBaseQuantums(),
 								IsBuy:             constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.IsBuy(),
-								IsTaker:           false,
 								Subticks:          constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.GetOrderSubticks(),
 								ClobPairId:        constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.GetClobPairId(),
 							},
@@ -732,7 +712,6 @@ func TestPlaceOrder_PreexistingStatefulOrder(t *testing.T) {
 					{
 						RemainingQuantums: 5,
 						IsBuy:             true,
-						IsTaker:           false,
 						Subticks:          10,
 						ClobPairId:        0,
 					},

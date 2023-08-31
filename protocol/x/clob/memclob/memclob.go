@@ -1380,7 +1380,6 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 		RemainingQuantums: remainingAmount,
 		IsBuy:             order.IsBuy(),
 		// This order will be added to the book as a maker order, so it cannot be a taker order.
-		IsTaker:    false,
 		Subticks:   order.GetOrderSubticks(),
 		ClobPairId: order.GetClobPairId(),
 	}
