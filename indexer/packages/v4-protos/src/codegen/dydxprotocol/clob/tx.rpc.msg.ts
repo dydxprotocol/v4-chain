@@ -18,7 +18,11 @@ export interface Msg {
   /** CreateClobPair creates a new clob pair. */
 
   createClobPair(request: MsgCreateClobPair): Promise<MsgCreateClobPairResponse>;
-  /** SetClobPairStatus sets the status of a clob pair. */
+  /**
+   * SetClobPairStatus sets the status of a clob pair. Should return an error
+   * if the authority is not in the clob keeper's set of authorities,
+   * if the ClobPair does not exist, or if the status transition is unsupported.
+   */
 
   setClobPairStatus(request: MsgSetClobPairStatus): Promise<MsgSetClobPairStatusResponse>;
   /**
