@@ -31,8 +31,8 @@ func (k Keeper) GetPricePremiumForPerpetual(
 		)
 	}
 
-	// Zero premium if ClobPair is in initializing mode.
-	if clobPair.Status == types.ClobPair_STATUS_INITIALIZING {
+	// Zero premium if ClobPair is not active.
+	if clobPair.Status != types.ClobPair_STATUS_ACTIVE {
 		return 0, nil
 	}
 
