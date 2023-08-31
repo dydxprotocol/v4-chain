@@ -428,9 +428,9 @@ type MsgSetClobPairStatus struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// clob_pair_id is the ID of the ClobPair to set the status of.
 	ClobPairId uint32 `protobuf:"varint,2,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
-	// clob_pair_status is the ClobPair_Status to set the ClobPair to. This currently does
-	// not directly reference the ClobPair.Status enum because of proto generation errors in
-	// typescript.
+	// clob_pair_status is the ClobPair_Status to set the ClobPair to. This
+	// currently does not directly reference the ClobPair.Status enum because of
+	// proto generation errors in typescript.
 	ClobPairStatus int32 `protobuf:"varint,3,opt,name=clob_pair_status,json=clobPairStatus,proto3" json:"clob_pair_status,omitempty"`
 }
 

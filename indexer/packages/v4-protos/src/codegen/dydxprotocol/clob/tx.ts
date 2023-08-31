@@ -132,9 +132,9 @@ export interface MsgSetClobPairStatus {
 
   clobPairId: number;
   /**
-   * clob_pair_status is the ClobPair_Status to set the ClobPair to. This currently does
-   * not directly reference the ClobPair.Status enum because of proto generation errors in
-   * typescript.
+   * clob_pair_status is the ClobPair_Status to set the ClobPair to. This
+   * currently does not directly reference the ClobPair.Status enum because of
+   * proto generation errors in typescript.
    */
 
   clobPairStatus: number;
@@ -147,9 +147,9 @@ export interface MsgSetClobPairStatusSDKType {
 
   clob_pair_id: number;
   /**
-   * clob_pair_status is the ClobPair_Status to set the ClobPair to. This currently does
-   * not directly reference the ClobPair.Status enum because of proto generation errors in
-   * typescript.
+   * clob_pair_status is the ClobPair_Status to set the ClobPair to. This
+   * currently does not directly reference the ClobPair.Status enum because of
+   * proto generation errors in typescript.
    */
 
   clob_pair_status: number;
