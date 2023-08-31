@@ -300,6 +300,26 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 					pricefeedmetrics.GetLabelForExchangeId(p.GetExchangeId()),
 				},
 			)
+		} else if errors.Is(response.Err, constants.RateLimitingError) {
+			p.logger.Info(
+				"Failed to update exchange price in price daemon priceEncoder due to rate limiting",
+				"error",
+				response.Err,
+				"exchangeId",
+				p.GetExchangeId(),
+			)
+			// Record rate limiting error as an error with the encoder.
+			telemetry.IncrCounterWithLabels(
+				[]string{
+					metrics.PricefeedDaemon,
+					metrics.PriceEncoderUpdatePrice,
+					metrics.Error,
+				},
+				1,
+				[]gometrics.Label{
+					pricefeedmetrics.GetLabelForExchangeId(p.GetExchangeId()),
+				},
+			)
 		} else if price_function.IsExchangeError(response.Err) {
 			// Log info if there are 5xx errors in the ingested buffered channel prices.
 			// This is only an info so that there aren't noisy errors when undesirable but

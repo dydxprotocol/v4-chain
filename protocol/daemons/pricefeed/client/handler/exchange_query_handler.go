@@ -141,6 +141,10 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 		},
 	)
 
+	if response.StatusCode == 429 {
+		return nil, nil, constants.RateLimitingError
+	}
+
 	// Verify response is not 4xx or 5xx.
 	if response.StatusCode < 200 || response.StatusCode > 299 {
 		return nil, nil, fmt.Errorf("%s %v", constants.UnexpectedResponseStatusMessage, response.StatusCode)
