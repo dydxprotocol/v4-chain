@@ -120,9 +120,8 @@ type ClobKeeper interface {
 	RateLimitPlaceOrder(ctx sdk.Context, order *MsgPlaceOrder) error
 	InitializeBlockRateLimit(ctx sdk.Context, config BlockRateLimitConfiguration) error
 	InitializeEquityTierLimit(ctx sdk.Context, config EquityTierLimitConfiguration) error
-	SetClobPairStatus(
+	UpdateClobPair(
 		ctx sdk.Context,
-		clobPairId ClobPairId,
-		status ClobPair_Status,
+		clobPair ClobPair,
 	) error
 }

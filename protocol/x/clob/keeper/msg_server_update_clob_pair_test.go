@@ -20,20 +20,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgServerSetClobPairStatus(t *testing.T) {
+func TestMsgServerUpdateClobPair(t *testing.T) {
 	tests := map[string]struct {
-		testMsg       types.MsgSetClobPairStatus
+		authority     string
+		status        types.ClobPair_Status
 		setup         func(ks keepertest.ClobKeepersTestContext)
-		expectedResp  *types.MsgSetClobPairStatusResponse
+		expectedResp  *types.MsgUpdateClobPairResponse
 		expectedErr   error
 		expectedPanic string
 	}{
 		"Success": {
-			testMsg: types.MsgSetClobPairStatus{
-				Authority:      authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPairId:     0,
-				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
-			},
+			authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			status:    types.ClobPair_STATUS_ACTIVE,
 			setup: func(ks keepertest.ClobKeepersTestContext) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
@@ -46,14 +44,11 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 					types.ClobPairId(constants.ClobPair_Btc.Id),
 				), b)
 			},
-			expectedResp: &types.MsgSetClobPairStatusResponse{},
+			expectedResp: &types.MsgUpdateClobPairResponse{},
 		},
 		"Error: unsupported status transition": {
-			testMsg: types.MsgSetClobPairStatus{
-				Authority:      authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPairId:     0,
-				ClobPairStatus: int32(types.ClobPair_STATUS_INITIALIZING),
-			},
+			authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			status:    types.ClobPair_STATUS_INITIALIZING,
 			setup: func(ks keepertest.ClobKeepersTestContext) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
@@ -69,19 +64,13 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 			expectedErr: types.ErrInvalidClobPairStatusTransition,
 		},
 		"Panic: clob pair not found": {
-			testMsg: types.MsgSetClobPairStatus{
-				Authority:      authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPairId:     0,
-				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
-			},
+			authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			status:        types.ClobPair_STATUS_ACTIVE,
 			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
 		},
 		"Error: invalid authority": {
-			testMsg: types.MsgSetClobPairStatus{
-				Authority:      "foobar",
-				ClobPairId:     0,
-				ClobPairStatus: int32(types.ClobPair_STATUS_ACTIVE),
-			},
+			authority: "foobar",
+			status:    types.ClobPair_STATUS_ACTIVE,
 			setup: func(ks keepertest.ClobKeepersTestContext) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
@@ -112,13 +101,20 @@ func TestMsgServerSetClobPairStatus(t *testing.T) {
 			msgServer := keeper.NewMsgServerImpl(k)
 			wrappedCtx := sdk.WrapSDKContext(ks.Ctx)
 
+			clobPair := constants.ClobPair_Btc
+			clobPair.Status = tc.status
+			msg := types.MsgUpdateClobPair{
+				Authority: tc.authority,
+				ClobPair:  &clobPair,
+			}
+
 			if tc.expectedPanic != "" {
 				require.PanicsWithValue(t, tc.expectedPanic, func() {
-					_, err := msgServer.SetClobPairStatus(wrappedCtx, &tc.testMsg)
+					_, err := msgServer.UpdateClobPair(wrappedCtx, &msg)
 					require.NoError(t, err)
 				})
 			} else {
-				resp, err := msgServer.SetClobPairStatus(wrappedCtx, &tc.testMsg)
+				resp, err := msgServer.UpdateClobPair(wrappedCtx, &msg)
 				require.Equal(t, tc.expectedResp, resp)
 
 				if tc.expectedErr != nil {

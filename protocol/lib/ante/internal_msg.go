@@ -54,8 +54,8 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// clob
 		*clob.MsgCreateClobPair,
-		*clob.MsgSetClobPairStatus,
 		*clob.MsgUpdateBlockRateLimitConfiguration,
+		*clob.MsgUpdateClobPair,
 		*clob.MsgUpdateEquityTierLimitConfiguration,
 
 		// delaymsg

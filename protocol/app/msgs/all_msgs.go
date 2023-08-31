@@ -155,10 +155,10 @@ var (
 		"/dydxprotocol.clob.MsgPlaceOrderResponse":                         {},
 		"/dydxprotocol.clob.MsgProposedOperations":                         {},
 		"/dydxprotocol.clob.MsgProposedOperationsResponse":                 {},
-		"/dydxprotocol.clob.MsgSetClobPairStatus":                          {},
-		"/dydxprotocol.clob.MsgSetClobPairStatusResponse":                  {},
 		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration":          {},
 		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse":  {},
+		"/dydxprotocol.clob.MsgUpdateClobPair":                             {},
+		"/dydxprotocol.clob.MsgUpdateClobPairResponse":                     {},
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration":         {},
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": {},
 

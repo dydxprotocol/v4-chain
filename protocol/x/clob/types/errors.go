@@ -178,10 +178,10 @@ var (
 		37,
 		"Perpetual does not exist in state",
 	)
-	ErrInvalidMsgSetClobPairStatus = sdkerrors.Register(
+	ErrInvalidMsgUpdateClobPair = sdkerrors.Register(
 		ModuleName,
 		38,
-		"MsgSetClobPairStatus is invalid",
+		"MsgUpdateClobPair is invalid",
 	)
 
 	// Liquidations errors.

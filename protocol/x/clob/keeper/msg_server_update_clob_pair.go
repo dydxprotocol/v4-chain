@@ -9,10 +9,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-func (k msgServer) SetClobPairStatus(
+func (k msgServer) UpdateClobPair(
 	goCtx context.Context,
-	msg *types.MsgSetClobPairStatus,
-) (*types.MsgSetClobPairStatusResponse, error) {
+	msg *types.MsgUpdateClobPair,
+) (*types.MsgUpdateClobPairResponse, error) {
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, sdkerrors.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -22,13 +22,12 @@ func (k msgServer) SetClobPairStatus(
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.Keeper.SetClobPairStatus(
+	if err := k.Keeper.UpdateClobPair(
 		ctx,
-		types.ClobPairId(msg.GetClobPairId()),
-		types.ClobPair_Status(msg.GetClobPairStatus()),
+		*msg.GetClobPair(),
 	); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgSetClobPairStatusResponse{}, nil
+	return &types.MsgUpdateClobPairResponse{}, nil
 }

@@ -806,23 +806,23 @@ func (_m *ClobKeeper) RemoveOrderFillAmount(ctx types.Context, orderId clobtypes
 	_m.Called(ctx, orderId)
 }
 
-// SetClobPairStatus provides a mock function with given fields: ctx, clobPairId, status
-func (_m *ClobKeeper) SetClobPairStatus(ctx types.Context, clobPairId clobtypes.ClobPairId, status clobtypes.ClobPair_Status) error {
-	ret := _m.Called(ctx, clobPairId, status)
+// SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight
+func (_m *ClobKeeper) SetLongTermOrderPlacement(ctx types.Context, order clobtypes.Order, blockHeight uint32) {
+	_m.Called(ctx, order, blockHeight)
+}
+
+// UpdateClobPair provides a mock function with given fields: ctx, clobPair
+func (_m *ClobKeeper) UpdateClobPair(ctx types.Context, clobPair clobtypes.ClobPair) error {
+	ret := _m.Called(ctx, clobPair)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, clobtypes.ClobPair_Status) error); ok {
-		r0 = rf(ctx, clobPairId, status)
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPair) error); ok {
+		r0 = rf(ctx, clobPair)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
-}
-
-// SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight
-func (_m *ClobKeeper) SetLongTermOrderPlacement(ctx types.Context, order clobtypes.Order, blockHeight uint32) {
-	_m.Called(ctx, order, blockHeight)
 }
 
 // UpdateSubaccountLiquidationInfo provides a mock function with given fields: ctx, subaccountId, notionalLiquidatedQuoteQuantums, insuranceFundDeltaQuoteQuantums

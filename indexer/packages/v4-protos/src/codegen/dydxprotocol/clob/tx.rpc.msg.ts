@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgSetClobPairStatus, MsgSetClobPairStatusResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse } from "./tx";
+import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -19,12 +19,13 @@ export interface Msg {
 
   createClobPair(request: MsgCreateClobPair): Promise<MsgCreateClobPairResponse>;
   /**
-   * SetClobPairStatus sets the status of a clob pair. Should return an error
+   * UpdateClobPair sets the status of a clob pair. Should return an error
    * if the authority is not in the clob keeper's set of authorities,
-   * if the ClobPair does not exist, or if the status transition is unsupported.
+   * if the ClobPair id is not found in state, or if the update includes
+   * an unsupported status transition.
    */
 
-  setClobPairStatus(request: MsgSetClobPairStatus): Promise<MsgSetClobPairStatusResponse>;
+  updateClobPair(request: MsgUpdateClobPair): Promise<MsgUpdateClobPairResponse>;
   /**
    * UpdateEquityTierLimitConfiguration updates the equity tier limit
    * configuration in state.
@@ -47,7 +48,7 @@ export class MsgClientImpl implements Msg {
     this.placeOrder = this.placeOrder.bind(this);
     this.cancelOrder = this.cancelOrder.bind(this);
     this.createClobPair = this.createClobPair.bind(this);
-    this.setClobPairStatus = this.setClobPairStatus.bind(this);
+    this.updateClobPair = this.updateClobPair.bind(this);
     this.updateEquityTierLimitConfiguration = this.updateEquityTierLimitConfiguration.bind(this);
     this.updateBlockRateLimitConfiguration = this.updateBlockRateLimitConfiguration.bind(this);
   }
@@ -76,10 +77,10 @@ export class MsgClientImpl implements Msg {
     return promise.then(data => MsgCreateClobPairResponse.decode(new _m0.Reader(data)));
   }
 
-  setClobPairStatus(request: MsgSetClobPairStatus): Promise<MsgSetClobPairStatusResponse> {
-    const data = MsgSetClobPairStatus.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.clob.Msg", "SetClobPairStatus", data);
-    return promise.then(data => MsgSetClobPairStatusResponse.decode(new _m0.Reader(data)));
+  updateClobPair(request: MsgUpdateClobPair): Promise<MsgUpdateClobPairResponse> {
+    const data = MsgUpdateClobPair.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateClobPair", data);
+    return promise.then(data => MsgUpdateClobPairResponse.decode(new _m0.Reader(data)));
   }
 
   updateEquityTierLimitConfiguration(request: MsgUpdateEquityTierLimitConfiguration): Promise<MsgUpdateEquityTierLimitConfigurationResponse> {

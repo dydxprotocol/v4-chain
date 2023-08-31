@@ -392,26 +392,26 @@ func (k Keeper) mustGetClobPair(
 	return clobPair
 }
 
-// SetClobPairStatus fetches a ClobPair by id and sets its
-// Status property equal to the provided ClobPair_Status. This function returns
-// an error if the proposed status transition is not supported.
-func (k Keeper) SetClobPairStatus(
+// UpdateClobPair overwrites a ClobPair in state.
+// This function returns an error if the update includes an unsupported transition
+// for the ClobPair's status.
+func (k Keeper) UpdateClobPair(
 	ctx sdk.Context,
-	clobPairId types.ClobPairId,
-	clobPairStatus types.ClobPair_Status,
+	clobPair types.ClobPair,
 ) error {
-	clobPair := k.mustGetClobPair(ctx, clobPairId)
+	oldClobPair := k.mustGetClobPair(ctx, types.ClobPairId(clobPair.Id))
 
-	if !types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus) {
+	oldStatus := oldClobPair.Status
+	newStatus := clobPair.Status
+	if oldStatus != newStatus && !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidClobPairStatusTransition,
 			"Cannot transition from status %+v to status %+v",
-			clobPair.Status,
-			clobPairStatus,
+			oldStatus,
+			newStatus,
 		)
 	}
 
-	clobPair.Status = clobPairStatus
 	if err := k.validateClobPair(ctx, &clobPair); err != nil {
 		return err
 	}
