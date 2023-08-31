@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"math/big"
 	"testing"
 
@@ -81,7 +82,9 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			untriggeredConditionalOrders := keeper.NewUntriggeredConditionalOrders()
+			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+			ctx := tApp.InitChain()
+			untriggeredConditionalOrders := tApp.App.ClobKeeper.UntriggeredConditionalOrders[0]
 
 			for _, order := range tc.conditionalOrdersToAdd {
 				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
@@ -97,6 +100,16 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 				tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
 			)
+
+			// There should be exacly one match for all these cases.
+			orderIdToMatch := tc.conditionalOrdersToAdd[0].OrderId
+			require.Equal(t, 1, tApp.App.ClobKeeper.CountUntriggeredSubaccountOrders(
+				ctx,
+				orderIdToMatch.SubaccountId,
+				func(id types.OrderId) bool {
+					return orderIdToMatch == id
+				},
+			))
 		})
 	}
 }
@@ -184,7 +197,9 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			untriggeredConditionalOrders := keeper.NewUntriggeredConditionalOrders()
+			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+			ctx := tApp.InitChain()
+			untriggeredConditionalOrders := tApp.App.ClobKeeper.UntriggeredConditionalOrders[0]
 
 			for _, order := range tc.conditionalOrdersToAdd {
 				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
@@ -202,6 +217,16 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 				tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
 			)
+
+			// There should be exacly zero matches for all these cases since the order should have been removed.
+			orderIdToMatch := tc.conditionalOrderIdsToExpire[0]
+			require.Equal(t, 0, tApp.App.ClobKeeper.CountUntriggeredSubaccountOrders(
+				ctx,
+				orderIdToMatch.SubaccountId,
+				func(id types.OrderId) bool {
+					return orderIdToMatch == id
+				},
+			))
 		})
 	}
 }

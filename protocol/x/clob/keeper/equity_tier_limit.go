@@ -128,8 +128,9 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 	// Count all the open orders that are on the `MemClob`.
 	equityTierCount := int32(k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter))
 
-	// Include the number of stateful orders that exist outside of the `MemClob`. During `DeliverTx` we use
-	// the count of to be committed stateful orders while in `CheckTx` we use the count of uncommitted stateful orders.
+	// Include the number of stateful orders that exist outside of the `MemClob`. This includes the number of
+	// untriggered conditional orders and during `DeliverTx` we add the count of to be committed stateful orders
+	// while in `CheckTx` we add the count of uncommitted stateful orders.
 	if order.IsStatefulOrder() {
 		equityTierCount += int32(k.CountUntriggeredSubaccountOrders(ctx, subaccountId, filter))
 		if lib.IsDeliverTxMode(ctx) {
