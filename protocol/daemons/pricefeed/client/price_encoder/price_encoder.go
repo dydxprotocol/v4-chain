@@ -27,7 +27,6 @@ type PriceEncoder interface {
 
 const (
 	FailedToUpdateExchangePrice = "Failed to update exchange price in price daemon priceEncoder"
-	ReasonKey                   = "reason"
 )
 
 // Enforce compile-time conformity of PriceEncoderImpl to the PriceEncoder interface.
@@ -278,11 +277,11 @@ func recordPriceUpdateExchangeFailure(
 ) {
 	logger.Info(
 		FailedToUpdateExchangePrice,
-		ReasonKey,
+		constants.ReasonLogKey,
 		reason,
 		constants.ExchangeIdLogKey,
 		exchangeId,
-		constants.ErrorKey,
+		constants.ErrorLogKey,
 		err,
 	)
 

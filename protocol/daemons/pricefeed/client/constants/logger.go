@@ -5,10 +5,11 @@ import "time"
 const (
 	SubmoduleLogKey = "submodule"
 
-	ErrorKey         = "error"
+	ErrorLogKey      = "error"
 	ExchangeIdLogKey = "exchangeId"
 	MarketIdLogKey   = "marketId"
 	PriceLogKey      = "Price"
+	ReasonLogKey     = "reason"
 
 	PricefeedDaemonModuleName       = "pricefeed-daemon"
 	PriceFetcherSubmoduleName       = "price-fetcher"
