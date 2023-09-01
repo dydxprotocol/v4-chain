@@ -6,6 +6,21 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Bitfinex",
+      "ticker": "tAVAX:USD",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "AVAX_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "avaxusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "Kucoin",
       "ticker": "AVAX-USDT",
       "adjustByMarket": "USDT-USD"

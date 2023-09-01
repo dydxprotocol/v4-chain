@@ -723,7 +723,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				require.Equal(t, tc.expectedFilledSize, orderSizeOptimisticallyFilledFromMatching)
 			}
 
-			traceDecoder.RequireKeyPrefixWrittenInSequence(t, tc.expectedMultiStoreWrites)
+			traceDecoder.RequireKeyPrefixesWritten(t, tc.expectedMultiStoreWrites)
 		})
 	}
 }
@@ -856,42 +856,8 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			expectedErr:              types.ErrPostOnlyWouldCrossMakerOrder,
 			expectedFilledSize:       0,
 			expectedTransactionIndex: 0,
-			expectedMultiStoreWrites: []string{
-				// Update taker subaccount.
-				fmt.Sprintf(
-					"Subaccount/value/%v/",
-					string(proto.MustFirst(constants.Alice_Num0.Marshal())),
-				),
-				indexer_manager.IndexerEventsKey,
-				// Update maker subaccount.
-				fmt.Sprintf(
-					"Subaccount/value/%v/",
-					string(proto.MustFirst(constants.Alice_Num1.Marshal())),
-				),
-				indexer_manager.IndexerEventsKey,
-				// Update block stats
-				"BlockStats/value",
-				// Update taker order fill amount.
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25_PO.OrderId.Marshal())),
-				),
-				// Update taker order fill amount in memStore.
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25_PO.OrderId.Marshal())),
-				),
-				// Update maker order fill amount
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id4_Clob0_Buy10_Price45_GTBT20.OrderId.Marshal())),
-				),
-				// Update maker order fill amount in memStore.
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(constants.LongTermOrder_Alice_Num1_Id4_Clob0_Buy10_Price45_GTBT20.OrderId.Marshal())),
-				),
-			},
+			// No multi store writes due to ErrPostOnlyWouldCrossMakerOrder error.
+			expectedMultiStoreWrites: []string{},
 		},
 	}
 	for name, tc := range tests {
@@ -1028,10 +994,11 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				)
 			}
 
-			traceDecoder.RequireKeyPrefixWrittenInSequence(t, tc.expectedMultiStoreWrites)
+			traceDecoder.RequireKeyPrefixesWritten(t, tc.expectedMultiStoreWrites)
 		})
 	}
 }
+
 func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	indexerEventManager := &mocks.IndexerEventManager{}
 	for _, message := range constants.TestOffchainMessages {

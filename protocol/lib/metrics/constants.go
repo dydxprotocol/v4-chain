@@ -11,7 +11,7 @@ const (
 	Deterministic          = "deterministic"
 	Error                  = "error"
 	GitCommit              = "git_commit"
-	HttpGet5xxx            = "http_get_5xx"
+	HttpGet5xx             = "http_get_5xx"
 	HttpGetHangup          = "http_get_hangup"
 	HttpGetRequest         = "http_get_request"
 	HttpGetResponse        = "http_get_response"
@@ -24,6 +24,7 @@ const (
 	No                     = "no"
 	NonDeterministic       = "non_deterministic"
 	Positive               = "positive"
+	Reason                 = "reason"
 	Received               = "received"
 	Rejected               = "rejected"
 	SequenceNumber         = "sequence_number"
@@ -267,7 +268,9 @@ const (
 	NonOverlappingBankruptcyPrices = "non_overlapping_bankruptcy_prices"
 
 	// Pricefeed Daemon.
+	Exchange                                = "exchange"
 	ExchangeQueryHandlerApiRequest          = "exchange_query_handler_api_request"
+	ExchangeSpecificError                   = "exchange_specific_error"
 	GetAllPrices_MarketIdToPrice            = "get_all_prices_market_id_to_price"
 	PriceEncoderUpdatePrice                 = "price_encoder_update_price"
 	PricefeedDaemon                         = "pricefeed_daemon"

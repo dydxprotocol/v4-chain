@@ -811,6 +811,20 @@ func (_m *ClobKeeper) SetLongTermOrderPlacement(ctx types.Context, order clobtyp
 	_m.Called(ctx, order, blockHeight)
 }
 
+// UpdateClobPair provides a mock function with given fields: ctx, clobPair
+func (_m *ClobKeeper) UpdateClobPair(ctx types.Context, clobPair clobtypes.ClobPair) error {
+	ret := _m.Called(ctx, clobPair)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPair) error); ok {
+		r0 = rf(ctx, clobPair)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateLiquidationsConfig provides a mock function with given fields: ctx, config
 func (_m *ClobKeeper) UpdateLiquidationsConfig(ctx types.Context, config clobtypes.LiquidationsConfig) error {
 	ret := _m.Called(ctx, config)

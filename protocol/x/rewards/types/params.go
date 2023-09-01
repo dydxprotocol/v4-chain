@@ -12,7 +12,7 @@ func DefaultParams() Params {
 	return Params{
 		// Corresponds to module account address: dydx16wrau2x4tsg033xfrrdpae6kxfn9kyuerr5jjp
 		TreasuryAccount:  "rewards_treasury",
-		Denom:            "testnet_reward_token",
+		Denom:            "dv4tnt",
 		DenomExponent:    -6,
 		MarketId:         1,
 		FeeMultiplierPpm: 990_000, // 0.99

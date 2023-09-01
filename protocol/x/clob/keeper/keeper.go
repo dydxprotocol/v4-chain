@@ -3,8 +3,9 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"sync/atomic"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 

@@ -44,32 +44,16 @@ func TestIsExchangeError_Mixed(t *testing.T) {
 			err:             fmt.Errorf(`http2: server sent GOAWAY and closed the connection blah blah blah`),
 			isExchangeError: true,
 		},
-		"Exchange Error - Huobi response status is not ok": {
-			err:             fmt.Errorf(`huobi response status is not "ok"`),
-			isExchangeError: true,
-		},
-		"Exchange Error - Crypto.com": {
-			err:             fmt.Errorf(`response code is not 0`),
-			isExchangeError: true,
-		},
-		"Exchange Error - Binance": {
-			err: fmt.Errorf(
-				`(Key: 'BinanceTicker.AskPrice' Error:Field validation for 'AskPrice' failed on the ` +
-					`'positive-float-string' tag\nKey: 'BinanceTicker.BidPrice' Error:Field validation for ` +
-					`'BidPrice' failed on the 'positive-float-string' tag)`,
-			),
-			isExchangeError: true,
-		},
-		"Exchange Error - Binance BidPrice": {
-			err:             fmt.Errorf(`Key: 'BinanceTicker.BidPrice' Error`),
-			isExchangeError: true,
-		},
 		"Exchange Error - internal error": {
 			err:             fmt.Errorf("internal error: something went wrong"),
 			isExchangeError: true,
 		},
 		"Exchange Error - Internal error": {
 			err:             fmt.Errorf("Internal error: something went wrong"),
+			isExchangeError: true,
+		},
+		"Exchange Error - INTERNAL_ERROR": {
+			err:             fmt.Errorf("INTERNAL_ERROR: something went wrong"),
 			isExchangeError: true,
 		},
 		"Exchange Error - generic": {
@@ -83,7 +67,7 @@ func TestIsExchangeError_Mixed(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tc.isExchangeError, IsExchangeError(tc.err))
+			require.Equal(t, tc.isExchangeError, IsGenericExchangeError(tc.err))
 		})
 	}
 }

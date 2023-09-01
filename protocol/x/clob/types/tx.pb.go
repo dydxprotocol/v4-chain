@@ -423,6 +423,99 @@ func (m *MsgCancelOrderResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCancelOrderResponse proto.InternalMessageInfo
 
+// MsgUpdateClobPair is a request type used for updating a ClobPair in state.
+type MsgUpdateClobPair struct {
+	// Authority is the address that may send this message.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// clob_pair is the ClobPair to write to state.
+	ClobPair *ClobPair `protobuf:"bytes,2,opt,name=clob_pair,json=clobPair,proto3" json:"clob_pair,omitempty"`
+}
+
+func (m *MsgUpdateClobPair) Reset()         { *m = MsgUpdateClobPair{} }
+func (m *MsgUpdateClobPair) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateClobPair) ProtoMessage()    {}
+func (*MsgUpdateClobPair) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{8}
+}
+func (m *MsgUpdateClobPair) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateClobPair) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateClobPair.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateClobPair) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateClobPair.Merge(m, src)
+}
+func (m *MsgUpdateClobPair) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateClobPair) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateClobPair.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateClobPair proto.InternalMessageInfo
+
+func (m *MsgUpdateClobPair) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateClobPair) GetClobPair() *ClobPair {
+	if m != nil {
+		return m.ClobPair
+	}
+	return nil
+}
+
+// MsgUpdateClobPairResponse is a response type used for setting a ClobPair's
+// status.
+type MsgUpdateClobPairResponse struct {
+}
+
+func (m *MsgUpdateClobPairResponse) Reset()         { *m = MsgUpdateClobPairResponse{} }
+func (m *MsgUpdateClobPairResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateClobPairResponse) ProtoMessage()    {}
+func (*MsgUpdateClobPairResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{9}
+}
+func (m *MsgUpdateClobPairResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateClobPairResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateClobPairResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateClobPairResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateClobPairResponse.Merge(m, src)
+}
+func (m *MsgUpdateClobPairResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateClobPairResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateClobPairResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateClobPairResponse proto.InternalMessageInfo
+
 // OperationRaw represents an operation in the proposed operations.
 // Note that the `order_placement` operation is a signed message.
 type OperationRaw struct {
@@ -441,7 +534,7 @@ func (m *OperationRaw) Reset()         { *m = OperationRaw{} }
 func (m *OperationRaw) String() string { return proto.CompactTextString(m) }
 func (*OperationRaw) ProtoMessage()    {}
 func (*OperationRaw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{8}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{10}
 }
 func (m *OperationRaw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -540,7 +633,7 @@ func (m *MsgUpdateEquityTierLimitConfiguration) Reset()         { *m = MsgUpdate
 func (m *MsgUpdateEquityTierLimitConfiguration) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateEquityTierLimitConfiguration) ProtoMessage()    {}
 func (*MsgUpdateEquityTierLimitConfiguration) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{9}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{11}
 }
 func (m *MsgUpdateEquityTierLimitConfiguration) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -596,7 +689,7 @@ func (m *MsgUpdateEquityTierLimitConfigurationResponse) String() string {
 }
 func (*MsgUpdateEquityTierLimitConfigurationResponse) ProtoMessage() {}
 func (*MsgUpdateEquityTierLimitConfigurationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{10}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{12}
 }
 func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -638,7 +731,7 @@ func (m *MsgUpdateBlockRateLimitConfiguration) Reset()         { *m = MsgUpdateB
 func (m *MsgUpdateBlockRateLimitConfiguration) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateBlockRateLimitConfiguration) ProtoMessage()    {}
 func (*MsgUpdateBlockRateLimitConfiguration) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{11}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{13}
 }
 func (m *MsgUpdateBlockRateLimitConfiguration) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -694,7 +787,7 @@ func (m *MsgUpdateBlockRateLimitConfigurationResponse) String() string {
 }
 func (*MsgUpdateBlockRateLimitConfigurationResponse) ProtoMessage() {}
 func (*MsgUpdateBlockRateLimitConfigurationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{12}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{14}
 }
 func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -825,6 +918,8 @@ func init() {
 	proto.RegisterType((*MsgPlaceOrderResponse)(nil), "dydxprotocol.clob.MsgPlaceOrderResponse")
 	proto.RegisterType((*MsgCancelOrder)(nil), "dydxprotocol.clob.MsgCancelOrder")
 	proto.RegisterType((*MsgCancelOrderResponse)(nil), "dydxprotocol.clob.MsgCancelOrderResponse")
+	proto.RegisterType((*MsgUpdateClobPair)(nil), "dydxprotocol.clob.MsgUpdateClobPair")
+	proto.RegisterType((*MsgUpdateClobPairResponse)(nil), "dydxprotocol.clob.MsgUpdateClobPairResponse")
 	proto.RegisterType((*OperationRaw)(nil), "dydxprotocol.clob.OperationRaw")
 	proto.RegisterType((*MsgUpdateEquityTierLimitConfiguration)(nil), "dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration")
 	proto.RegisterType((*MsgUpdateEquityTierLimitConfigurationResponse)(nil), "dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse")
@@ -921,6 +1016,11 @@ type MsgClient interface {
 	CancelOrder(ctx context.Context, in *MsgCancelOrder, opts ...grpc.CallOption) (*MsgCancelOrderResponse, error)
 	// CreateClobPair creates a new clob pair.
 	CreateClobPair(ctx context.Context, in *MsgCreateClobPair, opts ...grpc.CallOption) (*MsgCreateClobPairResponse, error)
+	// UpdateClobPair sets the status of a clob pair. Should return an error
+	// if the authority is not in the clob keeper's set of authorities,
+	// if the ClobPair id is not found in state, or if the update includes
+	// an unsupported status transition.
+	UpdateClobPair(ctx context.Context, in *MsgUpdateClobPair, opts ...grpc.CallOption) (*MsgUpdateClobPairResponse, error)
 	// UpdateEquityTierLimitConfiguration updates the equity tier limit
 	// configuration in state.
 	UpdateEquityTierLimitConfiguration(ctx context.Context, in *MsgUpdateEquityTierLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateEquityTierLimitConfigurationResponse, error)
@@ -975,6 +1075,15 @@ func (c *msgClient) CreateClobPair(ctx context.Context, in *MsgCreateClobPair, o
 	return out, nil
 }
 
+func (c *msgClient) UpdateClobPair(ctx context.Context, in *MsgUpdateClobPair, opts ...grpc.CallOption) (*MsgUpdateClobPairResponse, error) {
+	out := new(MsgUpdateClobPairResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/UpdateClobPair", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) UpdateEquityTierLimitConfiguration(ctx context.Context, in *MsgUpdateEquityTierLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateEquityTierLimitConfigurationResponse, error) {
 	out := new(MsgUpdateEquityTierLimitConfigurationResponse)
 	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/UpdateEquityTierLimitConfiguration", in, out, opts...)
@@ -1013,6 +1122,11 @@ type MsgServer interface {
 	CancelOrder(context.Context, *MsgCancelOrder) (*MsgCancelOrderResponse, error)
 	// CreateClobPair creates a new clob pair.
 	CreateClobPair(context.Context, *MsgCreateClobPair) (*MsgCreateClobPairResponse, error)
+	// UpdateClobPair sets the status of a clob pair. Should return an error
+	// if the authority is not in the clob keeper's set of authorities,
+	// if the ClobPair id is not found in state, or if the update includes
+	// an unsupported status transition.
+	UpdateClobPair(context.Context, *MsgUpdateClobPair) (*MsgUpdateClobPairResponse, error)
 	// UpdateEquityTierLimitConfiguration updates the equity tier limit
 	// configuration in state.
 	UpdateEquityTierLimitConfiguration(context.Context, *MsgUpdateEquityTierLimitConfiguration) (*MsgUpdateEquityTierLimitConfigurationResponse, error)
@@ -1038,6 +1152,9 @@ func (*UnimplementedMsgServer) CancelOrder(ctx context.Context, req *MsgCancelOr
 }
 func (*UnimplementedMsgServer) CreateClobPair(ctx context.Context, req *MsgCreateClobPair) (*MsgCreateClobPairResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateClobPair not implemented")
+}
+func (*UnimplementedMsgServer) UpdateClobPair(ctx context.Context, req *MsgUpdateClobPair) (*MsgUpdateClobPairResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateClobPair not implemented")
 }
 func (*UnimplementedMsgServer) UpdateEquityTierLimitConfiguration(ctx context.Context, req *MsgUpdateEquityTierLimitConfiguration) (*MsgUpdateEquityTierLimitConfigurationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEquityTierLimitConfiguration not implemented")
@@ -1125,6 +1242,24 @@ func _Msg_CreateClobPair_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateClobPair_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateClobPair)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateClobPair(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.clob.Msg/UpdateClobPair",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateClobPair(ctx, req.(*MsgUpdateClobPair))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_UpdateEquityTierLimitConfiguration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateEquityTierLimitConfiguration)
 	if err := dec(in); err != nil {
@@ -1198,6 +1333,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateClobPair",
 			Handler:    _Msg_CreateClobPair_Handler,
+		},
+		{
+			MethodName: "UpdateClobPair",
+			Handler:    _Msg_UpdateClobPair_Handler,
 		},
 		{
 			MethodName: "UpdateEquityTierLimitConfiguration",
@@ -1480,6 +1619,71 @@ func (m *MsgCancelOrderResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgCancelOrderResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateClobPair) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateClobPair) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateClobPair) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ClobPair != nil {
+		{
+			size, err := m.ClobPair.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateClobPairResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateClobPairResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateClobPairResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1880,6 +2084,32 @@ func (m *MsgCancelOrder_GoodTilBlockTime) Size() (n int) {
 	return n
 }
 func (m *MsgCancelOrderResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateClobPair) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.ClobPair != nil {
+		l = m.ClobPair.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateClobPairResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2590,6 +2820,174 @@ func (m *MsgCancelOrderResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgCancelOrderResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateClobPair) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateClobPair: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateClobPair: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClobPair", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ClobPair == nil {
+				m.ClobPair = &ClobPair{}
+			}
+			if err := m.ClobPair.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateClobPairResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateClobPairResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateClobPairResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

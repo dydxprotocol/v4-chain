@@ -75,7 +75,11 @@ func (td *TraceDecoder) RequireKeyPrefixWrittenInSequence(
 		t,
 		decodedWriteOperations,
 		len(keys),
-		"Different number of write operations performed than expected",
+		fmt.Sprintf(
+			"Different number of write operations (%+v) performed than expected (%+v)",
+			len(decodedWriteOperations),
+			len(keys),
+		),
 	)
 
 	for i, dwo := range decodedWriteOperations {
@@ -117,5 +121,43 @@ func (td *TraceDecoder) RequireReadWriteInSequence(
 		value, err := base64.StdEncoding.DecodeString(op.Value)
 		require.NoError(t, err)
 		require.Equal(t, expectedOperations[i].Value, string(value))
+	}
+}
+
+// RequireKeyPrefixesWritten checks if the list of key prefixes were
+// written to. This should be used when the order of writes do not have
+// a deterministic ordering, i.e when state is branched and written back to.
+// TODO(CLOB-851) update this function to assert ordering of key prefixes within stores.
+func (td *TraceDecoder) RequireKeyPrefixesWritten(
+	t *testing.T,
+	keys []string,
+) {
+	writeOperations := td.GetWriteOperations()
+	decodedWriteOperations := make([]string, 0, len(writeOperations))
+
+	for _, operation := range writeOperations {
+		s, err := base64.StdEncoding.DecodeString(operation.Key)
+		require.NoError(t, err)
+
+		decodedWriteOperations = append(decodedWriteOperations, string(s))
+	}
+
+	for _, key := range keys {
+		foundMatchingWriteOperation := false
+		for _, dwo := range decodedWriteOperations {
+			if strings.HasPrefix(
+				dwo,
+				key,
+			) {
+				foundMatchingWriteOperation = true
+				break
+			}
+		}
+		require.Truef(
+			t,
+			foundMatchingWriteOperation,
+			"Did not find a matching write operation for key %+v",
+			key,
+		)
 	}
 }

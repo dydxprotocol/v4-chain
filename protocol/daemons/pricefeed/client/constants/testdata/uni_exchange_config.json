@@ -20,6 +20,20 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Huobi",
+      "ticker": "uniusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "UNIUSD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "UNI_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "Okx",
       "ticker": "UNI-USDT",
       "adjustByMarket": "USDT-USD"
