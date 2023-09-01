@@ -813,7 +813,7 @@ func TestGetClobPairIdForPerpetual_PanicsMultipleClobPairIds(t *testing.T) {
 	)
 }
 
-func TestIsPerpetualClobPairInitializing(t *testing.T) {
+func TestIsPerpetualClobPairActive(t *testing.T) {
 	testCases := map[string]struct {
 		clobPair                *types.ClobPair
 		perpetualIdToClobPairId map[uint32][]types.ClobPairId
@@ -836,12 +836,19 @@ func TestIsPerpetualClobPairInitializing(t *testing.T) {
 			clobPair: &constants.ClobPair_Btc_Init,
 			resp:     false,
 		},
-		"Succeeds when clob pair is not initializing": {
+		"Succeeds when clob pair is active": {
 			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
 				0: {types.ClobPairId(0)},
 			},
 			clobPair: &constants.ClobPair_Btc,
 			resp:     true,
+		},
+		"Succeeds when clob pair is paused": {
+			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
+				0: {types.ClobPairId(0)},
+			},
+			clobPair: &constants.ClobPair_Btc_Paused,
+			resp:     false,
 		},
 	}
 
@@ -854,37 +861,16 @@ func TestIsPerpetualClobPairInitializing(t *testing.T) {
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			if tc.clobPair != nil {
-				mockIndexerEventManager.On("AddTxnEvent",
-					ks.Ctx,
-					indexerevents.SubtypePerpetualMarket,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewPerpetualMarketCreateEvent(
-							0,
-							0,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-							tc.clobPair.Status,
-							tc.clobPair.QuantumConversionExponent,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-							tc.clobPair.SubticksPerTick,
-							tc.clobPair.MinOrderBaseQuantums,
-							tc.clobPair.StepBaseQuantums,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-						),
-					),
-				).Once().Return()
+				// allows us to circumvent CreatePerpetualClobPair and write unsupported statuses to state to
+				// test this function with unsupported statuses.
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
 
-				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
-					ks.Ctx,
-					tc.clobPair.Id,
-					clobtest.MustPerpetualId(*tc.clobPair),
-					satypes.BaseQuantums(tc.clobPair.MinOrderBaseQuantums),
-					satypes.BaseQuantums(tc.clobPair.StepBaseQuantums),
-					tc.clobPair.QuantumConversionExponent,
-					tc.clobPair.SubticksPerTick,
-					tc.clobPair.Status,
-				)
-				require.NoError(t, err)
+				b := cdc.MustMarshal(tc.clobPair)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(tc.clobPair.Id),
+				), b)
 			}
 
 			ks.ClobKeeper.PerpetualIdToClobPairId = tc.perpetualIdToClobPairId

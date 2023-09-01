@@ -8,7 +8,7 @@ import (
 )
 
 // GetPricePremiumForPerpetual returns the price premium for a perpetual market,
-// according to the memclob state.
+// according to the memclob state. If the market is not active, returns zero premium ppm.
 func (k Keeper) GetPricePremiumForPerpetual(
 	ctx sdk.Context,
 	perpetualId uint32,

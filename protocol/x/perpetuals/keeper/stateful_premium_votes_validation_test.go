@@ -156,10 +156,10 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			mockPCPIC := &mocks.PerpetualsClobKeeper{}
+			mockPerpetualsClobKeeper := &mocks.PerpetualsClobKeeper{}
 			ctx, k, pricesKeeper, _, _ := keepertest.PerpetualsKeepersWithClobHelpers(
 				t,
-				mockPCPIC,
+				mockPerpetualsClobKeeper,
 			)
 
 			// set mock expectations
@@ -170,7 +170,7 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 					isActive = tc.isPerpetualClobPairActiveResp.isPerpetualClobPairActive
 					err = tc.isPerpetualClobPairActiveResp.isPerpetualClobPairActiveErr
 				}
-				mockPCPIC.On("IsPerpetualClobPairActive", ctx, vote.PerpetualId).Once().Return(
+				mockPerpetualsClobKeeper.On("IsPerpetualClobPairActive", ctx, vote.PerpetualId).Once().Return(
 					isActive,
 					err,
 				)
@@ -191,6 +191,8 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 			}
 
 			require.NoError(t, err)
+
+			mockPerpetualsClobKeeper.AssertExpectations(t)
 		})
 	}
 }
