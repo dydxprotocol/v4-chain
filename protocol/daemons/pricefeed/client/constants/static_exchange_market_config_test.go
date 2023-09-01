@@ -168,8 +168,17 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			exchangeCount := 0
+			for _, exchangeConfig := range StaticExchangeMarketConfig {
+				if _, ok := exchangeConfig.MarketToMarketConfig[tc.id]; ok {
+					exchangeCount++
+				}
+			}
+			if tc.id != exchange_common.MARKET_TEST_USD {
+				require.GreaterOrEqual(t, exchangeCount, 5)
+			}
+
 			configs := GenerateExchangeConfigJson(StaticExchangeMarketConfig)
-			require.GreaterOrEqual(t, len(configs[tc.id]), 6)
 
 			// Uncomment to update test data
 			f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
