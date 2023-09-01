@@ -157,6 +157,8 @@ var (
 		"/dydxprotocol.clob.MsgProposedOperationsResponse":                 {},
 		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration":          {},
 		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse":  {},
+		"/dydxprotocol.clob.MsgUpdateClobPair":                             {},
+		"/dydxprotocol.clob.MsgUpdateClobPairResponse":                     {},
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration":         {},
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": {},
 

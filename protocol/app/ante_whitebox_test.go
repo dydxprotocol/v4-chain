@@ -1,9 +1,10 @@
 package app
 
 import (
-	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"reflect"
 	"testing"
+
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 

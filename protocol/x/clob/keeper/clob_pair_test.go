@@ -557,7 +557,7 @@ func TestClobPairGetAll(t *testing.T) {
 	)
 }
 
-func TestSetClobPairStatus(t *testing.T) {
+func TestUpdateClobPair(t *testing.T) {
 	testCases := map[string]struct {
 		setup         func(t *testing.T, ks keepertest.ClobKeepersTestContext, manager *mocks.IndexerEventManager)
 		status        types.ClobPair_Status
@@ -673,18 +673,19 @@ func TestSetClobPairStatus(t *testing.T) {
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			tc.setup(t, ks, mockIndexerEventManager)
-
+			clobPair := constants.ClobPair_Btc
+			clobPair.Status = tc.status
 			if tc.expectedPanic != "" {
 				require.PanicsWithValue(
 					t,
 					tc.expectedPanic,
 					func() {
-						err := ks.ClobKeeper.SetClobPairStatus(ks.Ctx, 0, tc.status)
+						err := ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
 						require.NoError(t, err)
 					},
 				)
 			} else {
-				err := ks.ClobKeeper.SetClobPairStatus(ks.Ctx, 0, tc.status)
+				err := ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
 
 				if tc.expectedErr != "" {
 					require.ErrorContains(t, err, tc.expectedErr)
