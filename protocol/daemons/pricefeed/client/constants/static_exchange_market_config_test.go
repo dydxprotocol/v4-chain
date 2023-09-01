@@ -169,6 +169,7 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			configs := GenerateExchangeConfigJson(StaticExchangeMarketConfig)
+			require.GreaterOrEqual(t, len(configs[tc.id]), 6)
 
 			// Uncomment to update test data
 			f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)

@@ -6,6 +6,11 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Bybit",
+      "ticker": "CRVUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "CoinbasePro",
       "ticker": "CRV-USD"
     },
@@ -13,6 +18,15 @@
       "exchangeName": "Gate",
       "ticker": "CRV_USDT",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "crvusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "CRVUSD"
     },
     {
       "exchangeName": "Kucoin",

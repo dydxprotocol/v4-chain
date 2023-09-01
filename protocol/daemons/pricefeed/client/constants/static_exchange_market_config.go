@@ -269,8 +269,14 @@ var (
 				exchange_common.MARKET_XRP_USD: {
 					Ticker: "XXRPZUSD",
 				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker: "UNIUSD",
+				},
 				exchange_common.MARKET_USDT_USD: {
 					Ticker: "USDTZUSD",
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker: "CRVUSD",
 				},
 			},
 		},
@@ -482,6 +488,10 @@ var (
 					Ticker:         "PEPEUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker:         "CRVUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
 				exchange_common.MARKET_USDT_USD: {
 					Ticker: "USDCUSDT",
 					Invert: true,
@@ -607,6 +617,14 @@ var (
 				},
 				exchange_common.MARKET_XRP_USD: {
 					Ticker:         "xrpusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker:         "uniusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_CRV_USD: {
+					Ticker:         "crvusdt",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_USDT_USD: {
@@ -916,6 +934,10 @@ var (
 				},
 				exchange_common.MARKET_DOGE_USD: {
 					Ticker:         "DOGE_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_UNI_USD: {
+					Ticker:         "UNI_USDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 			},
