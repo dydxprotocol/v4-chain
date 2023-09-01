@@ -693,11 +693,8 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 			err
 	}
 
-	// Deleverage the subaccount's remaining position size.
-	deltaQuantums := new(big.Int).Sub(
-		liquidationOrder.GetBaseQuantums().ToBigInt(),
-		liquidationOrderStatus.OrderOptimisticallyFilledQuantums.ToBigInt(),
-	)
+	// Deleverage the full liquidation order size from the subaccount's position size.
+	deltaQuantums := liquidationOrder.GetBaseQuantums().ToBigInt()
 	if !liquidationOrder.IsBuy() {
 		deltaQuantums = deltaQuantums.Neg(deltaQuantums)
 	}
