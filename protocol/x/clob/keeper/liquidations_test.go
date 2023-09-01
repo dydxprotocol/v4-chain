@@ -51,21 +51,21 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 		expectedPlacedOrders  []*types.MsgPlaceOrder
 		expectedMatchedOrders []*types.ClobMatch
 	}{
-		// `Can place a liquidation that doesn't match any maker orders`: {
-		// 	perpetuals: []perptypes.Perpetual{
-		// 		constants.BtcUsd_SmallMarginRequirement,
-		// 	},
-		// 	subaccounts: []satypes.Subaccount{
-		// 		constants.Dave_Num0_1BTC_Long_46000USD_Short,
-		// 	},
-		// 	clobs:     []types.ClobPair{constants.ClobPair_Btc},
-		// 	feeParams: constants.PerpetualFeeParams,
+		`Can place a liquidation that doesn't match any maker orders`: {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Dave_Num0_1BTC_Long_46000USD_Short,
+			},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParams,
 
-		// 	order: constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+			order: constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
 
-		// 	expectedPlacedOrders:  []*types.MsgPlaceOrder{},
-		// 	expectedMatchedOrders: []*types.ClobMatch{},
-		// },
+			expectedPlacedOrders:  []*types.MsgPlaceOrder{},
+			expectedMatchedOrders: []*types.ClobMatch{},
+		},
 		`Can place a liquidation that matches maker orders`: {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
