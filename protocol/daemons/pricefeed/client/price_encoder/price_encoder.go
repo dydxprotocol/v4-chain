@@ -351,9 +351,9 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 				},
 			)
 		} else if ok := errors.As(response.Err, &exchangeSpecificError); ok {
-			// Log info if there are 5xx errors in the ingested buffered channel prices.
-			// This is only an info so that there aren't noisy errors when undesirable but
-			// expected behavior occurs.
+			// Log info if there are exchange-specific errors in the ingested buffered channel prices.
+			// These responses came back with an acceptable status code, but the response body contents
+			// were rejected by the price function as invalid.
 			recordPriceUpdateExchangeFailure(
 				metrics.ExchangeSpecificError,
 				p.logger,
