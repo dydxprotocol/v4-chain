@@ -3,6 +3,7 @@ package ante_test
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -17,6 +18,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,6 +49,7 @@ func runTestCase(t *testing.T, tc TestCase) {
 
 	// Setup AnteHandler.
 	mockClobKeeper := &mocks.ClobKeeper{}
+	mockClobKeeper.On("Logger", mock.Anything).Return(log.NewNopLogger()).Maybe()
 	cd := ante.NewClobDecorator(mockClobKeeper)
 	antehandler := sdk.ChainAnteDecorators(cd)
 	if tc.setupMocks != nil {
