@@ -149,45 +149,10 @@ func (k Keeper) ProcessInternalOperations(
 			}
 			placedShortTermOrders[order.GetOrderId()] = order
 		case *types.InternalOperation_OrderRemoval:
-			// Remove the stateful order from state.
-			// TODO(CLOB-85): Perform additional validation on the order removal.
 			orderRemoval := castedOperation.OrderRemoval
-
-			// Order removals are always for stateful orders that must exist.
-			orderIdToRemove := orderRemoval.GetOrderId()
-			_, found := k.GetLongTermOrderPlacement(ctx, orderIdToRemove)
-			if !found {
-				return sdkerrors.Wrapf(
-					types.ErrStatefulOrderDoesNotExist,
-					"Stateful order id %+v does not exist in state.",
-					orderIdToRemove,
-				)
+			if err := k.PersistOrderRemovalToState(ctx, orderRemoval); err != nil {
+				return nil
 			}
-
-			k.MustRemoveStatefulOrder(ctx, orderIdToRemove)
-
-			// Emit an on-chain indexer event for Stateful Order Removal.
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewStatefulOrderRemovalEvent(
-						orderIdToRemove,
-						indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-							orderRemoval.RemovalReason,
-						),
-					),
-				),
-			)
-
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
-				1,
-				append(
-					orderIdToRemove.GetOrderIdLabels(),
-					metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
-				),
-			)
 		case *types.InternalOperation_PreexistingStatefulOrder:
 			// When we fetch operations to propose, preexisting stateful orders are not included
 			// in the operations queue.
@@ -245,6 +210,103 @@ func (k Keeper) PersistMatchToState(
 		)
 	}
 	return nil
+}
+
+// PersistOrderRemovalToState takes in an OrderRemoval, statefully validates it according to
+// RemovalReason, and writes the removal to state.
+func (k Keeper) PersistOrderRemovalToState(
+	ctx sdk.Context,
+	orderRemoval *types.OrderRemoval,
+) error {
+	orderIdToRemove := orderRemoval.GetOrderId()
+	orderIdToRemove.MustBeStatefulOrder()
+
+	// Order removals are always for stateful orders that must exist.
+	orderToRemove, err := k.FetchOrderFromOrderId(ctx, orderIdToRemove, make(map[types.OrderId]types.Order, 0))
+	if err != nil {
+		return err
+	}
+
+	// Statefully validate that the removal reason is valid.
+	switch removalReason := orderRemoval.RemovalReason; removalReason {
+	case types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED:
+		// The subaccount must be under-collateralized if this order was filled.
+
+		// For the collateralization check, use the remaining amount of the order that is resting on the book.
+		remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		if !hasRemainingAmount {
+			panic(fmt.Sprintf("addOrderToOrderbookCollateralizationCheck: order has no remaining amount %v", orderToRemove))
+		}
+
+		pendingOpenOrder := types.PendingOpenOrder{
+			RemainingQuantums: remainingAmount,
+			IsBuy:             orderToRemove.IsBuy(),
+			Subticks:          orderToRemove.GetOrderSubticks(),
+			ClobPairId:        orderToRemove.GetClobPairId(),
+		}
+
+		// Temporarily construct the subaccountOpenOrders with a single PendingOpenOrder.
+		subaccountOpenOrders := map[satypes.SubaccountId][]types.PendingOpenOrder{
+			orderIdToRemove.SubaccountId: {
+				pendingOpenOrder,
+			},
+		}
+
+		// TODO(DEC-1896): AddOrderToOrderbookCollatCheck should accept a single PendingOpenOrder as a
+		// parameter rather than the subaccountOpenOrders map.
+		_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
+			ctx,
+			orderToRemove.GetClobPairId(),
+			subaccountOpenOrders,
+		)
+		if successPerSubaccountUpdate[orderIdToRemove.SubaccountId].IsSuccess() {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order passes collateralization check.",
+				*orderRemoval,
+			)
+		}
+	case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
+		// The reduce-only must increase the size of the position, or change the side.
+	case types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
+	case types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE:
+		// The order must have been triggered in the last block.
+	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED:
+	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK:
+	case types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED:
+	default:
+		return sdkerrors.Wrapf(
+			types.ErrInvalidOrderRemoval,
+			"PersistOrderRemovalToState: Unrecognized order removal type for order removal: %+v",
+			orderIdToRemove,
+		)
+	}
+
+	// Remove the stateful order from state.
+	k.MustRemoveStatefulOrder(ctx, orderIdToRemove)
+
+	// Emit an on-chain indexer event for Stateful Order Removal.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeStatefulOrder,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewStatefulOrderRemovalEvent(
+				orderIdToRemove,
+				indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+					orderRemoval.RemovalReason,
+				),
+			),
+		),
+	)
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
+		1,
+		append(
+			orderIdToRemove.GetOrderIdLabels(),
+			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
+		),
+	)
 }
 
 // PersistMatchOrdersToState writes a MatchOrders object to state and emits an onchain

@@ -100,6 +100,17 @@ func ValidateAndTransformRawOperations(
 				return nil, err
 			}
 		case *OperationRaw_OrderRemoval:
+			orderRemoval := rawOperation.GetOrderRemoval()
+			if err := orderRemoval.OrderId.Validate(); err != nil {
+				return nil, err
+			}
+			if orderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
+				return nil, sdkerrors.Wrapf(
+					ErrInvalidOrderRemoval,
+					"Invalid order removal reason: %+v",
+					orderRemoval.RemovalReason,
+				)
+			}
 			operation.Operation = &InternalOperation_OrderRemoval{
 				OrderRemoval: rawOperation.GetOrderRemoval(),
 			}

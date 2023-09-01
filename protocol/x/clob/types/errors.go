@@ -401,6 +401,11 @@ var (
 		4005,
 		"Deleveraged subaccount in proposed match operation is not liquidatable",
 	)
+	ErrInvalidOrderRemoval = sdkerrors.Register(
+		ModuleName,
+		4006,
+		"Order Removal is invalid",
+	)
 
 	// Block rate limit errors.
 	ErrInvalidBlockRateLimitConfig = sdkerrors.Register(

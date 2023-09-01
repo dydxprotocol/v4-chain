@@ -1318,7 +1318,7 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	// Check if the order being replaced has at least `MinOrderBaseQuantums` of size remaining, otherwise the order
 	// is considered fully filled and cannot be placed/replaced.
 	orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
-	remainingAmount, hasRemainingAmount := m.getOrderRemainingAmount(ctx, order)
+	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
 		return sdkerrors.Wrapf(
 			types.ErrOrderFullyFilled,
@@ -1357,7 +1357,7 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 	subaccountId := orderId.SubaccountId
 
 	// For the collateralization check, use the remaining amount of the order that is resting on the book.
-	remainingAmount, hasRemainingAmount := m.getOrderRemainingAmount(ctx, order)
+	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount {
 		panic(fmt.Sprintf("addOrderToOrderbookCollateralizationCheck: order has no remaining amount %v", order))
 	}
@@ -1365,9 +1365,8 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 	pendingOpenOrder := types.PendingOpenOrder{
 		RemainingQuantums: remainingAmount,
 		IsBuy:             order.IsBuy(),
-		// This order will be added to the book as a maker order, so it cannot be a taker order.
-		Subticks:   order.GetOrderSubticks(),
-		ClobPairId: order.GetClobPairId(),
+		Subticks:          order.GetOrderSubticks(),
+		ClobPairId:        order.GetClobPairId(),
 	}
 
 	// Temporarily construct the subaccountOpenOrders with a single PendingOpenOrder.
@@ -1404,7 +1403,7 @@ func (m *MemClobPriceTimePriority) mustAddOrderToOrderbook(
 	)
 
 	// Ensure that the order is not fully-filled.
-	if _, hasRemainingQuantums := m.getOrderRemainingAmount(ctx, newOrder); !hasRemainingQuantums {
+	if _, hasRemainingQuantums := m.GetOrderRemainingAmount(ctx, newOrder); !hasRemainingQuantums {
 		panic(fmt.Sprintf("mustAddOrderToOrderbook: order has no remaining amount %+v", newOrder))
 	}
 
@@ -1461,7 +1460,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		takerRemainingSize = newTakerOrder.GetBaseQuantums()
 	} else {
 		var takerHasRemainingSize bool
-		takerRemainingSize, takerHasRemainingSize = m.getOrderRemainingAmount(
+		takerRemainingSize, takerHasRemainingSize = m.GetOrderRemainingAmount(
 			ctx,
 			newTakerOrder.MustGetOrder(),
 		)
@@ -1539,7 +1538,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			continue
 		}
 
-		makerRemainingSize, makerHasRemainingSize := m.getOrderRemainingAmount(ctx, makerOrder.Order)
+		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder.Order)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("mustPerformTakerOrderMatching: maker order has no remaining amount %v", makerOrder.Order))
 		}
@@ -1896,9 +1895,9 @@ func updateResultToOrderStatus(updateResult satypes.UpdateResult) types.OrderSta
 	return types.Undercollateralized
 }
 
-// getOrderRemainingAmount returns the remaining amount of an order (its size minus its filled amount).
+// GetOrderRemainingAmount returns the remaining amount of an order (its size minus its filled amount).
 // It also returns a boolean indicating whether the remaining amount is positive (true) or not (false).
-func (m *MemClobPriceTimePriority) getOrderRemainingAmount(
+func (m *MemClobPriceTimePriority) GetOrderRemainingAmount(
 	ctx sdk.Context,
 	order types.Order,
 ) (
@@ -2054,7 +2053,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 
 	for remainingImpactQuoteQuantums.Sign() > 0 && foundMakerOrder {
 		makerOrder := makerLevelOrder.Value.Order
-		makerRemainingSize, makerHasRemainingSize := m.getOrderRemainingAmount(ctx, makerOrder)
+		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("getImpactPriceSubticks: maker order has no remaining amount (%+v)", makerOrder))
 		}

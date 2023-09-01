@@ -178,6 +178,27 @@ func (_m *MemClob) GetOrderFilledAmount(ctx types.Context, orderId clobtypes.Ord
 	return r0
 }
 
+// GetOrderRemainingAmount provides a mock function with given fields: ctx, order
+func (_m *MemClob) GetOrderRemainingAmount(ctx types.Context, order clobtypes.Order) (subaccountstypes.BaseQuantums, bool) {
+	ret := _m.Called(ctx, order)
+
+	var r0 subaccountstypes.BaseQuantums
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) subaccountstypes.BaseQuantums); ok {
+		r0 = rf(ctx, order)
+	} else {
+		r0 = ret.Get(0).(subaccountstypes.BaseQuantums)
+	}
+
+	var r1 bool
+	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.Order) bool); ok {
+		r1 = rf(ctx, order)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetPricePremium provides a mock function with given fields: ctx, clobPair, params
 func (_m *MemClob) GetPricePremium(ctx types.Context, clobPair clobtypes.ClobPair, params perpetualstypes.GetPricePremiumParams) (int32, error) {
 	ret := _m.Called(ctx, clobPair, params)
