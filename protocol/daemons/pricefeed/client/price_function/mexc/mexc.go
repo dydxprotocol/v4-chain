@@ -2,7 +2,7 @@ package mexc
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
@@ -55,7 +55,7 @@ func MexcPriceFunction(
 	}
 
 	if mexcResponseBody.Code != 200 {
-		return nil, nil, fmt.Errorf("mexc response code is not 200")
+		return nil, nil, errors.New(`mexc response code is not 200`)
 	}
 
 	return price_function.GetMedianPricesFromTickers(
