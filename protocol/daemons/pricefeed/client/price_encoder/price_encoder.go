@@ -329,11 +329,11 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 			// Log an error if there are rate limiting errors in the ingested buffered channel prices.
 			p.logger.Error(
 				FailedToUpdateExchangePrice,
-				ReasonKey,
+				constants.ReasonLogKey,
 				metrics.RateLimit,
 				constants.ExchangeIdLogKey,
 				p.GetExchangeId(),
-				constants.ErrorKey,
+				constants.ErrorLogKey,
 				response.Err,
 			)
 
