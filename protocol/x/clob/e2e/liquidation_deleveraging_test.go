@@ -408,7 +408,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 						pricesGenesis.MarketPrices = marketPricesCopy
 						*genesisState = pricesGenesis
-
 					},
 				)
 				testapp.UpdateGenesisDocWithAppStateForModule(
