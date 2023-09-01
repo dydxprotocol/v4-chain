@@ -123,7 +123,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			marketIdToOraclePriceOverride: map[uint32]uint64{
-				0: 5_050_000_000, // $50,500 / BTC
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
 			},
 
 			placedMatchableOrders: []clobtypes.MatchableOrder{
@@ -156,7 +156,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			marketIdToOraclePriceOverride: map[uint32]uint64{
-				0: 5_050_000_000, // $50,500 / BTC
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
 			},
 
 			placedMatchableOrders: []clobtypes.MatchableOrder{
@@ -336,7 +336,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			},
 
 			marketIdToOraclePriceOverride: map[uint32]uint64{
-				0: 5_050_000_000, // $50,500 / BTC
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
 			},
 
 			placedMatchableOrders: []clobtypes.MatchableOrder{

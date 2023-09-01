@@ -1328,7 +1328,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			},
 			insuranceFundBalance: 0,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
-				0: 5_050_000_000, // $50,500 / BTC
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
 			},
 
 			liquidationConfig: constants.LiquidationsConfig_No_Limit,
@@ -1385,7 +1385,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			},
 			insuranceFundBalance: 0,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
-				0: 5_050_000_000, // $50,500 / BTC.
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC.
 			},
 
 			liquidationConfig: constants.LiquidationsConfig_No_Limit,
@@ -1647,7 +1647,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			},
 			insuranceFundBalance: 9_999_000_000, // $9,999
 			marketIdToOraclePriceOverride: map[uint32]uint64{
-				0: 5_050_000_000, // $50,500 / BTC.
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC.
 			},
 
 			liquidationConfig: constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,

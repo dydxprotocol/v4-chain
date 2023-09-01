@@ -53,6 +53,7 @@ func (k Keeper) CanDeleverageSubaccount(
 
 	// Deleveraging cannot be performed if the current insurance fund balance is greater than the
 	// max insurance fund for deleveraging,
+	fmt.Println("currentInsuranceFundBalance", currentInsuranceFundBalance.String())
 	if currentInsuranceFundBalance.Cmp(bigMaxInsuranceFundForDeleveraging) > 0 {
 		return false, nil
 	}
@@ -69,6 +70,7 @@ func (k Keeper) CanDeleverageSubaccount(
 	}
 
 	// Deleveraging cannot be performed if the subaccounts net collateral is non-negative.
+	fmt.Println("bigNetCollateral", bigNetCollateral.String())
 	if bigNetCollateral.Sign() >= 0 {
 		return false, nil
 	}
