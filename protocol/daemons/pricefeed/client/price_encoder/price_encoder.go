@@ -25,6 +25,11 @@ type PriceEncoder interface {
 	ProcessPriceFetcherResponse(response *price_fetcher.PriceFetcherSubtaskResponse)
 }
 
+const (
+	FailedToUpdateExchangePrice = "Failed to update exchange price in price daemon priceEncoder"
+	ReasonKey                   = "reason"
+)
+
 // Enforce compile-time conformity of PriceEncoderImpl to the PriceEncoder interface.
 var _ PriceEncoder = &PriceEncoderImpl{}
 
@@ -264,6 +269,39 @@ func (p *PriceEncoderImpl) UpdatePrice(marketPriceTimestamp *types.MarketPriceTi
 	)
 }
 
+// recordPriceUpdateExchangeFailure logs and reports metrics for a price update failure.
+func recordPriceUpdateExchangeFailure(
+	reason string,
+	logger log.Logger,
+	err error,
+	exchangeId types.ExchangeId,
+) {
+	logger.Info(
+		FailedToUpdateExchangePrice,
+		ReasonKey,
+		reason,
+		constants.ExchangeIdLogKey,
+		exchangeId,
+		constants.ErrorKey,
+		err,
+	)
+
+	// Measure failure metric.
+	telemetry.IncrCounterWithLabels(
+		[]string{
+			metrics.PricefeedDaemon,
+			metrics.PriceEncoderUpdatePrice,
+			metrics.Exchange,
+			metrics.Error,
+		},
+		1,
+		[]gometrics.Label{
+			pricefeedmetrics.GetLabelForExchangeId(exchangeId),
+			metrics.GetLabelForStringValue(metrics.Reason, reason),
+		},
+	)
+}
+
 // ProcessPriceFetcherResponse consumes the (price, error) response from the price fetcher and either updates the
 // exchangeToMarketPrices cache with a valid price, or appropriately logs and reports metrics for errors.
 func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.PriceFetcherSubtaskResponse) {
@@ -272,6 +310,9 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 		panic("nil response received from price fetcher")
 	}
 
+	// Capture exchange-specific errors.
+	var exchangeSpecificError price_function.ExchangeError
+
 	if response.Err == nil {
 		p.UpdatePrice(response.Price)
 	} else {
@@ -279,36 +320,25 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 			// Log info if there are timeout errors in the ingested buffered channel prices.
 			// This is only an info so that there aren't noisy errors when undesirable but
 			// expected behavior occurs.
-			p.logger.Info(
-				"Failed to update exchange price in price daemon priceEncoder due to timeout",
-				"error",
+			recordPriceUpdateExchangeFailure(
+				metrics.HttpGetTimeout,
+				p.logger,
 				response.Err,
-				"exchangeId",
 				p.GetExchangeId(),
-			)
-
-			// Measure timeout failures.
-			telemetry.IncrCounterWithLabels(
-				[]string{
-					metrics.PricefeedDaemon,
-					metrics.PriceEncoderUpdatePrice,
-					metrics.HttpGetTimeout,
-					metrics.Error,
-				},
-				1,
-				[]gometrics.Label{
-					pricefeedmetrics.GetLabelForExchangeId(p.GetExchangeId()),
-				},
 			)
 		} else if errors.Is(response.Err, constants.RateLimitingError) {
-			p.logger.Info(
-				"Failed to update exchange price in price daemon priceEncoder due to rate limiting",
-				"error",
-				response.Err,
-				"exchangeId",
+			// Log an error if there are rate limiting errors in the ingested buffered channel prices.
+			p.logger.Error(
+				FailedToUpdateExchangePrice,
+				ReasonKey,
+				metrics.RateLimit,
+				constants.ExchangeIdLogKey,
 				p.GetExchangeId(),
+				constants.ErrorKey,
+				response.Err,
 			)
-			// Record rate limiting error as an error with the encoder.
+
+			// Measure failure metric.
 			telemetry.IncrCounterWithLabels(
 				[]string{
 					metrics.PricefeedDaemon,
@@ -318,57 +348,38 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 				1,
 				[]gometrics.Label{
 					pricefeedmetrics.GetLabelForExchangeId(p.GetExchangeId()),
+					metrics.GetLabelForStringValue(metrics.Reason, metrics.RateLimit),
 				},
 			)
-		} else if price_function.IsExchangeError(response.Err) {
+		} else if ok := errors.As(response.Err, &exchangeSpecificError); ok {
 			// Log info if there are 5xx errors in the ingested buffered channel prices.
 			// This is only an info so that there aren't noisy errors when undesirable but
 			// expected behavior occurs.
-			p.logger.Info(
-				"Failed to update exchange price in price daemon priceEncoder due to exchange-side error",
-				"error",
+			recordPriceUpdateExchangeFailure(
+				metrics.ExchangeSpecificError,
+				p.logger,
 				response.Err,
-				"exchangeId",
 				p.GetExchangeId(),
 			)
-
-			// Measure 5xx failures.
-			telemetry.IncrCounterWithLabels(
-				[]string{
-					metrics.PricefeedDaemon,
-					metrics.PriceEncoderUpdatePrice,
-					metrics.HttpGet5xxx,
-					metrics.Error,
-				},
-				1,
-				[]gometrics.Label{
-					pricefeedmetrics.GetLabelForExchangeId(p.GetExchangeId()),
-				},
+		} else if price_function.IsGenericExchangeError(response.Err) {
+			// Log info if there are 5xx errors in the ingested buffered channel prices.
+			// This is only an info so that there aren't noisy errors when undesirable but
+			// expected behavior occurs.
+			recordPriceUpdateExchangeFailure(
+				metrics.HttpGet5xx,
+				p.logger,
+				response.Err,
+				p.GetExchangeId(),
 			)
 		} else if errors.Is(response.Err, syscall.ECONNRESET) {
 			// Log info if there are connections reset by the exchange.
 			// This is only an info so that there aren't noisy errors when undesirable but
 			// expected behavior occurs.
-			p.logger.Info(
-				"Failed to update exchange price in price daemon priceEncoder due to exchange-side hang-up",
-				"error",
+			recordPriceUpdateExchangeFailure(
+				metrics.HttpGetHangup,
+				p.logger,
 				response.Err,
-				"exchangeId",
 				p.GetExchangeId(),
-			)
-
-			// Measure HTTP GET hangups.
-			telemetry.IncrCounterWithLabels(
-				[]string{
-					metrics.PricefeedDaemon,
-					metrics.PriceEncoderUpdatePrice,
-					metrics.HttpGetHangup,
-					metrics.Error,
-				},
-				1,
-				[]gometrics.Label{
-					pricefeedmetrics.GetLabelForExchangeId(p.GetExchangeId()),
-				},
 			)
 		} else {
 			// Log error if there are errors in the ingested buffered channel prices.

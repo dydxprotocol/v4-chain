@@ -5,6 +5,7 @@ import "time"
 const (
 	SubmoduleLogKey = "submodule"
 
+	ErrorKey         = "error"
 	ExchangeIdLogKey = "exchangeId"
 	MarketIdLogKey   = "marketId"
 	PriceLogKey      = "Price"
