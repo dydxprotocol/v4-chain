@@ -658,6 +658,8 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 //     perform collateralization checks on the taker order.
 //   - If there were any matches resulting from matching the liquidation order, memclob state will
 //     be updated accordingly.
+//
+// TODO(CLOB-852): Separate out deleveraging flow from liquidations flow.
 func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 	ctx sdk.Context,
 	liquidationOrder types.LiquidationOrder,
@@ -670,6 +672,9 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 	// Attempt to match the liquidation order against the orderbook.
 	// TODO(DEC-1157): Update liquidations flow to send off-chain indexer messages.
 	liquidationOrderStatus, offchainUpdates, err := m.matchOrder(ctx, &liquidationOrder)
+	if err != nil {
+		return 0, 0, nil, err
+	}
 
 	// Skip checking if the account needs to be deleveraged if the liquidation order was partially
 	// or fully-filled.

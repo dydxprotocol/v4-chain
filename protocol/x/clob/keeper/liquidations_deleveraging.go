@@ -40,8 +40,8 @@ func (k Keeper) GetInsuranceFundBalance(
 
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
 // Specifically, this function returns true if both of the following are true:
-// - The subaccount's total net collateral is negative.
 // - The insurance fund balance is less-than-or-equal to `MaxInsuranceFundQuantumsForDeleveraging`.
+// - The subaccount's total net collateral is negative.
 // This function returns an error if `GetNetCollateralAndMarginRequirements` returns an error.
 func (k Keeper) CanDeleverageSubaccount(
 	ctx sdk.Context,
