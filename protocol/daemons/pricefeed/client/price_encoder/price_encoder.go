@@ -268,7 +268,9 @@ func (p *PriceEncoderImpl) UpdatePrice(marketPriceTimestamp *types.MarketPriceTi
 	)
 }
 
-// recordPriceUpdateExchangeFailure logs and reports metrics for a price update failure.
+// recordPriceUpdateExchangeFailure logs and reports metrics for exchange-related price update failures.
+// These errors are logged at the info level so that there aren't noisy errors when undesirable but
+// occasionally expected behavior occurs.
 func recordPriceUpdateExchangeFailure(
 	reason string,
 	logger log.Logger,
@@ -317,8 +319,6 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 	} else {
 		if errors.Is(response.Err, context.DeadlineExceeded) {
 			// Log info if there are timeout errors in the ingested buffered channel prices.
-			// This is only an info so that there aren't noisy errors when undesirable but
-			// expected behavior occurs.
 			recordPriceUpdateExchangeFailure(
 				metrics.HttpGetTimeout,
 				p.logger,
@@ -361,9 +361,9 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 				p.GetExchangeId(),
 			)
 		} else if price_function.IsGenericExchangeError(response.Err) {
-			// Log info if there are 5xx errors in the ingested buffered channel prices.
-			// This is only an info so that there aren't noisy errors when undesirable but
-			// expected behavior occurs.
+			// Log info if there are 5xx errors in the ingested buffered channel prices. These responses
+			// may have come back with an acceptable status code, but the response body contents indicate
+			// that the exchange is experiencing an internal error.
 			recordPriceUpdateExchangeFailure(
 				metrics.HttpGet5xx,
 				p.logger,
@@ -372,8 +372,6 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 			)
 		} else if errors.Is(response.Err, syscall.ECONNRESET) {
 			// Log info if there are connections reset by the exchange.
-			// This is only an info so that there aren't noisy errors when undesirable but
-			// expected behavior occurs.
 			recordPriceUpdateExchangeFailure(
 				metrics.HttpGetHangup,
 				p.logger,
