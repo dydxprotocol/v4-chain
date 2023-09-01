@@ -70,7 +70,7 @@ FAUCET_USDC_BALANCE=10000000000000
 MONIKERS=(
 	"dydx-1"
 	"dydx-2"
-	"dydx-research" # TODO: Uncomment to add research validator.
+	"dydx-research"
 )
 
 # Public IPs for each validator.
