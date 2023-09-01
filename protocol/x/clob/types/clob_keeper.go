@@ -122,4 +122,8 @@ type ClobKeeper interface {
 	InitializeBlockRateLimit(ctx sdk.Context, config BlockRateLimitConfiguration) error
 	InitializeEquityTierLimit(ctx sdk.Context, config EquityTierLimitConfiguration) error
 	Logger(ctx sdk.Context) log.Logger
+	UpdateClobPair(
+		ctx sdk.Context,
+		clobPair ClobPair,
+	) error
 }
