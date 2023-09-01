@@ -128,7 +128,7 @@ func PrepareCheckState(
 
 	// 1. Remove all operations in the local validators operations queue from the memclob.
 	localValidatorOperationsQueue, shortTermOrderTxBytes := memClob.GetOperationsToReplay(ctx)
-	ctx.Logger().Debug(
+	keeper.Logger(ctx).Debug(
 		"Clearing local operations queue",
 		"localValidatorOperationsQueue",
 		types.GetInternalOperationsQueueTextString(localValidatorOperationsQueue),
@@ -210,7 +210,7 @@ func PrepareCheckState(
 	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
 		liquidationOrder := liquidationOrders[i]
 		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
-			ctx.Logger().Error(
+			keeper.Logger(ctx).Error(
 				fmt.Sprintf(
 					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
 					liquidationOrder,
@@ -231,7 +231,7 @@ func PrepareCheckState(
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
 	newLocalValidatorOperationsQueue, _ := memClob.GetOperationsToReplay(ctx)
-	ctx.Logger().Debug(
+	keeper.Logger(ctx).Debug(
 		"Local operations queue after PrepareCheckState",
 		"newLocalValidatorOperationsQueue",
 		types.GetInternalOperationsQueueTextString(newLocalValidatorOperationsQueue),

@@ -237,7 +237,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			1,
 			types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count,
 		)
-		ctx.Logger().Error(
+		k.Logger(ctx).Error(
 			sdkerrors.Wrapf(
 				types.ErrPositionCannotBeFullyOffset,
 				"OffsetSubaccountPerpetualPosition: Not enough position to fully offset position, "+

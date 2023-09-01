@@ -52,7 +52,7 @@ func (k Keeper) ProcessSingleMatch(
 					ctx,
 					satypes.Update{SubaccountId: *takerSubaccount.Id},
 				)
-				ctx.Logger().Error(
+				k.Logger(ctx).Error(
 					"collateralization check failed for liquidation",
 					"takerSubaccount", fmt.Sprintf("%+v", takerSubaccount),
 					"takerTNC", takerTnc,
@@ -473,7 +473,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 		// the same `OrderId` with a lower `GoodTilBlock` first if the proposer is using this unmodified application,
 		// but it's still not necessarily guaranteed due to MEV.
 		if curPruneableBlockHeight > order.GetGoodTilBlock()+types.ShortBlockWindow {
-			ctx.Logger().Info(
+			k.Logger(ctx).Info(
 				"Found an `orderId` in ProcessProposerMatches which had a lower GoodTilBlock than"+
 					" a previous order in the list of fills. This could mean a lower priority order was allowed on the book.",
 				"orderId",
@@ -498,7 +498,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 		if _, exists := k.MemClob.GetOrder(ctx, order.OrderId); exists {
 			// Generate an off-chain update message updating the total filled amount of order.
 			if message, success := off_chain_updates.CreateOrderUpdateMessage(
-				ctx.Logger(),
+				k.Logger(ctx),
 				order.OrderId,
 				newTotalFillAmount,
 			); success {

@@ -54,7 +54,7 @@ func (k Keeper) validateMatchedLiquidation(
 	// in the insurance fund (such that deleveraging is required and the liquidation couldn't
 	// have possibly continued).
 	if k.ShouldPerformDeleveraging(ctx, insuranceFundDelta) {
-		ctx.Logger().Info("ProcessMatches: insurance fund does not have enough balance and deleveraging is required.")
+		k.Logger(ctx).Info("ProcessMatches: insurance fund does not have enough balance and deleveraging is required.")
 		return nil, sdkerrors.Wrapf(
 			types.ErrInsuranceFundHasInsufficientFunds,
 			"Liquidation order %v",
