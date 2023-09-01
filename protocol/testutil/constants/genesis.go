@@ -1347,7 +1347,7 @@ const GenesisState = `{
     "rewards": {
       "params": {
         "treasury_account":"rewards_treasury",
-        "denom":"testnet_reward_token",
+        "denom":"dv4tnt",
         "denom_exponent":-6,
         "market_id":1,
         "fee_multiplier_ppm":990000
@@ -1473,9 +1473,9 @@ const GenesisState = `{
     "vest": {
       "vest_entries": [
         {
-          "denom": "testnet_reward_token",
-          "end_time": "2023-08-23T00:00:00Z",
-          "start_time": "2023-08-02T00:00:00Z",
+          "denom": "dv4tnt",
+          "end_time": "2023-10-13T00:00:00Z",
+          "start_time": "2023-09-13T00:00:00Z",
           "treasury_account": "rewards_treasury",
           "vester_account": "rewards_vester"
         }
