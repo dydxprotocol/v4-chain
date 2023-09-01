@@ -458,7 +458,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	// Attempt to match the order against the orderbook.
-	takerOrderStatus, takerOffchainUpdates, err := m.matchOrder(ctx, &order)
+	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
 	offchainUpdates.Append(takerOffchainUpdates)
 
 	if err != nil {
@@ -669,7 +669,7 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 ) {
 	// Attempt to match the liquidation order against the orderbook.
 	// TODO(DEC-1157): Update liquidations flow to send off-chain indexer messages.
-	liquidationOrderStatus, offchainUpdates, err := m.matchOrder(ctx, &order)
+	liquidationOrderStatus, offchainUpdates, _, err := m.matchOrder(ctx, &order)
 
 	if liquidationOrderStatus.OrderStatus == types.LiquidationRequiresDeleveraging {
 		// Check if the subaccount is still liquidatable. This check is needed for the edge case
@@ -727,6 +727,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 ) (
 	orderStatus types.TakerOrderStatus,
 	offchainUpdates *types.OffchainUpdates,
+	orderIdsRemovedFromBook []types.OrderId,
 	err error,
 ) {
 	offchainUpdates = types.NewOffchainUpdates()
@@ -777,6 +778,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		}
 
 		m.mustRemoveOrder(branchedContext, makerOrderId)
+		orderIdsRemovedFromBook = append(orderIdsRemovedFromBook, makerOrderId)
 		if makerOrderId.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
 			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
 				makerOrderId,
@@ -827,7 +829,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		writeCache()
 	}
 
-	return takerOrderStatus, offchainUpdates, matchingErr
+	return takerOrderStatus, offchainUpdates, orderIdsRemovedFromBook, matchingErr
 }
 
 // ReplayOperations will replay the provided operations onto the memclob.
