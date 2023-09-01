@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -469,4 +470,8 @@ func (f *FakeMemClobKeeper) IsLiquidatable(
 
 func (f *FakeMemClobKeeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, order types.Order) error {
 	return nil
+}
+
+func (f *FakeMemClobKeeper) Logger(ctx sdk.Context) log.Logger {
+	return log.NewNopLogger()
 }

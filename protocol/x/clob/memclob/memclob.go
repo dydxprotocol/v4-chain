@@ -903,39 +903,15 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx.BlockHeight(),
 			)
 
-			if err != nil {
-				m.clobKeeper.Logger(ctx).Debug(
-					"ReplayOperations: PlaceOrder() returned an error.",
-					"error",
-					err,
-					"operation",
-					operation,
-					"order",
-					order,
-				)
-
-				// If the order is dropped while adding it to the book, return an off-chain order remove
-				// message for the order.
-				// Note: Currently, the error returned from placing the order determines whether an order
-				// removal message is sent to the Indexer. This may change later on to be a check on whether
-				// the order has an existing nonce.
-				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
-					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-						m.clobKeeper.Logger(ctx),
-						order.OrderId,
-						orderStatus,
-						err,
-						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-					); success {
-						existingOffchainUpdates.AddRemoveMessage(order.OrderId, message)
-					}
-				}
-			} else {
-				if m.generateOffchainUpdates {
-					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-				}
-			}
+			m.GenerateOffchainUpdatesForReplayPlaceOrder(
+				ctx,
+				err,
+				operation,
+				order,
+				orderStatus,
+				placeOrderOffchainUpdates,
+				existingOffchainUpdates,
+			)
 
 		// Replay all pre-existing stateful order placements.
 		case *types.InternalOperation_PreexistingStatefulOrder:
@@ -959,39 +935,15 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			if err != nil {
-				m.clobKeeper.Logger(ctx).Debug(
-					"ReplayOperations: PlaceOrder() returned an error for a pre-existing stateful order.",
-					"error",
-					err,
-					"operation",
-					operation,
-					"statefulOrderPlacement",
-					statefulOrderPlacement,
-				)
-
-				// If the stateful order is dropped while adding it to the book, return an off-chain order remove
-				// message for the order.
-				// Note: Currently, the error returned from placing the order determines whether an order
-				// removal message is sent to the Indexer. This may change later on to be a check on whether
-				// the order has an existing nonce.
-				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
-					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-						m.clobKeeper.Logger(ctx),
-						*orderId,
-						orderStatus,
-						err,
-						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-					); success {
-						existingOffchainUpdates.AddRemoveMessage(*orderId, message)
-					}
-				}
-			} else {
-				if m.generateOffchainUpdates {
-					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-				}
-			}
+			m.GenerateOffchainUpdatesForReplayPlaceOrder(
+				ctx,
+				err,
+				operation,
+				statefulOrderPlacement.Order,
+				orderStatus,
+				placeOrderOffchainUpdates,
+				existingOffchainUpdates,
+			)
 		// Matches are a no-op.
 		case *types.InternalOperation_Match:
 		case *types.InternalOperation_OrderRemoval:
@@ -1010,34 +962,15 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			if err != nil {
-				m.clobKeeper.Logger(ctx).Debug(
-					"ReplayOperations: PlaceOrder() returned an error for a removed stateful order which was re-placed.",
-					"error",
-					err,
-					"operation",
-					operation,
-					"statefulOrderPlacement",
-					statefulOrderPlacement,
-				)
-
-				// If the stateful order is dropped while adding it to the book, return an off-chain order remove
-				// message for the order.
-				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
-					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-						m.clobKeeper.Logger(ctx),
-						orderId,
-						orderStatus,
-						err,
-						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-					); success {
-						existingOffchainUpdates.AddRemoveMessage(orderId, message)
-					}
-				}
-			} else if m.generateOffchainUpdates {
-				existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-			}
+			m.GenerateOffchainUpdatesForReplayPlaceOrder(
+				ctx,
+				err,
+				operation,
+				statefulOrderPlacement.Order,
+				orderStatus,
+				placeOrderOffchainUpdates,
+				existingOffchainUpdates,
+			)
 		default:
 			panic(fmt.Sprintf("unknown operation type: %T", operation.Operation))
 		}
@@ -1045,6 +978,57 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 
 	existingOffchainUpdates.CondenseMessagesForReplay()
 	return existingOffchainUpdates
+}
+
+func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
+	ctx sdk.Context,
+	err error,
+	operation types.InternalOperation,
+	order types.Order,
+	orderStatus types.OrderStatus,
+	placeOrderOffchainUpdates *types.OffchainUpdates,
+	existingOffchainUpdates *types.OffchainUpdates,
+) {
+	orderId := order.OrderId
+	if err != nil {
+		var loggerString string
+		switch operation.Operation.(type) {
+		case *types.InternalOperation_ShortTermOrderPlacement:
+			loggerString = "ReplayOperations: PlaceOrder() returned an error"
+		case *types.InternalOperation_PreexistingStatefulOrder:
+			loggerString = "ReplayOperations: PlaceOrder() returned an error for a pre-existing stateful order."
+		case *types.InternalOperation_OrderRemoval:
+			loggerString = "ReplayOperations: PlaceOrder() returned an error for a removed stateful order which was re-placed."
+		}
+		m.clobKeeper.Logger(ctx).Debug(
+			loggerString,
+			"error",
+			err,
+			"operation",
+			operation,
+			"order",
+			order,
+		)
+
+		// If the stateful order is dropped while adding it to the book, return an off-chain order remove
+		// message for the order.
+		if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
+			if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
+				m.clobKeeper.Logger(ctx),
+				orderId,
+				orderStatus,
+				err,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+			); success {
+				existingOffchainUpdates.AddRemoveMessage(orderId, message)
+			}
+		}
+		return
+	}
+	if m.generateOffchainUpdates {
+		existingOffchainUpdates.Append(placeOrderOffchainUpdates)
+	}
 }
 
 // RemoveAndClearOperationsQueue is called during `Commit`/`PrepareCheckState`
