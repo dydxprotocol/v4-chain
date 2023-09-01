@@ -81,7 +81,10 @@ func ProcessProposalHandler(
 			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}
 
-		clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
+		// Measure MEV metrics if enabled.
+		if clobKeeper.RecordMevMetricsIsEnabled() {
+			clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
+		}
 
 		// Record a success metric.
 		recordSuccessMetrics(ctx, txs, len(req.Txs))

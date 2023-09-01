@@ -180,13 +180,13 @@ func (o *Order) CanTrigger(subticks Subticks) bool {
 	o.MustBeConditionalOrder()
 	orderTriggerSubticks := Subticks(o.ConditionalOrderTriggerSubticks)
 
-	// Take profit buys and stop loss sells trigger when when oracle price goes lower
+	// Take profit buys and stop loss sells trigger when the oracle price goes lower
 	// than or equal to the trigger price.
 	if o.ConditionType == Order_CONDITION_TYPE_TAKE_PROFIT && o.IsBuy() ||
 		o.ConditionType == Order_CONDITION_TYPE_STOP_LOSS && !o.IsBuy() {
 		return orderTriggerSubticks >= subticks
 	}
-	// Take profit sells and stop loss buys trigger when when oracle price goes higher
+	// Take profit sells and stop loss buys trigger when the oracle price goes higher
 	// than or equal to the trigger price.
 	return orderTriggerSubticks <= subticks
 }

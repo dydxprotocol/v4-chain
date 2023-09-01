@@ -7,6 +7,7 @@ import {
 } from '../../src/helpers/db-helpers';
 import { UniqueViolationError } from 'objection';
 import { defaultMarket, defaultMarket2 } from '../helpers/constants';
+import Transaction from '../../src/helpers/transaction';
 
 describe('Market store', () => {
   beforeAll(async () => {
@@ -98,6 +99,25 @@ describe('Market store', () => {
       ...defaultMarket,
       minPriceChangePpm: 100,
     }));
+  });
+
+  it('Successfully updates a market created in the same transaction', async () => {
+    const txId: number = await Transaction.start();
+    await MarketTable.create(defaultMarket, { txId });
+    const market: MarketFromDatabase | undefined = await MarketTable.update(
+      {
+        id: defaultMarket.id,
+        minPriceChangePpm: 100,
+      },
+      {
+        txId,
+      },
+    );
+    expect(market).toEqual(expect.objectContaining({
+      ...defaultMarket,
+      minPriceChangePpm: 100,
+    }));
+    await Transaction.commit(txId);
   });
 
   it('Fails to update market to have same pair as existing market', async () => {

@@ -78,7 +78,7 @@ describe('liquidity-tier-validator', () => {
         'logs error on liquidity tier upsert event with basePositionNotional equal to 0',
         {
           ...defaultLiquidityTierUpsertEvent,
-          basePositionNotional: Long.fromValue(0),
+          basePositionNotional: Long.fromValue(0, true),
         } as LiquidityTierUpsertEventV1,
         'LiquidityTierUpsertEventV1 basePositionNotional is not populated',
       ],

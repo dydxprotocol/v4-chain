@@ -221,6 +221,12 @@ func PrepareCheckState(
 		}
 	}
 
+	telemetry.ModuleSetGauge(
+		types.ModuleName,
+		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
+		metrics.InsuranceFundBalance,
+	)
+
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 

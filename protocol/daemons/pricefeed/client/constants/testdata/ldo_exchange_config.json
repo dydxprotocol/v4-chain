@@ -1,0 +1,23 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "\"LDOUSDT\"",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "LDO-USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "LDO-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "LDO_USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

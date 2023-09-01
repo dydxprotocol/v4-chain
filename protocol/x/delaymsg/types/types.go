@@ -54,9 +54,6 @@ type DelayMsgKeeper interface {
 		found bool,
 	)
 
-	// DecodeMessage decodes a message from bytes.
-	DecodeMessage(msgBytes []byte, msg *sdk.Msg) error
-
 	// HasAuthority returns whether the authority is permitted to send delayed messages.
 	HasAuthority(authority string) bool
 

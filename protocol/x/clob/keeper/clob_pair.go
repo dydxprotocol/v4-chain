@@ -392,26 +392,53 @@ func (k Keeper) mustGetClobPair(
 	return clobPair
 }
 
-// SetClobPairStatus fetches a ClobPair by id and sets its
-// Status property equal to the provided ClobPair_Status. This function returns
-// an error if the proposed status transition is not supported.
-func (k Keeper) SetClobPairStatus(
+// UpdateClobPair overwrites a ClobPair in state.
+// This function returns an error if the update includes an unsupported transition
+// for the ClobPair's status.
+func (k Keeper) UpdateClobPair(
 	ctx sdk.Context,
-	clobPairId types.ClobPairId,
-	clobPairStatus types.ClobPair_Status,
+	clobPair types.ClobPair,
 ) error {
-	clobPair := k.mustGetClobPair(ctx, clobPairId)
+	oldClobPair := k.mustGetClobPair(ctx, types.ClobPairId(clobPair.Id))
 
-	if !types.IsSupportedClobPairStatusTransition(clobPair.Status, clobPairStatus) {
+	// Note, only perpetual clob pairs are currently supported. Neither the old nor the
+	// new clob pair should be spot.
+	if clobPair.MustGetPerpetualId() != oldClobPair.MustGetPerpetualId() {
+		return sdkerrors.Wrap(
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: cannot update ClobPair perpetual id",
+		)
+	}
+	if clobPair.StepBaseQuantums != oldClobPair.StepBaseQuantums {
 		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairStatusTransition,
-			"Cannot transition from status %+v to status %+v",
-			clobPair.Status,
-			clobPairStatus,
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: cannot update ClobPair step base quantums",
+		)
+	}
+	if clobPair.SubticksPerTick != oldClobPair.SubticksPerTick {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: cannot update ClobPair subticks per tick",
+		)
+	}
+	if clobPair.QuantumConversionExponent != oldClobPair.QuantumConversionExponent {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: cannot update ClobPair quantum conversion exponent",
 		)
 	}
 
-	clobPair.Status = clobPairStatus
+	oldStatus := oldClobPair.Status
+	newStatus := clobPair.Status
+	if oldStatus != newStatus && !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClobPairStatusTransition,
+			"Cannot transition from status %+v to status %+v",
+			oldStatus,
+			newStatus,
+		)
+	}
+
 	if err := k.validateClobPair(ctx, &clobPair); err != nil {
 		return err
 	}

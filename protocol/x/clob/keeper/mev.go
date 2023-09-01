@@ -18,6 +18,12 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+type MevTelemetryConfig struct {
+	Enabled    bool
+	Host       string
+	Identifier string
+}
+
 // CumulativePnL keeps track of the cumulative PnL for each subaccount per market.
 type CumulativePnL struct {
 	// PnL calculations.
@@ -39,6 +45,11 @@ type PnLCalculationParams struct {
 	subaccountId satypes.SubaccountId
 	isBuy        bool
 	feePpm       int32
+}
+
+// RecordMevMetricsIsEnabled returns true if the MEV telemetry config is enabled.
+func (k Keeper) RecordMevMetricsIsEnabled() bool {
+	return k.mevTelemetryConfig.Enabled
 }
 
 // RecordMevMetrics measures and records MEV by comparing the block proposer's list of matches
@@ -291,7 +302,7 @@ func (k Keeper) RecordMevMetrics(
 		mevPerMarket[clobPairId] = mev
 	}
 
-	if k.mevTelemetryHost != "" {
+	if k.mevTelemetryConfig.Host != "" {
 		mevClobMidPrices := make([]types.ClobMidPrice, 0, len(clobPairs))
 		for _, clobPair := range clobPairs {
 			mevClobMidPrices = append(
@@ -304,14 +315,14 @@ func (k Keeper) RecordMevMetrics(
 		}
 		go mev_telemetry.SendDatapoints(
 			ctx,
-			k.mevTelemetryHost,
+			k.mevTelemetryConfig.Host,
 			types.MevMetrics{
 				MevDatapoint: types.MEVDatapoint{
 					Height:              lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 					ChainID:             ctx.ChainID(),
 					VolumeQuoteQuantums: validatorVolumeQuoteQuantumsPerMarket,
 					MEV:                 mevPerMarket,
-					Identifier:          k.mevTelemetryIdentifier,
+					Identifier:          k.mevTelemetryConfig.Identifier,
 				},
 				MevNodeToNode: types.MevNodeToNodeMetrics{
 					ValidatorMevMatches: validatorMevMatches,

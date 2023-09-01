@@ -1,9 +1,12 @@
 package keeper
 
 import (
+	"bytes"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"sort"
@@ -128,16 +131,24 @@ func (k Keeper) SetDelayedMessage(
 	return nil
 }
 
-// DecodeMessage decodes message bytes into a sdk.Msg. This method is added to the keeper
-// to allow for mocking in msg service tests.
-func (k Keeper) DecodeMessage(msgBytes []byte, msg *sdk.Msg) error {
-	return k.cdc.UnmarshalInterface(msgBytes, msg)
-}
-
-// EncodeMessage encodes a sdk.Msg into bytes. This method is added to the keeper
-// for ease of testing.
-func (k Keeper) EncodeMessage(msg sdk.Msg) ([]byte, error) {
-	return k.cdc.MarshalInterface(msg)
+// validateSigners validates that the message has exactly one signer, and that the signer is the delaymsg module
+// address.
+func validateSigners(msg sdk.Msg) error {
+	signers := msg.GetSigners()
+	if len(signers) != 1 {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidSigner,
+			"message must have exactly one signer",
+		)
+	}
+	moduleAddress := authtypes.NewModuleAddress(types.ModuleName)
+	if !bytes.Equal(signers[0], moduleAddress) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidSigner,
+			"message signer must be delaymsg module address",
+		)
+	}
+	return nil
 }
 
 // DelayMessageByBlocks registers an sdk.Msg to be executed after blockDelay blocks.
@@ -158,6 +169,18 @@ func (k Keeper) DelayMessageByBlocks(
 		)
 	}
 
+	if err := msg.ValidateBasic(); err != nil {
+		return 0, sdkerrors.Wrapf(
+			types.ErrInvalidInput,
+			"message failed basic validation: %v",
+			err,
+		)
+	}
+
+	if err := validateSigners(msg); err != nil {
+		return 0, err
+	}
+
 	nextId := k.GetNumMessages(ctx)
 	blockHeight, err := lib.AddUint32(ctx.BlockHeight(), blockDelay)
 	if err != nil {
@@ -168,18 +191,18 @@ func (k Keeper) DelayMessageByBlocks(
 		)
 	}
 
-	messageBytes, err := k.cdc.MarshalInterface(msg)
+	anyMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return 0, sdkerrors.Wrapf(
 			types.ErrInvalidInput,
-			"failed to marshal message: %v. Is the message type registered?",
+			"failed to convert message to Any: %v",
 			err,
 		)
 	}
 
 	delayedMessage := types.DelayedMessage{
 		Id:          nextId,
-		Msg:         messageBytes,
+		Msg:         anyMsg,
 		BlockHeight: blockHeight,
 	}
 

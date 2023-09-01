@@ -79,6 +79,7 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			mockClobKeeper := &mocks.ProcessClobKeeper{}
+			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			handler := process.FullNodeProcessProposalHandler(

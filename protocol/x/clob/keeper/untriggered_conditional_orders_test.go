@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"math/big"
 	"testing"
 
@@ -19,6 +20,7 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 		// Expectations.
 		expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice []types.Order
 		expectedOrdersToTriggerWhenOraclePriceGTETriggerPrice []types.Order
+		expectedNumberOfMatches                               uint32
 	}{
 		"Can add a stop loss buy to the GTE array": {
 			conditionalOrdersToAdd: []types.Order{
@@ -29,6 +31,7 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 			expectedOrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 			},
+			expectedNumberOfMatches: 1,
 		},
 		"Can add a take profit sell to the GTE array": {
 			conditionalOrdersToAdd: []types.Order{
@@ -39,6 +42,7 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 			expectedOrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Sell5_Price10_GTBT15_TakeProfit20,
 			},
+			expectedNumberOfMatches: 1,
 		},
 		"Can add a take profit buy to the LTE array": {
 			conditionalOrdersToAdd: []types.Order{
@@ -49,6 +53,7 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20,
 			},
 			expectedOrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{},
+			expectedNumberOfMatches:                               1,
 		},
 		"Can add a stop loss sell to the LTE array": {
 			conditionalOrdersToAdd: []types.Order{
@@ -59,6 +64,7 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss20,
 			},
 			expectedOrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{},
+			expectedNumberOfMatches:                               1,
 		},
 		"Can add multiple conditional orders to both heaps": {
 			conditionalOrdersToAdd: []types.Order{
@@ -76,12 +82,16 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Sell5_Price10_GTBT15_StopLoss20,
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20,
 			},
+			expectedNumberOfMatches: 4,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			untriggeredConditionalOrders := keeper.NewUntriggeredConditionalOrders()
+			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+			ctx := tApp.InitChain()
+			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
+			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
 
 			for _, order := range tc.conditionalOrdersToAdd {
 				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
@@ -97,6 +107,16 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 				tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
 			)
+
+			// There should be exacly one match for all these cases.
+			orderIdToMatch := tc.conditionalOrdersToAdd[0].OrderId
+			require.Equal(t, tc.expectedNumberOfMatches, tApp.App.ClobKeeper.CountUntriggeredSubaccountOrders(
+				ctx,
+				orderIdToMatch.SubaccountId,
+				func(id types.OrderId) bool {
+					return orderIdToMatch == id
+				},
+			))
 		})
 	}
 }
@@ -184,7 +204,10 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			untriggeredConditionalOrders := keeper.NewUntriggeredConditionalOrders()
+			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+			ctx := tApp.InitChain()
+			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
+			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
 
 			for _, order := range tc.conditionalOrdersToAdd {
 				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
@@ -202,6 +225,16 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 				tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
 			)
+
+			// There should be exacly zero matches for all these cases since the order should have been removed.
+			orderIdToMatch := tc.conditionalOrderIdsToExpire[0]
+			require.Equal(t, uint32(0), tApp.App.ClobKeeper.CountUntriggeredSubaccountOrders(
+				ctx,
+				orderIdToMatch.SubaccountId,
+				func(id types.OrderId) bool {
+					return orderIdToMatch == id
+				},
+			))
 		})
 	}
 }

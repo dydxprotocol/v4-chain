@@ -46,7 +46,7 @@ type LiquidationsKeeper interface {
 	GetInsuranceFundBalance(
 		ctx sdk.Context,
 	) (
-		balance uint64,
+		balance *big.Int,
 	)
 	GetLiquidationInsuranceFundDelta(
 		ctx sdk.Context,

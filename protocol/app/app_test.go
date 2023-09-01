@@ -1,10 +1,11 @@
 package app_test
 
 import (
-	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 	"reflect"
 	"strings"
 	"testing"
+
+	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -154,43 +155,6 @@ func TestUpgrades(t *testing.T) {
 
 func TestForks(t *testing.T) {
 	require.Len(t, app.Forks, 0, "Expected no Forks")
-}
-
-func TestBlockedAddresses(t *testing.T) {
-	blockedAddresses := app.BlockedAddresses()
-	expectedBlockedAddresses := map[string]bool{
-		"dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2": true,
-		"dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq": true,
-		"dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq": true,
-		"dydx1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wx2cfg": true,
-		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true,
-		"dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6": true,
-		"dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5": true,
-		"dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv": true, // `bridge` module account.
-		// `rewards_treasury` module account
-		"dydx16wrau2x4tsg033xfrrdpae6kxfn9kyuerr5jjp": true,
-		// `vester_treasury` module accoount
-		"dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp": true,
-	}
-	require.Equal(t, expectedBlockedAddresses, blockedAddresses, "default blocked address list does not match expected")
-}
-
-func TestMaccPerms(t *testing.T) {
-	maccPerms := app.GetMaccPerms()
-	expectedMaccPerms := map[string][]string{
-		"bonded_tokens_pool":     {"burner", "staking"},
-		"bridge":                 {"minter"},
-		"distribution":           []string(nil),
-		"fee_collector":          []string(nil),
-		"gov":                    {"burner"},
-		"insurance_fund":         []string(nil),
-		"not_bonded_tokens_pool": {"burner", "staking"},
-		"subaccounts":            []string(nil),
-		"transfer":               {"minter", "burner"},
-		"rewards_treasury":       nil,
-		"rewards_vester":         nil,
-	}
-	require.Equal(t, expectedMaccPerms, maccPerms, "default macc perms list does not match expected")
 }
 
 func TestModuleBasics(t *testing.T) {

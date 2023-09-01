@@ -343,8 +343,93 @@ const GenesisState = `{
       }
     },
     "delaymsg": {
-      "num_messages": "0",
-      "delayed_messages": []
+      "delayed_messages": [
+        {
+          "id": 0,
+          "msg": {
+            "@type": "/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+            "authority": "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+            "params": {
+              "tiers": [
+                {
+                  "name": "1",
+                  "absolute_volume_requirement": "0",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 100,
+                  "taker_fee_ppm": 500
+                },
+                {
+                  "name": "2",
+                  "absolute_volume_requirement": "1000000000000",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 100,
+                  "taker_fee_ppm": 450
+                },
+                {
+                  "name": "3",
+                  "absolute_volume_requirement": "5000000000000",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 50,
+                  "taker_fee_ppm": 400
+                },
+                {
+                  "name": "4",
+                  "absolute_volume_requirement": "25000000000000",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 0,
+                  "taker_fee_ppm": 350
+                },
+                {
+                  "name": "5",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 0,
+                  "taker_fee_ppm": 300
+                },
+                {
+                  "name": "6",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 5000,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": -50,
+                  "taker_fee_ppm": 250
+                },
+                {
+                  "name": "7",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 5000,
+                  "maker_volume_share_requirement_ppm": 10000,
+                  "maker_fee_ppm": -90,
+                  "taker_fee_ppm": 250
+                },
+                {
+                  "name": "8",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 5000,
+                  "maker_volume_share_requirement_ppm": 20000,
+                  "maker_fee_ppm": -110,
+                  "taker_fee_ppm": 250
+                },
+                {
+                  "name": "9",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 5000,
+                  "maker_volume_share_requirement_ppm": 40000,
+                  "maker_fee_ppm": -110,
+                  "taker_fee_ppm": 250
+                }
+              ]
+            }
+          },
+          "block_height": "6480000"
+        }
+      ],
+      "num_messages": 1
     },
     "distribution": {
       "delegator_starting_infos": [],
@@ -1262,7 +1347,7 @@ const GenesisState = `{
     "rewards": {
       "params": {
         "treasury_account":"rewards_treasury",
-        "denom":"testnet_reward_token",
+        "denom":"dv4tnt",
         "denom_exponent":-6,
         "market_id":1,
         "fee_multiplier_ppm":990000
@@ -1388,9 +1473,9 @@ const GenesisState = `{
     "vest": {
       "vest_entries": [
         {
-          "denom": "testnet_reward_token",
-          "end_time": "2023-08-23T00:00:00Z",
-          "start_time": "2023-08-02T00:00:00Z",
+          "denom": "dv4tnt",
+          "end_time": "2023-10-13T00:00:00Z",
+          "start_time": "2023-09-13T00:00:00Z",
           "treasury_account": "rewards_treasury",
           "vester_account": "rewards_vester"
         }

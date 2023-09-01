@@ -89,7 +89,9 @@ export async function update(
     // TODO fix expression typing so we dont have to use any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ).findById(id);
-  const updatedMarket = await market.$query().patch(fields as PartialModelObject<MarketModel>).returning('*');
+  const updatedMarket = await market
+    .$query(Transaction.get(options.txId))
+    .patch(fields as PartialModelObject<MarketModel>).returning('*');
   // The objection types mistakenly think the query returns an array of markets.
   return updatedMarket as unknown as (MarketFromDatabase | undefined);
 }

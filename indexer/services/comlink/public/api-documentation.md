@@ -1207,8 +1207,6 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "baseAsset": "string",
-      "quoteAsset": "string",
       "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
@@ -1218,9 +1216,6 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "basePositionNotional": "string",
-      "basePositionSize": "string",
-      "incrementalPositionSize": "string",
-      "maxPositionSize": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
@@ -1234,8 +1229,6 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "baseAsset": "string",
-      "quoteAsset": "string",
       "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
@@ -1245,9 +1238,6 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "basePositionNotional": "string",
-      "basePositionSize": "string",
-      "incrementalPositionSize": "string",
-      "maxPositionSize": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
@@ -2740,8 +2730,6 @@ or
   "clobPairId": "string",
   "ticker": "string",
   "status": "ACTIVE",
-  "baseAsset": "string",
-  "quoteAsset": "string",
   "lastPrice": "string",
   "oraclePrice": "string",
   "priceChange24H": "string",
@@ -2751,9 +2739,6 @@ or
   "initialMarginFraction": "string",
   "maintenanceMarginFraction": "string",
   "basePositionNotional": "string",
-  "basePositionSize": "string",
-  "incrementalPositionSize": "string",
-  "maxPositionSize": "string",
   "openInterest": "string",
   "atomicResolution": 0,
   "quantumConversionExponent": 0,
@@ -2773,8 +2758,6 @@ or
 |clobPairId|string|true|none|none|
 |ticker|string|true|none|none|
 |status|[PerpetualMarketStatus](#schemaperpetualmarketstatus)|true|none|none|
-|baseAsset|string|true|none|none|
-|quoteAsset|string|true|none|none|
 |lastPrice|string|true|none|none|
 |oraclePrice|string|true|none|none|
 |priceChange24H|string|true|none|none|
@@ -2784,9 +2767,6 @@ or
 |initialMarginFraction|string|true|none|none|
 |maintenanceMarginFraction|string|true|none|none|
 |basePositionNotional|string|true|none|none|
-|basePositionSize|string|true|none|none|
-|incrementalPositionSize|string|true|none|none|
-|maxPositionSize|string|true|none|none|
 |openInterest|string|true|none|none|
 |atomicResolution|number(double)|true|none|none|
 |quantumConversionExponent|number(double)|true|none|none|
@@ -2810,8 +2790,6 @@ or
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "baseAsset": "string",
-      "quoteAsset": "string",
       "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
@@ -2821,9 +2799,6 @@ or
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "basePositionNotional": "string",
-      "basePositionSize": "string",
-      "incrementalPositionSize": "string",
-      "maxPositionSize": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
@@ -2837,8 +2812,6 @@ or
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "baseAsset": "string",
-      "quoteAsset": "string",
       "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
@@ -2848,9 +2821,6 @@ or
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "basePositionNotional": "string",
-      "basePositionSize": "string",
-      "incrementalPositionSize": "string",
-      "maxPositionSize": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,

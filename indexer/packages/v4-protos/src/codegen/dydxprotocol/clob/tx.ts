@@ -124,6 +124,36 @@ export interface MsgCancelOrderResponse {}
 /** MsgCancelOrderResponse is a response type used for canceling orders. */
 
 export interface MsgCancelOrderResponseSDKType {}
+/** MsgUpdateClobPair is a request type used for updating a ClobPair in state. */
+
+export interface MsgUpdateClobPair {
+  /** Authority is the address that may send this message. */
+  authority: string;
+  /** clob_pair is the ClobPair to write to state. */
+
+  clobPair?: ClobPair;
+}
+/** MsgUpdateClobPair is a request type used for updating a ClobPair in state. */
+
+export interface MsgUpdateClobPairSDKType {
+  /** Authority is the address that may send this message. */
+  authority: string;
+  /** clob_pair is the ClobPair to write to state. */
+
+  clob_pair?: ClobPairSDKType;
+}
+/**
+ * MsgUpdateClobPairResponse is a response type used for setting a ClobPair's
+ * status.
+ */
+
+export interface MsgUpdateClobPairResponse {}
+/**
+ * MsgUpdateClobPairResponse is a response type used for setting a ClobPair's
+ * status.
+ */
+
+export interface MsgUpdateClobPairResponseSDKType {}
 /**
  * OperationRaw represents an operation in the proposed operations.
  * Note that the `order_placement` operation is a signed message.
@@ -566,6 +596,95 @@ export const MsgCancelOrderResponse = {
 
   fromPartial(_: DeepPartial<MsgCancelOrderResponse>): MsgCancelOrderResponse {
     const message = createBaseMsgCancelOrderResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateClobPair(): MsgUpdateClobPair {
+  return {
+    authority: "",
+    clobPair: undefined
+  };
+}
+
+export const MsgUpdateClobPair = {
+  encode(message: MsgUpdateClobPair, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.clobPair !== undefined) {
+      ClobPair.encode(message.clobPair, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateClobPair {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateClobPair();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.clobPair = ClobPair.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateClobPair>): MsgUpdateClobPair {
+    const message = createBaseMsgUpdateClobPair();
+    message.authority = object.authority ?? "";
+    message.clobPair = object.clobPair !== undefined && object.clobPair !== null ? ClobPair.fromPartial(object.clobPair) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateClobPairResponse(): MsgUpdateClobPairResponse {
+  return {};
+}
+
+export const MsgUpdateClobPairResponse = {
+  encode(_: MsgUpdateClobPairResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateClobPairResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateClobPairResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateClobPairResponse>): MsgUpdateClobPairResponse {
+    const message = createBaseMsgUpdateClobPairResponse();
     return message;
   }
 
