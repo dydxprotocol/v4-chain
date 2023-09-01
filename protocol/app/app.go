@@ -247,7 +247,7 @@ type App struct {
 
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
-	PerpetualsKeeper perpetualsmodulekeeper.Keeper
+	PerpetualsKeeper *perpetualsmodulekeeper.Keeper
 
 	VestKeeper vestmodulekeeper.Keeper
 
@@ -638,14 +638,14 @@ func New(
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
-	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
+	app.PerpetualsKeeper = perpetualsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[perpetualsmoduletypes.StoreKey],
 		app.PricesKeeper,
 		app.EpochsKeeper,
 		app.IndexerEventManager,
 	)
-	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, &app.PerpetualsKeeper, app.AccountKeeper, app.BankKeeper)
+	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper, app.AccountKeeper, app.BankKeeper)
 
 	app.StatsKeeper = *statsmodulekeeper.NewKeeper(
 		appCodec,
