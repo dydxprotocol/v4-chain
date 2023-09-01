@@ -660,7 +660,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 //     be updated accordingly.
 func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 	ctx sdk.Context,
-	order types.LiquidationOrder,
+	liquidationOrder types.LiquidationOrder,
 ) (
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	orderStatus types.OrderStatus,
@@ -669,47 +669,52 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 ) {
 	// Attempt to match the liquidation order against the orderbook.
 	// TODO(DEC-1157): Update liquidations flow to send off-chain indexer messages.
-	liquidationOrderStatus, offchainUpdates, err := m.matchOrder(ctx, &order)
+	liquidationOrderStatus, offchainUpdates, err := m.matchOrder(ctx, &liquidationOrder)
 
-	if liquidationOrderStatus.OrderStatus == types.LiquidationRequiresDeleveraging {
-		// Check if the subaccount is still liquidatable. This check is needed for the edge case
-		// where a partially matched liquidation order has resulted in making the subaccount well-collateralized,
-		// but while attempting to match the full size of the liquidation order we trigger a deleveraging attempt.
-		// This scenario is made possible due to the MaxLiquidationFeePpm parameter on the LiquidationsConfig which
-		// caps the maximum fee that can be charged for a liquidation to MaxLiquidationFeePpm * QuoteQuantums
-		// of the liquidation order. If not for this, the liquidated subaccount would pay the full difference between
-		// the fill price and the bankruptcy price, leaving the TNC/MMR ratio the same as it was. It is the cap on this
-		// fee which allows a subaccount's TNC/MMR ratio to be improved by a liquidation.
-		isLiquidatable, err := m.clobKeeper.IsLiquidatable(ctx, order.GetSubaccountId())
-		if err != nil {
-			panic(err)
-		}
+	// Skip checking if the account needs to be deleveraged if the liquidation order was partially
+	// or fully-filled.
+	if liquidationOrderStatus.OrderOptimisticallyFilledQuantums > 0 {
+		return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
+			liquidationOrderStatus.OrderStatus,
+			offchainUpdates,
+			err
+	}
 
-		if isLiquidatable {
-			// Deleverage the remaining amounts.
-			deltaQuantums := new(big.Int).Sub(
-				order.GetBaseQuantums().ToBigInt(),
-				liquidationOrderStatus.OrderOptimisticallyFilledQuantums.ToBigInt(),
-			)
-			if !order.IsBuy() {
-				deltaQuantums = deltaQuantums.Neg(deltaQuantums)
-			}
+	canPerformDeleveraging, deleverageErr := m.clobKeeper.CanDeleverageSubaccount(ctx, liquidationOrder.GetSubaccountId())
+	if deleverageErr != nil {
+		return 0, 0, offchainUpdates, deleverageErr
+	}
 
-			fills, _ := m.clobKeeper.OffsetSubaccountPerpetualPosition(
-				ctx,
-				order.GetSubaccountId(),
-				order.MustGetLiquidatedPerpetualId(),
-				deltaQuantums,
-			)
+	// Early return to skip deleveraging if the subaccount can't be deleveraged.
+	if !canPerformDeleveraging {
+		return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
+			liquidationOrderStatus.OrderStatus,
+			offchainUpdates,
+			err
+	}
 
-			if len(fills) > 0 {
-				m.operationsToPropose.MustAddDeleveragingToOperationsQueue(
-					order.GetSubaccountId(),
-					order.MustGetLiquidatedPerpetualId(),
-					fills,
-				)
-			}
-		}
+	// Deleverage the subaccount's remaining position size.
+	deltaQuantums := new(big.Int).Sub(
+		liquidationOrder.GetBaseQuantums().ToBigInt(),
+		liquidationOrderStatus.OrderOptimisticallyFilledQuantums.ToBigInt(),
+	)
+	if !liquidationOrder.IsBuy() {
+		deltaQuantums = deltaQuantums.Neg(deltaQuantums)
+	}
+
+	fills, _ := m.clobKeeper.OffsetSubaccountPerpetualPosition(
+		ctx,
+		liquidationOrder.GetSubaccountId(),
+		liquidationOrder.MustGetLiquidatedPerpetualId(),
+		deltaQuantums,
+	)
+
+	if len(fills) > 0 {
+		m.operationsToPropose.MustAddDeleveragingToOperationsQueue(
+			liquidationOrder.GetSubaccountId(),
+			liquidationOrder.MustGetLiquidatedPerpetualId(),
+			fills,
+		)
 	}
 
 	return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
