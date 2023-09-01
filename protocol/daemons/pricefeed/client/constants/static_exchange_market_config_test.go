@@ -1,7 +1,6 @@
 package constants
 
 import (
-	"os"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
@@ -175,17 +174,18 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 				}
 			}
 			if tc.id != exchange_common.MARKET_TEST_USD {
-				require.GreaterOrEqual(t, exchangeCount, 5)
+				// Ok to drop this to 5 for some markets if needed.
+				require.GreaterOrEqual(t, exchangeCount, MinimumRequiredExchangesPerMarket)
 			}
 
 			configs := GenerateExchangeConfigJson(StaticExchangeMarketConfig)
 
 			// Uncomment to update test data
-			f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-			require.NoError(t, err)
-			defer f.Close()
-			_, err = f.WriteString(configs[tc.id] + "\n") // Final newline added manually.
-			require.NoError(t, err)
+			//f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+			//require.NoError(t, err)
+			//defer f.Close()
+			//_, err = f.WriteString(configs[tc.id] + "\n") // Final newline added manually.
+			//require.NoError(t, err)
 
 			actualExchangeConfigJson := json.CompactJsonString(t, configs[tc.id])
 			expectedExchangeConfigJson := pricefeed.ReadJsonTestFile(t, tc.expectedExchangeConfigJsonFile)

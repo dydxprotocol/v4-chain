@@ -6,12 +6,27 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Bybit",
+      "ticker": "NEARUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "CoinbasePro",
       "ticker": "NEAR-USD"
     },
     {
       "exchangeName": "Gate",
       "ticker": "NEAR_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "nearusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "NEAR-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

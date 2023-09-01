@@ -9,6 +9,15 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 )
 
+const (
+	// MinimumRequiredExchangesPerMarket is the minimum number of markets required for a market to be reliably priced
+	// by the pricefeed daemon. This number was chosen to supply the minimum number of prices required to
+	// compute an index price for a market, given exchange unavailability due to exchange geo-fencing,
+	// downtime, etc.
+	// Ok to drop this to 5 for some markets if needed, but 6 is better.
+	MinimumRequiredExchangesPerMarket = 6
+)
+
 var (
 	// StaticExchangeMarketConfig maps exchange feed ids to exchange market config. This map is used to generate
 	// the exchange config json used by the genesis state. See `GenerateExchangeConfigJson` below.
@@ -209,6 +218,18 @@ var (
 					Ticker:         "tXRPUSD",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker:         "tAVAX:USD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "tMKRUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_LDO_USD: {
+					Ticker:         "tLDOUSD",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
 				exchange_common.MARKET_USDT_USD: {
 					Ticker:         "tUSTUSD",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
@@ -272,11 +293,17 @@ var (
 				exchange_common.MARKET_UNI_USD: {
 					Ticker: "UNIUSD",
 				},
-				exchange_common.MARKET_USDT_USD: {
-					Ticker: "USDTZUSD",
-				},
 				exchange_common.MARKET_CRV_USD: {
 					Ticker: "CRVUSD",
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker: "COMPUSD",
+				},
+				exchange_common.MARKET_ETC_USD: {
+					Ticker: "XETCZUSD",
+				},
+				exchange_common.MARKET_USDT_USD: {
+					Ticker: "USDTZUSD",
 				},
 			},
 		},
@@ -371,6 +398,18 @@ var (
 					Ticker:         "XRP_USDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker:         "AVAX_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "MKR_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_LDO_USD: {
+					Ticker:         "LDO_USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
 				exchange_common.MARKET_USDT_USD: {
 					Ticker: "USDT_USD",
 				},
@@ -402,6 +441,9 @@ var (
 				},
 				exchange_common.MARKET_USDT_USD: {
 					Ticker: "USDT/USD",
+				},
+				exchange_common.MARKET_LDO_USD: {
+					Ticker: "LDO/USD",
 				},
 			},
 		},
@@ -490,6 +532,14 @@ var (
 				},
 				exchange_common.MARKET_CRV_USD: {
 					Ticker:         "CRVUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker:         "COMPUSDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker:         "NEARUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_USDT_USD: {
@@ -627,6 +677,26 @@ var (
 					Ticker:         "crvusdt",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker:         "compusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_AVAX_USD: {
+					Ticker:         "avaxusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "mkrusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker:         "nearusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_ETC_USD: {
+					Ticker:         "etcusdt",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
 				exchange_common.MARKET_USDT_USD: {
 					Ticker:         "ethusdt", // Adjusted with ETH index price.
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_ETH_USD),
@@ -733,6 +803,18 @@ var (
 					Ticker:         "XRP-USDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker:         "COMP-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "MKR-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_NEAR_USD: {
+					Ticker:         "NEAR-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
 				exchange_common.MARKET_USDT_USD: {
 					Ticker:         "BTC-USDT", // Adjusted with BTC index price.
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_BTC_USD),
@@ -837,6 +919,14 @@ var (
 				},
 				exchange_common.MARKET_XRP_USD: {
 					Ticker:         "XRP-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_COMP_USD: {
+					Ticker:         "COMP-USDT",
+					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+				},
+				exchange_common.MARKET_MKR_USD: {
+					Ticker:         "MKR-USDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_USDT_USD: {

@@ -15,6 +15,15 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Huobi",
+      "ticker": "etcusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "XETCZUSD"
+    },
+    {
       "exchangeName": "Okx",
       "ticker": "ETC-USDT",
       "adjustByMarket": "USDT-USD"
