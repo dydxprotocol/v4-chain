@@ -646,7 +646,6 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		if err != nil {
 			return err
 		}
-		fmt.Println("NET COLLAT:", bigNetCollateralQuoteQuantums.String())
 
 		bigNetCollateral.Add(bigNetCollateral, bigNetCollateralQuoteQuantums)
 
@@ -674,7 +673,6 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	// Iterate over all perpetuals and updates and calculate change to net collateral and margin requirements.
 	// TODO(DEC-110): `perp.GetSettlement()`, factor in unsettled funding.
 	for _, size := range perpetualSizes {
-		fmt.Println("PERP size", size)
 		err := calculate(k.perpetualsKeeper, size)
 		if err != nil {
 			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
