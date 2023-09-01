@@ -121,7 +121,7 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	offchainUpdates = types.NewOffchainUpdates()
 	if m.generateOffchainUpdates {
 		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-			ctx.Logger(),
+			m.clobKeeper.Logger(ctx),
 			orderIdToCancel,
 			indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
@@ -440,7 +440,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			orderId := order.OrderId
 			if _, found := m.openOrders.getOrder(ctx, orderId); found {
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					ctx.Logger(),
+					m.clobKeeper.Logger(ctx),
 					orderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
@@ -450,7 +450,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			}
 		}
 		if message, success := off_chain_updates.CreateOrderPlaceMessage(
-			ctx.Logger(),
+			m.clobKeeper.Logger(ctx),
 			order,
 		); success {
 			offchainUpdates.AddPlaceMessage(order.OrderId, message)
@@ -491,7 +491,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				err,
@@ -513,7 +513,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				nil,
@@ -543,7 +543,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		// during uncrossing.
 		if m.generateOffchainUpdates {
 			if message, success := off_chain_updates.CreateOrderUpdateMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				order.GetBaseQuantums(),
 			); success {
@@ -560,7 +560,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				orderStatus,
 				nil,
@@ -595,7 +595,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				addOrderOrderStatus,
 				nil,
@@ -632,7 +632,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	// the total filled size of the order (size of order - remaining size).
 	if m.generateOffchainUpdates {
 		if message, success := off_chain_updates.CreateOrderUpdateMessage(
-			ctx.Logger(),
+			m.clobKeeper.Logger(ctx),
 			order.OrderId,
 			order.GetBaseQuantums()-remainingSize,
 		); success {
@@ -851,7 +851,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	defer func() {
 		if r := recover(); r != nil {
 			stackTrace := string(debug.Stack())
-			ctx.Logger().Error("panic in replay operations", "panic", r, "stackTrace", stackTrace)
+			m.clobKeeper.Logger(ctx).Error("panic in replay operations", "panic", r, "stackTrace", stackTrace)
 		}
 	}()
 
@@ -887,7 +887,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				msg,
 			)
 
-			ctx.Logger().Debug(
+			m.clobKeeper.Logger(ctx).Debug(
 				"Received new order",
 				"orderHash",
 				log.NewLazySprintf("%X", order.GetOrderHash()),
@@ -904,7 +904,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			)
 
 			if err != nil {
-				ctx.Logger().Debug(
+				m.clobKeeper.Logger(ctx).Debug(
 					"ReplayOperations: PlaceOrder() returned an error.",
 					"error",
 					err,
@@ -921,7 +921,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				// the order has an existing nonce.
 				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
 					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-						ctx.Logger(),
+						m.clobKeeper.Logger(ctx),
 						order.OrderId,
 						orderStatus,
 						err,
@@ -960,7 +960,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				statefulOrderPlacement.Order,
 			)
 			if err != nil {
-				ctx.Logger().Debug(
+				m.clobKeeper.Logger(ctx).Debug(
 					"ReplayOperations: PlaceOrder() returned an error for a pre-existing stateful order.",
 					"error",
 					err,
@@ -977,7 +977,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				// the order has an existing nonce.
 				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
 					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-						ctx.Logger(),
+						m.clobKeeper.Logger(ctx),
 						*orderId,
 						orderStatus,
 						err,
@@ -1011,7 +1011,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				statefulOrderPlacement.Order,
 			)
 			if err != nil {
-				ctx.Logger().Debug(
+				m.clobKeeper.Logger(ctx).Debug(
 					"ReplayOperations: PlaceOrder() returned an error for a removed stateful order which was re-placed.",
 					"error",
 					err,
@@ -1025,7 +1025,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				// message for the order.
 				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
 					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-						ctx.Logger(),
+						m.clobKeeper.Logger(ctx),
 						orderId,
 						orderStatus,
 						err,
@@ -1174,7 +1174,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				// orderbook on the Indexer. As the order is expired, the status of the order is canceled
 				// and not best-effort-canceled.
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					ctx.Logger(),
+					m.clobKeeper.Logger(ctx),
 					statefulOrderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
@@ -1193,7 +1193,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				// orderbook on the Indexer. As the order is expired, the status of the order is canceled
 				// and not best-effort-canceled.
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					ctx.Logger(),
+					m.clobKeeper.Logger(ctx),
 					shortTermOrderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
@@ -1633,7 +1633,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			}
 
 			// Panic since this is an unknown error.
-			ctx.Logger().Error(
+			m.clobKeeper.Logger(ctx).Error(
 				"Unexpected error from `ProcessSingleMatch`",
 				"error",
 				err,
@@ -1872,7 +1872,7 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 		// Send an off-chain update message to the indexer to update the total filled size of the maker
 		// order.
 		if message, success := off_chain_updates.CreateOrderUpdateMessage(
-			ctx.Logger(),
+			m.clobKeeper.Logger(ctx),
 			makerOrder.OrderId,
 			newTotalFilledAmount,
 		); success {
@@ -1988,7 +1988,7 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 				}
 				if m.generateOffchainUpdates {
 					if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-						ctx.Logger(),
+						m.clobKeeper.Logger(ctx),
 						orderId,
 						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
 						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,

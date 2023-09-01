@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -91,4 +92,7 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 		order Order,
 	) error
+	Logger(
+		ctx sdk.Context,
+	) log.Logger
 }
