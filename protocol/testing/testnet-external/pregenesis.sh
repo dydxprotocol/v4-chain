@@ -7,15 +7,49 @@ set -eo pipefail
 #
 # The script must be run from the root of the `v4` repo.
 #
-# example: ./testing/testnet-external/pregenesis.sh
+# example usage:
+# $ ./testing/testnet-external/pregenesis.sh ./build/dydxprotocold --SEED_FAUCET_USDC
 
 # To get the following information, first set up the validator keys locally. Then run:
 # Account address: `dydxprotocold keys show dydx-1-key -a`
 # Consensus address: `dydxprotocold tendermint show-address`
 # Node ID: `dydxprotocold tendermint show-node-id`
 
+# Check for missing required arguments
+if [ -z "$1" ]; then
+  echo "Error: Missing required argument DYDX_BINARY."
+  echo "Usage: $0 <DYDX_BINARY> [-s|--SEED_FAUCET_USDC]"
+  exit 1
+fi
+
+# Capture the required argument
+DYDX_BINARY="$1"
+
+# Remove the required argument, leaving optional flags
+shift
+
+# Initialize optional flags with default values
+SEED_FAUCET_USDC=false
+
+# Parse optional flags
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -s|--SEED_FAUCET_USDC)
+      SEED_FAUCET_USDC=true
+      ;;
+    *)
+      echo "Error: Invalid option '$1'"
+      echo "Usage: $0 <DYDX_BINARY> [-s|--SEED_FAUCET_USDC]"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+echo "Running with SEED_FAUCET_USDC=$SEED_FAUCET_USDC..."
+
 source "./testing/genesis.sh"
-CHAIN_ID="dydx-testnet-2"
+CHAIN_ID="dydx-testnet-3"
 FAUCET_ACCOUNTS=(
 	"dydx1g2ygh8ufgwwpg5clp2qh3tmcmlewuyt2z6px8k" # main faucet
 	"dydx1fzhzmcvcy7nycvu46j9j4f7f8cnqxn3770q260" # backup #1
@@ -26,12 +60,17 @@ TMP_CHAIN_DIR="/tmp/chain"
 TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/exchange_config"
 AWS_REGION="us-east-2"
 
+# initialize faucet address with 1e27 native tokens.
+FAUCET_STAKE_BALANCE=1000000000000000000000000000
+# initialize faucet with 1e13 micro USDC (10 million USDC).
+FAUCET_USDC_BALANCE=10000000000000
+
 # Define monikers for each validator. These are made up strings and can be anything.
 # This also controls in which directory the validator's home will be located. i.e. `/tmp/chain/.dydx-1`
 MONIKERS=(
 	"dydx-1"
 	"dydx-2"
-	"dydx-research"
+	"dydx-research" # TODO: Uncomment to add research validator.
 )
 
 # Public IPs for each validator.
@@ -136,11 +175,9 @@ create_pregenesis_file() {
 
 	VALIDATOR_INITIAL_STAKE_BALANCE=100000000000
 	VALIDATOR_INITIAL_SELF_DELEGATION=$((VALIDATOR_INITIAL_STAKE_BALANCE/2))
-	# initialize faucet address with 1e27 native tokens.
-	FAUCET_INITIAL_STAKE_BALANCE=1000000000000000000000000000
 
 	# This initializes the $VAL_HOME_DIR folder.
-	dydxprotocold init "test-moniker" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+	$DYDX_BINARY init "test-moniker" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 	# Create temporary directory for exchange config jsons.
 	echo "Copying exchange config jsons to $TMP_EXCHANGE_CONFIG_JSON_DIR"
@@ -151,10 +188,16 @@ create_pregenesis_file() {
 	# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 	# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
 	# Note: `edit_genesis` must be called before `add-genesis-account`.
-	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR"
+	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config"
 	overwrite_genesis_public_testnet
+
+	FAUCET_BALANCE="${FAUCET_STAKE_BALANCE}$NATIVE_TOKEN"
+	# If SEED_FAUCET_USDC is true, faucet is initalized with USDC balance in addition to native token balance.
+	if [ "$SEED_FAUCET_USDC" = true ]; then
+		FAUCET_BALANCE="${FAUCET_BALANCE},${FAUCET_USDC_BALANCE}$USDC_DENOM"
+	fi
 	for acct in "${FAUCET_ACCOUNTS[@]}"; do
-		dydxprotocold add-genesis-account "$acct" "${FAUCET_INITIAL_STAKE_BALANCE}$NATIVE_TOKEN" --home "$VAL_HOME_DIR"
+		$DYDX_BINARY add-genesis-account "$acct" $FAUCET_BALANCE --home "$VAL_HOME_DIR"
 	done
 
 	# Create temporary directory for all gentx files.
@@ -166,10 +209,10 @@ create_pregenesis_file() {
 		INDIVIDUAL_VAL_CONFIG_DIR="$INDIVIDUAL_VAL_HOME_DIR/config"
 
 		# Initialize the chain and validator files.
-		dydxprotocold init "${MONIKERS[$i]}" -o --chain-id=$CHAIN_ID --home "$INDIVIDUAL_VAL_HOME_DIR"
+		$DYDX_BINARY init "${MONIKERS[$i]}" -o --chain-id=$CHAIN_ID --home "$INDIVIDUAL_VAL_HOME_DIR"
 
 		# Overwrite the randomly generated `priv_validator_key.json` with a key generated deterministically from the mnemonic.
-		dydxprotocold tendermint gen-priv-key --home "$INDIVIDUAL_VAL_HOME_DIR" --mnemonic "${MNEMONICS[$i]}"
+		$DYDX_BINARY tendermint gen-priv-key --home "$INDIVIDUAL_VAL_HOME_DIR" --mnemonic "${MNEMONICS[$i]}"
 
 		# Note: `dydxprotocold init` non-deterministically creates `node_id.json` for each validator.
 		# This is inconvenient for persistent peering during testing in Terraform configuration as the `node_id`
@@ -179,15 +222,15 @@ create_pregenesis_file() {
 		new_file=$(jq ".priv_key.value = \"${NODE_KEYS[$i]}\"" "$INDIVIDUAL_VAL_CONFIG_DIR"/node_key.json)
 		cat <<<"$new_file" >"$INDIVIDUAL_VAL_CONFIG_DIR"/node_key.json
 
-		echo "${MNEMONICS[$i]}" | dydxprotocold keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$INDIVIDUAL_VAL_HOME_DIR"
+		echo "${MNEMONICS[$i]}" | $DYDX_BINARY keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$INDIVIDUAL_VAL_HOME_DIR"
 
 		# Initialize the validator account in `genesis.json` under their individual home directory, which is used to create their gentx.
-		dydxprotocold add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" "${VALIDATOR_INITIAL_STAKE_BALANCE}$NATIVE_TOKEN" --home "$INDIVIDUAL_VAL_HOME_DIR"
+		$DYDX_BINARY add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" "${VALIDATOR_INITIAL_STAKE_BALANCE}$NATIVE_TOKEN" --home "$INDIVIDUAL_VAL_HOME_DIR"
 
 		# Initialize the validator account in `genesis.json` under the common home directory, which is used as the output geneis file.
-		dydxprotocold add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" "${VALIDATOR_INITIAL_STAKE_BALANCE}$NATIVE_TOKEN" --home "$VAL_HOME_DIR"
+		$DYDX_BINARY add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" "${VALIDATOR_INITIAL_STAKE_BALANCE}$NATIVE_TOKEN" --home "$VAL_HOME_DIR"
 
-		dydxprotocold gentx "${MONIKERS[$i]}" "${VALIDATOR_INITIAL_SELF_DELEGATION}$NATIVE_TOKEN" --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$INDIVIDUAL_VAL_HOME_DIR" --ip="${IPS[$i]}"
+		$DYDX_BINARY gentx "${MONIKERS[$i]}" "${VALIDATOR_INITIAL_SELF_DELEGATION}$NATIVE_TOKEN" --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$INDIVIDUAL_VAL_HOME_DIR" --ip="${IPS[$i]}"
 
 		# Copy the gentx to a shared directory.
 		cp -a "$INDIVIDUAL_VAL_CONFIG_DIR/gentx/." "$TMP_GENTX_DIR"
@@ -195,7 +238,7 @@ create_pregenesis_file() {
 
 	cp -r "$TMP_GENTX_DIR" "$VAL_CONFIG_DIR"
 
-	dydxprotocold collect-gentxs --home "$VAL_HOME_DIR"
+	$DYDX_BINARY collect-gentxs --home "$VAL_HOME_DIR"
 }
 
 cleanup_tmp_dir
