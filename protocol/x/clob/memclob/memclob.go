@@ -727,7 +727,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 ) (
 	orderStatus types.TakerOrderStatus,
 	offchainUpdates *types.OffchainUpdates,
-	orderIdsRemovedFromBook []types.OrderId,
+	makerOrdersToRemove []OrderWithRemovalReason,
 	err error,
 ) {
 	offchainUpdates = types.NewOffchainUpdates()
@@ -778,7 +778,6 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		}
 
 		m.mustRemoveOrder(branchedContext, makerOrderId)
-		orderIdsRemovedFromBook = append(orderIdsRemovedFromBook, makerOrderId)
 		if makerOrderId.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
 			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
 				makerOrderId,
@@ -829,7 +828,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		writeCache()
 	}
 
-	return takerOrderStatus, offchainUpdates, orderIdsRemovedFromBook, matchingErr
+	return takerOrderStatus, offchainUpdates, makerOrdersToRemove, matchingErr
 }
 
 // ReplayOperations will replay the provided operations onto the memclob.
@@ -905,7 +904,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx.BlockHeight(),
 			)
 
-			m.GenerateOffchainUpdatesForReplayPlaceOrder(
+			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
 				err,
 				operation,
@@ -937,7 +936,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			m.GenerateOffchainUpdatesForReplayPlaceOrder(
+			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
 				err,
 				operation,
@@ -964,7 +963,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			m.GenerateOffchainUpdatesForReplayPlaceOrder(
+			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
 				err,
 				operation,
@@ -982,6 +981,9 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	return existingOffchainUpdates
 }
 
+// GenerateOffchainUpdatesForReplayPlaceOrder is a helper function intended to be used in ReplayOperations.
+// It takes the results of a PlaceOrder function call, emits the according logs, and appends offchain updates for
+// the replay operation to the existingOffchainUpdates object.
 func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 	ctx sdk.Context,
 	err error,
@@ -990,7 +992,7 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 	orderStatus types.OrderStatus,
 	placeOrderOffchainUpdates *types.OffchainUpdates,
 	existingOffchainUpdates *types.OffchainUpdates,
-) {
+) *types.OffchainUpdates {
 	orderId := order.OrderId
 	if err != nil {
 		var loggerString string
@@ -1012,7 +1014,7 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 			order,
 		)
 
-		// If the stateful order is dropped while adding it to the book, return an off-chain order remove
+		// If the order is dropped while adding it to the book, return an off-chain order remove
 		// message for the order.
 		if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
 			if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
@@ -1026,11 +1028,10 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 				existingOffchainUpdates.AddRemoveMessage(orderId, message)
 			}
 		}
-		return
-	}
-	if m.generateOffchainUpdates {
+	} else if m.generateOffchainUpdates {
 		existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 	}
+	return existingOffchainUpdates
 }
 
 // RemoveAndClearOperationsQueue is called during `Commit`/`PrepareCheckState`

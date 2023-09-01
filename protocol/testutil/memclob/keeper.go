@@ -473,5 +473,5 @@ func (f *FakeMemClobKeeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk
 }
 
 func (f *FakeMemClobKeeper) Logger(ctx sdk.Context) log.Logger {
-	return log.NewNopLogger()
+	return ctx.Logger()
 }
