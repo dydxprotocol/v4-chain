@@ -278,14 +278,14 @@ format:
 # Note: update github action workflow `proto.yaml` when updating version or images.
 protoVer=0.11.5
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+protoImage=$(DOCKER) run --rm -v $(CURDIR)/..:/workspace --workdir /workspace $(protoImageName)
 
 proto-swagger-gen:
 	@make clean
 	@echo "Downloading Protobuf dependencies"
 	@make proto-download-deps
 	@echo "Generating Protobuf Swagger"
-	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
+	@$(protoImage) sh ./protocol/scripts/protoc-swagger-gen.sh
 	@echo "Generating static files for swagger docs"
 	$(MAKE) update-swagger-docs
 
