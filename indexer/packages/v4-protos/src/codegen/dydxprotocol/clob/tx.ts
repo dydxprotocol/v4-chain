@@ -2,6 +2,7 @@ import { Order, OrderSDKType, OrderId, OrderIdSDKType } from "./order";
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
+import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_config";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
 import { OrderRemoval, OrderRemovalSDKType } from "./order_removals";
 import * as _m0 from "protobufjs/minimal";
@@ -254,6 +255,36 @@ export interface MsgUpdateBlockRateLimitConfigurationResponse {}
  */
 
 export interface MsgUpdateBlockRateLimitConfigurationResponseSDKType {}
+/** MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig request type. */
+
+export interface MsgUpdateLiquidationsConfig {
+  /** The address that controls the module. */
+  authority: string;
+  /**
+   * Defines the liquidations configuration to update to. All fields must
+   * be set.
+   */
+
+  liquidationsConfig?: LiquidationsConfig;
+}
+/** MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig request type. */
+
+export interface MsgUpdateLiquidationsConfigSDKType {
+  /** The address that controls the module. */
+  authority: string;
+  /**
+   * Defines the liquidations configuration to update to. All fields must
+   * be set.
+   */
+
+  liquidations_config?: LiquidationsConfigSDKType;
+}
+/** MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type. */
+
+export interface MsgUpdateLiquidationsConfigResponse {}
+/** MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type. */
+
+export interface MsgUpdateLiquidationsConfigResponseSDKType {}
 
 function createBaseMsgCreateClobPair(): MsgCreateClobPair {
   return {
@@ -928,6 +959,95 @@ export const MsgUpdateBlockRateLimitConfigurationResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateBlockRateLimitConfigurationResponse>): MsgUpdateBlockRateLimitConfigurationResponse {
     const message = createBaseMsgUpdateBlockRateLimitConfigurationResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateLiquidationsConfig(): MsgUpdateLiquidationsConfig {
+  return {
+    authority: "",
+    liquidationsConfig: undefined
+  };
+}
+
+export const MsgUpdateLiquidationsConfig = {
+  encode(message: MsgUpdateLiquidationsConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.liquidationsConfig !== undefined) {
+      LiquidationsConfig.encode(message.liquidationsConfig, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateLiquidationsConfig {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateLiquidationsConfig();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.liquidationsConfig = LiquidationsConfig.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateLiquidationsConfig>): MsgUpdateLiquidationsConfig {
+    const message = createBaseMsgUpdateLiquidationsConfig();
+    message.authority = object.authority ?? "";
+    message.liquidationsConfig = object.liquidationsConfig !== undefined && object.liquidationsConfig !== null ? LiquidationsConfig.fromPartial(object.liquidationsConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateLiquidationsConfigResponse(): MsgUpdateLiquidationsConfigResponse {
+  return {};
+}
+
+export const MsgUpdateLiquidationsConfigResponse = {
+  encode(_: MsgUpdateLiquidationsConfigResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateLiquidationsConfigResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateLiquidationsConfigResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateLiquidationsConfigResponse>): MsgUpdateLiquidationsConfigResponse {
+    const message = createBaseMsgUpdateLiquidationsConfigResponse();
     return message;
   }
 
