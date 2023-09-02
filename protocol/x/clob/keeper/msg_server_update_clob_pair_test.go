@@ -284,6 +284,9 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					require.ErrorIs(t, err, tc.expectedErr)
 				} else {
 					require.NoError(t, err)
+					clobPair, found := k.GetClobPair(ks.Ctx, types.ClobPairId(tc.msg.ClobPair.Id))
+					require.True(t, found)
+					require.Equal(t, tc.clobPair, clobPair)
 				}
 			}
 		})
