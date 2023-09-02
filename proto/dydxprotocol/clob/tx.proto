@@ -41,7 +41,7 @@ service Msg {
   // configuration in state.
   rpc UpdateBlockRateLimitConfiguration(MsgUpdateBlockRateLimitConfiguration)
       returns (MsgUpdateBlockRateLimitConfigurationResponse);
-    // UpdateLiquidationsConfig updates the liquidations configuration in state.
+  // UpdateLiquidationsConfig updates the liquidations configuration in state.
   rpc UpdateLiquidationsConfig(MsgUpdateLiquidationsConfig)
       returns (MsgUpdateLiquidationsConfigResponse);
 }
@@ -166,8 +166,7 @@ message MsgUpdateLiquidationsConfig {
 
   // Defines the liquidations configuration to update to. All fields must
   // be set.
-  LiquidationsConfig liquidations_config = 2
-      [ (gogoproto.nullable) = false ];
+  LiquidationsConfig liquidations_config = 2 [ (gogoproto.nullable) = false ];
 }
 
 // MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type.
