@@ -267,7 +267,33 @@ func (k Keeper) PersistOrderRemovalToState(
 			)
 		}
 	case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
-		// The reduce-only must increase the size of the position, or change the side.
+		if !orderToRemove.IsReduceOnly() {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order must be reduce only.",
+				*orderRemoval,
+			)
+		}
+		// The reduce-only order must increase the size of the position, or change the side.
+
+		// Fetch the quantum size of the current position.
+		currentPositionSize := k.GetStatePosition(
+			ctx,
+			orderIdToRemove.SubaccountId,
+			orderToRemove.GetClobPairId(),
+		)
+		orderQuantumsToFill := orderToRemove.GetBigQuantums()
+
+		orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == 1
+		newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
+		orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
+		if !orderFillWouldIncreasePositionSize && !orderChangedSide {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
+				*orderRemoval,
+			)
+		}
 	case types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
 	case types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE:
 		// The order must have been triggered in the last block.
@@ -307,6 +333,7 @@ func (k Keeper) PersistOrderRemovalToState(
 			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
 		),
 	)
+	return nil
 }
 
 // PersistMatchOrdersToState writes a MatchOrders object to state and emits an onchain
