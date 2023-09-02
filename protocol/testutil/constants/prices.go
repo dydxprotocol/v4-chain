@@ -94,6 +94,12 @@ var TestMarketPrices = []types.MarketPrice{
 	},
 }
 
+var TestMarketIdsToExponents = map[uint32]int32{
+	0: BtcUsdExponent,
+	1: EthUsdExponent,
+	2: SolUsdExponent,
+}
+
 var TestPricesGenesisState = types.GenesisState{
 	MarketParams: TestMarketParams,
 	MarketPrices: TestMarketPrices,
