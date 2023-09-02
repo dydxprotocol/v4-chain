@@ -24,7 +24,6 @@ func (k msgServer) UpdateLiquidationsConfig(
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-
 	if err := k.Keeper.UpdateLiquidationsConfig(ctx, msg.LiquidationsConfig); err != nil {
 		return nil, err
 	}

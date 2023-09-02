@@ -16,14 +16,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUpdateLiquidationsConfig(t *testing.T){
-	testCases := map[string]struct{
-		msg *types.MsgUpdateLiquidationsConfig
+func TestUpdateLiquidationsConfig(t *testing.T) {
+	testCases := map[string]struct {
+		msg           *types.MsgUpdateLiquidationsConfig
 		expectedError error
 	}{
 		"Succeeds": {
 			msg: &types.MsgUpdateLiquidationsConfig{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:          authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				LiquidationsConfig: constants.LiquidationsConfig_No_Limit,
 			},
 		},
@@ -31,8 +31,8 @@ func TestUpdateLiquidationsConfig(t *testing.T){
 			msg: &types.MsgUpdateLiquidationsConfig{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm:  5_000,
-					FillablePriceConfig:   types.FillablePriceConfig{
+					MaxLiquidationFeePpm: 5_000,
+					FillablePriceConfig: types.FillablePriceConfig{
 						BankruptcyAdjustmentPpm: 0,
 					},
 					PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
@@ -43,7 +43,7 @@ func TestUpdateLiquidationsConfig(t *testing.T){
 		},
 		"Error: invalid authority": {
 			msg: &types.MsgUpdateLiquidationsConfig{
-				Authority: "foobar",
+				Authority:          "foobar",
 				LiquidationsConfig: types.LiquidationsConfig{},
 			},
 			expectedError: govtypes.ErrInvalidSigner,
@@ -58,7 +58,7 @@ func TestUpdateLiquidationsConfig(t *testing.T){
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
-			_, err := msgServer.UpdateLiquidationsConfig(ks.Ctx,tc.msg)
+			_, err := msgServer.UpdateLiquidationsConfig(ks.Ctx, tc.msg)
 
 			if tc.expectedError != nil {
 				require.ErrorIs(t, err, tc.expectedError)
