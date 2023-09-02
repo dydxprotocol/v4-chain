@@ -43,6 +43,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+
+	_ "github.com/dydxprotocol/v4-chain/protocol/client/docs/statik"
 )
 
 const (
