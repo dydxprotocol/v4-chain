@@ -44,6 +44,7 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
+	// unnamed import of statik for swagger UI support
 	_ "github.com/dydxprotocol/v4-chain/protocol/client/docs/statik"
 )
 
