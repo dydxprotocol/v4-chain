@@ -437,7 +437,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 // - CanDeleverageSubaccount returns false, indicating the subaccount failed deleveraging validation.
 // - OffsetSubaccountPerpetualPosition returns an error.
 // - The generated fills do not match the fills in the Operations object.
-// TODO(CLOB-654) Verify deleveraging is triggered by liquidation orders and for the correct amount.
+// TODO(CLOB-654) Verify deleveraging is triggered by unmatched liquidation orders and for the correct amount.
 func (k Keeper) PersistMatchDeleveragingToState(
 	ctx sdk.Context,
 	matchDeleveraging *types.MatchPerpetualDeleveraging,
