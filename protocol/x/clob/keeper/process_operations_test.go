@@ -20,6 +20,7 @@ import (
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sakeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -38,13 +39,14 @@ type MatchWithOrdersForTesting struct {
 
 type processProposerOperationsTestCase struct {
 	// State
-	perpetuals                 []*perptypes.Perpetual
-	perpetualFeeParams         *feetierstypes.PerpetualFeeParams
-	clobPairs                  []types.ClobPair
-	subaccounts                []satypes.Subaccount
-	preExistingStatefulOrders  []types.Order
-	triggeredConditionalOrders []types.Order
-	rawOperations              []types.OperationRaw
+	perpetuals                    []*perptypes.Perpetual
+	perpetualFeeParams            *feetierstypes.PerpetualFeeParams
+	clobPairs                     []types.ClobPair
+	subaccounts                   []satypes.Subaccount
+	preExistingStatefulOrders     []types.Order
+	triggeredConditionalOrders    []types.Order
+	marketIdToOraclePriceOverride map[uint32]uint64
+	rawOperations                 []types.OperationRaw
 
 	setupState          func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext)
 	setupMockBankKeeper func(bk *mocks.BankKeeper)
@@ -787,11 +789,10 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 		},
 		// This test proposes a set of operations where no liquidation match occurs before the
-		// deleveraging match. This happens in the case where the first order the liquidation
-		// taker order tries to match with results in a match that requires insurance funds but the
-		// insurance funds are insufficient. Because no matches took place, the liquidation order
-		// is not included in the operations queue but a deleveraging match is. Deleveraging happens
-		// at the bankruptcty price ($50,499) so Dave ends up with all of Carl's money.
+		// deleveraging match. This happens in the case where the liquidation taker order did
+		// not match with any orders on the other side of the book, the subaccount total net collateral
+		// is negative, and the insurance fund is less-than-or-equal-to `MaxInsuranceFundQuantumsForDeleveraging`.
+		// Deleveraging happens at the bankruptcy price ($50,499) so Dave ends up with all of Carl's money.
 		"Succeeds with deleveraging with no liquidation order": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -804,6 +805,9 @@ func TestProcessProposerOperations(t *testing.T) {
 				// liquidatable: MMR = $5000, TNC = $499
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
@@ -847,9 +851,12 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.ClobPair_Btc,
 			},
 			subaccounts: []satypes.Subaccount{
-				// liquidatable: MMR = $5000, TNC = $0
+				// liquidatable: MMR = $5000, TNC = -$1.
 				constants.Carl_Num0_1BTC_Short_50000USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_000_100_000, // $50,001 / BTC
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -886,7 +893,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedMatches: []*MatchWithOrdersForTesting{
 				{
 					MatchWithOrders: types.MatchWithOrders{
-						TakerOrder: &constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+						TakerOrder: &constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50501_01,
 						MakerOrder: &constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 						FillAmount: 25_000_000,
 						MakerFee:   2_500_000,
@@ -980,7 +987,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetPerpetualPositions(),
 				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetPerpetualPositions(),
 			},
-			expectedError: types.ErrDeleveragedSubaccountNotLiquidatable,
+			expectedError: types.ErrInvalidDeleveragedSubaccount,
 		},
 		"Conditional: succeeds with singular match of a triggered conditional order": {
 			perpetuals: []*perptypes.Perpetual{
@@ -1604,17 +1611,29 @@ func setupProcessProposerOperationsTestCase(
 		require.NoError(t, ks.ClobKeeper.InitializeLiquidationsConfig(ctx, constants.LiquidationsConfig_No_Limit))
 	}
 
+	// Update the oracle prices.
+	for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
+		err := ks.PricesKeeper.UpdateMarketPrices(
+			ks.Ctx,
+			[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+				{
+					MarketId: marketId,
+					Price:    oraclePrice,
+				},
+			},
+		)
+		require.NoError(t, err)
+	}
+
 	if tc.setupState != nil {
 		tc.setupState(ctx, ks)
 	}
 
 	// Create all pre-existing stateful orders in state. Duplicate orders are not allowed.
-	// We don't need to set the stateful order placement in memclob because the deliverTx flow
-	// will create its own memclob.
 	seenOrderIds := make(map[types.OrderId]struct{})
 	for _, order := range tc.preExistingStatefulOrders {
 		_, exists := seenOrderIds[order.GetOrderId()]
-		require.Falsef(t, exists, "Duplicate pre-existing stateful order (+%v)", order)
+		require.Falsef(t, exists, "Duplicate pre-existing stateful order (%+v)", order)
 		seenOrderIds[order.GetOrderId()] = struct{}{}
 		ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
 		ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
@@ -1626,7 +1645,7 @@ func setupProcessProposerOperationsTestCase(
 
 	for _, order := range tc.triggeredConditionalOrders {
 		_, exists := seenOrderIds[order.GetOrderId()]
-		require.Falsef(t, exists, "Duplicate pre-existing stateful order (+%v)", order)
+		require.Falsef(t, exists, "Duplicate pre-existing stateful order (%+v)", order)
 		seenOrderIds[order.GetOrderId()] = struct{}{}
 		ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
 		ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(

@@ -396,10 +396,10 @@ var (
 		4004,
 		"Deleveraging fill is invalid",
 	)
-	ErrDeleveragedSubaccountNotLiquidatable = sdkerrors.Register(
+	ErrInvalidDeleveragedSubaccount = sdkerrors.Register(
 		ModuleName,
 		4005,
-		"Deleveraged subaccount in proposed match operation is not liquidatable",
+		"Deleveraged subaccount in proposed deleveraged operation failed deleveraging validation",
 	)
 
 	// Block rate limit errors.

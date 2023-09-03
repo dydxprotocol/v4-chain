@@ -443,22 +443,20 @@ func (k Keeper) PersistMatchDeleveragingToState(
 ) error {
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
 
-	isLiquidatable, err := k.IsLiquidatable(ctx, liquidatedSubaccountId)
-	if err != nil {
+	// Validate that the provided subaccount can be deleveraged.
+	if canDeleverageSubaccount, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId); err != nil {
 		panic(
 			fmt.Sprintf(
-				"PersistMatchDeleveragingToState: Failed to determine if subaccount is liquidatable. "+
-					"SubaccountId %v, error %s",
+				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
+					"SubaccountId %+v, error %+v",
 				liquidatedSubaccountId,
 				err,
 			),
 		)
-	}
-
-	if !isLiquidatable {
+	} else if !canDeleverageSubaccount {
 		return sdkerrors.Wrapf(
-			types.ErrDeleveragedSubaccountNotLiquidatable,
-			"Subaccount %+v is not liquidatable",
+			types.ErrInvalidDeleveragedSubaccount,
+			"Subaccount %+v failed deleveraging validation",
 			liquidatedSubaccountId,
 		)
 	}
