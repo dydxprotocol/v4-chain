@@ -434,6 +434,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 
 // PersistMatchDeleveragingToState writes a MatchPerpetualDeleveraging object to state.
 // This function returns an error if:
+// - CanDeleverageSubaccount returns false, indicating the subaccount failed deleveraging validation.
 // - OffsetSubaccountPerpetualPosition returns an error.
 // - The generated fills do not match the fills in the Operations object.
 // TODO(CLOB-654) Verify deleveraging is triggered by liquidation orders and for the correct amount.
