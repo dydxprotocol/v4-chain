@@ -840,8 +840,9 @@ func TestProcessProposerOperations(t *testing.T) {
 		// would have matched with this first order and then tried to match with a second order, resulting
 		// in a match that requires insurance funds but the insurance funds are insufficient. When processing
 		// the deleveraging operation, the validator will confirm that the subaccount in the deleveraging match
-		// is indeed liquidatable, confirming that this is a valid deleveraging match. In this example, the liquidation
-		// and deleveraging both happen at bankruptcy price resulting in all of Carl's funds being transferred to Dave.
+		// has negative TNC and the insurance fund balance is less than `MaxInsuranceFundQuantumsForDeleveraging`,
+		// confirming that this is a valid deleveraging match. In this example, the liquidation and deleveraging
+		// both happen at bankruptcy price resulting in all of Carl's funds being transferred to Dave.
 		"Succeeds with deleveraging and partially filled liquidation": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -851,7 +852,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.ClobPair_Btc,
 			},
 			subaccounts: []satypes.Subaccount{
-				// liquidatable: MMR = $5000, TNC = -$1.
+				// liquidatable: MMR = $5000.10, TNC = -$1.
 				constants.Carl_Num0_1BTC_Short_50000USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
@@ -965,6 +966,91 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Carl_Num0_1BTC_Short_55000USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             100_000_000,
+							},
+						},
+					},
+				),
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetUsdcPosition().Int64(),
+				constants.Dave_Num0: constants.Usdc_Asset_50_000.GetBigQuantums().Int64(),
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetPerpetualPositions(),
+				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetPerpetualPositions(),
+			},
+			expectedError: types.ErrInvalidDeleveragedSubaccount,
+		},
+		// This test proposes an invalid perpetual deleveraging liquidation match operation. The
+		// subaccount has zero TNC, so the deleveraging operation should be rejected.
+		"Fails with deleveraging match for subaccount with zero TNC": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_55000USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             100_000_000,
+							},
+						},
+					},
+				),
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetUsdcPosition().Int64(),
+				constants.Dave_Num0: constants.Usdc_Asset_50_000.GetBigQuantums().Int64(),
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetPerpetualPositions(),
+				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetPerpetualPositions(),
+			},
+			expectedError: types.ErrInvalidDeleveragedSubaccount,
+		},
+		// This test proposes an invalid perpetual deleveraging liquidation match operation. The
+		// subaccount has negative TNC but the insurance fund balance is greater than
+		// `MaxInsuranceFundQuantumsForDeleveraging`, so the deleveraging operation should be rejected.
+		`Fails with deleveraging match for subaccount with negative TNC but insurance fund balance is
+			greater than MaxInsuranceFundQuantumsForDeleveraging`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_55000USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_500_100_000, // $55,001 / BTC
+			},
+			insuranceFundBalance: 1,
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
 					types.MatchPerpetualDeleveraging{

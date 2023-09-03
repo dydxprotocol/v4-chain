@@ -454,6 +454,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			),
 		)
 	} else if !canDeleverageSubaccount {
+		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
 		return sdkerrors.Wrapf(
 			types.ErrInvalidDeleveragedSubaccount,
 			"Subaccount %+v failed deleveraging validation",
