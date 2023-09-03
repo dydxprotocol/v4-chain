@@ -782,7 +782,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				},
 			},
 		},
-		`Liquidation buy order matches with some orders and stops when deleveraging is required`: {
+		`Liquidation buy order matches with some orders and stops when insurance fund is empty`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -801,8 +801,8 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				).Return(
-					// Insurance fund has $1 initially.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(1_000_000)),
+					// Insurance fund has $99 initially.
+					sdk.NewCoin("USDC", sdk.NewIntFromUint64(990_000)),
 				).Once()
 				bk.On(
 					"GetBalance",
@@ -810,8 +810,8 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				).Return(
-					// Insurance fund has $0.75 after covering the loss of the first match.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(750_000)),
+					// Insurance fund has $0.74 after covering the loss of the first match.
+					sdk.NewCoin("USDC", sdk.NewIntFromUint64(740_000)),
 				).Twice()
 			},
 
@@ -832,8 +832,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			// Matches the first order since insurance fund balance is above `MaxInsuranceFundQuantumsForDeleveraging`
 			// and has enough to cover the losses (-$0.25).
 			// Does not match the second order since insurance fund delta is -$0.75 and insurance fund balance
-			// is $0.75 which is lower than `MaxInsuranceFundQuantumsForDeleveraging`,
-			// and therefore, deleveraging is required.
+			// is $0.74 which is not enough to cover the loss, and therefore deleveraging is required.
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
 			expectedPlacedOrders: []*types.MsgPlaceOrder{
 				{
@@ -885,8 +884,8 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				).Return(
-					// Insurance fund has $1 initially.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(1_000_000)),
+					// Insurance fund has $0.99 initially.
+					sdk.NewCoin("USDC", sdk.NewIntFromUint64(990_000)),
 				).Once()
 				bk.On(
 					"GetBalance",
@@ -894,8 +893,8 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				).Return(
-					// Insurance fund has $0.75 after covering the loss of the first match.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(750_000)),
+					// Insurance fund has $0.74 after covering the loss of the first match.
+					sdk.NewCoin("USDC", sdk.NewIntFromUint64(740_000)),
 				).Once()
 			},
 
@@ -916,8 +915,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			// Matches the first order since insurance fund balance is above `MaxInsuranceFundQuantumsForDeleveraging`
 			// and has enough to cover the losses (-$0.25).
 			// Does not match the second order since insurance fund delta is -$0.75 and insurance fund balance
-			// is $0.75 which is lower than `MaxInsuranceFundQuantumsForDeleveraging`,
-			// and therefore, deleveraging is required.
+			// is $0.74 which is not enough to cover the loss, and therefore deleveraging is required.
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
 			expectedPlacedOrders: []*types.MsgPlaceOrder{
 				{
@@ -1639,13 +1637,13 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				),
 			},
 		},
-		`Partially matched and deleveraging is skipped -
-			positive insurance fund balance and positive MaxInsuranceFundQuantumsForDeleveraging`: {
+		`Partially matched but fails due to insufficient insurance fund balance and deleveraging is skipped -
+			negative TNC and insurance fund balance less than MaxInsuranceFundQuantumsForDeleveraging`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			insuranceFundBalance: 9_999_000_000, // $9,999
+			insuranceFundBalance: 740_000, // $0.74
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC.
 			},
@@ -1655,8 +1653,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				// First order at $50,498, Carl pays $0.25 to the insurance fund.
 				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
 				// Carl's bankruptcy price to close 0.75 BTC short is $50,499, and closing at $50,500
-				// would require $0.75 from the insurance fund. Since the insurance fund is below
-				// MaxInsuranceFundQuantumsForDeleveraging, deleveraging is required to close this position.
+				// would require $0.75 from the insurance fund. The insurance fund balance cannot
+				// cover this loss so deleveraging is required to close this position.
 				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
 			},
 			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
