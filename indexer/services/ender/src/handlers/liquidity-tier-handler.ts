@@ -51,7 +51,7 @@ export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
       basePositionNotional: protocolTranslations.quantumsToHuman(
         liquidityTier.basePositionNotional.toString(),
         QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-      ).toFixed(6),
+      ).toFixed(),
     };
   }
 

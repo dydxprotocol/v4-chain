@@ -144,7 +144,7 @@ export function getPnl(
     realizedPnl = priceDiff
       .mul(updateObject.sumClose)
       .plus(updateObject.settledFunding)
-      .toFixed(CURRENCY_DECIMAL_PRECISION);
+      .toFixed();
     unrealizedPnl = helpers.getUnrealizedPnl(updateObject, perpetualMarket, marketIdToMarket);
   }
   return { realizedPnl, unrealizedPnl };
