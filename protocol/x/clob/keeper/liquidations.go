@@ -548,16 +548,33 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	// Take the minimum of the subaccount block limit and position block limit.
-	bigMaxNotionalLiquidatable := lib.BigMin(
+	bigMaxQuoteQuantumsLiquidatable := lib.BigMin(
 		bigMaxPositionNotionalLiquidatable,
 		bigMaxSubaccountNotionalLiquidatable,
 	)
+
+	bigQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		perpetualPosition.PerpetualId,
+		perpetualPosition.GetBigQuantums(),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Return the full position to avoid any rounding errors.
+	if bigQuoteQuantums.CmpAbs(bigMaxQuoteQuantumsLiquidatable) <= 0 ||
+		perpetualPosition.GetBigQuantums().CmpAbs(
+			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
+		) <= 0 {
+		return clobPair, perpetualPosition.GetBigQuantums(), nil
+	}
 
 	// Convert the max notional liquidatable to base quantums.
 	bigBaseQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
 		ctx,
 		perpetualPosition.PerpetualId,
-		bigMaxNotionalLiquidatable,
+		bigMaxQuoteQuantumsLiquidatable,
 	)
 	if err != nil {
 		panic(err)
