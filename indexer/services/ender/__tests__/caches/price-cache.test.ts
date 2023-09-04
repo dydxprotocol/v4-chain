@@ -61,7 +61,7 @@ describe('priceCache', () => {
     await startPriceCache(testConstants.defaultBlock2.blockHeight);
 
     const map:PriceMap = getPriceMap();
-    expect(_.size(map)).toEqual(3);
+    expect(_.size(map)).toEqual(4);
     expect(
       getPrice(0),
     ).toEqual(
@@ -76,6 +76,11 @@ describe('priceCache', () => {
       getPrice(marketWithOraclePrice.id),
     ).toEqual(
       marketWithOraclePrice.oraclePrice,
+    );
+    expect(
+      getPrice(2),
+    ).toEqual(
+      testConstants.defaultOraclePrice3.price,
     );
     await expect(() => getPrice(marketWithoutOraclePrice.id)).toThrow(
       new Error(`price not found for marketId ${marketWithoutOraclePrice.id} in price cache`),
@@ -123,7 +128,7 @@ describe('priceCache', () => {
     updatePriceCacheWithPrice(priceFromDatabase);
 
     const map: PriceMap = getPriceMap();
-    expect(_.size(map)).toEqual(2);
+    expect(_.size(map)).toEqual(3);
     expect(
       getPrice(0),
     ).toEqual(
