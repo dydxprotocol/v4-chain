@@ -19,7 +19,6 @@ import {
   TransferFromDatabase,
   helpers,
   UpdatedPerpetualPositionSubaccountKafkaObject,
-  CURRENCY_DECIMAL_PRECISION,
   PerpetualPositionFromDatabase,
   AssetPositionSubaccountMessageContents,
   SubaccountTable,
