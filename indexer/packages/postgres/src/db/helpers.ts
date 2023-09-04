@@ -1,7 +1,7 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import Big from 'big.js';
 
-import { CURRENCY_DECIMAL_PRECISION, ONE_MILLION } from '../constants';
+import { ONE_MILLION } from '../constants';
 import {
   FundingIndexMap,
   MarketsMap,

@@ -14,7 +14,6 @@ import {
 } from '../helpers/constants';
 import * as PerpetualPositionTable from '../../src/stores/perpetual-position-table';
 import * as MarketTable from '../../src/stores/market-table';
-import { CURRENCY_DECIMAL_PRECISION } from '../../src';
 import Big from 'big.js';
 import { seedData } from '../helpers/mock-generators';
 import _ from 'lodash';
