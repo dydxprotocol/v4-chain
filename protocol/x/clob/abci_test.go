@@ -3,6 +3,7 @@ package clob_test
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"sort"
 	"testing"
 	"time"
@@ -22,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -666,6 +668,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			} {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
+					p.Params.Id,
 					p.Params.Ticker,
 					p.Params.MarketId,
 					p.Params.AtomicResolution,
@@ -699,6 +702,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
 				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
@@ -731,6 +735,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				constants.ClobPair_Eth.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
 				satypes.BaseQuantums(constants.ClobPair_Eth.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Eth.StepBaseQuantums),
@@ -1315,6 +1320,12 @@ func TestPrepareCheckState(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(types.InsuranceFundName),
+				constants.Usdc.Denom,
+			).Return(sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(new(big.Int))))
+			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,
 				mock.Anything,
@@ -1338,6 +1349,7 @@ func TestPrepareCheckState(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Params.Id,
 					p.Params.Ticker,
 					p.Params.MarketId,
 					p.Params.AtomicResolution,
@@ -1356,6 +1368,7 @@ func TestPrepareCheckState(t *testing.T) {
 			for _, clobPair := range tc.clobs {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
+					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
 					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),

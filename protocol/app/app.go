@@ -178,23 +178,6 @@ var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
 
-	// module account permissions
-	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:        nil,
-		bridgemoduletypes.ModuleName:      {authtypes.Minter},
-		distrtypes.ModuleName:             nil,
-		stakingtypes.BondedPoolName:       {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:               {authtypes.Burner},
-		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
-		satypes.ModuleName:                nil,
-		clobmoduletypes.InsuranceFundName: nil,
-		// Add rewards treasury account as module account to receive and distribute reward tokens.
-		rewardsmoduletypes.TreasuryAccountName: nil,
-		// Add rewards vest treasury account as module account to distribute vest tokens.
-		rewardsmoduletypes.VesterAccountName: nil,
-	}
-
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
 	Upgrades = []upgrades.Upgrade{}
@@ -630,27 +613,30 @@ func New(
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
 
-	app.BridgeKeeper = *bridgemodulekeeper.NewKeeper(
-		appCodec,
-		keys[bridgemoduletypes.StoreKey],
-		bridgeEventManager,
-		app.BankKeeper,
-		// set the gov module account as the authority for updating parameters.
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
-
 	app.DelayMsgKeeper = *delaymsgmodulekeeper.NewKeeper(
 		appCodec,
 		keys[delaymsgmoduletypes.StoreKey],
 		bApp.MsgServiceRouter(),
 		// Permit delayed messages to be signed by the following modules.
 		[]string{
-			authtypes.NewModuleAddress(bridgemoduletypes.ModuleName).String(),
 			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		},
 	)
 	delayMsgModule := delaymsgmodule.NewAppModule(appCodec, app.DelayMsgKeeper)
+
+	app.BridgeKeeper = *bridgemodulekeeper.NewKeeper(
+		appCodec,
+		keys[bridgemoduletypes.StoreKey],
+		bridgeEventManager,
+		app.BankKeeper,
+		app.DelayMsgKeeper,
+		// gov module and delayMsg module accounts are allowed to send messages to the bridge module.
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+		},
+	)
+	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
 	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
 		appCodec,
@@ -737,6 +723,11 @@ func New(
 		keys[clobmoduletypes.StoreKey],
 		memKeys[clobmoduletypes.MemStoreKey],
 		tkeys[clobmoduletypes.TransientStoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 		memClob,
 		app.SubaccountsKeeper,
 		app.AssetsKeeper,
@@ -1180,16 +1171,6 @@ func (app *App) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
-// ModuleAccountAddrs returns all the app's module account addresses.
-func (app *App) ModuleAccountAddrs() map[string]bool {
-	modAccAddrs := make(map[string]bool)
-	for acc := range maccPerms {
-		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
-	}
-
-	return modAccAddrs
-}
-
 // LegacyAmino returns SimApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
@@ -1313,27 +1294,6 @@ func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
 
 	staticServer := http.FileServer(statikFS)
 	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
-}
-
-// GetMaccPerms returns a copy of the module account permissions
-func GetMaccPerms() map[string][]string {
-	dupMaccPerms := make(map[string][]string)
-	for k, v := range maccPerms {
-		dupMaccPerms[k] = v
-	}
-	return dupMaccPerms
-}
-
-// BlockedAddresses returns all the app's blocked account addresses.
-func BlockedAddresses() map[string]bool {
-	modAccAddrs := make(map[string]bool)
-	for acc := range GetMaccPerms() {
-		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
-	}
-
-	// allow the following addresses to receive funds
-	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	return modAccAddrs
 }
 
 // initParamsKeeper init params keeper and its subspaces

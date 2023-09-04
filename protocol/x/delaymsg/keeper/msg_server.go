@@ -29,10 +29,9 @@ func (k msgServer) DelayMessage(
 		))
 	}
 
-	var sdkMsg sdk.Msg
-
-	if err := k.DecodeMessage(msg.Msg, &sdkMsg); err != nil {
-		panic(fmt.Errorf("UnmarshalInterface for DelayedMessage failed, err = %w", err))
+	sdkMsg, err := msg.GetMessage()
+	if err != nil {
+		panic(fmt.Errorf("GetMessage for MsgDelayedMessage failed, err = %w", err))
 	}
 
 	id, err := k.DelayMessageByBlocks(ctx, sdkMsg, msg.DelayBlocks)

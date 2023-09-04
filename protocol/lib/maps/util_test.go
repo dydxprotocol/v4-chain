@@ -229,3 +229,52 @@ func TestAreMapsEqual_Mixed(t *testing.T) {
 		})
 	}
 }
+
+func TestCopy(t *testing.T) {
+	tests := map[string]struct {
+		inputMap       map[string]int
+		expectedOutput map[string]int
+	}{
+		"Nil map": {
+			inputMap:       nil,
+			expectedOutput: nil,
+		},
+		"Empty map": {
+			inputMap:       map[string]int{},
+			expectedOutput: map[string]int{},
+		},
+		"Single-element map": {
+			inputMap: map[string]int{
+				"a": 1,
+			},
+			expectedOutput: map[string]int{
+				"a": 1,
+			},
+		},
+		"Multi-element map": {
+			inputMap: map[string]int{
+				"a": 1,
+				"b": 2,
+				"c": 3,
+			},
+			expectedOutput: map[string]int{
+				"a": 1,
+				"b": 2,
+				"c": 3,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			copiedMap := maps.ShallowCopy(tc.inputMap)
+			require.Equal(t, tc.expectedOutput, copiedMap)
+
+			// If the original map is modified, it should not affect the copied map
+			if tc.inputMap != nil {
+				tc.inputMap["new_key"] = 100
+				require.NotEqual(t, tc.inputMap, copiedMap)
+			}
+		})
+	}
+}

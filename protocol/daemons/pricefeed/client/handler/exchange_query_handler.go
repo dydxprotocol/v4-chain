@@ -10,6 +10,7 @@ import (
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -141,6 +142,10 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 		},
 	)
 
+	if response.StatusCode == 429 {
+		return nil, nil, constants.RateLimitingError
+	}
+
 	// Verify response is not 4xx or 5xx.
 	if response.StatusCode < 200 || response.StatusCode > 299 {
 		return nil, nil, fmt.Errorf("%s %v", constants.UnexpectedResponseStatusMessage, response.StatusCode)
@@ -153,7 +158,7 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 		&lib.MedianizerImpl{},
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, price_function.NewExchangeError(exchangeQueryDetails.Exchange, err.Error())
 	}
 
 	// 5) Insert prices into MarketPriceTimestamp struct slice, convert unavailable tickers back into marketIds,

@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"MKRUSD\""
-    },
-    {
       "exchangeName": "Bitfinex",
       "ticker": "tMKRUSD",
       "adjustByMarket": "USDT-USD"

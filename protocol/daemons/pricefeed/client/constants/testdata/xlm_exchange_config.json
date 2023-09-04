@@ -6,12 +6,17 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"XLMUSD\""
-    },
-    {
       "exchangeName": "Bitfinex",
       "ticker": "tXLMUSD",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bitstamp",
+      "ticker": "XLM/USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "XLMUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -19,7 +24,7 @@
       "ticker": "XLM-USD"
     },
     {
-      "exchangeName": "Gate",
+      "exchangeName": "CryptoCom",
       "ticker": "XLM_USDT",
       "adjustByMarket": "USDT-USD"
     },
@@ -33,8 +38,8 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Okx",
-      "ticker": "XLM-USDT",
+      "exchangeName": "Mexc",
+      "ticker": "XLM_USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

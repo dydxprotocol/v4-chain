@@ -111,13 +111,13 @@ func (ob *Orderbook) GetMidPrice() (Subticks, bool) {
 // PendingOpenOrder is a utility struct used for representing an order a subaccount will open. This is
 // used for collateralization checks, to specifically verify that the number of quantums in this order
 // can be opened for this subaccount.
+// Only used for representing maker orders in add-to-orderbook collat check.
+// TODO(CLOB-849) Remove this struct.
 type PendingOpenOrder struct {
 	// The amount of base quantums that is remaining for this order.
 	RemainingQuantums satypes.BaseQuantums
 	// True if this is a buy order, false if it's a sell order.
 	IsBuy bool
-	// True if this is a taker order, false if not.
-	IsTaker bool
 	// The price that this order would be matched at.
 	Subticks Subticks
 	// The ID of the CLOB this order would be placed on.

@@ -203,6 +203,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 		perpetuals[i] = types.Perpetual{
 			Params: types.PerpetualParams{
+				Id:                uint32(i),
 				Ticker:            genTicker(r),
 				MarketId:          marketId,
 				AtomicResolution:  genAtomicResolution(r, isReasonableGenesis),

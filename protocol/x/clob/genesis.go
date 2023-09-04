@@ -21,6 +21,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 		}
 		_, err = k.CreatePerpetualClobPair(
 			ctx,
+			elem.Id,
 			perpetualId,
 			satypes.BaseQuantums(elem.MinOrderBaseQuantums),
 			satypes.BaseQuantums(elem.StepBaseQuantums),
@@ -54,7 +55,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// Read the CLOB pairs from state.
-	genesis.ClobPairs = k.GetAllClobPair(ctx)
+	genesis.ClobPairs = k.GetAllClobPairs(ctx)
 
 	// Read the liquidations config from state.
 	genesis.LiquidationsConfig = k.GetLiquidationsConfig(ctx)

@@ -3,8 +3,11 @@ package keeper_test
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
@@ -14,22 +17,19 @@ import (
 func TestDelayMessageByBlocks(t *testing.T) {
 	tests := map[string]struct {
 		testDelayedMsgs []struct {
-			msg      sdk.Msg
-			delay    uint32
-			msgBytes []byte
+			msg   sdk.Msg
+			delay uint32
 		}
 		expectedBlockToMessageIds map[int64]types.BlockMessageIds
 	}{
 		"single message": {
 			testDelayedMsgs: []struct {
-				msg      sdk.Msg
-				delay    uint32
-				msgBytes []byte
+				msg   sdk.Msg
+				delay uint32
 			}{
 				{
-					msg:      constants.TestMsg1,
-					delay:    blockDelay1,
-					msgBytes: constants.Msg1Bytes,
+					msg:   constants.TestMsg1,
+					delay: blockDelay1,
 				},
 			},
 			expectedBlockToMessageIds: map[int64]types.BlockMessageIds{
@@ -40,19 +40,16 @@ func TestDelayMessageByBlocks(t *testing.T) {
 		},
 		"multiple messages": {
 			testDelayedMsgs: []struct {
-				msg      sdk.Msg
-				delay    uint32
-				msgBytes []byte
+				msg   sdk.Msg
+				delay uint32
 			}{
 				{
-					msg:      constants.TestMsg1,
-					delay:    blockDelay1,
-					msgBytes: constants.Msg1Bytes,
+					msg:   constants.TestMsg1,
+					delay: blockDelay1,
 				},
 				{
-					msg:      constants.TestMsg2,
-					delay:    blockDelay2,
-					msgBytes: constants.Msg2Bytes,
+					msg:   constants.TestMsg2,
+					delay: blockDelay2,
 				},
 			},
 			expectedBlockToMessageIds: map[int64]types.BlockMessageIds{
@@ -66,24 +63,20 @@ func TestDelayMessageByBlocks(t *testing.T) {
 		},
 		"multiple messages per block": {
 			testDelayedMsgs: []struct {
-				msg      sdk.Msg
-				delay    uint32
-				msgBytes []byte
+				msg   sdk.Msg
+				delay uint32
 			}{
 				{
-					msg:      constants.TestMsg1,
-					delay:    blockDelay1,
-					msgBytes: constants.Msg1Bytes,
+					msg:   constants.TestMsg1,
+					delay: blockDelay1,
 				},
 				{
-					msg:      constants.TestMsg2,
-					delay:    blockDelay2,
-					msgBytes: constants.Msg2Bytes,
+					msg:   constants.TestMsg2,
+					delay: blockDelay2,
 				},
 				{
-					msg:      constants.TestMsg3,
-					delay:    blockDelay1,
-					msgBytes: constants.Msg3Bytes,
+					msg:   constants.TestMsg3,
+					delay: blockDelay1,
 				},
 			},
 			expectedBlockToMessageIds: map[int64]types.BlockMessageIds{
@@ -111,7 +104,7 @@ func TestDelayMessageByBlocks(t *testing.T) {
 			idToDelayedMsg := make(map[uint32]types.DelayedMessage)
 			for i, testDelayedMsg := range tc.testDelayedMsgs {
 				idToDelayedMsg[uint32(i)] = types.DelayedMessage{
-					Msg:         testDelayedMsg.msgBytes,
+					Msg:         testutildelaymsg.EncodeMessageToAny(t, testDelayedMsg.msg),
 					BlockHeight: int64(testDelayedMsg.delay),
 				}
 			}
@@ -133,6 +126,16 @@ func TestDelayMessageByBlocks_NoHandlerFound(t *testing.T) {
 	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 	_, err := delaymsg.DelayMessageByBlocks(ctx, constants.InvalidMsg, blockDelay1)
 	require.ErrorContains(t, err, "/testpb.TestMsg: Message not recognized by router")
+}
+
+func TestDelayMsgByBlocks_InvalidSigners(t *testing.T) {
+	invalidSignerMsg := &bridgetypes.MsgCompleteBridge{
+		Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+		Event:     constants.BridgeEvent_Id0_Height0,
+	}
+	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+	_, err := delaymsg.DelayMessageByBlocks(ctx, invalidSignerMsg, blockDelay1)
+	require.ErrorContains(t, err, "message signer must be delaymsg module address: Invalid signer")
 }
 
 func TestDeleteMessage_NotFound(t *testing.T) {
@@ -213,7 +216,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 		delaymsg,
 		map[uint32]types.DelayedMessage{
 			0: {
-				Msg:         constants.Msg1Bytes,
+				Msg:         testutildelaymsg.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: 10,
 			},
 		},
@@ -249,7 +252,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 		delaymsg,
 		map[uint32]types.DelayedMessage{
 			1: { // Id incremented.
-				Msg:         constants.Msg1Bytes,
+				Msg:         testutildelaymsg.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: 10,
 			},
 		},
@@ -278,7 +281,7 @@ func TestSetDelayedMessage_Errors(t *testing.T) {
 		"invalid block height": {
 			msg: types.DelayedMessage{
 				Id:          0,
-				Msg:         constants.Msg1Bytes,
+				Msg:         testutildelaymsg.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: -1,
 			},
 			expErr: fmt.Errorf("failed to delay message: block height -1 is in the past: Invalid input"),

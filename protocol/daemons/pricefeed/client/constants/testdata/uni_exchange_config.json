@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"UNIUSD\""
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "UNIUSDT",
       "adjustByMarket": "USDT-USD"

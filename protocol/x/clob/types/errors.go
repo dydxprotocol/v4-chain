@@ -168,6 +168,26 @@ var (
 		35,
 		"Invalid ClobPair status transition",
 	)
+	ErrOperationConflictsWithClobPairStatus = sdkerrors.Register(
+		ModuleName,
+		36,
+		"Operation conflicts with ClobPair status",
+	)
+	ErrPerpetualDoesNotExist = sdkerrors.Register(
+		ModuleName,
+		37,
+		"Perpetual does not exist in state",
+	)
+	ErrInvalidMsgUpdateClobPair = sdkerrors.Register(
+		ModuleName,
+		38,
+		"MsgUpdateClobPair is invalid",
+	)
+	ErrInvalidClobPairUpdate = sdkerrors.Register(
+		ModuleName,
+		39,
+		"ClobPair update is invalid",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(

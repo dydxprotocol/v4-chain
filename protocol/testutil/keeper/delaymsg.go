@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"testing"
+
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,10 +16,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	bridgekeeper "github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	"testing"
 )
 
 func DelayMsgKeepers(
@@ -49,7 +49,7 @@ func DelayMsgKeepers(
 
 		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
-		bridgeKeeper, _, _, _ =
+		bridgeKeeper, _, _, _, _ =
 			createBridgeKeeper(stateStore, db, cdc, transientStoreKey, bankKeeper)
 
 		// Register bridge keeper msg server for msg routing.

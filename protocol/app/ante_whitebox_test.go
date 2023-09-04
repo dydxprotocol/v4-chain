@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,6 +56,10 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		nil,
 		nil,
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 		memClob,
 		nil,
 		nil,

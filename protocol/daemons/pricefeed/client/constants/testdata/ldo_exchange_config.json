@@ -1,0 +1,37 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "\"LDOUSDT\"",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bitfinex",
+      "ticker": "tLDOUSD",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bitstamp",
+      "ticker": "LDO/USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "LDO-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "LDO_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "LDO-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "LDO_USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

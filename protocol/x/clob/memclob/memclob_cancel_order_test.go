@@ -432,7 +432,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 30,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -448,7 +447,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -457,7 +455,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -541,7 +538,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 30,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -557,7 +553,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -566,7 +561,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -649,7 +643,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 30,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -688,7 +681,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 30,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -704,7 +696,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 30,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -713,7 +704,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 30,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -730,7 +720,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           false,
 								Subticks:          35,
 								ClobPairId:        0,
 							},
@@ -817,7 +806,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           false,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -833,7 +821,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           false,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -842,7 +829,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             true,
-								IsTaker:           true,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -859,7 +845,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -875,7 +860,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             false,
-								IsTaker:           false,
 								Subticks:          15,
 								ClobPairId:        0,
 							},
@@ -891,7 +875,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           false,
 								Subticks:          15,
 								ClobPairId:        0,
 							},
@@ -900,7 +883,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             true,
-								IsTaker:           true,
 								Subticks:          15,
 								ClobPairId:        0,
 							},
@@ -917,7 +899,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 10,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          45,
 								ClobPairId:        1,
 							},
@@ -933,7 +914,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          45,
 								ClobPairId:        1,
 							},
@@ -942,7 +922,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          45,
 								ClobPairId:        1,
 							},
@@ -1099,7 +1078,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 30,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1115,7 +1093,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1124,7 +1101,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1141,7 +1117,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 45,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1228,7 +1203,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 30,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1245,7 +1219,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1254,7 +1227,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1272,7 +1244,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 20,
 								IsBuy:             false,
-								IsTaker:           false,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -1289,7 +1260,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 20,
 								IsBuy:             true,
-								IsTaker:           true,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -1298,7 +1268,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 20,
 								IsBuy:             false,
-								IsTaker:           false,
 								Subticks:          10,
 								ClobPairId:        0,
 							},
@@ -1315,7 +1284,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 25,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1417,7 +1385,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 30,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1433,7 +1400,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             false,
-								IsTaker:           true,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1442,7 +1408,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 5,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},
@@ -1459,7 +1424,6 @@ func TestCancelOrder_OperationsQueue(t *testing.T) {
 							{
 								RemainingQuantums: 45,
 								IsBuy:             true,
-								IsTaker:           false,
 								Subticks:          50,
 								ClobPairId:        0,
 							},

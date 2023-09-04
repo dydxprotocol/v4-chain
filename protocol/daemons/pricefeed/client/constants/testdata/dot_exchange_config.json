@@ -6,13 +6,13 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"DOTUSD\""
-    },
-    {
       "exchangeName": "Bitfinex",
       "ticker": "tDOTUSD",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "DOT_USD"
     },
     {
       "exchangeName": "Gate",

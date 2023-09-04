@@ -9,13 +9,14 @@ import (
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
+		// TODO(CORE-530): in genesis.sh, overwrite start and end times dynamically for testnets.
 		VestEntries: []VestEntry{
 			{
 				VesterAccount:   rewardstypes.VesterAccountName,
 				TreasuryAccount: rewardstypes.TreasuryAccountName,
-				Denom:           "testnet_reward_token",
-				StartTime:       time.Date(2023, 8, 2, 0, 0, 0, 0, time.UTC).In(time.UTC),
-				EndTime:         time.Date(2023, 8, 23, 0, 0, 0, 0, time.UTC).In(time.UTC),
+				Denom:           "dv4tnt",
+				StartTime:       time.Date(2023, 9, 13, 0, 0, 0, 0, time.UTC).In(time.UTC),
+				EndTime:         time.Date(2023, 10, 13, 0, 0, 0, 0, time.UTC).In(time.UTC),
 			},
 		},
 	}

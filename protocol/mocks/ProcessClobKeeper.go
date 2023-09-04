@@ -21,6 +21,20 @@ func (_m *ProcessClobKeeper) RecordMevMetrics(ctx types.Context, stakingKeeper p
 	_m.Called(ctx, stakingKeeper, perpetualKeeper, msgProposedOperations)
 }
 
+// RecordMevMetricsIsEnabled provides a mock function with given fields:
+func (_m *ProcessClobKeeper) RecordMevMetricsIsEnabled() bool {
+	ret := _m.Called()
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func() bool); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewProcessClobKeeper interface {
 	mock.TestingT
 	Cleanup(func())

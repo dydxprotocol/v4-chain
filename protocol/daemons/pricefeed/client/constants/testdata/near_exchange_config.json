@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"NEARUSD\""
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "NEARUSDT",
       "adjustByMarket": "USDT-USD"
@@ -30,11 +26,6 @@
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "NEAR-USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Okx",
       "ticker": "NEAR-USDT",
       "adjustByMarket": "USDT-USD"
     }

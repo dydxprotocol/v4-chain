@@ -658,9 +658,11 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 //     perform collateralization checks on the taker order.
 //   - If there were any matches resulting from matching the liquidation order, memclob state will
 //     be updated accordingly.
+//
+// TODO(CLOB-852): Separate out deleveraging flow from liquidations flow.
 func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 	ctx sdk.Context,
-	order types.LiquidationOrder,
+	liquidationOrder types.LiquidationOrder,
 ) (
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	orderStatus types.OrderStatus,
@@ -669,47 +671,52 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 ) {
 	// Attempt to match the liquidation order against the orderbook.
 	// TODO(DEC-1157): Update liquidations flow to send off-chain indexer messages.
-	liquidationOrderStatus, offchainUpdates, err := m.matchOrder(ctx, &order)
+	liquidationOrderStatus, offchainUpdates, err := m.matchOrder(ctx, &liquidationOrder)
+	if err != nil {
+		return 0, 0, nil, err
+	}
 
-	if liquidationOrderStatus.OrderStatus == types.LiquidationRequiresDeleveraging {
-		// Check if the subaccount is still liquidatable. This check is needed for the edge case
-		// where a partially matched liquidation order has resulted in making the subaccount well-collateralized,
-		// but while attempting to match the full size of the liquidation order we trigger a deleveraging attempt.
-		// This scenario is made possible due to the MaxLiquidationFeePpm parameter on the LiquidationsConfig which
-		// caps the maximum fee that can be charged for a liquidation to MaxLiquidationFeePpm * QuoteQuantums
-		// of the liquidation order. If not for this, the liquidated subaccount would pay the full difference between
-		// the fill price and the bankruptcy price, leaving the TNC/MMR ratio the same as it was. It is the cap on this
-		// fee which allows a subaccount's TNC/MMR ratio to be improved by a liquidation.
-		isLiquidatable, err := m.clobKeeper.IsLiquidatable(ctx, order.GetSubaccountId())
-		if err != nil {
-			panic(err)
-		}
+	// Skip checking if the account needs to be deleveraged if the liquidation order was partially
+	// or fully-filled.
+	if liquidationOrderStatus.OrderOptimisticallyFilledQuantums > 0 {
+		return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
+			liquidationOrderStatus.OrderStatus,
+			offchainUpdates,
+			err
+	}
 
-		if isLiquidatable {
-			// Deleverage the remaining amounts.
-			deltaQuantums := new(big.Int).Sub(
-				order.GetBaseQuantums().ToBigInt(),
-				liquidationOrderStatus.OrderOptimisticallyFilledQuantums.ToBigInt(),
-			)
-			if !order.IsBuy() {
-				deltaQuantums = deltaQuantums.Neg(deltaQuantums)
-			}
+	canPerformDeleveraging, deleverageErr := m.clobKeeper.CanDeleverageSubaccount(ctx, liquidationOrder.GetSubaccountId())
+	if deleverageErr != nil {
+		return 0, 0, offchainUpdates, deleverageErr
+	}
 
-			fills, _ := m.clobKeeper.OffsetSubaccountPerpetualPosition(
-				ctx,
-				order.GetSubaccountId(),
-				order.MustGetLiquidatedPerpetualId(),
-				deltaQuantums,
-			)
+	// Early return to skip deleveraging if the subaccount can't be deleveraged.
+	if !canPerformDeleveraging {
+		return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
+			liquidationOrderStatus.OrderStatus,
+			offchainUpdates,
+			err
+	}
 
-			if len(fills) > 0 {
-				m.operationsToPropose.MustAddDeleveragingToOperationsQueue(
-					order.GetSubaccountId(),
-					order.MustGetLiquidatedPerpetualId(),
-					fills,
-				)
-			}
-		}
+	// Deleverage the full liquidation order size from the subaccount's position size.
+	deltaQuantums := liquidationOrder.GetBaseQuantums().ToBigInt()
+	if !liquidationOrder.IsBuy() {
+		deltaQuantums = deltaQuantums.Neg(deltaQuantums)
+	}
+
+	fills, _ := m.clobKeeper.OffsetSubaccountPerpetualPosition(
+		ctx,
+		liquidationOrder.GetSubaccountId(),
+		liquidationOrder.MustGetLiquidatedPerpetualId(),
+		deltaQuantums,
+	)
+
+	if len(fills) > 0 {
+		m.operationsToPropose.MustAddDeleveragingToOperationsQueue(
+			liquidationOrder.GetSubaccountId(),
+			liquidationOrder.MustGetLiquidatedPerpetualId(),
+			fills,
+		)
 	}
 
 	return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
@@ -720,6 +727,7 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 
 // matchOrder will match the provided `MatchableOrder` as a taker order against the respective orderbook.
 // This function will return the status of the matched order, along with the new taker pending matches.
+// If order matching results in any error, all state updates wil be discarded.
 func (m *MemClobPriceTimePriority) matchOrder(
 	ctx sdk.Context,
 	order types.MatchableOrder,
@@ -730,20 +738,23 @@ func (m *MemClobPriceTimePriority) matchOrder(
 ) {
 	offchainUpdates = types.NewOffchainUpdates()
 
+	// // Branch the state. State will be wrote to only if matching does not return an error.
+	branchedContext, writeCache := ctx.CacheContext()
+
 	// Attempt to match the order against the orderbook.
 	newMakerFills,
 		matchedOrderHashToOrder,
 		matchedMakerOrderIdToOrder,
 		makerOrdersToRemove,
 		takerOrderStatus := m.mustPerformTakerOrderMatching(
-		ctx,
+		branchedContext,
 		order,
 	)
 
 	// If this is a replacement order, then ensure we remove the existing order from the orderbook.
 	if !order.IsLiquidation() {
 		orderId := order.MustGetOrder().OrderId
-		if orderToBeReplaced, found := m.openOrders.getOrder(ctx, orderId); found {
+		if orderToBeReplaced, found := m.openOrders.getOrder(branchedContext, orderId); found {
 			makerOrdersToRemove = append(makerOrdersToRemove, OrderWithRemovalReason{Order: orderToBeReplaced})
 		}
 	}
@@ -763,7 +774,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 				makerOrderWithRemovalReason.RemovalReason,
 			)
 			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-				ctx.Logger(),
+				branchedContext.Logger(),
 				makerOrderId,
 				reason,
 				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
@@ -772,7 +783,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 			}
 		}
 
-		m.mustRemoveOrder(ctx, makerOrderId)
+		m.mustRemoveOrder(branchedContext, makerOrderId)
 		if makerOrderId.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
 			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
 				makerOrderId,
@@ -813,13 +824,14 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	takerGeneratedValidMatches := len(newMakerFills) > 0 && matchingErr == nil
 	if takerGeneratedValidMatches {
 		matchOffchainUpdates := m.mustUpdateMemclobStateWithMatches(
-			ctx,
+			branchedContext,
 			order,
 			newMakerFills,
 			matchedOrderHashToOrder,
 			matchedMakerOrderIdToOrder,
 		)
 		offchainUpdates.Append(matchOffchainUpdates)
+		writeCache()
 	}
 
 	return takerOrderStatus, offchainUpdates, matchingErr
@@ -857,8 +869,6 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		case *types.InternalOperation_ShortTermOrderPlacement:
 			order := operation.GetShortTermOrderPlacement().Order
 
-			// Branch the state to avoid writing to state on failed operations.
-			placeOrderCtx, writeCache := ctx.CacheContext()
 			// Set underlying tx bytes so OperationsToPropose may access it and
 			// store the tx bytes on OperationHashToTxBytes data structure
 			shortTermOrderTxBytes, exists := shortTermOrderTxBytes[order.GetOrderHash()]
@@ -870,8 +880,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 					),
 				)
 			}
-			// TODO(CLOB-730) - don't branch context
-			placeOrderCtx = placeOrderCtx.WithTxBytes(shortTermOrderTxBytes)
+			ctx = ctx.WithTxBytes(shortTermOrderTxBytes)
 
 			// Note we use `clobKeeper.PlaceOrder` here to ensure the proper stateful validation is performed and
 			// newly-placed stateful orders are written to state. In the future this will be important for sequence number
@@ -881,7 +890,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			msg := types.NewMsgPlaceOrder(order)
 			orderSizeOptimisticallyFilledFromMatchingQuantums,
 				orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.ReplayPlaceOrder(
-				placeOrderCtx,
+				ctx,
 				msg,
 			)
 
@@ -930,8 +939,6 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 					}
 				}
 			} else {
-				writeCache()
-
 				if m.generateOffchainUpdates {
 					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 				}
@@ -953,14 +960,10 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
-			// Branch the state to avoid writing to state on failed operations.
-			// TODO(CLOB-730) - don't branch context
-			placeOrderCtx, writeCache := ctx.CacheContext()
-
 			// Note that we use `memclob.PlaceOrder` here, this will skip writing the stateful order placement to state.
 			// TODO(DEC-998): Research whether it's fine for two post-only orders to be matched. Currently they are dropped.
 			_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(
-				placeOrderCtx,
+				ctx,
 				statefulOrderPlacement.Order,
 			)
 			if err != nil {
@@ -992,8 +995,6 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 					}
 				}
 			} else {
-				writeCache()
-
 				if m.generateOffchainUpdates {
 					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 				}
@@ -1012,12 +1013,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
-			// Branch the state to avoid writing to state on failed operations.
-			// TODO(CLOB-730) - don't branch context
-			placeOrderCtx, writeCache := ctx.CacheContext()
-
 			_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(
-				placeOrderCtx,
+				ctx,
 				statefulOrderPlacement.Order,
 			)
 			if err != nil {
@@ -1045,12 +1042,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 						existingOffchainUpdates.AddRemoveMessage(orderId, message)
 					}
 				}
-			} else {
-				writeCache()
-
-				if m.generateOffchainUpdates {
-					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-				}
+			} else if m.generateOffchainUpdates {
+				existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 			}
 		default:
 			panic(fmt.Sprintf("unknown operation type: %T", operation.Operation))
@@ -1380,7 +1373,6 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 		RemainingQuantums: remainingAmount,
 		IsBuy:             order.IsBuy(),
 		// This order will be added to the book as a maker order, so it cannot be a taker order.
-		IsTaker:    false,
 		Subticks:   order.GetOrderSubticks(),
 		ClobPairId: order.GetClobPairId(),
 	}
@@ -2133,7 +2125,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 //
 //		If Index < Impact Bid:
 //	 		P = Impact Bid / Index - 1
-//		If Impact Bid ≤ Index ≤ Impact Ask:
+//		If Impact Bid ≤ Index ≤ Impact Ask:
 //			P = 0
 //		If Impact Ask < Index:
 //			P = Impact Ask / Index - 1

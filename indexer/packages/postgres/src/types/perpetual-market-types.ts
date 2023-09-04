@@ -6,16 +6,11 @@ export interface PerpetualMarketCreateObject {
   ticker: string;
   marketId: number;
   status: PerpetualMarketStatus;
-  baseAsset: string;
-  quoteAsset: string;
   lastPrice: string;
   priceChange24H: string;
   volume24H: string;
   trades24H: number;
   nextFundingRate: string;
-  basePositionSize: string;
-  incrementalPositionSize: string;
-  maxPositionSize: string;
   openInterest: string;
   quantumConversionExponent: number;
   atomicResolution: number;
@@ -31,16 +26,11 @@ export interface PerpetualMarketUpdateObject {
   ticker?: string;
   marketId?: number;
   status?: PerpetualMarketStatus;
-  baseAsset?: string;
-  quoteAsset?: string;
   lastPrice?: string;
   priceChange24H?: string;
   volume24H?: string;
   trades24H?: number;
   nextFundingRate?: string;
-  basePositionSize?: string;
-  incrementalPositionSize?: string;
-  maxPositionSize?: string;
   openInterest?: string;
   quantumConversionExponent?: number;
   atomicResolution?: number;
@@ -56,16 +46,11 @@ export enum PerpetualMarketColumns {
   ticker = 'ticker',
   marketId = 'marketId',
   status = 'status',
-  baseAsset = 'baseAsset',
-  quoteAsset = 'quoteAsset',
   lastPrice = 'lastPrice',
   priceChange24H = 'priceChange24H',
   volume24H = 'volume24H',
   trades24H = 'trades24H',
   nextFundingRate = 'nextFundingRate',
-  basePositionSize = 'basePositionSize',
-  incrementalPositionSize = 'incrementalPositionSize',
-  maxPositionSize = 'maxPositionSize',
   openInterest = 'openInterest',
   quantumConversionExponent = 'quantumConversionExponent',
   atomicResolution = 'atomicResolution',

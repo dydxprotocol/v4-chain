@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"math/big"
 	"sort"
 
@@ -316,4 +317,26 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 		)
 	}
 	return triggeredConditionalOrderIds
+}
+
+// CountUntriggeredSubaccountOrders will count all untriggered orders for a given subaccount that match the provided
+// filter.
+func (k Keeper) CountUntriggeredSubaccountOrders(ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	filter func(types.OrderId) bool,
+) uint32 {
+	count := uint32(0)
+	for _, untriggeredConditionalOrders := range k.UntriggeredConditionalOrders {
+		for _, order := range untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice {
+			if order.OrderId.SubaccountId == subaccountId && filter(order.OrderId) {
+				count++
+			}
+		}
+		for _, order := range untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
+			if order.OrderId.SubaccountId == subaccountId && filter(order.OrderId) {
+				count++
+			}
+		}
+	}
+	return count
 }

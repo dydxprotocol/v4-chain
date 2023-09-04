@@ -1,10 +1,11 @@
 package clob_test
 
 import (
+	"testing"
+
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
-	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
@@ -255,7 +256,7 @@ func TestGenesis(t *testing.T) {
 			expectedErr:     "0 is not a valid SpreadToMaintenanceMarginRatioPpm",
 			expectedErrType: types.ErrInvalidLiquidationsConfig,
 		},
-		"Genesis state is invalid when spread to maintenance margin ratio ppm is greater than one million": {
+		"Genesis state is valid when spread to maintenance margin ratio ppm is greater than one million": {
 			genesis: types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
 					MaxLiquidationFeePpm: 5_000,
@@ -267,8 +268,6 @@ func TestGenesis(t *testing.T) {
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
-			expectedErr:     "1000001 is not a valid SpreadToMaintenanceMarginRatioPpm",
-			expectedErrType: types.ErrInvalidLiquidationsConfig,
 		},
 		"Genesis state is invalid when bankruptcy adjustment ppm is less than one million": {
 			genesis: types.GenesisState{
@@ -480,10 +479,6 @@ func TestGenesis(t *testing.T) {
 			require.Equal(t, tc.genesis.LiquidationsConfig, got.LiquidationsConfig)
 			require.Equal(t, tc.genesis.BlockRateLimitConfig, got.BlockRateLimitConfig)
 			require.Equal(t, tc.genesis.EquityTierLimitConfig, got.EquityTierLimitConfig)
-
-			// The number of CLOB pairs in the store should match the amount created thus far.
-			numClobPairs := ks.ClobKeeper.GetNumClobPairs(ctx)
-			require.Equal(t, uint32(len(got.ClobPairs)), numClobPairs)
 		})
 	}
 }

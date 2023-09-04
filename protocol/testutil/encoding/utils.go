@@ -27,6 +27,7 @@ import (
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
@@ -55,6 +56,7 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 		crisis.AppModuleBasic{},
 		custommodule.SlashingModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
+		feetiers.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ibctm.AppModuleBasic{},
 		upgrade.AppModuleBasic{},

@@ -22,6 +22,7 @@ type ClobKeeper interface {
 	CancelStatefulOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CreatePerpetualClobPair(
 		ctx sdk.Context,
+		clobPairId uint32,
 		perpetualId uint32,
 		minOrderInBaseQuantums satypes.BaseQuantums,
 		stepSizeInBaseQuantums satypes.BaseQuantums,
@@ -32,8 +33,9 @@ type ClobKeeper interface {
 		ClobPair,
 		error,
 	)
-	GetAllClobPair(ctx sdk.Context) (list []ClobPair)
+	GetAllClobPairs(ctx sdk.Context) (list []ClobPair)
 	GetClobPair(ctx sdk.Context, id ClobPairId) (val ClobPair, found bool)
+	HasAuthority(authority string) bool
 	PlaceShortTermOrder(ctx sdk.Context, msg *MsgPlaceOrder) (
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 		orderStatus OrderStatus,
@@ -102,7 +104,6 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		processProposerMatchesEvents ProcessProposerMatchesEvents,
 	)
-	GetNumClobPairs(ctx sdk.Context) uint32
 	PerformOrderCancellationStatefulValidation(
 		ctx sdk.Context,
 		msgCancelOrder *MsgCancelOrder,
@@ -117,4 +118,10 @@ type ClobKeeper interface {
 	GetIndexerEventManager() indexer_manager.IndexerEventManager
 	RateLimitCancelOrder(ctx sdk.Context, order *MsgCancelOrder) error
 	RateLimitPlaceOrder(ctx sdk.Context, order *MsgPlaceOrder) error
+	InitializeBlockRateLimit(ctx sdk.Context, config BlockRateLimitConfiguration) error
+	InitializeEquityTierLimit(ctx sdk.Context, config EquityTierLimitConfiguration) error
+	UpdateClobPair(
+		ctx sdk.Context,
+		clobPair ClobPair,
+	) error
 }

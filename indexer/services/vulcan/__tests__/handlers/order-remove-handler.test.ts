@@ -682,7 +682,7 @@ describe('OrderRemoveHandler', () => {
           orderRemove: undefined,
           orderUpdate: {
             orderId: removedRedisOrder.order!.orderId!,
-            totalFilledQuantums: removedRedisOrder.order!.quantums.add(Long.fromValue(100)),
+            totalFilledQuantums: removedRedisOrder.order!.quantums.add(Long.fromValue(100, true)),
           },
         };
         await handleOrderUpdate(exceedsFilledUpdate);
@@ -1333,7 +1333,7 @@ describe('OrderRemoveHandler', () => {
         orderRemove: undefined,
         orderUpdate: {
           orderId: removedRedisOrder.order!.orderId!,
-          totalFilledQuantums: defaultQuantums.add(Long.fromValue(100)),
+          totalFilledQuantums: defaultQuantums.add(Long.fromValue(100, true)),
         },
       };
       await handleOrderUpdate(exceedsFilledUpdate);

@@ -3,6 +3,10 @@ package keeper
 import (
 	"testing"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
@@ -186,6 +190,10 @@ func createClobKeeper(
 		storeKey,
 		memKey,
 		transientStoreKey,
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 		memClob,
 		saKeeper,
 		aKeeper,

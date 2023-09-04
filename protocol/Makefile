@@ -1,4 +1,4 @@
-export VERSION := $(shell echo $(shell git describe --always --match "v*") | sed 's/^v//')
+export VERSION := $(shell echo $(shell git describe --tags --always --match "protocol/v*") | sed 's/^protocol\/v//')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
 HTTPS_GIT := https://github.com/dydxprotocol/v4.git
@@ -7,7 +7,7 @@ PROJECT_NAME := $(shell git remote get-url origin | xargs basename -s .git)
 CGO_ENABLED=1
 export GIT_COMMIT_HASH=$(shell git rev-parse --short HEAD)
 export COMMIT=$(shell git rev-parse HEAD)
-export TAG_VERSION=$(shell git describe --tags | sed 's/^v//')
+export TAG_VERSION=$(shell git describe --tags | sed 's/^protocol\/v//')
 
 export GO111MODULE = on
 

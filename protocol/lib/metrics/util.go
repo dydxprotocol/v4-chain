@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"math/big"
 	"strconv"
 	"time"
 
@@ -39,6 +40,13 @@ func GetLabelForIntValue(labelName string, labelValue int) gometrics.Label {
 // GetLabelForStringValue returns a telemetry label for a given label and string value.
 func GetLabelForStringValue(labelName string, labelValue string) gometrics.Label {
 	return telemetry.NewLabel(labelName, labelValue)
+}
+
+// GetMetricValueFromBigInt returns a telemetry value (float32) from an integer value.
+// Any rounding information is ignored, so this function should only be used for metrics.
+func GetMetricValueFromBigInt(i *big.Int) float32 {
+	r, _ := new(big.Float).SetInt(i).Float32()
+	return r
 }
 
 // ModuleMeasureSinceWithLabels provides a short hand method for emitting a time measure

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"net/http"
 	"testing"
@@ -236,7 +237,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: true,
-			expectedError:    priceFuncError,
+			expectedError:    price_function.NewExchangeError("", priceFuncError.Error()),
 		},
 		"Failure - PriceFunction returns invalid response": {
 			priceFunc: priceFuncWithInvalidResponse,

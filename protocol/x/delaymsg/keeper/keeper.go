@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
@@ -41,6 +42,11 @@ func NewKeeper(
 func (k Keeper) HasAuthority(authority string) bool {
 	_, ok := k.authorities[authority]
 	return ok
+}
+
+// Router returns the x/delaymsg router.
+func (k Keeper) Router() lib.MsgRouter {
+	return k.router
 }
 
 // InitializeForGenesis initializes the x/delaymsg keeper for genesis.

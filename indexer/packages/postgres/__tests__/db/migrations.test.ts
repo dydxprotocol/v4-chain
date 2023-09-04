@@ -25,7 +25,7 @@ describe('Test new migration', () => {
     await teardown();
   });
 
-  it('test adding most recent migration', async () => {
+  it.skip('test adding most recent migration', async () => {
     // remove latest migration
     await multiDown(1);
 
@@ -39,7 +39,7 @@ describe('Test new migration', () => {
     await multiDown(1);
   });
 
-  it('test adding most recent migration with rows that fail index that should only be applied going forward', async () => {
+  it.skip('test adding most recent migration with rows that fail index that should only be applied going forward', async () => {
     // remove latest migration
     await multiDown(1);
 

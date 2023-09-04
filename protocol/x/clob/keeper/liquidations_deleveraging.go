@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -23,28 +22,60 @@ import (
 func (k Keeper) GetInsuranceFundBalance(
 	ctx sdk.Context,
 ) (
-	balance uint64,
+	balance *big.Int,
 ) {
 	usdcAsset, err := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
 	if err != nil {
 		panic("GetInsuranceFundBalance: Usdc asset not found in state")
 	}
-
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
 		authtypes.NewModuleAddress(types.InsuranceFundName),
 		usdcAsset.Denom,
 	)
 
-	floatBalance, _ := new(big.Float).SetUint64(insuranceFundBalance.Amount.Uint64()).Float32()
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		floatBalance,
-		metrics.InsuranceFundBalance,
+	// Return as big.Int.
+	return insuranceFundBalance.Amount.BigInt()
+}
+
+// CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
+// Specifically, this function returns true if both of the following are true:
+// - The insurance fund balance is less-than-or-equal to `MaxInsuranceFundQuantumsForDeleveraging`.
+// - The subaccount's total net collateral is negative.
+// This function returns an error if `GetNetCollateralAndMarginRequirements` returns an error.
+func (k Keeper) CanDeleverageSubaccount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+) (bool, error) {
+	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx)
+	liquidationConfig := k.GetLiquidationsConfig(ctx)
+	bigMaxInsuranceFundForDeleveraging := new(big.Int).SetUint64(liquidationConfig.MaxInsuranceFundQuantumsForDeleveraging)
+
+	// Deleveraging cannot be performed if the current insurance fund balance is greater than the
+	// max insurance fund for deleveraging,
+	if currentInsuranceFundBalance.Cmp(bigMaxInsuranceFundForDeleveraging) > 0 {
+		return false, nil
+	}
+
+	bigNetCollateral,
+		_,
+		_,
+		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		ctx,
+		satypes.Update{SubaccountId: subaccountId},
 	)
-	// Return the amount as uint64. `Uint64` panics if amount
-	// cannot be represented in a uint64.
-	return insuranceFundBalance.Amount.Uint64()
+	if err != nil {
+		return false, err
+	}
+
+	// Deleveraging cannot be performed if the subaccounts net collateral is non-negative.
+	if bigNetCollateral.Sign() >= 0 {
+		return false, nil
+	}
+
+	// The insurance fund balance is less-than-or-equal to `MaxInsuranceFundQuantumsForDeleveraging`
+	// and the subaccount's total net collateral is negative, so deleveraging can be performed.
+	return true, nil
 }
 
 // ShouldPerformDeleveraging returns true if deleveraging needs to occur.
@@ -61,7 +92,7 @@ func (k Keeper) ShouldPerformDeleveraging(
 		return false
 	}
 
-	currentInsuranceFundBalance := new(big.Int).SetUint64(k.GetInsuranceFundBalance(ctx))
+	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx)
 
 	liquidationConfig := k.GetLiquidationsConfig(ctx)
 	bigMaxInsuranceFundForDeleveraging := new(big.Int).SetUint64(liquidationConfig.MaxInsuranceFundQuantumsForDeleveraging)
@@ -225,10 +256,9 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"offsettingBankruptcyPriceQuoteQuantums", offsettingBankruptcyPrice,
 					"offsettingTnc", offsettingTnc,
 				)
-				telemetry.IncrCounterWithLabels(
-					[]string{types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count},
+				telemetry.IncrCounter(
 					1,
-					[]gometrics.Label{metrics.GetLabelForIntValue(metrics.BlockHeight, int(ctx.BlockHeight()))},
+					types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
 				)
 			}
 			return deltaQuantumsRemaining.Sign() == 0
@@ -236,38 +266,16 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		rand,
 	)
 
-	mode := metrics.DeliverTx
-	blockHeight := ctx.BlockHeight()
-	if ctx.IsCheckTx() {
-		mode = metrics.CheckTx
-		blockHeight += 1
-	}
-
-	telemetry.SetGaugeWithLabels(
-		[]string{metrics.NumSubaccountsIterated, metrics.Count},
-		float32(numSubaccountsIterated),
-		[]gometrics.Label{
-			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
-		},
-	)
+	telemetry.SetGauge(float32(numSubaccountsIterated), metrics.NumSubaccountsIterated, metrics.Count)
 
 	if deltaQuantumsRemaining.Sign() == 0 {
 		// Deleveraging was successful.
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, mode, metrics.Deleveraging, metrics.Success, metrics.Count},
-			1,
-			[]gometrics.Label{
-				metrics.GetLabelForIntValue(metrics.BlockHeight, int(blockHeight)),
-			},
-		)
+		telemetry.IncrCounter(1, types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.Success, metrics.Count)
 	} else {
 		// Not enough offsetting subaccounts to fully offset the liquidated subaccount's position.
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, mode, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count},
+		telemetry.IncrCounter(
 			1,
-			[]gometrics.Label{
-				metrics.GetLabelForIntValue(metrics.BlockHeight, int(blockHeight)),
-			},
+			types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count,
 		)
 		ctx.Logger().Error(
 			sdkerrors.Wrapf(

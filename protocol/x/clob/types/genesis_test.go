@@ -3,8 +3,9 @@ package types_test
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -138,7 +139,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedError: errors.New(
 				"0 is not a valid SpreadToMaintenanceMarginRatioPpm: Proposed LiquidationsConfig is invalid"),
 		},
-		"spread to maintenance margin ratio of greater than one million is invalid": {
+		"spread to maintenance margin ratio of greater than one million is valid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
 					MaxLiquidationFeePpm: 100_00,
@@ -150,8 +151,6 @@ func TestGenesisState_Validate(t *testing.T) {
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
-			expectedError: errors.New(
-				"1000001 is not a valid SpreadToMaintenanceMarginRatioPpm: Proposed LiquidationsConfig is invalid"),
 		},
 		"bankruptcy adjustment ppm of 0 is invalid": {
 			genState: &types.GenesisState{
