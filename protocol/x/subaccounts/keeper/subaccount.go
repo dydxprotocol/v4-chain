@@ -282,7 +282,7 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Apply all updates, including a subaccount update event in the Indexer
-	// block message per update and emit an event.
+	// block message per update and emit a cometbft event.
 	for _, u := range settledUpdates {
 		k.SetSubaccount(ctx, u.SettledSubaccount)
 		// Below access is safe because for all updated subaccounts' IDs, this map
@@ -309,7 +309,7 @@ func (k Keeper) UpdateSubaccounts(
 		// and negative if the subaccount received funding.
 		for perpetualId, fundingPaid := range fundingPayments {
 			ctx.EventManager().EmitEvent(
-				types.NewCreateFundingEvent(
+				types.NewCreateSettledFundingEvent(
 					*u.SettledSubaccount.Id,
 					perpetualId,
 					fundingPaid.BigInt(),
