@@ -9,8 +9,9 @@ import (
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -983,7 +984,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 			order: constants.LiquidationOrder_Carl_Num0_Clob1_Buy1ETH_Price3000,
 
-			expectedError: sdkerrors.Wrapf(
+			expectedError: moderrors.Wrapf(
 				types.ErrSubaccountHasLiquidatedPerpetual,
 				"Subaccount %v and perpetual %v have already been liquidated within the last block",
 				constants.Carl_Num0,

@@ -1,9 +1,9 @@
 package types
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"math/big"
 
-	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -28,7 +28,7 @@ func (bq BaseQuantums) ToUint64() uint64 {
 
 func (m *SubaccountId) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(m.Owner); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidSubaccountIdOwner,
+		return moderrors.Wrapf(ErrInvalidSubaccountIdOwner,
 			"invalid SubaccountId Owner address (%s). Error: (%s)", m.Owner, err)
 	}
 

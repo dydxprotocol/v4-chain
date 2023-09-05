@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"errors"
 	"fmt"
 	"math"
@@ -138,7 +139,7 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 	}
 
 	// Should be the same among all runs.
-	var gasConsumed sdk.Gas
+	var gasConsumed storetypes.Gas
 
 	for i := 0; i < 100; i++ {
 		ctx, _ := runProcessProposerOperationsTestCase(t, tc)

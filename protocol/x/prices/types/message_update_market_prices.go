@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -33,7 +33,7 @@ func (msg *MsgUpdateMarketPrices) ValidateBasic() error {
 	for i, marketPriceUpdate := range msg.MarketPriceUpdates {
 		// Check price is not 0.
 		if marketPriceUpdate.Price == uint64(0) {
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				ErrInvalidMarketPriceUpdateStateless,
 				"price cannot be 0 for market id (%d)",
 				marketPriceUpdate.MarketId,
@@ -42,7 +42,7 @@ func (msg *MsgUpdateMarketPrices) ValidateBasic() error {
 
 		// Check updates are sorted by market id and there are no duplicates.
 		if i > 0 && msg.MarketPriceUpdates[i-1].MarketId >= marketPriceUpdate.MarketId {
-			return sdkerrors.Wrap(
+			return moderrors.Wrap(
 				ErrInvalidMarketPriceUpdateStateless,
 				"market price updates must be sorted by market id in ascending order and cannot contain duplicates",
 			)

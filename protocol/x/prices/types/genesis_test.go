@@ -1,10 +1,9 @@
 package types_test
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"errors"
 	"testing"
-
-	sdkerrors "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -77,7 +76,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: sdkerrors.Wrap(types.ErrInvalidInput, "Pair cannot be empty"),
+			expectedError: moderrors.Wrap(types.ErrInvalidInput, "Pair cannot be empty"),
 		},
 		"invalid: mismatched number of market params and prices": {
 			genState: &types.GenesisState{
@@ -131,7 +130,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: sdkerrors.Wrap(types.ErrInvalidInput, "market param id 1 does not match market price id 2"),
+			expectedError: moderrors.Wrap(types.ErrInvalidInput, "market param id 1 does not match market price id 2"),
 		},
 		"invalid: invalid market price": {
 			genState: &types.GenesisState{
@@ -160,7 +159,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: sdkerrors.Wrap(types.ErrInvalidInput, "market 1 price cannot be zero"),
+			expectedError: moderrors.Wrap(types.ErrInvalidInput, "market 1 price cannot be zero"),
 		},
 	}
 	for name, tc := range tests {

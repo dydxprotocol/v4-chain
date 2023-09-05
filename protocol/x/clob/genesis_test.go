@@ -9,7 +9,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -460,7 +460,7 @@ func TestGenesis(t *testing.T) {
 			if tc.expectedErr != "" {
 				require.PanicsWithError(
 					t,
-					sdkerrors.Wrap(
+					moderrors.Wrap(
 						tc.expectedErrType,
 						tc.expectedErr,
 					).Error(),

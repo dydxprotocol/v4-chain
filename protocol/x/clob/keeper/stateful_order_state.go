@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"sort"
 	"time"
@@ -448,13 +449,13 @@ func (k Keeper) setStatefulOrdersTimeSliceInState(
 
 // getStatefulOrdersTimeSliceIterator returns an iterator over all stateful order time slice values
 // from time 0 until `endTime`.
-func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time.Time) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	startKey :=
 		types.KeyPrefix(types.StatefulOrdersTimeSlicePrefix)
 	endKey := append(
 		startKey,
-		sdk.InclusiveEndBytes(
+		storetypes.InclusiveEndBytes(
 			types.GetTimeSliceKey(
 				endTime,
 			),
@@ -468,20 +469,20 @@ func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time
 
 // getPlacedOrdersIterator returns an iterator over all placed orders, which includes all
 // Long-Term orders and triggered conditional orders.
-func (k Keeper) getPlacedOrdersIterator(ctx sdk.Context) sdk.Iterator {
+func (k Keeper) getPlacedOrdersIterator(ctx sdk.Context) storetypes.Iterator {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		types.KeyPrefix(types.PlacedStatefulOrderKeyPrefix),
 	)
-	return sdk.KVStorePrefixIterator(store, []byte{})
+	return storetypes.KVStorePrefixIterator(store, []byte{})
 }
 
 // getUntriggeredConditionalOrdersIterator returns an iterator over all untriggered conditional
 // orders.
-func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) sdk.Iterator {
+func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) storetypes.Iterator {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		types.KeyPrefix(types.UntriggeredConditionalOrderKeyPrefix),
 	)
-	return sdk.KVStorePrefixIterator(store, []byte{})
+	return storetypes.KVStorePrefixIterator(store, []byte{})
 }

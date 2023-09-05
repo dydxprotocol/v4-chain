@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -68,7 +68,7 @@ func (k Keeper) deleteMessageIdFromBlock(
 ) {
 	blockMessageIds, found := k.GetBlockMessageIds(ctx, blockHeight)
 	if !found {
-		return sdkerrors.Wrapf(
+		return moderrors.Wrapf(
 			types.ErrInvalidInput,
 			"block %v not found",
 			blockHeight,
@@ -99,7 +99,7 @@ func (k Keeper) deleteMessageIdFromBlock(
 	}
 
 	// If we make it here, the message id was not found in the block.
-	return sdkerrors.Wrapf(
+	return moderrors.Wrapf(
 		types.ErrInvalidInput,
 		"message id %v not found in block %v",
 		id,

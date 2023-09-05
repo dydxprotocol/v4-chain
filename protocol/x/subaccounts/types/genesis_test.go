@@ -1,9 +1,9 @@
 package types_test
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -176,7 +176,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			shouldPanic: true,
-			expectedError: sdkerrors.Wrapf(
+			expectedError: moderrors.Wrapf(
 				types.ErrAssetPositionZeroQuantum,
 				"asset position (asset Id: 0) has zero quantum",
 			),
@@ -222,7 +222,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			shouldPanic: true,
-			expectedError: sdkerrors.Wrapf(
+			expectedError: moderrors.Wrapf(
 				types.ErrPerpPositionZeroQuantum,
 				"perpetual position (perpetual Id: 0) has zero quantum",
 			),

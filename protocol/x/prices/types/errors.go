@@ -1,39 +1,37 @@
 package types
 
-// DONTCOVER
+import moderrors "cosmossdk.io/errors"
 
-import (
-	sdkerrors "cosmossdk.io/errors"
-)
+// DONTCOVER
 
 var (
 	// 1 - 99: Default.
-	ErrInvalidInput = sdkerrors.Register(ModuleName, 1, "Invalid input")
+	ErrInvalidInput = moderrors.Register(ModuleName, 1, "Invalid input")
 
 	// 100 - 199: Exchange related errors.
-	ErrExchangeDoesNotExist = sdkerrors.Register(ModuleName, 100, "Exchange does not exist")
-	ErrZeroMinExchanges     = sdkerrors.Register(ModuleName, 101, "Min exchanges must be greater than zero")
-	ErrTooFewExchanges      = sdkerrors.Register(ModuleName, 102, "Exchanges is fewer than minExchanges")
-	ErrDuplicateExchanges   = sdkerrors.Register(
+	ErrExchangeDoesNotExist = moderrors.Register(ModuleName, 100, "Exchange does not exist")
+	ErrZeroMinExchanges     = moderrors.Register(ModuleName, 101, "Min exchanges must be greater than zero")
+	ErrTooFewExchanges      = moderrors.Register(ModuleName, 102, "Exchanges is fewer than minExchanges")
+	ErrDuplicateExchanges   = moderrors.Register(
 		ModuleName,
 		103,
 		"Exchanges must not contain duplicates and must be provided in ascending order",
 	)
 
 	// 200 - 299: Market related errors.
-	ErrMarketParamDoesNotExist        = sdkerrors.Register(ModuleName, 200, "Market param does not exist")
-	ErrMarketPriceDoesNotExist        = sdkerrors.Register(ModuleName, 201, "Market price does not exist")
-	ErrMarketExponentCannotBeUpdated  = sdkerrors.Register(ModuleName, 202, "Market exponent cannot be updated")
-	ErrMarketPricesAndParamsDontMatch = sdkerrors.Register(ModuleName, 203, "Market prices and params don't match")
+	ErrMarketParamDoesNotExist        = moderrors.Register(ModuleName, 200, "Market param does not exist")
+	ErrMarketPriceDoesNotExist        = moderrors.Register(ModuleName, 201, "Market price does not exist")
+	ErrMarketExponentCannotBeUpdated  = moderrors.Register(ModuleName, 202, "Market exponent cannot be updated")
+	ErrMarketPricesAndParamsDontMatch = moderrors.Register(ModuleName, 203, "Market prices and params don't match")
 
 	// 300 - 399: Price related errors.
-	ErrIndexPriceNotAvailable = sdkerrors.Register(ModuleName, 300, "Index price is not available")
+	ErrIndexPriceNotAvailable = moderrors.Register(ModuleName, 300, "Index price is not available")
 
 	// 400 - 499: Market price update related errors.
-	ErrInvalidMarketPriceUpdateStateless = sdkerrors.Register(
+	ErrInvalidMarketPriceUpdateStateless = moderrors.Register(
 		ModuleName, 400, "Market price update is invalid: stateless.")
-	ErrInvalidMarketPriceUpdateDeterministic = sdkerrors.Register(
+	ErrInvalidMarketPriceUpdateDeterministic = moderrors.Register(
 		ModuleName, 401, "Market price update is invalid: deterministic.")
-	ErrInvalidMarketPriceUpdateNonDeterministic = sdkerrors.Register(
+	ErrInvalidMarketPriceUpdateNonDeterministic = moderrors.Register(
 		ModuleName, 402, "Market price update is invalid: non-deterministic.")
 )

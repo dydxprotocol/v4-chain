@@ -1,22 +1,21 @@
 package types
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"fmt"
-
-	sdkerrors "cosmossdk.io/errors"
 )
 
 // Validate does basic validation for epoch info.
 func (epoch EpochInfo) Validate() error {
 	if epoch.Name == "" {
-		return sdkerrors.Wrap(ErrEmptyEpochInfoName, "EpochInfo Name is empty")
+		return moderrors.Wrap(ErrEmptyEpochInfoName, "EpochInfo Name is empty")
 	}
 	if epoch.Duration == 0 {
-		return sdkerrors.Wrap(ErrDurationIsZero, "Duration is zero")
+		return moderrors.Wrap(ErrDurationIsZero, "Duration is zero")
 	}
 	// `CurrentEpoch` should be zero if and only if `CurrentEpochStartBlock` is zero.
 	if (epoch.CurrentEpoch == 0) != (epoch.CurrentEpochStartBlock == 0) {
-		return sdkerrors.Wrap(
+		return moderrors.Wrap(
 			ErrInvalidCurrentEpochAndCurrentEpochStartBlockTuple,
 			fmt.Sprintf(
 				"CurrentEpoch: %d, CurrentEpochStartBlock: %v",

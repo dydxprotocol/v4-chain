@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"sort"
 	"strconv"
 	"testing"
 	"time"
 
-	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
@@ -371,7 +371,7 @@ func TestMustGetFundingEpochInfo(t *testing.T) {
 			ctx, keeper, _ := keepertest.EpochsKeeper(t)
 
 			// No epoch info created, should panic
-			require.PanicsWithError(t, sdkerrors.Wrapf(
+			require.PanicsWithError(t, moderrors.Wrapf(
 				types.ErrEpochInfoNotFound,
 				"name: %s",
 				tc.epochInfoName,

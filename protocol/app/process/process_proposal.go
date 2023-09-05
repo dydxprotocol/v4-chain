@@ -40,7 +40,7 @@ func ProcessProposalHandler(
 	currentBlockHeight := int64(0)
 	currentConsensusRound := int64(0)
 
-	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		defer telemetry.ModuleMeasureSince(
 			ModuleName,
 			time.Now(),
@@ -67,18 +67,18 @@ func ProcessProposalHandler(
 			error_lib.LogErrorWithOptionalContext(logger, "UpdateSmoothedPrices failed", err)
 		}
 
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeper, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), *req, bridgeKeeper, pricesKeeper)
 		if err != nil {
 			error_lib.LogErrorWithOptionalContext(logger, "DecodeProcessProposalTxs failed", err)
 			recordErrorMetricsWithLabel(metrics.Decode)
-			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 
 		err = txs.Validate()
 		if err != nil {
 			error_lib.LogErrorWithOptionalContext(logger, "DecodeProcessProposalTxs.Validate failed", err)
 			recordErrorMetricsWithLabel(metrics.Validate)
-			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 
 		// Measure MEV metrics if enabled.
@@ -89,6 +89,6 @@ func ProcessProposalHandler(
 		// Record a success metric.
 		recordSuccessMetrics(ctx, txs, len(req.Txs))
 
-		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 	}
 }

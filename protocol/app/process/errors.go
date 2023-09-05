@@ -1,10 +1,8 @@
 package process
 
-// DONTCOVER
+import moderrors "cosmossdk.io/errors"
 
-import (
-	sdkerrors "cosmossdk.io/errors"
-)
+// DONTCOVER
 
 const (
 	ModuleName = "process_proposal"
@@ -12,8 +10,8 @@ const (
 
 var (
 	// 1 - 99: Default.
-	ErrDecodingTxBytes   = sdkerrors.Register(ModuleName, 1, "Decoding tx bytes failed")
-	ErrMsgValidateBasic  = sdkerrors.Register(ModuleName, 2, "ValidateBasic failed on msg")
-	ErrUnexpectedNumMsgs = sdkerrors.Register(ModuleName, 3, "Unexpected num of msgs")
-	ErrUnexpectedMsgType = sdkerrors.Register(ModuleName, 4, "Unexpected msg type")
+	ErrDecodingTxBytes   = moderrors.Register(ModuleName, 1, "Decoding tx bytes failed")
+	ErrMsgValidateBasic  = moderrors.Register(ModuleName, 2, "ValidateBasic failed on msg")
+	ErrUnexpectedNumMsgs = moderrors.Register(ModuleName, 3, "Unexpected num of msgs")
+	ErrUnexpectedMsgType = moderrors.Register(ModuleName, 4, "Unexpected msg type")
 )

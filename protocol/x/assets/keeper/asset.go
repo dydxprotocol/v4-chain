@@ -1,12 +1,12 @@
 package keeper
 
 import (
+	moderrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 
-	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -27,7 +27,7 @@ func (k Keeper) CreateAsset(
 
 	_, found := k.internalGetIdByDenom(ctx, denom)
 	if found {
-		return types.Asset{}, sdkerrors.Wrap(types.ErrAssetDenomAlreadyExists, denom)
+		return types.Asset{}, moderrors.Wrap(types.ErrAssetDenomAlreadyExists, denom)
 	}
 
 	// Create the asset
@@ -48,7 +48,7 @@ func (k Keeper) CreateAsset(
 			return asset, err
 		}
 	} else if marketId > 0 {
-		return asset, sdkerrors.Wrapf(
+		return asset, moderrors.Wrapf(
 			types.ErrInvalidMarketId,
 			"Market ID: %v",
 			marketId,
@@ -122,7 +122,7 @@ func (k Keeper) ModifyLongInterest(
 
 	// Validate delta
 	if !isIncrease && delta > asset.LongInterest {
-		return asset, sdkerrors.Wrap(types.ErrNegativeLongInterest, lib.Uint32ToString(id))
+		return asset, moderrors.Wrap(types.ErrNegativeLongInterest, lib.Uint32ToString(id))
 	}
 
 	// Modify asset
@@ -203,7 +203,7 @@ func (k Keeper) GetIdByDenom(
 	id, found := k.internalGetIdByDenom(ctx, denom)
 
 	if !found {
-		return 0, sdkerrors.Wrap(types.ErrNoAssetWithDenom, denom)
+		return 0, moderrors.Wrap(types.ErrNoAssetWithDenom, denom)
 	}
 
 	return id, nil
@@ -234,7 +234,7 @@ func (k Keeper) GetAsset(
 
 	b := store.Get(types.AssetKey(id))
 	if b == nil {
-		return val, sdkerrors.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+		return val, moderrors.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
 	}
 
 	k.cdc.MustUnmarshal(b, &val)
@@ -359,7 +359,7 @@ func (k Keeper) ConvertAssetToCoin(
 	}
 
 	if lib.AbsInt32(asset.AtomicResolution) > types.MaxAssetUnitExponentAbs {
-		return nil, sdk.Coin{}, sdkerrors.Wrapf(
+		return nil, sdk.Coin{}, moderrors.Wrapf(
 			types.ErrInvalidAssetAtomicResolution,
 			"asset: %+v",
 			asset,
@@ -367,7 +367,7 @@ func (k Keeper) ConvertAssetToCoin(
 	}
 
 	if lib.AbsInt32(asset.DenomExponent) > types.MaxAssetUnitExponentAbs {
-		return nil, sdk.Coin{}, sdkerrors.Wrapf(
+		return nil, sdk.Coin{}, moderrors.Wrapf(
 			types.ErrInvalidDenomExponent,
 			"asset: %+v",
 			asset,

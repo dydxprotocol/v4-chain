@@ -1,13 +1,11 @@
 package types
 
-// DONTCOVER
+import moderrors "cosmossdk.io/errors"
 
-import (
-	sdkerrors "cosmossdk.io/errors"
-)
+// DONTCOVER
 
 // x/rewards module sentinel errors
 var (
-	ErrInvalidTreasuryAccount  = sdkerrors.Register(ModuleName, 1001, "invalid treasury account")
-	ErrInvalidFeeMultiplierPpm = sdkerrors.Register(ModuleName, 1002, "invalid FeeMultiplierPpm")
+	ErrInvalidTreasuryAccount  = moderrors.Register(ModuleName, 1001, "invalid treasury account")
+	ErrInvalidFeeMultiplierPpm = moderrors.Register(ModuleName, 1002, "invalid FeeMultiplierPpm")
 )

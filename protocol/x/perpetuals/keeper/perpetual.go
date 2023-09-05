@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"math/big"
 	"sort"
@@ -8,7 +9,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,7 @@ func (k Keeper) CreatePerpetual(
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
 	if k.HasPerpetual(ctx, id) {
-		return types.Perpetual{}, sdkerrors.Wrap(
+		return types.Perpetual{}, moderrors.Wrap(
 			types.ErrPerpetualAlreadyExists,
 			lib.Uint32ToString(id),
 		)
@@ -135,7 +136,7 @@ func (k Keeper) GetPerpetual(
 
 	b := store.Get(types.PerpetualKey(id))
 	if b == nil {
-		return val, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, lib.Uint32ToString(id))
+		return val, moderrors.Wrap(types.ErrPerpetualDoesNotExist, lib.Uint32ToString(id))
 	}
 
 	k.cdc.MustUnmarshal(b, &val)
@@ -145,7 +146,7 @@ func (k Keeper) GetPerpetual(
 // GetAllPerpetuals returns all perpetuals, sorted by perpetual Id.
 func (k Keeper) GetAllPerpetuals(ctx sdk.Context) (list []types.Perpetual) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -615,7 +616,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 
 		// Panic if maintenance fraction ppm is larger than its maximum value.
 		if liquidityTier.MaintenanceFractionPpm > types.MaxMaintenanceFractionPpm {
-			panic(sdkerrors.Wrapf(
+			panic(moderrors.Wrapf(
 				types.ErrMaintenanceFractionPpmExceedsMax,
 				"perpetual Id = (%d), liquidity tier Id = (%d), maintenance fraction ppm = (%v)",
 				perp.Params.Id, perp.Params.LiquidityTier, liquidityTier.MaintenanceFractionPpm,
@@ -648,7 +649,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 		)
 
 		if bigFundingRatePpm.Cmp(lib.BigMaxInt32()) > 0 {
-			panic(sdkerrors.Wrapf(
+			panic(moderrors.Wrapf(
 				types.ErrFundingRateInt32Overflow,
 				"perpetual Id = (%d), funding rate = (%v)",
 				perp.Params.Id, bigFundingRatePpm,
@@ -975,7 +976,7 @@ func (k Keeper) addToPremiumStore(
 
 	for _, sample := range newSamples {
 		if !k.HasPerpetual(ctx, sample.PerpetualId) {
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"perpetual ID = %d",
 				sample.PerpetualId,
@@ -1100,8 +1101,8 @@ func (k Keeper) GetPerpetualAndMarketPrice(
 	// Get market price.
 	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId)
 	if err != nil {
-		if sdkerrors.IsOf(err, pricestypes.ErrMarketPriceDoesNotExist) {
-			return perpetual, marketPrice, sdkerrors.Wrap(
+		if moderrors.IsOf(err, pricestypes.ErrMarketPriceDoesNotExist) {
+			return perpetual, marketPrice, moderrors.Wrap(
 				types.ErrMarketDoesNotExist,
 				fmt.Sprintf(
 					"Market ID %d does not exist on perpetual ID %d",
@@ -1134,7 +1135,7 @@ func (k Keeper) validatePerpetual(
 	}
 	// Validate `liquidityTier`.
 	if perpetual.Params.LiquidityTier >= k.GetNumLiquidityTiers(ctx) {
-		return sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.Params.LiquidityTier))
+		return moderrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.Params.LiquidityTier))
 	}
 
 	return nil
@@ -1152,7 +1153,7 @@ func (k Keeper) validatePerpetualStateless(perpetual *types.Perpetual) error {
 	// Validate `defaultFundingPpm`
 	defaultFundingPpm := lib.AbsInt32(perpetual.Params.DefaultFundingPpm)
 	if defaultFundingPpm > types.MaxDefaultFundingPpmAbs {
-		return sdkerrors.Wrap(
+		return moderrors.Wrap(
 			types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 			lib.Int32ToString(perpetual.Params.DefaultFundingPpm))
 	}
@@ -1203,7 +1204,7 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 	for _, vote := range msg.Votes {
 		// Check that the perpetual Id is valid.
 		if _, err := k.GetPerpetual(ctx, vote.PerpetualId); err != nil {
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"perpetualId = %d",
 				vote.PerpetualId,
@@ -1221,13 +1222,13 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 		if isActive, err := k.clobKeeper.IsPerpetualClobPairActive(
 			ctx, vote.PerpetualId,
 		); err != nil {
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				err,
 				"PerformStatefulPremiumVotesValidation: failed to determine ClobPair status for perpetual with id %d",
 				vote.PerpetualId,
 			)
 		} else if !isActive { // reject premium votes for non active markets
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				types.ErrPremiumVoteForNonActiveMarket,
 				"PerformStatefulPremiumVotesValidation: no premium vote should be included for inactive perpetual with id %d",
 				vote.PerpetualId,
@@ -1241,7 +1242,7 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 			lib.AbsInt32(vote.PremiumPpm),
 		))
 		if bigAbsPremiumPpm.Cmp(maxAbsPremiumVotePpm) > 0 {
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				types.ErrPremiumVoteNotClamped,
 				"perpetualId = %d, premium vote = %d, maxAbsPremiumVotePpm = %d",
 				vote.PerpetualId,
@@ -1385,7 +1386,7 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 
 	b := store.Get(types.LiquidityTierKey(id))
 	if b == nil {
-		return liquidityTier, sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(id))
+		return liquidityTier, moderrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(id))
 	}
 
 	k.cdc.MustUnmarshal(b, &liquidityTier)

@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"context"
+	moderrors "cosmossdk.io/errors"
 
-	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -58,7 +58,7 @@ func (k Keeper) MarketPrice(
 		req.Id,
 	)
 	if err != nil {
-		if sdkerrors.IsOf(err, types.ErrMarketPriceDoesNotExist) {
+		if moderrors.IsOf(err, types.ErrMarketPriceDoesNotExist) {
 			return nil, status.Error(codes.NotFound, "not found")
 		} else {
 			return nil, status.Error(codes.Internal, "unknown error getting market price")
@@ -115,7 +115,7 @@ func (k Keeper) MarketParam(
 		req.Id,
 	)
 	if err != nil {
-		if sdkerrors.IsOf(err, types.ErrMarketParamDoesNotExist) {
+		if moderrors.IsOf(err, types.ErrMarketParamDoesNotExist) {
 			return nil, status.Error(codes.NotFound, "not found")
 		} else {
 			return nil, status.Error(codes.Internal, "unknown error getting market param")

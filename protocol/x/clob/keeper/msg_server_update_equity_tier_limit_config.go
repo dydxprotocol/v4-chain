@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -15,7 +15,7 @@ func (k msgServer) UpdateEquityTierLimitConfiguration(
 	msg *types.MsgUpdateEquityTierLimitConfiguration,
 ) (*types.MsgUpdateEquityTierLimitConfigurationResponse, error) {
 	if !k.Keeper.HasAuthority(msg.Authority) {
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority %s",
 			msg.Authority,

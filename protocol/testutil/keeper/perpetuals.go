@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
@@ -11,7 +12,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,7 +49,7 @@ func PerpetualsKeepersWithClobHelpers(
 	storeKey storetypes.StoreKey,
 ) {
 	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -79,14 +79,14 @@ func PerpetualsKeepersWithClobHelpers(
 
 func createPerpetualsKeeperWithClobHelpers(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	pk *priceskeeper.Keeper,
 	ek *epochskeeper.Keeper,
 	pck types.PerpetualsClobKeeper,
 	transientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
@@ -109,7 +109,7 @@ func createPerpetualsKeeperWithClobHelpers(
 
 func createPerpetualsKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	pk *priceskeeper.Keeper,
 	ek *epochskeeper.Keeper,

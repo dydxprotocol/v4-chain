@@ -1,7 +1,7 @@
 package clob
 
 import (
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -17,7 +17,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	for _, elem := range genState.ClobPairs {
 		perpetualId, err := elem.GetPerpetualId()
 		if err != nil {
-			panic(sdkerrors.Wrap(types.ErrInvalidClobPairParameter, err.Error()))
+			panic(moderrors.Wrap(types.ErrInvalidClobPairParameter, err.Error()))
 		}
 		_, err = k.CreatePerpetualClobPair(
 			ctx,

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	moderrors "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	"errors"
 	"fmt"
 	"math/big"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
-	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -62,7 +63,7 @@ func (k Keeper) GetSubaccount(
 // For more performant searching and iteration, use `ForEachSubaccount`.
 func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -81,7 +82,7 @@ func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
 // and you do not need to iterate through all the subaccounts.
 func (k Keeper) ForEachSubaccount(ctx sdk.Context, callback func(types.Subaccount) (finished bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -706,7 +707,7 @@ func applyUpdatesToPositions[
 		_, exists := updateMap[id]
 		if exists {
 			errMsg := fmt.Sprintf("Multiple updates exist for position %v", update.GetId())
-			return nil, sdkerrors.Wrap(types.ErrNonUniqueUpdatesPosition, errMsg)
+			return nil, moderrors.Wrap(types.ErrNonUniqueUpdatesPosition, errMsg)
 		}
 
 		updateMap[id] = update

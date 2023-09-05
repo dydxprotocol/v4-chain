@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -42,32 +42,32 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 	}
 
 	if _, exists := Order_Side_name[int32(msg.Order.Side)]; !exists {
-		return sdkerrors.Wrapf(ErrInvalidOrderSide, "invalid order side (%s)", msg.Order.Side)
+		return moderrors.Wrapf(ErrInvalidOrderSide, "invalid order side (%s)", msg.Order.Side)
 	}
 
 	if msg.Order.Side == Order_SIDE_UNSPECIFIED {
-		return sdkerrors.Wrapf(ErrInvalidOrderSide, "UNSPECIFIED is not a valid order side")
+		return moderrors.Wrapf(ErrInvalidOrderSide, "UNSPECIFIED is not a valid order side")
 	}
 
 	if msg.Order.Quantums == uint64(0) {
-		return sdkerrors.Wrapf(ErrInvalidOrderQuantums, "order size quantums cannot be 0")
+		return moderrors.Wrapf(ErrInvalidOrderQuantums, "order size quantums cannot be 0")
 	}
 
 	orderId := msg.Order.GetOrderId()
 	if orderId.IsShortTermOrder() {
 		// This also implicitly verifies that GoodTilBlockTime is not set / is zero for short-term orders.
 		if msg.Order.GetGoodTilBlock() == uint32(0) {
-			return sdkerrors.Wrapf(ErrInvalidOrderGoodTilBlock, "order goodTilBlock cannot be 0")
+			return moderrors.Wrapf(ErrInvalidOrderGoodTilBlock, "order goodTilBlock cannot be 0")
 		}
 	} else if orderId.IsStatefulOrder() {
 		if msg.Order.GetGoodTilBlockTime() == uint32(0) {
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				ErrInvalidStatefulOrderGoodTilBlockTime,
 				"stateful order goodTilBlockTime cannot be 0",
 			)
 		}
 	} else {
-		return sdkerrors.Wrapf(ErrInvalidOrderFlag, "invalid order flag %v", orderId.OrderFlags)
+		return moderrors.Wrapf(ErrInvalidOrderFlag, "invalid order flag %v", orderId.OrderFlags)
 	}
 
 	if orderId.IsLongTermOrder() && msg.Order.RequiresImmediateExecution() {
@@ -75,28 +75,28 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 	}
 
 	if msg.Order.ReduceOnly {
-		return sdkerrors.Wrapf(ErrReduceOnlyDisabled, "reduce-only is temporarily disabled")
+		return moderrors.Wrapf(ErrReduceOnlyDisabled, "reduce-only is temporarily disabled")
 	}
 
 	if msg.Order.Subticks == uint64(0) {
-		return sdkerrors.Wrapf(ErrInvalidOrderSubticks, "order subticks cannot be 0")
+		return moderrors.Wrapf(ErrInvalidOrderSubticks, "order subticks cannot be 0")
 	}
 
 	if orderId.IsConditionalOrder() {
 		if msg.Order.ConditionType == Order_CONDITION_TYPE_UNSPECIFIED {
-			return sdkerrors.Wrapf(ErrInvalidConditionType, "condition type cannot be unspecified")
+			return moderrors.Wrapf(ErrInvalidConditionType, "condition type cannot be unspecified")
 		}
 
 		if msg.Order.ConditionalOrderTriggerSubticks == uint64(0) {
-			return sdkerrors.Wrapf(ErrInvalidConditionalOrderTriggerSubticks, "conditional order trigger subticks cannot be 0")
+			return moderrors.Wrapf(ErrInvalidConditionalOrderTriggerSubticks, "conditional order trigger subticks cannot be 0")
 		}
 	} else {
 		if msg.Order.ConditionType != Order_CONDITION_TYPE_UNSPECIFIED {
-			return sdkerrors.Wrapf(ErrInvalidConditionType, "condition type specified for non-conditional order")
+			return moderrors.Wrapf(ErrInvalidConditionType, "condition type specified for non-conditional order")
 		}
 
 		if msg.Order.ConditionalOrderTriggerSubticks != uint64(0) {
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				ErrInvalidConditionalOrderTriggerSubticks,
 				"conditional order trigger subticks greater than 0 for non-conditional order",
 			)

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"math/big"
 	"sort"
 	"time"
@@ -10,7 +11,6 @@ import (
 
 	gometrics "github.com/hashicorp/go-metrics"
 
-	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,7 +115,7 @@ func (k Keeper) GetMarketPrice(
 	store := k.newMarketPriceStore(ctx)
 	b := store.Get(types.MarketKey(id))
 	if b == nil {
-		return types.MarketPrice{}, sdkerrors.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(id))
+		return types.MarketPrice{}, moderrors.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(id))
 	}
 
 	var marketPrice = types.MarketPrice{}

@@ -8,8 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -146,7 +144,7 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 		},
 		"Bad state: Invalid param": {
 			genesisJson: `{"market_params": [{ "pair": "" }]}`,
-			expectedErr: sdkerrors.Wrap(pricestypes.ErrInvalidInput, "Pair cannot be empty").Error(),
+			expectedErr: moderrors.Wrap(pricestypes.ErrInvalidInput, "Pair cannot be empty").Error(),
 		},
 		"Bad state: Mismatch between params and prices": {
 			genesisJson: `{"market_params": [{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1}]}`,
@@ -155,7 +153,7 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 		"Bad state: Invalid price": {
 			genesisJson: `{"market_params":[{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1}],` +
 				`"market_prices": [{"exponent":1,"price": "0"}]}`,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				pricestypes.ErrInvalidInput,
 				"market param 0 exponent 0 does not match market price 0 exponent 1",
 			).Error(),

@@ -1,6 +1,7 @@
 package process_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -260,9 +261,10 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
 
 			// Run.
-			resp := handler(ctx, req)
+			resp, err := handler(ctx, &req)
 
 			// Validate.
+			require.NoError(t, err)
 			require.Equal(t, tc.expectedResponse, resp)
 			require.Equal(
 				t,

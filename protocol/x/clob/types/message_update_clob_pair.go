@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,7 +18,7 @@ func (msg *MsgUpdateClobPair) ValidateBasic() error {
 	// TODO(CORE-504): Implement message validation, copy from MsgCreateClobPair.
 
 	if !IsSupportedClobPairStatus(msg.ClobPair.Status) {
-		return sdkerrors.Wrapf(
+		return moderrors.Wrapf(
 			ErrInvalidMsgUpdateClobPair,
 			"Cannot set status for ClobPair with id %d to unsupported ClobPair status %s",
 			msg.ClobPair.Id,

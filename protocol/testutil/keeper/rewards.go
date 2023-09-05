@@ -1,12 +1,11 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -24,11 +23,11 @@ func createRewardsKeeper(
 	bankKeeper bankkeeper.Keeper,
 	feeTiersKeeper *feetierskeeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 ) (*rewardskeeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	transientStoreKey := sdk.NewTransientStoreKey(types.TransientStoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
+	transientStoreKey := storetypes.NewTransientStoreKey(types.TransientStoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(transientStoreKey, storetypes.StoreTypeTransient, db)

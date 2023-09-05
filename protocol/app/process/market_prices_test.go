@@ -1,10 +1,10 @@
 package process_test
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"errors"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
@@ -96,7 +96,7 @@ func TestUpdateMarketPricesTx_Validate(t *testing.T) {
 		"Error: Stateful + Deterministic validation fails": {
 			txBytes:     invalidStatefulMsgTxBytes,
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				types.ErrInvalidMarketPriceUpdateDeterministic,
 				"market param price (99) does not exist",
 			),
@@ -104,12 +104,12 @@ func TestUpdateMarketPricesTx_Validate(t *testing.T) {
 		"Error: Stateful + NonDeterministic validation fails": {
 			txBytes: validMsgTxBytes, // Msg is valid, but there's no corresponding index price.
 			// Skip index price updates, so the validation fails.
-			expectedErr: sdkerrors.Wrapf(types.ErrIndexPriceNotAvailable, "index price for market (0) is not available"),
+			expectedErr: moderrors.Wrapf(types.ErrIndexPriceNotAvailable, "index price for market (0) is not available"),
 		},
 		"Error: ValidateBasic fails": {
 			txBytes:     invalidStatelessMsgTxBytes,
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				process.ErrMsgValidateBasic,
 				"price cannot be 0 for market id (0): Market price update is invalid: stateless.",
 			),

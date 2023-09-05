@@ -1,460 +1,458 @@
 package types
 
-// DONTCOVER
+import moderrors "cosmossdk.io/errors"
 
-import (
-	sdkerrors "cosmossdk.io/errors"
-)
+// DONTCOVER
 
 // x/clob module sentinel errors
 // TODO(CLOB-553) Clean up sentinel errors not in use.
 var (
-	ErrMemClobOrderDoesNotExist = sdkerrors.Register(
+	ErrMemClobOrderDoesNotExist = moderrors.Register(
 		ModuleName,
 		2,
 		"Order does not exist in memclob",
 	)
-	ErrInvalidOrderSide = sdkerrors.Register(
+	ErrInvalidOrderSide = moderrors.Register(
 		ModuleName,
 		3,
 		"Invalid order side",
 	)
-	ErrInvalidOrderQuantums     = sdkerrors.Register(ModuleName, 4, "Invalid order quantums")
-	ErrInvalidOrderGoodTilBlock = sdkerrors.Register(ModuleName, 5, "Invalid order goodTilBlock")
-	ErrInvalidOrderSubticks     = sdkerrors.Register(ModuleName, 6, "Invalid order subticks")
-	ErrOrderIsCanceled          = sdkerrors.Register(
+	ErrInvalidOrderQuantums     = moderrors.Register(ModuleName, 4, "Invalid order quantums")
+	ErrInvalidOrderGoodTilBlock = moderrors.Register(ModuleName, 5, "Invalid order goodTilBlock")
+	ErrInvalidOrderSubticks     = moderrors.Register(ModuleName, 6, "Invalid order subticks")
+	ErrOrderIsCanceled          = moderrors.Register(
 		ModuleName,
 		7,
 		"Attempt to place an order that is already canceled",
 	)
-	ErrInvalidClob = sdkerrors.Register(
+	ErrInvalidClob = moderrors.Register(
 		ModuleName,
 		8,
 		"ClobPair ID does not reference a valid CLOB",
 	)
-	ErrMemClobCancelAlreadyExists = sdkerrors.Register(
+	ErrMemClobCancelAlreadyExists = moderrors.Register(
 		ModuleName,
 		9,
 		"A cancel already exists in the memclob for this order with a greater than or equal GoodTilBlock",
 	)
-	ErrHeightExceedsGoodTilBlock = sdkerrors.Register(
+	ErrHeightExceedsGoodTilBlock = moderrors.Register(
 		ModuleName,
 		10,
 		"The next block height is greater than the GoodTilBlock of the message",
 	)
-	ErrGoodTilBlockExceedsShortBlockWindow = sdkerrors.Register(
+	ErrGoodTilBlockExceedsShortBlockWindow = moderrors.Register(
 		ModuleName,
 		11,
 		"The GoodTilBlock of the message is further than ShortBlockWindow blocks into the future",
 	)
-	ErrInvalidPlaceOrder = sdkerrors.Register(
+	ErrInvalidPlaceOrder = moderrors.Register(
 		ModuleName,
 		12,
 		"MsgPlaceOrder is invalid",
 	)
-	ErrInvalidMsgProposedMatchOrders = sdkerrors.Register(
+	ErrInvalidMsgProposedMatchOrders = moderrors.Register(
 		ModuleName,
 		13,
 		"MsgProposedMatchOrders is invalid",
 	)
-	ErrStateFilledAmountNoChange = sdkerrors.Register(
+	ErrStateFilledAmountNoChange = moderrors.Register(
 		ModuleName,
 		14,
 		"State filled amount cannot be unchanged",
 	)
-	ErrStateFilledAmountDecreasing = sdkerrors.Register(
+	ErrStateFilledAmountDecreasing = moderrors.Register(
 		ModuleName,
 		15,
 		"State filled amount cannot decrease",
 	)
-	ErrInvalidPruneStateFilledAmount = sdkerrors.Register(
+	ErrInvalidPruneStateFilledAmount = moderrors.Register(
 		ModuleName,
 		16,
 		"Cannot prune state fill amount that does not exist",
 	)
-	ErrOrderWouldExceedMaxOpenOrdersPerClobAndSide = sdkerrors.Register(
+	ErrOrderWouldExceedMaxOpenOrdersPerClobAndSide = moderrors.Register(
 		ModuleName,
 		17,
 		"Subaccount cannot open more than 20 orders on a given CLOB and side",
 	)
-	ErrFillAmountNotDivisibleByStepSize = sdkerrors.Register(
+	ErrFillAmountNotDivisibleByStepSize = moderrors.Register(
 		ModuleName,
 		18,
 		"`FillAmount` is not divisible by `StepBaseQuantums` of the specified `ClobPairId`",
 	)
-	ErrNoClobPairForPerpetual = sdkerrors.Register(
+	ErrNoClobPairForPerpetual = moderrors.Register(
 		ModuleName,
 		19,
 		"The provided perpetual ID does not have any associated CLOB pairs",
 	)
-	ErrInvalidReplacement = sdkerrors.Register(
+	ErrInvalidReplacement = moderrors.Register(
 		ModuleName,
 		20,
 		"An order with the same `OrderId` already exists for this CLOB with a greater-than-or-equal `GoodTilBlock` "+
 			"or Order Hash",
 	)
-	ErrClobPairAndPerpetualDoNotMatch = sdkerrors.Register(
+	ErrClobPairAndPerpetualDoNotMatch = moderrors.Register(
 		ModuleName,
 		21,
 		"Clob pair and perpetual ids do not match",
 	)
-	ErrMatchedOrderNegativeFee = sdkerrors.Register(
+	ErrMatchedOrderNegativeFee = moderrors.Register(
 		ModuleName,
 		22,
 		"Matched order has negative fee",
 	)
-	ErrSubaccountFeeTransferFailed = sdkerrors.Register(
+	ErrSubaccountFeeTransferFailed = moderrors.Register(
 		ModuleName,
 		23,
 		"Subaccounts updated for a matched order, but fee transfer to fee-collector failed",
 	)
-	ErrOrderFullyFilled = sdkerrors.Register(
+	ErrOrderFullyFilled = moderrors.Register(
 		ModuleName,
 		24,
 		"Order is fully filled",
 	)
-	ErrPremiumWithNonPerpetualClobPair = sdkerrors.Register(
+	ErrPremiumWithNonPerpetualClobPair = moderrors.Register(
 		ModuleName,
 		25,
 		"Attempting to get price premium with a non-perpetual CLOB pair",
 	)
-	ErrZeroIndexPriceForPremiumCalculation = sdkerrors.Register(
+	ErrZeroIndexPriceForPremiumCalculation = moderrors.Register(
 		ModuleName,
 		26,
 		"Index price is zero when calculating price premium",
 	)
-	ErrInvalidClobPairParameter = sdkerrors.Register(
+	ErrInvalidClobPairParameter = moderrors.Register(
 		ModuleName,
 		27,
 		"Invalid ClobPair parameter",
 	)
-	ErrZeroPriceForOracle = sdkerrors.Register(
+	ErrZeroPriceForOracle = moderrors.Register(
 		ModuleName,
 		28,
 		"Oracle price must be > 0.",
 	)
-	ErrInvalidStatefulOrderCancellation = sdkerrors.Register(
+	ErrInvalidStatefulOrderCancellation = moderrors.Register(
 		ModuleName,
 		29,
 		"Invalid stateful order cancellation",
 	)
-	ErrOrderReprocessed = sdkerrors.Register(
+	ErrOrderReprocessed = moderrors.Register(
 		ModuleName,
 		30,
 		"An order with the same `OrderId` and `OrderHash` has already been processed for this CLOB",
 	)
-	ErrMissingMidPrice = sdkerrors.Register(
+	ErrMissingMidPrice = moderrors.Register(
 		ModuleName,
 		31,
 		"Missing mid price for ClobPair",
 	)
-	ErrStatefulOrderCancellationAlreadyExists = sdkerrors.Register(
+	ErrStatefulOrderCancellationAlreadyExists = moderrors.Register(
 		ModuleName,
 		32,
 		"Existing stateful order cancellation has higher-or-equal priority than the new one",
 	)
-	ErrClobPairAlreadyExists = sdkerrors.Register(
+	ErrClobPairAlreadyExists = moderrors.Register(
 		ModuleName,
 		33,
 		"ClobPair with id already exists",
 	)
-	ErrOrderConflictsWithClobPairStatus = sdkerrors.Register(
+	ErrOrderConflictsWithClobPairStatus = moderrors.Register(
 		ModuleName,
 		34,
 		"Order conflicts with ClobPair status",
 	)
-	ErrInvalidClobPairStatusTransition = sdkerrors.Register(
+	ErrInvalidClobPairStatusTransition = moderrors.Register(
 		ModuleName,
 		35,
 		"Invalid ClobPair status transition",
 	)
-	ErrOperationConflictsWithClobPairStatus = sdkerrors.Register(
+	ErrOperationConflictsWithClobPairStatus = moderrors.Register(
 		ModuleName,
 		36,
 		"Operation conflicts with ClobPair status",
 	)
-	ErrPerpetualDoesNotExist = sdkerrors.Register(
+	ErrPerpetualDoesNotExist = moderrors.Register(
 		ModuleName,
 		37,
 		"Perpetual does not exist in state",
 	)
-	ErrInvalidMsgUpdateClobPair = sdkerrors.Register(
+	ErrInvalidMsgUpdateClobPair = moderrors.Register(
 		ModuleName,
 		38,
 		"MsgUpdateClobPair is invalid",
 	)
-	ErrInvalidClobPairUpdate = sdkerrors.Register(
+	ErrInvalidClobPairUpdate = moderrors.Register(
 		ModuleName,
 		39,
 		"ClobPair update is invalid",
 	)
 
 	// Liquidations errors.
-	ErrInvalidLiquidationsConfig = sdkerrors.Register(
+	ErrInvalidLiquidationsConfig = moderrors.Register(
 		ModuleName,
 		1000,
 		"Proposed LiquidationsConfig is invalid",
 	)
-	ErrNoPerpetualPositionsToLiquidate = sdkerrors.Register(
+	ErrNoPerpetualPositionsToLiquidate = moderrors.Register(
 		ModuleName,
 		1001,
 		"Subaccount has no perpetual positions to liquidate",
 	)
-	ErrSubaccountNotLiquidatable = sdkerrors.Register(
+	ErrSubaccountNotLiquidatable = moderrors.Register(
 		ModuleName,
 		1002,
 		"Subaccount is not liquidatable",
 	)
-	ErrNoOpenPositionForPerpetual = sdkerrors.Register(
+	ErrNoOpenPositionForPerpetual = moderrors.Register(
 		ModuleName,
 		1003,
 		"Subaccount does not have an open position for perpetual",
 	)
-	ErrInvalidLiquidationOrderTotalSize = sdkerrors.Register(
+	ErrInvalidLiquidationOrderTotalSize = moderrors.Register(
 		ModuleName,
 		1004,
 		"Liquidation order has invalid size",
 	)
-	ErrInvalidLiquidationOrderSide = sdkerrors.Register(
+	ErrInvalidLiquidationOrderSide = moderrors.Register(
 		ModuleName,
 		1005,
 		"Liquidation order is on the wrong side",
 	)
-	ErrTotalFillAmountExceedsOrderSize = sdkerrors.Register(
+	ErrTotalFillAmountExceedsOrderSize = moderrors.Register(
 		ModuleName,
 		1006,
 		"Total fills amount exceeds size of liquidation order",
 	)
-	ErrLiquidationContainsNoFills = sdkerrors.Register(
+	ErrLiquidationContainsNoFills = moderrors.Register(
 		ModuleName,
 		1007,
 		"Liquidation order does not contain any fills",
 	)
-	ErrSubaccountHasLiquidatedPerpetual = sdkerrors.Register(
+	ErrSubaccountHasLiquidatedPerpetual = moderrors.Register(
 		ModuleName,
 		1008,
 		"Subaccount has previously liquidated this perpetual in the current block",
 	)
-	ErrLiquidationOrderSizeSmallerThanMin = sdkerrors.Register(
+	ErrLiquidationOrderSizeSmallerThanMin = moderrors.Register(
 		ModuleName,
 		1009,
 		"Liquidation order has size smaller than min position notional specified in the liquidation config",
 	)
-	ErrLiquidationOrderSizeGreaterThanMax = sdkerrors.Register(
+	ErrLiquidationOrderSizeGreaterThanMax = moderrors.Register(
 		ModuleName,
 		1010,
 		"Liquidation order has size greater than max position notional specified in the liquidation config",
 	)
-	ErrLiquidationExceedsSubaccountMaxNotionalLiquidated = sdkerrors.Register(
+	ErrLiquidationExceedsSubaccountMaxNotionalLiquidated = moderrors.Register(
 		ModuleName,
 		1011,
 		"Liquidation exceeds the maximum notional amount that a single subaccount can have liquidated per block",
 	)
-	ErrLiquidationExceedsSubaccountMaxInsuranceLost = sdkerrors.Register(
+	ErrLiquidationExceedsSubaccountMaxInsuranceLost = moderrors.Register(
 		ModuleName,
 		1012,
 		"Liquidation exceeds the maximum insurance fund payout amount for a given subaccount per block",
 	)
-	ErrInsuranceFundHasInsufficientFunds = sdkerrors.Register(
+	ErrInsuranceFundHasInsufficientFunds = moderrors.Register(
 		ModuleName,
 		1013,
 		"Insurance fund does not have sufficient funds to cover liquidation losses",
 	)
-	ErrInvalidPerpetualPositionSizeDelta = sdkerrors.Register(
+	ErrInvalidPerpetualPositionSizeDelta = moderrors.Register(
 		ModuleName,
 		1014,
 		"Invalid perpetual position size delta",
 	)
-	ErrInvalidQuantumsForInsuranceFundDeltaCalculation = sdkerrors.Register(
+	ErrInvalidQuantumsForInsuranceFundDeltaCalculation = moderrors.Register(
 		ModuleName,
 		1015,
 		"Invalid delta base and/or quote quantums for insurance fund delta calculation",
 	)
-	ErrEmptyDeleveragingFills = sdkerrors.Register(
+	ErrEmptyDeleveragingFills = moderrors.Register(
 		ModuleName,
 		1016,
 		"Deleveraging fills length must be greater than 0",
 	)
-	ErrDeleveragingAgainstSelf = sdkerrors.Register(
+	ErrDeleveragingAgainstSelf = moderrors.Register(
 		ModuleName,
 		1017,
 		"Cannot deleverage subaccount against itself",
 	)
-	ErrDuplicateDeleveragingFillSubaccounts = sdkerrors.Register(
+	ErrDuplicateDeleveragingFillSubaccounts = moderrors.Register(
 		ModuleName,
 		1018,
 		"Deleveraging match cannot have fills with same id",
 	)
-	ErrZeroDeleveragingFillAmount = sdkerrors.Register(
+	ErrZeroDeleveragingFillAmount = moderrors.Register(
 		ModuleName,
 		1019,
 		"Deleveraging match cannot have fills with zero amount",
 	)
-	ErrPositionCannotBeFullyOffset = sdkerrors.Register(
+	ErrPositionCannotBeFullyOffset = moderrors.Register(
 		ModuleName,
 		1020,
 		"Position cannot be fully offset",
 	)
 
 	// Advanced order type errors.
-	ErrFokOrderCouldNotBeFullyFilled = sdkerrors.Register(
+	ErrFokOrderCouldNotBeFullyFilled = moderrors.Register(
 		ModuleName,
 		2000,
 		"FillOrKill order could not be fully filled",
 	)
-	ErrReduceOnlyWouldIncreasePositionSize = sdkerrors.Register(
+	ErrReduceOnlyWouldIncreasePositionSize = moderrors.Register(
 		ModuleName,
 		2001,
 		"Reduce-only orders cannot increase the position size",
 	)
-	ErrReduceOnlyWouldChangePositionSide = sdkerrors.Register(
+	ErrReduceOnlyWouldChangePositionSide = moderrors.Register(
 		ModuleName,
 		2002,
 		"Reduce-only orders cannot change the position side",
 	)
-	ErrPostOnlyWouldCrossMakerOrder = sdkerrors.Register(
+	ErrPostOnlyWouldCrossMakerOrder = moderrors.Register(
 		ModuleName,
 		2003,
 		"Post-only order would cross one or more maker orders",
 	)
 
 	// Stateful order errors.
-	ErrInvalidOrderFlag = sdkerrors.Register(
+	ErrInvalidOrderFlag = moderrors.Register(
 		ModuleName,
 		3000,
 		"Invalid order flags",
 	)
-	ErrInvalidStatefulOrderGoodTilBlockTime = sdkerrors.Register(
+	ErrInvalidStatefulOrderGoodTilBlockTime = moderrors.Register(
 		ModuleName,
 		3001,
 		"Invalid order goodTilBlockTime",
 	)
-	ErrStatefulOrdersCannotRequireImmediateExecution = sdkerrors.Register(
+	ErrStatefulOrdersCannotRequireImmediateExecution = moderrors.Register(
 		ModuleName,
 		3002,
 		"Stateful orders cannot require immediate execution",
 	)
-	ErrTimeExceedsGoodTilBlockTime = sdkerrors.Register(
+	ErrTimeExceedsGoodTilBlockTime = moderrors.Register(
 		ModuleName,
 		3003,
 		"The block time is greater than the GoodTilBlockTime of the message",
 	)
-	ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow = sdkerrors.Register(
+	ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow = moderrors.Register(
 		ModuleName,
 		3004,
 		"The GoodTilBlockTime of the message is further than StatefulOrderTimeWindow into the future",
 	)
-	ErrStatefulOrderAlreadyExists = sdkerrors.Register(
+	ErrStatefulOrderAlreadyExists = moderrors.Register(
 		ModuleName,
 		3005,
 		"Existing stateful order has higher-or-equal priority than the new one",
 	)
-	ErrStatefulOrderDoesNotExist = sdkerrors.Register(
+	ErrStatefulOrderDoesNotExist = moderrors.Register(
 		ModuleName,
 		3006,
 		"Stateful order does not exist",
 	)
-	ErrStatefulOrderCollateralizationCheckFailed = sdkerrors.Register(
+	ErrStatefulOrderCollateralizationCheckFailed = moderrors.Register(
 		ModuleName,
 		3007,
 		"Stateful order collateralization check failed",
 	)
-	ErrStatefulOrderPreviouslyCancelled = sdkerrors.Register(
+	ErrStatefulOrderPreviouslyCancelled = moderrors.Register(
 		ModuleName,
 		3008,
 		"Stateful order was previously cancelled and therefore cannot be placed",
 	)
-	ErrStatefulOrderPreviouslyRemoved = sdkerrors.Register(
+	ErrStatefulOrderPreviouslyRemoved = moderrors.Register(
 		ModuleName,
 		3009,
 		"Stateful order was previously removed and therefore cannot be placed",
 	)
 
 	// Operations Queue validation errors
-	ErrInvalidMsgProposedOperations = sdkerrors.Register(
+	ErrInvalidMsgProposedOperations = moderrors.Register(
 		ModuleName,
 		4000,
 		"MsgProposedOperations is invalid",
 	)
-	ErrInvalidMatchOrder = sdkerrors.Register(
+	ErrInvalidMatchOrder = moderrors.Register(
 		ModuleName,
 		4001,
 		"Match Order is invalid",
 	)
-	ErrOrderPlacementNotInOperationsQueue = sdkerrors.Register(
+	ErrOrderPlacementNotInOperationsQueue = moderrors.Register(
 		ModuleName,
 		4002,
 		"Order was not previously placed in operations queue",
 	)
-	ErrFillAmountIsZero = sdkerrors.Register(
+	ErrFillAmountIsZero = moderrors.Register(
 		ModuleName,
 		4003,
 		"Fill amount cannot be zero",
 	)
-	ErrInvalidDeleveragingFill = sdkerrors.Register(
+	ErrInvalidDeleveragingFill = moderrors.Register(
 		ModuleName,
 		4004,
 		"Deleveraging fill is invalid",
 	)
-	ErrInvalidDeleveragedSubaccount = sdkerrors.Register(
+	ErrInvalidDeleveragedSubaccount = moderrors.Register(
 		ModuleName,
 		4005,
 		"Deleveraged subaccount in proposed deleveraged operation failed deleveraging validation",
 	)
 
 	// Block rate limit errors.
-	ErrInvalidBlockRateLimitConfig = sdkerrors.Register(
+	ErrInvalidBlockRateLimitConfig = moderrors.Register(
 		ModuleName,
 		5000,
 		"Proposed BlockRateLimitConfig is invalid",
 	)
-	ErrBlockRateLimitExceeded = sdkerrors.Register(
+	ErrBlockRateLimitExceeded = moderrors.Register(
 		ModuleName,
 		5001,
 		"Block rate limit exceeded",
 	)
 
 	// Conditional order errors.
-	ErrInvalidConditionType = sdkerrors.Register(
+	ErrInvalidConditionType = moderrors.Register(
 		ModuleName,
 		6000,
 		"Conditional type is invalid",
 	)
-	ErrInvalidConditionalOrderTriggerSubticks = sdkerrors.Register(
+	ErrInvalidConditionalOrderTriggerSubticks = moderrors.Register(
 		ModuleName,
 		6001,
 		"Conditional order trigger subticks is invalid",
 	)
 
 	// Errors for unimplemented and disabled functionality.
-	ErrAssetOrdersNotImplemented = sdkerrors.Register(
+	ErrAssetOrdersNotImplemented = moderrors.Register(
 		ModuleName,
 		9000,
 		"Asset orders are not implemented",
 	)
-	ErrAssetUpdateNotImplemented = sdkerrors.Register(
+	ErrAssetUpdateNotImplemented = moderrors.Register(
 		ModuleName,
 		9001,
 		"Updates for assets other than USDC are not implemented",
 	)
-	ErrNotImplemented = sdkerrors.Register(
+	ErrNotImplemented = moderrors.Register(
 		ModuleName,
 		9002,
 		"This function is not implemented",
 	)
-	ErrReduceOnlyDisabled = sdkerrors.Register(
+	ErrReduceOnlyDisabled = moderrors.Register(
 		ModuleName,
 		9003,
 		"Reduce-only is currently disabled",
 	)
 
 	// Equity tier limit errors.
-	ErrInvalidEquityTierLimitConfig = sdkerrors.Register(
+	ErrInvalidEquityTierLimitConfig = moderrors.Register(
 		ModuleName,
 		10000,
 		"Proposed EquityTierLimitConfig is invalid",
 	)
-	ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit = sdkerrors.Register(
+	ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit = moderrors.Register(
 		ModuleName,
 		10001,
 		"Subaccount cannot open more orders due to equity tier limit.",
