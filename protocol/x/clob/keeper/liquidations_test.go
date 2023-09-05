@@ -1717,6 +1717,73 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				),
 			},
 		},
+		`Partially matched deleveraging is skipped -
+			negative TNC and insurance fund balance less than MaxInsuranceFundQuantumsForDeleveraging`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			insuranceFundBalance: 750_000, // $0.75
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC.
+			},
+
+			liquidationConfig: constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			placedMatchableOrders: []types.MatchableOrder{
+				// First order at $50,498, Carl pays $0.25 to the insurance fund.
+				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
+				// Carl's bankruptcy price to close 0.75 BTC short is $50,499, and closing at $50,500
+				// would require $0.75 from the insurance fund. The insurance fund balance can
+				// cover this loss so the liquidation succeeds.
+				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
+			},
+			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
+
+			expectedFilledSize:  satypes.BaseQuantums(100_000_000),
+			expectedOrderStatus: types.Success,
+			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
+				constants.Carl_Num0: {
+					PerpetualsLiquidated:  []uint32{0},
+					NotionalLiquidated:    50_499_500_000,
+					QuantumsInsuranceLost: 750_000,
+				},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_500_000),
+						},
+					},
+				},
+			},
+			expectedOperationsQueue: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11.GetOrderId(),
+							FillAmount:   25_000_000,
+						},
+						{
+							MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.GetOrderId(),
+							FillAmount:   75_000_000,
+						},
+					},
+				),
+			},
+		},
 		`Can place a liquidation order that is partially-filled and subaccount becomes non-liquidatable -
 			deleveraging is skipped`: {
 			subaccounts: []satypes.Subaccount{
