@@ -174,7 +174,7 @@ describe('helpers', () => {
     );
 
     expect(equity).toEqual('25000');
-    expect(freeCollateral).toEqual('32500');
+    expect(freeCollateral).toEqual('17500');
   });
 
   it('filterPositionsByLatestEventIdPerPerpetual', async () => {
@@ -270,10 +270,10 @@ describe('helpers', () => {
     ['base', 100, 1_000_000, 50_000, 30_000],
     ['greater than base', 400, 4_000_000, 400_000, 240_000],
     ['max', 400_000, 4_000_000_000, 4_000_000_000, 4_000_000_000],
-    ['less than base SHORT', -20, -200_000, -10_000, -6_000],
-    ['base SHORT', -100, -1_000_000, -50_000, -30_000],
-    ['greater than base SHORT', -400, -4_000_000, -400_000, -240_000],
-    ['max SHORT', -400_000, -4_000_000_000, -4_000_000_000, -4_000_000_000],
+    ['less than base SHORT', -20, -200_000, 10_000, 6_000],
+    ['base SHORT', -100, -1_000_000, 50_000, 30_000],
+    ['greater than base SHORT', -400, -4_000_000, 400_000, 240_000],
+    ['max SHORT', -400_000, -4_000_000_000, 4_000_000_000, 4_000_000_000],
   ])('getSignedNotionalAndRisk: %s', async (
     _name: string,
     size: number,

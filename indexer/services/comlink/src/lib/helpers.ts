@@ -237,11 +237,13 @@ export function getSignedNotionalAndRisk({
     liquidityTier,
     positionNotional: signedNotional.abs(),
   });
+  // Used to calculate risk, as risk of a position should always be positive
+  const absNotional: Big = signedNotional.abs();
   return {
     signedNotional,
     individualRisk: {
-      initial: signedNotional.times(adjustedInitialMarginFraction),
-      maintenance: signedNotional.times(adjustedMaintenanceMarginFraction),
+      initial: absNotional.times(adjustedInitialMarginFraction),
+      maintenance: absNotional.times(adjustedMaintenanceMarginFraction),
     },
   };
 }
