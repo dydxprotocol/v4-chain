@@ -57,7 +57,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations := make([]simtypes.WeightedOperation, 0)
 
 	var weightMsgProposedOperations int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgProposedOperations, &weightMsgProposedOperations, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgProposedOperations, &weightMsgProposedOperations, nil,
 		func(_ *rand.Rand) {
 			weightMsgProposedOperations = defaultWeightMsgProposedOperations
 		},
@@ -68,7 +68,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgPlaceOrder int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgPlaceOrder, &weightMsgPlaceOrder, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgPlaceOrder, &weightMsgPlaceOrder, nil,
 		func(_ *rand.Rand) {
 			weightMsgPlaceOrder = defaultWeightMsgPlaceOrder
 		},
@@ -79,7 +79,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgCancelOrder int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCancelOrder, &weightMsgCancelOrder, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgCancelOrder, &weightMsgCancelOrder, nil,
 		func(_ *rand.Rand) {
 			weightMsgCancelOrder = defaultWeightMsgCancelOrder
 		},

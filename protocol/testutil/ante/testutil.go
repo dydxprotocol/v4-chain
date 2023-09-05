@@ -2,6 +2,8 @@ package ante
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -68,14 +70,15 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.AccountKeeper = keeper.NewAccountKeeper(
 		suite.EncCfg.Codec,
-		key,
+		runtime.NewKVStoreService(key),
 		types.ProtoBaseAccount,
 		maccPerms,
+		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		types.NewModuleAddress("gov").String(),
 	)
 	suite.AccountKeeper.GetModuleAccount(suite.Ctx, types.FeeCollectorName)
-	err := suite.AccountKeeper.SetParams(suite.Ctx, types.DefaultParams())
+	err := suite.AccountKeeper.Params.Set(suite.Ctx, types.DefaultParams())
 	require.NoError(t, err)
 
 	// We're using TestMsg encoding in some tests, so register it here.

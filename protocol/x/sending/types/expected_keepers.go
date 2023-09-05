@@ -6,7 +6,6 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -62,9 +61,9 @@ type SubaccountsKeeper interface {
 // AccountKeeper defines the expected account keeper used for simulations.
 type AccountKeeper interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
-	SetAccount(ctx sdk.Context, acc types.AccountI)
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
+	SetAccount(ctx context.Context, acc sdk.AccountI)
+	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 // BankKeeper defines the expected bank keeper used for simulations.

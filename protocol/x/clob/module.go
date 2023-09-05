@@ -189,7 +189,7 @@ func (am AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
 
 // Commit executes all ABCI Commit logic respective to the clob module.
 func (am AppModule) Commit(ctx sdk.Context) {
-	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyCommit)
+	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyPrecommiter)
 	PrepareCheckState(
 		ctx,
 		*am.keeper,

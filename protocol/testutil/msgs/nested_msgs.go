@@ -66,30 +66,30 @@ var (
 
 	// Invalid MsgSubmitProposals
 	MsgSubmitProposalWithEmptyInner, _ = gov.NewMsgSubmitProposal(
-		[]sdk.Msg{}, nil, testProposer, testMetadata, testTitle, testSummary)
+		[]sdk.Msg{}, nil, testProposer, testMetadata, testTitle, testSummary, false)
 	MsgSubmitProposalWithEmptyInnerTxBytes []byte
 
 	MsgSubmitProposalWithUnsupportedInner, _ = gov.NewMsgSubmitProposal(
-		[]sdk.Msg{GovBetaMsgSubmitProposal}, nil, testProposer, testMetadata, testTitle, testSummary)
+		[]sdk.Msg{GovBetaMsgSubmitProposal}, nil, testProposer, testMetadata, testTitle, testSummary, false)
 	MsgSubmitProposalWithUnsupportedInnerTxBytes []byte
 
 	MsgSubmitProposalWithAppInjectedInner, _ = gov.NewMsgSubmitProposal(
-		[]sdk.Msg{&prices.MsgUpdateMarketPrices{}}, nil, testProposer, testMetadata, testTitle, testSummary)
+		[]sdk.Msg{&prices.MsgUpdateMarketPrices{}}, nil, testProposer, testMetadata, testTitle, testSummary, false)
 	MsgSubmitProposalWithAppInjectedInnerTxBytes []byte
 
 	MsgSubmitProposalWithDoubleNestedInner, _ = gov.NewMsgSubmitProposal(
-		[]sdk.Msg{MsgSubmitProposalWithUpgradeAndCancel}, nil, testProposer, testMetadata, testTitle, testSummary)
+		[]sdk.Msg{MsgSubmitProposalWithUpgradeAndCancel}, nil, testProposer, testMetadata, testTitle, testSummary, false)
 	MsgSubmitProposalWithDoubleNestedInnerTxBytes []byte
 
 	// Valid MsgSubmitProposals
 	MsgSubmitProposalWithUpgrade, _ = gov.NewMsgSubmitProposal(
-		[]sdk.Msg{MsgSoftwareUpgrade}, nil, testProposer, testMetadata, testTitle, testSummary)
+		[]sdk.Msg{MsgSoftwareUpgrade}, nil, testProposer, testMetadata, testTitle, testSummary, false)
 	MsgSubmitProposalWithUpgradeTxBytes []byte
 
 	MsgSubmitProposalWithUpgradeAndCancel, _ = gov.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			MsgSoftwareUpgrade,
 			MsgCancelUpgrade,
-		}, nil, testProposer, testMetadata, testTitle, testSummary)
+		}, nil, testProposer, testMetadata, testTitle, testSummary, false)
 	MsgSubmitProposalWithUpgradeAndCancelTxBytes []byte
 )

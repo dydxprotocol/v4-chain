@@ -151,7 +151,7 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected bank keeper used for simulations.
 type BankKeeper interface {
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 }
 

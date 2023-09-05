@@ -45,7 +45,7 @@ func WeightedOperations(
 
 	// MsgUpdateMarketPrices
 	var weightMsgUpdateMarketPrices int
-	appParams.GetOrGenerate(jsonCdc, opWeightMsgUpdateMarketPrices, &weightMsgUpdateMarketPrices, nil,
+	appParams.GetOrGenerate(opWeightMsgUpdateMarketPrices, &weightMsgUpdateMarketPrices, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateMarketPrices = defaultWeightMsgUpdateMarketPrices
 		},
