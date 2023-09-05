@@ -184,12 +184,12 @@ func (k Keeper) getSettledUpdates(
 	requireUniqueSubaccount bool,
 ) (
 	settledUpdates []settledUpdate,
-	subaccoundIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
+	subaccountIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
 	var idToSettledSubaccount = make(map[types.SubaccountId]types.Subaccount)
 	settledUpdates = make([]settledUpdate, len(updates))
-	subaccoundIdToFundingPayments = make(map[types.SubaccountId]map[uint32]dtypes.SerializableInt)
+	subaccountIdToFundingPayments = make(map[types.SubaccountId]map[uint32]dtypes.SerializableInt)
 
 	// Iterate over all updates and query the relevant `Subaccounts`.
 	for i, u := range updates {
@@ -210,7 +210,7 @@ func (k Keeper) getSettledUpdates(
 			}
 
 			idToSettledSubaccount[u.SubaccountId] = settledSubaccount
-			subaccoundIdToFundingPayments[u.SubaccountId] = fundingPayments
+			subaccountIdToFundingPayments[u.SubaccountId] = fundingPayments
 		}
 
 		settledUpdate := settledUpdate{
@@ -222,7 +222,7 @@ func (k Keeper) getSettledUpdates(
 		settledUpdates[i] = settledUpdate
 	}
 
-	return settledUpdates, subaccoundIdToFundingPayments, nil
+	return settledUpdates, subaccountIdToFundingPayments, nil
 }
 
 // UpdateSubaccounts validates and applies all `updates` to the relevant subaccounts as long as this is a
@@ -249,7 +249,7 @@ func (k Keeper) UpdateSubaccounts(
 		metrics.Latency,
 	)
 
-	settledUpdates, subaccoundIdToFundingPayments, err := k.getSettledUpdates(ctx, updates, true)
+	settledUpdates, subaccountIdToFundingPayments, err := k.getSettledUpdates(ctx, updates, true)
 	if err != nil {
 		return false, nil, err
 	}
@@ -281,13 +281,13 @@ func (k Keeper) UpdateSubaccounts(
 		return success, successPerUpdate, err
 	}
 
-	// Apply all updates, including a subaccount update event in the Indexer
-	// block message per update.
+	// Apply all updates, including a subaccount update event in the Indexer block message
+	// per update and emit a cometbft event for each settled funding payment.
 	for _, u := range settledUpdates {
 		k.SetSubaccount(ctx, u.SettledSubaccount)
 		// Below access is safe because for all updated subaccounts' IDs, this map
 		// is populated as getSettledSubaccount() is called in getSettledUpdates().
-		fundingPayments := subaccoundIdToFundingPayments[*u.SettledSubaccount.Id]
+		fundingPayments := subaccountIdToFundingPayments[*u.SettledSubaccount.Id]
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeSubaccountUpdate,
@@ -303,6 +303,19 @@ func (k Keeper) UpdateSubaccounts(
 				),
 			),
 		)
+
+		// Emit an event indicating a funding payment was paid / received for each settled funding
+		// payment. Note that `fundingPaid` is positive if the subaccount paid funding,
+		// and negative if the subaccount received funding.
+		for perpetualId, fundingPaid := range fundingPayments {
+			ctx.EventManager().EmitEvent(
+				types.NewCreateSettledFundingEvent(
+					*u.SettledSubaccount.Id,
+					perpetualId,
+					fundingPaid.BigInt(),
+				),
+			)
+		}
 	}
 
 	return success, successPerUpdate, err
