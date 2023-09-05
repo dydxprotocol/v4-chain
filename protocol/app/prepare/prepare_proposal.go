@@ -59,7 +59,7 @@ func PrepareProposalHandler(
 	pricesKeeper PreparePricesKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
 ) sdk.PrepareProposalHandler {
-	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		defer telemetry.ModuleMeasureSince(
 			ModuleName,
 			time.Now(),
@@ -68,11 +68,11 @@ func PrepareProposalHandler(
 			metrics.Latency,
 		)
 
-		txs, err := NewPrepareProposalTxs(req)
+		txs, err := NewPrepareProposalTxs(*req)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("NewPrepareProposalTxs error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PrepareProposalTxs)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 
 		// Gather "FixedSize" group messages.
@@ -80,33 +80,33 @@ func PrepareProposalHandler(
 		if pricesTxResp.Err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetUpdateMarketPricesTx error: %v", pricesTxResp.Err))
 			recordErrorMetricsWithLabel(metrics.PricesTx)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 		err = txs.SetUpdateMarketPricesTx(pricesTxResp.Tx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetUpdateMarketPricesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PricesTx)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 
 		fundingTxResp := GetAddPremiumVotesTx(ctx, txConfig, perpetualKeeper)
 		if fundingTxResp.Err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetAddPremiumVotesTx error: %v", fundingTxResp.Err))
 			recordErrorMetricsWithLabel(metrics.FundingTx)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 		err = txs.SetAddPremiumVotesTx(fundingTxResp.Tx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetAddPremiumVotesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.FundingTx)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 
 		acknowledgeBridgesTxResp := GetAcknowledgeBridgesTx(ctx, txConfig, bridgeKeeper)
 		if acknowledgeBridgesTxResp.Err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetAcknowledgeBridgesTx error: %v", acknowledgeBridgesTxResp.Err))
 			recordErrorMetricsWithLabel(metrics.AcknowledgeBridgesTx)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 		// Set AcknowledgeBridgesTx whether there are bridge events or not to ensure
 		// consistent ordering of txs received by ProcessProposal.
@@ -114,7 +114,7 @@ func PrepareProposalHandler(
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetAcknowledgeBridgesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.AcknowledgeBridgesTx)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 
 		// Gather "Other" group messages.
@@ -127,7 +127,7 @@ func PrepareProposalHandler(
 			if err != nil {
 				ctx.Logger().Error(fmt.Sprintf("AddOtherTxs error: %v", err))
 				recordErrorMetricsWithLabel(metrics.OtherTxs)
-				return EmptyResponse
+				return &EmptyResponse, nil
 			}
 		}
 
@@ -137,13 +137,13 @@ func PrepareProposalHandler(
 		if operationsTxResp.Err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetProposedOperationsTx error: %v", operationsTxResp.Err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 		err = txs.SetProposedOperationsTx(operationsTxResp.Tx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetProposedOperationsTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 
 		// Try to pack in more "Other" txs.
@@ -155,7 +155,7 @@ func PrepareProposalHandler(
 				if err != nil {
 					ctx.Logger().Error(fmt.Sprintf("AddOtherTxs (additional) error: %v", err))
 					recordErrorMetricsWithLabel(metrics.OtherTxs)
-					return EmptyResponse
+					return &EmptyResponse, nil
 				}
 			}
 		}
@@ -164,7 +164,7 @@ func PrepareProposalHandler(
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetTxsInOrder error: %v", err))
 			recordErrorMetricsWithLabel(metrics.GetTxsInOrder)
-			return EmptyResponse
+			return &EmptyResponse, nil
 		}
 
 		// Record a success metric.
@@ -180,7 +180,7 @@ func PrepareProposalHandler(
 			},
 		)
 
-		return abci.ResponsePrepareProposal{Txs: txsToReturn}
+		return &abci.ResponsePrepareProposal{Txs: txsToReturn}, nil
 	}
 }
 
