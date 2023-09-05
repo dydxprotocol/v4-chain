@@ -19,7 +19,6 @@ require (
 	github.com/cosmos/ibc-go/v7 v7.0.0-20230824092829-0be805050816
 	github.com/go-playground/validator/v10 v10.14.0
 	github.com/gofrs/flock v0.8.1
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/golangci/golangci-lint v1.52.0
@@ -180,6 +179,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect

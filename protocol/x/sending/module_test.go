@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -254,14 +253,12 @@ func TestAppModule_BeginBlock(t *testing.T) {
 	am := createAppModule(t)
 
 	var ctx sdk.Context
-	var req abci.RequestBeginBlock
-	am.BeginBlock(ctx, req) // should not panic
+	am.BeginBlock(ctx) // should not panic
 }
 
 func TestAppModule_EndBlock(t *testing.T) {
 	am, _, ctx := createAppModuleWithKeeper(t)
 
-	var req abci.RequestEndBlock
-	result := am.EndBlock(ctx, req)
+	result := am.EndBlock(ctx)
 	require.Equal(t, 0, len(result))
 }
