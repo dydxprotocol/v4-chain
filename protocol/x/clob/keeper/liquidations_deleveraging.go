@@ -352,9 +352,9 @@ func (k Keeper) ProcessDeleveraging(
 		return err
 	}
 
-	liquidatedSubaccountQuoteBalanceDelta := bankruptcyPriceQuoteQuantums
+	deleveragedSubaccountQuoteBalanceDelta := bankruptcyPriceQuoteQuantums
 	offsettingSubaccountQuoteBalanceDelta := new(big.Int).Neg(bankruptcyPriceQuoteQuantums)
-	liquidatedSubaccountPerpetualQuantumsDelta := deltaQuantums
+	deleveragedSubaccountPerpetualQuantumsDelta := deltaQuantums
 	offsettingSubaccountPerpetualQuantumsDelta := new(big.Int).Neg(deltaQuantums)
 
 	updates := []satypes.Update{
@@ -363,13 +363,13 @@ func (k Keeper) ProcessDeleveraging(
 			AssetUpdates: []satypes.AssetUpdate{
 				{
 					AssetId:          lib.UsdcAssetId,
-					BigQuantumsDelta: liquidatedSubaccountQuoteBalanceDelta,
+					BigQuantumsDelta: deleveragedSubaccountQuoteBalanceDelta,
 				},
 			},
 			PerpetualUpdates: []satypes.PerpetualUpdate{
 				{
 					PerpetualId:      perpetualId,
-					BigQuantumsDelta: liquidatedSubaccountPerpetualQuantumsDelta,
+					BigQuantumsDelta: deleveragedSubaccountPerpetualQuantumsDelta,
 				},
 			},
 			SubaccountId: liquidatedSubaccountId,
@@ -403,20 +403,20 @@ func (k Keeper) ProcessDeleveraging(
 		return updateErr
 	}
 
-	// Deleveraging was successful, therefore emit an event indicating a deleveraging match occurred.
+	// Deleveraging was successful, therefore emit a cometbft event indicating a deleveraging match occurred.
 	ctx.EventManager().EmitEvent(
 		types.NewCreateMatchEvent(
 			liquidatedSubaccountId,
 			offsettingSubaccountId,
 			big.NewInt(0),
 			big.NewInt(0),
-			liquidatedSubaccountQuoteBalanceDelta,
+			deleveragedSubaccountQuoteBalanceDelta,
 			offsettingSubaccountQuoteBalanceDelta,
-			liquidatedSubaccountPerpetualQuantumsDelta,
+			deleveragedSubaccountPerpetualQuantumsDelta,
 			offsettingSubaccountPerpetualQuantumsDelta,
 			big.NewInt(0),
-			false,
-			true,
+			false, // IsLiquidation is false since this isn't a liquidation match.
+			true,  // IsDeleverage is true since this is a deleveraging match.
 			perpetualId,
 		),
 	)
