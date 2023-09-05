@@ -453,7 +453,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	expected := `{"clob_pairs":[{"id":0,"perpetual_clob_metadata":{"perpetual_id":0},`
-	expected += `"min_order_base_quantums":"0","step_base_quantums":"5","subticks_per_tick":100,`
+	expected += `"step_base_quantums":"5","subticks_per_tick":100,`
 	expected += `"quantum_conversion_exponent":0,"status":"STATUS_ACTIVE"}],`
 	expected += `"liquidations_config":{"max_insurance_fund_quantums_for_deleveraging":"0",`
 	expected += `"max_liquidation_fee_ppm":5000,"position_block_limits":{"min_position_notional_liquidated":"1000",`
