@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"context"
+	moderrors "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 
-	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -27,7 +27,7 @@ func (k msgServer) SetVestEntry(
 	msg *types.MsgSetVestEntry,
 ) (*types.MsgSetVestEntryResponse, error) {
 	if !k.HasAuthority(msg.Authority) {
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority %s",
 			msg.Authority,
@@ -47,7 +47,7 @@ func (k msgServer) DeleteVestEntry(
 	msg *types.MsgDeleteVestEntry,
 ) (*types.MsgDeleteVestEntryResponse, error) {
 	if !k.HasAuthority(msg.Authority) {
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority %s",
 			msg.Authority,

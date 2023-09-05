@@ -311,7 +311,7 @@ func (tApp *TestApp) InitChain() sdk.Context {
 		panic(errors.New("Cannot initialize chain that has been initialized already. Missing a Reset()?"))
 	}
 	tApp.initChainIfNeeded()
-	return tApp.App.NewContext(true, tApp.header)
+	return tApp.App.NewContext(true)
 }
 
 func (tApp *TestApp) initChainIfNeeded() {
@@ -371,7 +371,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		panic(fmt.Errorf("Expected time (%v) >= current block time (%v).", options.BlockTime, tApp.header.Time))
 	}
 	if int64(block) == tApp.GetBlockHeight() {
-		return tApp.App.NewContext(true, tApp.header)
+		return tApp.App.NewContext(true)
 	}
 
 	// First advance to the prior block using the current block time. This ensures that we only update the time on
@@ -410,12 +410,12 @@ func (tApp *TestApp) AdvanceToBlock(
 
 			if options.ValidateRespPrepare != nil {
 				haltChain := options.ValidateRespPrepare(
-					tApp.App.NewContext(true, tApp.header),
+					tApp.App.NewContext(true),
 					prepareResponse,
 				)
 				tApp.halted = haltChain
 				if tApp.halted {
-					return tApp.App.NewContext(true, tApp.header)
+					return tApp.App.NewContext(true)
 				}
 			}
 
@@ -435,12 +435,12 @@ func (tApp *TestApp) AdvanceToBlock(
 
 			if options.ValidateRespProcess != nil {
 				haltChain := options.ValidateRespProcess(
-					tApp.App.NewContext(true, tApp.header),
+					tApp.App.NewContext(true),
 					processResponse,
 				)
 				tApp.halted = haltChain
 				if tApp.halted {
-					return tApp.App.NewContext(true, tApp.header)
+					return tApp.App.NewContext(true)
 				}
 			}
 
@@ -487,13 +487,13 @@ func (tApp *TestApp) AdvanceToBlock(
 			// transactions to succeed.
 			if options.ValidateDeliverTxs != nil {
 				haltChain := options.ValidateDeliverTxs(
-					tApp.App.NewContext(false, tApp.header),
+					tApp.App.NewContext(false),
 					deliverTxRequest,
 					deliverTxResponse,
 				)
 				tApp.halted = haltChain
 				if tApp.halted {
-					return tApp.App.NewContext(true, tApp.header)
+					return tApp.App.NewContext(true)
 				}
 			} else {
 				if tApp.builder.t == nil {
@@ -532,7 +532,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		tApp.passingCheckTxs = passingRecheckTxs
 	}
 
-	return tApp.App.NewContext(true, tApp.header)
+	return tApp.App.NewContext(true)
 }
 
 // Reset resets the chain such that it can be initialized and executed again.

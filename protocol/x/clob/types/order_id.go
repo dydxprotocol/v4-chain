@@ -1,13 +1,12 @@
 package types
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"fmt"
 	"sort"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	gometrics "github.com/hashicorp/go-metrics"
-
-	sdkerrors "cosmossdk.io/errors"
 )
 
 const (
@@ -92,7 +91,7 @@ func (o *OrderId) Validate() error {
 		return err
 	}
 	if !o.IsShortTermOrder() && !o.IsStatefulOrder() {
-		return sdkerrors.Wrapf(ErrInvalidOrderFlag, "orderId: %v", o)
+		return moderrors.Wrapf(ErrInvalidOrderFlag, "orderId: %v", o)
 	}
 	return nil
 }

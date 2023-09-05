@@ -1896,7 +1896,7 @@ func TestGetStatePosition_PanicsOnInvalidClob(t *testing.T) {
 // 	// Run the test and verify expectations.
 // 	require.PanicsWithError(
 // 		t,
-// 		sdkerrors.Wrap(
+// 		moderrors.Wrap(
 // 			types.ErrAssetOrdersNotImplemented,
 // 			"GetStatePosition: Reduce-only orders for assets not implemented",
 // 		).Error(),

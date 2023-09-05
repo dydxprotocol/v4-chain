@@ -1,10 +1,11 @@
 package ante
 
 import (
-	sdkerrors "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	moderrors "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -77,7 +78,7 @@ func (cd ClobDecorator) AnteHandle(
 		}
 		ctx.Logger().Debug("Received new order cancelation",
 			"tx",
-			log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+			cmtlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 			"msg",
 			msg,
 			"err",
@@ -93,9 +94,9 @@ func (cd ClobDecorator) AnteHandle(
 			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg)
 			ctx.Logger().Debug("Received new stateful order",
 				"tx",
-				log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				cmtlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				"orderHash",
-				log.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+				cmtlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
 				"msg",
 				msg,
 				"err",
@@ -121,9 +122,9 @@ func (cd ClobDecorator) AnteHandle(
 			)
 			ctx.Logger().Debug("Received new short term order",
 				"tx",
-				log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				cmtlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				"orderHash",
-				log.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+				cmtlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
 				"msg",
 				msg,
 				"status",
@@ -170,7 +171,7 @@ func IsSingleClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 
 	numMsgs := len(msgs)
 	if numMsgs > 1 {
-		return false, sdkerrors.Wrap(
+		return false, moderrors.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)
@@ -214,7 +215,7 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 
 	numMsgs := len(msgs)
 	if numMsgs > 1 {
-		return false, sdkerrors.Wrap(
+		return false, moderrors.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)

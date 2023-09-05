@@ -1,13 +1,13 @@
 package keeper_test
 
 import (
+	moderrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"fmt"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"math/big"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -68,7 +68,7 @@ func TestCreateAsset_MarketNotFound(t *testing.T) {
 		uint32(999),
 		int32(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, "999").Error())
+	require.EqualError(t, err, moderrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, "999").Error())
 
 	// Does not create an asset.
 	numAssets := keeper.GetNumAssets(ctx)
@@ -88,7 +88,7 @@ func TestCreateAsset_MarketIdInvalid(t *testing.T) {
 		uint32(1),
 		int32(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrInvalidMarketId, "Market ID: 1").Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrInvalidMarketId, "Market ID: 1").Error())
 
 	// Does not create an asset.
 	numAssets := keeper.GetNumAssets(ctx)
@@ -121,7 +121,7 @@ func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
 		0,           // marketId
 		10,          // atomicResolution
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrAssetDenomAlreadyExists, "btc-denom").Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrAssetDenomAlreadyExists, "btc-denom").Error())
 }
 
 func TestModifyAsset_Success(t *testing.T) {
@@ -177,7 +177,7 @@ func TestModifyAsset_NotFound(t *testing.T) {
 		true,
 		uint32(1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrAssetDoesNotExist, "0").Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrAssetDoesNotExist, "0").Error())
 	require.ErrorIs(t, err, types.ErrAssetDoesNotExist)
 
 	// Actually create the asset
@@ -205,7 +205,7 @@ func TestModifyAsset_MarketNotFound(t *testing.T) {
 		true,
 		uint32(999),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, "999").Error())
+	require.EqualError(t, err, moderrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, "999").Error())
 }
 
 func TestGetDenomById_Success(t *testing.T) {
@@ -233,7 +233,7 @@ func TestGetDenomById_NotFound(t *testing.T) {
 		ctx,
 		0,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrAssetDoesNotExist, "0").Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrAssetDoesNotExist, "0").Error())
 }
 
 func TestGetIdByDenom_Success(t *testing.T) {
@@ -263,7 +263,7 @@ func TestGetIdByDenom_NotFound(t *testing.T) {
 	_, err = keeper.GetIdByDenom(ctx,
 		nonExistingDenom,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrNoAssetWithDenom, nonExistingDenom).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrNoAssetWithDenom, nonExistingDenom).Error())
 }
 
 func TestGetAsset_Success(t *testing.T) {
@@ -288,7 +288,7 @@ func TestGetAsset_NotFound(t *testing.T) {
 	_, err := keeper.GetAsset(ctx,
 		uint32(0),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrAssetDoesNotExist, "0").Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrAssetDoesNotExist, "0").Error())
 }
 
 func TestGetAllAssets_Success(t *testing.T) {
@@ -384,7 +384,7 @@ func TestModifyLongInterest_CannotNegative(t *testing.T) {
 		false,
 		uint64(12),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrNegativeLongInterest, "0").Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrNegativeLongInterest, "0").Error())
 	getAsset, err = keeper.GetAsset(ctx, assetId)
 	require.NoError(t, err)
 	require.Equal(t, asset, getAsset)

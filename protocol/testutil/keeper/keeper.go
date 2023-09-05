@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +18,7 @@ type GenesisInitializer interface {
 }
 
 type callback func(
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	registry codectypes.InterfaceRegistry,
 	cdc *codec.ProtoCodec,
 	stateStore storetypes.CommitMultiStore,
@@ -28,7 +28,7 @@ type callback func(
 func initKeepers(t testing.TB, cb callback) sdk.Context {
 	ctx, stateStore, db := sdktest.NewSdkContextWithMultistore()
 	// Mount transient store for indexer events, shared by all keepers that emit indexer events.
-	transientStoreKey := sdk.NewTransientStoreKey(indexer_manager.IndexerEventsKey)
+	transientStoreKey := storetypes.NewTransientStoreKey(indexer_manager.IndexerEventsKey)
 	stateStore.MountStoreWithDB(transientStoreKey, storetypes.StoreTypeTransient, db)
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)

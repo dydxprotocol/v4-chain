@@ -3,7 +3,9 @@ package ante
 import (
 	"fmt"
 
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -62,7 +64,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 ) (newCtx sdk.Context, err error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return ctx, moderrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
@@ -76,7 +78,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signerAddrs) {
-		err := sdkerrors.Wrapf(
+		err := moderrors.Wrapf(
 			sdkerrors.ErrUnauthorized,
 			"invalid number of signer;  expected: %d, got %d",
 			len(signerAddrs),
@@ -98,7 +100,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 		// retrieve pubkey
 		pubKey := acc.GetPubKey()
 		if !simulate && pubKey == nil {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+			return ctx, moderrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
 		// Check account sequence number.
@@ -117,7 +119,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 				1,
 				labels,
 			)
-			return ctx, sdkerrors.Wrapf(
+			return ctx, moderrors.Wrapf(
 				sdkerrors.ErrWrongSequence,
 				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 			)
@@ -161,7 +163,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 						chainID,
 					)
 				}
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+				return ctx, moderrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
 			}
 		}
 	}

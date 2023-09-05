@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"errors"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
@@ -330,7 +330,7 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
 				types.NewMarketPriceUpdate(99, 11), // Market with id 99 does not exist.
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: moderrors.Wrapf(
 				types.ErrInvalidMarketPriceUpdateDeterministic,
 				"market param price (99) does not exist",
 			),
@@ -343,7 +343,7 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 					constants.FiveBillion+(constants.FiveBillion*50/uint64(lib.OneMillion))-1,
 				),
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: moderrors.Wrapf(
 				types.ErrInvalidMarketPriceUpdateDeterministic,
 				"update price (5000249999) for market (0) does not meet min price change requirement"+
 					" (50 ppm) based on the current market price (5000000000)",

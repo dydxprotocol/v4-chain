@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	"fmt"
 )
 
@@ -20,20 +20,20 @@ func (gs GenesisState) Validate() error {
 
 	for i, msg := range gs.DelayedMessages {
 		if err := msg.Validate(); err != nil {
-			return sdkerrors.Wrap(
+			return moderrors.Wrap(
 				ErrInvalidGenesisState,
 				fmt.Sprintf("invalid delayed message at index %v with id %v: %v", i, msg.Id, err),
 			)
 		}
 
 		if msg.Id >= gs.NumMessages {
-			return sdkerrors.Wrap(
+			return moderrors.Wrap(
 				ErrInvalidGenesisState,
 				"delayed message id exceeds total number of messages",
 			)
 		}
 		if _, ok := ids[msg.Id]; ok {
-			return sdkerrors.Wrap(
+			return moderrors.Wrap(
 				ErrInvalidGenesisState,
 				"duplicate delayed message id",
 			)

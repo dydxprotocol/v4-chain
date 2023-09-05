@@ -1,11 +1,11 @@
 package keeper_test
 
 import (
+	moderrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"testing"
 	"time"
 
-	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -1218,7 +1218,7 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: moderrors.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
@@ -1273,7 +1273,7 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: moderrors.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,

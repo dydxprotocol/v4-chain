@@ -1,9 +1,8 @@
 package types
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"math/big"
-
-	sdkerrors "cosmossdk.io/errors"
 )
 
 type UpdateResult uint
@@ -36,7 +35,7 @@ func GetErrorFromUpdateResults(
 	for index, result := range successPerUpdate {
 		if !result.IsSuccess() {
 			subaccountId := updates[index].SubaccountId
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				ErrFailedToUpdateSubaccounts,
 				"Subaccount with id %v failed with UpdateResult: %v",
 				subaccountId,

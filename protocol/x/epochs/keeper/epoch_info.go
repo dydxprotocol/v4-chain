@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	moderrors "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"fmt"
 
-	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +33,7 @@ func (k Keeper) setEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) {
 func (k Keeper) MaybeStartNextEpoch(ctx sdk.Context, id types.EpochInfoName) (nextEpochStarted bool, err error) {
 	epoch, found := k.GetEpochInfo(ctx, id)
 	if !found {
-		return false, sdkerrors.Wrapf(types.ErrEpochInfoNotFound, "EpochInfo Id not found (%s)", id)
+		return false, moderrors.Wrapf(types.ErrEpochInfoNotFound, "EpochInfo Id not found (%s)", id)
 	}
 
 	blockTime := uint32(ctx.BlockTime().Unix())
@@ -112,7 +112,7 @@ func (k Keeper) CreateEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) erro
 
 	// Check if identifier already exists
 	if _, found := k.GetEpochInfo(ctx, epochInfo.GetEpochInfoName()); found {
-		return sdkerrors.Wrapf(types.ErrEpochInfoAlreadyExists, "epochInfo.Name already exists (%s)", epochInfo.Name)
+		return moderrors.Wrapf(types.ErrEpochInfoAlreadyExists, "epochInfo.Name already exists (%s)", epochInfo.Name)
 	}
 
 	k.setEpochInfo(ctx, epochInfo)
@@ -170,7 +170,7 @@ func (k Keeper) NumBlocksSinceEpochStart(
 ) {
 	epoch, found := k.GetEpochInfo(ctx, id)
 	if !found {
-		return 0, sdkerrors.Wrapf(types.ErrEpochInfoNotFound, "EpochInfo Id not found (%s)", id)
+		return 0, moderrors.Wrapf(types.ErrEpochInfoNotFound, "EpochInfo Id not found (%s)", id)
 	}
 
 	return lib.MustConvertIntegerToUint32(ctx.BlockHeight() - int64(epoch.CurrentEpochStartBlock)), nil
@@ -203,7 +203,7 @@ func (k Keeper) mustGetEpochInfo(
 		epochInfoName,
 	)
 	if !found {
-		panic(sdkerrors.Wrapf(
+		panic(moderrors.Wrapf(
 			types.ErrEpochInfoNotFound,
 			"name: %s",
 			epochInfoName,

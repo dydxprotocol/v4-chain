@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -24,7 +24,7 @@ func (k Keeper) GetPricePremiumForPerpetual(
 
 	clobPair, found := k.GetClobPair(ctx, clobPairId)
 	if !found {
-		return 0, sdkerrors.Wrapf(
+		return 0, moderrors.Wrapf(
 			types.ErrInvalidClob,
 			"GetPricePremiumForPerpetual: did not find clob pair with clobPairId = %d",
 			clobPairId,

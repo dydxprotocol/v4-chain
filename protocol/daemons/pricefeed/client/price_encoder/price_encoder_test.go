@@ -34,7 +34,7 @@ func genNewPriceEncoder(t *testing.T) *PriceEncoderImpl {
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
 		etmp,
-		log.TestingLogger(),
+		log.NewTestLogger(t),
 		bCh,
 	)
 	require.NoError(t, err)
@@ -249,7 +249,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 				tc.mutableExchangeConfig,
 				tc.mutableMarketConfigs,
 				&emtp,
-				log.TestingLogger(),
+				log.NewTestLogger(t),
 				nil,
 			)
 			require.NoError(t, err)

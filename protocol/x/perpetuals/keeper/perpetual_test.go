@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -20,7 +21,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
@@ -168,7 +168,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
+			expectedError:     moderrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Positive default funding magnitude exceeds maximum": {
 			id:                0,
@@ -177,7 +177,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: int32(lib.OneMillion + 1),
 			liquidityTier:     0,
-			expectedError: sdkerrors.Wrap(
+			expectedError: moderrors.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(int32(lib.OneMillion+1)),
 			),
@@ -189,7 +189,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0 - int32(lib.OneMillion) - 1,
 			liquidityTier:     0,
-			expectedError: sdkerrors.Wrap(
+			expectedError: moderrors.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(0-int32(lib.OneMillion)-1),
 			),
@@ -201,7 +201,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: math.MinInt32,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, fmt.Sprint(math.MinInt32)),
+			expectedError:     moderrors.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, fmt.Sprint(math.MinInt32)),
 		},
 		"Ticker is an empty string": {
 			id:                0,
@@ -254,7 +254,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			marketId:          0,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(999)),
+			expectedError:     moderrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(999)),
 		},
 		"Price doesn't exist": {
 			id:                0,
@@ -262,7 +262,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			marketId:          999,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
+			expectedError:     moderrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Ticker is an empty string": {
 			id:                0,
@@ -378,7 +378,7 @@ func TestGetPerpetual_NotFound(t *testing.T) {
 		ctx,
 		nonExistentPerpetualId,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -768,7 +768,7 @@ func TestGetMarginRequirements_PerpetualNotFound(t *testing.T) {
 		nonExistentPerpetualId,
 		big.NewInt(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -803,7 +803,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 		perpetual.Params.MarketId,
 		perpetual.Params.Id,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
 }
 
@@ -836,7 +836,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	require.EqualError(
 		t,
 		err,
-		sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, fmt.Sprint(nonExistentLiquidityTier)).Error(),
+		moderrors.Wrap(types.ErrLiquidityTierDoesNotExist, fmt.Sprint(nonExistentLiquidityTier)).Error(),
 	)
 	require.ErrorIs(t, err, types.ErrLiquidityTierDoesNotExist)
 }
@@ -969,7 +969,7 @@ func TestGetNetNotional_PerpetualNotFound(t *testing.T) {
 		nonExistentPerpetualId,
 		big.NewInt(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -1003,7 +1003,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 		perpetual.Params.MarketId,
 		perpetual.Params.Id,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
 }
 
@@ -1134,7 +1134,7 @@ func TestGetNotionalInBaseQuantums_PerpetualNotFound(t *testing.T) {
 		nonExistentPerpetualId,
 		big.NewInt(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -1168,7 +1168,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 		perpetual.Params.MarketId,
 		perpetual.Params.Id,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
 }
 
@@ -1300,7 +1300,7 @@ func TestGetNetCollateral_PerpetualNotFound(t *testing.T) {
 		nonExistentPerpetualId,
 		big.NewInt(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -1334,7 +1334,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 		perpetual.Params.MarketId,
 		perpetual.Params.Id,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
 }
 
@@ -1467,7 +1467,7 @@ func TestGetSettlement_PerpetualNotFound(t *testing.T) {
 		big.NewInt(-100),       // quantum
 		big.NewInt(0),          // index
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -1508,7 +1508,7 @@ func TestModifyFundingIndex_PerpetualDoesNotExist(t *testing.T) {
 		big.NewInt(1),
 	)
 
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, moderrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -2108,7 +2108,7 @@ func TestMaybeProcessNewFundingTickEpoch_Failure(t *testing.T) {
 					Duration:               3600,
 				},
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: moderrors.Wrapf(
 				epochstypes.ErrEpochInfoNotFound,
 				"name: %s",
 				epochstypes.FundingSampleEpochInfoName,
@@ -2560,7 +2560,7 @@ func TestAddPremiums_NonExistingPerpetuals(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 		require.Error(t,
 			err,
-			sdkerrors.Wrapf(
+			moderrors.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"perpetual ID = %d",
 				1000,
@@ -2913,7 +2913,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: 500_000,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
+			expectedError:          moderrors.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
 			id:                     1,
@@ -2922,7 +2922,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
+			expectedError:          moderrors.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Base Position Notional is zero": {
 			id:                     1,
@@ -2931,7 +2931,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          moderrors.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
 		},
 		"Impact Notional is zero": {
 			id:                     1,
@@ -2940,7 +2940,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
-			expectedError:          sdkerrors.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          moderrors.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
 		},
 	}
 
@@ -3051,7 +3051,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: 500_000,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
+			expectedError:          moderrors.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
 			id:                     1,
@@ -3060,7 +3060,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
+			expectedError:          moderrors.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Base Position Notional is zero": {
 			id:                     1,
@@ -3069,7 +3069,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          moderrors.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
 		},
 		"Impact Notional is zero": {
 			id:                     1,
@@ -3078,7 +3078,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
-			expectedError:          sdkerrors.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          moderrors.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
 		},
 	}
 

@@ -1,18 +1,16 @@
 package types
 
+import moderrors "cosmossdk.io/errors"
+
 // DONTCOVER
 
-import (
-	sdkerrors "cosmossdk.io/errors"
-)
-
 var (
-	ErrNonpositiveDuration = sdkerrors.Register(
+	ErrNonpositiveDuration = moderrors.Register(
 		ModuleName,
 		400,
 		"Durations must be positive",
 	)
-	ErrUnorderedDurations = sdkerrors.Register(
+	ErrUnorderedDurations = moderrors.Register(
 		ModuleName,
 		401,
 		"Durations must be in ascending order by length",

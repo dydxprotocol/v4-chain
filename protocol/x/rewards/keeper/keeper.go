@@ -194,7 +194,7 @@ func (k Keeper) getAllRewardSharesAndTotalWeight(ctx sdk.Context) (
 	totalWeight *big.Int,
 ) {
 	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), types.KeyPrefix(types.RewardShareKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	totalWeight = big.NewInt(0)
 	for ; iterator.Valid(); iterator.Next() {

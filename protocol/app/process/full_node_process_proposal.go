@@ -21,7 +21,7 @@ func FullNodeProcessProposalHandler(
 	currentBlockHeight := int64(0)
 	currentConsensusRound := int64(0)
 
-	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		// Always return `abci.ResponseProcessProposal_ACCEPT`
 		response := abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 
@@ -34,9 +34,9 @@ func FullNodeProcessProposalHandler(
 		}
 		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
 
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeepr, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), *req, bridgeKeeepr, pricesKeeper)
 		if err != nil {
-			return response
+			return &response, nil
 		}
 
 		// Only validate the `ProposedOperationsTx` since full nodes don't have
@@ -44,7 +44,7 @@ func FullNodeProcessProposalHandler(
 		// would fail due to missing index prices.
 		err = txs.ProposedOperationsTx.Validate()
 		if err != nil {
-			return response
+			return &response, nil
 		}
 
 		// Measure MEV metrics if enabled.
@@ -52,6 +52,6 @@ func FullNodeProcessProposalHandler(
 			clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
 		}
 
-		return response
+		return &response, nil
 	}
 }

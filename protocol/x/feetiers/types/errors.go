@@ -1,28 +1,26 @@
 package types
 
+import moderrors "cosmossdk.io/errors"
+
 // DONTCOVER
 
-import (
-	sdkerrors "cosmossdk.io/errors"
-)
-
 var (
-	ErrNoTiersExist = sdkerrors.Register(
+	ErrNoTiersExist = moderrors.Register(
 		ModuleName,
 		400,
 		"Must have at least one fee tier",
 	)
-	ErrInvalidFirstTierRequirements = sdkerrors.Register(
+	ErrInvalidFirstTierRequirements = moderrors.Register(
 		ModuleName,
 		401,
 		"First fee tier must not have volume requirements",
 	)
-	ErrTiersOutOfOrder = sdkerrors.Register(
+	ErrTiersOutOfOrder = moderrors.Register(
 		ModuleName,
 		402,
 		"Fee tiers must have ascending requirements",
 	)
-	ErrInvalidFee = sdkerrors.Register(
+	ErrInvalidFee = moderrors.Register(
 		ModuleName,
 		403,
 		"No maker and taker fee combination should result in a net rebate",

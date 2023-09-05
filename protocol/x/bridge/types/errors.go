@@ -1,50 +1,48 @@
 package types
 
-// DONTCOVER
+import moderrors "cosmossdk.io/errors"
 
-import (
-	sdkerrors "cosmossdk.io/errors"
-)
+// DONTCOVER
 
 // x/bridge module sentinel errors
 var (
-	ErrBridgeIdNotRecognized = sdkerrors.Register(
+	ErrBridgeIdNotRecognized = moderrors.Register(
 		ModuleName,
 		1,
 		"Bridge event ID is not recognized",
 	)
-	ErrBridgeIdNotNextToAcknowledge = sdkerrors.Register(
+	ErrBridgeIdNotNextToAcknowledge = moderrors.Register(
 		ModuleName,
 		2,
 		"Bridge event ID is not the ID to be next acknowledged",
 	)
-	ErrBridgeIdsNotConsecutive = sdkerrors.Register(
+	ErrBridgeIdsNotConsecutive = moderrors.Register(
 		ModuleName,
 		3,
 		"Bridge event IDs are not consecutive",
 	)
-	ErrInvalidAuthority = sdkerrors.Register(
+	ErrInvalidAuthority = moderrors.Register(
 		ModuleName,
 		4,
 		"Authority is invalid",
 	)
-	ErrBridgeEventNotFound = sdkerrors.Register(
+	ErrBridgeEventNotFound = moderrors.Register(
 		ModuleName,
 		5,
 		"Bridge event not found",
 	)
-	ErrBridgeEventContentMismatch = sdkerrors.Register(
+	ErrBridgeEventContentMismatch = moderrors.Register(
 		ModuleName,
 		6,
 		"Bridge event content mismatch",
 	)
 
-	ErrNegativeDuration = sdkerrors.Register(
+	ErrNegativeDuration = moderrors.Register(
 		ModuleName,
 		400,
 		"Duration is negative",
 	)
-	ErrRateOutOfBounds = sdkerrors.Register(
+	ErrRateOutOfBounds = moderrors.Register(
 		ModuleName,
 		401,
 		"Rate is out of bounds",

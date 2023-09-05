@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"context"
+	moderrors "cosmossdk.io/errors"
 
-	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -27,7 +27,7 @@ func (k msgServer) UpdatePerpetualFeeParams(
 	msg *types.MsgUpdatePerpetualFeeParams,
 ) (*types.MsgUpdatePerpetualFeeParamsResponse, error) {
 	if !k.HasAuthority(msg.Authority) {
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority %s",
 			msg.Authority,

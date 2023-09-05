@@ -4,7 +4,7 @@ import (
 	"math"
 	"math/big"
 
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -201,7 +201,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// Validate that the provided deltaQuantums is valid with respect to
 	// the current position size.
 	if psBig.Sign()*deltaQuantums.Sign() != -1 || psBig.CmpAbs(deltaQuantums) == -1 {
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
 			"Position size delta %v is invalid for %v and perpetual %v, outstanding position size is %v",
 			deltaQuantums,
@@ -311,7 +311,7 @@ func (k Keeper) GetFillablePrice(
 	// Validate that the provided deltaQuantums is valid with respect to
 	// the current position size.
 	if psBig.Sign()*deltaQuantums.Sign() != -1 || psBig.CmpAbs(deltaQuantums) == -1 {
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
 			"Position size delta %v is invalid for %v and perpetual %v, outstanding position size is %v",
 			deltaQuantums,
@@ -406,7 +406,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 ) {
 	// Verify that fill amount is not zero.
 	if fillAmount == 0 {
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			types.ErrInvalidQuantumsForInsuranceFundDeltaCalculation,
 			"FillAmount is zero for subaccount %v and perpetual %v.",
 			subaccountId,
@@ -495,7 +495,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	if len(subaccount.PerpetualPositions) == 0 {
 		return types.ClobPair{},
 			nil,
-			sdkerrors.Wrapf(
+			moderrors.Wrapf(
 				types.ErrNoPerpetualPositionsToLiquidate,
 				"Subaccount ID: %v",
 				subaccount.Id,
@@ -589,7 +589,7 @@ func (k Keeper) GetMaxLiquidatableNotionalAndInsuranceLost(
 
 	// Make sure that the subaccount has not previously liquidated this perpetual in the same block.
 	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
-		return nil, nil, sdkerrors.Wrapf(
+		return nil, nil, moderrors.Wrapf(
 			types.ErrSubaccountHasLiquidatedPerpetual,
 			"Subaccount %v and perpetual %v have already been liquidated within the last block",
 			subaccountId,

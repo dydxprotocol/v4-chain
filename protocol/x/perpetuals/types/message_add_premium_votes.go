@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +26,7 @@ func (msg *MsgAddPremiumVotes) GetSigners() []sdk.AccAddress {
 func (msg *MsgAddPremiumVotes) ValidateBasic() error {
 	for i, sample := range msg.Votes {
 		if i > 0 && msg.Votes[i-1].PerpetualId >= sample.PerpetualId {
-			return sdkerrors.Wrap(
+			return moderrors.Wrap(
 				ErrInvalidAddPremiumVotes,
 				"premium votes must be sorted by perpetual id in ascending order and cannot contain duplicates",
 			)

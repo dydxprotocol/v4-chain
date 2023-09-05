@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"testing"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -68,7 +69,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 	indexerEventManager indexer_manager.IndexerEventManager,
 ) (ks ClobKeepersTestContext) {
 	ks.Ctx = initKeepers(t, func(
-		db *db.MemDB,
+		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -177,9 +178,9 @@ func createClobKeeper(
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
-	transientStoreKey := sdk.NewTransientStoreKey(types.TransientStoreKey)
+	transientStoreKey := storetypes.NewTransientStoreKey(types.TransientStoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)

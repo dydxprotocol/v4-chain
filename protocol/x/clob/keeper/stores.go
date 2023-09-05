@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
@@ -114,7 +115,7 @@ func (k Keeper) getStatefulOrdersTimeSliceStore(ctx sdk.Context) prefix.Store {
 
 // getTransientStore fetches a transient store used for reading and
 // updating the transient store.
-func (k Keeper) getTransientStore(ctx sdk.Context) sdk.KVStore {
+func (k Keeper) getTransientStore(ctx sdk.Context) storetypes.KVStore {
 	return ctx.KVStore(k.transientStoreKey)
 }
 

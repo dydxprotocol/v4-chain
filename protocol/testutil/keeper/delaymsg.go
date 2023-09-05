@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -31,7 +31,7 @@ func DelayMsgKeepers(
 	authorities []string,
 ) {
 	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		_ codectypes.InterfaceRegistry,
 		_ *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -84,7 +84,7 @@ func DelayMsgKeeperWithMockBridgeKeeper(
 	authorities []string,
 ) {
 	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		_ codectypes.InterfaceRegistry,
 		_ *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -124,12 +124,12 @@ func DelayMsgKeeperWithMockBridgeKeeper(
 
 func createDelayMsgKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	router *baseapp.MsgServiceRouter,
 	authorities []string,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 

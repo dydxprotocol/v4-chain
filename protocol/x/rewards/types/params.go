@@ -1,8 +1,7 @@
 package types
 
 import (
-	sdkerrors "cosmossdk.io/errors"
-
+	moderrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
@@ -22,11 +21,11 @@ func DefaultParams() Params {
 // Validate validates the set of params
 func (p Params) Validate() error {
 	if p.TreasuryAccount == "" {
-		return sdkerrors.Wrap(ErrInvalidTreasuryAccount, "treasury account cannot have empty name")
+		return moderrors.Wrap(ErrInvalidTreasuryAccount, "treasury account cannot have empty name")
 	}
 
 	if p.FeeMultiplierPpm > lib.OneMillion {
-		return sdkerrors.Wrap(ErrInvalidFeeMultiplierPpm, "FeeMultiplierPpm cannot be greater than 1_000_000 (100%)")
+		return moderrors.Wrap(ErrInvalidFeeMultiplierPpm, "FeeMultiplierPpm cannot be greater than 1_000_000 (100%)")
 	}
 
 	if err := sdk.ValidateDenom(p.Denom); err != nil {

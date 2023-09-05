@@ -1,13 +1,11 @@
 package types
 
+import moderrors "cosmossdk.io/errors"
+
 // DONTCOVER
 
-import (
-	sdkerrors "cosmossdk.io/errors"
-)
-
 var (
-	ErrNonpositiveDuration = sdkerrors.Register(
+	ErrNonpositiveDuration = moderrors.Register(
 		ModuleName,
 		400,
 		"Duration is nonpositive",

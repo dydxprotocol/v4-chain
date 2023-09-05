@@ -1,6 +1,7 @@
 package ante
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -50,10 +51,10 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.FeeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.Ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1)
-	// app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockHeight(1)
+	// app.BaseApp.NewContext(isCheckTx).WithBlockHeight(1)
 	suite.EncCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 
 	maccPerms := map[string][]string{

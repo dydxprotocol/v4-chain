@@ -1,12 +1,11 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -18,11 +17,11 @@ import (
 func createStatsKeeper(
 	stateStore storetypes.CommitMultiStore,
 	epochsKeeper *epochskeeper.Keeper,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	transientStoreKey := sdk.NewTransientStoreKey(types.TransientStoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
+	transientStoreKey := storetypes.NewTransientStoreKey(types.TransientStoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(transientStoreKey, storetypes.StoreTypeTransient, db)

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"math/big"
 	"math/rand"
 
@@ -60,7 +61,7 @@ type SubaccountsKeeper interface {
 
 // AccountKeeper defines the expected account keeper used for simulations.
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 	SetAccount(ctx sdk.Context, acc types.AccountI)
 	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
@@ -68,5 +69,5 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected bank keeper used for simulations.
 type BankKeeper interface {
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 }

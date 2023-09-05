@@ -1,9 +1,9 @@
 package keeper
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"math/big"
 
-	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -55,7 +55,7 @@ func (k Keeper) validateMatchedLiquidation(
 	// have possibly continued).
 	if k.ShouldPerformDeleveraging(ctx, insuranceFundDelta) {
 		ctx.Logger().Info("ProcessMatches: insurance fund does not have enough balance and deleveraging is required.")
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			types.ErrInsuranceFundHasInsufficientFunds,
 			"Liquidation order %v",
 			order,
@@ -135,7 +135,7 @@ func (k Keeper) ConstructTakerOrderFromMatchPerpetualLiquidation(
 ) {
 	takerClobPair, found := k.GetClobPair(ctx, types.ClobPairId(match.ClobPairId))
 	if !found {
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			types.ErrInvalidClob,
 			"CLOB pair ID %d not found in state",
 			match.ClobPairId,
@@ -144,7 +144,7 @@ func (k Keeper) ConstructTakerOrderFromMatchPerpetualLiquidation(
 
 	perpetualId, err := takerClobPair.GetPerpetualId()
 	if err != nil || perpetualId != match.PerpetualId {
-		return nil, sdkerrors.Wrapf(
+		return nil, moderrors.Wrapf(
 			types.ErrClobPairAndPerpetualDoNotMatch,
 			"Clob pair id: %v, perpetual id: %v",
 			match.ClobPairId,

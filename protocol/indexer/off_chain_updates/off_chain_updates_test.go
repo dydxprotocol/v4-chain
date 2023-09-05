@@ -1,10 +1,10 @@
 package off_chain_updates
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"fmt"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
@@ -336,31 +336,31 @@ func TestShouldSendOrderRemovalOnReplay(t *testing.T) {
 			expected:   false,
 		},
 		"Returns false for wrapped ErrOrderReprocessed": {
-			orderError: sdkerrors.Wrapf(clobtypes.ErrOrderReprocessed, "wrapped error"),
+			orderError: moderrors.Wrapf(clobtypes.ErrOrderReprocessed, "wrapped error"),
 			expected:   false,
 		},
 		"Returns false for wrapped ErrInvalidReplacement": {
-			orderError: sdkerrors.Wrapf(clobtypes.ErrInvalidReplacement, "wrapped error"),
+			orderError: moderrors.Wrapf(clobtypes.ErrInvalidReplacement, "wrapped error"),
 			expected:   false,
 		},
 		"Returns false for wrapped ErrOrderFullyFilled": {
-			orderError: sdkerrors.Wrapf(clobtypes.ErrOrderFullyFilled, "wrapped error"),
+			orderError: moderrors.Wrapf(clobtypes.ErrOrderFullyFilled, "wrapped error"),
 			expected:   false,
 		},
 		"Returns false for wrapped ErrOrderIsCanceled": {
-			orderError: sdkerrors.Wrapf(clobtypes.ErrOrderIsCanceled, "wrapped error"),
+			orderError: moderrors.Wrapf(clobtypes.ErrOrderIsCanceled, "wrapped error"),
 			expected:   false,
 		},
 		"Returns false for wrapped ErrStatefulOrderAlreadyExists": {
-			orderError: sdkerrors.Wrapf(clobtypes.ErrStatefulOrderAlreadyExists, "wrapped error"),
+			orderError: moderrors.Wrapf(clobtypes.ErrStatefulOrderAlreadyExists, "wrapped error"),
 			expected:   false,
 		},
 		"Returns false for wrapped ErrHeightExceedsGoodTilBlock": {
-			orderError: sdkerrors.Wrapf(clobtypes.ErrHeightExceedsGoodTilBlock, "wrapped error"),
+			orderError: moderrors.Wrapf(clobtypes.ErrHeightExceedsGoodTilBlock, "wrapped error"),
 			expected:   false,
 		},
 		"Returns false for wrapped ErrTimeExceedsGoodTilBlockTime": {
-			orderError: sdkerrors.Wrapf(clobtypes.ErrTimeExceedsGoodTilBlockTime, "wrapped error"),
+			orderError: moderrors.Wrapf(clobtypes.ErrTimeExceedsGoodTilBlockTime, "wrapped error"),
 			expected:   false,
 		},
 		"Returns false for other error": {

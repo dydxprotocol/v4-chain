@@ -1,10 +1,10 @@
 package memclob
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"fmt"
 	"math"
 
-	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -227,7 +227,7 @@ func (m *memclobOpenOrders) getSubaccountOrders(
 	orderbook, exists := m.orderbooksMap[clobPairId]
 	// If the CLOB doesn't exist, then `clobPairId` is invalid.
 	if !exists {
-		return openOrders, sdkerrors.Wrapf(
+		return openOrders, moderrors.Wrapf(
 			types.ErrInvalidClob,
 			"Invalid ClobPair ID: %d",
 			clobPairId,

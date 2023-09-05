@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,31 +39,31 @@ var (
 
 	testMsg = &testdata.TestMsg{Signers: []string{"meh"}}
 
-	invalidReqErrCannotBeEmpty = sdkerrors.Wrap(
+	invalidReqErrCannotBeEmpty = moderrors.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		"msgs cannot be empty",
 	)
-	invalidReqErrAppInjectedMustBeOnlyMsg = sdkerrors.Wrap(
+	invalidReqErrAppInjectedMustBeOnlyMsg = moderrors.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		"app-injected msg must be the only msg in a tx",
 	)
-	invalidReqErrInternalMsg = sdkerrors.Wrap(
+	invalidReqErrInternalMsg = moderrors.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		"internal msg cannot be submitted externally",
 	)
-	invalidReqErrNestedUnsupportedMsg = sdkerrors.Wrap(
+	invalidReqErrNestedUnsupportedMsg = moderrors.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		fmt.Errorf("Invalid nested msg: unsupported msg type").Error(),
 	)
-	invalidReqErrNestedAppInjectedMsg = sdkerrors.Wrap(
+	invalidReqErrNestedAppInjectedMsg = moderrors.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		fmt.Errorf("Invalid nested msg: app-injected msg type").Error(),
 	)
-	invalidReqErrNestedDoubleNested = sdkerrors.Wrap(
+	invalidReqErrNestedDoubleNested = moderrors.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		fmt.Errorf("Invalid nested msg: double-nested msg type").Error(),
 	)
-	invalidReqErrUnsupportedMsg = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
+	invalidReqErrUnsupportedMsg = moderrors.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
 )
 
 func TestValidateMsgType_Empty(t *testing.T) {
@@ -123,7 +125,7 @@ func TestValidateMsgType_AppInjectedMsg(t *testing.T) {
 
 			expectedErr: map[txMode]error{
 				reCheckTx: nil, // ReCheck skips the AnteHandler.
-				checkTx: sdkerrors.Wrap( // Should only be included in DeliverTx
+				checkTx: moderrors.Wrap( // Should only be included in DeliverTx
 					sdkerrors.ErrInvalidRequest,
 					"app-injected msg must only be included in DeliverTx",
 				),

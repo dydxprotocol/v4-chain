@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -8,7 +9,6 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,7 +46,7 @@ func AssetsKeepers(
 	storeKey storetypes.StoreKey,
 ) {
 	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -66,13 +66,13 @@ func AssetsKeepers(
 
 func createAssetsKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	pk *priceskeeper.Keeper,
 	transientStoreKey storetypes.StoreKey,
 	msgSenderEnabled bool,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 

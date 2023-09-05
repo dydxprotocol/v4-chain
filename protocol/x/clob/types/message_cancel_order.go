@@ -1,10 +1,10 @@
 package types
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"fmt"
 	"time"
 
-	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -61,7 +61,7 @@ func (msg *MsgCancelOrder) ValidateBasic() (err error) {
 
 	if orderId.IsStatefulOrder() {
 		if msg.GetGoodTilBlockTime() == 0 {
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				ErrInvalidStatefulOrderGoodTilBlockTime,
 				"stateful cancellation goodTilBlockTime cannot be 0, %+v",
 				orderId,
@@ -69,7 +69,7 @@ func (msg *MsgCancelOrder) ValidateBasic() (err error) {
 		}
 	} else {
 		if msg.GetGoodTilBlock() == 0 {
-			return sdkerrors.Wrapf(
+			return moderrors.Wrapf(
 				ErrInvalidOrderGoodTilBlock,
 				"cancellation goodTilBlock cannot be 0, orderId %+v",
 				orderId,

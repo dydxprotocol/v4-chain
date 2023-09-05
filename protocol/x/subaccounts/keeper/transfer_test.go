@@ -6,7 +6,9 @@ import (
 	"math/big"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
+	moderrors "cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -1054,7 +1056,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			skipSetUpUsdc:                       true,
 			subaccountModuleAccBalance:          500,
 			quantums:                            big.NewInt(500),
-			expectedErr:                         sdkerrors.Wrap(asstypes.ErrAssetDoesNotExist, lib.Uint32ToString(0)),
+			expectedErr:                         moderrors.Wrap(asstypes.ErrAssetDoesNotExist, lib.Uint32ToString(0)),
 			expectedSubaccountsModuleAccBalance: 500,
 			expectedInsuranceFundBalance:        1500,
 			panics:                              true,

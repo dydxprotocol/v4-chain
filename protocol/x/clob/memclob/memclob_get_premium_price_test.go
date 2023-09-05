@@ -1,11 +1,11 @@
 package memclob
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"math"
 	"math/big"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
@@ -590,7 +590,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:                    constants.ClobPair_Spot_Btc,
 			maxAbsPremiumVotePpm:        big.NewInt(100_000), // 10%
 			impactNotionalQuoteQuantums: big.NewInt(1000),
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: moderrors.Wrapf(
 				types.ErrPremiumWithNonPerpetualClobPair,
 				"ClobPair ID: %d",
 				constants.ClobPair_Spot_Btc.Id,

@@ -1,9 +1,9 @@
 package process_test
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -24,65 +24,65 @@ func TestDecodeOtherMsgsTx(t *testing.T) {
 	}{
 		"Error: decode fails": {
 			txBytes:                  []byte{1, 2, 3}, // invalid bytes.
-			expectedErr:              sdkerrors.Wrap(process.ErrDecodingTxBytes, "OtherMsgsTx Error"),
+			expectedErr:              moderrors.Wrap(process.ErrDecodingTxBytes, "OtherMsgsTx Error"),
 			expectedErrTypeCheckOnly: true,
 		},
 		"Error: empty bytes": {
 			txBytes:     []byte{}, // empty returns 0 msgs.
-			expectedErr: sdkerrors.Wrap(process.ErrUnexpectedNumMsgs, "OtherMsgs len cannot be zero"),
+			expectedErr: moderrors.Wrap(process.ErrUnexpectedNumMsgs, "OtherMsgs len cannot be zero"),
 		},
 		"Error: app-injected msg type is not allowed": {
 			txBytes: constants.ValidMsgUpdateMarketPricesTxBytes,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *types.MsgUpdateMarketPrices",
 			),
 		},
 		"Error: internal msg type is not allowed": {
 			txBytes: testmsgs.MsgSoftwareUpgradeTxBytes,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *types.MsgSoftwareUpgrade",
 			),
 		},
 		"Error: unsupported msg type is not allowed": {
 			txBytes: testmsgs.GovBetaMsgSubmitProposalTxBytes,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *v1beta1.MsgSubmitProposal",
 			),
 		},
 		"Error: nested msg type with unsupported inner is not allowed": {
 			txBytes: testmsgs.MsgSubmitProposalWithUnsupportedInnerTxBytes,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *v1.MsgSubmitProposal",
 			),
 		},
 		"Error: nested msg type with app-injected inner is not allowed": {
 			txBytes: testmsgs.MsgSubmitProposalWithAppInjectedInnerTxBytes,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *v1.MsgSubmitProposal",
 			),
 		},
 		"Error: nested msg type with double-nested inner is not allowed": {
 			txBytes: testmsgs.MsgSubmitProposalWithDoubleNestedInnerTxBytes,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *v1.MsgSubmitProposal",
 			),
 		},
 		"Error: place order is not allowed": {
 			txBytes: constants.Msg_PlaceOrder_TxBtyes,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				process.ErrUnexpectedMsgType,
 				"Msg type *types.MsgPlaceOrder is not allowed in OtherTxs",
 			),
 		},
 		"Error: cancel order is not allowed": {
 			txBytes: constants.Msg_CancelOrder_TxBtyes,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: moderrors.Wrap(
 				process.ErrUnexpectedMsgType,
 				"Msg type *types.MsgCancelOrder is not allowed in OtherTxs",
 			),
@@ -131,11 +131,11 @@ func TestOtherMsgsTx_Validate(t *testing.T) {
 	}{
 		"Error Single: ValidateBasic fails": {
 			txBytes:     failingSingleTx,
-			expectedErr: sdkerrors.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: moderrors.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
 		},
 		"Error Multi: ValidateBasic fails": {
 			txBytes:     failingMultiTx,
-			expectedErr: sdkerrors.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: moderrors.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
 		},
 		"Valid Single: ValidateBasic passes": {
 			txBytes: constants.Msg_Send_TxBytes,

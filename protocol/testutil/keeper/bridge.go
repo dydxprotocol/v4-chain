@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +30,7 @@ func BridgeKeepers(
 	mockDelayMsgKeeper *mocks.DelayMsgKeeper,
 ) {
 	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -49,7 +49,7 @@ func BridgeKeepers(
 
 func createBridgeKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	transientStoreKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
@@ -60,7 +60,7 @@ func createBridgeKeeper(
 	*bridgeserver_types.BridgeEventManager,
 	*mocks.DelayMsgKeeper,
 ) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	mockTimeProvider := &mocks.TimeProvider{}

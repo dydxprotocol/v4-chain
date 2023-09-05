@@ -301,7 +301,7 @@ func New(
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetTxEncoder(txConfig.TxEncoder())
 
-	keys := sdk.NewKVStoreKeys(
+	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, crisistypes.StoreKey,
 		distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
@@ -1108,7 +1108,7 @@ func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
 	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
 	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
 	// directly.
-	checkStateCtx := app.BaseApp.NewContext(true, tmproto.Header{})
+	checkStateCtx := app.BaseApp.NewContext(true)
 
 	// Initialize memclob in clobKeeper with orderbooks using `ClobPairs` in state.
 	app.ClobKeeper.InitMemClobOrderbooks(checkStateCtx)

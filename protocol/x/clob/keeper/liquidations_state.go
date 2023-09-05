@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	moderrors "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 
-	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -86,7 +86,7 @@ func (k Keeper) UpdateSubaccountLiquidationInfo(
 		// This should never happen, since the total notional liquidated for any subaccount should
 		// never exceed the value of maximum notional liquidated (uint64) in the liquidation config.
 		panic(
-			sdkerrors.Wrapf(
+			moderrors.Wrapf(
 				satypes.ErrIntegerOverflow,
 				"Notional liquidated update for subaccount %v overflows uint64",
 				subaccountId,
@@ -108,7 +108,7 @@ func (k Keeper) UpdateSubaccountLiquidationInfo(
 			// exceed the value of maximum insurance lost (uint64) in the liquidation config.
 			// This should also never exceed the maximum possible insurance fund balance.
 			panic(
-				sdkerrors.Wrapf(
+				moderrors.Wrapf(
 					satypes.ErrIntegerOverflow,
 					"Quantums insurance lost update for subaccount %v overflows uint64",
 					subaccountId,
