@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sdkerrors "cosmossdk.io/errors"
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -16,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // ProcessProposerOperations updates on-chain state given an []OperationRaw operations queue

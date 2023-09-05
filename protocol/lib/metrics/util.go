@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // IncrCountMetricWithLabels increases a count metric from a module with the provided labels by a count of 1.

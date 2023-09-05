@@ -3,11 +3,11 @@ package process
 import (
 	"reflect"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 var (

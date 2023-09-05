@@ -1,16 +1,17 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 
 	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 func (k Keeper) setEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) {
@@ -146,7 +147,7 @@ func (k Keeper) GetEpochInfo(
 // GetAllEpochInfo returns all epochInfos
 func (k Keeper) GetAllEpochInfo(ctx sdk.Context) (list []types.EpochInfo) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EpochInfoKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

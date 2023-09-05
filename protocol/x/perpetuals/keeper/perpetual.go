@@ -10,7 +10,6 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -20,6 +19,7 @@ import (
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/pkg/errors"
 )
 
