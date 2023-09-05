@@ -18,34 +18,43 @@ func TestMsgUpdateLiquidationsConfig_GetSigners(t *testing.T) {
 
 func TestMsgUpdateLiquidationsConfig_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
-		liquidationsConfig types.LiquidationsConfig
-		expectedError      error
+		msg           types.MsgUpdateLiquidationsConfig
+		expectedError string
 	}{
 		"valid": {
-			liquidationsConfig: constants.LiquidationsConfig_No_Limit,
-		},
-		"invalid": {
-			liquidationsConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm: 0,
-				},
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+			msg: types.MsgUpdateLiquidationsConfig{
+				Authority:          constants.AliceAccAddress.String(),
+				LiquidationsConfig: constants.LiquidationsConfig_No_Limit,
 			},
-			expectedError: types.ErrInvalidLiquidationsConfig,
+		},
+		"invalid liquidations config": {
+			msg: types.MsgUpdateLiquidationsConfig{
+				Authority: constants.AliceAccAddress.String(),
+				LiquidationsConfig: types.LiquidationsConfig{
+					MaxLiquidationFeePpm: 5_000,
+					FillablePriceConfig: types.FillablePriceConfig{
+						BankruptcyAdjustmentPpm: 0,
+					},
+					PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
+					SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				},
+			},
+			expectedError: "0 is not a valid BankruptcyAdjustmentPpm",
+		},
+		"invalid authority": {
+			msg: types.MsgUpdateLiquidationsConfig{
+				LiquidationsConfig: constants.LiquidationsConfig_No_Limit,
+			},
+			expectedError: "authority cannot be empty",
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			msg := types.MsgUpdateLiquidationsConfig{
-				LiquidationsConfig: tc.liquidationsConfig,
-			}
-			err := msg.ValidateBasic()
+			err := tc.msg.ValidateBasic()
 
-			if tc.expectedError != nil {
-				require.ErrorContains(t, err, tc.expectedError.Error())
+			if tc.expectedError != "" {
+				require.ErrorContains(t, err, tc.expectedError)
 			} else {
 				require.NoError(t, err)
 			}
