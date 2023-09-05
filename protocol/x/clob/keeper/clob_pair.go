@@ -392,6 +392,19 @@ func (k Keeper) mustGetClobPair(
 	return clobPair
 }
 
+// mustGetClobPairForPerpetualId fetches a ClobPair from state given a perpetual id.
+// This function panics if the ClobPair is not found.
+func (k Keeper) mustGetClobPairForPerpetualId(
+	ctx sdk.Context,
+	perpetualId uint32,
+) types.ClobPair {
+	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
+	if err != nil {
+		panic(err)
+	}
+	return k.mustGetClobPair(ctx, clobPairId)
+}
+
 // UpdateClobPair overwrites a ClobPair in state.
 // This function returns an error if the update includes an unsupported transition
 // for the ClobPair's status.
