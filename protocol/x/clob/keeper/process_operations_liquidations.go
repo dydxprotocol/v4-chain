@@ -17,7 +17,6 @@ func (k Keeper) validateMatchedLiquidation(
 	perpetualId uint32,
 	fillAmount satypes.BaseQuantums,
 	makerSubticks types.Subticks,
-	bigFillQuoteQuantums *big.Int,
 ) (
 	insuranceFundDelta *big.Int,
 	err error,
@@ -63,11 +62,11 @@ func (k Keeper) validateMatchedLiquidation(
 	}
 
 	// Validate that total notional liquidated and total insurance funds lost do not exceed subaccount block limits.
-	if err := k.validateMatchPerpetualLiquidationAgainstSubaccountBlockLimits(
+	if err := k.validateLiquidationAgainstSubaccountBlockLimits(
 		ctx,
 		liquidatedSubaccountId,
 		perpetualId,
-		bigFillQuoteQuantums,
+		fillAmount,
 		insuranceFundDelta,
 	); err != nil {
 		return nil, err
@@ -76,7 +75,7 @@ func (k Keeper) validateMatchedLiquidation(
 	return insuranceFundDelta, nil
 }
 
-// validateMatchPerpetualLiquidationAgainstSubaccountBlockLimits performs stateful validation
+// validateLiquidationAgainstSubaccountBlockLimits performs stateful validation
 // against the subaccount block limits specified in liquidation configs.
 // If validation fails, an error is returned.
 //
@@ -85,17 +84,18 @@ func (k Keeper) validateMatchedLiquidation(
 //   - The total notional liquidated does not exceed the maximum notional amount that a single subaccount
 //     can have liquidated per block.
 //   - The total insurance lost does not exceed the maximum insurance lost per block.
-func (k Keeper) validateMatchPerpetualLiquidationAgainstSubaccountBlockLimits(
+func (k Keeper) validateLiquidationAgainstSubaccountBlockLimits(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
-	bigNotionalLiquidated *big.Int,
+	fillAmount satypes.BaseQuantums,
 	insuranceFundDeltaQuoteQuantums *big.Int,
 ) (
 	err error,
 ) {
-	// Get the maximum liquidatable notional and insurance lost for the liquidated subaccount.
-	bigMaxNotionalLiquidatable, bigMaxQuantumsInsuranceLost, err := k.GetMaxLiquidatableNotionalAndInsuranceLost(
+	// Validate that this liquidation does not exceed the maximum notional amount that a single subaccount can have
+	// liquidated per block.
+	bigMaxNotionalLiquidatable, err := k.GetSubaccountMaxNotionalLiquidatable(
 		ctx,
 		subaccountId,
 		perpetualId,
@@ -104,8 +104,11 @@ func (k Keeper) validateMatchPerpetualLiquidationAgainstSubaccountBlockLimits(
 		return err
 	}
 
-	// Validate that this liquidation does not exceed the maximum notional amount that a single subaccount can have
-	// liquidated per block.
+	bigNotionalLiquidated, err := k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, fillAmount.ToBigInt())
+	if err != nil {
+		return err
+	}
+
 	if bigNotionalLiquidated.CmpAbs(bigMaxNotionalLiquidatable) > 0 {
 		return types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated
 	}
@@ -113,8 +116,16 @@ func (k Keeper) validateMatchPerpetualLiquidationAgainstSubaccountBlockLimits(
 	// Validate that this liquidation does not exceed the maximum insurance fund payout amount for this
 	// subaccount per block.
 	if insuranceFundDeltaQuoteQuantums.Sign() == -1 {
-		bigAbsInsuranceFundDelta := new(big.Int).Abs(insuranceFundDeltaQuoteQuantums)
-		if bigAbsInsuranceFundDelta.Cmp(bigMaxQuantumsInsuranceLost) > 0 {
+		bigMaxQuantumsInsuranceLost, err := k.GetSubaccountMaxInsuranceLost(
+			ctx,
+			subaccountId,
+			perpetualId,
+		)
+		if err != nil {
+			return err
+		}
+
+		if insuranceFundDeltaQuoteQuantums.CmpAbs(bigMaxQuantumsInsuranceLost) > 0 {
 			return types.ErrLiquidationExceedsSubaccountMaxInsuranceLost
 		}
 	}

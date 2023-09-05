@@ -641,7 +641,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{1, 0},
-					NotionalLiquidated:    3_030_000_000, // $3,030
+					NotionalLiquidated:    3_000_000_000, // $3,000
 					QuantumsInsuranceLost: 30_000_000,    // $30
 				},
 				constants.Dave_Num0: {},
@@ -696,7 +696,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_625_000_000, // $12,625
+					NotionalLiquidated:    12_500_000_000, // $12,500
 					QuantumsInsuranceLost: 250_000,
 				},
 				constants.Dave_Num0: {},
@@ -860,7 +860,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_625_000_000, // $12,625
+					NotionalLiquidated:    12_500_000_000, // $12,500
 					QuantumsInsuranceLost: 250_000,
 				},
 				constants.Dave_Num0: {},
@@ -945,7 +945,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				constants.Carl_Num0: {},
 				constants.Dave_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_375_000_000, // $12,375
+					NotionalLiquidated:    12_500_000_000, // $12,500
 					QuantumsInsuranceLost: 250_000,
 				},
 			},
@@ -1404,7 +1404,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_498_000_000 / 4,
+					NotionalLiquidated:    50_500_000_000 / 4,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1516,7 +1516,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_499_750_000,
+					NotionalLiquidated:    12_500_000_000,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1666,7 +1666,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_498_000_000 / 4,
+					NotionalLiquidated:    50_500_000_000 / 4,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -4520,10 +4520,10 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 		previousInsuranceFundLost       *big.Int
 
 		// Expectations.
-		panics                          bool
-		expectedErr                     error
-		expectedMaxNotionalLiquidatable *big.Int
-		expectedMaxInsuranceLost        *big.Int
+		expectedMaxNotionalLiquidatableErr error
+		expectedMaxInsuranceLostErr        error
+		expectedMaxNotionalLiquidatable    *big.Int
+		expectedMaxInsuranceLost           *big.Int
 	}{
 		"Can get max notional liquidatable and insurance lost": {
 			liquidationConfig: types.LiquidationsConfig{
@@ -4547,32 +4547,33 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 			previousNotionalLiquidated: big.NewInt(100),
 			previousInsuranceFundLost:  big.NewInt(-100),
 
-			expectedErr: types.ErrSubaccountHasLiquidatedPerpetual,
+			expectedMaxNotionalLiquidatableErr: types.ErrSubaccountHasLiquidatedPerpetual,
+			expectedMaxInsuranceLostErr:        types.ErrSubaccountHasLiquidatedPerpetual,
 		},
-		"Panics on invalid notional liquidated": {
+		"invalid notional liquidated": {
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
 				FillablePriceConfig:  constants.FillablePriceConfig_Default,
 				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxNotionalLiquidated:    50,
-					MaxQuantumsInsuranceLost: math.MaxUint64,
+					MaxQuantumsInsuranceLost: 150,
 				},
 			},
 			previouslyLiquidatedPerpetualId: uint32(1),
 			previousNotionalLiquidated:      big.NewInt(100),
 			previousInsuranceFundLost:       big.NewInt(-100),
 
-			panics:      true,
-			expectedErr: types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+			expectedMaxInsuranceLost:           big.NewInt(50),
+			expectedMaxNotionalLiquidatableErr: types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
 		},
-		"Panics on invalid insurance lost": {
+		"invalid insurance lost": {
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
 				FillablePriceConfig:  constants.FillablePriceConfig_Default,
 				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    math.MaxUint64,
+					MaxNotionalLiquidated:    150,
 					MaxQuantumsInsuranceLost: 50,
 				},
 			},
@@ -4580,8 +4581,8 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 			previousNotionalLiquidated:      big.NewInt(100),
 			previousInsuranceFundLost:       big.NewInt(-100),
 
-			panics:      true,
-			expectedErr: types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
+			expectedMaxNotionalLiquidatable: big.NewInt(50),
+			expectedMaxInsuranceLostErr:     types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 		},
 	}
 
@@ -4608,34 +4609,28 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 				tc.previousInsuranceFundLost,
 			)
 
-			if tc.panics {
-				require.PanicsWithError(
-					t,
-					tc.expectedErr.Error(),
-					func() {
-						//nolint: errcheck
-						ks.ClobKeeper.GetMaxLiquidatableNotionalAndInsuranceLost(
-							ks.Ctx,
-							subaccountId,
-							perpetualId,
-						)
-					},
-				)
+			actualMaxNotionalLiquidatable, err := ks.ClobKeeper.GetSubaccountMaxNotionalLiquidatable(
+				ks.Ctx,
+				subaccountId,
+				perpetualId,
+			)
+			if tc.expectedMaxNotionalLiquidatableErr != nil {
+				require.ErrorContains(t, err, tc.expectedMaxNotionalLiquidatableErr.Error())
 			} else {
-				actualMaxNotionalLiquidatable,
-					actualMaxInsuranceLost,
-					err := ks.ClobKeeper.GetMaxLiquidatableNotionalAndInsuranceLost(
-					ks.Ctx,
-					subaccountId,
-					perpetualId,
-				)
-				if tc.expectedErr != nil {
-					require.ErrorContains(t, err, tc.expectedErr.Error())
-				} else {
-					require.NoError(t, err)
-					require.Equal(t, tc.expectedMaxNotionalLiquidatable, actualMaxNotionalLiquidatable)
-					require.Equal(t, tc.expectedMaxInsuranceLost, actualMaxInsuranceLost)
-				}
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedMaxNotionalLiquidatable, actualMaxNotionalLiquidatable)
+			}
+
+			actualMaxInsuranceLost, err := ks.ClobKeeper.GetSubaccountMaxInsuranceLost(
+				ks.Ctx,
+				subaccountId,
+				perpetualId,
+			)
+			if tc.expectedMaxInsuranceLostErr != nil {
+				require.ErrorContains(t, err, tc.expectedMaxInsuranceLostErr.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedMaxInsuranceLost, actualMaxInsuranceLost)
 			}
 		})
 	}
