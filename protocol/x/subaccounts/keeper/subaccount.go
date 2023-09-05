@@ -304,15 +304,15 @@ func (k Keeper) UpdateSubaccounts(
 			),
 		)
 
-		// Emit an event indicating a funding payment was received / paid for each settled funding
-		// payment. Note that `fundingReceived` is positive if the subaccount received funding,
-		// and negative if the subaccount paid funding.
-		for perpetualId, fundingReceived := range fundingPayments {
+		// Emit an event indicating a funding payment was paid / received for each settled funding
+		// payment. Note that `fundingPaid` is positive if the subaccount paid funding,
+		// and negative if the subaccount received funding.
+		for perpetualId, fundingPaid := range fundingPayments {
 			ctx.EventManager().EmitEvent(
 				types.NewCreateFundingEvent(
 					*u.SettledSubaccount.Id,
 					perpetualId,
-					fundingReceived.BigInt(),
+					fundingPaid.BigInt(),
 				),
 			)
 		}
