@@ -812,3 +812,77 @@ func TestGetClobPairIdForPerpetual_PanicsMultipleClobPairIds(t *testing.T) {
 		},
 	)
 }
+
+func TestIsPerpetualClobPairActive(t *testing.T) {
+	testCases := map[string]struct {
+		clobPair                *types.ClobPair
+		perpetualIdToClobPairId map[uint32][]types.ClobPairId
+		resp                    bool
+		expectedErr             error
+	}{
+		"Errors when perpetual has no clob pairs": {
+			expectedErr: types.ErrNoClobPairForPerpetual,
+		},
+		"Errors when clob pair does not exist": {
+			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
+				0: {types.ClobPairId(0)},
+			},
+			expectedErr: types.ErrInvalidClob,
+		},
+		"Succeeds when clob pair is initializing": {
+			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
+				0: {types.ClobPairId(0)},
+			},
+			clobPair: &constants.ClobPair_Btc_Init,
+			resp:     false,
+		},
+		"Succeeds when clob pair is active": {
+			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
+				0: {types.ClobPairId(0)},
+			},
+			clobPair: &constants.ClobPair_Btc,
+			resp:     true,
+		},
+		"Succeeds when clob pair is paused": {
+			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
+				0: {types.ClobPairId(0)},
+			},
+			clobPair: &constants.ClobPair_Btc_Paused,
+			resp:     false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+			if tc.clobPair != nil {
+				// allows us to circumvent CreatePerpetualClobPair and write unsupported statuses to state to
+				// test this function with unsupported statuses.
+				registry := codectypes.NewInterfaceRegistry()
+				cdc := codec.NewProtoCodec(registry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+
+				b := cdc.MustMarshal(tc.clobPair)
+				store.Set(types.ClobPairKey(
+					types.ClobPairId(tc.clobPair.Id),
+				), b)
+			}
+
+			ks.ClobKeeper.PerpetualIdToClobPairId = tc.perpetualIdToClobPairId
+
+			resp, err := ks.ClobKeeper.IsPerpetualClobPairActive(ks.Ctx, 0)
+
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.resp, resp)
+			}
+		})
+	}
+}

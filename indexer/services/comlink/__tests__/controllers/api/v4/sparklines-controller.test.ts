@@ -15,6 +15,7 @@ import { SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP, SPARKLINE_TIME_PERIOD_TO_RESOLUTION
 
 import { RequestMethod, SparklineTimePeriod } from '../../../../src/types';
 import { sendRequest } from '../../../helpers/helpers';
+import Big from 'big.js';
 
 describe('sparklines-controller#V4', () => {
   beforeAll(async () => {
@@ -44,27 +45,49 @@ describe('sparklines-controller#V4', () => {
       expect(response.body).toEqual({
         [testConstants.defaultPerpetualMarket.ticker]: [],
         [testConstants.defaultPerpetualMarket2.ticker]: [],
+        [testConstants.defaultPerpetualMarket3.ticker]: [],
       });
     });
 
     it.each(
       _.map(Object.values(SparklineTimePeriod), (timePeriod: SparklineTimePeriod) => [timePeriod]),
     )('successfully returns time period %s sparklines', async (timePeriod: SparklineTimePeriod) => {
-      const resolutionToClosePriceMap: Record<CandleResolution, string> = {
-        [CandleResolution.ONE_DAY]: Math.floor(Math.random() * 20000).toString(),
-        [CandleResolution.FOUR_HOURS]: Math.floor(Math.random() * 20000).toString(),
-        [CandleResolution.ONE_HOUR]: Math.floor(Math.random() * 20000).toString(),
-        [CandleResolution.THIRTY_MINUTES]: Math.floor(Math.random() * 20000).toString(),
-        [CandleResolution.FIFTEEN_MINUTES]: Math.floor(Math.random() * 20000).toString(),
-        [CandleResolution.FIVE_MINUTES]: Math.floor(Math.random() * 20000).toString(),
-        [CandleResolution.ONE_MINUTE]: Math.floor(Math.random() * 20000).toString(),
+      const tickerToBasePrice: Record<string, number> = {
+        [testConstants.defaultPerpetualMarket.ticker]: 20000,
+        [testConstants.defaultPerpetualMarket2.ticker]: 1000,
+        [testConstants.defaultPerpetualMarket3.ticker]: 0.00000062,
       };
+      const tickerToCandles: Record<string, Record<CandleResolution, string>> = _.mapValues(
+        tickerToBasePrice,
+        (basePrice: number): Record<CandleResolution, string> => {
+          return {
+            [CandleResolution.ONE_DAY]:
+              Big(Math.random().toFixed(2)).mul(basePrice).toFixed(),
+            [CandleResolution.FOUR_HOURS]:
+              Big(Math.random().toFixed(2)).mul(basePrice).toFixed(),
+            [CandleResolution.ONE_HOUR]:
+              Big(Math.random().toFixed(2)).mul(basePrice).toFixed(),
+            [CandleResolution.THIRTY_MINUTES]:
+              Big(Math.random().toFixed(2)).mul(basePrice).toFixed(),
+            [CandleResolution.FIFTEEN_MINUTES]:
+              Big(Math.random().toFixed(2)).mul(basePrice).toFixed(),
+            [CandleResolution.FIVE_MINUTES]:
+              Big(Math.random().toFixed(2)).mul(basePrice).toFixed(),
+            [CandleResolution.ONE_MINUTE]:
+              Big(Math.random().toFixed(2)).mul(basePrice).toFixed(),
+          };
+        },
+      );
 
       await Promise.all(
         // eslint-disable-next-line @typescript-eslint/require-await
         _.flatten(
           _.map(
-            [testConstants.defaultPerpetualMarket, testConstants.defaultPerpetualMarket2],
+            [
+              testConstants.defaultPerpetualMarket,
+              testConstants.defaultPerpetualMarket2,
+              testConstants.defaultPerpetualMarket3,
+            ],
             (perpetualMarket: PerpetualMarketFromDatabase): Promise<CandleFromDatabase>[] => {
               return _.map(
                 Object.values(CandleResolution),
@@ -74,7 +97,7 @@ describe('sparklines-controller#V4', () => {
                     ...testConstants.defaultCandle,
                     ticker: perpetualMarket.ticker,
                     resolution: res,
-                    close: resolutionToClosePriceMap[res],
+                    close: tickerToCandles[perpetualMarket.ticker][res],
                   });
                 },
               );
@@ -91,10 +114,13 @@ describe('sparklines-controller#V4', () => {
       const resolution: CandleResolution = SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP[timePeriod];
       expect(response.body).toEqual({
         [testConstants.defaultPerpetualMarket.ticker]: [
-          resolutionToClosePriceMap[resolution],
+          tickerToCandles[testConstants.defaultPerpetualMarket.ticker][resolution],
         ],
         [testConstants.defaultPerpetualMarket2.ticker]: [
-          resolutionToClosePriceMap[resolution],
+          tickerToCandles[testConstants.defaultPerpetualMarket2.ticker][resolution],
+        ],
+        [testConstants.defaultPerpetualMarket3.ticker]: [
+          tickerToCandles[testConstants.defaultPerpetualMarket3.ticker][resolution],
         ],
       });
     });
@@ -130,6 +156,7 @@ describe('sparklines-controller#V4', () => {
           (i: number) => closePrices[i],
         ),
         [testConstants.defaultPerpetualMarket2.ticker]: [],
+        [testConstants.defaultPerpetualMarket3.ticker]: [],
       });
     });
 
@@ -181,6 +208,7 @@ describe('sparklines-controller#V4', () => {
         expect(response.body).toEqual({
           [testConstants.defaultPerpetualMarket.ticker]: _.times(limit, () => firstClosing),
           [testConstants.defaultPerpetualMarket2.ticker]: _.times(limit2, () => secondClosing),
+          [testConstants.defaultPerpetualMarket3.ticker]: [],
         });
       },
     );

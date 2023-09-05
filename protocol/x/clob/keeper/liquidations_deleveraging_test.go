@@ -247,6 +247,179 @@ func TestShouldPerformDeleveraging(t *testing.T) {
 	}
 }
 
+func TestCanDeleverageSubaccount(t *testing.T) {
+	tests := map[string]struct {
+		// Setup
+		liquidationConfig             types.LiquidationsConfig
+		insuranceFundBalance          *big.Int
+		subaccount                    satypes.Subaccount
+		marketIdToOraclePriceOverride map[uint32]uint64
+
+		// Expectations.
+		expectedCanDeleverageSubaccount bool
+	}{
+		`Cannot deleverage when subaccount has positive TNC, insurance fund balance is greater than
+			MaxInsuranceFundQuantumsForDeleveraging`: {
+			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_000_000_000, // $50,000 / BTC
+			},
+
+			expectedCanDeleverageSubaccount: false,
+		},
+		`Cannot deleverage when subaccount has zero TNC, insurance fund balance is greater than
+			MaxInsuranceFundQuantumsForDeleveraging`: {
+			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_499_000_000, // $54,999 / BTC
+			},
+
+			expectedCanDeleverageSubaccount: false,
+		},
+		`Cannot deleverage when subaccount has negative TNC, insurance fund balance is greater than
+			MaxInsuranceFundQuantumsForDeleveraging`: {
+			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
+			},
+
+			expectedCanDeleverageSubaccount: false,
+		},
+		`Cannot deleverage when subaccount has zero TNC, insurance fund balance is equal to
+			MaxInsuranceFundQuantumsForDeleveraging`: {
+			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			insuranceFundBalance: big.NewInt(10_000_000_000), // $10,000
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_499_000_000, // $54,999 / BTC
+			},
+
+			expectedCanDeleverageSubaccount: false,
+		},
+		`Cannot deleverage when subaccount has zero TNC, insurance fund balance is less than
+			MaxInsuranceFundQuantumsForDeleveraging`: {
+			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			insuranceFundBalance: big.NewInt(0), // $0
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_499_000_000, // $54,999 / BTC
+			},
+
+			expectedCanDeleverageSubaccount: false,
+		},
+		`Can deleverage when subaccount has negative TNC, insurance fund balance is equal to
+			MaxInsuranceFundQuantumsForDeleveraging`: {
+			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			insuranceFundBalance: big.NewInt(10_000_000_000), // $10,000
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
+			},
+
+			expectedCanDeleverageSubaccount: true,
+		},
+		`Can deleverage when subaccount has negative TNC, insurance fund balance is less than
+			MaxInsuranceFundQuantumsForDeleveraging`: {
+			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			insuranceFundBalance: big.NewInt(0), // $0
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
+			},
+
+			expectedCanDeleverageSubaccount: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup keeper state.
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			bankMock := &mocks.BankKeeper{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
+
+			_, err := ks.AssetsKeeper.CreateAsset(
+				ks.Ctx,
+				constants.Usdc.Symbol,
+				constants.Usdc.Denom,
+				constants.Usdc.DenomExponent,
+				constants.Usdc.HasMarket,
+				constants.Usdc.MarketId,
+				constants.Usdc.AtomicResolution,
+			)
+			require.NoError(t, err)
+
+			// Initialize the liquidations config.
+			err = ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, tc.liquidationConfig)
+			require.NoError(t, err)
+
+			bankMock.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(types.InsuranceFundName),
+				constants.Usdc.Denom,
+			).Return(
+				sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(tc.insuranceFundBalance)),
+			)
+
+			// Create test markets.
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			// Update the prices on the test markets.
+			for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
+				err := ks.PricesKeeper.UpdateMarketPrices(
+					ks.Ctx,
+					[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+						{
+							MarketId: marketId,
+							Price:    oraclePrice,
+						},
+					},
+				)
+				require.NoError(t, err)
+			}
+
+			perpetuals := []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			}
+			for _, perpetual := range perpetuals {
+				_, err = ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
+					perpetual.Params.Id,
+					perpetual.Params.Ticker,
+					perpetual.Params.MarketId,
+					perpetual.Params.AtomicResolution,
+					perpetual.Params.DefaultFundingPpm,
+					perpetual.Params.LiquidityTier,
+				)
+				require.NoError(t, err)
+			}
+
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.subaccount)
+
+			canDeleverageSubaccount, err := ks.ClobKeeper.CanDeleverageSubaccount(
+				ks.Ctx,
+				*tc.subaccount.Id,
+			)
+			require.NoError(t, err)
+			require.Equal(
+				t,
+				tc.expectedCanDeleverageSubaccount,
+				canDeleverageSubaccount,
+			)
+		})
+	}
+}
+
 func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.

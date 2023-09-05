@@ -247,7 +247,7 @@ type App struct {
 
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
-	PerpetualsKeeper perpetualsmodulekeeper.Keeper
+	PerpetualsKeeper *perpetualsmodulekeeper.Keeper
 
 	VestKeeper vestmodulekeeper.Keeper
 
@@ -638,7 +638,7 @@ func New(
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
-	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
+	app.PerpetualsKeeper = perpetualsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[perpetualsmoduletypes.StoreKey],
 		app.PricesKeeper,
@@ -752,7 +752,7 @@ func New(
 		memClob,
 		liquidatableSubaccountIds,
 	)
-	app.PerpetualsKeeper.SetPricePremiumGetter(app.ClobKeeper)
+	app.PerpetualsKeeper.SetClobKeeper(app.ClobKeeper)
 
 	app.SendingKeeper = *sendingmodulekeeper.NewKeeper(
 		appCodec,

@@ -25,7 +25,7 @@ message MsgCreatePerpetual {
   string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 
   // `params` defines parameters for the new perpetual market.
-  PerpetualParams params = 2;
+  PerpetualParams params = 2 [ (gogoproto.nullable) = false ];
 }
 
 // MsgCreatePerpetualResponse defines the CreatePerpetual

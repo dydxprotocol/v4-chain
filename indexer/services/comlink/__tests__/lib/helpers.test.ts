@@ -74,7 +74,7 @@ describe('helpers', () => {
 
   it('getFixedRepresentation', () => {
     const fixedRep: string = getFixedRepresentation(150125);
-    expect(fixedRep).toEqual('150125.000000');
+    expect(fixedRep).toEqual('150125');
   });
 
   it('filterAssetPositions with 0 size', () => {
@@ -348,7 +348,7 @@ describe('helpers', () => {
         latestBlock!,
       );
 
-      expect(Object.keys(lastUpdatedFundingIndexMap)).toHaveLength(2);
+      expect(Object.keys(lastUpdatedFundingIndexMap)).toHaveLength(3);
       expect(
         lastUpdatedFundingIndexMap[testConstants.defaultFundingIndexUpdate.perpetualId]
           .toString(),
@@ -357,10 +357,16 @@ describe('helpers', () => {
         lastUpdatedFundingIndexMap[testConstants.defaultPerpetualMarket2.id]
           .toString(),
       ).toEqual(ZERO.toString());
-      expect(Object.keys(latestFundingIndexMap)).toHaveLength(2);
+      expect(
+        lastUpdatedFundingIndexMap[testConstants.defaultPerpetualMarket3.id]
+          .toString(),
+      ).toEqual(ZERO.toString());
+      expect(Object.keys(latestFundingIndexMap)).toHaveLength(3);
       expect(latestFundingIndexMap[fundingIndexUpdate3.perpetualId].toString())
         .toEqual(fundingIndexUpdate3.fundingIndex);
       expect(latestFundingIndexMap[testConstants.defaultPerpetualMarket2.id].toString())
+        .toEqual(ZERO.toString());
+      expect(latestFundingIndexMap[testConstants.defaultPerpetualMarket3.id].toString())
         .toEqual(ZERO.toString());
     });
   });

@@ -36,7 +36,7 @@ type MsgCreateClobPair struct {
 	// The address that controls the module.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// `clob_pair` defines parameters for the new clob pair.
-	ClobPair *ClobPair `protobuf:"bytes,2,opt,name=clob_pair,json=clobPair,proto3" json:"clob_pair,omitempty"`
+	ClobPair ClobPair `protobuf:"bytes,2,opt,name=clob_pair,json=clobPair,proto3" json:"clob_pair"`
 }
 
 func (m *MsgCreateClobPair) Reset()         { *m = MsgCreateClobPair{} }
@@ -79,11 +79,11 @@ func (m *MsgCreateClobPair) GetAuthority() string {
 	return ""
 }
 
-func (m *MsgCreateClobPair) GetClobPair() *ClobPair {
+func (m *MsgCreateClobPair) GetClobPair() ClobPair {
 	if m != nil {
 		return m.ClobPair
 	}
-	return nil
+	return ClobPair{}
 }
 
 // MsgCreateClobPairResponse defines the CreateClobPair response type.
@@ -1376,18 +1376,16 @@ func (m *MsgCreateClobPair) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.ClobPair != nil {
-		{
-			size, err := m.ClobPair.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
+	{
+		size, err := m.ClobPair.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
-		i--
-		dAtA[i] = 0x12
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x12
 	if len(m.Authority) > 0 {
 		i -= len(m.Authority)
 		copy(dAtA[i:], m.Authority)
@@ -1992,10 +1990,8 @@ func (m *MsgCreateClobPair) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.ClobPair != nil {
-		l = m.ClobPair.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
+	l = m.ClobPair.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -2334,9 +2330,6 @@ func (m *MsgCreateClobPair) Unmarshal(dAtA []byte) error {
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
-			}
-			if m.ClobPair == nil {
-				m.ClobPair = &ClobPair{}
 			}
 			if err := m.ClobPair.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
