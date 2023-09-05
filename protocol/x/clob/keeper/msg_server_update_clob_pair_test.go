@@ -23,8 +23,6 @@ import (
 func TestMsgServerUpdateClobPair(t *testing.T) {
 	tests := map[string]struct {
 		msg           *types.MsgUpdateClobPair
-		authority     string
-		clobPair      types.ClobPair
 		setup         func(ks keepertest.ClobKeepersTestContext)
 		expectedResp  *types.MsgUpdateClobPairResponse
 		expectedErr   error
@@ -61,7 +59,6 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			expectedResp: &types.MsgUpdateClobPairResponse{},
 		},
 		"Error: unsupported status transition from active to initializing": {
-			authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				ClobPair: &types.ClobPair{
@@ -284,6 +281,9 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					require.ErrorIs(t, err, tc.expectedErr)
 				} else {
 					require.NoError(t, err)
+					clobPair, found := k.GetClobPair(ks.Ctx, types.ClobPairId(tc.msg.ClobPair.Id))
+					require.True(t, found)
+					require.Equal(t, clobPair, *tc.msg.ClobPair)
 				}
 			}
 		})

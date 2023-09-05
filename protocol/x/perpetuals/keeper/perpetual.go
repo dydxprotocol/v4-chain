@@ -459,7 +459,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		liquidityTier := lib.MustGetValue(allLiquidityTiers, uint(perp.Params.LiquidityTier))
 		bigImpactNotionalQuoteQuantums := new(big.Int).SetUint64(liquidityTier.ImpactNotional)
 
-		premiumPpm, err := k.pricePremiumGetter.GetPricePremiumForPerpetual(
+		premiumPpm, err := k.clobKeeper.GetPricePremiumForPerpetual(
 			ctx,
 			perp.Params.Id,
 			types.GetPricePremiumParams{
@@ -1191,6 +1191,7 @@ func (k Keeper) SetPremiumVotes(
 // For each vote, it checks that:
 // - The perpetual Id is valid.
 // - The premium vote value is correctly clamped.
+// This function throws an error if the associated clob pair cannot be found or is not active.
 func (k Keeper) PerformStatefulPremiumVotesValidation(
 	ctx sdk.Context,
 	msg *types.MsgAddPremiumVotes,
@@ -1215,6 +1216,24 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 		if err != nil {
 			return err
 		}
+
+		// Zero values for perpetuals whose ClobPair is not active
+		if isActive, err := k.clobKeeper.IsPerpetualClobPairActive(
+			ctx, vote.PerpetualId,
+		); err != nil {
+			return sdkerrors.Wrapf(
+				err,
+				"PerformStatefulPremiumVotesValidation: failed to determine ClobPair status for perpetual with id %d",
+				vote.PerpetualId,
+			)
+		} else if !isActive { // reject premium votes for non active markets
+			return sdkerrors.Wrapf(
+				types.ErrPremiumVoteForNonActiveMarket,
+				"PerformStatefulPremiumVotesValidation: no premium vote should be included for inactive perpetual with id %d",
+				vote.PerpetualId,
+			)
+		}
+
 		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
 		maxAbsPremiumVotePpm := lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perpetual.Params.LiquidityTier))
 		// Check premium vote value is within bounds.

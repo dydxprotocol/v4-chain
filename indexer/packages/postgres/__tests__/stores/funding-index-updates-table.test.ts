@@ -8,6 +8,7 @@ import {
   defaultFundingIndexUpdateId,
   defaultPerpetualMarket,
   defaultPerpetualMarket2,
+  defaultPerpetualMarket3,
   defaultTendermintEventId2,
   defaultTendermintEventId3,
 } from '../helpers/constants';
@@ -214,6 +215,7 @@ describe('funding index update store', () => {
     expect(fundingIndexMap).toEqual({
       [defaultFundingIndexUpdate.perpetualId]: Big(defaultFundingIndexUpdate.fundingIndex),
       [fundingIndexUpdates3.perpetualId]: Big(fundingIndexUpdates3.fundingIndex),
+      [defaultPerpetualMarket3.id]: Big(0),
     });
   });
 
@@ -226,6 +228,7 @@ describe('funding index update store', () => {
     expect(fundingIndexMap).toEqual({
       [defaultPerpetualMarket.id]: Big(0),
       [defaultPerpetualMarket2.id]: Big(0),
+      [defaultPerpetualMarket3.id]: Big(0),
     });
   });
 
@@ -242,6 +245,7 @@ describe('funding index update store', () => {
       expect(fundingIndexMap).toEqual({
         [defaultPerpetualMarket.id]: Big(defaultFundingIndexUpdate.fundingIndex),
         [defaultPerpetualMarket2.id]: Big(0),
+        [defaultPerpetualMarket3.id]: Big(0),
       });
     },
   );

@@ -62,6 +62,7 @@ export async function updatePriceLevel({
       ticker,
       side,
       humanPrice,
+      // Needs to be an integer
       Big(sizeDeltaInQuantums).mul(-1).toFixed(0),
       client,
     );

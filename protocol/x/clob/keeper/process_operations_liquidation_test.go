@@ -2389,7 +2389,7 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			insuranceFundBalance: 999_999, // Insurance fund only has $0.999999
 			expectedError:        types.ErrInsuranceFundHasInsufficientFunds,
 		},
-		"Fails when insurance fund has enough balance but is less than MaxInsuranceFundQuantumsForDeleveraging": {
+		"Succeeds when insurance fund has enough balance but is less than MaxInsuranceFundQuantumsForDeleveraging": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -2431,7 +2431,13 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 				PositionBlockLimits:                     constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits:                   constants.SubaccountBlockLimits_No_Limit,
 			},
-			expectedError: types.ErrInsuranceFundHasInsufficientFunds,
+			expectedError: nil,
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: 5,
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId,
+				},
+			},
 		},
 	}
 

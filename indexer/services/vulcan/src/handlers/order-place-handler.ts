@@ -207,7 +207,7 @@ export class OrderPlaceHandler extends Handler {
         ticker: perpetualMarket.ticker,
         side: protocolTranslations.protocolOrderSideToOrderSide(result.oldOrder!.order!.side),
         humanPrice: result.oldOrder!.price,
-        // Delta should be -1 * remaining size of order in quantums
+        // Delta should be -1 * remaining size of order in quantums and an integer
         sizeDeltaInQuantums: remainingSizeDeltaInQuantums.mul(-1).toFixed(0),
         client: redisClient,
       }),

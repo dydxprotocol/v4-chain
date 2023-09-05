@@ -114,3 +114,9 @@ jobs:
           npm install
           npm run transpile
           npm run build
+  swagger-gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - working-directory: ./protocol
+        run: make proto-swagger-gen && git diff --exit-code

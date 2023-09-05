@@ -50,14 +50,14 @@ func (k Keeper) validateMatchedLiquidation(
 	}
 
 	// Validate that processing the liquidation fill does not leave insufficient funds
-	// in the insurance fund (such that deleveraging is required and the liquidation couldn't
-	// have possibly continued).
-	if k.ShouldPerformDeleveraging(ctx, insuranceFundDelta) {
-		ctx.Logger().Info("ProcessMatches: insurance fund does not have enough balance and deleveraging is required.")
+	// in the insurance fund (such that the liquidation couldn't have possibly continued).
+	if !k.IsValidInsuranceFundDelta(ctx, insuranceFundDelta) {
+		ctx.Logger().Info("ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
 		return nil, sdkerrors.Wrapf(
 			types.ErrInsuranceFundHasInsufficientFunds,
-			"Liquidation order %v",
+			"Liquidation order %v, insurance fund delta %v",
 			order,
+			insuranceFundDelta.String(),
 		)
 	}
 

@@ -53,7 +53,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 
 	return perpetuals.NewAppModule(
 		appCodec,
-		*keeper,
+		keeper,
 		nil,
 		nil,
 	), keeper, pricesKeeper, epochsKeeper, ctx

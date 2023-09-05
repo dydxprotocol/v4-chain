@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,7 +45,10 @@ func TestPerpetualQuerySingle(t *testing.T) {
 			request: &types.QueryPerpetualRequest{
 				Id: uint32(100000),
 			},
-			err: status.Error(codes.NotFound, "not found"),
+			err: status.Error(codes.NotFound, fmt.Sprintf(
+				"Perpetual id %+v not found.",
+				uint32(100000),
+			)),
 		},
 		{
 			desc: "InvalidRequest",

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -405,16 +404,6 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	insuranceFundDeltaQuoteQuantums *big.Int,
 	err error,
 ) {
-	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
-	if err != nil {
-		panic(fmt.Errorf("GetLiquidationInsuranceFundDelta: CLOB pair not found for perpetual %d", perpetualId))
-	}
-
-	clobPair, found := k.GetClobPair(ctx, clobPairId)
-	if !found {
-		panic(fmt.Errorf("GetLiquidationInsuranceFundDelta: CLOB pair %d not found", clobPairId))
-	}
-
 	// Verify that fill amount is not zero.
 	if fillAmount == 0 {
 		return nil, sdkerrors.Wrapf(
@@ -426,6 +415,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	}
 
 	// Get the delta quantums and delta quote quantums.
+	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	deltaQuantums := new(big.Int).SetUint64(fillAmount)
 	deltaQuoteQuantums, err := getFillQuoteQuantums(
 		clobPair,
@@ -513,20 +503,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	perpetualPosition := subaccount.PerpetualPositions[0]
-	clobPairId, err := k.GetClobPairIdForPerpetual(
-		ctx,
-		perpetualPosition.PerpetualId,
-	)
-	// If an unexpected error is returned, panic.
-	if err != nil {
-		panic(err)
-	}
-
-	// Get the corresponding CLOB pair from state.
-	clobPair, found := k.GetClobPair(ctx, clobPairId)
-	if !found {
-		panic(fmt.Errorf("CLOB pair ID %d not found in state", clobPairId))
-	}
+	clobPair = k.mustGetClobPairForPerpetualId(ctx, perpetualPosition.PerpetualId)
 
 	// Get the maximum notional liquidatable for this position.
 	_, bigMaxPositionNotionalLiquidatable, err := k.GetMaxAndMinPositionNotionalLiquidatable(
@@ -548,7 +525,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	// Take the minimum of the subaccount block limit and position block limit.
-	bigMaxNotionalLiquidatable := lib.BigMin(
+	bigMaxQuoteQuantumsLiquidatable := lib.BigMin(
 		bigMaxPositionNotionalLiquidatable,
 		bigMaxSubaccountNotionalLiquidatable,
 	)
@@ -562,37 +539,45 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 		panic(err)
 	}
 
-	bigAbsQuoteQuantums := new(big.Int).Abs(bigQuoteQuantums)
 	// Return the full position to avoid any rounding errors.
-	if bigAbsQuoteQuantums.Cmp(bigMaxNotionalLiquidatable) <= 0 ||
+	if bigQuoteQuantums.CmpAbs(bigMaxQuoteQuantumsLiquidatable) <= 0 ||
 		perpetualPosition.GetBigQuantums().CmpAbs(
 			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		) <= 0 {
 		return clobPair, perpetualPosition.GetBigQuantums(), nil
 	}
 
-	bigQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
+	// Convert the max notional liquidatable to base quantums.
+	bigBaseQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
 		ctx,
 		perpetualPosition.PerpetualId,
-		bigMaxNotionalLiquidatable,
+		bigMaxQuoteQuantumsLiquidatable,
 	)
 	if err != nil {
 		panic(err)
 	}
 
 	// Round to the nearest step size.
-	bigQuantumsToLiquidate = lib.BigIntRoundToMultiple(
-		bigQuantumsToLiquidate,
+	bigBaseQuantumsToLiquidate = lib.BigIntRoundToMultiple(
+		bigBaseQuantumsToLiquidate,
 		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		false,
 	)
 
+	// Clamp the base quantums to liquidate to the step size and the size of the position
+	// in case there's rounding errors.
+	bigBaseQuantumsToLiquidate = lib.BigIntClamp(
+		bigBaseQuantumsToLiquidate,
+		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
+		new(big.Int).Abs(perpetualPosition.GetBigQuantums()),
+	)
+
 	// Negate the position size if it's short.
 	if !perpetualPosition.GetIsLong() {
-		bigQuantumsToLiquidate.Neg(bigQuantumsToLiquidate)
+		bigBaseQuantumsToLiquidate.Neg(bigBaseQuantumsToLiquidate)
 	}
 
-	return clobPair, bigQuantumsToLiquidate, nil
+	return clobPair, bigBaseQuantumsToLiquidate, nil
 }
 
 // GetSubaccountMaxNotionalLiquidatable returns the maximum notional that the subaccount can liquidate

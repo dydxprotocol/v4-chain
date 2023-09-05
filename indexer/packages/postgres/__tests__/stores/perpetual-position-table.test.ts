@@ -78,13 +78,13 @@ describe('PerpetualPosition store', () => {
   it('Successfully finds all PerpetualPositions', async () => {
     await PerpetualMarketTable.create({
       ...defaultPerpetualMarket,
-      id: '2',
+      id: '3',
     });
     await Promise.all([
       PerpetualPositionTable.create(defaultPerpetualPosition),
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
-        perpetualId: '2',
+        perpetualId: '3',
         openEventId: defaultTendermintEventId2,
       }),
     ]);
@@ -104,7 +104,7 @@ describe('PerpetualPosition store', () => {
     expect(perpetualPositions[0]).toEqual(expect.objectContaining(defaultPerpetualPosition));
     expect(perpetualPositions[1]).toEqual(expect.objectContaining({
       ...defaultPerpetualPosition,
-      perpetualId: '2',
+      perpetualId: '3',
       openEventId: defaultTendermintEventId2,
     }));
   });
@@ -112,13 +112,13 @@ describe('PerpetualPosition store', () => {
   it('Successfully finds PerpetualPosition with perpetualId', async () => {
     await PerpetualMarketTable.create({
       ...defaultPerpetualMarket,
-      id: '2',
+      id: '3',
     });
     await Promise.all([
       PerpetualPositionTable.create(defaultPerpetualPosition),
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
-        perpetualId: '2',
+        perpetualId: '3',
         openEventId: defaultTendermintEventId2,
       }),
     ]);
@@ -253,7 +253,7 @@ describe('PerpetualPosition store', () => {
     it('Successfully gets no open positions for a subaccountId and perpetualId', async () => {
       await PerpetualPositionTable.create(defaultPerpetualPosition);
 
-      const otherPerpetualId: string = '2';
+      const otherPerpetualId: string = '3';
       const perpetualPosition: PerpetualPositionFromDatabase | undefined = await
       PerpetualPositionTable.findOpenPositionForSubaccountPerpetual(
         defaultPerpetualPosition.subaccountId,
@@ -269,28 +269,28 @@ describe('PerpetualPosition store', () => {
       await Promise.all([
         PerpetualMarketTable.create({
           ...defaultPerpetualMarket,
-          id: '2',
+          id: '3',
         }),
         PerpetualMarketTable.create({
           ...defaultPerpetualMarket,
-          id: '3',
+          id: '4',
         }),
       ]);
       const perpetualPosition2: PerpetualPositionCreateObject = {
         ...defaultPerpetualPosition,
-        perpetualId: '2',
+        perpetualId: '3',
         openEventId: defaultTendermintEventId2,
       };
       const perpetualPosition3: PerpetualPositionCreateObject = {
         ...defaultPerpetualPosition,
         subaccountId: defaultSubaccountId2,
-        perpetualId: '3',
+        perpetualId: '4',
         openEventId: defaultTendermintEventId2,
       };
       const perpetualPosition4: PerpetualPositionCreateObject = {
         ...defaultPerpetualPosition,
         subaccountId: defaultSubaccountId2,
-        perpetualId: '2',
+        perpetualId: '3',
         openEventId: defaultTendermintEventId,
         status: PerpetualPositionStatus.CLOSED,
       };

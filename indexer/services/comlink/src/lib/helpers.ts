@@ -227,6 +227,8 @@ export function getSignedNotionalAndRisk({
   if (liquidityTier === undefined) {
     throw new NotFoundError(`Liquidity tier with id ${perpetualMarket.liquidityTierId} not found for perpetual market ${perpetualMarket.ticker}`);
   }
+  // Used to calculate risk / margin fracitons, as risk of a position should always be positive
+  const positionNotional: Big = signedNotional.abs();
   const {
     adjustedInitialMarginFraction,
     adjustedMaintenanceMarginFraction,
@@ -235,13 +237,13 @@ export function getSignedNotionalAndRisk({
     adjustedMaintenanceMarginFraction: Big,
   } = getAdjustedMarginFractions({
     liquidityTier,
-    positionNotional: signedNotional.abs(),
+    positionNotional,
   });
   return {
     signedNotional,
     individualRisk: {
-      initial: signedNotional.times(adjustedInitialMarginFraction),
-      maintenance: signedNotional.times(adjustedMaintenanceMarginFraction),
+      initial: positionNotional.times(adjustedInitialMarginFraction),
+      maintenance: positionNotional.times(adjustedMaintenanceMarginFraction),
     },
   };
 }

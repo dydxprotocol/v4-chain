@@ -61,7 +61,7 @@ describe('priceCache', () => {
     await startPriceCache(testConstants.defaultBlock2.blockHeight);
 
     const map:PriceMap = getPriceMap();
-    expect(_.size(map)).toEqual(3);
+    expect(_.size(map)).toEqual(4);
     expect(
       getPrice(0),
     ).toEqual(
@@ -123,7 +123,7 @@ describe('priceCache', () => {
     updatePriceCacheWithPrice(priceFromDatabase);
 
     const map: PriceMap = getPriceMap();
-    expect(_.size(map)).toEqual(2);
+    expect(_.size(map)).toEqual(3);
     expect(
       getPrice(0),
     ).toEqual(

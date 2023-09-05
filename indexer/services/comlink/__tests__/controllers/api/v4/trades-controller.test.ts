@@ -138,6 +138,45 @@ describe('trades-controller#V4', () => {
       expect(response.body.trades).toEqual([]);
     });
 
+    it('Get /:ticker for ticker with price < 1e-6', async () => {
+      await testMocks.seedData();
+      await perpetualMarketRefresher.updatePerpetualMarkets();
+      // Order and fill for BTC-USD (maker and taker)
+      const fills1: {
+        makerFill: FillFromDatabase,
+        takerFill: FillFromDatabase,
+      } = await createMakerTakerOrderAndFill(
+        {
+          ...testConstants.defaultOrder,
+          clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+          price: '0.000000065',
+        },
+        {
+          ...testConstants.defaultFill,
+          clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+          price: '0.000000064',
+        },
+      );
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/trades/perpetualMarket/${testConstants.defaultPerpetualMarket3.ticker}`,
+      });
+
+      const expected: TradeResponseObject[] = [
+        fillToTradeResponseObject(fills1.takerFill),
+      ];
+
+      expect(response.body.trades).toHaveLength(1);
+      expect(response.body.trades).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...expected[0],
+          }),
+        ]),
+      );
+    });
+
     it('Returns 404 with unknown ticker', async () => {
       await testMocks.seedData();
 

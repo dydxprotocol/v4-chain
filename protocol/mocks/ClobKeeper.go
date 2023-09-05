@@ -794,6 +794,20 @@ func (_m *ClobKeeper) UpdateClobPair(ctx types.Context, clobPair clobtypes.ClobP
 	return r0
 }
 
+// UpdateLiquidationsConfig provides a mock function with given fields: ctx, config
+func (_m *ClobKeeper) UpdateLiquidationsConfig(ctx types.Context, config clobtypes.LiquidationsConfig) error {
+	ret := _m.Called(ctx, config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.LiquidationsConfig) error); ok {
+		r0 = rf(ctx, config)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateSubaccountLiquidationInfo provides a mock function with given fields: ctx, subaccountId, notionalLiquidatedQuoteQuantums, insuranceFundDeltaQuoteQuantums
 func (_m *ClobKeeper) UpdateSubaccountLiquidationInfo(ctx types.Context, subaccountId subaccountstypes.SubaccountId, notionalLiquidatedQuoteQuantums *big.Int, insuranceFundDeltaQuoteQuantums *big.Int) {
 	_m.Called(ctx, subaccountId, notionalLiquidatedQuoteQuantums, insuranceFundDeltaQuoteQuantums)

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,7 +56,14 @@ func (k Keeper) Perpetual(c context.Context, req *types.QueryPerpetualRequest) (
 	)
 	if err != nil {
 		if errors.Is(err, types.ErrPerpetualDoesNotExist) {
-			return nil, status.Error(codes.NotFound, "not found")
+			return nil,
+				status.Error(
+					codes.NotFound,
+					fmt.Sprintf(
+						"Perpetual id %+v not found.",
+						req.Id,
+					),
+				)
 		}
 
 		return nil, status.Error(codes.Internal, "internal error")

@@ -9,6 +9,9 @@ export const createLCDClient = async ({
   });
   return {
     dydxprotocol: {
+      assets: new (await import("./assets/query.lcd")).LCDQueryClient({
+        requestClient
+      }),
       blocktime: new (await import("./blocktime/query.lcd")).LCDQueryClient({
         requestClient
       }),
