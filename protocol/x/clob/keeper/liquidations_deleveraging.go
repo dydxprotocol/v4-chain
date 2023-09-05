@@ -296,7 +296,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 // ProcessDeleveraging processes a deleveraging operation by closing both the liquidated subaccount's
 // position and the offsetting subaccount's position at the bankruptcy price of the _liquidated_ position.
 // This function takes a `deltaQuantums` argument, which is the delta with respect to the liquidated subaccount's
-// position, to allow for partial deleveraging.
+// position, to allow for partial deleveraging. This function emits a cometbft event if the deleveraging match
+// is successfully written to state.
 //
 // This function returns an error if:
 // - `deltaQuantums` is not valid with respect to either of the subaccounts.
@@ -351,19 +352,24 @@ func (k Keeper) ProcessDeleveraging(
 		return err
 	}
 
+	liquidatedSubaccountQuoteBalanceDelta := bankruptcyPriceQuoteQuantums
+	offsettingSubaccountQuoteBalanceDelta := new(big.Int).Neg(bankruptcyPriceQuoteQuantums)
+	liquidatedSubaccountPerpetualQuantumsDelta := deltaQuantums
+	offsettingSubaccountPerpetualQuantumsDelta := new(big.Int).Neg(deltaQuantums)
+
 	updates := []satypes.Update{
 		// Liquidated subaccount update.
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
 					AssetId:          lib.UsdcAssetId,
-					BigQuantumsDelta: bankruptcyPriceQuoteQuantums,
+					BigQuantumsDelta: liquidatedSubaccountQuoteBalanceDelta,
 				},
 			},
 			PerpetualUpdates: []satypes.PerpetualUpdate{
 				{
 					PerpetualId:      perpetualId,
-					BigQuantumsDelta: deltaQuantums,
+					BigQuantumsDelta: liquidatedSubaccountPerpetualQuantumsDelta,
 				},
 			},
 			SubaccountId: liquidatedSubaccountId,
@@ -373,13 +379,13 @@ func (k Keeper) ProcessDeleveraging(
 			AssetUpdates: []satypes.AssetUpdate{
 				{
 					AssetId:          lib.UsdcAssetId,
-					BigQuantumsDelta: new(big.Int).Neg(bankruptcyPriceQuoteQuantums),
+					BigQuantumsDelta: offsettingSubaccountQuoteBalanceDelta,
 				},
 			},
 			PerpetualUpdates: []satypes.PerpetualUpdate{
 				{
 					PerpetualId:      perpetualId,
-					BigQuantumsDelta: new(big.Int).Neg(deltaQuantums),
+					BigQuantumsDelta: offsettingSubaccountPerpetualQuantumsDelta,
 				},
 			},
 			SubaccountId: offsettingSubaccountId,
@@ -393,5 +399,27 @@ func (k Keeper) ProcessDeleveraging(
 	}
 
 	// If not successful, return error indicating why.
-	return satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates)
+	if updateErr := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); updateErr != nil {
+		return updateErr
+	}
+
+	// Deleveraging was successful, therefore emit an event indicating a deleveraging match occurred.
+	ctx.EventManager().EmitEvent(
+		types.NewCreateMatchEvent(
+			liquidatedSubaccountId,
+			offsettingSubaccountId,
+			big.NewInt(0),
+			big.NewInt(0),
+			liquidatedSubaccountQuoteBalanceDelta,
+			offsettingSubaccountQuoteBalanceDelta,
+			liquidatedSubaccountPerpetualQuantumsDelta,
+			offsettingSubaccountPerpetualQuantumsDelta,
+			big.NewInt(0),
+			false,
+			true,
+			perpetualId,
+		),
+	)
+
+	return nil
 }
