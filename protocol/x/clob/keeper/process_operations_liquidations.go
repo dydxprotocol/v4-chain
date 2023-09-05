@@ -110,7 +110,14 @@ func (k Keeper) validateLiquidationAgainstSubaccountBlockLimits(
 	}
 
 	if bigNotionalLiquidated.CmpAbs(bigMaxNotionalLiquidatable) > 0 {
-		return types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated
+		return sdkerrors.Wrapf(
+			types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+			"Subaccount ID: %v, Perpetual ID: %v, Max Notional Liquidatable: %v, Notional Liquidated: %v",
+			subaccountId,
+			perpetualId,
+			bigMaxNotionalLiquidatable,
+			bigNotionalLiquidated,
+		)
 	}
 
 	// Validate that this liquidation does not exceed the maximum insurance fund payout amount for this
@@ -126,7 +133,14 @@ func (k Keeper) validateLiquidationAgainstSubaccountBlockLimits(
 		}
 
 		if insuranceFundDeltaQuoteQuantums.CmpAbs(bigMaxQuantumsInsuranceLost) > 0 {
-			return types.ErrLiquidationExceedsSubaccountMaxInsuranceLost
+			return sdkerrors.Wrapf(
+				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
+				"Subaccount ID: %v, Perpetual ID: %v, Max Insurance Lost: %v, Insurance Lost: %v",
+				subaccountId,
+				perpetualId,
+				bigMaxQuantumsInsuranceLost,
+				insuranceFundDeltaQuoteQuantums,
+			)
 		}
 	}
 	return nil

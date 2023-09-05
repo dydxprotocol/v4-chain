@@ -609,7 +609,7 @@ func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
 ) {
 	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
 
-	// Make sure that the subaccount has not previously liquidated this perpetual in the same block.
+	// Make sure that this subaccount <> perpetual has not previously been liquidated in the same block.
 	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
 		return nil, sdkerrors.Wrapf(
 			types.ErrSubaccountHasLiquidatedPerpetual,
@@ -627,11 +627,14 @@ func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
 		liquidationConfig.SubaccountBlockLimits.MaxNotionalLiquidated,
 	)
 	if bigTotalNotionalLiquidated.Cmp(bigNotionalLiquidatedBlockLimit) > 0 {
-		return nil, sdkerrors.Wrapf(
-			types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
-			"Subaccount %v has already liquidated %v notional in this block",
-			subaccountId,
-			bigTotalNotionalLiquidated,
+		panic(
+			sdkerrors.Wrapf(
+				types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+				"Subaccount %+v notional liquidated exceeds block limit. Current notional liquidated: %v, block limit: %v",
+				subaccountId,
+				bigTotalNotionalLiquidated,
+				bigNotionalLiquidatedBlockLimit,
+			),
 		)
 	}
 
@@ -643,8 +646,8 @@ func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
 	return bigMaxNotionalLiquidatable, nil
 }
 
-// GetSubaccountMaxInsuranceLost returns the maximum insurance fund payment without exceeding
-// the subaccount block limits.
+// GetSubaccountMaxInsuranceLost returns the maximum insurance fund payout that can be performed
+// in this block without exceeding the subaccount block limits.
 // This function takes into account any previous liquidations in the same block and returns an error if
 // called with a previously liquidated perpetual id.
 func (k Keeper) GetSubaccountMaxInsuranceLost(
@@ -675,11 +678,14 @@ func (k Keeper) GetSubaccountMaxInsuranceLost(
 		liquidationConfig.SubaccountBlockLimits.MaxQuantumsInsuranceLost,
 	)
 	if bigCurrentInsuranceFundLost.Cmp(bigInsuranceFundLostBlockLimit) > 0 {
-		return nil, sdkerrors.Wrapf(
-			types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
-			"Subaccount %v has already lost %v quantums of insurance fund in this block",
-			subaccountId,
-			bigCurrentInsuranceFundLost,
+		panic(
+			sdkerrors.Wrapf(
+				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
+				"Subaccount %+v insurance lost exceeds block limit. Current insurance lost: %v, block limit: %v",
+				subaccountId,
+				bigCurrentInsuranceFundLost,
+				bigInsuranceFundLostBlockLimit,
+			),
 		)
 	}
 

@@ -4520,10 +4520,12 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 		previousInsuranceFundLost       *big.Int
 
 		// Expectations.
-		expectedMaxNotionalLiquidatableErr error
-		expectedMaxInsuranceLostErr        error
-		expectedMaxNotionalLiquidatable    *big.Int
-		expectedMaxInsuranceLost           *big.Int
+		expectedMaxNotionalLiquidatablePanic bool
+		expectedMaxNotionalLiquidatableErr   error
+		expectedMaxInsuranceLostPanic        bool
+		expectedMaxInsuranceLostErr          error
+		expectedMaxNotionalLiquidatable      *big.Int
+		expectedMaxInsuranceLost             *big.Int
 	}{
 		"Can get max notional liquidatable and insurance lost": {
 			liquidationConfig: types.LiquidationsConfig{
@@ -4564,8 +4566,15 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 			previousNotionalLiquidated:      big.NewInt(100),
 			previousInsuranceFundLost:       big.NewInt(-100),
 
-			expectedMaxInsuranceLost:           big.NewInt(50),
-			expectedMaxNotionalLiquidatableErr: types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+			expectedMaxInsuranceLost:             big.NewInt(50),
+			expectedMaxNotionalLiquidatablePanic: true,
+			expectedMaxNotionalLiquidatableErr: sdkerrors.Wrapf(
+				types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+				"Subaccount %+v notional liquidated exceeds block limit. Current notional liquidated: %v, block limit: %v",
+				constants.Alice_Num0,
+				100,
+				50,
+			),
 		},
 		"invalid insurance lost": {
 			liquidationConfig: types.LiquidationsConfig{
@@ -4582,7 +4591,14 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 			previousInsuranceFundLost:       big.NewInt(-100),
 
 			expectedMaxNotionalLiquidatable: big.NewInt(50),
-			expectedMaxInsuranceLostErr:     types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
+			expectedMaxInsuranceLostPanic:   true,
+			expectedMaxInsuranceLostErr: sdkerrors.Wrapf(
+				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
+				"Subaccount %+v insurance lost exceeds block limit. Current insurance lost: %v, block limit: %v",
+				constants.Alice_Num0,
+				100,
+				50,
+			),
 		},
 	}
 
@@ -4609,28 +4625,58 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 				tc.previousInsuranceFundLost,
 			)
 
-			actualMaxNotionalLiquidatable, err := ks.ClobKeeper.GetSubaccountMaxNotionalLiquidatable(
-				ks.Ctx,
-				subaccountId,
-				perpetualId,
-			)
-			if tc.expectedMaxNotionalLiquidatableErr != nil {
-				require.ErrorContains(t, err, tc.expectedMaxNotionalLiquidatableErr.Error())
+			if tc.expectedMaxNotionalLiquidatablePanic {
+				require.PanicsWithError(
+					t,
+					tc.expectedMaxNotionalLiquidatableErr.Error(),
+					func() {
+						//nolint: errcheck
+						ks.ClobKeeper.GetSubaccountMaxNotionalLiquidatable(
+							ks.Ctx,
+							subaccountId,
+							perpetualId,
+						)
+					},
+				)
 			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedMaxNotionalLiquidatable, actualMaxNotionalLiquidatable)
+				actualMaxNotionalLiquidatable, err := ks.ClobKeeper.GetSubaccountMaxNotionalLiquidatable(
+					ks.Ctx,
+					subaccountId,
+					perpetualId,
+				)
+				if tc.expectedMaxNotionalLiquidatableErr != nil {
+					require.ErrorContains(t, err, tc.expectedMaxNotionalLiquidatableErr.Error())
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tc.expectedMaxNotionalLiquidatable, actualMaxNotionalLiquidatable)
+				}
 			}
 
-			actualMaxInsuranceLost, err := ks.ClobKeeper.GetSubaccountMaxInsuranceLost(
-				ks.Ctx,
-				subaccountId,
-				perpetualId,
-			)
-			if tc.expectedMaxInsuranceLostErr != nil {
-				require.ErrorContains(t, err, tc.expectedMaxInsuranceLostErr.Error())
+			if tc.expectedMaxInsuranceLostPanic {
+				require.PanicsWithError(
+					t,
+					tc.expectedMaxInsuranceLostErr.Error(),
+					func() {
+						//nolint: errcheck
+						ks.ClobKeeper.GetSubaccountMaxInsuranceLost(
+							ks.Ctx,
+							subaccountId,
+							perpetualId,
+						)
+					},
+				)
 			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedMaxInsuranceLost, actualMaxInsuranceLost)
+				actualMaxInsuranceLost, err := ks.ClobKeeper.GetSubaccountMaxInsuranceLost(
+					ks.Ctx,
+					subaccountId,
+					perpetualId,
+				)
+				if tc.expectedMaxInsuranceLostErr != nil {
+					require.ErrorContains(t, err, tc.expectedMaxInsuranceLostErr.Error())
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tc.expectedMaxInsuranceLost, actualMaxInsuranceLost)
+				}
 			}
 		})
 	}
