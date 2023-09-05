@@ -16,19 +16,16 @@ service Query {
   }
 
   // Queries a list of Asset items.
-  rpc AllAssets(QueryAllAssetsRequest)
-      returns (QueryAllAssetsResponse) {
+  rpc AllAssets(QueryAllAssetsRequest) returns (QueryAllAssetsResponse) {
     option (google.api.http).get = "/dydxprotocol/assets/asset";
   }
 }
 
-// Queries a Asset by id.
+// Queries an Asset by id.
 message QueryAssetRequest { uint32 id = 1; }
 
 // QueryAssetResponse is response type for the Asset RPC method.
-message QueryAssetResponse {
-  Asset asset = 1 [ (gogoproto.nullable) = false ];
-}
+message QueryAssetResponse { Asset asset = 1 [ (gogoproto.nullable) = false ]; }
 
 // Queries a list of Asset items.
 message QueryAllAssetsRequest {
