@@ -539,3 +539,26 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 
 	return nil
 }
+
+// IsPerpetualClobPairActive returns true if the ClobPair associated with the provided perpetual id
+// has the active status. Returns an error if the ClobPair cannot be found.
+func (k Keeper) IsPerpetualClobPairActive(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (bool, error) {
+	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
+	if err != nil {
+		return false, err
+	}
+
+	clobPair, found := k.GetClobPair(ctx, clobPairId)
+	if !found {
+		return false, sdkerrors.Wrapf(
+			types.ErrInvalidClob,
+			"GetPerpetualClobPairStatus: did not find clob pair with id = %d",
+			clobPairId,
+		)
+	}
+
+	return clobPair.Status == types.ClobPair_STATUS_ACTIVE, nil
+}

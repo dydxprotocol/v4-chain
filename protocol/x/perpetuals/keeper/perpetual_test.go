@@ -2269,7 +2269,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockPricePremiumGetter := mocks.PricePremiumGetter{}
+			mockPricePremiumGetter := mocks.PerpetualsClobKeeper{}
 			mockPricePremiumGetter.On(
 				"GetPricePremiumForPerpetual",
 				mock.Anything,
@@ -2285,7 +2285,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 				perpsKeeper,
 				pricesKeeper,
 				epochsKeeper,
-				_ := keepertest.PerpetualsKeepersWithPricePremiumGetter(
+				_ := keepertest.PerpetualsKeepersWithClobHelpers(
 				t,
 				&mockPricePremiumGetter,
 			)
