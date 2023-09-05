@@ -281,8 +281,8 @@ func (k Keeper) UpdateSubaccounts(
 		return success, successPerUpdate, err
 	}
 
-	// Apply all updates, including a subaccount update event in the Indexer
-	// block message per update and emit a cometbft event.
+	// Apply all updates, including a subaccount update event in the Indexer block message
+	// per update and emit a cometbft event for each settled funding payment.
 	for _, u := range settledUpdates {
 		k.SetSubaccount(ctx, u.SettledSubaccount)
 		// Below access is safe because for all updated subaccounts' IDs, this map
