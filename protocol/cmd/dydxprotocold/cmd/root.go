@@ -43,6 +43,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+
+	// Unnamed import of statik for swagger UI support.
+	// Used in cosmos-sdk when registering the route for swagger docs.
+	_ "github.com/dydxprotocol/v4-chain/protocol/client/docs/statik"
 )
 
 const (
