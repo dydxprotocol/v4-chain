@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"cosmossdk.io/simapp/params"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
@@ -268,16 +269,19 @@ func (a appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
-	// Report app version and git commit
-	version := version.NewInfo()
-	telemetry.SetGaugeWithLabels(
-		[]string{metrics.AppInfo},
-		1,
-		[]gometrics.Label{
-			metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
-			metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
-		},
-	)
+	// Report app version and git commit if not in dev
+	// TODO(DEC-2107): Doing this based on chain id seems brittle.
+	if !strings.Contains(chainID, "dev") {
+		version := version.NewInfo()
+		telemetry.SetGaugeWithLabels(
+			[]string{metrics.AppInfo},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
+				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
+			},
+		)
+	}
 
 	return dydxapp.New(
 		logger,
