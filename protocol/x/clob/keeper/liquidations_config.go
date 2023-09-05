@@ -50,6 +50,19 @@ func (k Keeper) setLiquidationsConfig(
 	return nil
 }
 
+// UpdateLiquidationsConfig updates the liquidations config in state.
+func (k Keeper) UpdateLiquidationsConfig(
+	ctx sdk.Context,
+	config types.LiquidationsConfig,
+) error {
+	// Write the liquidations config to state.
+	if err := k.setLiquidationsConfig(ctx, config); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // InitializeLiquidationsConfig initializes the liquidations config in state.
 // This function should only be called from the CLOB genesis.
 func (k Keeper) InitializeLiquidationsConfig(

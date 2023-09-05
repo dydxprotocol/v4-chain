@@ -443,6 +443,7 @@ func (k Keeper) persistMatchedOrders(
 			bigMakerPerpetualQuantumsDelta,
 			insuranceFundDelta,
 			isTakerLiquidation,
+			false,
 			perpetualId,
 		),
 	)

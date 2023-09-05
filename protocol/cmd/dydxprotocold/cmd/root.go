@@ -43,6 +43,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+
+	// Unnamed import of statik for swagger UI support.
+	// Used in cosmos-sdk when registering the route for swagger docs.
+	_ "github.com/dydxprotocol/v4-chain/protocol/client/docs/statik"
 )
 
 const (
@@ -269,11 +273,12 @@ func (a appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
-	// Report app version and git commit in non-dev and non-staging environments.
-	if !strings.Contains(chainID, "dev") && !strings.Contains(chainID, "staging") {
+	// Report app version and git commit if not in dev
+	// TODO(DEC-2107): Doing this based on chain id seems brittle.
+	if !strings.Contains(chainID, "dev") {
 		version := version.NewInfo()
-		telemetry.IncrCounterWithLabels(
-			[]string{metrics.AppVersionAndGitCommit},
+		telemetry.SetGaugeWithLabels(
+			[]string{metrics.AppInfo},
 			1,
 			[]gometrics.Label{
 				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),

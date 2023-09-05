@@ -123,4 +123,5 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		clobPair ClobPair,
 	) error
+	UpdateLiquidationsConfig(ctx sdk.Context, config LiquidationsConfig) error
 }
