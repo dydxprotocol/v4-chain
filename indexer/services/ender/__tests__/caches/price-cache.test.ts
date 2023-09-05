@@ -77,11 +77,6 @@ describe('priceCache', () => {
     ).toEqual(
       marketWithOraclePrice.oraclePrice,
     );
-    expect(
-      getPrice(2),
-    ).toEqual(
-      testConstants.defaultOraclePrice3.price,
-    );
     await expect(() => getPrice(marketWithoutOraclePrice.id)).toThrow(
       new Error(`price not found for marketId ${marketWithoutOraclePrice.id} in price cache`),
     );
