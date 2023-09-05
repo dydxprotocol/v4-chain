@@ -774,7 +774,8 @@ func (m *MsgUpdateBlockRateLimitConfiguration) GetBlockRateLimitConfig() BlockRa
 	return BlockRateLimitConfiguration{}
 }
 
-// MsgUpdateBlockRateLimitConfiguration is a response type for updating the liquidations config.
+// MsgUpdateBlockRateLimitConfiguration is a response type for updating the
+// liquidations config.
 type MsgUpdateBlockRateLimitConfigurationResponse struct {
 }
 
@@ -815,7 +816,8 @@ func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateBlockRateLimitConfigurationResponse proto.InternalMessageInfo
 
-// MsgUpdateLiquidationsConfig is a request type for updating the liquidations config.
+// MsgUpdateLiquidationsConfig is a request type for updating the liquidations
+// config.
 type MsgUpdateLiquidationsConfig struct {
 	// Authority is the address that may send this message.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`

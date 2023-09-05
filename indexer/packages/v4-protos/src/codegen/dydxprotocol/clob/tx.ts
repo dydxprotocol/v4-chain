@@ -243,13 +243,22 @@ export interface MsgUpdateBlockRateLimitConfigurationSDKType {
 
   block_rate_limit_config?: BlockRateLimitConfigurationSDKType;
 }
-/** MsgUpdateBlockRateLimitConfiguration is a response type for updating the liquidations config. */
+/**
+ * MsgUpdateBlockRateLimitConfiguration is a response type for updating the
+ * liquidations config.
+ */
 
 export interface MsgUpdateBlockRateLimitConfigurationResponse {}
-/** MsgUpdateBlockRateLimitConfiguration is a response type for updating the liquidations config. */
+/**
+ * MsgUpdateBlockRateLimitConfiguration is a response type for updating the
+ * liquidations config.
+ */
 
 export interface MsgUpdateBlockRateLimitConfigurationResponseSDKType {}
-/** MsgUpdateLiquidationsConfig is a request type for updating the liquidations config. */
+/**
+ * MsgUpdateLiquidationsConfig is a request type for updating the liquidations
+ * config.
+ */
 
 export interface MsgUpdateLiquidationsConfig {
   /** Authority is the address that may send this message. */
@@ -261,7 +270,10 @@ export interface MsgUpdateLiquidationsConfig {
 
   liquidationsConfig?: LiquidationsConfig;
 }
-/** MsgUpdateLiquidationsConfig is a request type for updating the liquidations config. */
+/**
+ * MsgUpdateLiquidationsConfig is a request type for updating the liquidations
+ * config.
+ */
 
 export interface MsgUpdateLiquidationsConfigSDKType {
   /** Authority is the address that may send this message. */

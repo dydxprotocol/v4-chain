@@ -153,10 +153,12 @@ message MsgUpdateBlockRateLimitConfiguration {
       [ (gogoproto.nullable) = false ];
 }
 
-// MsgUpdateBlockRateLimitConfiguration is a response type for updating the liquidations config.
+// MsgUpdateBlockRateLimitConfiguration is a response type for updating the
+// liquidations config.
 message MsgUpdateBlockRateLimitConfigurationResponse {}
 
-// MsgUpdateLiquidationsConfig is a request type for updating the liquidations config.
+// MsgUpdateLiquidationsConfig is a request type for updating the liquidations
+// config.
 message MsgUpdateLiquidationsConfig {
   option (cosmos.msg.v1.signer) = "authority";
 
