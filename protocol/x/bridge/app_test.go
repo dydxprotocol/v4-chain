@@ -21,6 +21,7 @@ const (
 
 func TestBridge_Success(t *testing.T) {
 	tests := map[string]struct {
+		// Setup.
 		// bridge events.
 		bridgeEvents []bridgetypes.BridgeEvent
 		// propose params.
@@ -29,8 +30,10 @@ func TestBridge_Success(t *testing.T) {
 		safetyParams bridgetypes.SafetyParams
 		// block time to advance to.
 		blockTime time.Time
+
+		// Expectations.
 		// whether bridge tx should have non-empty bridge events.
-		nonEmptyBridgeTx bool
+		expectNonEmptyBridgeTx bool
 	}{
 		"Success: 1 bridge event, delay 5 blocks": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
@@ -46,8 +49,8 @@ func TestBridge_Success(t *testing.T) {
 				IsDisabled:  false,
 				DelayBlocks: 5,
 			},
-			blockTime:        time.Now(),
-			nonEmptyBridgeTx: true,
+			blockTime:              time.Now(),
+			expectNonEmptyBridgeTx: true,
 		},
 		"Success: 4 bridge event, delay 27 blocks": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
@@ -66,8 +69,8 @@ func TestBridge_Success(t *testing.T) {
 				IsDisabled:  false,
 				DelayBlocks: 27,
 			},
-			blockTime:        time.Now(),
-			nonEmptyBridgeTx: true,
+			blockTime:              time.Now(),
+			expectNonEmptyBridgeTx: true,
 		},
 		"Skipped: wait for other validators to recognize bridge events": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
@@ -84,8 +87,8 @@ func TestBridge_Success(t *testing.T) {
 				IsDisabled:  false,
 				DelayBlocks: 5,
 			},
-			blockTime:        time.Now(),
-			nonEmptyBridgeTx: false,
+			blockTime:              time.Now(),
+			expectNonEmptyBridgeTx: false,
 		},
 		"Skipped: block delayed by too much": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
@@ -103,8 +106,8 @@ func TestBridge_Success(t *testing.T) {
 			},
 			// should skip proposing bridge events as block time is 11 seconds ago,
 			// which is more than 10 seconds of `SkipIfBlockDelayedByDuration`.
-			blockTime:        time.Now().Add(-time.Second * 11),
-			nonEmptyBridgeTx: false,
+			blockTime:              time.Now().Add(-time.Second * 11),
+			expectNonEmptyBridgeTx: false,
 		},
 	}
 
@@ -146,8 +149,12 @@ func TestBridge_Success(t *testing.T) {
 			require.Equal(t, &api.AddBridgeEventsResponse{}, res)
 			require.NoError(t, error)
 
-			// Advance to the block before complete bridge messages are executed and
-			// verify that balances have not changed.
+			// Verify that balances have not changed at the block right before the one where complete
+			// bridge messages should be executed, which is `DelayBlocks+2` because
+			// 1. Bridge events are recognized by server at block 1.
+			// 2. Bridge events are proposed at block 2 and complete bridge messages are delayed for
+			//    `DelayBlocks` number of blocks.
+			// 3. Complete bridge messages are executed at block `DelayBlocks+2`.
 			ctx = tApp.AdvanceToBlock(tc.safetyParams.DelayBlocks+1, testapp.AdvanceToBlockOptions{
 				BlockTime: tc.blockTime.Add(-time.Second * 1),
 			})
@@ -160,8 +167,8 @@ func TestBridge_Success(t *testing.T) {
 				require.Equal(t, initialBalances[event.Address], balance)
 			}
 
-			// Advance to the block after complete bridge messages are executed and
-			// verify that balances are updated if bridge events were proposed.
+			// Verify that balances are updated, if bridge events were proposed, at the block where
+			// complete bridge messages are executed.
 			ctx = tApp.AdvanceToBlock(tc.safetyParams.DelayBlocks+2, testapp.AdvanceToBlockOptions{
 				BlockTime: tc.blockTime,
 			})
@@ -171,7 +178,7 @@ func TestBridge_Success(t *testing.T) {
 					sdk.MustAccAddressFromBech32(event.Address),
 					TEST_DENOM,
 				)
-				if tc.nonEmptyBridgeTx { // bridge events were proposed.
+				if tc.expectNonEmptyBridgeTx { // bridge events were proposed.
 					require.Equal(t, expectedBalances[event.Address], balance)
 				} else {
 					require.Equal(t, initialBalances[event.Address], balance)
@@ -233,8 +240,8 @@ func TestBridge_REJECT(t *testing.T) {
 			require.Equal(t, &api.AddBridgeEventsResponse{}, res)
 			require.NoError(t, error)
 
-			// Propose bad bridge events in bridge tx.
 			proposal := tApp.PrepareProposal()
+			// Propose bad bridge events by overriding bridge tx, which is the third-to-last tx in the proposal.
 			proposal.Txs[len(proposal.Txs)-3] = testtx.MustGetTxBytes(
 				&bridgetypes.MsgAcknowledgeBridges{
 					Events: tc.bridgeEvents,
