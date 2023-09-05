@@ -525,7 +525,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	// Take the minimum of the subaccount block limit and position block limit.
-	bigMaxNotionalLiquidatable := lib.BigMin(
+	bigMaxQuoteQuantumsLiquidatable := lib.BigMin(
 		bigMaxPositionNotionalLiquidatable,
 		bigMaxSubaccountNotionalLiquidatable,
 	)
@@ -539,37 +539,45 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 		panic(err)
 	}
 
-	bigAbsQuoteQuantums := new(big.Int).Abs(bigQuoteQuantums)
 	// Return the full position to avoid any rounding errors.
-	if bigAbsQuoteQuantums.Cmp(bigMaxNotionalLiquidatable) <= 0 ||
+	if bigQuoteQuantums.CmpAbs(bigMaxQuoteQuantumsLiquidatable) <= 0 ||
 		perpetualPosition.GetBigQuantums().CmpAbs(
 			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		) <= 0 {
 		return clobPair, perpetualPosition.GetBigQuantums(), nil
 	}
 
-	bigQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
+	// Convert the max notional liquidatable to base quantums.
+	bigBaseQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
 		ctx,
 		perpetualPosition.PerpetualId,
-		bigMaxNotionalLiquidatable,
+		bigMaxQuoteQuantumsLiquidatable,
 	)
 	if err != nil {
 		panic(err)
 	}
 
 	// Round to the nearest step size.
-	bigQuantumsToLiquidate = lib.BigIntRoundToMultiple(
-		bigQuantumsToLiquidate,
+	bigBaseQuantumsToLiquidate = lib.BigIntRoundToMultiple(
+		bigBaseQuantumsToLiquidate,
 		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		false,
 	)
 
+	// Clamp the base quantums to liquidate to the step size and the size of the position
+	// in case there's rounding errors.
+	bigBaseQuantumsToLiquidate = lib.BigIntClamp(
+		bigBaseQuantumsToLiquidate,
+		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
+		new(big.Int).Abs(perpetualPosition.GetBigQuantums()),
+	)
+
 	// Negate the position size if it's short.
 	if !perpetualPosition.GetIsLong() {
-		bigQuantumsToLiquidate.Neg(bigQuantumsToLiquidate)
+		bigBaseQuantumsToLiquidate.Neg(bigBaseQuantumsToLiquidate)
 	}
 
-	return clobPair, bigQuantumsToLiquidate, nil
+	return clobPair, bigBaseQuantumsToLiquidate, nil
 }
 
 // GetMaxLiquidatableNotionalAndInsuranceLost returns the maximum notional that the subaccount can liquidate

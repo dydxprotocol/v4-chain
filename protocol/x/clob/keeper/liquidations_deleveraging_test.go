@@ -117,91 +117,62 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 	}
 }
 
-func TestShouldPerformDeleveraging(t *testing.T) {
+func TestIsValidInsuranceFundDelta(t *testing.T) {
 	tests := map[string]struct {
 		// Setup
-		liquidationConfig    types.LiquidationsConfig
 		insuranceFundBalance *big.Int
 		insuranceFundDelta   *big.Int
 
 		// Expectations.
-		expectedShouldPerformDeleveraging bool
+		expectedIsValidInsuranceFundDelta bool
 	}{
-		"zero insurance fund delta": {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		"valid: zero insurance fund delta": {
 			insuranceFundBalance: big.NewInt(9_998_000_000), // $9,998
 			insuranceFundDelta:   big.NewInt(0),
 
-			expectedShouldPerformDeleveraging: false,
+			expectedIsValidInsuranceFundDelta: true,
 		},
-		"zero insurance fund delta - insurance fund balance is greater than deleveraging threshold": {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(20_000_000_000), // $20,000
+		"valid: zero insurance fund delta and zero balance": {
+			insuranceFundBalance: big.NewInt(0), // $0
 			insuranceFundDelta:   big.NewInt(0),
 
-			expectedShouldPerformDeleveraging: false,
+			expectedIsValidInsuranceFundDelta: true,
 		},
-		"positive insurance fund delta": {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		"valid: positive insurance fund delta": {
 			insuranceFundBalance: big.NewInt(9_998_000_000), // $9,998
 			insuranceFundDelta:   big.NewInt(1_000_000),
 
-			expectedShouldPerformDeleveraging: false,
+			expectedIsValidInsuranceFundDelta: true,
 		},
-		"positive insurance fund delta - insurance fund after applying delta is greater than deleveraging threshold": {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(20_000_000_000), // $20,000
+		"valid: positive insurance fund delta and zero balance": {
+			insuranceFundBalance: big.NewInt(0), // $0
 			insuranceFundDelta:   big.NewInt(1_000_000),
 
-			expectedShouldPerformDeleveraging: false,
+			expectedIsValidInsuranceFundDelta: true,
 		},
-		"negative insurance fund delta - initial balance is less than deleveraging threshold": {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		"valid: negative insurance fund delta - insurance fund is still positive after delta": {
 			insuranceFundBalance: big.NewInt(9_998_000_000), // $10,000
 			insuranceFundDelta:   big.NewInt(-1_000_000),
 
-			expectedShouldPerformDeleveraging: true,
+			expectedIsValidInsuranceFundDelta: true,
 		},
-		"negative insurance fund delta - initial balance is greater than deleveraging threshold": {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(20_000_000_000), // $20,000
-			insuranceFundDelta:   big.NewInt(-1_000_000),
-
-			expectedShouldPerformDeleveraging: false,
-		},
-		"negative insurance fund delta - insurance fund balance can go from above threshold to below threshold": {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(10_000_000_000), // $10,000
-			insuranceFundDelta:   big.NewInt(-1_000_000),
-
-			expectedShouldPerformDeleveraging: false,
-		},
-		"negative insurance fund delta - abs delta is greater than max insurance fund quantums for deleverging ": {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		"valid: negative insurance fund delta - insurance fund has zero balance after delta": {
 			insuranceFundBalance: big.NewInt(10_000_000_000),
-			insuranceFundDelta:   big.NewInt(-10_000_000_001),
-
-			expectedShouldPerformDeleveraging: true,
-		},
-		"negative insurance fund delta - max insurance fund quantums for deleveraging is zero": {
-			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
-			insuranceFundBalance: big.NewInt(10_000_000_000),
-			insuranceFundDelta:   big.NewInt(-10_000_000_001),
-
-			expectedShouldPerformDeleveraging: true,
-		},
-		"negative insurance fund delta - max insurance fund quantums for deleveraging is max uint64": {
-			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm:                    5_000,
-				MaxInsuranceFundQuantumsForDeleveraging: math.MaxUint64,
-				FillablePriceConfig:                     constants.FillablePriceConfig_Default,
-				PositionBlockLimits:                     constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits:                   constants.SubaccountBlockLimits_No_Limit,
-			},
-			insuranceFundBalance: new(big.Int).SetUint64(math.MaxUint64 - 1),
 			insuranceFundDelta:   big.NewInt(-10_000_000_000),
 
-			expectedShouldPerformDeleveraging: true,
+			expectedIsValidInsuranceFundDelta: true,
+		},
+		"invalid: negative insurance fund delta - insurance fund is negative after delta": {
+			insuranceFundBalance: big.NewInt(10_000_000_000),
+			insuranceFundDelta:   big.NewInt(-10_000_000_001),
+
+			expectedIsValidInsuranceFundDelta: false,
+		},
+		"invalid: negative insurance fund delta - insurance fund was empty and is negative after delta": {
+			insuranceFundBalance: big.NewInt(0),
+			insuranceFundDelta:   big.NewInt(-1),
+
+			expectedIsValidInsuranceFundDelta: false,
 		},
 	}
 
@@ -223,10 +194,6 @@ func TestShouldPerformDeleveraging(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			// Initialize the liquidations config.
-			err = ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, tc.liquidationConfig)
-			require.NoError(t, err)
-
 			bankMock.On(
 				"GetBalance",
 				mock.Anything,
@@ -237,8 +204,8 @@ func TestShouldPerformDeleveraging(t *testing.T) {
 			)
 			require.Equal(
 				t,
-				tc.expectedShouldPerformDeleveraging,
-				ks.ClobKeeper.ShouldPerformDeleveraging(
+				tc.expectedIsValidInsuranceFundDelta,
+				ks.ClobKeeper.IsValidInsuranceFundDelta(
 					ks.Ctx,
 					tc.insuranceFundDelta,
 				),
