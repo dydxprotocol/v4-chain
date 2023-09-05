@@ -78,27 +78,23 @@ func (k Keeper) CanDeleverageSubaccount(
 	return true, nil
 }
 
-// ShouldPerformDeleveraging returns true if deleveraging needs to occur.
-// Specifically, this function returns true if both of the following are true:
-// - The `insuranceFundDelta` is negative.
-// - The insurance fund balance is less than `MaxInsuranceFundQuantumsForDeleveraging` or `abs(insuranceFundDelta)`.
-func (k Keeper) ShouldPerformDeleveraging(
+// IsValidInsuranceFundDelta returns true if the insurance fund has enough funds to cover the insurance
+// fund delta. Specifically, this function returns true if either of the following are true:
+// - The `insuranceFundDelta` is non-negative.
+// - The insurance fund balance + `insuranceFundDelta` is greater-than-or-equal-to 0.
+func (k Keeper) IsValidInsuranceFundDelta(
 	ctx sdk.Context,
 	insuranceFundDelta *big.Int,
-) (
-	shouldPerformDeleveraging bool,
-) {
+) bool {
+	// Non-negative insurance fund deltas are valid.
 	if insuranceFundDelta.Sign() >= 0 {
-		return false
+		return true
 	}
 
+	// The insurance fund delta is valid if the insurance fund balance is non-negative after adding
+	// the delta.
 	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx)
-
-	liquidationConfig := k.GetLiquidationsConfig(ctx)
-	bigMaxInsuranceFundForDeleveraging := new(big.Int).SetUint64(liquidationConfig.MaxInsuranceFundQuantumsForDeleveraging)
-
-	return new(big.Int).Add(currentInsuranceFundBalance, insuranceFundDelta).Sign() < 0 ||
-		currentInsuranceFundBalance.Cmp(bigMaxInsuranceFundForDeleveraging) < 0
+	return new(big.Int).Add(currentInsuranceFundBalance, insuranceFundDelta).Sign() >= 0
 }
 
 // OffsetSubaccountPerpetualPosition iterates over all subaccounts and use those with positions
