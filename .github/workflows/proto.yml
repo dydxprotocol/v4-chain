@@ -116,9 +116,6 @@ jobs:
           npm run build
   swagger-gen:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cosmos/proto-builder:0.11.5
-      options: --user root
     steps:
       - uses: actions/checkout@v3
       - run: |
