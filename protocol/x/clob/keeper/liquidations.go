@@ -643,7 +643,8 @@ func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
 	return bigMaxNotionalLiquidatable, nil
 }
 
-// GetSubaccountMaxInsuranceLost returns the maximum insurance fund payment without exceeding the subaccount block limits.
+// GetSubaccountMaxInsuranceLost returns the maximum insurance fund payment without exceeding
+// the subaccount block limits.
 // This function takes into account any previous liquidations in the same block and returns an error if
 // called with a previously liquidated perpetual id.
 func (k Keeper) GetSubaccountMaxInsuranceLost(
