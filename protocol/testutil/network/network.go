@@ -10,9 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 
+	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	tmdb "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

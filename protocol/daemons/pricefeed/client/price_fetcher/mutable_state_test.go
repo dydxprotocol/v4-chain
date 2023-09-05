@@ -1,7 +1,7 @@
 package price_fetcher
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"

@@ -1,6 +1,7 @@
 package bank
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	testutilcli "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -48,7 +49,7 @@ func GetModuleAccUsdcBalance(
 // *big.Int type when setting up mocks.
 func MatchUsdcOfAmount(amount int64) func(coins sdk.Coins) bool {
 	return func(coins sdk.Coins) bool {
-		return coins[0].Amount.Equal(sdk.NewInt(amount))
+		return coins[0].Amount.Equal(sdkmath.NewInt(amount))
 	}
 }
 

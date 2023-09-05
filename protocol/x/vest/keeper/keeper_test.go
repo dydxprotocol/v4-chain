@@ -107,7 +107,7 @@ func TestProcessVesting(t *testing.T) {
 		expectedTreasuryBalance sdkmath.Int
 	}{
 		"vesting has not started": {
-			vesterBalance: sdk.NewInt(1_000_000),
+			vesterBalance: sdkmath.NewInt(1_000_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -117,11 +117,11 @@ func TestProcessVesting(t *testing.T) {
 			},
 			prevBlockTime:           time.Unix(1000, 0).In(time.UTC),
 			blockTime:               time.Unix(1001, 0).In(time.UTC),
-			expectedVesterBalance:   sdk.NewInt(1_000_000),
-			expectedTreasuryBalance: sdk.NewInt(0),
+			expectedVesterBalance:   sdkmath.NewInt(1_000_000),
+			expectedTreasuryBalance: sdkmath.NewInt(0),
 		},
 		"vesting has ended": {
-			vesterBalance: sdk.NewInt(0),
+			vesterBalance: sdkmath.NewInt(0),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -131,11 +131,11 @@ func TestProcessVesting(t *testing.T) {
 			},
 			prevBlockTime:           time.Unix(1000, 0).In(time.UTC),
 			blockTime:               time.Unix(1001, 0).In(time.UTC),
-			expectedVesterBalance:   sdk.NewInt(0),
-			expectedTreasuryBalance: sdk.NewInt(0),
+			expectedVesterBalance:   sdkmath.NewInt(0),
+			expectedTreasuryBalance: sdkmath.NewInt(0),
 		},
 		"vesting in progress, start_time < prev_block_time < block_time < end_time": {
-			vesterBalance: sdk.NewInt(2_000_000),
+			vesterBalance: sdkmath.NewInt(2_000_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -146,11 +146,11 @@ func TestProcessVesting(t *testing.T) {
 			prevBlockTime: time.Unix(1000, 0),
 			blockTime:     time.Unix(1001, 0),
 			// (1001 - 1000) / (2000 - 1000) * 1_000_000 = 1_000
-			expectedTreasuryBalance: sdk.NewInt(2_000),
-			expectedVesterBalance:   sdk.NewInt(1_998_000),
+			expectedTreasuryBalance: sdkmath.NewInt(2_000),
+			expectedVesterBalance:   sdkmath.NewInt(1_998_000),
 		},
 		"vesting in progress, start_time < prev_block_time < block_time < end_time, rounds down": {
-			vesterBalance: sdk.NewInt(2_005_000),
+			vesterBalance: sdkmath.NewInt(2_005_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -161,11 +161,11 @@ func TestProcessVesting(t *testing.T) {
 			prevBlockTime: time.Unix(1000, 0),
 			blockTime:     time.Unix(1001, 500_000_000),
 			// (1001.5 - 1000) / (2000 - 1000) * 2_005_000 = 3007
-			expectedTreasuryBalance: sdk.NewInt(3_007),
-			expectedVesterBalance:   sdk.NewInt(2_001_993),
+			expectedTreasuryBalance: sdkmath.NewInt(3_007),
+			expectedVesterBalance:   sdkmath.NewInt(2_001_993),
 		},
 		"vesting about to end, start_time < prev_block_time < end_time < block_time, vest all balance": {
-			vesterBalance: sdk.NewInt(2_005_000),
+			vesterBalance: sdkmath.NewInt(2_005_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -175,11 +175,11 @@ func TestProcessVesting(t *testing.T) {
 			},
 			prevBlockTime:           time.Unix(1999, 0).In(time.UTC),
 			blockTime:               time.Unix(2001, 0).In(time.UTC),
-			expectedTreasuryBalance: sdk.NewInt(2_005_000),
-			expectedVesterBalance:   sdk.NewInt(0),
+			expectedTreasuryBalance: sdkmath.NewInt(2_005_000),
+			expectedVesterBalance:   sdkmath.NewInt(0),
 		},
 		"vesting just started, prev_block_time < start_time < block_time < end_time": {
-			vesterBalance: sdk.NewInt(2_005_000),
+			vesterBalance: sdkmath.NewInt(2_005_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -190,8 +190,8 @@ func TestProcessVesting(t *testing.T) {
 			prevBlockTime: time.Unix(499, 0),
 			blockTime:     time.Unix(500, 500_000_000),
 			// 0.5 / (2000 - 500) * 2_005_000 = 668
-			expectedTreasuryBalance: sdk.NewInt(668),
-			expectedVesterBalance:   sdk.NewInt(2_004_332),
+			expectedTreasuryBalance: sdkmath.NewInt(668),
+			expectedVesterBalance:   sdkmath.NewInt(2_004_332),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

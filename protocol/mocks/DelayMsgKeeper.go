@@ -6,7 +6,7 @@ import (
 	lib "github.com/dydxprotocol/v4-chain/protocol/lib"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 
-	log "github.com/cometbft/cometbft/libs/log"
+	log "cosmossdk.io/log"
 
 	mock "github.com/stretchr/testify/mock"
 

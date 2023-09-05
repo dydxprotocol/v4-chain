@@ -1,8 +1,8 @@
 package price_encoder
 
 import (
+	"cosmossdk.io/log"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	pf_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"

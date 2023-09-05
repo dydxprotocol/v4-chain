@@ -1,14 +1,15 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"testing"
 	"time"
 
+	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -1585,7 +1586,7 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
-		).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(tc.insuranceFundBalance)))
+		).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(tc.insuranceFundBalance)))
 	}
 
 	mockIndexerEventManager = &mocks.IndexerEventManager{}

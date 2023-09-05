@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
 )
 
 // ValidateFromParam checks that the MarketPrice is valid and that it corresponds to the given MarketParam.

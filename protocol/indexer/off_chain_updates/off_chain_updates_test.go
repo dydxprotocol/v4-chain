@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"

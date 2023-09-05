@@ -154,7 +154,7 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 						Id: event.Id,
 						Coin: sdk.NewCoin(
 							event.Coin.Denom,
-							sdk.NewInt(1000000000000000000), // incorrect amount.
+							sdkmath.NewInt(1000000000000000000), // incorrect amount.
 						),
 						Address:        event.Address,
 						EthBlockHeight: event.EthBlockHeight,

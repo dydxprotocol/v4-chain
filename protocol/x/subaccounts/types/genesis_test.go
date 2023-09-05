@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"

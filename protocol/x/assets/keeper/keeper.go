@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	sdklog "cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	sdkerrors "cosmossdk.io/errors"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	customante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
 	appmsgs "github.com/dydxprotocol/v4-chain/protocol/app/msgs"

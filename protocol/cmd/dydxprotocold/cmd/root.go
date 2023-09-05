@@ -12,11 +12,11 @@ import (
 	"cosmossdk.io/simapp/params"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	gometrics "github.com/armon/go-metrics"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

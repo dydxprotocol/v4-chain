@@ -5,7 +5,7 @@ import (
 
 	sdklog "cosmossdk.io/log"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	storetypes "cosmossdk.io/store/types"

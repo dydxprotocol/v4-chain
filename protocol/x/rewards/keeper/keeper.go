@@ -1,14 +1,15 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"math/big"
 	"time"
 
+	"cosmossdk.io/log"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -308,7 +309,7 @@ func (k Keeper) ProcessRewardsForBlock(
 			[]sdk.Coin{
 				{
 					Denom:  params.Denom,
-					Amount: sdk.NewIntFromBigInt(rewardAmountForAddress),
+					Amount: sdkmath.NewIntFromBigInt(rewardAmountForAddress),
 				},
 			},
 		); err != nil {

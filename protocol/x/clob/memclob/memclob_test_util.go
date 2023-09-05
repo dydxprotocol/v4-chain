@@ -6,7 +6,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"

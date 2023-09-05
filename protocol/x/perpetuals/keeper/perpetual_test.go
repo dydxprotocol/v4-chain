@@ -20,8 +20,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"

@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,12 +30,12 @@ var (
 
 	DelayMsgAuthority = authtypes.NewModuleAddress(types.ModuleName).String()
 
-	BridgeGenesisAccountBalance = sdk.NewCoin("dv4tnt", sdk.NewInt(1000000000))
-	AliceInitialAccountBalance  = sdk.NewCoin("dv4tnt", sdk.NewInt(99500000000))
+	BridgeGenesisAccountBalance = sdk.NewCoin("dv4tnt", sdkmath.NewInt(1000000000))
+	AliceInitialAccountBalance  = sdk.NewCoin("dv4tnt", sdkmath.NewInt(99500000000))
 
 	delta                        = constants.BridgeEvent_Id0_Height0.Coin.Amount.Int64()
-	BridgeExpectedAccountBalance = sdk.NewCoin("dv4tnt", sdk.NewInt(1000000000-delta))
-	AliceExpectedAccountBalance  = sdk.NewCoin("dv4tnt", sdk.NewInt(99500000000+delta))
+	BridgeExpectedAccountBalance = sdk.NewCoin("dv4tnt", sdkmath.NewInt(1000000000-delta))
+	AliceExpectedAccountBalance  = sdk.NewCoin("dv4tnt", sdkmath.NewInt(99500000000+delta))
 )
 
 func TestDispatchMessagesForBlock(t *testing.T) {

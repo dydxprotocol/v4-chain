@@ -1,8 +1,8 @@
 package types
 
 import (
+	sdkerrors "cosmossdk.io/errors"
 	"fmt"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // DefaultGenesis returns the default genesis state

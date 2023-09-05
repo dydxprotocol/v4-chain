@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // getValidateBasicError returns a sdk error for `Msg.ValidateBasic` failure.

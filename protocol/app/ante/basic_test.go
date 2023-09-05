@@ -3,10 +3,10 @@ package ante_test
 import (
 	"testing"
 
+	sdkerrors "cosmossdk.io/errors"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"

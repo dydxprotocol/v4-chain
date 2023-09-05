@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
 	"math/big"
@@ -1324,7 +1325,7 @@ func TestPrepareCheckState(t *testing.T) {
 				mock.Anything,
 				authtypes.NewModuleAddress(types.InsuranceFundName),
 				constants.Usdc.Denom,
-			).Return(sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(new(big.Int))))
+			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,

@@ -1,9 +1,9 @@
 package error
 
 import (
+	"cosmossdk.io/log"
 	"errors"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/logging"
 )
 

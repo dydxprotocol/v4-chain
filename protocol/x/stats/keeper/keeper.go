@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"

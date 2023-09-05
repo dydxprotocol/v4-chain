@@ -7,7 +7,7 @@ import (
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
 	pricefeedconstants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server"

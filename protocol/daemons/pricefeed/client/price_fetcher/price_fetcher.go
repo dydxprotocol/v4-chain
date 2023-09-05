@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"cosmossdk.io/log"
 	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"

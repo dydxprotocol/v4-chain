@@ -4,7 +4,7 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	bridgeapi "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	liquidationapi "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"

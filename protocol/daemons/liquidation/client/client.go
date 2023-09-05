@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
 	"math"
@@ -278,7 +279,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
 				bk.On(
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
@@ -462,7 +463,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
 				bk.On(
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
@@ -567,7 +568,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
 				bk.On(
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
@@ -671,7 +672,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
 				bk.On(
 					"SendCoinsFromModuleToModule",
 					mock.Anything,

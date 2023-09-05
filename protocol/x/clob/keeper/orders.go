@@ -6,10 +6,10 @@ import (
 	"math/big"
 	"time"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
