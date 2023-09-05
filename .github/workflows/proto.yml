@@ -127,4 +127,4 @@ jobs:
           curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
           chmod +x "${BIN}/buf"
       - working-directory: ./protocol
-      - run: make proto-swagger-gen && git diff --exit-code
+        run: make proto-swagger-gen && git diff --exit-code
