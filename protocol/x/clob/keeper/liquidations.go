@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -405,16 +404,6 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	insuranceFundDeltaQuoteQuantums *big.Int,
 	err error,
 ) {
-	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
-	if err != nil {
-		panic(fmt.Errorf("GetLiquidationInsuranceFundDelta: CLOB pair not found for perpetual %d", perpetualId))
-	}
-
-	clobPair, found := k.GetClobPair(ctx, clobPairId)
-	if !found {
-		panic(fmt.Errorf("GetLiquidationInsuranceFundDelta: CLOB pair %d not found", clobPairId))
-	}
-
 	// Verify that fill amount is not zero.
 	if fillAmount == 0 {
 		return nil, sdkerrors.Wrapf(
@@ -426,6 +415,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	}
 
 	// Get the delta quantums and delta quote quantums.
+	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	deltaQuantums := new(big.Int).SetUint64(fillAmount)
 	deltaQuoteQuantums, err := getFillQuoteQuantums(
 		clobPair,
@@ -513,20 +503,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	perpetualPosition := subaccount.PerpetualPositions[0]
-	clobPairId, err := k.GetClobPairIdForPerpetual(
-		ctx,
-		perpetualPosition.PerpetualId,
-	)
-	// If an unexpected error is returned, panic.
-	if err != nil {
-		panic(err)
-	}
-
-	// Get the corresponding CLOB pair from state.
-	clobPair, found := k.GetClobPair(ctx, clobPairId)
-	if !found {
-		panic(fmt.Errorf("CLOB pair ID %d not found in state", clobPairId))
-	}
+	clobPair = k.mustGetClobPairForPerpetualId(ctx, perpetualPosition.PerpetualId)
 
 	// Get the maximum notional liquidatable for this position.
 	_, bigMaxPositionNotionalLiquidatable, err := k.GetMaxAndMinPositionNotionalLiquidatable(

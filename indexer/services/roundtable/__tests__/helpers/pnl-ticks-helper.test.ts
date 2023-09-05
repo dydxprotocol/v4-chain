@@ -155,6 +155,7 @@ describe('pnl-ticks-helper', () => {
       1: {
         [testConstants.defaultPerpetualMarket.id]: Big('100'),
         [testConstants.defaultPerpetualMarket2.id]: Big('2'),
+        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
       },
     });
 
@@ -167,6 +168,7 @@ describe('pnl-ticks-helper', () => {
       2: {
         [testConstants.defaultPerpetualMarket.id]: Big('10050'),
         [testConstants.defaultPerpetualMarket2.id]: Big('5'),
+        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
       },
     });
     const accountsToUpdate3: string[] = [
@@ -182,14 +184,17 @@ describe('pnl-ticks-helper', () => {
       1: {
         [testConstants.defaultPerpetualMarket.id]: Big('100'),
         [testConstants.defaultPerpetualMarket2.id]: Big('2'),
+        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
       },
       2: {
         [testConstants.defaultPerpetualMarket.id]: Big('10050'),
         [testConstants.defaultPerpetualMarket2.id]: Big('5'),
+        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
       },
       3: {
         [testConstants.defaultPerpetualMarket.id]: Big('10050'),
         [testConstants.defaultPerpetualMarket2.id]: Big('5'),
+        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
       },
     });
   });

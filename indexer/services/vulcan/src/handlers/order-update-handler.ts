@@ -151,6 +151,7 @@ export class OrderUpdateHandler extends Handler {
         ticker: redisOrder.ticker,
         side: protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
         humanPrice: redisOrder.price,
+        // Size delta needs to be an integer
         sizeDeltaInQuantums: sizeDeltaInQuantums.toFixed(0),
         client: redisClient,
       }),

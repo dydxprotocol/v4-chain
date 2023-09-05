@@ -4341,9 +4341,9 @@ func TestGetPerpetualPositionToLiquidate_PanicsClobPairNotInState(t *testing.T) 
 
 	ks.ClobKeeper.PerpetualIdToClobPairId[0] = []types.ClobPairId{0}
 
-	require.PanicsWithError(
+	require.PanicsWithValue(
 		t,
-		"CLOB pair ID 0 not found in state",
+		"mustGetClobPair: ClobPair with id 0 not found",
 		func() {
 			//nolint: errcheck
 			ks.ClobKeeper.GetPerpetualPositionToLiquidate(
