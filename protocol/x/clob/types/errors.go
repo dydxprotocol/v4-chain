@@ -188,6 +188,11 @@ var (
 		39,
 		"ClobPair update is invalid",
 	)
+	ErrInvalidAuthority = sdkerrors.Register(
+		ModuleName,
+		40,
+		"Authority is invalid",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(
