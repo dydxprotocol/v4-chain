@@ -332,7 +332,6 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				0,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
 				uint32(100),
-				uint64(0),
 				uint64(5),
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 			),
