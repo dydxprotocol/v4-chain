@@ -15,7 +15,8 @@
     },
     {
       "exchangeName": "CryptoCom",
-      "ticker": "BCH_USD"
+      "ticker": "BCH_USD",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Gate",
