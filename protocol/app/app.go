@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"io"
 	"net/http"
 	"os"
@@ -363,9 +364,10 @@ func New(
 	// add keepers
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
-		keys[authtypes.StoreKey],
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)

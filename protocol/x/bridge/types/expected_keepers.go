@@ -1,15 +1,18 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // BankKeeper defines the expected bank keeper.
 type BankKeeper interface {
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(
-		ctx sdk.Context,
+		ctx context.Context,
 		senderModule string,
 		recipientAddr sdk.AccAddress,
 		amt sdk.Coins,
 	) error
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }

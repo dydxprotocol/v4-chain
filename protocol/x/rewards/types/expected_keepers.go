@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -15,8 +16,8 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 type FeeTiersKeeper interface {

@@ -159,11 +159,11 @@ func AppStateRandomizedFn(
 		initialStake       math.Int
 	)
 	appParams.GetOrGenerate(
-		cdc, sims.StakePerAccount, &initialStake, r,
+		sims.StakePerAccount, &initialStake, r,
 		func(r *rand.Rand) { initialStake = math.NewInt(r.Int63n(1e12)) },
 	)
 	appParams.GetOrGenerate(
-		cdc, sims.InitiallyBondedValidators, &numInitiallyBonded, r,
+		sims.InitiallyBondedValidators, &numInitiallyBonded, r,
 		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(299) + 1) },
 	)
 

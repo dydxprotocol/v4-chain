@@ -1,6 +1,8 @@
 package app
 
 import (
+	"cosmossdk.io/log"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"reflect"
 	"testing"
 
@@ -36,6 +38,7 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		authtypes.ProtoBaseAccount,
 		nil,
+		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -46,6 +49,7 @@ func newTestHandlerOptions() HandlerOptions {
 		accountKeeper,
 		BlockedAddresses(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		log.NewNopLogger(),
 	)
 
 	feeGrantKeeper := feegrantkeeper.NewKeeper(appCodec, nil, accountKeeper)

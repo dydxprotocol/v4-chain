@@ -44,7 +44,7 @@ func WeightedOperations(
 	operations := make([]simtypes.WeightedOperation, 0)
 
 	var weightMsgCreateTransfer int
-	appParams.GetOrGenerate(jsonCdc, opWeightMsgCreateTransfer, &weightMsgCreateTransfer, nil,
+	appParams.GetOrGenerate(opWeightMsgCreateTransfer, &weightMsgCreateTransfer, nil,
 		func(_ *rand.Rand) {
 			weightMsgCreateTransfer = defaultWeightMsgCreateTransfer
 		},

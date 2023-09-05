@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,8 +74,8 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }

@@ -1,8 +1,8 @@
 package types
 
 import (
+	"context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
@@ -35,12 +35,12 @@ type PerpetualsClobKeeper interface {
 
 // AccountKeeper defines the expected account keeper used for simulations.
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 // BankKeeper defines the expected bank keeper used for simulations.
 type BankKeeper interface {
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 // EpochsKeeper defines the expected epochs keeper to get epoch info.

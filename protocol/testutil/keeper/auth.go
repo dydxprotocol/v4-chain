@@ -5,7 +5,9 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -43,9 +45,10 @@ func createAccountKeeper(
 
 	k := keeper.NewAccountKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		types.ProtoBaseAccount,
 		maccPerms,
+		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		types.NewModuleAddress(govtypes.ModuleName).String(),
 	)
