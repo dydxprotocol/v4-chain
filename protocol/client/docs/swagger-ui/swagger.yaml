@@ -4,6 +4,332 @@ info:
   description: A REST interface for state queries, legacy transactions
   version: 1.0.0
 paths:
+  /dydxprotocol/assets/asset:
+    get:
+      summary: Queries a list of Asset items.
+      operationId: AllAssets
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              asset:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                      description: Unique, sequentially-generated.
+                    symbol:
+                      type: string
+                      description: >-
+                        The human readable symbol of the `Asset` (e.g. `USDC`,
+                        `ATOM`).
+
+                        Must be uppercase, unique and correspond to the
+                        canonical symbol of the
+
+                        full coin.
+                    denom:
+                      type: string
+                      description: >-
+                        The name of base denomination unit of the `Asset` (e.g.
+                        `uatom`,
+
+                        'ibc/xxxxx'). Must be unique and match the `denom` used
+                        in the `sdk.Coin`
+
+                        type in the `x/bank` module.
+                    denom_exponent:
+                      type: integer
+                      format: int32
+                      title: >-
+                        The exponent of converting one unit of `denom` to a full
+                        coin.
+
+                        For example, `name=USDC, denom=uusdc, denom_exponent=-6`
+                        defines that
+
+                        `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a
+                        `Coin` type in
+
+                        `x/bank`, where the prefix `u` means `micro` by
+                        convetion. `uusdc` is
+
+                        a different concept from a "quantum" defined by
+                        `atomic_resolution` below.
+
+                        To convert from an amount of `denom` to quantums:
+
+                        `quantums = denom_amount * 10^(denom_exponent -
+                        atomic_resolution)`
+                    has_market:
+                      type: boolean
+                      description: '`true` if this `Asset` has a valid `MarketId` value.'
+                    market_id:
+                      type: integer
+                      format: int64
+                      description: >-
+                        The `Id` of the `Market` associated with this `Asset`.
+                        It acts as the
+
+                        oracle price for the purposes of calculating collateral
+
+                        and margin requirements.
+                    atomic_resolution:
+                      type: integer
+                      format: int32
+                      description: >-
+                        The exponent for converting an atomic amount (1
+                        'quantum')
+
+                        to a full coin. For example, if `atomic_resolution = -8`
+
+                        then an `asset_position` with `base_quantums = 1e8` is
+                        equivalent to
+
+                        a position size of one full coin.
+                    long_interest:
+                      type: string
+                      format: uint64
+                      description: The total positive balance across the exchange.
+                  description: Asset defines a single exchangable asset.
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+            description: >-
+              QueryAllAssetsResponse is response type for the AllAssets RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /dydxprotocol/assets/asset/{id}:
+    get:
+      summary: Queries a Asset by id.
+      operationId: Asset
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              asset:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: Unique, sequentially-generated.
+                  symbol:
+                    type: string
+                    description: >-
+                      The human readable symbol of the `Asset` (e.g. `USDC`,
+                      `ATOM`).
+
+                      Must be uppercase, unique and correspond to the canonical
+                      symbol of the
+
+                      full coin.
+                  denom:
+                    type: string
+                    description: >-
+                      The name of base denomination unit of the `Asset` (e.g.
+                      `uatom`,
+
+                      'ibc/xxxxx'). Must be unique and match the `denom` used in
+                      the `sdk.Coin`
+
+                      type in the `x/bank` module.
+                  denom_exponent:
+                    type: integer
+                    format: int32
+                    title: >-
+                      The exponent of converting one unit of `denom` to a full
+                      coin.
+
+                      For example, `name=USDC, denom=uusdc, denom_exponent=-6`
+                      defines that
+
+                      `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a
+                      `Coin` type in
+
+                      `x/bank`, where the prefix `u` means `micro` by convetion.
+                      `uusdc` is
+
+                      a different concept from a "quantum" defined by
+                      `atomic_resolution` below.
+
+                      To convert from an amount of `denom` to quantums:
+
+                      `quantums = denom_amount * 10^(denom_exponent -
+                      atomic_resolution)`
+                  has_market:
+                    type: boolean
+                    description: '`true` if this `Asset` has a valid `MarketId` value.'
+                  market_id:
+                    type: integer
+                    format: int64
+                    description: >-
+                      The `Id` of the `Market` associated with this `Asset`. It
+                      acts as the
+
+                      oracle price for the purposes of calculating collateral
+
+                      and margin requirements.
+                  atomic_resolution:
+                    type: integer
+                    format: int32
+                    description: >-
+                      The exponent for converting an atomic amount (1 'quantum')
+
+                      to a full coin. For example, if `atomic_resolution = -8`
+
+                      then an `asset_position` with `base_quantums = 1e8` is
+                      equivalent to
+
+                      a position size of one full coin.
+                  long_interest:
+                    type: string
+                    format: uint64
+                    description: The total positive balance across the exchange.
+                description: Asset defines a single exchangable asset.
+            description: QueryAssetResponse is response type for the Asset RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+          format: int64
+      tags:
+        - Query
   /dydxprotocol/v4/blocktime/downtime_params:
     get:
       summary: Queries the DowntimeParams.
@@ -450,10 +776,6 @@ paths:
                         per BaseQuantum
 
                         per Subtick.
-                    min_order_base_quantums:
-                      type: string
-                      format: uint64
-                      description: Minimum size of an order on the CLOB, in base quantums.
                     status:
                       type: string
                       enum:
@@ -664,10 +986,6 @@ paths:
                       BaseQuantum
 
                       per Subtick.
-                  min_order_base_quantums:
-                    type: string
-                    format: uint64
-                    description: Minimum size of an order on the CLOB, in base quantums.
                   status:
                     type: string
                     enum:
@@ -41235,6 +41553,339 @@ paths:
       tags:
         - Service
 definitions:
+  cosmos.base.query.v1beta1.PageRequest:
+    type: object
+    properties:
+      key:
+        type: string
+        format: byte
+        description: |-
+          key is a value returned in PageResponse.next_key to begin
+          querying the next page most efficiently. Only one of offset or key
+          should be set.
+      offset:
+        type: string
+        format: uint64
+        description: |-
+          offset is a numeric offset that can be used when key is unavailable.
+          It is less efficient than using key. Only one of offset or key should
+          be set.
+      limit:
+        type: string
+        format: uint64
+        description: >-
+          limit is the total number of results to be returned in the result
+          page.
+
+          If left empty it will default to a value to be set by each app.
+      count_total:
+        type: boolean
+        description: >-
+          count_total is set to true  to indicate that the result set should
+          include
+
+          a count of the total number of items available for pagination in UIs.
+
+          count_total is only respected when offset is used. It is ignored when
+          key
+
+          is set.
+      reverse:
+        type: boolean
+        description: >-
+          reverse is set to true if results are to be returned in the descending
+          order.
+
+
+          Since: cosmos-sdk 0.43
+    description: |-
+      message SomeRequest {
+               Foo some_parameter = 1;
+               PageRequest pagination = 2;
+       }
+    title: |-
+      PageRequest is to be embedded in gRPC request messages for efficient
+      pagination. Ex:
+  cosmos.base.query.v1beta1.PageResponse:
+    type: object
+    properties:
+      next_key:
+        type: string
+        format: byte
+        description: |-
+          next_key is the key to be passed to PageRequest.key to
+          query the next page most efficiently. It will be empty if
+          there are no more results.
+      total:
+        type: string
+        format: uint64
+        title: |-
+          total is total number of results available if PageRequest.count_total
+          was set, its value is undefined otherwise
+    description: |-
+      PageResponse is to be embedded in gRPC response messages where the
+      corresponding request message has used PageRequest.
+
+       message SomeResponse {
+               repeated Bar results = 1;
+               PageResponse page = 2;
+       }
+  dydxprotocol.assets.Asset:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Unique, sequentially-generated.
+      symbol:
+        type: string
+        description: >-
+          The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+
+          Must be uppercase, unique and correspond to the canonical symbol of
+          the
+
+          full coin.
+      denom:
+        type: string
+        description: >-
+          The name of base denomination unit of the `Asset` (e.g. `uatom`,
+
+          'ibc/xxxxx'). Must be unique and match the `denom` used in the
+          `sdk.Coin`
+
+          type in the `x/bank` module.
+      denom_exponent:
+        type: integer
+        format: int32
+        title: >-
+          The exponent of converting one unit of `denom` to a full coin.
+
+          For example, `name=USDC, denom=uusdc, denom_exponent=-6` defines that
+
+          `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a `Coin` type in
+
+          `x/bank`, where the prefix `u` means `micro` by convetion. `uusdc` is
+
+          a different concept from a "quantum" defined by `atomic_resolution`
+          below.
+
+          To convert from an amount of `denom` to quantums:
+
+          `quantums = denom_amount * 10^(denom_exponent - atomic_resolution)`
+      has_market:
+        type: boolean
+        description: '`true` if this `Asset` has a valid `MarketId` value.'
+      market_id:
+        type: integer
+        format: int64
+        description: |-
+          The `Id` of the `Market` associated with this `Asset`. It acts as the
+          oracle price for the purposes of calculating collateral
+          and margin requirements.
+      atomic_resolution:
+        type: integer
+        format: int32
+        description: |-
+          The exponent for converting an atomic amount (1 'quantum')
+          to a full coin. For example, if `atomic_resolution = -8`
+          then an `asset_position` with `base_quantums = 1e8` is equivalent to
+          a position size of one full coin.
+      long_interest:
+        type: string
+        format: uint64
+        description: The total positive balance across the exchange.
+    description: Asset defines a single exchangable asset.
+  dydxprotocol.assets.QueryAllAssetsResponse:
+    type: object
+    properties:
+      asset:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: Unique, sequentially-generated.
+            symbol:
+              type: string
+              description: >-
+                The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+
+                Must be uppercase, unique and correspond to the canonical symbol
+                of the
+
+                full coin.
+            denom:
+              type: string
+              description: >-
+                The name of base denomination unit of the `Asset` (e.g. `uatom`,
+
+                'ibc/xxxxx'). Must be unique and match the `denom` used in the
+                `sdk.Coin`
+
+                type in the `x/bank` module.
+            denom_exponent:
+              type: integer
+              format: int32
+              title: >-
+                The exponent of converting one unit of `denom` to a full coin.
+
+                For example, `name=USDC, denom=uusdc, denom_exponent=-6` defines
+                that
+
+                `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a `Coin`
+                type in
+
+                `x/bank`, where the prefix `u` means `micro` by convetion.
+                `uusdc` is
+
+                a different concept from a "quantum" defined by
+                `atomic_resolution` below.
+
+                To convert from an amount of `denom` to quantums:
+
+                `quantums = denom_amount * 10^(denom_exponent -
+                atomic_resolution)`
+            has_market:
+              type: boolean
+              description: '`true` if this `Asset` has a valid `MarketId` value.'
+            market_id:
+              type: integer
+              format: int64
+              description: >-
+                The `Id` of the `Market` associated with this `Asset`. It acts
+                as the
+
+                oracle price for the purposes of calculating collateral
+
+                and margin requirements.
+            atomic_resolution:
+              type: integer
+              format: int32
+              description: >-
+                The exponent for converting an atomic amount (1 'quantum')
+
+                to a full coin. For example, if `atomic_resolution = -8`
+
+                then an `asset_position` with `base_quantums = 1e8` is
+                equivalent to
+
+                a position size of one full coin.
+            long_interest:
+              type: string
+              format: uint64
+              description: The total positive balance across the exchange.
+          description: Asset defines a single exchangable asset.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: QueryAllAssetsResponse is response type for the AllAssets RPC method.
+  dydxprotocol.assets.QueryAssetResponse:
+    type: object
+    properties:
+      asset:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            description: Unique, sequentially-generated.
+          symbol:
+            type: string
+            description: >-
+              The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+
+              Must be uppercase, unique and correspond to the canonical symbol
+              of the
+
+              full coin.
+          denom:
+            type: string
+            description: >-
+              The name of base denomination unit of the `Asset` (e.g. `uatom`,
+
+              'ibc/xxxxx'). Must be unique and match the `denom` used in the
+              `sdk.Coin`
+
+              type in the `x/bank` module.
+          denom_exponent:
+            type: integer
+            format: int32
+            title: >-
+              The exponent of converting one unit of `denom` to a full coin.
+
+              For example, `name=USDC, denom=uusdc, denom_exponent=-6` defines
+              that
+
+              `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a `Coin`
+              type in
+
+              `x/bank`, where the prefix `u` means `micro` by convetion. `uusdc`
+              is
+
+              a different concept from a "quantum" defined by
+              `atomic_resolution` below.
+
+              To convert from an amount of `denom` to quantums:
+
+              `quantums = denom_amount * 10^(denom_exponent -
+              atomic_resolution)`
+          has_market:
+            type: boolean
+            description: '`true` if this `Asset` has a valid `MarketId` value.'
+          market_id:
+            type: integer
+            format: int64
+            description: >-
+              The `Id` of the `Market` associated with this `Asset`. It acts as
+              the
+
+              oracle price for the purposes of calculating collateral
+
+              and margin requirements.
+          atomic_resolution:
+            type: integer
+            format: int32
+            description: >-
+              The exponent for converting an atomic amount (1 'quantum')
+
+              to a full coin. For example, if `atomic_resolution = -8`
+
+              then an `asset_position` with `base_quantums = 1e8` is equivalent
+              to
+
+              a position size of one full coin.
+          long_interest:
+            type: string
+            format: uint64
+            description: The total positive balance across the exchange.
+        description: Asset defines a single exchangable asset.
+    description: QueryAssetResponse is response type for the Asset RPC method.
   google.protobuf.Any:
     type: object
     properties:
@@ -41957,83 +42608,6 @@ definitions:
 
           until the minted tokens are granted.
     description: SafetyParams stores safety parameters for the module.
-  cosmos.base.query.v1beta1.PageRequest:
-    type: object
-    properties:
-      key:
-        type: string
-        format: byte
-        description: |-
-          key is a value returned in PageResponse.next_key to begin
-          querying the next page most efficiently. Only one of offset or key
-          should be set.
-      offset:
-        type: string
-        format: uint64
-        description: |-
-          offset is a numeric offset that can be used when key is unavailable.
-          It is less efficient than using key. Only one of offset or key should
-          be set.
-      limit:
-        type: string
-        format: uint64
-        description: >-
-          limit is the total number of results to be returned in the result
-          page.
-
-          If left empty it will default to a value to be set by each app.
-      count_total:
-        type: boolean
-        description: >-
-          count_total is set to true  to indicate that the result set should
-          include
-
-          a count of the total number of items available for pagination in UIs.
-
-          count_total is only respected when offset is used. It is ignored when
-          key
-
-          is set.
-      reverse:
-        type: boolean
-        description: >-
-          reverse is set to true if results are to be returned in the descending
-          order.
-
-
-          Since: cosmos-sdk 0.43
-    description: |-
-      message SomeRequest {
-               Foo some_parameter = 1;
-               PageRequest pagination = 2;
-       }
-    title: |-
-      PageRequest is to be embedded in gRPC request messages for efficient
-      pagination. Ex:
-  cosmos.base.query.v1beta1.PageResponse:
-    type: object
-    properties:
-      next_key:
-        type: string
-        format: byte
-        description: |-
-          next_key is the key to be passed to PageRequest.key to
-          query the next page most efficiently. It will be empty if
-          there are no more results.
-      total:
-        type: string
-        format: uint64
-        title: |-
-          total is total number of results available if PageRequest.count_total
-          was set, its value is undefined otherwise
-    description: |-
-      PageResponse is to be embedded in gRPC response messages where the
-      corresponding request message has used PageRequest.
-
-       message SomeResponse {
-               repeated Bar results = 1;
-               PageResponse page = 2;
-       }
   dydxprotocol.clob.AreSubaccountsLiquidatableResponse:
     type: object
     properties:
@@ -42228,10 +42802,6 @@ definitions:
         description: |-
           `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
           per Subtick.
-      min_order_base_quantums:
-        type: string
-        format: uint64
-        description: Minimum size of an order on the CLOB, in base quantums.
       status:
         type: string
         enum:
@@ -43147,10 +43717,6 @@ definitions:
                 BaseQuantum
 
                 per Subtick.
-            min_order_base_quantums:
-              type: string
-              format: uint64
-              description: Minimum size of an order on the CLOB, in base quantums.
             status:
               type: string
               enum:
@@ -43269,10 +43835,6 @@ definitions:
               BaseQuantum
 
               per Subtick.
-          min_order_base_quantums:
-            type: string
-            format: uint64
-            description: Minimum size of an order on the CLOB, in base quantums.
           status:
             type: string
             enum:
