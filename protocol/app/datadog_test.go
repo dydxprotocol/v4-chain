@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"

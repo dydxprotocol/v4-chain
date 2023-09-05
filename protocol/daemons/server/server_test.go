@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	pricefeedconstants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"

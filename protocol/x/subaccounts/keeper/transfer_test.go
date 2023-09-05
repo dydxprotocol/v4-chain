@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"math"
 	"math/big"
 	"testing"
 
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -153,7 +154,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					ctx,
 					testAccAddress,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.accAddressBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
 					},
 					*bankKeeper,
 				)
@@ -165,7 +166,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					ctx,
 					types.ModuleName,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 					},
 					*bankKeeper,
 				)
@@ -228,7 +229,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
 			)
 
@@ -238,7 +239,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.expectedAccAddressBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedAccAddressBalance)),
 				testAccountBalance,
 			)
 		})
@@ -382,7 +383,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					ctx,
 					testAccAddress,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.accAddressBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
 					},
 					*bankKeeper,
 				)
@@ -394,7 +395,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					ctx,
 					types.ModuleName,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 					},
 					*bankKeeper,
 				)
@@ -471,7 +472,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 				subaccountsModuleAccBalance,
 			)
 
@@ -481,7 +482,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.accAddressBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
 				testAccountBalance,
 			)
 		})
@@ -691,7 +692,7 @@ func TestTransferFundsFromSubaccountToModule_TransferFundsFromModuleToSubaccount
 					ctx,
 					tc.otherModuleName,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.otherModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.otherModuleAccBalance)),
 					},
 					*bankKeeper,
 				)
@@ -703,7 +704,7 @@ func TestTransferFundsFromSubaccountToModule_TransferFundsFromModuleToSubaccount
 					ctx,
 					types.ModuleName,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 					},
 					*bankKeeper,
 				)
@@ -790,7 +791,7 @@ func TestTransferFundsFromSubaccountToModule_TransferFundsFromModuleToSubaccount
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
 			)
 
@@ -800,7 +801,7 @@ func TestTransferFundsFromSubaccountToModule_TransferFundsFromModuleToSubaccount
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.expectedOtherModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedOtherModuleAccBalance)),
 				toModuleBalance,
 			)
 		})
@@ -910,7 +911,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 					ctx,
 					authtypes.FeeCollectorName,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.feeModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.feeModuleAccBalance)),
 					},
 					*bankKeeper,
 				)
@@ -922,7 +923,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 					ctx,
 					types.ModuleName,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 					},
 					*bankKeeper,
 				)
@@ -977,7 +978,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
 			)
 
@@ -987,7 +988,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdk.NewIntFromBigInt(tc.expectedFeeModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedFeeModuleAccBalance)),
 				toModuleBalance,
 			)
 		})

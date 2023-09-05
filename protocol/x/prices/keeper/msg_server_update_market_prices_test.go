@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	sdkerrors "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"

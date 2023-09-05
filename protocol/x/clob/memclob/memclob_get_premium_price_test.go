@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"

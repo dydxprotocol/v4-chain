@@ -1,8 +1,8 @@
 package error
 
 import (
+	"cosmossdk.io/log"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/logging"
 	"github.com/stretchr/testify/require"
 	"testing"

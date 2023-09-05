@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/store/types"
 )
 
 type freeInfiniteGasMeter struct {

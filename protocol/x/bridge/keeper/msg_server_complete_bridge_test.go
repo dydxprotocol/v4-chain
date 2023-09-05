@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"testing"
 
@@ -30,7 +31,7 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 				Authority: constants.DelayMsgModuleAccAddressString,
 				Event: types.BridgeEvent{
 					Id:             0,
-					Coin:           sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+					Coin:           sdk.NewCoin("dv4tnt", sdkmath.NewInt(1)),
 					Address:        "invalid",
 					EthBlockHeight: 1,
 				},

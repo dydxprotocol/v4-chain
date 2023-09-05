@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	log "github.com/cometbft/cometbft/libs/log"
+	log "cosmossdk.io/log"
 	mock "github.com/stretchr/testify/mock"
 
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"

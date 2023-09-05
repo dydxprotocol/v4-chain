@@ -6,4 +6,4 @@
 proto-export-dydxjs:
 	rm -rf ./.proto-export
 	buf export --config ./buf.yaml --output ./.proto-export --exclude-imports
-	buf export buf.build/cosmos/cosmos-sdk:v0.47.0 --output ./.proto-export
+	buf export buf.build/cosmos/cosmos-sdk:v0.50.0-rc.0 --output ./.proto-export

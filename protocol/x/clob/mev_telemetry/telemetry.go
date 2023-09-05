@@ -8,8 +8,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	"cosmossdk.io/log"
 	sdklog "cosmossdk.io/log"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"

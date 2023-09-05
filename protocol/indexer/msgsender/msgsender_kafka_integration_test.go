@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
+	tmlog "cosmossdk.io/log"
 	"github.com/Shopify/sarama"
-	tmlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"

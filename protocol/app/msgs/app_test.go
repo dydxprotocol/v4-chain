@@ -3,9 +3,9 @@ package msgs_test
 import (
 	"testing"
 
+	sdkerrors "cosmossdk.io/errors"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"

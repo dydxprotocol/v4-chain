@@ -5,9 +5,9 @@ import (
 	"sort"
 	"time"
 
+	"cosmossdk.io/store/prefix"
 	gometrics "github.com/armon/go-metrics"
 	db "github.com/cometbft/cometbft-db"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"

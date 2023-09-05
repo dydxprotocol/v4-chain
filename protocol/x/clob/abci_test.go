@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
 	"math/big"
@@ -20,8 +21,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
@@ -1324,7 +1325,7 @@ func TestPrepareCheckState(t *testing.T) {
 				mock.Anything,
 				authtypes.NewModuleAddress(types.InsuranceFundName),
 				constants.Usdc.Denom,
-			).Return(sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(new(big.Int))))
+			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,

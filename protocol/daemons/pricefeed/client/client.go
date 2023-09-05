@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 )
 
 // Client encapsulates the logic for executing and cleanly stopping all subtasks associated with the

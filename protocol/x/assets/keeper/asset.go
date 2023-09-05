@@ -1,13 +1,14 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdkerrors "cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
@@ -388,5 +389,5 @@ func (k Keeper) ConvertAssetToCoin(
 
 	bigConvertedQuantums := bigRatConvertedQuantums.Num()
 
-	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdk.NewIntFromBigInt(bigConvertedDenomAmount)), nil
+	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmount)), nil
 }

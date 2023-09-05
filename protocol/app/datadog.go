@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"gopkg.in/DataDog/dd-trace-go.v1/profiler"

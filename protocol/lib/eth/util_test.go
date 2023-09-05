@@ -25,7 +25,7 @@ func TestBridgeLogToEvent(t *testing.T) {
 				Id: 0,
 				Coin: sdk.NewCoin(
 					"dv4tnt",
-					sdk.NewInt(12345),
+					sdkmath.NewInt(12345),
 				),
 				Address:        "dydx1qqgzqvzq2ps8pqys5zcvp58q7rluextx92xhln",
 				EthBlockHeight: 3872013,
@@ -38,7 +38,7 @@ func TestBridgeLogToEvent(t *testing.T) {
 				Id: 1,
 				Coin: sdk.NewCoin(
 					"test-token",
-					sdk.NewInt(55),
+					sdkmath.NewInt(55),
 				),
 				// address shorter than 20 bytes is padded with zeros.
 				Address:        "dydx1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq66wm82",
@@ -52,7 +52,7 @@ func TestBridgeLogToEvent(t *testing.T) {
 				Id: 2,
 				Coin: sdk.NewCoin(
 					"test-token",
-					sdk.NewInt(777),
+					sdkmath.NewInt(777),
 				),
 				// 32 bytes * 8 bits / 5 bits = 51.2 characters ~ 52 bech32 characters
 				Address:        "dydx1qqgzqvzq2ps8pqys5zcvp58q7rluextxzy3rx3z4vemc3xgq42as94fpcv",
@@ -66,7 +66,7 @@ func TestBridgeLogToEvent(t *testing.T) {
 				Id: 3,
 				Coin: sdk.NewCoin(
 					"test-token-2",
-					sdk.NewInt(888),
+					sdkmath.NewInt(888),
 				),
 				// address data is 62 bytes but we take the first 32 bytes only.
 				// 32 bytes * 8 bits / 5 bits ~ 52 bech32 characters
@@ -81,7 +81,7 @@ func TestBridgeLogToEvent(t *testing.T) {
 				Id: 4,
 				Coin: sdk.NewCoin(
 					"dv4tnt",
-					sdk.NewInt(1234123443214321),
+					sdkmath.NewInt(1234123443214321),
 				),
 				// address shorter than 20 bytes is padded with zeros.
 				Address:        "dydx1zg6pydqqqqqqqqqqqqqqqqqqqqqqqqqqm0r5ra",

@@ -839,7 +839,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				authtypes.NewModuleAddress(types.InsuranceFundName),
 				constants.Usdc.Denom,
 			).Return(
-				sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(new(big.Int))),
+				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
 			)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())

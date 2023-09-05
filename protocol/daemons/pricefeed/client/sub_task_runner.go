@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"cosmossdk.io/log"
 	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
