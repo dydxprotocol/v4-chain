@@ -169,12 +169,14 @@ func (k Keeper) DelayMessageByBlocks(
 		)
 	}
 
-	if err := msg.ValidateBasic(); err != nil {
-		return 0, sdkerrors.Wrapf(
-			types.ErrInvalidInput,
-			"message failed basic validation: %v",
-			err,
-		)
+	if m, ok := msg.(sdk.HasValidateBasic); ok {
+		if err := m.ValidateBasic(); err != nil {
+			return 0, sdkerrors.Wrapf(
+				types.ErrInvalidInput,
+				"message failed basic validation: %v",
+				err,
+			)
+		}
 	}
 
 	if err := validateSigners(msg); err != nil {

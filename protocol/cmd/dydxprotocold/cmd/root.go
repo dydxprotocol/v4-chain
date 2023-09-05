@@ -14,7 +14,6 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
-	gometrics "github.com/armon/go-metrics"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -41,6 +40,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )

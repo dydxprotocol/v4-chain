@@ -3,10 +3,10 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	gometrics "github.com/hashicorp/go-metrics"
 	"sort"
 	"strings"
 	"sync"

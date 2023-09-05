@@ -9,7 +9,6 @@ require (
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/Shopify/sarama v1.37.2
-	github.com/armon/go-metrics v0.4.1
 	github.com/cometbft/cometbft v0.38.0-rc3
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -54,6 +53,7 @@ require (
 	github.com/cosmos/ibc-go/modules/capability v1.0.0-rc3
 	github.com/deckarep/golang-set/v2 v2.3.0
 	github.com/ethereum/go-ethereum v1.12.0
+	github.com/hashicorp/go-metrics v0.5.1
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/shopspring/decimal v1.3.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e
@@ -215,7 +215,6 @@ require (
 	github.com/hashicorp/go-getter v1.7.1 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.5.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.10 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
