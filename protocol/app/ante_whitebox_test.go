@@ -8,12 +8,12 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"

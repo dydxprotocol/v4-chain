@@ -3,8 +3,8 @@ package app
 import (
 	"fmt"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade
