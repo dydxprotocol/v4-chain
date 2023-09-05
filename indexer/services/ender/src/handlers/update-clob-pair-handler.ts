@@ -42,7 +42,6 @@ export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
       status: protocolTranslations.clobStatusToMarketStatus(this.event.status),
       quantumConversionExponent: this.event.quantumConversionExponent,
       subticksPerTick: this.event.subticksPerTick,
-      minOrderBaseQuantums: Number(this.event.minOrderBaseQuantums),
       stepBaseQuantums: Number(this.event.stepBaseQuantums),
     }, { txId: this.txId });
 
