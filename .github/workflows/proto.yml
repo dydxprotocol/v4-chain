@@ -116,15 +116,15 @@ jobs:
           npm run build
   protocol-gen:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cosmos/proto-builder:0.11.5
+      options: --user root
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
       - run: |
           BIN="/usr/local/bin" && \
           VERSION="1.26.1" && \
           curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
           chmod +x "${BIN}/buf"
-      - run: |
-        cd protocol && make proto-swagger-gen && git diff --exit-code
+      - working-directory: ./protocol
+      - run: make proto-swagger-gen && git diff --exit-code
