@@ -199,7 +199,6 @@ export interface TradingPerpetualMarketMessage {
   quantumConversionExponent?: number;
   atomicResolution?: number;
   subticksPerTick?: number;
-  minOrderBaseQuantums?: number;
   stepBaseQuantums?: number;
 
   // Fields that are likely to change
