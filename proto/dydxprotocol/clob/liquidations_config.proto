@@ -7,7 +7,7 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // LiquidationsConfig stores all configurable fields related to liquidations.
 message LiquidationsConfig {
-  // The maximum number of quote quantums (exclusive) that the insurance fund
+  // The maximum number of quote quantums (inclusive) that the insurance fund
   // can have for deleverages to be enabled. This is typically some non-zero
   // value since it is difficult to fully-drain the insurance fund (to
   // zero without rounding error).

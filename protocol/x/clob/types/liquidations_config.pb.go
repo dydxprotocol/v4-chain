@@ -25,7 +25,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // LiquidationsConfig stores all configurable fields related to liquidations.
 type LiquidationsConfig struct {
-	// The maximum number of quote quantums (exclusive) that the insurance fund
+	// The maximum number of quote quantums (inclusive) that the insurance fund
 	// can have for deleverages to be enabled. This is typically some non-zero
 	// value since it is difficult to fully-drain the insurance fund (to
 	// zero without rounding error).
