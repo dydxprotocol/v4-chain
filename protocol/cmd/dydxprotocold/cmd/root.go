@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/simapp/params"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
+	"cosmossdk.io/store"
 	gometrics "github.com/armon/go-metrics"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -26,7 +27,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"

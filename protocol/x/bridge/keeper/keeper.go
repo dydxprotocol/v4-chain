@@ -7,8 +7,8 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bridgeserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
