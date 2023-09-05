@@ -801,7 +801,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				).Return(
-					// Insurance fund has $99 initially.
+					// Insurance fund has $0.99 initially.
 					sdk.NewCoin("USDC", sdk.NewIntFromUint64(990_000)),
 				).Once()
 				bk.On(

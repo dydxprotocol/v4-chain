@@ -81,7 +81,7 @@ func (k Keeper) CanDeleverageSubaccount(
 // IsValidInsuranceFundDelta returns true if the insurance fund has enough funds to cover the insurance
 // fund delta. Specifically, this function returns true if either of the following are true:
 // - The `insuranceFundDelta` is non-negative.
-// - The insurance fund balance is greater-than-or-equal-to `abs(insuranceFundDelta)`.
+// - The insurance fund balance + `insuranceFundDelta` is greater-than-or-equal-to 0.
 func (k Keeper) IsValidInsuranceFundDelta(
 	ctx sdk.Context,
 	insuranceFundDelta *big.Int,
