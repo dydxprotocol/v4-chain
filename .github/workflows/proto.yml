@@ -114,7 +114,7 @@ jobs:
           npm install
           npm run transpile
           npm run build
-  protocol-gen:
+  swagger-gen:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/cosmos/proto-builder:0.11.5
