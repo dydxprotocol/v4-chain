@@ -521,7 +521,6 @@ Returns everything from `v4/trades/perpetualMarkets/${id}` endpoint.
       "id": "BTC-USD",
       "contents": {
         "trades": [
-    
           {
             "side": "BUY",
             "size": "0.00396135",
@@ -895,7 +894,7 @@ type OraclePriceMarketMessageContentsMapping = {
 };
 
 interface OraclePriceMarket {
-  price: string,
+  oraclePrice: string,
   effectiveAt: IsoString,
   effectiveAtHeight: string,
   marketId: number,
