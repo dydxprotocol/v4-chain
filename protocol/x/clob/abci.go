@@ -198,6 +198,12 @@ func PrepareCheckState(
 			// in a separate goroutine and is not always in sync with the application.
 			// Therefore, if subaccount is not liquidatable, continue.
 			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				telemetry.IncrCounter(
+					1,
+					metrics.MaybeGetLiquidationOrder,
+					metrics.SubaccountsNotLiquidatable,
+					metrics.Count,
+				)
 				continue
 			}
 

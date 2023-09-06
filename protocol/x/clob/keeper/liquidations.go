@@ -31,12 +31,6 @@ func (k Keeper) MaybeGetLiquidationOrder(
 		return nil, err
 	}
 	if !isLiquidatable {
-		telemetry.IncrCounter(
-			1,
-			metrics.MaybeGetLiquidationOrder,
-			metrics.SubaccountsNotLiquidatable,
-			metrics.Count,
-		)
 		return nil, types.ErrSubaccountNotLiquidatable
 	}
 
@@ -495,6 +489,9 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	var perpetualPosition *satypes.PerpetualPosition
 
 	for _, position := range subaccount.PerpetualPositions {
+		// Note that this could run in O(n^2) time. This is fine for now because we have less than a hundred
+		// perpetuals and only liquidate once per subaccount per block. This means that the position with smallest
+		// id will be liquidated first.
 		if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
 			perpetualPosition = position
 			break

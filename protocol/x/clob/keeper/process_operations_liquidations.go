@@ -11,14 +11,14 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-// ValidateLiquidationOrderAgainstProposedMatch performs stateless validation of a liquidation order
-// against a proposed match.
+// ValidateLiquidationOrderAgainstProposedLiquidation performs stateless validation of a liquidation order
+// against a proposed liquidation.
 // An error is returned when
-//   - The CLOB pair IDs of the order and proposed match do not match.
-//   - The perpetual IDs of the order and proposed match do not match.
-//   - The total size of the order and proposed match do not match.
-//   - The side of the order and proposed match do not match.
-func (k Keeper) ValidateLiquidationOrderAgainstProposedMatch(
+//   - The CLOB pair IDs of the order and proposed liquidation do not match.
+//   - The perpetual IDs of the order and proposed liquidation do not match.
+//   - The total size of the order and proposed liquidation do not match.
+//   - The side of the order and proposed liquidation do not match.
+func (k Keeper) ValidateLiquidationOrderAgainstProposedLiquidation(
 	ctx sdk.Context,
 	order *types.LiquidationOrder,
 	proposedMatch *types.MatchPerpetualLiquidation,
