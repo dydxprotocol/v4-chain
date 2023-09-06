@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ sdk.Msg = &MsgUpdateClobPair{}
@@ -15,15 +14,5 @@ func (msg *MsgUpdateClobPair) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic validates that the message's ClobPair status is a supported status.
 func (msg *MsgUpdateClobPair) ValidateBasic() error {
-	// TODO(CORE-504): Implement message validation, copy from MsgCreateClobPair.
-
-	if !IsSupportedClobPairStatus(msg.ClobPair.Status) {
-		return sdkerrors.Wrapf(
-			ErrInvalidMsgUpdateClobPair,
-			"Cannot set status for ClobPair with id %d to unsupported ClobPair status %s",
-			msg.ClobPair.Id,
-			msg.ClobPair.Status,
-		)
-	}
-	return nil
+	return msg.ClobPair.Validate()
 }

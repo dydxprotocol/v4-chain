@@ -88,25 +88,14 @@ func (k Keeper) CreatePerpetualClobPair(
 
 // validateClobPair validates a CLOB pair's fields are suitable for CLOB pair creation.
 //
-// - Metadata:
+// Stateful Validation:
 //   - Must be a perpetual CLOB pair with a perpetualId matching a perpetual in the store.
 //
-// - Status:
-//   - Must be a supported status.
-//
-// - StepBaseQuantums:
-//   - Must be greater than zero.
-//
-// - SubticksPerTick:
-//   - Must be greater than zero.
+// Stateless Validation
+//   - `clobPair.Validate()` returns no error.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
-	if !types.IsSupportedClobPairStatus(clobPair.Status) {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"CLOB pair (%+v) has unsupported status %+v",
-			clobPair,
-			clobPair.Status,
-		)
+	if err := clobPair.Validate(); err != nil {
+		return err
 	}
 
 	// TODO(DEC-1535): update this validation when we implement "spot"/"asset" clob pairs.
@@ -136,25 +125,6 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 			clobPair,
 		)
 	}
-
-	if clobPair.StepBaseQuantums <= 0 {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"invalid ClobPair parameter: StepBaseQuantums must be > 0. Got %v",
-			clobPair.StepBaseQuantums,
-		)
-	}
-
-	// Since a subtick will be calculated as (1 tick/SubticksPerTick), the denominator cannot be 0
-	// and negative numbers do not make sense.
-	if clobPair.SubticksPerTick <= 0 {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"invalid ClobPair parameter: SubticksPerTick must be > 0. Got %v",
-			clobPair.SubticksPerTick,
-		)
-	}
-
 	return nil
 }
 

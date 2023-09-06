@@ -19,23 +19,24 @@ func TestMsgUpdateClobPair_GetSigners(t *testing.T) {
 func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
 		status        types.ClobPair_Status
-		expectedError error
+		expectedError string
 	}{
 		"valid status": {
 			status: types.ClobPair_STATUS_ACTIVE,
 		},
 		"invalid unsupported status": {
 			status:        types.ClobPair_STATUS_UNSPECIFIED,
-			expectedError: types.ErrInvalidMsgUpdateClobPair,
+			expectedError: "has unsupported status",
 		},
 		"invalid negative out of bounds status": {
 			status:        -1,
-			expectedError: types.ErrInvalidMsgUpdateClobPair,
+			expectedError: "has unsupported status",
 		},
 		"invalid positive out of bounds status": {
 			status:        100,
-			expectedError: types.ErrInvalidMsgUpdateClobPair,
+			expectedError: "has unsupported status",
 		},
+		// TODO add more
 	}
 
 	for name, tc := range tests {
@@ -47,8 +48,8 @@ func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 			}
 			err := msg.ValidateBasic()
 
-			if tc.expectedError != nil {
-				require.ErrorContains(t, err, tc.expectedError.Error())
+			if tc.expectedError != "" {
+				require.ErrorContains(t, err, tc.expectedError)
 			} else {
 				require.NoError(t, err)
 			}
