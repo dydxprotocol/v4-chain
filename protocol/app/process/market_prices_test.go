@@ -124,9 +124,9 @@ func TestUpdateMarketPricesTx_Validate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, k)
 			indexPriceCache.UpdatePrices(tc.indexPrices)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 			umpt, err := process.DecodeUpdateMarketPricesTx(ctx, k, constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 			require.NoError(t, err)
 

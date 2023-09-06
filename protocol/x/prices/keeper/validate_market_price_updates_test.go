@@ -122,10 +122,10 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarkets(t, ctx, k)
-
-			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
+
+			keepertest.CreateTestMarkets(t, ctx, k)
+			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run.
 			msg := &types.MsgUpdateMarketPrices{
@@ -207,10 +207,10 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarkets(t, ctx, k)
-
-			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
+
+			keepertest.CreateTestMarkets(t, ctx, k)
+			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run.
 			msg := &types.MsgUpdateMarketPrices{
@@ -340,10 +340,10 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarkets(t, ctx, k)
-
-			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
+
+			keepertest.CreateTestMarkets(t, ctx, k)
+			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run and Validate.
 			msg := &types.MsgUpdateMarketPrices{
@@ -407,12 +407,13 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+
 			keepertest.CreateTestMarkets(t, ctx, k)
 			for market, price := range tc.smoothedIndexPrices {
 				marketToSmoothedPrices.PushSmoothedPrice(market, price)
 			}
 			indexPriceCache.UpdatePrices(tc.indexPrices)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			// Run.
 			missingMarketIds := k.GetMarketsMissingFromPriceUpdates(ctx, tc.msgUpdateMarketPrices)

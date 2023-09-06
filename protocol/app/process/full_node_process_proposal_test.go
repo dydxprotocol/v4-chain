@@ -74,9 +74,9 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 			_, bridgeKeeper, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			mockClobKeeper := &mocks.ProcessClobKeeper{}
 			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)

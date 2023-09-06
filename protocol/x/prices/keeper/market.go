@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -49,7 +48,23 @@ func (k Keeper) CreateMarket(
 			),
 		),
 	)
+
+	k.marketToCreatedAt[marketParam.Id] = k.timeProvider.Now()
+
 	return marketParam, nil
+}
+
+// IsRecentlyAdded returns true if the market was added recently. Since it takes a few seconds for
+// index prices to populate, we would not consider missing index prices for a recently added market
+// to be an error.
+func (k Keeper) IsRecentlyAdded(marketId uint32) bool {
+	createdAt, ok := k.marketToCreatedAt[marketId]
+
+	if !ok {
+		return false
+	}
+
+	return k.timeProvider.Now().Sub(createdAt) < types.MarketIsRecentDuration
 }
 
 // GetAllMarketParamPrices returns a slice of MarketParam, MarketPrice tuples for all markets.

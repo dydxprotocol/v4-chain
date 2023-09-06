@@ -1,18 +1,18 @@
 package keeper_test
 
 import (
-	"testing"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestCreateMarket(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 
 	marketParam, err := keeper.CreateMarket(
@@ -31,6 +31,7 @@ func TestCreateMarket(t *testing.T) {
 			Price:    constants.FiveBillion,
 		},
 	)
+
 	require.NoError(t, err)
 
 	marketPrice, err := keeper.GetMarketPrice(ctx, marketParam.Id)
@@ -51,6 +52,24 @@ func TestCreateMarket(t *testing.T) {
 
 	// Verify expected market event.
 	keepertest.AssertMarketCreateEventInIndexerBlock(t, keeper, ctx, marketParam)
+}
+
+func TestMarketIsRecentlyAdded(t *testing.T) {
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT).Once()
+
+	// Nonexistent markets should not be recently added.
+	require.False(t, keeper.IsRecentlyAdded(0))
+
+	keepertest.CreateNMarkets(t, ctx, keeper, 1)
+
+	// Before the duration passes, the market should be recently added.
+	mockTimeProvider.On("Now").Return(constants.TimeT.Add(types.MarketIsRecentDuration - 1)).Once()
+	require.True(t, keeper.IsRecentlyAdded(0))
+
+	// After the duration passes, the market is no longer recently added.
+	mockTimeProvider.On("Now").Return(constants.TimeT.Add(types.MarketIsRecentDuration)).Once()
+	require.False(t, keeper.IsRecentlyAdded(0))
 }
 
 func TestCreateMarket_Errors(t *testing.T) {
@@ -170,7 +189,9 @@ func TestCreateMarket_Errors(t *testing.T) {
 }
 
 func TestGetNumMarkets(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+
 	require.Equal(t, uint32(0), keeper.GetNumMarkets(ctx))
 
 	keepertest.CreateNMarkets(t, ctx, keeper, 10)
@@ -178,7 +199,8 @@ func TestGetNumMarkets(t *testing.T) {
 }
 
 func TestGetAllMarketParamPrices(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 
 	allParamPrices, err := keeper.GetAllMarketParamPrices(ctx)
