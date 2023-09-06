@@ -6,27 +6,22 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bybit",
-      "ticker": "COMPUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "COMP-USD"
     },
     {
-      "exchangeName": "Huobi",
-      "ticker": "compusdt",
+      "exchangeName": "CryptoCom",
+      "ticker": "COMP_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "COMP_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
       "ticker": "COMPUSD"
-    },
-    {
-      "exchangeName": "Kucoin",
-      "ticker": "COMP-USDT",
-      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",

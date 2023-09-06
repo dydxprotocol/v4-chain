@@ -333,7 +333,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_500_000_000, // Liquidated 1BTC at $50,500
+					NotionalLiquidated:    50_000_000_000, // Liquidated 1BTC at $50,000
 					QuantumsInsuranceLost: 1_000_000,
 				},
 				constants.Dave_Num0: {},
@@ -536,7 +536,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    25_250_000_000, // Liquidated 0.5 BTC at $50,500
+					NotionalLiquidated:    25_000_000_000, // Liquidated 0.5 BTC at $50,000
 					QuantumsInsuranceLost: 500_000,
 				},
 				constants.Dave_Num0: {},
@@ -640,7 +640,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_498_500_000,
+					NotionalLiquidated:    50_000_000_000,
 					QuantumsInsuranceLost: 250_000, // Insurance fund covered $0.25.
 				},
 				constants.Dave_Num0: {},
@@ -753,7 +753,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_498_500_000,
+					NotionalLiquidated:    50_000_000_000,
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},

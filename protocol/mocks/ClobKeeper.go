@@ -342,41 +342,6 @@ func (_m *ClobKeeper) GetMaxAndMinPositionNotionalLiquidatable(ctx types.Context
 	return r0, r1, r2
 }
 
-// GetMaxLiquidatableNotionalAndInsuranceLost provides a mock function with given fields: ctx, subaccountId, perpetualId
-func (_m *ClobKeeper) GetMaxLiquidatableNotionalAndInsuranceLost(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) (*big.Int, *big.Int, error) {
-	ret := _m.Called(ctx, subaccountId, perpetualId)
-
-	var r0 *big.Int
-	var r1 *big.Int
-	var r2 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) (*big.Int, *big.Int, error)); ok {
-		return rf(ctx, subaccountId, perpetualId)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) *big.Int); ok {
-		r0 = rf(ctx, subaccountId, perpetualId)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32) *big.Int); ok {
-		r1 = rf(ctx, subaccountId, perpetualId)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.SubaccountId, uint32) error); ok {
-		r2 = rf(ctx, subaccountId, perpetualId)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
 // GetPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
 func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (clobtypes.ClobPair, *big.Int, error) {
 	ret := _m.Called(ctx, subaccountId)
@@ -468,6 +433,58 @@ func (_m *ClobKeeper) GetSubaccountLiquidationInfo(ctx types.Context, subaccount
 	}
 
 	return r0
+}
+
+// GetSubaccountMaxInsuranceLost provides a mock function with given fields: ctx, subaccountId, perpetualId
+func (_m *ClobKeeper) GetSubaccountMaxInsuranceLost(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) (*big.Int, error) {
+	ret := _m.Called(ctx, subaccountId, perpetualId)
+
+	var r0 *big.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) (*big.Int, error)); ok {
+		return rf(ctx, subaccountId, perpetualId)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) *big.Int); ok {
+		r0 = rf(ctx, subaccountId, perpetualId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32) error); ok {
+		r1 = rf(ctx, subaccountId, perpetualId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSubaccountMaxNotionalLiquidatable provides a mock function with given fields: ctx, subaccountId, perpetualId
+func (_m *ClobKeeper) GetSubaccountMaxNotionalLiquidatable(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) (*big.Int, error) {
+	ret := _m.Called(ctx, subaccountId, perpetualId)
+
+	var r0 *big.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) (*big.Int, error)); ok {
+		return rf(ctx, subaccountId, perpetualId)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) *big.Int); ok {
+		r0 = rf(ctx, subaccountId, perpetualId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32) error); ok {
+		r1 = rf(ctx, subaccountId, perpetualId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // HasAuthority provides a mock function with given fields: authority

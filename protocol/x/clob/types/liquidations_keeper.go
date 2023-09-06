@@ -75,12 +75,19 @@ type LiquidationsKeeper interface {
 		quantums *big.Int,
 		err error,
 	)
-	GetMaxLiquidatableNotionalAndInsuranceLost(
+	GetSubaccountMaxNotionalLiquidatable(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
 	) (
 		bigMaxNotionalLiquidatable *big.Int,
+		err error,
+	)
+	GetSubaccountMaxInsuranceLost(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		perpetualId uint32,
+	) (
 		bigMaxQuantumsInsuranceLost *big.Int,
 		err error,
 	)
