@@ -45,7 +45,6 @@ func NewGockBinanceResponse(
 	tickers []JsonResponse,
 ) *gock.Response {
 	rootUrl := binance.BinanceDetails.Url
-	rootUrl = rootUrl[:strings.Index(rootUrl, "[")]
 
 	// Construct `symbols` parameter in Binance API request.
 	sortedTickers := GetTickersSortedByMarketId(
@@ -75,7 +74,6 @@ func NewGockBinanceUSResponse(
 	tickers []JsonResponse,
 ) *gock.Response {
 	rootUrl := binance.BinanceUSDetails.Url
-	rootUrl = rootUrl[:strings.Index(rootUrl, "[")]
 
 	// Construct `symbols` parameter in BinanceUS API request.
 	sortedTickers := GetTickersSortedByMarketId(
