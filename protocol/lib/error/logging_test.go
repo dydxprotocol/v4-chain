@@ -18,6 +18,10 @@ type MockLogger struct {
 	keyVals  []interface{}
 }
 
+func (ml *MockLogger) Impl() any {
+	return ml
+}
+
 func (ml *MockLogger) Debug(msg string, keyvals ...interface{}) {
 	if !ml.addedContext {
 		panic("attempted to log without adding context")
