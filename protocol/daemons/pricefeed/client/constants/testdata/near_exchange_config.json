@@ -6,13 +6,13 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bybit",
-      "ticker": "NEARUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "NEAR-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "NEAR_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Gate",
@@ -27,6 +27,11 @@
     {
       "exchangeName": "Kucoin",
       "ticker": "NEAR-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "NEAR_USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

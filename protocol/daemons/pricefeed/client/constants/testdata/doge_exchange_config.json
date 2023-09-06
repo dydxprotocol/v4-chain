@@ -7,13 +7,17 @@
     },
     {
       "exchangeName": "BinanceUS",
-      "ticker": "\"DOGEUSD\"",
+      "ticker": "\"DOGEUSDT\"",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bybit",
       "ticker": "DOGEUSDT",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "DOGE-USD"
     },
     {
       "exchangeName": "CryptoCom",
@@ -28,6 +32,10 @@
       "exchangeName": "Huobi",
       "ticker": "dogeusdt",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "XDGUSD"
     },
     {
       "exchangeName": "Kucoin",
