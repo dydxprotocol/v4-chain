@@ -148,7 +148,6 @@ func (k Keeper) ProcessSingleMatch(
 			perpetualId,
 			fillAmount,
 			makerMatchableOrder.GetOrderSubticks(),
-			bigFillQuoteQuantums,
 		)
 
 		if err != nil {
@@ -227,10 +226,19 @@ func (k Keeper) ProcessSingleMatch(
 
 	// Update subaccount total quantums liquidated and total insurance fund lost for liquidation orders.
 	if matchWithOrders.TakerOrder.IsLiquidation() {
+		notionalLiquidatedQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+			ctx,
+			perpetualId,
+			fillAmount.ToBigInt(),
+		)
+		if err != nil {
+			return false, takerUpdateResult, makerUpdateResult, nil, err
+		}
+
 		k.UpdateSubaccountLiquidationInfo(
 			ctx,
 			matchWithOrders.TakerOrder.GetSubaccountId(),
-			bigFillQuoteQuantums,
+			notionalLiquidatedQuoteQuantums,
 			takerInsuranceFundDelta,
 		)
 	}
