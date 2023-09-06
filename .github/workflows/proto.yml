@@ -9,7 +9,7 @@ on:  # yamllint disable-line rule:truthy
       - '**.pb.gw.go'
       - 'indexer/packages/v4-protos/**'
       # Code that affects generation
-      - 'dydxjs/**'
+      - 'v4-telescope-js/**'
       - 'dydxpy/**'
       - 'proto/**'
       - 'indexer/package.json'
@@ -97,7 +97,7 @@ jobs:
           chmod +x "${BIN}/buf"
       - run: pip install -r ./dydxpy/requirements.txt
       - run: make dydxpy-gen
-  dydxjs-gen:
+  v4-telescope-js-gen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -109,7 +109,7 @@ jobs:
           VERSION="1.26.1" && \
           curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
           chmod +x "${BIN}/buf"
-      - working-directory: ./dydxjs
+      - working-directory: ./v4-telescope-js
         run: |
           npm install
           npm run transpile
