@@ -42,7 +42,7 @@ export function getPriceChange(
   }
   return new Big(latestPrice)
     .minus(price24hAgo)
-    .toFixed(6);
+    .toFixed();
 }
 
 export default async function runTask(): Promise<void> {
