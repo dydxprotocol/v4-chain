@@ -1,16 +1,19 @@
-Business Source License 1.1 
-License text copyright © 2023 MariaDB plc, All Rights Reserved. “Business Source License” is a trademark of MariaDB plc.
-Copyright (C) 2023 dYdX Trading Inc.
+Subject to your compliance with applicable law, you are granted the right to use the Licensed Work (defined below) under the terms of the below licenses; provided, however, that if you violate any such applicable law in your use of the Licensed Work, all of your rights and licenses to use (including any rights to reproduce, distribute, install or modify) the Licensed Work will automatically and immediately terminate.
 
 Use of this software before the Change Date specified in the LICENSE file is governed by the Business Source License included in the LICENSE file and at https://spdx.org/licenses/BUSL-1.1.html.
 
 On and after the Change Date specified in the LICENSE file, use of this software will be governed by the Change License (GNU Affero GPL v3) as specified in the LICENSE file.
 
+
+Business Source License 1.1 
+Business Source License text copyright © 2023 MariaDB plc, All Rights Reserved. “Business Source License” is a trademark of MariaDB plc.
+Copyright (C) 2023 dYdX Trading Inc.
+
 Parameters
 Licensor: dYdX Trading Inc.
 Licensed Work: dydxprotocol/cosmos-sdk, dydxprotocol/cometbft, dydxprotocol/v4-chain, dydxprotocol/v4-clients, dydxprotocol/v4-web, dydxprotocol/v4-abacus, dydxprotocol/v4-localization, dydxprotocol/v4-documentation, and any dYdX or dYdX Trading Inc. github repository reflecting a copy of this license, or link to this license. 
 Additional Use Grant: None
-Change Date: On the later to occur of (i) the release of the Licensed Work labeled “dYdX Version 1.0 GPL”, and which includes a document uploaded to the relevant github repository stating “The software in this repository is Version 1.0, subject to GPL license”, and (ii) September 30, 2023 (approximate projected release of “Version 1.0” of this software).
+Change Date: On the later to occur of (i) the release of the Licensed Work labeled “dYdX Version 1.0 Affero GPL”, and which includes a document uploaded to the relevant github repository stating “The software in this repository is Version 1.0, subject to Affero GPL license”, and (ii) September 30, 2023 (approximate projected release of “Version 1.0” of this software).
 Change License: GNU Affero GPL License v3
 
 License text copyright © 2023 MariaDB plc, All Rights Reserved. “Business Source License” is a trademark of MariaDB plc.
@@ -39,7 +42,7 @@ OPEN SOURCE LICENSE BELOW - TO BE APPLIED AFTER THE CHANGE DATE.
 
 Copyright (C) 2023 dYdX Trading Inc.
 
-Use of this software is governed by the The GNU Affero General Public License as set forth below. 
+Subject to your compliance with applicable law, you are granted the right to use the Licensed Work (defined below) under the terms of the GNU Affero General Public License as set forth below; provided, however, that if you violate any such applicable law in your use of the Licensed Work, all of your rights and licenses to use (including any rights to reproduce, distribute, install or modify) the Licensed Work will automatically and immediately terminate.
 
 
 The GNU Affero General Public License
