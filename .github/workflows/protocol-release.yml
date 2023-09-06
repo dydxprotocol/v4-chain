@@ -74,11 +74,11 @@ jobs:
           asset_content_type: application/gzip
           # TODO(DEC-1743): add build report and binary check sums
 
-  dydxpy-release:
+  v4-telescope-py-release:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./dydxpy
+        working-directory: ./v4-telescope-py
 
     steps:
       - name: Check out repository code
@@ -99,9 +99,9 @@ jobs:
       - name: Install Requirements
         run: pip install -r requirements-publish.txt
 
-      - name: Generate dydxpy
+      - name: Generate v4-telescope-py
         working-directory: ./ # Move to parent folder
-        run: make dydxpy-gen
+        run: make v4-telescope-py-gen
 
       - name: Set Env from Tag (remove 'v' prefix)
         run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/protocol/v} | tr '-' '.')" >> $GITHUB_ENV

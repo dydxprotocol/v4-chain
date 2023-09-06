@@ -1,10 +1,10 @@
 .gen
 .proto-export
 .proto-export-deps
-dydxpy/build
-dydxpy/dist
-dydxpy/dydxpy.egg-info/
-dydxpy/dydxpy
+v4-telescope-py/build
+v4-telescope-py/dist
+v4-telescope-py/v4-telescope-py.egg-info/
+v4-telescope-py/v4-telescope-py
 dydxjs/build
 dydxjs/node_modules
 dydxjs/src
