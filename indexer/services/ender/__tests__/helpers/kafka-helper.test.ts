@@ -460,7 +460,7 @@ describe('kafka-helper', () => {
 
       expect(contents.oraclePrices).toEqual({
         [market.pair]: {
-          price: oraclePrice.price,
+          oraclePrice: oraclePrice.price,
           effectiveAt: oraclePrice.effectiveAt,
           effectiveAtHeight: oraclePrice.effectiveAtHeight,
           marketId: oraclePrice.marketId,
