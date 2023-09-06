@@ -35,7 +35,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "Unsupported Status",
 			clobPair: types.ClobPair{
-				Metadata:         &types.ClobPair_PerpetualClobMetadata{}, // Assume it's a supported metadata
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 1,
 				SubticksPerTick:  1,
 				Status:           types.ClobPair_STATUS_PAUSED,
@@ -45,7 +45,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "StepBaseQuantums <= 0",
 			clobPair: types.ClobPair{
-				Metadata:         &types.ClobPair_PerpetualClobMetadata{}, // Assume it's a supported metadata
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 0,
 				SubticksPerTick:  1,
 				Status:           types.ClobPair_STATUS_ACTIVE,
@@ -55,7 +55,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "SubticksPerTick <= 0",
 			clobPair: types.ClobPair{
-				Metadata:         &types.ClobPair_PerpetualClobMetadata{}, // Assume it's a supported metadata
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 1,
 				SubticksPerTick:  0,
 				Status:           types.ClobPair_STATUS_ACTIVE,
@@ -65,7 +65,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "Valid ClobPair",
 			clobPair: types.ClobPair{
-				Metadata:         &types.ClobPair_PerpetualClobMetadata{}, // Assume it's a supported metadata
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 1,
 				SubticksPerTick:  1,
 				Status:           types.ClobPair_STATUS_ACTIVE,

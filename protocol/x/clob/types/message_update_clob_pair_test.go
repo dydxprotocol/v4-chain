@@ -17,41 +17,92 @@ func TestMsgUpdateClobPair_GetSigners(t *testing.T) {
 }
 
 func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
-	tests := map[string]struct {
-		status        types.ClobPair_Status
-		expectedError string
+	tests := []struct {
+		desc        string
+		clobPair    *types.ClobPair
+		expectedErr string
 	}{
-		"valid status": {
-			status: types.ClobPair_STATUS_ACTIVE,
+		{
+			desc: "Invalid Metadata (SpotClobMetadata)",
+			clobPair: &types.ClobPair{
+				Metadata:         &types.ClobPair_SpotClobMetadata{},
+				StepBaseQuantums: 1,
+				SubticksPerTick:  1,
+				Status:           types.ClobPair_STATUS_ACTIVE,
+			},
+			expectedErr: "is not a perpetual CLOB",
 		},
-		"invalid unsupported status": {
-			status:        types.ClobPair_STATUS_UNSPECIFIED,
-			expectedError: "has unsupported status",
+		{
+			desc: "UNSPECIFIED Status",
+			clobPair: &types.ClobPair{
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
+				StepBaseQuantums: 1,
+				SubticksPerTick:  1,
+				Status:           types.ClobPair_STATUS_PAUSED,
+			},
+			expectedErr: "has unsupported status",
 		},
-		"invalid negative out of bounds status": {
-			status:        -1,
-			expectedError: "has unsupported status",
+		{
+			desc: "invalid negative status integer",
+			clobPair: &types.ClobPair{
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
+				StepBaseQuantums: 1,
+				SubticksPerTick:  1,
+				Status:           -1,
+			},
+			expectedErr: "has unsupported status",
 		},
-		"invalid positive out of bounds status": {
-			status:        100,
-			expectedError: "has unsupported status",
+		{
+			desc: "invalid positive status integer",
+			clobPair: &types.ClobPair{
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
+				StepBaseQuantums: 1,
+				SubticksPerTick:  1,
+				Status:           100,
+			},
+			expectedErr: "has unsupported status",
 		},
-		// TODO add more
+		{
+			desc: "StepBaseQuantums <= 0",
+			clobPair: &types.ClobPair{
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
+				StepBaseQuantums: 0,
+				SubticksPerTick:  1,
+				Status:           types.ClobPair_STATUS_ACTIVE,
+			},
+			expectedErr: "StepBaseQuantums must be > 0.",
+		},
+		{
+			desc: "SubticksPerTick <= 0",
+			clobPair: &types.ClobPair{
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
+				StepBaseQuantums: 1,
+				SubticksPerTick:  0,
+				Status:           types.ClobPair_STATUS_ACTIVE,
+			},
+			expectedErr: "SubticksPerTick must be > 0",
+		},
+		{
+			desc: "Valid ClobPair",
+			clobPair: &types.ClobPair{
+				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
+				StepBaseQuantums: 1,
+				SubticksPerTick:  1,
+				Status:           types.ClobPair_STATUS_ACTIVE,
+			},
+			expectedErr: "",
+		},
 	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			clobPair := constants.ClobPair_Btc
-			clobPair.Status = tc.status
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
 			msg := types.MsgUpdateClobPair{
-				ClobPair: &clobPair,
+				ClobPair: tc.clobPair,
 			}
 			err := msg.ValidateBasic()
-
-			if tc.expectedError != "" {
-				require.ErrorContains(t, err, tc.expectedError)
-			} else {
+			if tc.expectedErr == "" {
 				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr)
 			}
 		})
 	}
