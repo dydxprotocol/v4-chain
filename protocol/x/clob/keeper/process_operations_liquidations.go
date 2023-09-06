@@ -16,7 +16,7 @@ import (
 // An error is returned when
 //   - The CLOB pair IDs of the order and proposed match do not match.
 //   - The perpetual IDs of the order and proposed match do not match.
-//   - The size of the order is less than the size of the proposed match.
+//   - The total size of the order and proposed match do not match.
 //   - The side of the order and proposed match do not match.
 func (k Keeper) ValidateLiquidationOrderAgainstProposedMatch(
 	ctx sdk.Context,
