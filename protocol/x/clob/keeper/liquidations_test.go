@@ -4459,8 +4459,10 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 
 		// Parameters.
 		liquidatableSubaccount satypes.SubaccountId
+		setupState             func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext)
 
 		// Expectations.
+		expectedErr           error
 		expectedPlacedOrders  []*types.MsgPlaceOrder
 		expectedMatchedOrders []*types.ClobMatch
 	}{
@@ -4478,6 +4480,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 
 			liquidatableSubaccount: constants.Carl_Num0,
 
+			expectedErr:           types.ErrSubaccountNotLiquidatable,
 			expectedPlacedOrders:  []*types.MsgPlaceOrder{},
 			expectedMatchedOrders: []*types.ClobMatch{},
 		},
@@ -4556,8 +4559,12 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			clobs:          []types.ClobPair{constants.ClobPair_Btc},
 			existingOrders: []types.Order{},
 
-			liquidatableSubaccount: constants.Carl_Num0,
+			liquidatableSubaccount: constants.Dave_Num0,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(ctx, constants.Dave_Num0, 0)
+			},
 
+			expectedErr:           types.ErrNoPerpetualPositionsToLiquidate,
 			expectedPlacedOrders:  []*types.MsgPlaceOrder{},
 			expectedMatchedOrders: []*types.ClobMatch{},
 		},
@@ -4638,6 +4645,10 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			err = ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default)
 			require.NoError(t, err)
 
+			if tc.setupState != nil {
+				tc.setupState(ctx, ks)
+			}
+
 			// Create all existing orders.
 			for _, order := range tc.existingOrders {
 				_, _, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, &types.MsgPlaceOrder{Order: order})
@@ -4648,17 +4659,19 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			liquidationOrder, err := ks.ClobKeeper.MaybeGetLiquidationOrder(ctx, tc.liquidatableSubaccount)
 
 			// Verify test expectations.
-			require.NoError(t, err)
-
-			if liquidationOrder != nil {
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, liquidationOrder)
 				_, _, err := ks.ClobKeeper.PlacePerpetualLiquidation(ctx, *liquidationOrder)
 				require.NoError(t, err)
-			}
 
-			// TODO(DEC-1979): Refactor these tests to support the operations queue refactor.
-			// placedOrders, matchedOrders := memClob.GetPendingFills(ctx)
-			// require.Equal(t, tc.expectedPlacedOrders, placedOrders, "Placed orders lists are not equal")
-			// require.Equal(t, tc.expectedMatchedOrders, matchedOrders, "Matched orders lists are not equal")
+				// TODO(DEC-1979): Refactor these tests to support the operations queue refactor.
+				// placedOrders, matchedOrders := memClob.GetPendingFills(ctx)
+				// require.Equal(t, tc.expectedPlacedOrders, placedOrders, "Placed orders lists are not equal")
+				// require.Equal(t, tc.expectedMatchedOrders, matchedOrders, "Matched orders lists are not equal")
+			}
 		})
 	}
 }

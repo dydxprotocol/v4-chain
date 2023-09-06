@@ -11,6 +11,56 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// ValidateLiquidationOrderAgainstProposedLiquidation performs stateless validation of a liquidation order
+// against a proposed liquidation.
+// An error is returned when
+//   - The CLOB pair IDs of the order and proposed liquidation do not match.
+//   - The perpetual IDs of the order and proposed liquidation do not match.
+//   - The total size of the order and proposed liquidation do not match.
+//   - The side of the order and proposed liquidation do not match.
+func (k Keeper) ValidateLiquidationOrderAgainstProposedLiquidation(
+	ctx sdk.Context,
+	order *types.LiquidationOrder,
+	proposedMatch *types.MatchPerpetualLiquidation,
+) error {
+	if order.GetClobPairId() != types.ClobPairId(proposedMatch.GetClobPairId()) {
+		return sdkerrors.Wrapf(
+			types.ErrClobPairAndPerpetualDoNotMatch,
+			"Order CLOB Pair ID: %v, Match CLOB Pair ID: %v",
+			order.GetClobPairId(),
+			proposedMatch.GetClobPairId(),
+		)
+	}
+
+	if order.MustGetLiquidatedPerpetualId() != proposedMatch.GetPerpetualId() {
+		return sdkerrors.Wrapf(
+			types.ErrClobPairAndPerpetualDoNotMatch,
+			"Order Perpetual ID: %v, Match Perpetual ID: %v",
+			order.MustGetLiquidatedPerpetualId(),
+			proposedMatch.GetPerpetualId(),
+		)
+	}
+
+	if order.GetBaseQuantums() != satypes.BaseQuantums(proposedMatch.TotalSize) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidLiquidationOrderTotalSize,
+			"Order Size: %v, Match Size: %v",
+			order.GetBaseQuantums(),
+			proposedMatch.TotalSize,
+		)
+	}
+
+	if order.IsBuy() != proposedMatch.GetIsBuy() {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidLiquidationOrderSide,
+			"Order Side: %v, Match Side: %v",
+			order.IsBuy(),
+			proposedMatch.GetIsBuy(),
+		)
+	}
+	return nil
+}
+
 func (k Keeper) validateMatchedLiquidation(
 	ctx sdk.Context,
 	order types.MatchableOrder,
@@ -144,63 +194,4 @@ func (k Keeper) validateLiquidationAgainstSubaccountBlockLimits(
 		}
 	}
 	return nil
-}
-
-// ConstructTakerOrderFromMatchPerpetualLiquidation creates and returns the corresponding LiquidationOrder
-// for the given match.
-// An error is returned if:
-//   - The clob pair is invalid or does not match the provided perpetual id.
-//   - `GetFillablePrice` returns an error.
-func (k Keeper) ConstructTakerOrderFromMatchPerpetualLiquidation(
-	ctx sdk.Context,
-	match *types.MatchPerpetualLiquidation,
-) (
-	takerOrder *types.LiquidationOrder,
-	err error,
-) {
-	takerClobPair, found := k.GetClobPair(ctx, types.ClobPairId(match.ClobPairId))
-	if !found {
-		return nil, sdkerrors.Wrapf(
-			types.ErrInvalidClob,
-			"CLOB pair ID %d not found in state",
-			match.ClobPairId,
-		)
-	}
-
-	perpetualId, err := takerClobPair.GetPerpetualId()
-	if err != nil || perpetualId != match.PerpetualId {
-		return nil, sdkerrors.Wrapf(
-			types.ErrClobPairAndPerpetualDoNotMatch,
-			"Clob pair id: %v, perpetual id: %v",
-			match.ClobPairId,
-			perpetualId,
-		)
-	}
-
-	deltaQuantumsBig := new(big.Int).SetUint64(match.TotalSize)
-	if !match.IsBuy {
-		deltaQuantumsBig.Neg(deltaQuantumsBig)
-	}
-	fillablePrice, err := k.GetFillablePrice(
-		ctx,
-		match.Liquidated,
-		match.PerpetualId,
-		deltaQuantumsBig,
-	)
-	if err != nil {
-		return nil, err
-	}
-	fillablePriceSubticks := k.ConvertFillablePriceToSubticks(
-		ctx,
-		fillablePrice,
-		!match.IsBuy,
-		takerClobPair,
-	)
-	return types.NewLiquidationOrder(
-		match.Liquidated,
-		takerClobPair,
-		match.IsBuy,
-		satypes.BaseQuantums(match.TotalSize),
-		fillablePriceSubticks,
-	), nil
 }
