@@ -24,7 +24,7 @@ func (k msgServer) UpdateClobPair(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.Keeper.UpdateClobPair(
 		ctx,
-		*msg.GetClobPair(),
+		msg.GetClobPair(),
 	); err != nil {
 		return nil, err
 	}

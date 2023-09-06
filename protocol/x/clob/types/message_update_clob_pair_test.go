@@ -43,7 +43,7 @@ func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 			clobPair := constants.ClobPair_Btc
 			clobPair.Status = tc.status
 			msg := types.MsgUpdateClobPair{
-				ClobPair: &clobPair,
+				ClobPair: clobPair,
 			}
 			err := msg.ValidateBasic()
 
