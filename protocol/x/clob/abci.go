@@ -1,6 +1,7 @@
 package clob
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -193,12 +194,18 @@ func PrepareCheckState(
 		// If attempting to liquidate a subaccount returns an error, panic.
 		liquidationOrder, err := keeper.MaybeGetLiquidationOrder(ctx, subaccountId)
 		if err != nil {
+			// Subaccount might not always be liquidatable since liquidation daemon runs
+			// in a separate goroutine and is not always in sync with the application.
+			// Therefore, if subaccount is not liquidatable, continue.
+			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				continue
+			}
+
+			// Panic on unexpected errors.
 			panic(err)
 		}
 
-		if liquidationOrder != nil {
-			liquidationOrders = append(liquidationOrders, *liquidationOrder)
-		}
+		liquidationOrders = append(liquidationOrders, *liquidationOrder)
 	}
 
 	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.

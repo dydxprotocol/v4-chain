@@ -37,7 +37,7 @@ func (k Keeper) MaybeGetLiquidationOrder(
 			metrics.SubaccountsNotLiquidatable,
 			metrics.Count,
 		)
-		return nil, nil
+		return nil, types.ErrSubaccountNotLiquidatable
 	}
 
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
@@ -490,9 +490,19 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 ) {
 	// Fetch the subaccount from state.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
+
+	var perpetualPosition *satypes.PerpetualPosition
+
+	for _, position := range subaccount.PerpetualPositions {
+		if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
+			perpetualPosition = position
+			break
+		}
+	}
 
 	// Return an error if there are no perpetual positions to liquidate.
-	if len(subaccount.PerpetualPositions) == 0 {
+	if perpetualPosition == nil {
 		return types.ClobPair{},
 			nil,
 			sdkerrors.Wrapf(
@@ -502,7 +512,6 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 			)
 	}
 
-	perpetualPosition := subaccount.PerpetualPositions[0]
 	clobPair = k.mustGetClobPairForPerpetualId(ctx, perpetualPosition.PerpetualId)
 
 	// Get the maximum notional liquidatable for this position.
