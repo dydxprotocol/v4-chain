@@ -1744,7 +1744,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_499_500_000,
+					NotionalLiquidated:    50_500_000_000,
 					QuantumsInsuranceLost: 750_000,
 				},
 			},
