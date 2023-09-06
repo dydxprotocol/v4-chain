@@ -371,7 +371,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 		return err
 	}
 
-	// Perform some validation on the liquidation order.
+	// Perform stateless validation on the liquidation order.
 	if err := k.ValidateLiquidationOrderAgainstProposedMatch(ctx, takerOrder, matchLiquidation); err != nil {
 		return err
 	}
