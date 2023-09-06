@@ -343,7 +343,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 	if !isLiquidatable {
 		return moderrors.Wrapf(
 			types.ErrSubaccountNotLiquidatable,
-			"PersistMatchLiquidationToState: Subaccount %s is not liquidatable",
+			"PersistMatchLiquidationToState: Subaccount %+v is not liquidatable",
 			matchLiquidation.Liquidated,
 		)
 	}

@@ -250,7 +250,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 
 	// Check that the `subaccounts` module account balance has not changed.
 	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-		ctx,
+		val,
 		s.network.Config.Codec,
 		satypes.ModuleName,
 	)
@@ -262,7 +262,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 
 	// Check that the `distribution` module account USDC balance has not changed.
 	distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-		ctx,
+		val,
 		s.network.Config.Codec,
 		distrtypes.ModuleName,
 	)
@@ -388,7 +388,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 
 	// Check that the `subaccounts` module account has expected remaining USDC balance.
 	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-		ctx,
+		val,
 		s.network.Config.Codec,
 		satypes.ModuleName,
 	)
@@ -400,7 +400,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 
 	// Check that the `distribution` module account USDC balance has not changed.
 	distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-		ctx,
+		val,
 		s.network.Config.Codec,
 		distrtypes.ModuleName,
 	)
