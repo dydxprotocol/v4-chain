@@ -18,7 +18,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -74,7 +74,7 @@ func TestCreateClobPair(t *testing.T) {
 			},
 			expectedClobPairs: []types.ClobPair{testClobPair1},
 		},
-		"Succeeds: clob pair already exists": {
+		"Failure: clob pair already exists": {
 			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				keepertest.CreateTestPricesAndPerpetualMarkets(
 					t,
@@ -84,36 +84,13 @@ func TestCreateClobPair(t *testing.T) {
 					[]perptypes.Perpetual{testPerp1},
 					[]pricestypes.MarketParamPrice{testMarket1},
 				)
+				// set up mock indexer event manager to accept anything.
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
-					indexerevents.SubtypePerpetualMarket,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewPerpetualMarketCreateEvent(
-							testClobPair1.MustGetPerpetualId(),
-							testClobPair1.GetId(),
-							testPerp1.Params.Ticker,
-							testPerp1.Params.MarketId,
-							testClobPair1.Status,
-							testClobPair1.QuantumConversionExponent,
-							testPerp1.Params.AtomicResolution,
-							testClobPair1.SubticksPerTick,
-							testClobPair1.MinOrderBaseQuantums,
-							testClobPair1.StepBaseQuantums,
-							testPerp1.Params.LiquidityTier,
-						),
-					),
+					mock.Anything,
+					mock.Anything,
 				).Return()
-				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
-					ks.Ctx,
-					testClobPair1.Id,
-					testClobPair1.MustGetPerpetualId(),
-					satypes.BaseQuantums(testClobPair1.MinOrderBaseQuantums),
-					satypes.BaseQuantums(testClobPair1.StepBaseQuantums),
-					testClobPair1.QuantumConversionExponent,
-					testClobPair1.SubticksPerTick,
-					testClobPair1.Status,
-				)
-				require.NoError(t, err)
+				keepertest.CreateTestClobPairs(t, ks.Ctx, ks.ClobKeeper, []types.ClobPair{testClobPair1})
 			},
 			msg: &types.MsgCreateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -121,6 +98,31 @@ func TestCreateClobPair(t *testing.T) {
 			},
 			expectedClobPairs: []types.ClobPair{testClobPair1},
 			expectedErr:       "ClobPair with id already exists",
+		},
+		"Failure: perpetual already associated with existing clob pair": {
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+				keepertest.CreateTestPricesAndPerpetualMarkets(
+					t,
+					ks.Ctx,
+					ks.PerpetualsKeeper,
+					ks.PricesKeeper,
+					[]perptypes.Perpetual{testPerp1},
+					[]pricestypes.MarketParamPrice{testMarket1},
+				)
+				// set up mock indexer event manager to accept anything.
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					mock.Anything,
+					mock.Anything,
+				).Return()
+				keepertest.CreateTestClobPairs(t, ks.Ctx, ks.ClobKeeper, []types.ClobPair{testClobPair1})
+			},
+			msg: &types.MsgCreateClobPair{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				ClobPair:  *clobtest.GenerateClobPair(clobtest.WithId(3), clobtest.WithPerpetualId(1)),
+			},
+			expectedClobPairs: []types.ClobPair{testClobPair1},
+			expectedErr:       "perpetual ID is already associated with an existing CLOB pair",
 		},
 		"Failure: refers to non-existing perpetual": {
 			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {

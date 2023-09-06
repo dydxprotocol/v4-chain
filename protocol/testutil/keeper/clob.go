@@ -6,6 +6,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
@@ -29,6 +30,7 @@ import (
 	rewardskeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
 	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	subkeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type ClobKeepersTestContext struct {
@@ -212,4 +214,25 @@ func createClobKeeper(
 	k.SetAnteHandler(constants.EmptyAnteHandler)
 
 	return k, storeKey, memKey
+}
+
+func CreateTestClobPairs(
+	t *testing.T,
+	ctx sdk.Context,
+	clobKeeper *keeper.Keeper,
+	clobPairs []types.ClobPair,
+) {
+	for _, clobPair := range clobPairs {
+		_, err := clobKeeper.CreatePerpetualClobPair(
+			ctx,
+			clobPair.Id,
+			clobPair.MustGetPerpetualId(),
+			satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
+			satypes.BaseQuantums(clobPair.StepBaseQuantums),
+			clobPair.QuantumConversionExponent,
+			clobPair.SubticksPerTick,
+			clobPair.Status,
+		)
+		require.NoError(t, err)
+	}
 }

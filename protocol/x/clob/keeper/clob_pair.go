@@ -42,6 +42,16 @@ func (k Keeper) CreatePerpetualClobPair(
 		)
 	}
 
+	// Verify the perpetual ID is not already associated with an existing CLOB pair.
+	if clobPairId, found := k.PerpetualIdToClobPairId[perpetualId]; found {
+		return types.ClobPair{}, sdkerrors.Wrapf(
+			types.ErrPerpetualAssociatedWithExistingClobPair,
+			"perpetual id=%v, existing clob pair id=%v",
+			perpetualId,
+			clobPairId,
+		)
+	}
+
 	clobPair := types.ClobPair{
 		Metadata: &types.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &types.PerpetualClobMetadata{

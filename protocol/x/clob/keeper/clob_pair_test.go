@@ -17,11 +17,15 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
+	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -97,10 +101,10 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 
 	clobPairs := []types.ClobPair{
 		constants.ClobPair_Btc,
-		constants.ClobPair_Btc2,
+		constants.ClobPair_Eth,
 	}
 
-	for _, clobPair := range clobPairs {
+	for i, clobPair := range clobPairs {
 		mockIndexerEventManager.On("AddTxnEvent",
 			ks.Ctx,
 			indexerevents.SubtypePerpetualMarket,
@@ -108,15 +112,15 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 				indexerevents.NewPerpetualMarketCreateEvent(
 					clobPair.MustGetPerpetualId(),
 					clobPair.Id,
-					constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-					constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.Ticker,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketId,
 					clobPair.Status,
 					clobPair.QuantumConversionExponent,
-					constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.AtomicResolution,
 					clobPair.SubticksPerTick,
 					clobPair.MinOrderBaseQuantums,
 					clobPair.StepBaseQuantums,
-					constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
 				),
 			),
 		).Once().Return()
@@ -135,10 +139,66 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 
 	require.Equal(
 		t,
-		ks.ClobKeeper.PerpetualIdToClobPairId,
 		map[uint32][]types.ClobPairId{
-			0: {constants.ClobPair_Btc.GetClobPairId(), constants.ClobPair_Btc2.GetClobPairId()},
+			0: {constants.ClobPair_Btc.GetClobPairId()},
+			1: {constants.ClobPair_Eth.GetClobPairId()},
 		},
+		ks.ClobKeeper.PerpetualIdToClobPairId,
+	)
+}
+
+func TestCreatePerpetualClobPair_FailsWithPerpetualAssociatedWithExistingClobPair(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	// Set up mock indexer event manager that accepts anything.
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	mockIndexerEventManager.On("AddTxnEvent",
+		mock.Anything, mock.Anything, mock.Anything,
+	).Return()
+	ks := keepertest.NewClobKeepersTestContext(
+		t,
+		memClob,
+		&mocks.BankKeeper{},
+		mockIndexerEventManager,
+	)
+	// Create test perpetual and market (id 0).
+	keepertest.CreateTestPricesAndPerpetualMarkets(
+		t,
+		ks.Ctx,
+		ks.PerpetualsKeeper,
+		ks.PricesKeeper,
+		[]perptypes.Perpetual{
+			*perptest.GeneratePerpetual(perptest.WithId(0), perptest.WithMarketId(0)),
+		},
+		[]pricestypes.MarketParamPrice{
+			*pricestest.GenerateMarketParamPrice(pricestest.WithId(0)),
+		},
+	)
+	// Create test clob pair id 0, associated with perpetual id 0.
+	keepertest.CreateTestClobPairs(
+		t,
+		ks.Ctx,
+		ks.ClobKeeper,
+		[]types.ClobPair{
+			*clobtest.GenerateClobPair(clobtest.WithId(0), clobtest.WithPerpetualId(0)),
+		},
+	)
+
+	// Create test clob pair id 1, associated with perpetual id 0.
+	newClobPair := clobtest.GenerateClobPair(clobtest.WithId(1), clobtest.WithPerpetualId(0))
+	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+		ks.Ctx,
+		newClobPair.Id,
+		newClobPair.MustGetPerpetualId(),
+		satypes.BaseQuantums(newClobPair.MinOrderBaseQuantums),
+		satypes.BaseQuantums(newClobPair.StepBaseQuantums),
+		newClobPair.QuantumConversionExponent,
+		newClobPair.SubticksPerTick,
+		newClobPair.Status,
+	)
+	require.ErrorContains(
+		t,
+		err,
+		"perpetual ID is already associated with an existing CLOB pair",
 	)
 }
 

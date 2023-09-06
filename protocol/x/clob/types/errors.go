@@ -188,6 +188,11 @@ var (
 		40,
 		"Authority is invalid",
 	)
+	ErrPerpetualAssociatedWithExistingClobPair = sdkerrors.Register(
+		ModuleName,
+		41,
+		"perpetual ID is already associated with an existing CLOB pair",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = sdkerrors.Register(
