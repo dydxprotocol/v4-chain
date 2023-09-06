@@ -1,6 +1,8 @@
 package ante_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -11,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
 	"github.com/stretchr/testify/require"
@@ -99,7 +100,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 			}
 
-			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.Ctx.ChainID())
+			tx, err := suite.CreateTestTx(suite.Ctx, privs, accNums, accSeqs, suite.Ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
 			if tc.isRecheck {

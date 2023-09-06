@@ -1,58 +1,36 @@
 package ante
 
 import (
+	txsigning "cosmossdk.io/x/tx/signing"
 	"fmt"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"google.golang.org/protobuf/types/known/anypb"
 
-	moderrors "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	sdkante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
-// Verify all signatures for a tx and return an error if any are invalid. Note,
+// SigVerificationDecorator verifies all signatures for a tx and return an error if any are invalid. Note,
 // the SigVerificationDecorator will not check signatures on ReCheck.
 //
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              AccountKeeper
-	signModeHandler authsigning.SignModeHandler
+	signModeHandler *txsigning.HandlerMap
 }
 
-func NewSigVerificationDecorator(
-	ak AccountKeeper,
-	signModeHandler authsigning.SignModeHandler,
-) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap) SigVerificationDecorator {
 	return SigVerificationDecorator{
 		ak:              ak,
 		signModeHandler: signModeHandler,
-	}
-}
-
-// OnlyLegacyAminoSigners checks SignatureData to see if all
-// signers are using SIGN_MODE_LEGACY_AMINO_JSON. If this is the case
-// then the corresponding SignatureV2 struct will not have account sequence
-// explicitly set, and we should skip the explicit verification of sig.Sequence
-// in the SigVerificationDecorator's AnteHandler function.
-func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
-	switch v := sigData.(type) {
-	case *signing.SingleSignatureData:
-		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	case *signing.MultiSignatureData:
-		for _, s := range v.Signatures {
-			if !OnlyLegacyAminoSigners(s) {
-				return false
-			}
-		}
-		return true
-	default:
-		return false
 	}
 }
 
@@ -62,9 +40,9 @@ func (svd SigVerificationDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
-		return ctx, moderrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
@@ -74,17 +52,19 @@ func (svd SigVerificationDecorator) AnteHandle(
 		return ctx, err
 	}
 
-	signerAddrs := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return ctx, err
+	}
 
 	// check that signer length and signature length are the same
-	if len(sigs) != len(signerAddrs) {
-		err := moderrors.Wrapf(
+	if len(sigs) != len(signers) {
+		return ctx, errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
 			"invalid number of signer;  expected: %d, got %d",
-			len(signerAddrs),
+			len(signers),
 			len(sigs),
 		)
-		return ctx, err
 	}
 
 	// Sequence number validation can be skipped if the given transaction consists of
@@ -92,7 +72,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 	skipSequenceValidation := ShouldSkipSequenceValidation(tx.GetMsgs())
 
 	for i, sig := range sigs {
-		acc, err := sdkante.GetSignerAcc(ctx, svd.ak, signerAddrs[i])
+		acc, err := sdkante.GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
 			return ctx, err
 		}
@@ -100,7 +80,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 		// retrieve pubkey
 		pubKey := acc.GetPubKey()
 		if !simulate && pubKey == nil {
-			return ctx, moderrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
 		// Check account sequence number.
@@ -119,7 +99,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 				1,
 				labels,
 			)
-			return ctx, moderrors.Wrapf(
+			return ctx, errorsmod.Wrapf(
 				sdkerrors.ErrWrongSequence,
 				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 			)
@@ -132,20 +112,30 @@ func (svd SigVerificationDecorator) AnteHandle(
 		if !genesis {
 			accNum = acc.GetAccountNumber()
 		}
-		signerData := authsigning.SignerData{
-			Address:       acc.GetAddress().String(),
-			ChainID:       chainID,
-			AccountNumber: accNum,
-			Sequence:      acc.GetSequence(),
-			PubKey:        pubKey,
-		}
 
 		// no need to verify signatures on recheck tx
 		if !simulate && !ctx.IsReCheckTx() {
-			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
+			anyPk, _ := codectypes.NewAnyWithValue(pubKey)
+
+			signerData := txsigning.SignerData{
+				Address:       acc.GetAddress().String(),
+				ChainID:       chainID,
+				AccountNumber: accNum,
+				Sequence:      acc.GetSequence(),
+				PubKey: &anypb.Any{
+					TypeUrl: anyPk.TypeUrl,
+					Value:   anyPk.Value,
+				},
+			}
+			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
+			if !ok {
+				return ctx, fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
+			}
+			txData := adaptableTx.GetSigningTxData()
+			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
 			if err != nil {
 				var errMsg string
-				if OnlyLegacyAminoSigners(sig.Data) {
+				if sdkante.OnlyLegacyAminoSigners(sig.Data) {
 					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to
 					// check account sequence number, and therefore communicate sequence number as a
 					// potential cause of error.
@@ -158,12 +148,14 @@ func (svd SigVerificationDecorator) AnteHandle(
 					)
 				} else {
 					errMsg = fmt.Sprintf(
-						"signature verification failed; please verify account number (%d) and chain-id (%s)",
+						"signature verification failed; please verify account number (%d) and chain-id (%s): (%s)",
 						accNum,
 						chainID,
+						err.Error(),
 					)
 				}
-				return ctx, moderrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+
 			}
 		}
 	}

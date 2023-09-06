@@ -2,6 +2,8 @@ package ante_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	"testing"
 
 	moderrors "cosmossdk.io/errors"
@@ -13,7 +15,6 @@ import (
 
 	customante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
 	appmsgs "github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 
 	"github.com/stretchr/testify/require"
@@ -488,7 +489,7 @@ func runTest(t *testing.T, name string, msgs []sdk.Msg, mode txMode, expectedErr
 		require.NoError(t, suite.TxBuilder.SetMsgs(msgs...))
 		// Empty private key, so tx's signature should be empty.
 		privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
-		tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.Ctx.ChainID())
+		tx, err := suite.CreateTestTx(suite.Ctx, privs, accNums, accSeqs, suite.Ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 		require.NoError(t, err)
 		suite.Ctx = getCtxWithTxMode(mode, suite)
 

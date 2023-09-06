@@ -1,16 +1,17 @@
 package ante_test
 
 import (
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	"reflect"
 	"testing"
 
-	"cosmossdk.io/errors"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/ante"
-	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
@@ -66,31 +67,31 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 			msgOne: constants.Msg_CancelOrder,
 			msgTwo: constants.Msg_Transfer,
 
-			expectedErr: errors.ErrInvalidRequest,
+			expectedErr: sdkerrors.ErrInvalidRequest,
 		},
 		"no freeInfiniteGasMeter: mult msgs, two MsgCancelOrder": {
 			msgOne: constants.Msg_CancelOrder,
 			msgTwo: constants.Msg_CancelOrder,
 
-			expectedErr: errors.ErrInvalidRequest,
+			expectedErr: sdkerrors.ErrInvalidRequest,
 		},
 		"no freeInfiniteGasMeter: mult msgs, MsgPlaceOrder with Transfer": {
 			msgOne: constants.Msg_PlaceOrder,
 			msgTwo: constants.Msg_Transfer,
 
-			expectedErr: errors.ErrInvalidRequest,
+			expectedErr: sdkerrors.ErrInvalidRequest,
 		},
 		"no freeInfiniteGasMeter: mult msgs, two MsgPlaceOrder": {
 			msgOne: constants.Msg_PlaceOrder,
 			msgTwo: constants.Msg_PlaceOrder,
 
-			expectedErr: errors.ErrInvalidRequest,
+			expectedErr: sdkerrors.ErrInvalidRequest,
 		},
 		"no freeInfiniteGasMeter: mult msgs, MsgPlaceOrder and MsgCancelOrder": {
 			msgOne: constants.Msg_PlaceOrder,
 			msgTwo: constants.Msg_CancelOrder,
 
-			expectedErr: errors.ErrInvalidRequest,
+			expectedErr: sdkerrors.ErrInvalidRequest,
 		},
 	}
 
@@ -115,7 +116,7 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 			// Empty private key, so tx's signature should be empty.
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 
-			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.Ctx.ChainID())
+			tx, err := suite.CreateTestTx(suite.Ctx, privs, accNums, accSeqs, suite.Ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
 			resultCtx, err := antehandler(suite.Ctx, tx, false)
