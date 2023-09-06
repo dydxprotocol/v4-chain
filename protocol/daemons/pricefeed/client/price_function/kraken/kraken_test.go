@@ -46,8 +46,7 @@ func TestKrakenPriceFunction_Mixed(t *testing.T) {
 			responseJsonString: `{,}`,
 			exponentMap:        EthExponentMap,
 			expectedError: errors.New(
-				"kraken API response JSON parse error (invalid character ',' looking for beginning of object " +
-					"key string)",
+				"invalid character ',' looking for beginning of object key string",
 			),
 		},
 		"Failure - invalid response, float instead of string data type, missing": {
@@ -55,8 +54,7 @@ func TestKrakenPriceFunction_Mixed(t *testing.T) {
 			responseJsonString: `{"result":{"XETHZUSD":{"a":[2105.8]}}}`,
 			exponentMap:        BtcAndEthExponentMap,
 			expectedError: errors.New(
-				"kraken API response JSON parse error (json: cannot unmarshal number into Go struct field " +
-					"KrakenTickerResult.result.a of type string)",
+				"json: cannot unmarshal number into Go struct field KrakenTickerResult.result.a of type string",
 			),
 		},
 		"Unavailable - overflow due to negative exponent": {
