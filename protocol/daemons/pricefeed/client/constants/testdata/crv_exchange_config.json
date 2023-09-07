@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"CRVUSDT\"",
+      "ticker": "CRVUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {

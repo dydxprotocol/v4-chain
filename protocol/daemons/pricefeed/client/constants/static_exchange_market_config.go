@@ -27,135 +27,135 @@ var (
 			// example `symbols` parameter: ["BTCUSDT","BNBUSDT"]
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
 				exchange_common.MARKET_BTC_USD: {
-					Ticker:         `"BTCUSDT"`,
+					Ticker:         "BTCUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_ETH_USD: {
-					Ticker:         `"ETHUSDT"`,
+					Ticker:         "ETHUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_LINK_USD: {
-					Ticker:         `"LINKUSDT"`,
+					Ticker:         "LINKUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_MATIC_USD: {
-					Ticker:         `"MATICUSDT"`,
+					Ticker:         "MATICUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_CRV_USD: {
-					Ticker:         `"CRVUSDT"`,
+					Ticker:         "CRVUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_SOL_USD: {
-					Ticker:         `"SOLUSDT"`,
+					Ticker:         "SOLUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_ADA_USD: {
-					Ticker:         `"ADAUSDT"`,
+					Ticker:         "ADAUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_AVAX_USD: {
-					Ticker:         `"AVAXUSDT"`,
+					Ticker:         "AVAXUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_FIL_USD: {
-					Ticker:         `"FILUSDT"`,
+					Ticker:         "FILUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_LTC_USD: {
-					Ticker:         `"LTCUSDT"`,
+					Ticker:         "LTCUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_DOGE_USD: {
-					Ticker:         `"DOGEUSDT"`,
+					Ticker:         "DOGEUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_ATOM_USD: {
-					Ticker:         `"ATOMUSDT"`,
+					Ticker:         "ATOMUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_DOT_USD: {
-					Ticker:         `"DOTUSDT"`,
+					Ticker:         "DOTUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_UNI_USD: {
-					Ticker:         `"UNIUSDT"`,
+					Ticker:         "UNIUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_BCH_USD: {
-					Ticker:         `"BCHUSDT"`,
+					Ticker:         "BCHUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_TRX_USD: {
-					Ticker:         `"TRXUSDT"`,
+					Ticker:         "TRXUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_NEAR_USD: {
-					Ticker:         `"NEARUSDT"`,
+					Ticker:         "NEARUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_MKR_USD: {
-					Ticker:         `"MKRUSDT"`,
+					Ticker:         "MKRUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_XLM_USD: {
-					Ticker:         `"XLMUSDT"`,
+					Ticker:         "XLMUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_ETC_USD: {
-					Ticker:         `"ETCUSDT"`,
+					Ticker:         "ETCUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_COMP_USD: {
-					Ticker:         `"COMPUSDT"`,
+					Ticker:         "COMPUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_APE_USD: {
-					Ticker:         `"APEUSDT"`,
+					Ticker:         "APEUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_APT_USD: {
-					Ticker:         `"APTUSDT"`,
+					Ticker:         "APTUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_ARB_USD: {
-					Ticker:         `"ARBUSDT"`,
+					Ticker:         "ARBUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_LDO_USD: {
-					Ticker:         `"LDOUSDT"`,
+					Ticker:         "LDOUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_OP_USD: {
-					Ticker:         `"OPUSDT"`,
+					Ticker:         "OPUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_PEPE_USD: {
-					Ticker:         `"PEPEUSDT"`,
+					Ticker:         "PEPEUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_SEI_USD: {
-					Ticker:         `"SEIUSDT"`,
+					Ticker:         "SEIUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_SHIB_USD: {
-					Ticker:         `"SHIBUSDT"`,
+					Ticker:         "SHIBUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_SUI_USD: {
-					Ticker:         `"SUIUSDT"`,
+					Ticker:         "SUIUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_WLD_USD: {
-					Ticker:         `"WLDUSDT"`,
+					Ticker:         "WLDUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_XRP_USD: {
-					Ticker:         `"XRPUSDT"`,
+					Ticker:         "XRPUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_USDT_USD: {
-					Ticker:         `"BTCUSDT"`, // Adjusted with BTC index price.
+					Ticker:         "BTCUSDT", // Adjusted with BTC index price.
 					Invert:         true,
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_BTC_USD),
 				},
@@ -166,19 +166,19 @@ var (
 			// example `symbols` parameter: ["BTCUSD","BNBUSD"]
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
 				exchange_common.MARKET_BTC_USD: {
-					Ticker:         `"BTCUSDT"`,
+					Ticker:         "BTCUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_ETH_USD: {
-					Ticker:         `"ETHUSDT"`,
+					Ticker:         "ETHUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_DOGE_USD: {
-					Ticker:         `"DOGEUSDT"`,
+					Ticker:         "DOGEUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_USDT_USD: {
-					Ticker: `"USDTUSD"`,
+					Ticker: "USDTUSD",
 				},
 			},
 		},
