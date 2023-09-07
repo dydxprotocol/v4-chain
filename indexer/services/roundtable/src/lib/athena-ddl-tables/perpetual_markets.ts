@@ -20,7 +20,6 @@ const RAW_TABLE_COLUMNS: string = `
   \`quantumConversionExponent\` int,
   \`atomicResolution\` int,
   \`subticksPerTick\` int,
-  \`minOrderBaseQuantums\` int,
   \`stepBaseQuantums\` int,
   \`liquidityTierId\` int
 `;
@@ -39,7 +38,6 @@ const TABLE_COLUMNS: string = `
   "quantumConversionExponent",
   "atomicResolution",
   "subticksPerTick",
-  "minOrderBaseQuantums",
   "stepBaseQuantums",
   "liquidityTierId"
 `;

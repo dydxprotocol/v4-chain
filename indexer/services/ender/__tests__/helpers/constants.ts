@@ -108,7 +108,6 @@ export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
   quantumConversionExponent: -8,
   atomicResolution: -10,
   subticksPerTick: 100,
-  minOrderBaseQuantums: Long.fromValue(10, true),
   stepBaseQuantums: Long.fromValue(10, true),
   liquidityTier: 0,
 };
@@ -134,7 +133,6 @@ export const defaultUpdateClobPairEvent: UpdateClobPairEventV1 = {
   status: ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE,
   quantumConversionExponent: -7,
   subticksPerTick: 1000,
-  minOrderBaseQuantums: Long.fromValue(100, true),
   stepBaseQuantums: Long.fromValue(100, true),
 };
 

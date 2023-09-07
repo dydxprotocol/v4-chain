@@ -496,8 +496,7 @@ export interface IndexerOrder {
   side: IndexerOrder_Side;
   /**
    * The size of this order in base quantums. Must be a multiple of
-   * `ClobPair.StepBaseQuantums` and above `ClobPair.MinOrderBaseQuantums`
-   * (where `ClobPair.Id = orderId.ClobPairId`).
+   * `ClobPair.StepBaseQuantums` (where `ClobPair.Id = orderId.ClobPairId`).
    */
 
   quantums: Long;
@@ -567,8 +566,7 @@ export interface IndexerOrderSDKType {
   side: IndexerOrder_SideSDKType;
   /**
    * The size of this order in base quantums. Must be a multiple of
-   * `ClobPair.StepBaseQuantums` and above `ClobPair.MinOrderBaseQuantums`
-   * (where `ClobPair.Id = orderId.ClobPairId`).
+   * `ClobPair.StepBaseQuantums` (where `ClobPair.Id = orderId.ClobPairId`).
    */
 
   quantums: Long;

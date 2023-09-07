@@ -447,7 +447,6 @@ func TestGenesis(t *testing.T) {
 								clobPair.QuantumConversionExponent,
 								perpetual.Params.AtomicResolution,
 								clobPair.SubticksPerTick,
-								clobPair.MinOrderBaseQuantums,
 								clobPair.StepBaseQuantums,
 								perpetual.Params.LiquidityTier,
 							),

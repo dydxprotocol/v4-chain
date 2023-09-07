@@ -256,7 +256,11 @@ func TestConvertStringSliceToBigFloatSlice(t *testing.T) {
 				new(big.Float).SetUint64(100),
 			},
 		},
-		"Multiple values and one throws an error": {
+		"Convert empty string returns an error": {
+			stringSlice:   []string{""},
+			expectedError: fmt.Errorf("invalid, value is not a number: %v", ""),
+		},
+		"Multiple values and one returns an error": {
 			stringSlice: []string{
 				"100.0001",
 				"300.02",
@@ -316,7 +320,6 @@ func TestConvertBigFloatSliceToUint64Slice(t *testing.T) {
 			bigFloatSlice: []*big.Float{
 				new(big.Float).SetFloat64(100.0001),
 			},
-			expectedError: nil,
 			expectedUint64Slice: []uint64{
 				uint64(100),
 			},
@@ -326,7 +329,6 @@ func TestConvertBigFloatSliceToUint64Slice(t *testing.T) {
 				new(big.Float).SetFloat64(0),
 				BigFloatMaxUint64(),
 			},
-			expectedError: nil,
 			expectedUint64Slice: []uint64{
 				uint64(0),
 				math.MaxUint64,
@@ -340,7 +342,6 @@ func TestConvertBigFloatSliceToUint64Slice(t *testing.T) {
 				new(big.Float).SetFloat64(50000),
 				BigFloatMaxUint64(),
 			},
-			expectedError: nil,
 			expectedUint64Slice: []uint64{
 				uint64(100),
 				uint64(300),
@@ -357,22 +358,19 @@ func TestConvertBigFloatSliceToUint64Slice(t *testing.T) {
 				new(big.Float).SetFloat64(-1), // Invalid
 				BigFloatMaxUint64(),
 			},
-			expectedError:       underflowError,
-			expectedUint64Slice: nil,
+			expectedError: underflowError,
 		},
 		"value overflows": {
 			bigFloatSlice: []*big.Float{
 				maxUint64PlusOneBigFloat,
 			},
-			expectedError:       overflowError,
-			expectedUint64Slice: nil,
+			expectedError: overflowError,
 		},
 		"value underflows": {
 			bigFloatSlice: []*big.Float{
 				new(big.Float).SetFloat64(-100),
 			},
-			expectedError:       underflowError,
-			expectedUint64Slice: nil,
+			expectedError: underflowError,
 		},
 	}
 

@@ -1222,8 +1222,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
-      "minOrderBaseQuantums": 0
+      "subticksPerTick": 0
     },
     "property2": {
       "clobPairId": "string",
@@ -1244,8 +1243,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
-      "minOrderBaseQuantums": 0
+      "subticksPerTick": 0
     }
   }
 }
@@ -2745,8 +2743,7 @@ or
   "tickSize": "string",
   "stepSize": "string",
   "stepBaseQuantums": 0,
-  "subticksPerTick": 0,
-  "minOrderBaseQuantums": 0
+  "subticksPerTick": 0
 }
 
 ```
@@ -2774,7 +2771,6 @@ or
 |stepSize|string|true|none|none|
 |stepBaseQuantums|number(double)|true|none|none|
 |subticksPerTick|number(double)|true|none|none|
-|minOrderBaseQuantums|number(double)|true|none|none|
 
 ## PerpetualMarketResponse
 
@@ -2805,8 +2801,7 @@ or
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
-      "minOrderBaseQuantums": 0
+      "subticksPerTick": 0
     },
     "property2": {
       "clobPairId": "string",
@@ -2827,8 +2822,7 @@ or
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
-      "minOrderBaseQuantums": 0
+      "subticksPerTick": 0
     }
   }
 }

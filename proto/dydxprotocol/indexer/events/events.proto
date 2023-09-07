@@ -319,17 +319,13 @@ message PerpetualMarketCreateEventV1 {
   // Defined in clob.clob_pair
   uint32 subticks_per_tick = 8;
 
-  // Minimum size of an order on the CLOB, in base quantums.
-  // Defined in clob.clob_pair
-  uint64 min_order_base_quantums = 9;
-
   // Minimum increment in the size of orders on the CLOB, in base quantums.
   // Defined in clob.clob_pair
-  uint64 step_base_quantums = 10;
+  uint64 step_base_quantums = 9;
 
   // The liquidity_tier that this perpetual is associated with.
   // Defined in perpetuals.perpetual
-  uint32 liquidity_tier = 11;
+  uint32 liquidity_tier = 10;
 }
 
 // LiquidityTierUpsertEventV1 message contains all the information to
@@ -377,13 +373,9 @@ message UpdateClobPairEventV1 {
   // Defined in clob.clob_pair
   uint32 subticks_per_tick = 4;
 
-  // Minimum size of an order on the CLOB, in base quantums.
-  // Defined in clob.clob_pair
-  uint64 min_order_base_quantums = 5;
-
   // Minimum increment in the size of orders on the CLOB, in base quantums.
   // Defined in clob.clob_pair
-  uint64 step_base_quantums = 6;
+  uint64 step_base_quantums = 5;
 }
 
 // UpdatePerpetualEventV1 message contains all the information about an update

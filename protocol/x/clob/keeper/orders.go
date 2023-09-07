@@ -429,7 +429,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 		)
 
 		if err != nil {
-			ctx.Logger().Debug(
+			k.Logger(ctx).Debug(
 				fmt.Sprintf(
 					"MustPlaceStatefulOrdersFromLastBlock: PlaceOrder() returned an error %+v for order %+v",
 					err,
@@ -450,7 +450,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 				// In this case, Indexer could be learning of this order for the first
 				// time with this removal.
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-					ctx.Logger(),
+					k.Logger(ctx),
 					order.OrderId,
 					orderStatus,
 					err,
@@ -927,7 +927,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 			)
 			if satypes.ErrIntegerOverflow.Is(err) {
 				// TODO(DEC-1701): Determine best action to take if the oracle price overflows max uint64
-				ctx.Logger().Error(
+				k.Logger(ctx).Error(
 					fmt.Sprintf(
 						"Integer overflow: oracle price (subticks) exceeded uint64 max. "+
 							"perpetual ID = (%d), oracle price = (%+v), is buy = (%t)",
@@ -1114,7 +1114,7 @@ func (k Keeper) InitStatefulOrdersInMemClob(
 		if err != nil {
 			// TODO(DEC-847): Revisit this error log once `MsgRemoveOrder` is implemented,
 			// since it should potentially be a panic.
-			ctx.Logger().Error(
+			k.Logger(ctx).Error(
 				"InitStatefulOrdersInMemClob: PlaceOrder() returned an error",
 				"error",
 				err,

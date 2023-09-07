@@ -291,7 +291,6 @@ export function perpetualMarketToResponseObject(
     stepSize: protocolTranslations.getStepSize(perpetualMarket),
     stepBaseQuantums: perpetualMarket.stepBaseQuantums,
     subticksPerTick: perpetualMarket.subticksPerTick,
-    minOrderBaseQuantums: perpetualMarket.minOrderBaseQuantums,
   };
 }
 

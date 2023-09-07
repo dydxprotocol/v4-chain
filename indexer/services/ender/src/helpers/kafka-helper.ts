@@ -321,7 +321,6 @@ export function generatePerpetualMarketMessage(
         quantumConversionExponent: perpetualMarket.quantumConversionExponent,
         atomicResolution: perpetualMarket.atomicResolution,
         subticksPerTick: perpetualMarket.subticksPerTick,
-        minOrderBaseQuantums: perpetualMarket.minOrderBaseQuantums,
         stepBaseQuantums: perpetualMarket.stepBaseQuantums,
         initialMarginFraction: helpers.ppmToString(Number(liquidityTier.initialMarginPpm)),
         maintenanceMarginFraction: helpers.ppmToString(

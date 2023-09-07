@@ -61,7 +61,6 @@ func TestCreateClobPair(t *testing.T) {
 							testClobPair1.QuantumConversionExponent,
 							testPerp1.Params.AtomicResolution,
 							testClobPair1.SubticksPerTick,
-							testClobPair1.MinOrderBaseQuantums,
 							testClobPair1.StepBaseQuantums,
 							testPerp1.Params.LiquidityTier,
 						),
