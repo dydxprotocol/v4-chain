@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 
@@ -803,4 +804,35 @@ func (k Keeper) ConvertFillablePriceToSubticks(
 	}
 
 	return types.Subticks(boundedSubticks)
+}
+
+// GetLiquidationOrderWeight returns the weight of a liquidation order in float64.
+// The weight is defined as the size of the liquidation order in quote quantums.
+func (k Keeper) GetLiquidationOrderWeight(
+	ctx sdk.Context,
+	liquidationOrder types.LiquidationOrder,
+) float64 {
+	bigOrderNotional, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		liquidationOrder.MustGetLiquidatedPerpetualId(),
+		liquidationOrder.GetBaseQuantums().ToBigInt(),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Convert the notional to weight in big.Float.
+	weight, _ := new(big.Float).SetInt(
+		new(big.Int).Abs(bigOrderNotional),
+	).Float64()
+
+	if weight == 0 {
+		k.Logger(ctx).Error(
+			"Weight of liquidation order is zero",
+			"liquidationOrder",
+			fmt.Sprintf("%+v", liquidationOrder),
+		)
+	}
+
+	return weight
 }

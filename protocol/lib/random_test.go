@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	exprand "golang.org/x/exp/rand"
 )
 
 func TestRandomBool(t *testing.T) {
@@ -80,4 +81,71 @@ func TestRandomBytesBetween_InvalidInputs(t *testing.T) {
 	require.Panics(t, func() {
 		RandomBytesBetween([]byte{}, []byte{}, nil)
 	})
+}
+
+func TestWeightedRandomSample(t *testing.T) {
+	source := exprand.NewSource(53)
+
+	freq := make([]float64, 4)
+	for i := 0; i < 1_000_000; i++ {
+		weights := []float64{0.1, 0.2, 0.3, 0.4}
+		sample, err := WeightedRandomSample(weights, 1, source)
+		require.NoError(t, err)
+		freq[sample[0]]++
+	}
+
+	exp := []float64{100_000, 200_000, 300_000, 400_000}
+
+	// Check that this is within statistical expectations.
+	require.Less(
+		t,
+		chi2(freq, exp),
+		16.92, // p = 0.05 df = 9
+	)
+}
+
+func TestWeightedRandomSample_NoReplacement(t *testing.T) {
+	source := exprand.NewSource(53)
+
+	for i := 0; i < 10_000; i++ {
+		weights := []float64{0.1, 0.2, 0.3, 0.4}
+		sample, err := WeightedRandomSample(weights, 4, source)
+		require.NoError(t, err)
+		require.ElementsMatch(t, sample, []int{0, 1, 2, 3})
+	}
+}
+
+func TestWeightedRandomSample_ZeroWeight(t *testing.T) {
+	source := exprand.NewSource(53)
+
+	for i := 0; i < 10_000; i++ {
+		weights := []float64{0.1, 0.2, 0.3, 0.0, 0.4}
+		// Pick 4 elements.
+		sample, err := WeightedRandomSample(weights, 4, source)
+		require.NoError(t, err)
+		require.ElementsMatch(t, sample, []int{0, 1, 2, 4})
+	}
+}
+
+func TestWeightedRandomSample_ErrorNoRemainingElements(t *testing.T) {
+	source := exprand.NewSource(53)
+	weights := []float64{0.1, 0.2, 0.3, 0.0, 0.4}
+	// Pick 5 elements.
+	_, err := WeightedRandomSample(weights, 5, source)
+	require.ErrorContains(t, err, "failed to take item from weighted")
+
+	source = exprand.NewSource(53)
+	weights = []float64{0.1, 0.2, 0.3, 0.0, 0.4}
+	// Pick 6 elements.
+	_, err = WeightedRandomSample(weights, 6, source)
+	require.ErrorContains(t, err, "failed to take item from weighted")
+}
+
+func chi2(ob, ex []float64) (sum float64) {
+	for i := range ob {
+		x := ob[i] - ex[i]
+		sum += (x * x) / ex[i]
+	}
+
+	return sum
 }

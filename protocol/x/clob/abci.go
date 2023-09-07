@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	exprand "golang.org/x/exp/rand"
 )
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
@@ -190,6 +191,7 @@ func PrepareCheckState(
 
 	// Get the liquidation order for each subaccount.
 	liquidationOrders := make([]types.LiquidationOrder, 0)
+	weights := make([]float64, 0)
 	for _, subaccountId := range subaccountIds {
 		// If attempting to liquidate a subaccount returns an error, panic.
 		liquidationOrder, err := keeper.MaybeGetLiquidationOrder(ctx, subaccountId)
@@ -212,16 +214,37 @@ func PrepareCheckState(
 		}
 
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
+		weights = append(weights, keeper.GetLiquidationOrderWeight(ctx, *liquidationOrder))
 	}
 
 	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
 	start := time.Now()
-	sort.Sort(types.SortedLiquidationOrders(liquidationOrders))
+
+	var liquidationsToPlace []types.LiquidationOrder
+
+	// Generate a random sample of liquidation orders to place.
+	src := exprand.NewSource(uint64(lib.MustConvertIntegerToUint32(ctx.BlockHeight())))
+	randomSample, err := lib.WeightedRandomSample(
+		weights,
+		lib.Min(keeper.MaxLiquidationOrdersPerBlock, uint32(len(liquidationOrders))),
+		src,
+	)
+	if err != nil {
+		keeper.Logger(ctx).Error("Failed to sample liquidation orders", "err", err)
+		liquidationsToPlace = liquidationOrders
+	} else {
+		liquidationsToPlace = make([]types.LiquidationOrder, 0)
+		for _, index := range randomSample {
+			liquidationsToPlace = append(liquidationsToPlace, liquidationOrders[index])
+		}
+	}
+	sort.Sort(types.SortedLiquidationOrders(liquidationsToPlace))
+
 	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.SortLiquidationOrders)
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
-		liquidationOrder := liquidationOrders[i]
+	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationsToPlace); i++ {
+		liquidationOrder := liquidationsToPlace[i]
 		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
 			keeper.Logger(ctx).Error(
 				fmt.Sprintf(

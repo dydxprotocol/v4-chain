@@ -4,7 +4,42 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+
+	exprand "golang.org/x/exp/rand"
+	"gonum.org/v1/gonum/stat/sampleuv"
 )
+
+// WeightedRandomSample returns a random sample of n indices without replacement.
+// This function returns an error if:
+//   - src is nil.
+//   - failed to select an item from weights because all weights are zero, or n > len(weights).
+//
+// Note that weights of zero will never get selected.
+func WeightedRandomSample(
+	weights []float64,
+	n uint32,
+	src exprand.Source,
+) (
+	selected []int,
+	err error,
+) {
+	if src == nil {
+		return nil, errors.New("src expected to be non-nil")
+	}
+
+	weighted := sampleuv.NewWeighted(weights, src)
+
+	selected = make([]int, n)
+	for i := uint32(0); i < n; i++ {
+		index, ok := weighted.Take()
+		if !ok {
+			return nil, errors.New("failed to take item from weighted")
+		}
+		selected[i] = index
+	}
+
+	return selected, nil
+}
 
 func RandomBool() bool {
 	return rand.Intn(2) == 0
