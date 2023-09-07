@@ -196,9 +196,6 @@ export interface ClobPair {
    */
 
   quantumConversionExponent: number;
-  /** Minimum size of an order on the CLOB, in base quantums. */
-
-  minOrderBaseQuantums: Long;
   status: ClobPair_Status;
 }
 /**
@@ -228,9 +225,6 @@ export interface ClobPairSDKType {
    */
 
   quantum_conversion_exponent: number;
-  /** Minimum size of an order on the CLOB, in base quantums. */
-
-  min_order_base_quantums: Long;
   status: ClobPair_StatusSDKType;
 }
 
@@ -342,7 +336,6 @@ function createBaseClobPair(): ClobPair {
     stepBaseQuantums: Long.UZERO,
     subticksPerTick: 0,
     quantumConversionExponent: 0,
-    minOrderBaseQuantums: Long.UZERO,
     status: 0
   };
 }
@@ -373,12 +366,8 @@ export const ClobPair = {
       writer.uint32(48).sint32(message.quantumConversionExponent);
     }
 
-    if (!message.minOrderBaseQuantums.isZero()) {
-      writer.uint32(56).uint64(message.minOrderBaseQuantums);
-    }
-
     if (message.status !== 0) {
-      writer.uint32(64).int32(message.status);
+      writer.uint32(56).int32(message.status);
     }
 
     return writer;
@@ -418,10 +407,6 @@ export const ClobPair = {
           break;
 
         case 7:
-          message.minOrderBaseQuantums = (reader.uint64() as Long);
-          break;
-
-        case 8:
           message.status = (reader.int32() as any);
           break;
 
@@ -442,7 +427,6 @@ export const ClobPair = {
     message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
     message.subticksPerTick = object.subticksPerTick ?? 0;
     message.quantumConversionExponent = object.quantumConversionExponent ?? 0;
-    message.minOrderBaseQuantums = object.minOrderBaseQuantums !== undefined && object.minOrderBaseQuantums !== null ? Long.fromValue(object.minOrderBaseQuantums) : Long.UZERO;
     message.status = object.status ?? 0;
     return message;
   }

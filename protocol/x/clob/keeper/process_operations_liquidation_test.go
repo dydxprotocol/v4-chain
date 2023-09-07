@@ -86,7 +86,7 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 					Liquidated:  constants.Dave_Num0,
 					ClobPairId:  0,
 					PerpetualId: 0,
-					TotalSize:   10,
+					TotalSize:   100_000_000,
 					IsBuy:       false,
 					Fills: []types.MakerFill{
 						// Fill would be processed successfully.
@@ -858,7 +858,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Dave_Num0: {},
 			},
 		},
-		"Liquidation succeeds with position size smaller than clobPair.MinOrderBaseQuantums": {
+		"Liquidation succeeds with position size smaller than clobPair.StepBaseQuantums": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -878,7 +878,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
 							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(-10), // Liquidatable position is smaller than MinOrderBaseQuantums
+							Quantums:    dtypes.NewInt(-10), // Liquidatable position is smaller than StepBaseQuantums
 						},
 					},
 				},
@@ -1177,7 +1177,7 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 						Liquidated:  constants.Dave_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
-						TotalSize:   20,
+						TotalSize:   100_000_000,
 						IsBuy:       false,
 						Fills: []types.MakerFill{
 							// Fill would be processed successfully.
@@ -1228,7 +1228,7 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
-						TotalSize:   50_000_000,
+						TotalSize:   100_000_000,
 						IsBuy:       true,
 						Fills: []types.MakerFill{
 							{
@@ -1506,7 +1506,10 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(ctx, constants.Carl_Num0, 0)
+			},
+			expectedError: types.ErrNoPerpetualPositionsToLiquidate,
 		},
 		"Stateful order validation: size of liquidation order exceeds position size": {
 			perpetuals: []*perptypes.Perpetual{
@@ -1540,7 +1543,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
+			expectedError: types.ErrInvalidLiquidationOrderTotalSize,
 		},
 		"Stateful order validation: liquidation order is on the wrong side": {
 			perpetuals: []*perptypes.Perpetual{
@@ -1574,7 +1577,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
+			expectedError: types.ErrInvalidLiquidationOrderSide,
 		},
 		"Stateful match validation: clob pair and perpetual ids do not match": {
 			perpetuals: []*perptypes.Perpetual{
@@ -1594,7 +1597,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 				clobtest.NewShortTermOrderPlacementOperationRaw(
 					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
-						Side:         types.Order_SIDE_BUY,
+						Side:         types.Order_SIDE_SELL,
 						Quantums:     1000,
 						Subticks:     1000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
@@ -2092,7 +2095,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrSubaccountHasLiquidatedPerpetual,
+			expectedError: types.ErrNoPerpetualPositionsToLiquidate,
 		},
 		"Subaccount block limit: fails when liquidation exceeds subaccount notional amount limit": {
 			perpetuals: []*perptypes.Perpetual{
@@ -2127,7 +2130,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 				),
 			},
 			liquidationConfig: &constants.LiquidationsConfig_Subaccount_Max10bNotionalLiquidated_Max10bInsuranceLost,
-			expectedError:     types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+			expectedError:     types.ErrInvalidLiquidationOrderTotalSize,
 		},
 		"Subaccount block limit: fails when a single liquidation fill exceeds max insurance lost block limit": {
 			perpetuals: []*perptypes.Perpetual{

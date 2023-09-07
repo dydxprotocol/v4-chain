@@ -61,11 +61,11 @@ BEGIN
                                                       AND "status" = 'OPEN';
             perpetual_position_found = FOUND;
             _size = dydx_trim_scale(dydx_from_serializable_int(perpetual_position_update->'quantums') *
-                   power(10::numeric, perpetual_market."atomicResolution"::numeric));
+                   power(10, perpetual_market."atomicResolution")::numeric);
             side = CASE WHEN _size > 0 THEN 'LONG' ELSE 'SHORT' END;
             existing_funding = CASE WHEN perpetual_position_found THEN perpetual_position_record."settledFunding" ELSE 0 END;
             settled_funding = dydx_trim_scale(-dydx_from_serializable_int(perpetual_position_update->'fundingPayment')
-                                                  * power(10::numeric, QUOTE_CURRENCY_ATOMIC_RESOLUTION) + existing_funding);
+                                                  * power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric + existing_funding);
             new_settled_funding = CASE WHEN (perpetual_position_found AND perpetual_position_record.side != side AND _size != 0)
                                         THEN 0
                                         ELSE settled_funding END;
@@ -149,7 +149,7 @@ BEGIN
             END IF;
 
             size = dydx_trim_scale(dydx_from_serializable_int(asset_position_update->'quantums') *
-                   power(10::numeric, asset_record."atomicResolution"::numeric));
+                   power(10, asset_record."atomicResolution")::numeric);
             asset_position_record.id = dydx_uuid_from_asset_position_parts(subaccount_record.id, asset_id);
             asset_position_record."subaccountId" = subaccount_record."id";
             asset_position_record."assetId" = asset_id;

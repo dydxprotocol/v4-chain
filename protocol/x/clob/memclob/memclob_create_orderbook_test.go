@@ -104,7 +104,7 @@ func TestCreateOrderbook_PanicsWhenSubticksPerTickIsZero(t *testing.T) {
 	})
 }
 
-func TestCreateOrderbook_PanicsWhenMinOrderBaseQuantumsIsZero(t *testing.T) {
+func TestCreateOrderbook_PanicsWhenStepBaseQuantumsIsZero(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 
 	memclob := NewMemClobPriceTimePriority(false)

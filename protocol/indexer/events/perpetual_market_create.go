@@ -16,7 +16,6 @@ func NewPerpetualMarketCreateEvent(
 	quantumConversionExponent int32,
 	atomicResolution int32,
 	subticksPerTick uint32,
-	minOrderBaseQuantums uint64,
 	stepBaseQuantums uint64,
 	liquidityTier uint32,
 ) *PerpetualMarketCreateEventV1 {
@@ -29,7 +28,6 @@ func NewPerpetualMarketCreateEvent(
 		QuantumConversionExponent: quantumConversionExponent,
 		AtomicResolution:          atomicResolution,
 		SubticksPerTick:           subticksPerTick,
-		MinOrderBaseQuantums:      minOrderBaseQuantums,
 		StepBaseQuantums:          stepBaseQuantums,
 		LiquidityTier:             liquidityTier,
 	}

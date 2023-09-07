@@ -151,9 +151,8 @@ build-reproducible-linux-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name dydxv4builder || true
 	$(DOCKER) buildx use dydxv4builder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(GO_VERSION) \
-		--build-arg GIT_VERSION=$(VERSION) \
-		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg COMMIT=$(COMMIT) \
 		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/amd64 \
 		-t dydx:local-linux-amd64 \
@@ -167,9 +166,8 @@ build-reproducible-linux-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name dydxv4builder || true
 	$(DOCKER) buildx use dydxv4builder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(GO_VERSION) \
-		--build-arg GIT_VERSION=$(VERSION) \
-		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg COMMIT=$(COMMIT) \
 		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/arm64 \
 		-t dydx:local-linux-arm64 \

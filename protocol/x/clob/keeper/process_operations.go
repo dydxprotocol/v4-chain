@@ -37,7 +37,7 @@ func (k Keeper) ProcessProposerOperations(
 		return sdkerrors.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
 	}
 
-	ctx.Logger().Debug(
+	k.Logger(ctx).Debug(
 		"Processing operations queue",
 		"operationsQueue",
 		types.GetInternalOperationsQueueTextString(operations),
@@ -366,8 +366,13 @@ func (k Keeper) PersistMatchLiquidationToState(
 		)
 	}
 
-	takerOrder, err := k.ConstructTakerOrderFromMatchPerpetualLiquidation(ctx, matchLiquidation)
+	takerOrder, err := k.MaybeGetLiquidationOrder(ctx, matchLiquidation.Liquidated)
 	if err != nil {
+		return err
+	}
+
+	// Perform stateless validation on the liquidation order.
+	if err := k.ValidateLiquidationOrderAgainstProposedLiquidation(ctx, takerOrder, matchLiquidation); err != nil {
 		return err
 	}
 

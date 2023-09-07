@@ -1,6 +1,7 @@
 package clob
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -128,7 +129,7 @@ func PrepareCheckState(
 
 	// 1. Remove all operations in the local validators operations queue from the memclob.
 	localValidatorOperationsQueue, shortTermOrderTxBytes := memClob.GetOperationsToReplay(ctx)
-	ctx.Logger().Debug(
+	keeper.Logger(ctx).Debug(
 		"Clearing local operations queue",
 		"localValidatorOperationsQueue",
 		types.GetInternalOperationsQueueTextString(localValidatorOperationsQueue),
@@ -193,12 +194,24 @@ func PrepareCheckState(
 		// If attempting to liquidate a subaccount returns an error, panic.
 		liquidationOrder, err := keeper.MaybeGetLiquidationOrder(ctx, subaccountId)
 		if err != nil {
+			// Subaccount might not always be liquidatable since liquidation daemon runs
+			// in a separate goroutine and is not always in sync with the application.
+			// Therefore, if subaccount is not liquidatable, continue.
+			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				telemetry.IncrCounter(
+					1,
+					metrics.MaybeGetLiquidationOrder,
+					metrics.SubaccountsNotLiquidatable,
+					metrics.Count,
+				)
+				continue
+			}
+
+			// Panic on unexpected errors.
 			panic(err)
 		}
 
-		if liquidationOrder != nil {
-			liquidationOrders = append(liquidationOrders, *liquidationOrder)
-		}
+		liquidationOrders = append(liquidationOrders, *liquidationOrder)
 	}
 
 	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
@@ -210,7 +223,7 @@ func PrepareCheckState(
 	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
 		liquidationOrder := liquidationOrders[i]
 		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
-			ctx.Logger().Error(
+			keeper.Logger(ctx).Error(
 				fmt.Sprintf(
 					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
 					liquidationOrder,
@@ -231,7 +244,7 @@ func PrepareCheckState(
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
 	newLocalValidatorOperationsQueue, _ := memClob.GetOperationsToReplay(ctx)
-	ctx.Logger().Debug(
+	keeper.Logger(ctx).Debug(
 		"Local operations queue after PrepareCheckState",
 		"newLocalValidatorOperationsQueue",
 		types.GetInternalOperationsQueueTextString(newLocalValidatorOperationsQueue),

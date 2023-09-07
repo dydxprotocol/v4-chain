@@ -26,7 +26,6 @@ func (k Keeper) CreatePerpetualClobPair(
 	ctx sdk.Context,
 	clobPairId uint32,
 	perpetualId uint32,
-	minOrderBaseQuantums satypes.BaseQuantums,
 	stepSizeBaseQuantums satypes.BaseQuantums,
 	quantumConversionExponent int32,
 	subticksPerTick uint32,
@@ -39,6 +38,16 @@ func (k Keeper) CreatePerpetualClobPair(
 			"id=%v, existing clob pair=%v",
 			clobPairId,
 			clobPair,
+		)
+	}
+
+	// Verify the perpetual ID is not already associated with an existing CLOB pair.
+	if clobPairId, found := k.PerpetualIdToClobPairId[perpetualId]; found {
+		return types.ClobPair{}, sdkerrors.Wrapf(
+			types.ErrPerpetualAssociatedWithExistingClobPair,
+			"perpetual id=%v, existing clob pair id=%v",
+			perpetualId,
+			clobPairId,
 		)
 	}
 
@@ -76,7 +85,6 @@ func (k Keeper) CreatePerpetualClobPair(
 				quantumConversionExponent,
 				perpetual.Params.AtomicResolution,
 				subticksPerTick,
-				minOrderBaseQuantums.ToUint64(),
 				stepSizeBaseQuantums.ToUint64(),
 				perpetual.Params.LiquidityTier,
 			),
@@ -88,25 +96,14 @@ func (k Keeper) CreatePerpetualClobPair(
 
 // validateClobPair validates a CLOB pair's fields are suitable for CLOB pair creation.
 //
-// - Metadata:
+// Stateful Validation:
 //   - Must be a perpetual CLOB pair with a perpetualId matching a perpetual in the store.
 //
-// - Status:
-//   - Must be a supported status.
-//
-// - StepBaseQuantums:
-//   - Must be greater than zero.
-//
-// - SubticksPerTick:
-//   - Must be greater than zero.
+// Stateless Validation
+//   - `clobPair.Validate()` returns no error.
 func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
-	if !types.IsSupportedClobPairStatus(clobPair.Status) {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"CLOB pair (%+v) has unsupported status %+v",
-			clobPair,
-			clobPair.Status,
-		)
+	if err := clobPair.Validate(); err != nil {
+		return err
 	}
 
 	// TODO(DEC-1535): update this validation when we implement "spot"/"asset" clob pairs.
@@ -136,25 +133,6 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 			clobPair,
 		)
 	}
-
-	if clobPair.StepBaseQuantums <= 0 {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"invalid ClobPair parameter: StepBaseQuantums must be > 0. Got %v",
-			clobPair.StepBaseQuantums,
-		)
-	}
-
-	// Since a subtick will be calculated as (1 tick/SubticksPerTick), the denominator cannot be 0
-	// and negative numbers do not make sense.
-	if clobPair.SubticksPerTick <= 0 {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClobPairParameter,
-			"invalid ClobPair parameter: SubticksPerTick must be > 0. Got %v",
-			clobPair.SubticksPerTick,
-		)
-	}
-
 	return nil
 }
 

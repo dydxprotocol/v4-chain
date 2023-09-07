@@ -19,6 +19,7 @@ import (
 func TestShortTermCancelOrder_CancelAlreadyExists(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 	memclob := NewMemClobPriceTimePriority(true)
+	memclob.SetClobKeeper(testutil_memclob.NewFakeMemClobKeeper())
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 
 	// Create all unique orderbooks.

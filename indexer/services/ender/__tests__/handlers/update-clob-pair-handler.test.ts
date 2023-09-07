@@ -116,7 +116,6 @@ describe('update-clob-pair-handler', () => {
       status: protocolTranslations.clobStatusToMarketStatus(defaultUpdateClobPairEvent.status),
       quantumConversionExponent: defaultUpdateClobPairEvent.quantumConversionExponent,
       subticksPerTick: defaultUpdateClobPairEvent.subticksPerTick,
-      minOrderBaseQuantums: defaultUpdateClobPairEvent.minOrderBaseQuantums.toNumber(),
       stepBaseQuantums: defaultUpdateClobPairEvent.stepBaseQuantums.toNumber(),
     }));
     expectTimingStats();

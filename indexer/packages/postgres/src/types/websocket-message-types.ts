@@ -199,7 +199,6 @@ export interface TradingPerpetualMarketMessage {
   quantumConversionExponent?: number;
   atomicResolution?: number;
   subticksPerTick?: number;
-  minOrderBaseQuantums?: number;
   stepBaseQuantums?: number;
 
   // Fields that are likely to change
@@ -215,7 +214,7 @@ export type OraclePriceMarketMessageContentsMapping = {
 };
 
 export interface OraclePriceMarket {
-  price: string,
+  oraclePrice: string,
   effectiveAt: IsoString,
   effectiveAtHeight: string,
   marketId: number,
