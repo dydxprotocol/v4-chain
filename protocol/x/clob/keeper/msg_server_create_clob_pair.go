@@ -31,7 +31,6 @@ func (k msgServer) CreateClobPair(
 		msg.ClobPair.Id,
 		// `MsgCreateClobPair.ValidateBasic` ensures that `msg.ClobPair.Metadata` is `PerpetualClobMetadata`.
 		msg.ClobPair.MustGetPerpetualId(),
-		satypes.BaseQuantums(msg.ClobPair.MinOrderBaseQuantums),
 		satypes.BaseQuantums(msg.ClobPair.StepBaseQuantums),
 		msg.ClobPair.QuantumConversionExponent,
 		msg.ClobPair.SubticksPerTick,

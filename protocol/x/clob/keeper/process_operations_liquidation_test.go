@@ -858,7 +858,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Dave_Num0: {},
 			},
 		},
-		"Liquidation succeeds with position size smaller than clobPair.MinOrderBaseQuantums": {
+		"Liquidation succeeds with position size smaller than clobPair.StepBaseQuantums": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -878,7 +878,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
 							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(-10), // Liquidatable position is smaller than MinOrderBaseQuantums
+							Quantums:    dtypes.NewInt(-10), // Liquidatable position is smaller than StepBaseQuantums
 						},
 					},
 				},

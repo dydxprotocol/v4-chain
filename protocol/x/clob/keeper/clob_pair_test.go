@@ -128,7 +128,6 @@ func TestCreatePerpetualClobPair_FailsWithPerpetualAssociatedWithExistingClobPai
 		ks.Ctx,
 		newClobPair.Id,
 		newClobPair.MustGetPerpetualId(),
-		satypes.BaseQuantums(newClobPair.MinOrderBaseQuantums),
 		satypes.BaseQuantums(newClobPair.StepBaseQuantums),
 		newClobPair.QuantumConversionExponent,
 		newClobPair.SubticksPerTick,
