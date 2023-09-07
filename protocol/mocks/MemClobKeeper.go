@@ -8,6 +8,8 @@ import (
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
+	log "github.com/cometbft/cometbft/libs/log"
+
 	mock "github.com/stretchr/testify/mock"
 
 	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -180,6 +182,22 @@ func (_m *MemClobKeeper) IsLiquidatable(ctx types.Context, subaccountId subaccou
 	}
 
 	return r0, r1
+}
+
+// Logger provides a mock function with given fields: ctx
+func (_m *MemClobKeeper) Logger(ctx types.Context) log.Logger {
+	ret := _m.Called(ctx)
+
+	var r0 log.Logger
+	if rf, ok := ret.Get(0).(func(types.Context) log.Logger); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(log.Logger)
+		}
+	}
+
+	return r0
 }
 
 // MustAddOrderToStatefulOrdersTimeSlice provides a mock function with given fields: ctx, goodTilBlockTime, orderId

@@ -37,7 +37,7 @@ func (k Keeper) ProcessProposerOperations(
 		return sdkerrors.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
 	}
 
-	ctx.Logger().Debug(
+	k.Logger(ctx).Debug(
 		"Processing operations queue",
 		"operationsQueue",
 		types.GetInternalOperationsQueueTextString(operations),
