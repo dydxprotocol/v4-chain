@@ -95,15 +95,9 @@ jobs:
           VERSION="1.26.1" && \
           curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
           chmod +x "${BIN}/buf"
-<<<<<<< HEAD
       - run: pip install -r ./v4-proto-py/requirements.txt
       - run: make v4-proto-py-gen
-  dydxjs-gen:
-=======
-      - run: pip install -r ./dydxpy/requirements.txt
-      - run: make dydxpy-gen
   v4-proto-js-gen:
->>>>>>> origin/main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
