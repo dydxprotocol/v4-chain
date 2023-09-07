@@ -20,7 +20,6 @@ import (
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/pkg/errors"
 )
 
 // CreatePerpetual creates a new perpetual in the store.
@@ -80,6 +79,11 @@ func (k Keeper) HasPerpetual(
 ) (found bool) {
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
 	return perpetualStore.Has(types.PerpetualKey(id))
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) ModifyPerpetual(
@@ -1125,36 +1129,19 @@ func (k Keeper) validatePerpetual(
 	ctx sdk.Context,
 	perpetual *types.Perpetual,
 ) error {
-	if err := k.validatePerpetualStateless(perpetual); err != nil {
+	// Stateless validation.
+	if err := perpetual.Params.Validate(); err != nil {
 		return err
 	}
-	// Validate `marketId`.
+
+	// Validate `marketId` exists.
 	if _, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId); err != nil {
 		return err
 	}
-	// Validate `liquidityTier`.
+
+	// Validate `liquidityTier` exists.
 	if perpetual.Params.LiquidityTier >= k.GetNumLiquidityTiers(ctx) {
 		return sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.Params.LiquidityTier))
-	}
-
-	return nil
-}
-
-// Performs the following validation (stateful and stateless) on a `Perpetual`
-// structs fields, returning an error if any conditions are false:
-// - Ticker is a non-empty string.
-func (k Keeper) validatePerpetualStateless(perpetual *types.Perpetual) error {
-	// Validate `ticker`.
-	if len(perpetual.Params.Ticker) == 0 {
-		return errors.WithStack(types.ErrTickerEmptyString)
-	}
-
-	// Validate `defaultFundingPpm`
-	defaultFundingPpm := lib.AbsInt32(perpetual.Params.DefaultFundingPpm)
-	if defaultFundingPpm > types.MaxDefaultFundingPpmAbs {
-		return sdkerrors.Wrap(
-			types.ErrDefaultFundingPpmMagnitudeExceedsMax,
-			lib.Int32ToString(perpetual.Params.DefaultFundingPpm))
 	}
 
 	return nil

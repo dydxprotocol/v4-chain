@@ -94,6 +94,11 @@ var (
 		18,
 		"Premium votes are disallowed for non active markets",
 	)
+	ErrInvalidAuthority = sdkerrors.Register(
+		ModuleName,
+		19,
+		"Authority is invalid",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding      = sdkerrors.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

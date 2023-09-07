@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"fmt"
+	"testing"
+
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/stretchr/testify/mock"
-	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -234,4 +235,25 @@ func AssertMarketPriceUpdateEventInIndexerBlock(
 		updatedMarketPrice.Price,
 	)
 	require.Contains(t, marketEvents, expectedEvent)
+}
+
+// CreateTestPriceMarkets is a test utility function that creates list of given
+// price markets in state.
+func CreateTestPriceMarkets(
+	t *testing.T,
+	ctx sdk.Context,
+	pricesKeeper *keeper.Keeper,
+	markets []types.MarketParamPrice,
+) {
+	// Create a new market param and price.
+	marketId := uint32(0)
+	for _, m := range markets {
+		_, err := pricesKeeper.CreateMarket(
+			ctx,
+			m.Param,
+			m.Price,
+		)
+		require.NoError(t, err)
+		marketId++
+	}
 }
