@@ -109,7 +109,7 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 			exponentMap:        BtcExponentMap,
 			expectedPriceMap:   make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: errors.New(`no listing found for ticker BTCUSDT`),
+				BTCUSDC_TICKER: errors.New("no listing found for ticker BTCUSDT"),
 			},
 		},
 		"Unavailable - empty list response": {
@@ -117,7 +117,7 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 			exponentMap:        BtcExponentMap,
 			expectedPriceMap:   make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: errors.New(`no listing found for ticker BTCUSDT`),
+				BTCUSDC_TICKER: errors.New("no listing found for ticker BTCUSDT"),
 			},
 		},
 		"Unavailable - incomplete response": {
@@ -155,7 +155,7 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 				ETHUSDC_TICKER: uint64(1_780_250_000),
 			},
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: errors.New(`no listing found for ticker BTCUSDT`),
+				BTCUSDC_TICKER: errors.New("no listing found for ticker BTCUSDT"),
 			},
 		},
 		"Success - integers": {

@@ -107,7 +107,7 @@ var (
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_COMP_USD: {
-					Ticker:         `"COMPUSDT"`,
+					Ticker:         "COMPUSDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_APE_USD: {
