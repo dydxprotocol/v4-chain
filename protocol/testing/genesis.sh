@@ -18,10 +18,16 @@ REWARD_TOKEN="dv4tnt"
 NATIVE_TOKEN="dv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
+# TODO(GENESIS): 11155111 is the chain ID for sepolia testnet.
 ETH_CHAIN_ID=11155111 # sepolia
+# TODO(GENESIS): below is the bridge contract on sepolia testnet.
+# https://sepolia.etherscan.io/address/0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0
 ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0"
+# TODO(GENESIS): verify below balance is desired amount.
 BRIDGE_MODACC_BALANCE=1000000000000000000000000000 # 1e27
+# TODO(GENESIS): determine bridge events to manually include in genesis.
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0 # TODO(CORE-329)
+# TODO(GENESIS): determine bridge events to manually include in genesis.
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=0 # TODO(CORE-329)
 
 function edit_genesis() {
