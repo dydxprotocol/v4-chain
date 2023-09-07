@@ -71,7 +71,7 @@ type LiquidationsKeeper interface {
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 	) (
-		perpetualID uint32,
+		perpetualId uint32,
 		quantums *big.Int,
 		err error,
 	)

@@ -47,7 +47,7 @@ func (k Keeper) MaybeGetLiquidationOrder(
 		return nil, err
 	}
 
-	// Calculaet the fillable price.
+	// Calculate the fillable price.
 	isLiquidatingLong := deltaQuantumsBig.Sign() == -1
 	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	fillablePriceSubticks := k.ConvertFillablePriceToSubticks(
