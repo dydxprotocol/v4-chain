@@ -2,12 +2,12 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"BTCUSDT\"",
+      "ticker": "BTCUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "BinanceUS",
-      "ticker": "\"BTCUSDT\"",
+      "ticker": "BTCUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {

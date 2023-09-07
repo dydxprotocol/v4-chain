@@ -2,12 +2,12 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"DOGEUSDT\"",
+      "ticker": "DOGEUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "BinanceUS",
-      "ticker": "\"DOGEUSDT\"",
+      "ticker": "DOGEUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
