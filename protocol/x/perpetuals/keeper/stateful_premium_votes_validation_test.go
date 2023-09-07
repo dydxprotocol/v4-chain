@@ -176,15 +176,14 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 				)
 			}
 
-			_, err := createLiquidityTiersAndNPerpetuals(t, ctx, k, pricesKeeper, tc.numPerpetuals)
-			require.NoError(t, err)
+			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, k, pricesKeeper, tc.numPerpetuals)
 
 			// Run.
 			msg := &types.MsgAddPremiumVotes{
 				Votes: tc.votes,
 			}
 
-			err = k.PerformStatefulPremiumVotesValidation(ctx, msg)
+			err := k.PerformStatefulPremiumVotesValidation(ctx, msg)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, err, tc.expectedErr)
 				return

@@ -178,11 +178,6 @@ var (
 		37,
 		"Perpetual does not exist in state",
 	)
-	ErrInvalidMsgUpdateClobPair = sdkerrors.Register(
-		ModuleName,
-		38,
-		"MsgUpdateClobPair is invalid",
-	)
 	ErrInvalidClobPairUpdate = sdkerrors.Register(
 		ModuleName,
 		39,
@@ -192,6 +187,11 @@ var (
 		ModuleName,
 		40,
 		"Authority is invalid",
+	)
+	ErrPerpetualAssociatedWithExistingClobPair = sdkerrors.Register(
+		ModuleName,
+		41,
+		"perpetual ID is already associated with an existing CLOB pair",
 	)
 
 	// Liquidations errors.
