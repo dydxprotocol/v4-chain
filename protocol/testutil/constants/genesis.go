@@ -220,7 +220,7 @@ const GenesisState = `{
     },
     "clob": {
       "block_rate_limit_config": {
-        "max_short_term_orders_per_market_per_n_blocks": [
+        "max_short_term_orders_per_n_blocks": [
           {
             "num_blocks": 1,
             "limit": 50
@@ -236,7 +236,7 @@ const GenesisState = `{
             "limit": 20
           }
         ],
-        "max_short_term_order_cancellations_per_market_per_n_blocks": [
+        "max_short_term_order_cancellations_per_n_blocks": [
           {
             "num_blocks": 1,
             "limit": 50
