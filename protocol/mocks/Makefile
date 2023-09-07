@@ -45,7 +45,7 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=RequestHandler --dir=./lib --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=Medianizer --dir=./lib --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=IndexerMessageSender --dir=./indexer --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=PricePremiumGetter --dir=x/perpetuals/types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=PerpetualsClobKeeper --dir=x/perpetuals/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=IndexerEventManager --dir=./indexer/indexer_manager --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PricefeedMutableMarketConfigs --dir=./daemons/pricefeed/client/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ExchangeConfigUpdater --dir=./daemons/pricefeed/client/types --recursive --output=./mocks
