@@ -121,11 +121,11 @@ jobs:
         run: |
           twine upload -r pypi dist/*
 
-  dydxjs-release:
+  v4-proto-js-release:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./dydxjs
+        working-directory: ./v4-proto-js
 
     steps:
       - name: Check out repository code

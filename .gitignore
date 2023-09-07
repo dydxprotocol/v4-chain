@@ -5,8 +5,8 @@ dydxpy/build
 dydxpy/dist
 dydxpy/dydxpy.egg-info/
 dydxpy/dydxpy
-dydxjs/build
-dydxjs/node_modules
-dydxjs/src
+v4-proto-js/build
+v4-proto-js/node_modules
+v4-proto-js/src
 
 .idea
