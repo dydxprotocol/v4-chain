@@ -35,7 +35,7 @@
     "url": "git+https://github.com/dydxprotocol/indexer.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "BSL-1.1",
   "bugs": {
     "url": "https://github.com/dydxprotocol/indexer/issues"
   },

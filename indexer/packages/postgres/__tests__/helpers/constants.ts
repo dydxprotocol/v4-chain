@@ -156,7 +156,6 @@ export const defaultPerpetualMarket: PerpetualMarketCreateObject = {
   quantumConversionExponent: -8,
   atomicResolution: -10,
   subticksPerTick: 100,
-  minOrderBaseQuantums: 10,
   stepBaseQuantums: 10,
   liquidityTierId: 0,
 };
@@ -175,7 +174,6 @@ export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   quantumConversionExponent: -6,
   atomicResolution: -18,
   subticksPerTick: 10,
-  minOrderBaseQuantums: 100,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
 };
@@ -191,10 +189,9 @@ export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
   trades24H: 200,
   nextFundingRate: '1.2',
   openInterest: '40000',
-  quantumConversionExponent: -2,
-  atomicResolution: -18,
+  quantumConversionExponent: -16,
+  atomicResolution: -2,
   subticksPerTick: 10,
-  minOrderBaseQuantums: 100,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
 };

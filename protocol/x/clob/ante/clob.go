@@ -75,7 +75,7 @@ func (cd ClobDecorator) AnteHandle(
 			// This guarantees that `MsgCancelOrder` has undergone stateless validation.
 			err = cd.clobKeeper.CancelShortTermOrder(ctx, msg)
 		}
-		ctx.Logger().Debug("Received new order cancelation",
+		cd.clobKeeper.Logger(ctx).Debug("Received new order cancelation",
 			"tx",
 			log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 			"msg",
@@ -91,7 +91,7 @@ func (cd ClobDecorator) AnteHandle(
 	case *types.MsgPlaceOrder:
 		if msg.Order.OrderId.IsStatefulOrder() {
 			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg)
-			ctx.Logger().Debug("Received new stateful order",
+			cd.clobKeeper.Logger(ctx).Debug("Received new stateful order",
 				"tx",
 				log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				"orderHash",
@@ -119,7 +119,7 @@ func (cd ClobDecorator) AnteHandle(
 				ctx,
 				msg,
 			)
-			ctx.Logger().Debug("Received new short term order",
+			cd.clobKeeper.Logger(ctx).Debug("Received new short term order",
 				"tx",
 				log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				"orderHash",

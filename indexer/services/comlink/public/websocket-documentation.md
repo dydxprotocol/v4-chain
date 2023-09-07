@@ -521,7 +521,6 @@ Returns everything from `v4/trades/perpetualMarkets/${id}` endpoint.
       "id": "BTC-USD",
       "contents": {
         "trades": [
-    
           {
             "side": "BUY",
             "size": "0.00396135",
@@ -806,8 +805,7 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "tickSize": "1",
         "stepSize": "0.000000001",
         "stepBaseQuantums": 10,
-        "subticksPerTick": 10000,
-        "minOrderBaseQuantums": 10
+        "subticksPerTick": 10000
       },
       "ETH-USD": {
         "clobPairId": "1",
@@ -833,8 +831,7 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "tickSize": "0.01",
         "stepSize": "0.000001",
         "stepBaseQuantums": 1000,
-        "subticksPerTick": 10000,
-        "minOrderBaseQuantums": 1000
+        "subticksPerTick": 10000
       }
     }
   }
@@ -879,7 +876,6 @@ interface TradingPerpetualMarketMessage {
   quantumConversionExponent?: number;
   atomicResolution?: number;
   subticksPerTick?: number;
-  minOrderBaseQuantums?: number;
   stepBaseQuantums?: number;
   lastPrice?: string;
   priceChange24H?: string;
@@ -893,7 +889,7 @@ type OraclePriceMarketMessageContentsMapping = {
 };
 
 interface OraclePriceMarket {
-  price: string,
+  oraclePrice: string,
   effectiveAt: IsoString,
   effectiveAtHeight: string,
   marketId: number,

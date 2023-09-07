@@ -84,7 +84,6 @@ export interface PerpetualMarketFromDatabase {
   quantumConversionExponent: number;
   atomicResolution: number;
   subticksPerTick: number;
-  minOrderBaseQuantums: number;
   stepBaseQuantums: number;
   liquidityTierId: number;
 }

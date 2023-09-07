@@ -263,7 +263,7 @@ export function generateOraclePriceContents(
   return {
     oraclePrices: {
       [ticker]: {
-        price: oraclePrice.price,
+        oraclePrice: oraclePrice.price,
         effectiveAt: oraclePrice.effectiveAt,
         effectiveAtHeight: oraclePrice.effectiveAtHeight,
         marketId: oraclePrice.marketId,
@@ -321,7 +321,6 @@ export function generatePerpetualMarketMessage(
         quantumConversionExponent: perpetualMarket.quantumConversionExponent,
         atomicResolution: perpetualMarket.atomicResolution,
         subticksPerTick: perpetualMarket.subticksPerTick,
-        minOrderBaseQuantums: perpetualMarket.minOrderBaseQuantums,
         stepBaseQuantums: perpetualMarket.stepBaseQuantums,
         initialMarginFraction: helpers.ppmToString(Number(liquidityTier.initialMarginPpm)),
         maintenanceMarginFraction: helpers.ppmToString(

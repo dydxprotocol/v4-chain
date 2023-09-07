@@ -65,7 +65,6 @@ export default class PerpetualMarketModel extends Model {
         'quantumConversionExponent',
         'atomicResolution',
         'subticksPerTick',
-        'minOrderBaseQuantums',
         'stepBaseQuantums',
         'liquidityTierId',
       ],
@@ -84,7 +83,6 @@ export default class PerpetualMarketModel extends Model {
         quantumConversionExponent: { type: 'integer' },
         atomicResolution: { type: 'integer' },
         subticksPerTick: { type: 'integer' },
-        minOrderBaseQuantums: { type: 'integer' },
         stepBaseQuantums: { type: 'integer' },
         liquidityTierId: { type: 'integer' },
       },
@@ -113,7 +111,6 @@ export default class PerpetualMarketModel extends Model {
       quantumConversionExponent: 'integer',
       atomicResolution: 'integer',
       subticksPerTick: 'integer',
-      minOrderBaseQuantums: 'integer',
       stepBaseQuantums: 'integer',
       liquidityTierId: 'integer',
     };
@@ -146,8 +143,6 @@ export default class PerpetualMarketModel extends Model {
   atomicResolution!: number;
 
   subticksPerTick!: number;
-
-  minOrderBaseQuantums!: number;
 
   stepBaseQuantums!: number;
 

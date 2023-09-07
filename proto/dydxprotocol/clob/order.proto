@@ -130,8 +130,7 @@ message Order {
   Side side = 2;
 
   // The size of this order in base quantums. Must be a multiple of
-  // `ClobPair.StepBaseQuantums` and above `ClobPair.MinOrderBaseQuantums`
-  // (where `ClobPair.Id = orderId.ClobPairId`).
+  // `ClobPair.StepBaseQuantums` (where `ClobPair.Id = orderId.ClobPairId`).
   uint64 quantums = 3;
 
   // The price level that this order will be placed at on the orderbook,
