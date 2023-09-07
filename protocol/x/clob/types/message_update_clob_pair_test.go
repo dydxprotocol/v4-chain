@@ -19,12 +19,12 @@ func TestMsgUpdateClobPair_GetSigners(t *testing.T) {
 func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		desc        string
-		clobPair    *types.ClobPair
+		clobPair    types.ClobPair
 		expectedErr string
 	}{
 		{
 			desc: "Invalid Metadata (SpotClobMetadata)",
-			clobPair: &types.ClobPair{
+			clobPair: types.ClobPair{
 				Metadata:         &types.ClobPair_SpotClobMetadata{},
 				StepBaseQuantums: 1,
 				SubticksPerTick:  1,
@@ -34,7 +34,7 @@ func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 		},
 		{
 			desc: "UNSPECIFIED Status",
-			clobPair: &types.ClobPair{
+			clobPair: types.ClobPair{
 				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 1,
 				SubticksPerTick:  1,
@@ -44,7 +44,7 @@ func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 		},
 		{
 			desc: "invalid negative status integer",
-			clobPair: &types.ClobPair{
+			clobPair: types.ClobPair{
 				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 1,
 				SubticksPerTick:  1,
@@ -54,7 +54,7 @@ func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 		},
 		{
 			desc: "invalid positive status integer",
-			clobPair: &types.ClobPair{
+			clobPair: types.ClobPair{
 				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 1,
 				SubticksPerTick:  1,
@@ -64,7 +64,7 @@ func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 		},
 		{
 			desc: "StepBaseQuantums <= 0",
-			clobPair: &types.ClobPair{
+			clobPair: types.ClobPair{
 				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 0,
 				SubticksPerTick:  1,
@@ -74,7 +74,7 @@ func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 		},
 		{
 			desc: "SubticksPerTick <= 0",
-			clobPair: &types.ClobPair{
+			clobPair: types.ClobPair{
 				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 1,
 				SubticksPerTick:  0,
@@ -84,7 +84,7 @@ func TestMsgUpdateClobPair_ValidateBasic(t *testing.T) {
 		},
 		{
 			desc: "Valid ClobPair",
-			clobPair: &types.ClobPair{
+			clobPair: types.ClobPair{
 				Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 				StepBaseQuantums: 1,
 				SubticksPerTick:  1,
