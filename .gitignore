@@ -1,10 +1,10 @@
 .gen
 .proto-export
 .proto-export-deps
-dydxpy/build
-dydxpy/dist
-dydxpy/dydxpy.egg-info/
-dydxpy/dydxpy
+v4-proto-py/build
+v4-proto-py/dist
+v4-proto-py/v4-proto-py.egg-info/
+v4-proto-py/v4-proto-py
 v4-proto-js/build
 v4-proto-js/node_modules
 v4-proto-js/src

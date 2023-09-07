@@ -9,8 +9,8 @@ on:  # yamllint disable-line rule:truthy
       - '**.pb.gw.go'
       - 'indexer/packages/v4-protos/**'
       # Code that affects generation
+      - 'v4-proto-py/**'
       - 'v4-proto-js/**'
-      - 'dydxpy/**'
       - 'proto/**'
       - 'indexer/package.json'
       - 'protocol/scripts/protoc**'
@@ -83,7 +83,7 @@ jobs:
           npm install -g pnpm@6.34.0
           pnpm install --loglevel warn --frozen-lockfile
           cd packages/v4-protos && npm run build:verify-proto
-  dydxpy-gen:
+  v4-proto-py-gen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -95,8 +95,8 @@ jobs:
           VERSION="1.26.1" && \
           curl -sSL "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-Linux-x86_64" -o "${BIN}/buf" && \
           chmod +x "${BIN}/buf"
-      - run: pip install -r ./dydxpy/requirements.txt
-      - run: make dydxpy-gen
+      - run: pip install -r ./v4-proto-py/requirements.txt
+      - run: make v4-proto-py-gen
   v4-proto-js-gen:
     runs-on: ubuntu-latest
     steps:
