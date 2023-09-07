@@ -805,8 +805,7 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "tickSize": "1",
         "stepSize": "0.000000001",
         "stepBaseQuantums": 10,
-        "subticksPerTick": 10000,
-        "minOrderBaseQuantums": 10
+        "subticksPerTick": 10000
       },
       "ETH-USD": {
         "clobPairId": "1",
@@ -832,8 +831,7 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "tickSize": "0.01",
         "stepSize": "0.000001",
         "stepBaseQuantums": 1000,
-        "subticksPerTick": 10000,
-        "minOrderBaseQuantums": 1000
+        "subticksPerTick": 10000
       }
     }
   }
@@ -878,7 +876,6 @@ interface TradingPerpetualMarketMessage {
   quantumConversionExponent?: number;
   atomicResolution?: number;
   subticksPerTick?: number;
-  minOrderBaseQuantums?: number;
   stepBaseQuantums?: number;
   lastPrice?: string;
   priceChange24H?: string;

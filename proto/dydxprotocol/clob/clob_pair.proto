@@ -46,9 +46,6 @@ message ClobPair {
   // per Subtick.
   sint32 quantum_conversion_exponent = 6;
 
-  // Minimum size of an order on the CLOB, in base quantums.
-  uint64 min_order_base_quantums = 7;
-
   // Status of the CLOB.
   enum Status {
     // Default value. This value is invalid and unused.
@@ -70,5 +67,5 @@ message ClobPair {
     STATUS_INITIALIZING = 5;
   }
 
-  Status status = 8;
+  Status status = 7;
 }

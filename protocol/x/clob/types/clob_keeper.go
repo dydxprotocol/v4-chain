@@ -25,7 +25,6 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		clobPairId uint32,
 		perpetualId uint32,
-		minOrderInBaseQuantums satypes.BaseQuantums,
 		stepSizeInBaseQuantums satypes.BaseQuantums,
 		quantumConversionExponent int32,
 		subticksPerTick uint32,
