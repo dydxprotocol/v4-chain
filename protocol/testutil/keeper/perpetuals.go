@@ -1,9 +1,11 @@
 package keeper
 
 import (
+	"fmt"
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -19,6 +21,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,15 +34,15 @@ func PerpetualsKeepers(
 	epochsKeeper *epochskeeper.Keeper,
 	storeKey storetypes.StoreKey,
 ) {
-	return PerpetualsKeepersWithPricePremiumGetter(
+	return PerpetualsKeepersWithClobHelpers(
 		t,
 		nil,
 	)
 }
 
-func PerpetualsKeepersWithPricePremiumGetter(
+func PerpetualsKeepersWithClobHelpers(
 	t testing.TB,
-	pricePremiumGetter types.PricePremiumGetter,
+	clobKeeper types.PerpetualsClobKeeper,
 ) (
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
@@ -57,13 +60,13 @@ func PerpetualsKeepersWithPricePremiumGetter(
 		// Define necessary keepers here for unit tests
 		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 		epochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
-		keeper, storeKey = createPerpetualsKeeperWithPricePremiumGetter(
+		keeper, storeKey = createPerpetualsKeeperWithClobHelpers(
 			stateStore,
 			db,
 			cdc,
 			pricesKeeper,
 			epochsKeeper,
-			pricePremiumGetter,
+			clobKeeper,
 			transientStoreKey,
 		)
 
@@ -76,13 +79,13 @@ func PerpetualsKeepersWithPricePremiumGetter(
 	return ctx, keeper, pricesKeeper, epochsKeeper, storeKey
 }
 
-func createPerpetualsKeeperWithPricePremiumGetter(
+func createPerpetualsKeeperWithClobHelpers(
 	stateStore storetypes.CommitMultiStore,
 	db *tmdb.MemDB,
 	cdc *codec.ProtoCodec,
 	pk *priceskeeper.Keeper,
 	ek *epochskeeper.Keeper,
-	ppg types.PricePremiumGetter,
+	pck types.PerpetualsClobKeeper,
 	transientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
@@ -101,7 +104,7 @@ func createPerpetualsKeeperWithPricePremiumGetter(
 		mockIndexerEventsManager,
 	)
 
-	k.SetPricePremiumGetter(ppg)
+	k.SetClobKeeper(pck)
 
 	return k, storeKey
 }
@@ -114,7 +117,7 @@ func createPerpetualsKeeper(
 	ek *epochskeeper.Keeper,
 	transientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	return createPerpetualsKeeperWithPricePremiumGetter(stateStore, db, cdc, pk, ek, nil, transientStoreKey)
+	return createPerpetualsKeeperWithClobHelpers(stateStore, db, cdc, pk, ek, nil, transientStoreKey)
 }
 
 // PopulateTestPremiumStore populates either `PremiumVotes` (`isVote` is true) or
@@ -187,4 +190,99 @@ func GetLiquidityTierUpsertEventsFromIndexerBlock(
 		liquidityTierEvents = append(liquidityTierEvents, &liquidityTierEvent)
 	}
 	return liquidityTierEvents
+}
+
+func CreateNPerpetuals(
+	t *testing.T,
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+	pricesKeeper *priceskeeper.Keeper,
+	n int,
+) ([]types.Perpetual, error) {
+	items := make([]types.Perpetual, n)
+	numLiquidityTiers := keeper.GetNumLiquidityTiers(ctx)
+	require.Greater(t, numLiquidityTiers, uint32(0))
+
+	for i := range items {
+		CreateNMarkets(t, ctx, pricesKeeper, n)
+
+		var defaultFundingPpm int32
+		if i%3 == 0 {
+			defaultFundingPpm = 1
+		} else if i%3 == 1 {
+			defaultFundingPpm = -1
+		} else {
+			defaultFundingPpm = 0
+		}
+
+		perpetual, err := keeper.CreatePerpetual(
+			ctx,
+			uint32(i),                        // Id
+			fmt.Sprintf("%v", i),             // Ticker
+			uint32(i),                        // MarketId
+			int32(i),                         // AtomicResolution
+			defaultFundingPpm,                // DefaultFundingPpm
+			uint32(i%int(numLiquidityTiers)), // LiquidityTier
+		)
+		if err != nil {
+			return items, err
+		}
+
+		items[i] = perpetual
+	}
+	return items, nil
+}
+
+func CreateLiquidityTiersAndNPerpetuals(
+	t *testing.T,
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+	pricesKeeper *priceskeeper.Keeper,
+	n int,
+) []types.Perpetual {
+	// Create liquidity tiers.
+	CreateTestLiquidityTiers(t, ctx, keeper)
+	// Create perpetuals.
+	perpetuals, err := CreateNPerpetuals(t, ctx, keeper, pricesKeeper, n)
+	require.NoError(t, err)
+	return perpetuals
+}
+
+// CreateTestPricesAndPerpetualMarkets is a test utility function that creates list of given
+// prices and perpetual markets in state.
+func CreateTestPricesAndPerpetualMarkets(
+	t *testing.T,
+	ctx sdk.Context,
+	perpKeeper *keeper.Keeper,
+	pricesKeeper *priceskeeper.Keeper,
+	perpetuals []types.Perpetual,
+	markets []pricestypes.MarketParamPrice,
+) {
+	// Create liquidity tiers.
+	CreateTestLiquidityTiers(t, ctx, perpKeeper)
+
+	// Create a new market param and price.
+	marketId := uint32(0)
+	for _, m := range markets {
+		_, err := pricesKeeper.CreateMarket(
+			ctx,
+			m.Param,
+			m.Price,
+		)
+		require.NoError(t, err)
+		marketId++
+	}
+
+	for _, perp := range perpetuals {
+		_, err := perpKeeper.CreatePerpetual(
+			ctx,
+			perp.Params.Id,
+			perp.Params.Ticker,
+			perp.Params.MarketId,
+			perp.Params.AtomicResolution,
+			perp.Params.DefaultFundingPpm,
+			perp.Params.LiquidityTier,
+		)
+		require.NoError(t, err)
+	}
 }

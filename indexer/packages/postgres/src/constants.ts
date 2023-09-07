@@ -87,9 +87,6 @@ export const SQL_TO_JSON_DEFINED_MODELS = [
   SubaccountModel,
 ];
 
-// Precision for numerical values representing money sent to websockets/API.
-export const CURRENCY_DECIMAL_PRECISION: number = 6;
-
 export type SpecifiedClobPairStatus =
   Exclude<ClobPairStatus, ClobPairStatus.CLOB_PAIR_STATUS_UNSPECIFIED> &
   Exclude<ClobPairStatus, ClobPairStatus.UNRECOGNIZED>;

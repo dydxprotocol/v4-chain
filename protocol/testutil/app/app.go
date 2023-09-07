@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"math"
 	"math/rand"
 	"sync"
@@ -36,6 +35,7 @@ import (
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	feetiertypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -151,7 +151,8 @@ type GenesisStates interface {
 		assettypes.GenesisState |
 		epochstypes.GenesisState |
 		sendingtypes.GenesisState |
-		delaymsgtypes.GenesisState
+		delaymsgtypes.GenesisState |
+		bridgetypes.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function

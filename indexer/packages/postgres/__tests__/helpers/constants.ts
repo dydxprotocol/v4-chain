@@ -179,6 +179,25 @@ export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   stepBaseQuantums: 1,
   liquidityTierId: 0,
 };
+export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
+  id: '2',
+  clobPairId: '3',
+  ticker: 'SHIB-USD',
+  marketId: 2,
+  status: PerpetualMarketStatus.ACTIVE,
+  lastPrice: '0.000000065',
+  priceChange24H: '0.000000001',
+  volume24H: '10000000',
+  trades24H: 200,
+  nextFundingRate: '1.2',
+  openInterest: '40000',
+  quantumConversionExponent: -16,
+  atomicResolution: -2,
+  subticksPerTick: 10,
+  minOrderBaseQuantums: 100,
+  stepBaseQuantums: 1,
+  liquidityTierId: 0,
+};
 
 // ============== Orders ==============
 
@@ -425,6 +444,14 @@ export const defaultMarket2: MarketCreateObject = {
   exponent: -6,
   minPriceChangePpm: 50,
   oraclePrice: '1000',
+};
+
+export const defaultMarket3: MarketCreateObject = {
+  id: 2,
+  pair: 'SHIB-USD',
+  exponent: -12,
+  minPriceChangePpm: 50,
+  oraclePrice: '0.000000065',
 };
 
 // ============== LiquidityTiers ==============

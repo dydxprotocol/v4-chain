@@ -521,7 +521,6 @@ Returns everything from `v4/trades/perpetualMarkets/${id}` endpoint.
       "id": "BTC-USD",
       "contents": {
         "trades": [
-    
           {
             "side": "BUY",
             "size": "0.00396135",
@@ -794,7 +793,6 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "volume24H": "63894023.044245577",
         "trades24H": 143820,
         "nextFundingRate": "0",
-        "nextFundingUpdate": 0,
         "initialMarginFraction": "0.050000",
         "maintenanceMarginFraction": "0.030000",
         "basePositionNotional": "1000",
@@ -822,7 +820,6 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "volume24H": "67487133.70842158",
         "trades24H": 137552,
         "nextFundingRate": "0",
-        "nextFundingUpdate": 0,
         "initialMarginFraction": "0.050000",
         "maintenanceMarginFraction": "0.030000",
         "basePositionNotional": "1000",
@@ -895,7 +892,7 @@ type OraclePriceMarketMessageContentsMapping = {
 };
 
 interface OraclePriceMarket {
-  price: string,
+  oraclePrice: string,
   effectiveAt: IsoString,
   effectiveAtHeight: string,
   marketId: number,

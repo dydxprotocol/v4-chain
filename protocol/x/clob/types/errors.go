@@ -178,15 +178,20 @@ var (
 		37,
 		"Perpetual does not exist in state",
 	)
-	ErrInvalidMsgUpdateClobPair = sdkerrors.Register(
-		ModuleName,
-		38,
-		"MsgUpdateClobPair is invalid",
-	)
 	ErrInvalidClobPairUpdate = sdkerrors.Register(
 		ModuleName,
 		39,
 		"ClobPair update is invalid",
+	)
+	ErrInvalidAuthority = sdkerrors.Register(
+		ModuleName,
+		40,
+		"Authority is invalid",
+	)
+	ErrPerpetualAssociatedWithExistingClobPair = sdkerrors.Register(
+		ModuleName,
+		41,
+		"perpetual ID is already associated with an existing CLOB pair",
 	)
 
 	// Liquidations errors.
@@ -396,10 +401,10 @@ var (
 		4004,
 		"Deleveraging fill is invalid",
 	)
-	ErrDeleveragedSubaccountNotLiquidatable = sdkerrors.Register(
+	ErrInvalidDeleveragedSubaccount = sdkerrors.Register(
 		ModuleName,
 		4005,
-		"Deleveraged subaccount in proposed match operation is not liquidatable",
+		"Deleveraged subaccount in proposed deleveraged operation failed deleveraging validation",
 	)
 
 	// Block rate limit errors.

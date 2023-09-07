@@ -58,6 +58,8 @@ var (
 		"/dydxprotocol.clob.MsgUpdateClobPairResponse":                     nil,
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration":         &clob.MsgUpdateEquityTierLimitConfiguration{},
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": nil,
+		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig":                   &clob.MsgUpdateLiquidationsConfig{},
+		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           nil,
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual":         &perpetuals.MsgCreatePerpetual{},

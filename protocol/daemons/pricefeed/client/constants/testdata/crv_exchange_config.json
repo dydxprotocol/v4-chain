@@ -15,6 +15,15 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Huobi",
+      "ticker": "crvusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "CRVUSD"
+    },
+    {
       "exchangeName": "Kucoin",
       "ticker": "CRV-USDT",
       "adjustByMarket": "USDT-USD"

@@ -366,8 +366,13 @@ func (k Keeper) PersistMatchLiquidationToState(
 		)
 	}
 
-	takerOrder, err := k.ConstructTakerOrderFromMatchPerpetualLiquidation(ctx, matchLiquidation)
+	takerOrder, err := k.MaybeGetLiquidationOrder(ctx, matchLiquidation.Liquidated)
 	if err != nil {
+		return err
+	}
+
+	// Perform stateless validation on the liquidation order.
+	if err := k.ValidateLiquidationOrderAgainstProposedLiquidation(ctx, takerOrder, matchLiquidation); err != nil {
 		return err
 	}
 
@@ -434,31 +439,31 @@ func (k Keeper) PersistMatchLiquidationToState(
 
 // PersistMatchDeleveragingToState writes a MatchPerpetualDeleveraging object to state.
 // This function returns an error if:
+// - CanDeleverageSubaccount returns false, indicating the subaccount failed deleveraging validation.
 // - OffsetSubaccountPerpetualPosition returns an error.
 // - The generated fills do not match the fills in the Operations object.
-// TODO(CLOB-654) Verify deleveraging is triggered by liquidation orders and for the correct amount.
+// TODO(CLOB-654) Verify deleveraging is triggered by unmatched liquidation orders and for the correct amount.
 func (k Keeper) PersistMatchDeleveragingToState(
 	ctx sdk.Context,
 	matchDeleveraging *types.MatchPerpetualDeleveraging,
 ) error {
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
 
-	isLiquidatable, err := k.IsLiquidatable(ctx, liquidatedSubaccountId)
-	if err != nil {
+	// Validate that the provided subaccount can be deleveraged.
+	if canDeleverageSubaccount, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId); err != nil {
 		panic(
 			fmt.Sprintf(
-				"PersistMatchDeleveragingToState: Failed to determine if subaccount is liquidatable. "+
-					"SubaccountId %v, error %s",
+				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
+					"SubaccountId %+v, error %+v",
 				liquidatedSubaccountId,
 				err,
 			),
 		)
-	}
-
-	if !isLiquidatable {
+	} else if !canDeleverageSubaccount {
+		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
 		return sdkerrors.Wrapf(
-			types.ErrDeleveragedSubaccountNotLiquidatable,
-			"Subaccount %+v is not liquidatable",
+			types.ErrInvalidDeleveragedSubaccount,
+			"Subaccount %+v failed deleveraging validation",
 			liquidatedSubaccountId,
 		)
 	}

@@ -1,5 +1,4 @@
 import {
-  CURRENCY_DECIMAL_PRECISION,
   FillCreateObject,
   FillFromDatabase,
   FillTable,
@@ -105,7 +104,7 @@ export function getQueryString(
 }
 
 export function getFixedRepresentation(val: number | string): string {
-  return new Big(val).toFixed(CURRENCY_DECIMAL_PRECISION);
+  return new Big(val).toFixed();
 }
 
 export async function createMakerTakerOrderAndFill(

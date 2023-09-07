@@ -4,7 +4,7 @@ import { Long, DeepPartial } from "../../helpers";
 
 export interface LiquidationsConfig {
   /**
-   * The maximum number of quote quantums (exclusive) that the insurance fund
+   * The maximum number of quote quantums (inclusive) that the insurance fund
    * can have for deleverages to be enabled. This is typically some non-zero
    * value since it is difficult to fully-drain the insurance fund (to
    * zero without rounding error).
@@ -39,7 +39,7 @@ export interface LiquidationsConfig {
 
 export interface LiquidationsConfigSDKType {
   /**
-   * The maximum number of quote quantums (exclusive) that the insurance fund
+   * The maximum number of quote quantums (inclusive) that the insurance fund
    * can have for deleverages to be enabled. This is typically some non-zero
    * value since it is difficult to fully-drain the insurance fund (to
    * zero without rounding error).

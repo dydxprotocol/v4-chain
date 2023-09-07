@@ -11,5 +11,6 @@ setup(
     description="Protos for dYdX v4 protocol",
     packages = find_namespace_packages(),
     install_requires=required,
+    license_files = ("LICENSE"),
     python_requires=">=3.8",
 )

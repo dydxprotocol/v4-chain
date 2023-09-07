@@ -47,6 +47,27 @@ func (_m *MemClobKeeper) AddOrderToOrderbookCollatCheck(ctx types.Context, clobP
 	return r0, r1
 }
 
+// CanDeleverageSubaccount provides a mock function with given fields: ctx, subaccountId
+func (_m *MemClobKeeper) CanDeleverageSubaccount(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (bool, error) {
+	ret := _m.Called(ctx, subaccountId)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) bool); ok {
+		r0 = rf(ctx, subaccountId)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
+		r1 = rf(ctx, subaccountId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CancelShortTermOrder provides a mock function with given fields: ctx, msgCancelOrder
 func (_m *MemClobKeeper) CancelShortTermOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgCancelOrder) error {
 	ret := _m.Called(ctx, msgCancelOrder)

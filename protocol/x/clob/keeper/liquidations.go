@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -32,13 +31,7 @@ func (k Keeper) MaybeGetLiquidationOrder(
 		return nil, err
 	}
 	if !isLiquidatable {
-		telemetry.IncrCounter(
-			1,
-			metrics.MaybeGetLiquidationOrder,
-			metrics.SubaccountsNotLiquidatable,
-			metrics.Count,
-		)
-		return nil, nil
+		return nil, types.ErrSubaccountNotLiquidatable
 	}
 
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
@@ -405,16 +398,6 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	insuranceFundDeltaQuoteQuantums *big.Int,
 	err error,
 ) {
-	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
-	if err != nil {
-		panic(fmt.Errorf("GetLiquidationInsuranceFundDelta: CLOB pair not found for perpetual %d", perpetualId))
-	}
-
-	clobPair, found := k.GetClobPair(ctx, clobPairId)
-	if !found {
-		panic(fmt.Errorf("GetLiquidationInsuranceFundDelta: CLOB pair %d not found", clobPairId))
-	}
-
 	// Verify that fill amount is not zero.
 	if fillAmount == 0 {
 		return nil, sdkerrors.Wrapf(
@@ -426,6 +409,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	}
 
 	// Get the delta quantums and delta quote quantums.
+	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	deltaQuantums := new(big.Int).SetUint64(fillAmount)
 	deltaQuoteQuantums, err := getFillQuoteQuantums(
 		clobPair,
@@ -500,9 +484,22 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 ) {
 	// Fetch the subaccount from state.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
+
+	var perpetualPosition *satypes.PerpetualPosition
+
+	for _, position := range subaccount.PerpetualPositions {
+		// Note that this could run in O(n^2) time. This is fine for now because we have less than a hundred
+		// perpetuals and only liquidate once per subaccount per block. This means that the position with smallest
+		// id will be liquidated first.
+		if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
+			perpetualPosition = position
+			break
+		}
+	}
 
 	// Return an error if there are no perpetual positions to liquidate.
-	if len(subaccount.PerpetualPositions) == 0 {
+	if perpetualPosition == nil {
 		return types.ClobPair{},
 			nil,
 			sdkerrors.Wrapf(
@@ -512,21 +509,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 			)
 	}
 
-	perpetualPosition := subaccount.PerpetualPositions[0]
-	clobPairId, err := k.GetClobPairIdForPerpetual(
-		ctx,
-		perpetualPosition.PerpetualId,
-	)
-	// If an unexpected error is returned, panic.
-	if err != nil {
-		panic(err)
-	}
-
-	// Get the corresponding CLOB pair from state.
-	clobPair, found := k.GetClobPair(ctx, clobPairId)
-	if !found {
-		panic(fmt.Errorf("CLOB pair ID %d not found in state", clobPairId))
-	}
+	clobPair = k.mustGetClobPairForPerpetualId(ctx, perpetualPosition.PerpetualId)
 
 	// Get the maximum notional liquidatable for this position.
 	_, bigMaxPositionNotionalLiquidatable, err := k.GetMaxAndMinPositionNotionalLiquidatable(
@@ -538,7 +521,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	// Get the maximum notional liquidatable for this subaccount.
-	bigMaxSubaccountNotionalLiquidatable, _, err := k.GetMaxLiquidatableNotionalAndInsuranceLost(
+	bigMaxSubaccountNotionalLiquidatable, err := k.GetSubaccountMaxNotionalLiquidatable(
 		ctx,
 		subaccountId,
 		perpetualPosition.PerpetualId,
@@ -548,7 +531,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	// Take the minimum of the subaccount block limit and position block limit.
-	bigMaxNotionalLiquidatable := lib.BigMin(
+	bigMaxQuoteQuantumsLiquidatable := lib.BigMin(
 		bigMaxPositionNotionalLiquidatable,
 		bigMaxSubaccountNotionalLiquidatable,
 	)
@@ -562,57 +545,64 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 		panic(err)
 	}
 
-	bigAbsQuoteQuantums := new(big.Int).Abs(bigQuoteQuantums)
 	// Return the full position to avoid any rounding errors.
-	if bigAbsQuoteQuantums.Cmp(bigMaxNotionalLiquidatable) <= 0 ||
+	if bigQuoteQuantums.CmpAbs(bigMaxQuoteQuantumsLiquidatable) <= 0 ||
 		perpetualPosition.GetBigQuantums().CmpAbs(
 			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		) <= 0 {
 		return clobPair, perpetualPosition.GetBigQuantums(), nil
 	}
 
-	bigQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
+	// Convert the max notional liquidatable to base quantums.
+	bigBaseQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
 		ctx,
 		perpetualPosition.PerpetualId,
-		bigMaxNotionalLiquidatable,
+		bigMaxQuoteQuantumsLiquidatable,
 	)
 	if err != nil {
 		panic(err)
 	}
 
 	// Round to the nearest step size.
-	bigQuantumsToLiquidate = lib.BigIntRoundToMultiple(
-		bigQuantumsToLiquidate,
+	bigBaseQuantumsToLiquidate = lib.BigIntRoundToMultiple(
+		bigBaseQuantumsToLiquidate,
 		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		false,
 	)
 
+	// Clamp the base quantums to liquidate to the step size and the size of the position
+	// in case there's rounding errors.
+	bigBaseQuantumsToLiquidate = lib.BigIntClamp(
+		bigBaseQuantumsToLiquidate,
+		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
+		new(big.Int).Abs(perpetualPosition.GetBigQuantums()),
+	)
+
 	// Negate the position size if it's short.
 	if !perpetualPosition.GetIsLong() {
-		bigQuantumsToLiquidate.Neg(bigQuantumsToLiquidate)
+		bigBaseQuantumsToLiquidate.Neg(bigBaseQuantumsToLiquidate)
 	}
 
-	return clobPair, bigQuantumsToLiquidate, nil
+	return clobPair, bigBaseQuantumsToLiquidate, nil
 }
 
-// GetMaxLiquidatableNotionalAndInsuranceLost returns the maximum notional that the subaccount can liquidate
-// and the maximum insurance fund payment without exceeding the subaccount block limits.
+// GetSubaccountMaxNotionalLiquidatable returns the maximum notional that the subaccount can liquidate
+// without exceeding the subaccount block limits.
 // This function takes into account any previous liquidations in the same block and returns an error if
 // called with a previously liquidated perpetual id.
-func (k Keeper) GetMaxLiquidatableNotionalAndInsuranceLost(
+func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 ) (
 	bigMaxNotionalLiquidatable *big.Int,
-	bigMaxQuantumsInsuranceLost *big.Int,
 	err error,
 ) {
 	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
 
-	// Make sure that the subaccount has not previously liquidated this perpetual in the same block.
+	// Make sure that this subaccount <> perpetual has not previously been liquidated in the same block.
 	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
-		return nil, nil, sdkerrors.Wrapf(
+		return nil, sdkerrors.Wrapf(
 			types.ErrSubaccountHasLiquidatedPerpetual,
 			"Subaccount %v and perpetual %v have already been liquidated within the last block",
 			subaccountId,
@@ -628,7 +618,15 @@ func (k Keeper) GetMaxLiquidatableNotionalAndInsuranceLost(
 		liquidationConfig.SubaccountBlockLimits.MaxNotionalLiquidated,
 	)
 	if bigTotalNotionalLiquidated.Cmp(bigNotionalLiquidatedBlockLimit) > 0 {
-		panic(types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated)
+		panic(
+			sdkerrors.Wrapf(
+				types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+				"Subaccount %+v notional liquidated exceeds block limit. Current notional liquidated: %v, block limit: %v",
+				subaccountId,
+				bigTotalNotionalLiquidated,
+				bigNotionalLiquidatedBlockLimit,
+			),
+		)
 	}
 
 	bigMaxNotionalLiquidatable = new(big.Int).Sub(
@@ -636,20 +634,57 @@ func (k Keeper) GetMaxLiquidatableNotionalAndInsuranceLost(
 		bigTotalNotionalLiquidated,
 	)
 
+	return bigMaxNotionalLiquidatable, nil
+}
+
+// GetSubaccountMaxInsuranceLost returns the maximum insurance fund payout that can be performed
+// in this block without exceeding the subaccount block limits.
+// This function takes into account any previous liquidations in the same block and returns an error if
+// called with a previously liquidated perpetual id.
+func (k Keeper) GetSubaccountMaxInsuranceLost(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+) (
+	bigMaxQuantumsInsuranceLost *big.Int,
+	err error,
+) {
+	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
+
+	// Make sure that the subaccount has not previously liquidated this perpetual in the same block.
+	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
+		return nil, sdkerrors.Wrapf(
+			types.ErrSubaccountHasLiquidatedPerpetual,
+			"Subaccount %v and perpetual %v have already been liquidated within the last block",
+			subaccountId,
+			perpetualId,
+		)
+	}
+
+	liquidationConfig := k.GetLiquidationsConfig(ctx)
+
 	// Calculate the maximum insurance fund payout amount for the given subaccount in this block.
 	bigCurrentInsuranceFundLost := new(big.Int).SetUint64(subaccountLiquidationInfo.QuantumsInsuranceLost)
 	bigInsuranceFundLostBlockLimit := new(big.Int).SetUint64(
 		liquidationConfig.SubaccountBlockLimits.MaxQuantumsInsuranceLost,
 	)
 	if bigCurrentInsuranceFundLost.Cmp(bigInsuranceFundLostBlockLimit) > 0 {
-		panic(types.ErrLiquidationExceedsSubaccountMaxInsuranceLost)
+		panic(
+			sdkerrors.Wrapf(
+				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
+				"Subaccount %+v insurance lost exceeds block limit. Current insurance lost: %v, block limit: %v",
+				subaccountId,
+				bigCurrentInsuranceFundLost,
+				bigInsuranceFundLostBlockLimit,
+			),
+		)
 	}
 
 	bigMaxQuantumsInsuranceLost = new(big.Int).Sub(
 		bigInsuranceFundLostBlockLimit,
 		bigCurrentInsuranceFundLost,
 	)
-	return bigMaxNotionalLiquidatable, bigMaxQuantumsInsuranceLost, nil
+	return bigMaxQuantumsInsuranceLost, nil
 }
 
 // GetMaxAndMinPositionNotionalLiquidatable returns the maximum and minimum notional that can be liquidated

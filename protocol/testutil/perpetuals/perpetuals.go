@@ -13,6 +13,12 @@ func WithId(id uint32) PerpetualModifierOption {
 	}
 }
 
+func WithMarketId(id uint32) PerpetualModifierOption {
+	return func(cp *perptypes.Perpetual) {
+		cp.Params.MarketId = id
+	}
+}
+
 func WithPerpetual(perp perptypes.Perpetual) PerpetualModifierOption {
 	return func(cp *perptypes.Perpetual) {
 		cp.Params = perp.Params

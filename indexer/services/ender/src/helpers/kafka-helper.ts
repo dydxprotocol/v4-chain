@@ -19,7 +19,6 @@ import {
   TransferFromDatabase,
   helpers,
   UpdatedPerpetualPositionSubaccountKafkaObject,
-  CURRENCY_DECIMAL_PRECISION,
   PerpetualPositionFromDatabase,
   AssetPositionSubaccountMessageContents,
   SubaccountTable,
@@ -144,7 +143,7 @@ export function getPnl(
     realizedPnl = priceDiff
       .mul(updateObject.sumClose)
       .plus(updateObject.settledFunding)
-      .toFixed(CURRENCY_DECIMAL_PRECISION);
+      .toFixed();
     unrealizedPnl = helpers.getUnrealizedPnl(updateObject, perpetualMarket, marketIdToMarket);
   }
   return { realizedPnl, unrealizedPnl };
@@ -264,7 +263,7 @@ export function generateOraclePriceContents(
   return {
     oraclePrices: {
       [ticker]: {
-        price: oraclePrice.price,
+        oraclePrice: oraclePrice.price,
         effectiveAt: oraclePrice.effectiveAt,
         effectiveAtHeight: oraclePrice.effectiveAtHeight,
         marketId: oraclePrice.marketId,

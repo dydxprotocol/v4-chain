@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,8 +18,7 @@ import (
 func TestPerpetualQuerySingle(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 2)
-	require.NoError(t, err)
+	msgs := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 2)
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryPerpetualRequest
@@ -44,7 +44,10 @@ func TestPerpetualQuerySingle(t *testing.T) {
 			request: &types.QueryPerpetualRequest{
 				Id: uint32(100000),
 			},
-			err: status.Error(codes.NotFound, "not found"),
+			err: status.Error(codes.NotFound, fmt.Sprintf(
+				"Perpetual id %+v not found.",
+				uint32(100000),
+			)),
 		},
 		{
 			desc: "InvalidRequest",
@@ -69,8 +72,7 @@ func TestPerpetualQuerySingle(t *testing.T) {
 func TestPerpetualQueryPaginated(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 5)
-	require.NoError(t, err)
+	msgs := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 5)
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllPerpetualsRequest {
 		return &types.QueryAllPerpetualsRequest{

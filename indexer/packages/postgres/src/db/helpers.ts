@@ -1,7 +1,7 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import Big from 'big.js';
 
-import { CURRENCY_DECIMAL_PRECISION, ONE_MILLION } from '../constants';
+import { ONE_MILLION } from '../constants';
 import {
   FundingIndexMap,
   MarketsMap,
@@ -19,7 +19,7 @@ import {
  * @returns String representation of the parts-per-million value as a floating point number.
  */
 export function ppmToString(ppm: number): string {
-  return Big(ppm).div(1_000_000).toFixed(6);
+  return Big(ppm).div(1_000_000).toFixed();
 }
 
 /**
@@ -79,7 +79,7 @@ export function getUnrealizedPnl(
       message: 'Market is undefined',
       marketId: perpetualMarket.marketId,
     });
-    return Big(0).toFixed(CURRENCY_DECIMAL_PRECISION);
+    return Big(0).toFixed();
   }
   if (marketsMap[perpetualMarket.marketId].oraclePrice === undefined) {
     logger.error({
@@ -87,13 +87,13 @@ export function getUnrealizedPnl(
       message: 'Oracle price is undefined for market',
       marketId: perpetualMarket.marketId,
     });
-    return Big(0).toFixed(CURRENCY_DECIMAL_PRECISION);
+    return Big(0).toFixed();
   }
   return (
     Big(position.size).times(
       Big(marketsMap[perpetualMarket.marketId].oraclePrice!).minus(position.entryPrice),
     )
-  ).toFixed(CURRENCY_DECIMAL_PRECISION);
+  ).toFixed();
 }
 
 /**

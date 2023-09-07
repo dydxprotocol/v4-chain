@@ -27,6 +27,7 @@ import {
   perpetualMarketRefresher,
   PerpetualMarketStatus,
   PerpetualMarketFromDatabase,
+  PerpetualMarketTable,
 } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -689,7 +690,6 @@ export async function expectOrderFillAndPositionSubaccountKafkaMessageFromIds(
   blockHeight: string = '3',
   transactionIndex: number = 0,
   eventIndex: number = 0,
-  ticker: string = defaultPerpetualMarketTicker,
 ) {
   const [
     order,
@@ -705,8 +705,14 @@ export async function expectOrderFillAndPositionSubaccountKafkaMessageFromIds(
     PerpetualPositionTable.findById(positionId),
   ]);
 
+  const perpetualMarket: PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable
+    .findById(
+      position!.perpetualId,
+    );
+
   expect(order).toBeDefined();
   expect(fill).toBeDefined();
+  expect(perpetualMarket).toBeDefined();
 
   const contents: SubaccountMessageContents = {
     orders: [
@@ -716,11 +722,11 @@ export async function expectOrderFillAndPositionSubaccountKafkaMessageFromIds(
         postOnly: apiTranslations.isOrderTIFPostOnly(order!.timeInForce),
         goodTilBlock: order!.goodTilBlock,
         goodTilBlockTime: order!.goodTilBlockTime,
-        ticker,
+        ticker: perpetualMarket!.ticker,
       },
     ],
     fills: [
-      generateFillSubaccountMessage(fill!, ticker),
+      generateFillSubaccountMessage(fill!, perpetualMarket!.ticker),
     ],
   };
 

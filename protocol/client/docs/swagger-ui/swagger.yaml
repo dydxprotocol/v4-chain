@@ -4,6 +4,705 @@ info:
   description: A REST interface for state queries, legacy transactions
   version: 1.0.0
 paths:
+  /dydxprotocol/assets/asset:
+    get:
+      summary: Queries a list of Asset items.
+      operationId: AllAssets
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              asset:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                      description: Unique, sequentially-generated.
+                    symbol:
+                      type: string
+                      description: >-
+                        The human readable symbol of the `Asset` (e.g. `USDC`,
+                        `ATOM`).
+
+                        Must be uppercase, unique and correspond to the
+                        canonical symbol of the
+
+                        full coin.
+                    denom:
+                      type: string
+                      description: >-
+                        The name of base denomination unit of the `Asset` (e.g.
+                        `uatom`,
+
+                        'ibc/xxxxx'). Must be unique and match the `denom` used
+                        in the `sdk.Coin`
+
+                        type in the `x/bank` module.
+                    denom_exponent:
+                      type: integer
+                      format: int32
+                      title: >-
+                        The exponent of converting one unit of `denom` to a full
+                        coin.
+
+                        For example, `name=USDC, denom=uusdc, denom_exponent=-6`
+                        defines that
+
+                        `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a
+                        `Coin` type in
+
+                        `x/bank`, where the prefix `u` means `micro` by
+                        convetion. `uusdc` is
+
+                        a different concept from a "quantum" defined by
+                        `atomic_resolution` below.
+
+                        To convert from an amount of `denom` to quantums:
+
+                        `quantums = denom_amount * 10^(denom_exponent -
+                        atomic_resolution)`
+                    has_market:
+                      type: boolean
+                      description: '`true` if this `Asset` has a valid `MarketId` value.'
+                    market_id:
+                      type: integer
+                      format: int64
+                      description: >-
+                        The `Id` of the `Market` associated with this `Asset`.
+                        It acts as the
+
+                        oracle price for the purposes of calculating collateral
+
+                        and margin requirements.
+                    atomic_resolution:
+                      type: integer
+                      format: int32
+                      description: >-
+                        The exponent for converting an atomic amount (1
+                        'quantum')
+
+                        to a full coin. For example, if `atomic_resolution = -8`
+
+                        then an `asset_position` with `base_quantums = 1e8` is
+                        equivalent to
+
+                        a position size of one full coin.
+                    long_interest:
+                      type: string
+                      format: uint64
+                      description: The total positive balance across the exchange.
+                  description: Asset defines a single exchangable asset.
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+            description: >-
+              QueryAllAssetsResponse is response type for the AllAssets RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /dydxprotocol/assets/asset/{id}:
+    get:
+      summary: Queries a Asset by id.
+      operationId: Asset
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              asset:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: Unique, sequentially-generated.
+                  symbol:
+                    type: string
+                    description: >-
+                      The human readable symbol of the `Asset` (e.g. `USDC`,
+                      `ATOM`).
+
+                      Must be uppercase, unique and correspond to the canonical
+                      symbol of the
+
+                      full coin.
+                  denom:
+                    type: string
+                    description: >-
+                      The name of base denomination unit of the `Asset` (e.g.
+                      `uatom`,
+
+                      'ibc/xxxxx'). Must be unique and match the `denom` used in
+                      the `sdk.Coin`
+
+                      type in the `x/bank` module.
+                  denom_exponent:
+                    type: integer
+                    format: int32
+                    title: >-
+                      The exponent of converting one unit of `denom` to a full
+                      coin.
+
+                      For example, `name=USDC, denom=uusdc, denom_exponent=-6`
+                      defines that
+
+                      `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a
+                      `Coin` type in
+
+                      `x/bank`, where the prefix `u` means `micro` by convetion.
+                      `uusdc` is
+
+                      a different concept from a "quantum" defined by
+                      `atomic_resolution` below.
+
+                      To convert from an amount of `denom` to quantums:
+
+                      `quantums = denom_amount * 10^(denom_exponent -
+                      atomic_resolution)`
+                  has_market:
+                    type: boolean
+                    description: '`true` if this `Asset` has a valid `MarketId` value.'
+                  market_id:
+                    type: integer
+                    format: int64
+                    description: >-
+                      The `Id` of the `Market` associated with this `Asset`. It
+                      acts as the
+
+                      oracle price for the purposes of calculating collateral
+
+                      and margin requirements.
+                  atomic_resolution:
+                    type: integer
+                    format: int32
+                    description: >-
+                      The exponent for converting an atomic amount (1 'quantum')
+
+                      to a full coin. For example, if `atomic_resolution = -8`
+
+                      then an `asset_position` with `base_quantums = 1e8` is
+                      equivalent to
+
+                      a position size of one full coin.
+                  long_interest:
+                    type: string
+                    format: uint64
+                    description: The total positive balance across the exchange.
+                description: Asset defines a single exchangable asset.
+            description: QueryAssetResponse is response type for the Asset RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+          format: int64
+      tags:
+        - Query
+  /dydxprotocol/v4/blocktime/downtime_params:
+    get:
+      summary: Queries the DowntimeParams.
+      operationId: DowntimeParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  durations:
+                    type: array
+                    items:
+                      type: string
+                    description: >-
+                      Durations tracked for downtime. The durations must be
+                      sorted from
+
+                      shortest to longest and must all be positive.
+                  clock_drift_grace_period_duration:
+                    type: string
+                    description: >-
+                      Grace-period duration when validating `MsgIsDelayedBlock`
+                      messages. Must be
+
+                      positive.
+                description: DowntimeParams defines the parameters for downtime.
+            description: >-
+              QueryDowntimeParamsResponse is a response type for the
+              DowntimeParams
+
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/bridge/acknowledged_event_info:
+    get:
+      summary: |-
+        Queries the AcknowledgedEventInfo.
+        An "acknowledged" event is one that is in-consensus and has been stored
+        in-state.
+      operationId: AcknowledgedEventInfo
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              info:
+                type: object
+                properties:
+                  next_id:
+                    type: integer
+                    format: int64
+                    description: >-
+                      The next event id (the last processed id plus one) of the
+                      logs from the
+
+                      Ethereum contract.
+                  eth_block_height:
+                    type: string
+                    format: uint64
+                    description: >-
+                      The Ethereum block height of the most recently processed
+                      bridge event.
+                description: >-
+                  BridgeEventInfo stores information about the most recently
+                  processed bridge
+
+                  event.
+            description: |-
+              QueryAcknowledgedEventInfoResponse is a response type for the
+              AcknowledgedEventInfo RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/bridge/event_params:
+    get:
+      summary: Queries the EventParams.
+      operationId: EventParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                    description: The denom of the token to mint.
+                  eth_chain_id:
+                    type: string
+                    format: uint64
+                    description: The numerical chain ID of the Ethereum chain to query.
+                  eth_address:
+                    type: string
+                    description: The address of the Ethereum contract to monitor for logs.
+                description: >-
+                  EventParams stores parameters about which events to recognize
+                  and which
+
+                  tokens to mint.
+            description: >-
+              QueryEventParamsResponse is a response type for the EventParams
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/bridge/propose_params:
+    get:
+      summary: Queries the ProposeParams.
+      operationId: ProposeParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  max_bridges_per_block:
+                    type: integer
+                    format: int64
+                    description: |-
+                      The maximum number of bridge events to propose per block.
+                      Limits the number of events to propose in a single block
+                      in-order to smooth out the flow of events.
+                  propose_delay_duration:
+                    type: string
+                    description: >-
+                      The minimum amount of nanoseconds to wait between a
+                      finalized bridge and
+
+                      proposing it. This allows other validators to have enough
+                      time to
+
+                      also recognize its occurence. Therefore the bridge daemon
+                      should
+
+                      pool for new finalized events at least as often as this
+                      parameter.
+                  skip_rate_ppm:
+                    type: integer
+                    format: int64
+                    description: >-
+                      Do not propose any events if a [0, 1_000_000) random
+                      number generator
+
+                      generates a number smaller than this number.
+
+                      Setting this parameter to 1_000_000 means always skipping
+                      proposing events.
+                  skip_if_block_delayed_by_duration:
+                    type: string
+                    description: >-
+                      Do not propose any events if the timestamp of the proposal
+                      block is
+
+                      behind the proposers' wall-clock by at least this
+                      duration.
+                description: ProposeParams stores parameters for proposing to the module.
+            description: >-
+              QueryProposeParamsResponse is a response type for the
+              ProposeParams RPC
+
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/bridge/recognized_event_info:
+    get:
+      summary: |-
+        Queries the RecognizedEventInfo.
+        A "recognized" event is one that is finalized on the Ethereum blockchain
+        and has been identified by the queried node. It is not yet in-consensus.
+      operationId: RecognizedEventInfo
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              info:
+                type: object
+                properties:
+                  next_id:
+                    type: integer
+                    format: int64
+                    description: >-
+                      The next event id (the last processed id plus one) of the
+                      logs from the
+
+                      Ethereum contract.
+                  eth_block_height:
+                    type: string
+                    format: uint64
+                    description: >-
+                      The Ethereum block height of the most recently processed
+                      bridge event.
+                description: >-
+                  BridgeEventInfo stores information about the most recently
+                  processed bridge
+
+                  event.
+            description: |-
+              QueryRecognizedEventInfoResponse is a response type for the
+              RecognizedEventInfo RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/bridge/safety_params:
+    get:
+      summary: Queries the SafetyParams.
+      operationId: SafetyParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  is_disabled:
+                    type: boolean
+                    description: True if bridging is disabled.
+                  delay_blocks:
+                    type: integer
+                    format: int64
+                    description: >-
+                      The number of blocks that bridges accepted in-consensus
+                      will be pending
+
+                      until the minted tokens are granted.
+                description: SafetyParams stores safety parameters for the module.
+            description: >-
+              QuerySafetyParamsResponse is a response type for the SafetyParams
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
   /dydxprotocol/clob/clob_pair:
     get:
       summary: Queries a list of ClobPair items.
@@ -54,7 +753,7 @@ paths:
                       format: uint64
                       description: >-
                         Minimum increment in the size of orders on the CLOB, in
-                        base quantums. This also defines the minimum size of an order.
+                        base quantums.
                     subticks_per_tick:
                       type: integer
                       format: int64
@@ -77,6 +776,10 @@ paths:
                         per BaseQuantum
 
                         per Subtick.
+                    min_order_base_quantums:
+                      type: string
+                      format: uint64
+                      description: Minimum size of an order on the CLOB, in base quantums.
                     status:
                       type: string
                       enum:
@@ -85,27 +788,22 @@ paths:
                         - STATUS_PAUSED
                         - STATUS_CANCEL_ONLY
                         - STATUS_POST_ONLY
+                        - STATUS_INITIALIZING
                       default: STATUS_UNSPECIFIED
                       description: |-
                         Status of the CLOB.
 
                          - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                         - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-                        TODO(DEC-600): update this documentation.
+                         - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
                          - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
                          - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
                          - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
-                    maker_fee_ppm:
-                      type: integer
-                      format: int64
-                      description: The maker fee in parts-per-million.
-                    taker_fee_ppm:
-                      type: integer
-                      format: int64
-                      description: The taker fee in parts-per-million.
+                         - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+                        Clob pairs in this state only accept orders which are
+                        both short-term and post-only.
                   description: |-
                     ClobPair represents a single CLOB pair for a given product
                     in state.
@@ -269,7 +967,7 @@ paths:
                     format: uint64
                     description: >-
                       Minimum increment in the size of orders on the CLOB, in
-                      base quantums. This also defines the minimum size of an order.
+                      base quantums.
                   subticks_per_tick:
                     type: integer
                     format: int64
@@ -292,6 +990,10 @@ paths:
                       BaseQuantum
 
                       per Subtick.
+                  min_order_base_quantums:
+                    type: string
+                    format: uint64
+                    description: Minimum size of an order on the CLOB, in base quantums.
                   status:
                     type: string
                     enum:
@@ -300,27 +1002,22 @@ paths:
                       - STATUS_PAUSED
                       - STATUS_CANCEL_ONLY
                       - STATUS_POST_ONLY
+                      - STATUS_INITIALIZING
                     default: STATUS_UNSPECIFIED
                     description: |-
                       Status of the CLOB.
 
                        - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                       - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-                      TODO(DEC-600): update this documentation.
+                       - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
                        - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
                       TODO(DEC-600): update this documentation.
                        - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
                       TODO(DEC-600): update this documentation.
                        - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
                       TODO(DEC-600): update this documentation.
-                  maker_fee_ppm:
-                    type: integer
-                    format: int64
-                    description: The maker fee in parts-per-million.
-                  taker_fee_ppm:
-                    type: integer
-                    format: int64
-                    description: The taker fee in parts-per-million.
+                       - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+                      Clob pairs in this state only accept orders which are
+                      both short-term and post-only.
                 description: |-
                   ClobPair represents a single CLOB pair for a given product
                   in state.
@@ -377,10 +1074,8 @@ paths:
                           type: string
                           format: byte
                           description: >-
-                            The absolute size of total net collateral in base
-                            quantums
-
-                            of equity required in USD equivalent.
+                            The total net collateral in USDC quote quantums of
+                            equity required.
                         limit:
                           type: integer
                           format: int64
@@ -400,10 +1095,8 @@ paths:
                           type: string
                           format: byte
                           description: >-
-                            The absolute size of total net collateral in base
-                            quantums
-
-                            of equity required in USD equivalent.
+                            The total net collateral in USDC quote quantums of
+                            equity required.
                         limit:
                           type: integer
                           format: int64
@@ -881,27 +1574,24 @@ paths:
                                 - STATUS_PAUSED
                                 - STATUS_CANCEL_ONLY
                                 - STATUS_POST_ONLY
+                                - STATUS_INITIALIZING
                               default: STATUS_UNSPECIFIED
-                              description: |-
+                              description: >-
                                 Status of the CLOB.
 
                                  - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                                 - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-                                TODO(DEC-600): update this documentation.
+                                 - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
                                  - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
                                 TODO(DEC-600): update this documentation.
                                  - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
                                 TODO(DEC-600): update this documentation.
                                  - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
                                 TODO(DEC-600): update this documentation.
-                            maker_fee_ppm:
-                              type: integer
-                              format: int64
-                              description: The maker fee in parts-per-million.
-                            taker_fee_ppm:
-                              type: integer
-                              format: int64
-                              description: The taker fee in parts-per-million.
+                                 - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+                                Clob pairs in this state only accept orders
+                                which are
+
+                                both short-term and post-only.
                           description: >-
                             ClobPair represents a single CLOB pair for a given
                             product
@@ -918,6 +1608,839 @@ paths:
               the
 
               MEV node <> node calculation.
+      tags:
+        - Query
+  /dydxprotocol/v4/delaymsg/block/message_ids/{block_height}:
+    get:
+      summary: Queries the DelayedMessages at a given block height.
+      operationId: BlockMessageIds
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              message_ids:
+                type: array
+                items:
+                  type: integer
+                  format: int64
+            description: >-
+              QueryGetBlockMessageIdsResponse is the response type for the
+              BlockMessageIds
+
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                    Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                    Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: block_height
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
+  /dydxprotocol/v4/delaymsg/message/{id}:
+    get:
+      summary: Queries the DelayedMessage by id.
+      operationId: Message
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              message:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: The ID of the delayed message.
+                  msg:
+                    type: object
+                    properties:
+                      type_url:
+                        type: string
+                        description: >-
+                          A URL/resource name that uniquely identifies the type
+                          of the serialized
+
+                          protocol buffer message. This string must contain at
+                          least
+
+                          one "/" character. The last segment of the URL's path
+                          must represent
+
+                          the fully qualified name of the type (as in
+
+                          `path/google.protobuf.Duration`). The name should be
+                          in a canonical form
+
+                          (e.g., leading "." is not accepted).
+
+
+                          In practice, teams usually precompile into the binary
+                          all types that they
+
+                          expect it to use in the context of Any. However, for
+                          URLs which use the
+
+                          scheme `http`, `https`, or no scheme, one can
+                          optionally set up a type
+
+                          server that maps type URLs to message definitions as
+                          follows:
+
+
+                          * If no scheme is provided, `https` is assumed.
+
+                          * An HTTP GET on the URL must yield a
+                          [google.protobuf.Type][]
+                            value in binary format, or produce an error.
+                          * Applications are allowed to cache lookup results
+                          based on the
+                            URL, or have them precompiled into a binary to avoid any
+                            lookup. Therefore, binary compatibility needs to be preserved
+                            on changes to types. (Use versioned type names to manage
+                            breaking changes.)
+
+                          Note: this functionality is not currently available in
+                          the official
+
+                          protobuf release, and it is not used for type URLs
+                          beginning with
+
+                          type.googleapis.com.
+
+
+                          Schemes other than `http`, `https` (or the empty
+                          scheme) might be
+
+                          used with implementation specific semantics.
+                      value:
+                        type: string
+                        format: byte
+                        description: >-
+                          Must be a valid serialized protocol buffer of the
+                          above specified type.
+                    description: >-
+                      `Any` contains an arbitrary serialized protocol buffer
+                      message along with a
+
+                      URL that describes the type of the serialized message.
+
+
+                      Protobuf library provides support to pack/unpack Any
+                      values in the form
+
+                      of utility functions or additional generated methods of
+                      the Any type.
+
+
+                      Example 1: Pack and unpack a message in C++.
+
+                          Foo foo = ...;
+                          Any any;
+                          any.PackFrom(foo);
+                          ...
+                          if (any.UnpackTo(&foo)) {
+                            ...
+                          }
+
+                      Example 2: Pack and unpack a message in Java.
+
+                          Foo foo = ...;
+                          Any any = Any.pack(foo);
+                          ...
+                          if (any.is(Foo.class)) {
+                            foo = any.unpack(Foo.class);
+                          }
+
+                      Example 3: Pack and unpack a message in Python.
+
+                          foo = Foo(...)
+                          any = Any()
+                          any.Pack(foo)
+                          ...
+                          if any.Is(Foo.DESCRIPTOR):
+                            any.Unpack(foo)
+                            ...
+
+                      Example 4: Pack and unpack a message in Go
+
+                           foo := &pb.Foo{...}
+                           any, err := anypb.New(foo)
+                           if err != nil {
+                             ...
+                           }
+                           ...
+                           foo := &pb.Foo{}
+                           if err := any.UnmarshalTo(foo); err != nil {
+                             ...
+                           }
+
+                      The pack methods provided by protobuf library will by
+                      default use
+
+                      'type.googleapis.com/full.type.name' as the type URL and
+                      the unpack
+
+                      methods only use the fully qualified type name after the
+                      last '/'
+
+                      in the type URL, for example "foo.bar.com/x/y.z" will
+                      yield type
+
+                      name "y.z".
+
+
+
+                      JSON
+
+
+                      The JSON representation of an `Any` value uses the regular
+
+                      representation of the deserialized, embedded message, with
+                      an
+
+                      additional field `@type` which contains the type URL.
+                      Example:
+
+                          package google.profile;
+                          message Person {
+                            string first_name = 1;
+                            string last_name = 2;
+                          }
+
+                          {
+                            "@type": "type.googleapis.com/google.profile.Person",
+                            "firstName": <string>,
+                            "lastName": <string>
+                          }
+
+                      If the embedded message type is well-known and has a
+                      custom JSON
+
+                      representation, that representation will be embedded
+                      adding a field
+
+                      `value` which holds the custom JSON in addition to the
+                      `@type`
+
+                      field. Example (for message [google.protobuf.Duration][]):
+
+                          {
+                            "@type": "type.googleapis.com/google.protobuf.Duration",
+                            "value": "1.212s"
+                          }
+                  block_height:
+                    type: string
+                    format: int64
+                    description: The block height at which the message should be executed.
+                description: >-
+                  DelayedMessage is a message that is delayed until a certain
+                  block height.
+            description: >-
+              QueryGetMessageResponse is the response type for the Message RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                    Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                    Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+          format: int64
+      tags:
+        - Query
+  /dydxprotocol/v4/delaymsg/messages:
+    get:
+      summary: Queries the number of DelayedMessages.
+      operationId: NumMessages
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              num_messages:
+                type: integer
+                format: int64
+            description: >-
+              QueryGetNumMessagesResponse is the response type for the
+              NumMessages RPC
+
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                    Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                    Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
       tags:
         - Query
   /dydxprotocol/v4/epochs/epoch_info:
@@ -1234,6 +2757,158 @@ paths:
           type: string
       tags:
         - Query
+  /dydxprotocol/v4/feetiers/perpetual_fee_params:
+    get:
+      summary: Queries the PerpetualFeeParams.
+      operationId: PerpetualFeeParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  tiers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Human-readable name of the tier, e.g. "Gold".
+                        absolute_volume_requirement:
+                          type: string
+                          format: uint64
+                          description: >-
+                            The trader's absolute volume requirement in quote
+                            quantums.
+                        total_volume_share_requirement_ppm:
+                          type: integer
+                          format: int64
+                          description: The total volume share requirement.
+                        maker_volume_share_requirement_ppm:
+                          type: integer
+                          format: int64
+                          description: The maker volume share requirement.
+                        maker_fee_ppm:
+                          type: integer
+                          format: int32
+                          description: The maker fee once this tier is reached.
+                        taker_fee_ppm:
+                          type: integer
+                          format: int32
+                          description: The taker fee once this tier is reached.
+                      title: A fee tier for perpetuals
+                    description: Sorted fee tiers (lowest requirements first).
+                description: PerpetualFeeParams defines the parameters for perpetual fees.
+            description: >-
+              QueryPerpetualFeeParamsResponse is a response type for the
+              PerpetualFeeParams
+
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/feetiers/user_fee_tier:
+    get:
+      summary: Queries a user's fee tier
+      operationId: UserFeeTier
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              index:
+                type: integer
+                format: int64
+                description: >-
+                  Index of the fee tier in the list queried from
+                  PerpetualFeeParams.
+              tier:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: Human-readable name of the tier, e.g. "Gold".
+                  absolute_volume_requirement:
+                    type: string
+                    format: uint64
+                    description: >-
+                      The trader's absolute volume requirement in quote
+                      quantums.
+                  total_volume_share_requirement_ppm:
+                    type: integer
+                    format: int64
+                    description: The total volume share requirement.
+                  maker_volume_share_requirement_ppm:
+                    type: integer
+                    format: int64
+                    description: The maker volume share requirement.
+                  maker_fee_ppm:
+                    type: integer
+                    format: int32
+                    description: The maker fee once this tier is reached.
+                  taker_fee_ppm:
+                    type: integer
+                    format: int32
+                    description: The taker fee once this tier is reached.
+                title: A fee tier for perpetuals
+            description: >-
+              QueryUserFeeTierResponse is a request type for the UserFeeTier RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: user
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /dydxprotocol/perpetuals/perpetual:
     get:
       summary: Queries a list of Perpetual items.
@@ -1249,56 +2924,59 @@ paths:
                 items:
                   type: object
                   properties:
-                    id:
-                      type: integer
-                      format: int64
-                      description: |-
-                        ==== Non-updatable fields. ====
-                        Unique, sequentially-generated.
-                    ticker:
-                      type: string
-                      description: The name of the `Perpetual` (e.g. `BTC-USD`).
-                    market_id:
-                      type: integer
-                      format: int64
-                      description: |-
-                        The market associated with this `Perpetual`. It
-                        acts as the oracle price for the purposes of calculating
-                        collateral, margin requirements, and funding rates.
-                    atomic_resolution:
-                      type: integer
-                      format: int32
-                      description: >-
-                        The exponent for converting an atomic amount (`size =
-                        1`)
+                    params:
+                      description: PerpetualParams is the parameters of the perpetual.
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          description: Unique, sequentially-generated.
+                        ticker:
+                          type: string
+                          description: The name of the `Perpetual` (e.g. `BTC-USD`).
+                        market_id:
+                          type: integer
+                          format: int64
+                          description: >-
+                            The market associated with this `Perpetual`. It
 
-                        to a full coin. For example, if `AtomicResolution = -8`
+                            acts as the oracle price for the purposes of
+                            calculating
 
-                        then a `PerpetualPosition` with `size = 1e8` is
-                        equivalent to
+                            collateral, margin requirements, and funding rates.
+                        atomic_resolution:
+                          type: integer
+                          format: int32
+                          description: >-
+                            The exponent for converting an atomic amount (`size
+                            = 1`)
 
-                        a position size of one full coin.
-                    default_funding_ppm:
-                      type: integer
-                      format: int32
-                      description: >-
-                        ==== Governance-updatable fields. ====
+                            to a full coin. For example, if `AtomicResolution =
+                            -8`
 
-                        The default funding payment if there is no price
-                        premium. In
+                            then a `PerpetualPosition` with `size = 1e8` is
+                            equivalent to
 
-                        parts-per-million.
-                    liquidity_tier:
-                      type: integer
-                      format: int64
-                      description: >-
-                        The liquidity_tier that this perpetual is associated
-                        with.
+                            a position size of one full coin.
+                        default_funding_ppm:
+                          type: integer
+                          format: int32
+                          description: >-
+                            The default funding payment if there is no price
+                            premium. In
+
+                            parts-per-million.
+                        liquidity_tier:
+                          type: integer
+                          format: int64
+                          description: >-
+                            The liquidity_tier that this perpetual is associated
+                            with.
                     funding_index:
                       type: string
                       format: byte
                       description: |-
-                        / ==== Regularly-updated fields. ====
                         The current index determined by the cumulative all-time
                         history of the funding mechanism. Starts at zero.
                     open_interest:
@@ -1433,53 +3111,59 @@ paths:
               perpetual:
                 type: object
                 properties:
-                  id:
-                    type: integer
-                    format: int64
-                    description: |-
-                      ==== Non-updatable fields. ====
-                      Unique, sequentially-generated.
-                  ticker:
-                    type: string
-                    description: The name of the `Perpetual` (e.g. `BTC-USD`).
-                  market_id:
-                    type: integer
-                    format: int64
-                    description: |-
-                      The market associated with this `Perpetual`. It
-                      acts as the oracle price for the purposes of calculating
-                      collateral, margin requirements, and funding rates.
-                  atomic_resolution:
-                    type: integer
-                    format: int32
-                    description: >-
-                      The exponent for converting an atomic amount (`size = 1`)
+                  params:
+                    description: PerpetualParams is the parameters of the perpetual.
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        format: int64
+                        description: Unique, sequentially-generated.
+                      ticker:
+                        type: string
+                        description: The name of the `Perpetual` (e.g. `BTC-USD`).
+                      market_id:
+                        type: integer
+                        format: int64
+                        description: >-
+                          The market associated with this `Perpetual`. It
 
-                      to a full coin. For example, if `AtomicResolution = -8`
+                          acts as the oracle price for the purposes of
+                          calculating
 
-                      then a `PerpetualPosition` with `size = 1e8` is equivalent
-                      to
+                          collateral, margin requirements, and funding rates.
+                      atomic_resolution:
+                        type: integer
+                        format: int32
+                        description: >-
+                          The exponent for converting an atomic amount (`size =
+                          1`)
 
-                      a position size of one full coin.
-                  default_funding_ppm:
-                    type: integer
-                    format: int32
-                    description: >-
-                      ==== Governance-updatable fields. ====
+                          to a full coin. For example, if `AtomicResolution =
+                          -8`
 
-                      The default funding payment if there is no price premium.
-                      In
+                          then a `PerpetualPosition` with `size = 1e8` is
+                          equivalent to
 
-                      parts-per-million.
-                  liquidity_tier:
-                    type: integer
-                    format: int64
-                    description: The liquidity_tier that this perpetual is associated with.
+                          a position size of one full coin.
+                      default_funding_ppm:
+                        type: integer
+                        format: int32
+                        description: >-
+                          The default funding payment if there is no price
+                          premium. In
+
+                          parts-per-million.
+                      liquidity_tier:
+                        type: integer
+                        format: int64
+                        description: >-
+                          The liquidity_tier that this perpetual is associated
+                          with.
                   funding_index:
                     type: string
                     format: byte
                     description: |-
-                      / ==== Regularly-updated fields. ====
                       The current index determined by the cumulative all-time
                       history of the funding mechanism. Starts at zero.
                   open_interest:
@@ -2036,6 +3720,269 @@ paths:
           format: int64
       tags:
         - Query
+  /dydxprotocol/v4/rewards/params:
+    get:
+      summary: Queries the Params.
+      operationId: RewardParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  treasury_account:
+                    type: string
+                    description: The module account to distribute rewards from.
+                  denom:
+                    type: string
+                    description: The denom of the rewards token.
+                  denom_exponent:
+                    type: integer
+                    format: int32
+                    description: >-
+                      The exponent of converting one unit of `denom` to a full
+                      coin.
+
+                      For example, `denom=uatom, denom_exponent=-6` defines that
+
+                      `1 uatom = 10^(-6) ATOM`. This conversion is needed since
+                      the
+
+                      `market_id` retrieves the price of a full coin of the
+                      reward token.
+                  market_id:
+                    type: integer
+                    format: int64
+                    description: >-
+                      The id of the market that has the price of the rewards
+                      token.
+                  fee_multiplier_ppm:
+                    type: integer
+                    format: int64
+                    description: |-
+                      The amount (in ppm) that fees are multiplied by to get
+                      the maximum rewards amount.
+                description: Params defines the parameters for x/rewards module.
+            description: QueryParamsResponse is a response type for the Params RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/stats/global_stats:
+    get:
+      summary: Queries GlobalStats.
+      operationId: GlobalStats
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              stats:
+                type: object
+                properties:
+                  notional_traded:
+                    type: string
+                    format: uint64
+                    title: Notional USDC traded in quantums
+                title: GlobalStats stores global stats
+            description: >-
+              QueryGlobalStatsResponse is a response type for the GlobalStats
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/stats/params:
+    get:
+      summary: Queries the Params.
+      operationId: StatParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  window_duration:
+                    type: string
+                    description: The desired number of seconds in the look-back window.
+                description: Params defines the parameters for x/stats module.
+            description: QueryParamsResponse is a response type for the Params RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/stats/stats_metadata:
+    get:
+      summary: Queries StatsMetadata.
+      operationId: StatsMetadata
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              metadata:
+                type: object
+                properties:
+                  trailing_epoch:
+                    type: integer
+                    format: int64
+                    description: >-
+                      The oldest epoch that is included in the stats. The next
+                      epoch to be
+
+                      removed from the window.
+                title: StatsMetadata stores metadata for the x/stats module
+            description: >-
+              QueryStatsMetadataResponse is a response type for the
+              StatsMetadata RPC
+
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/v4/stats/user_stats:
+    get:
+      summary: Queries UserStats.
+      operationId: UserStats
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              stats:
+                type: object
+                properties:
+                  taker_notional:
+                    type: string
+                    format: uint64
+                    title: Taker USDC in quantums
+                  maker_notional:
+                    type: string
+                    format: uint64
+                    title: Maker USDC in quantums
+                title: UserStats stores stats for a User
+            description: >-
+              QueryUserStatsResponse is a request type for the UserStats RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: user
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /dydxprotocol/subaccounts/subaccount:
     get:
       summary: Queries a list of Subaccount items.
@@ -2397,6 +4344,81 @@ paths:
           required: true
           type: integer
           format: int64
+      tags:
+        - Query
+  /dydxprotocol/v4/vest/vest_entry:
+    get:
+      summary: Queries the VestEntry.
+      operationId: VestEntry
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              entry:
+                type: object
+                properties:
+                  vester_account:
+                    type: string
+                    description: |-
+                      The module account to vest tokens from.
+                      This is also the key to this `VestEntry` in state.
+                  treasury_account:
+                    type: string
+                    description: The module account to vest tokens to.
+                  denom:
+                    type: string
+                    description: The denom of the token to vest.
+                  start_time:
+                    type: string
+                    format: date-time
+                    description: >-
+                      The start time of vest. Before this time, no vest will
+                      occur.
+                  end_time:
+                    type: string
+                    format: date-time
+                    description: >-
+                      The end time of vest. At this target date, all funds
+                      should be in the
+
+                      Treasury Account and none left in the Vester Account.
+                description: >-
+                  VestEntry specifies a Vester Account and the rate at which
+                  tokens are
+
+                  dripped into the corresponding Treasury Account.
+            description: >-
+              QueryVestEntryResponse is a response type for the VestEntry RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: vester_account
+          in: query
+          required: false
+          type: string
       tags:
         - Query
   /ibc/apps/transfer/v1/channels/{channel_id}/ports/{port_id}/escrow_address:
@@ -24246,7 +26268,11 @@ paths:
         - Query
   /cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}:
     get:
-      summary: Vote queries voted information based on proposalID, voterAddr.
+      summary: >-
+        Vote queries voted information based on proposalID, voterAddr.
+
+        Due to how we handle state, this query would error for proposals that
+        has already been finished.
       operationId: Vote
       responses:
         '200':
@@ -39618,6 +41644,984 @@ definitions:
                repeated Bar results = 1;
                PageResponse page = 2;
        }
+  dydxprotocol.assets.Asset:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Unique, sequentially-generated.
+      symbol:
+        type: string
+        description: >-
+          The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+
+          Must be uppercase, unique and correspond to the canonical symbol of
+          the
+
+          full coin.
+      denom:
+        type: string
+        description: >-
+          The name of base denomination unit of the `Asset` (e.g. `uatom`,
+
+          'ibc/xxxxx'). Must be unique and match the `denom` used in the
+          `sdk.Coin`
+
+          type in the `x/bank` module.
+      denom_exponent:
+        type: integer
+        format: int32
+        title: >-
+          The exponent of converting one unit of `denom` to a full coin.
+
+          For example, `name=USDC, denom=uusdc, denom_exponent=-6` defines that
+
+          `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a `Coin` type in
+
+          `x/bank`, where the prefix `u` means `micro` by convetion. `uusdc` is
+
+          a different concept from a "quantum" defined by `atomic_resolution`
+          below.
+
+          To convert from an amount of `denom` to quantums:
+
+          `quantums = denom_amount * 10^(denom_exponent - atomic_resolution)`
+      has_market:
+        type: boolean
+        description: '`true` if this `Asset` has a valid `MarketId` value.'
+      market_id:
+        type: integer
+        format: int64
+        description: |-
+          The `Id` of the `Market` associated with this `Asset`. It acts as the
+          oracle price for the purposes of calculating collateral
+          and margin requirements.
+      atomic_resolution:
+        type: integer
+        format: int32
+        description: |-
+          The exponent for converting an atomic amount (1 'quantum')
+          to a full coin. For example, if `atomic_resolution = -8`
+          then an `asset_position` with `base_quantums = 1e8` is equivalent to
+          a position size of one full coin.
+      long_interest:
+        type: string
+        format: uint64
+        description: The total positive balance across the exchange.
+    description: Asset defines a single exchangable asset.
+  dydxprotocol.assets.QueryAllAssetsResponse:
+    type: object
+    properties:
+      asset:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: Unique, sequentially-generated.
+            symbol:
+              type: string
+              description: >-
+                The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+
+                Must be uppercase, unique and correspond to the canonical symbol
+                of the
+
+                full coin.
+            denom:
+              type: string
+              description: >-
+                The name of base denomination unit of the `Asset` (e.g. `uatom`,
+
+                'ibc/xxxxx'). Must be unique and match the `denom` used in the
+                `sdk.Coin`
+
+                type in the `x/bank` module.
+            denom_exponent:
+              type: integer
+              format: int32
+              title: >-
+                The exponent of converting one unit of `denom` to a full coin.
+
+                For example, `name=USDC, denom=uusdc, denom_exponent=-6` defines
+                that
+
+                `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a `Coin`
+                type in
+
+                `x/bank`, where the prefix `u` means `micro` by convetion.
+                `uusdc` is
+
+                a different concept from a "quantum" defined by
+                `atomic_resolution` below.
+
+                To convert from an amount of `denom` to quantums:
+
+                `quantums = denom_amount * 10^(denom_exponent -
+                atomic_resolution)`
+            has_market:
+              type: boolean
+              description: '`true` if this `Asset` has a valid `MarketId` value.'
+            market_id:
+              type: integer
+              format: int64
+              description: >-
+                The `Id` of the `Market` associated with this `Asset`. It acts
+                as the
+
+                oracle price for the purposes of calculating collateral
+
+                and margin requirements.
+            atomic_resolution:
+              type: integer
+              format: int32
+              description: >-
+                The exponent for converting an atomic amount (1 'quantum')
+
+                to a full coin. For example, if `atomic_resolution = -8`
+
+                then an `asset_position` with `base_quantums = 1e8` is
+                equivalent to
+
+                a position size of one full coin.
+            long_interest:
+              type: string
+              format: uint64
+              description: The total positive balance across the exchange.
+          description: Asset defines a single exchangable asset.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: QueryAllAssetsResponse is response type for the AllAssets RPC method.
+  dydxprotocol.assets.QueryAssetResponse:
+    type: object
+    properties:
+      asset:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            description: Unique, sequentially-generated.
+          symbol:
+            type: string
+            description: >-
+              The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+
+              Must be uppercase, unique and correspond to the canonical symbol
+              of the
+
+              full coin.
+          denom:
+            type: string
+            description: >-
+              The name of base denomination unit of the `Asset` (e.g. `uatom`,
+
+              'ibc/xxxxx'). Must be unique and match the `denom` used in the
+              `sdk.Coin`
+
+              type in the `x/bank` module.
+          denom_exponent:
+            type: integer
+            format: int32
+            title: >-
+              The exponent of converting one unit of `denom` to a full coin.
+
+              For example, `name=USDC, denom=uusdc, denom_exponent=-6` defines
+              that
+
+              `1 uusdc = 10^(-6) USDC`. Note that `uusdc` refers to a `Coin`
+              type in
+
+              `x/bank`, where the prefix `u` means `micro` by convetion. `uusdc`
+              is
+
+              a different concept from a "quantum" defined by
+              `atomic_resolution` below.
+
+              To convert from an amount of `denom` to quantums:
+
+              `quantums = denom_amount * 10^(denom_exponent -
+              atomic_resolution)`
+          has_market:
+            type: boolean
+            description: '`true` if this `Asset` has a valid `MarketId` value.'
+          market_id:
+            type: integer
+            format: int64
+            description: >-
+              The `Id` of the `Market` associated with this `Asset`. It acts as
+              the
+
+              oracle price for the purposes of calculating collateral
+
+              and margin requirements.
+          atomic_resolution:
+            type: integer
+            format: int32
+            description: >-
+              The exponent for converting an atomic amount (1 'quantum')
+
+              to a full coin. For example, if `atomic_resolution = -8`
+
+              then an `asset_position` with `base_quantums = 1e8` is equivalent
+              to
+
+              a position size of one full coin.
+          long_interest:
+            type: string
+            format: uint64
+            description: The total positive balance across the exchange.
+        description: Asset defines a single exchangable asset.
+    description: QueryAssetResponse is response type for the Asset RPC method.
+  google.protobuf.Any:
+    type: object
+    properties:
+      type_url:
+        type: string
+        description: >-
+          A URL/resource name that uniquely identifies the type of the
+          serialized
+
+          protocol buffer message. This string must contain at least
+
+          one "/" character. The last segment of the URL's path must represent
+
+          the fully qualified name of the type (as in
+
+          `path/google.protobuf.Duration`). The name should be in a canonical
+          form
+
+          (e.g., leading "." is not accepted).
+
+
+          In practice, teams usually precompile into the binary all types that
+          they
+
+          expect it to use in the context of Any. However, for URLs which use
+          the
+
+          scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+          server that maps type URLs to message definitions as follows:
+
+
+          * If no scheme is provided, `https` is assumed.
+
+          * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+            value in binary format, or produce an error.
+          * Applications are allowed to cache lookup results based on the
+            URL, or have them precompiled into a binary to avoid any
+            lookup. Therefore, binary compatibility needs to be preserved
+            on changes to types. (Use versioned type names to manage
+            breaking changes.)
+
+          Note: this functionality is not currently available in the official
+
+          protobuf release, and it is not used for type URLs beginning with
+
+          type.googleapis.com.
+
+
+          Schemes other than `http`, `https` (or the empty scheme) might be
+
+          used with implementation specific semantics.
+      value:
+        type: string
+        format: byte
+        description: >-
+          Must be a valid serialized protocol buffer of the above specified
+          type.
+    description: >-
+      `Any` contains an arbitrary serialized protocol buffer message along with
+      a
+
+      URL that describes the type of the serialized message.
+
+
+      Protobuf library provides support to pack/unpack Any values in the form
+
+      of utility functions or additional generated methods of the Any type.
+
+
+      Example 1: Pack and unpack a message in C++.
+
+          Foo foo = ...;
+          Any any;
+          any.PackFrom(foo);
+          ...
+          if (any.UnpackTo(&foo)) {
+            ...
+          }
+
+      Example 2: Pack and unpack a message in Java.
+
+          Foo foo = ...;
+          Any any = Any.pack(foo);
+          ...
+          if (any.is(Foo.class)) {
+            foo = any.unpack(Foo.class);
+          }
+
+      Example 3: Pack and unpack a message in Python.
+
+          foo = Foo(...)
+          any = Any()
+          any.Pack(foo)
+          ...
+          if any.Is(Foo.DESCRIPTOR):
+            any.Unpack(foo)
+            ...
+
+      Example 4: Pack and unpack a message in Go
+
+           foo := &pb.Foo{...}
+           any, err := anypb.New(foo)
+           if err != nil {
+             ...
+           }
+           ...
+           foo := &pb.Foo{}
+           if err := any.UnmarshalTo(foo); err != nil {
+             ...
+           }
+
+      The pack methods provided by protobuf library will by default use
+
+      'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+      methods only use the fully qualified type name after the last '/'
+
+      in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+      name "y.z".
+
+
+
+      JSON
+
+
+      The JSON representation of an `Any` value uses the regular
+
+      representation of the deserialized, embedded message, with an
+
+      additional field `@type` which contains the type URL. Example:
+
+          package google.profile;
+          message Person {
+            string first_name = 1;
+            string last_name = 2;
+          }
+
+          {
+            "@type": "type.googleapis.com/google.profile.Person",
+            "firstName": <string>,
+            "lastName": <string>
+          }
+
+      If the embedded message type is well-known and has a custom JSON
+
+      representation, that representation will be embedded adding a field
+
+      `value` which holds the custom JSON in addition to the `@type`
+
+      field. Example (for message [google.protobuf.Duration][]):
+
+          {
+            "@type": "type.googleapis.com/google.protobuf.Duration",
+            "value": "1.212s"
+          }
+  grpc.gateway.runtime.Error:
+    type: object
+    properties:
+      error:
+        type: string
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          properties:
+            type_url:
+              type: string
+              description: >-
+                A URL/resource name that uniquely identifies the type of the
+                serialized
+
+                protocol buffer message. This string must contain at least
+
+                one "/" character. The last segment of the URL's path must
+                represent
+
+                the fully qualified name of the type (as in
+
+                `path/google.protobuf.Duration`). The name should be in a
+                canonical form
+
+                (e.g., leading "." is not accepted).
+
+
+                In practice, teams usually precompile into the binary all types
+                that they
+
+                expect it to use in the context of Any. However, for URLs which
+                use the
+
+                scheme `http`, `https`, or no scheme, one can optionally set up
+                a type
+
+                server that maps type URLs to message definitions as follows:
+
+
+                * If no scheme is provided, `https` is assumed.
+
+                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                  value in binary format, or produce an error.
+                * Applications are allowed to cache lookup results based on the
+                  URL, or have them precompiled into a binary to avoid any
+                  lookup. Therefore, binary compatibility needs to be preserved
+                  on changes to types. (Use versioned type names to manage
+                  breaking changes.)
+
+                Note: this functionality is not currently available in the
+                official
+
+                protobuf release, and it is not used for type URLs beginning
+                with
+
+                type.googleapis.com.
+
+
+                Schemes other than `http`, `https` (or the empty scheme) might
+                be
+
+                used with implementation specific semantics.
+            value:
+              type: string
+              format: byte
+              description: >-
+                Must be a valid serialized protocol buffer of the above
+                specified type.
+          description: >-
+            `Any` contains an arbitrary serialized protocol buffer message along
+            with a
+
+            URL that describes the type of the serialized message.
+
+
+            Protobuf library provides support to pack/unpack Any values in the
+            form
+
+            of utility functions or additional generated methods of the Any
+            type.
+
+
+            Example 1: Pack and unpack a message in C++.
+
+                Foo foo = ...;
+                Any any;
+                any.PackFrom(foo);
+                ...
+                if (any.UnpackTo(&foo)) {
+                  ...
+                }
+
+            Example 2: Pack and unpack a message in Java.
+
+                Foo foo = ...;
+                Any any = Any.pack(foo);
+                ...
+                if (any.is(Foo.class)) {
+                  foo = any.unpack(Foo.class);
+                }
+
+            Example 3: Pack and unpack a message in Python.
+
+                foo = Foo(...)
+                any = Any()
+                any.Pack(foo)
+                ...
+                if any.Is(Foo.DESCRIPTOR):
+                  any.Unpack(foo)
+                  ...
+
+            Example 4: Pack and unpack a message in Go
+
+                 foo := &pb.Foo{...}
+                 any, err := anypb.New(foo)
+                 if err != nil {
+                   ...
+                 }
+                 ...
+                 foo := &pb.Foo{}
+                 if err := any.UnmarshalTo(foo); err != nil {
+                   ...
+                 }
+
+            The pack methods provided by protobuf library will by default use
+
+            'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+            methods only use the fully qualified type name after the last '/'
+
+            in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+            name "y.z".
+
+
+
+            JSON
+
+
+            The JSON representation of an `Any` value uses the regular
+
+            representation of the deserialized, embedded message, with an
+
+            additional field `@type` which contains the type URL. Example:
+
+                package google.profile;
+                message Person {
+                  string first_name = 1;
+                  string last_name = 2;
+                }
+
+                {
+                  "@type": "type.googleapis.com/google.profile.Person",
+                  "firstName": <string>,
+                  "lastName": <string>
+                }
+
+            If the embedded message type is well-known and has a custom JSON
+
+            representation, that representation will be embedded adding a field
+
+            `value` which holds the custom JSON in addition to the `@type`
+
+            field. Example (for message [google.protobuf.Duration][]):
+
+                {
+                  "@type": "type.googleapis.com/google.protobuf.Duration",
+                  "value": "1.212s"
+                }
+  dydxprotocol.blocktime.AllDowntimeInfo:
+    type: object
+    properties:
+      infos:
+        type: array
+        items:
+          type: object
+          properties:
+            duration:
+              type: string
+            block_info:
+              type: object
+              properties:
+                height:
+                  type: integer
+                  format: int64
+                timestamp:
+                  type: string
+                  format: date-time
+              title: BlockInfo stores information about a block
+          description: >-
+            Stores information about downtime. block_info corresponds to the
+            most
+
+            recent block at which a downtime occurred.
+        description: >-
+          The downtime information for each tracked duration. Sorted by
+          duration,
+
+          ascending. (i.e. the same order as they appear in DowntimeParams).
+    description: AllDowntimeInfo stores information for all downtime durations.
+  dydxprotocol.blocktime.AllDowntimeInfo.DowntimeInfo:
+    type: object
+    properties:
+      duration:
+        type: string
+      block_info:
+        type: object
+        properties:
+          height:
+            type: integer
+            format: int64
+          timestamp:
+            type: string
+            format: date-time
+        title: BlockInfo stores information about a block
+    description: |-
+      Stores information about downtime. block_info corresponds to the most
+      recent block at which a downtime occurred.
+  dydxprotocol.blocktime.BlockInfo:
+    type: object
+    properties:
+      height:
+        type: integer
+        format: int64
+      timestamp:
+        type: string
+        format: date-time
+    title: BlockInfo stores information about a block
+  dydxprotocol.blocktime.DowntimeParams:
+    type: object
+    properties:
+      durations:
+        type: array
+        items:
+          type: string
+        description: |-
+          Durations tracked for downtime. The durations must be sorted from
+          shortest to longest and must all be positive.
+      clock_drift_grace_period_duration:
+        type: string
+        description: >-
+          Grace-period duration when validating `MsgIsDelayedBlock` messages.
+          Must be
+
+          positive.
+    description: DowntimeParams defines the parameters for downtime.
+  dydxprotocol.blocktime.QueryAllDowntimeInfoResponse:
+    type: object
+    properties:
+      info:
+        type: object
+        properties:
+          infos:
+            type: array
+            items:
+              type: object
+              properties:
+                duration:
+                  type: string
+                block_info:
+                  type: object
+                  properties:
+                    height:
+                      type: integer
+                      format: int64
+                    timestamp:
+                      type: string
+                      format: date-time
+                  title: BlockInfo stores information about a block
+              description: >-
+                Stores information about downtime. block_info corresponds to the
+                most
+
+                recent block at which a downtime occurred.
+            description: >-
+              The downtime information for each tracked duration. Sorted by
+              duration,
+
+              ascending. (i.e. the same order as they appear in DowntimeParams).
+        description: AllDowntimeInfo stores information for all downtime durations.
+    description: |-
+      QueryAllDowntimeInfoResponse is a request type for the AllDowntimeInfo
+      RPC method.
+  dydxprotocol.blocktime.QueryDowntimeParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          durations:
+            type: array
+            items:
+              type: string
+            description: |-
+              Durations tracked for downtime. The durations must be sorted from
+              shortest to longest and must all be positive.
+          clock_drift_grace_period_duration:
+            type: string
+            description: >-
+              Grace-period duration when validating `MsgIsDelayedBlock`
+              messages. Must be
+
+              positive.
+        description: DowntimeParams defines the parameters for downtime.
+    description: |-
+      QueryDowntimeParamsResponse is a response type for the DowntimeParams
+      RPC method.
+  dydxprotocol.blocktime.QueryPreviousBlockInfoResponse:
+    type: object
+    properties:
+      info:
+        type: object
+        properties:
+          height:
+            type: integer
+            format: int64
+          timestamp:
+            type: string
+            format: date-time
+        title: BlockInfo stores information about a block
+    description: |-
+      QueryPreviousBlockInfoResponse is a request type for the PreviousBlockInfo
+      RPC method.
+  dydxprotocol.bridge.BridgeEventInfo:
+    type: object
+    properties:
+      next_id:
+        type: integer
+        format: int64
+        description: >-
+          The next event id (the last processed id plus one) of the logs from
+          the
+
+          Ethereum contract.
+      eth_block_height:
+        type: string
+        format: uint64
+        description: The Ethereum block height of the most recently processed bridge event.
+    description: >-
+      BridgeEventInfo stores information about the most recently processed
+      bridge
+
+      event.
+  dydxprotocol.bridge.EventParams:
+    type: object
+    properties:
+      denom:
+        type: string
+        description: The denom of the token to mint.
+      eth_chain_id:
+        type: string
+        format: uint64
+        description: The numerical chain ID of the Ethereum chain to query.
+      eth_address:
+        type: string
+        description: The address of the Ethereum contract to monitor for logs.
+    description: |-
+      EventParams stores parameters about which events to recognize and which
+      tokens to mint.
+  dydxprotocol.bridge.ProposeParams:
+    type: object
+    properties:
+      max_bridges_per_block:
+        type: integer
+        format: int64
+        description: |-
+          The maximum number of bridge events to propose per block.
+          Limits the number of events to propose in a single block
+          in-order to smooth out the flow of events.
+      propose_delay_duration:
+        type: string
+        description: >-
+          The minimum amount of nanoseconds to wait between a finalized bridge
+          and
+
+          proposing it. This allows other validators to have enough time to
+
+          also recognize its occurence. Therefore the bridge daemon should
+
+          pool for new finalized events at least as often as this parameter.
+      skip_rate_ppm:
+        type: integer
+        format: int64
+        description: >-
+          Do not propose any events if a [0, 1_000_000) random number generator
+
+          generates a number smaller than this number.
+
+          Setting this parameter to 1_000_000 means always skipping proposing
+          events.
+      skip_if_block_delayed_by_duration:
+        type: string
+        description: |-
+          Do not propose any events if the timestamp of the proposal block is
+          behind the proposers' wall-clock by at least this duration.
+    description: ProposeParams stores parameters for proposing to the module.
+  dydxprotocol.bridge.QueryAcknowledgedEventInfoResponse:
+    type: object
+    properties:
+      info:
+        type: object
+        properties:
+          next_id:
+            type: integer
+            format: int64
+            description: >-
+              The next event id (the last processed id plus one) of the logs
+              from the
+
+              Ethereum contract.
+          eth_block_height:
+            type: string
+            format: uint64
+            description: >-
+              The Ethereum block height of the most recently processed bridge
+              event.
+        description: >-
+          BridgeEventInfo stores information about the most recently processed
+          bridge
+
+          event.
+    description: |-
+      QueryAcknowledgedEventInfoResponse is a response type for the
+      AcknowledgedEventInfo RPC method.
+  dydxprotocol.bridge.QueryEventParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          denom:
+            type: string
+            description: The denom of the token to mint.
+          eth_chain_id:
+            type: string
+            format: uint64
+            description: The numerical chain ID of the Ethereum chain to query.
+          eth_address:
+            type: string
+            description: The address of the Ethereum contract to monitor for logs.
+        description: >-
+          EventParams stores parameters about which events to recognize and
+          which
+
+          tokens to mint.
+    description: >-
+      QueryEventParamsResponse is a response type for the EventParams RPC
+      method.
+  dydxprotocol.bridge.QueryProposeParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          max_bridges_per_block:
+            type: integer
+            format: int64
+            description: |-
+              The maximum number of bridge events to propose per block.
+              Limits the number of events to propose in a single block
+              in-order to smooth out the flow of events.
+          propose_delay_duration:
+            type: string
+            description: >-
+              The minimum amount of nanoseconds to wait between a finalized
+              bridge and
+
+              proposing it. This allows other validators to have enough time to
+
+              also recognize its occurence. Therefore the bridge daemon should
+
+              pool for new finalized events at least as often as this parameter.
+          skip_rate_ppm:
+            type: integer
+            format: int64
+            description: >-
+              Do not propose any events if a [0, 1_000_000) random number
+              generator
+
+              generates a number smaller than this number.
+
+              Setting this parameter to 1_000_000 means always skipping
+              proposing events.
+          skip_if_block_delayed_by_duration:
+            type: string
+            description: >-
+              Do not propose any events if the timestamp of the proposal block
+              is
+
+              behind the proposers' wall-clock by at least this duration.
+        description: ProposeParams stores parameters for proposing to the module.
+    description: |-
+      QueryProposeParamsResponse is a response type for the ProposeParams RPC
+      method.
+  dydxprotocol.bridge.QueryRecognizedEventInfoResponse:
+    type: object
+    properties:
+      info:
+        type: object
+        properties:
+          next_id:
+            type: integer
+            format: int64
+            description: >-
+              The next event id (the last processed id plus one) of the logs
+              from the
+
+              Ethereum contract.
+          eth_block_height:
+            type: string
+            format: uint64
+            description: >-
+              The Ethereum block height of the most recently processed bridge
+              event.
+        description: >-
+          BridgeEventInfo stores information about the most recently processed
+          bridge
+
+          event.
+    description: |-
+      QueryRecognizedEventInfoResponse is a response type for the
+      RecognizedEventInfo RPC method.
+  dydxprotocol.bridge.QuerySafetyParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          is_disabled:
+            type: boolean
+            description: True if bridging is disabled.
+          delay_blocks:
+            type: integer
+            format: int64
+            description: >-
+              The number of blocks that bridges accepted in-consensus will be
+              pending
+
+              until the minted tokens are granted.
+        description: SafetyParams stores safety parameters for the module.
+    description: >-
+      QuerySafetyParamsResponse is a response type for the SafetyParams RPC
+      method.
+  dydxprotocol.bridge.SafetyParams:
+    type: object
+    properties:
+      is_disabled:
+        type: boolean
+        description: True if bridging is disabled.
+      delay_blocks:
+        type: integer
+        format: int64
+        description: >-
+          The number of blocks that bridges accepted in-consensus will be
+          pending
+
+          until the minted tokens are granted.
+    description: SafetyParams stores safety parameters for the module.
   dydxprotocol.clob.AreSubaccountsLiquidatableResponse:
     type: object
     properties:
@@ -39742,27 +42746,22 @@ definitions:
               - STATUS_PAUSED
               - STATUS_CANCEL_ONLY
               - STATUS_POST_ONLY
+              - STATUS_INITIALIZING
             default: STATUS_UNSPECIFIED
             description: |-
               Status of the CLOB.
 
                - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-               - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-              TODO(DEC-600): update this documentation.
+               - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
                - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
               TODO(DEC-600): update this documentation.
                - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
               TODO(DEC-600): update this documentation.
                - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
               TODO(DEC-600): update this documentation.
-          maker_fee_ppm:
-            type: integer
-            format: int64
-            description: The maker fee in parts-per-million.
-          taker_fee_ppm:
-            type: integer
-            format: int64
-            description: The taker fee in parts-per-million.
+               - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+              Clob pairs in this state only accept orders which are
+              both short-term and post-only.
         description: |-
           ClobPair represents a single CLOB pair for a given product
           in state.
@@ -39806,9 +42805,7 @@ definitions:
       step_base_quantums:
         type: string
         format: uint64
-        description: |-
-          Minimum increment in the size of orders on the CLOB, in base quantums.
-          This also defines the minimum size of an order.
+        description: Minimum increment in the size of orders on the CLOB, in base quantums.
       subticks_per_tick:
         type: integer
         format: int64
@@ -39823,6 +42820,10 @@ definitions:
         description: |-
           `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
           per Subtick.
+      min_order_base_quantums:
+        type: string
+        format: uint64
+        description: Minimum size of an order on the CLOB, in base quantums.
       status:
         type: string
         enum:
@@ -39831,27 +42832,22 @@ definitions:
           - STATUS_PAUSED
           - STATUS_CANCEL_ONLY
           - STATUS_POST_ONLY
+          - STATUS_INITIALIZING
         default: STATUS_UNSPECIFIED
         description: |-
           Status of the CLOB.
 
            - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-           - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-          TODO(DEC-600): update this documentation.
+           - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
            - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
           TODO(DEC-600): update this documentation.
            - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
           TODO(DEC-600): update this documentation.
            - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
           TODO(DEC-600): update this documentation.
-      maker_fee_ppm:
-        type: integer
-        format: int64
-        description: The maker fee in parts-per-million.
-      taker_fee_ppm:
-        type: integer
-        format: int64
-        description: The taker fee in parts-per-million.
+           - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+          Clob pairs in this state only accept orders which are
+          both short-term and post-only.
     description: |-
       ClobPair represents a single CLOB pair for a given product
       in state.
@@ -39863,28 +42859,29 @@ definitions:
       - STATUS_PAUSED
       - STATUS_CANCEL_ONLY
       - STATUS_POST_ONLY
+      - STATUS_INITIALIZING
     default: STATUS_UNSPECIFIED
     description: |-
       Status of the CLOB.
 
        - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-       - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-      TODO(DEC-600): update this documentation.
+       - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
        - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
       TODO(DEC-600): update this documentation.
        - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
       TODO(DEC-600): update this documentation.
        - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
       TODO(DEC-600): update this documentation.
+       - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+      Clob pairs in this state only accept orders which are
+      both short-term and post-only.
   dydxprotocol.clob.EquityTierLimit:
     type: object
     properties:
       usd_tnc_required:
         type: string
         format: byte
-        description: |-
-          The absolute size of total net collateral in base quantums
-          of equity required in USD equivalent.
+        description: The total net collateral in USDC quote quantums of equity required.
       limit:
         type: integer
         format: int64
@@ -39901,9 +42898,9 @@ definitions:
             usd_tnc_required:
               type: string
               format: byte
-              description: |-
-                The absolute size of total net collateral in base quantums
-                of equity required in USD equivalent.
+              description: >-
+                The total net collateral in USDC quote quantums of equity
+                required.
             limit:
               type: integer
               format: int64
@@ -39920,9 +42917,9 @@ definitions:
             usd_tnc_required:
               type: string
               format: byte
-              description: |-
-                The absolute size of total net collateral in base quantums
-                of equity required in USD equivalent.
+              description: >-
+                The total net collateral in USDC quote quantums of equity
+                required.
             limit:
               type: integer
               format: int64
@@ -40377,27 +43374,22 @@ definitions:
                         - STATUS_PAUSED
                         - STATUS_CANCEL_ONLY
                         - STATUS_POST_ONLY
+                        - STATUS_INITIALIZING
                       default: STATUS_UNSPECIFIED
                       description: |-
                         Status of the CLOB.
 
                          - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                         - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-                        TODO(DEC-600): update this documentation.
+                         - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
                          - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
                          - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
                          - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
                         TODO(DEC-600): update this documentation.
-                    maker_fee_ppm:
-                      type: integer
-                      format: int64
-                      description: The maker fee in parts-per-million.
-                    taker_fee_ppm:
-                      type: integer
-                      format: int64
-                      description: The taker fee in parts-per-million.
+                         - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+                        Clob pairs in this state only accept orders which are
+                        both short-term and post-only.
                   description: |-
                     ClobPair represents a single CLOB pair for a given product
                     in state.
@@ -40651,27 +43643,22 @@ definitions:
                     - STATUS_PAUSED
                     - STATUS_CANCEL_ONLY
                     - STATUS_POST_ONLY
+                    - STATUS_INITIALIZING
                   default: STATUS_UNSPECIFIED
                   description: |-
                     Status of the CLOB.
 
                      - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                     - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-                    TODO(DEC-600): update this documentation.
+                     - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
                      - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
                     TODO(DEC-600): update this documentation.
                      - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
                     TODO(DEC-600): update this documentation.
                      - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
                     TODO(DEC-600): update this documentation.
-                maker_fee_ppm:
-                  type: integer
-                  format: int64
-                  description: The maker fee in parts-per-million.
-                taker_fee_ppm:
-                  type: integer
-                  format: int64
-                  description: The taker fee in parts-per-million.
+                     - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+                    Clob pairs in this state only accept orders which are
+                    both short-term and post-only.
               description: |-
                 ClobPair represents a single CLOB pair for a given product
                 in state.
@@ -40737,7 +43724,7 @@ definitions:
               format: uint64
               description: >-
                 Minimum increment in the size of orders on the CLOB, in base
-                quantums. This also defines the minimum size of an order.
+                quantums.
             subticks_per_tick:
               type: integer
               format: int64
@@ -40760,6 +43747,10 @@ definitions:
                 BaseQuantum
 
                 per Subtick.
+            min_order_base_quantums:
+              type: string
+              format: uint64
+              description: Minimum size of an order on the CLOB, in base quantums.
             status:
               type: string
               enum:
@@ -40768,27 +43759,22 @@ definitions:
                 - STATUS_PAUSED
                 - STATUS_CANCEL_ONLY
                 - STATUS_POST_ONLY
+                - STATUS_INITIALIZING
               default: STATUS_UNSPECIFIED
               description: |-
                 Status of the CLOB.
 
                  - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-                 - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-                TODO(DEC-600): update this documentation.
+                 - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
                  - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
                 TODO(DEC-600): update this documentation.
                  - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
                 TODO(DEC-600): update this documentation.
                  - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
                 TODO(DEC-600): update this documentation.
-            maker_fee_ppm:
-              type: integer
-              format: int64
-              description: The maker fee in parts-per-million.
-            taker_fee_ppm:
-              type: integer
-              format: int64
-              description: The taker fee in parts-per-million.
+                 - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+                Clob pairs in this state only accept orders which are
+                both short-term and post-only.
           description: |-
             ClobPair represents a single CLOB pair for a given product
             in state.
@@ -40860,7 +43846,7 @@ definitions:
             format: uint64
             description: >-
               Minimum increment in the size of orders on the CLOB, in base
-              quantums. This also defines the minimum size of an order.
+              quantums.
           subticks_per_tick:
             type: integer
             format: int64
@@ -40883,6 +43869,10 @@ definitions:
               BaseQuantum
 
               per Subtick.
+          min_order_base_quantums:
+            type: string
+            format: uint64
+            description: Minimum size of an order on the CLOB, in base quantums.
           status:
             type: string
             enum:
@@ -40891,27 +43881,22 @@ definitions:
               - STATUS_PAUSED
               - STATUS_CANCEL_ONLY
               - STATUS_POST_ONLY
+              - STATUS_INITIALIZING
             default: STATUS_UNSPECIFIED
             description: |-
               Status of the CLOB.
 
                - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
-               - STATUS_ACTIVE: STATUS_ACTIVE behavior is unfinalized.
-              TODO(DEC-600): update this documentation.
+               - STATUS_ACTIVE: STATUS_ACTIVE represents an active clob pair.
                - STATUS_PAUSED: STATUS_PAUSED behavior is unfinalized.
               TODO(DEC-600): update this documentation.
                - STATUS_CANCEL_ONLY: STATUS_CANCEL_ONLY behavior is unfinalized.
               TODO(DEC-600): update this documentation.
                - STATUS_POST_ONLY: STATUS_POST_ONLY behavior is unfinalized.
               TODO(DEC-600): update this documentation.
-          maker_fee_ppm:
-            type: integer
-            format: int64
-            description: The maker fee in parts-per-million.
-          taker_fee_ppm:
-            type: integer
-            format: int64
-            description: The taker fee in parts-per-million.
+               - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
+              Clob pairs in this state only accept orders which are
+              both short-term and post-only.
         description: |-
           ClobPair represents a single CLOB pair for a given product
           in state.
@@ -40930,9 +43915,9 @@ definitions:
                 usd_tnc_required:
                   type: string
                   format: byte
-                  description: |-
-                    The absolute size of total net collateral in base quantums
-                    of equity required in USD equivalent.
+                  description: >-
+                    The total net collateral in USDC quote quantums of equity
+                    required.
                 limit:
                   type: integer
                   format: int64
@@ -40949,9 +43934,9 @@ definitions:
                 usd_tnc_required:
                   type: string
                   format: byte
-                  description: |-
-                    The absolute size of total net collateral in base quantums
-                    of equity required in USD equivalent.
+                  description: >-
+                    The total net collateral in USDC quote quantums of equity
+                    required.
                 limit:
                   type: integer
                   format: int64
@@ -41113,339 +44098,386 @@ definitions:
           < 128 Since 128 should be enough to start and it fits within
           1 Byte (1 Bit needed to indicate that the first byte is the last).
     description: SubaccountId defines a unique identifier for a Subaccount.
-  google.protobuf.Any:
+  dydxprotocol.delaymsg.DelayedMessage:
     type: object
     properties:
-      type_url:
-        type: string
+      id:
+        type: integer
+        format: int64
+        description: The ID of the delayed message.
+      msg:
+        type: object
+        properties:
+          type_url:
+            type: string
+            description: >-
+              A URL/resource name that uniquely identifies the type of the
+              serialized
+
+              protocol buffer message. This string must contain at least
+
+              one "/" character. The last segment of the URL's path must
+              represent
+
+              the fully qualified name of the type (as in
+
+              `path/google.protobuf.Duration`). The name should be in a
+              canonical form
+
+              (e.g., leading "." is not accepted).
+
+
+              In practice, teams usually precompile into the binary all types
+              that they
+
+              expect it to use in the context of Any. However, for URLs which
+              use the
+
+              scheme `http`, `https`, or no scheme, one can optionally set up a
+              type
+
+              server that maps type URLs to message definitions as follows:
+
+
+              * If no scheme is provided, `https` is assumed.
+
+              * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                value in binary format, or produce an error.
+              * Applications are allowed to cache lookup results based on the
+                URL, or have them precompiled into a binary to avoid any
+                lookup. Therefore, binary compatibility needs to be preserved
+                on changes to types. (Use versioned type names to manage
+                breaking changes.)
+
+              Note: this functionality is not currently available in the
+              official
+
+              protobuf release, and it is not used for type URLs beginning with
+
+              type.googleapis.com.
+
+
+              Schemes other than `http`, `https` (or the empty scheme) might be
+
+              used with implementation specific semantics.
+          value:
+            type: string
+            format: byte
+            description: >-
+              Must be a valid serialized protocol buffer of the above specified
+              type.
         description: >-
-          A URL/resource name that uniquely identifies the type of the
-          serialized
+          `Any` contains an arbitrary serialized protocol buffer message along
+          with a
 
-          protocol buffer message. This string must contain at least
+          URL that describes the type of the serialized message.
 
-          one "/" character. The last segment of the URL's path must represent
 
-          the fully qualified name of the type (as in
-
-          `path/google.protobuf.Duration`). The name should be in a canonical
+          Protobuf library provides support to pack/unpack Any values in the
           form
 
-          (e.g., leading "." is not accepted).
+          of utility functions or additional generated methods of the Any type.
 
 
-          In practice, teams usually precompile into the binary all types that
-          they
+          Example 1: Pack and unpack a message in C++.
 
-          expect it to use in the context of Any. However, for URLs which use
-          the
+              Foo foo = ...;
+              Any any;
+              any.PackFrom(foo);
+              ...
+              if (any.UnpackTo(&foo)) {
+                ...
+              }
 
-          scheme `http`, `https`, or no scheme, one can optionally set up a type
+          Example 2: Pack and unpack a message in Java.
 
-          server that maps type URLs to message definitions as follows:
+              Foo foo = ...;
+              Any any = Any.pack(foo);
+              ...
+              if (any.is(Foo.class)) {
+                foo = any.unpack(Foo.class);
+              }
+
+          Example 3: Pack and unpack a message in Python.
+
+              foo = Foo(...)
+              any = Any()
+              any.Pack(foo)
+              ...
+              if any.Is(Foo.DESCRIPTOR):
+                any.Unpack(foo)
+                ...
+
+          Example 4: Pack and unpack a message in Go
+
+               foo := &pb.Foo{...}
+               any, err := anypb.New(foo)
+               if err != nil {
+                 ...
+               }
+               ...
+               foo := &pb.Foo{}
+               if err := any.UnmarshalTo(foo); err != nil {
+                 ...
+               }
+
+          The pack methods provided by protobuf library will by default use
+
+          'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+          methods only use the fully qualified type name after the last '/'
+
+          in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+          name "y.z".
 
 
-          * If no scheme is provided, `https` is assumed.
 
-          * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-            value in binary format, or produce an error.
-          * Applications are allowed to cache lookup results based on the
-            URL, or have them precompiled into a binary to avoid any
-            lookup. Therefore, binary compatibility needs to be preserved
-            on changes to types. (Use versioned type names to manage
-            breaking changes.)
-
-          Note: this functionality is not currently available in the official
-
-          protobuf release, and it is not used for type URLs beginning with
-
-          type.googleapis.com.
+          JSON
 
 
-          Schemes other than `http`, `https` (or the empty scheme) might be
+          The JSON representation of an `Any` value uses the regular
 
-          used with implementation specific semantics.
-      value:
+          representation of the deserialized, embedded message, with an
+
+          additional field `@type` which contains the type URL. Example:
+
+              package google.profile;
+              message Person {
+                string first_name = 1;
+                string last_name = 2;
+              }
+
+              {
+                "@type": "type.googleapis.com/google.profile.Person",
+                "firstName": <string>,
+                "lastName": <string>
+              }
+
+          If the embedded message type is well-known and has a custom JSON
+
+          representation, that representation will be embedded adding a field
+
+          `value` which holds the custom JSON in addition to the `@type`
+
+          field. Example (for message [google.protobuf.Duration][]):
+
+              {
+                "@type": "type.googleapis.com/google.protobuf.Duration",
+                "value": "1.212s"
+              }
+      block_height:
         type: string
-        format: byte
-        description: >-
-          Must be a valid serialized protocol buffer of the above specified
-          type.
-    description: >-
-      `Any` contains an arbitrary serialized protocol buffer message along with
-      a
-
-      URL that describes the type of the serialized message.
-
-
-      Protobuf library provides support to pack/unpack Any values in the form
-
-      of utility functions or additional generated methods of the Any type.
-
-
-      Example 1: Pack and unpack a message in C++.
-
-          Foo foo = ...;
-          Any any;
-          any.PackFrom(foo);
-          ...
-          if (any.UnpackTo(&foo)) {
-            ...
-          }
-
-      Example 2: Pack and unpack a message in Java.
-
-          Foo foo = ...;
-          Any any = Any.pack(foo);
-          ...
-          if (any.is(Foo.class)) {
-            foo = any.unpack(Foo.class);
-          }
-
-      Example 3: Pack and unpack a message in Python.
-
-          foo = Foo(...)
-          any = Any()
-          any.Pack(foo)
-          ...
-          if any.Is(Foo.DESCRIPTOR):
-            any.Unpack(foo)
-            ...
-
-      Example 4: Pack and unpack a message in Go
-
-           foo := &pb.Foo{...}
-           any, err := anypb.New(foo)
-           if err != nil {
-             ...
-           }
-           ...
-           foo := &pb.Foo{}
-           if err := any.UnmarshalTo(foo); err != nil {
-             ...
-           }
-
-      The pack methods provided by protobuf library will by default use
-
-      'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-      methods only use the fully qualified type name after the last '/'
-
-      in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-      name "y.z".
-
-
-
-      JSON
-
-
-      The JSON representation of an `Any` value uses the regular
-
-      representation of the deserialized, embedded message, with an
-
-      additional field `@type` which contains the type URL. Example:
-
-          package google.profile;
-          message Person {
-            string first_name = 1;
-            string last_name = 2;
-          }
-
-          {
-            "@type": "type.googleapis.com/google.profile.Person",
-            "firstName": <string>,
-            "lastName": <string>
-          }
-
-      If the embedded message type is well-known and has a custom JSON
-
-      representation, that representation will be embedded adding a field
-
-      `value` which holds the custom JSON in addition to the `@type`
-
-      field. Example (for message [google.protobuf.Duration][]):
-
-          {
-            "@type": "type.googleapis.com/google.protobuf.Duration",
-            "value": "1.212s"
-          }
-  grpc.gateway.runtime.Error:
+        format: int64
+        description: The block height at which the message should be executed.
+    description: DelayedMessage is a message that is delayed until a certain block height.
+  dydxprotocol.delaymsg.QueryBlockMessageIdsResponse:
     type: object
     properties:
-      error:
-        type: string
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
+      message_ids:
         type: array
         items:
-          type: object
-          properties:
-            type_url:
-              type: string
-              description: >-
-                A URL/resource name that uniquely identifies the type of the
-                serialized
+          type: integer
+          format: int64
+    description: >-
+      QueryGetBlockMessageIdsResponse is the response type for the
+      BlockMessageIds
 
-                protocol buffer message. This string must contain at least
+      RPC method.
+  dydxprotocol.delaymsg.QueryMessageResponse:
+    type: object
+    properties:
+      message:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            description: The ID of the delayed message.
+          msg:
+            type: object
+            properties:
+              type_url:
+                type: string
+                description: >-
+                  A URL/resource name that uniquely identifies the type of the
+                  serialized
 
-                one "/" character. The last segment of the URL's path must
-                represent
+                  protocol buffer message. This string must contain at least
 
-                the fully qualified name of the type (as in
+                  one "/" character. The last segment of the URL's path must
+                  represent
 
-                `path/google.protobuf.Duration`). The name should be in a
-                canonical form
+                  the fully qualified name of the type (as in
 
-                (e.g., leading "." is not accepted).
+                  `path/google.protobuf.Duration`). The name should be in a
+                  canonical form
 
-
-                In practice, teams usually precompile into the binary all types
-                that they
-
-                expect it to use in the context of Any. However, for URLs which
-                use the
-
-                scheme `http`, `https`, or no scheme, one can optionally set up
-                a type
-
-                server that maps type URLs to message definitions as follows:
-
-
-                * If no scheme is provided, `https` is assumed.
-
-                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                  value in binary format, or produce an error.
-                * Applications are allowed to cache lookup results based on the
-                  URL, or have them precompiled into a binary to avoid any
-                  lookup. Therefore, binary compatibility needs to be preserved
-                  on changes to types. (Use versioned type names to manage
-                  breaking changes.)
-
-                Note: this functionality is not currently available in the
-                official
-
-                protobuf release, and it is not used for type URLs beginning
-                with
-
-                type.googleapis.com.
+                  (e.g., leading "." is not accepted).
 
 
-                Schemes other than `http`, `https` (or the empty scheme) might
-                be
+                  In practice, teams usually precompile into the binary all
+                  types that they
 
-                used with implementation specific semantics.
-            value:
-              type: string
-              format: byte
-              description: >-
-                Must be a valid serialized protocol buffer of the above
-                specified type.
-          description: >-
-            `Any` contains an arbitrary serialized protocol buffer message along
-            with a
+                  expect it to use in the context of Any. However, for URLs
+                  which use the
 
-            URL that describes the type of the serialized message.
+                  scheme `http`, `https`, or no scheme, one can optionally set
+                  up a type
+
+                  server that maps type URLs to message definitions as follows:
 
 
-            Protobuf library provides support to pack/unpack Any values in the
-            form
+                  * If no scheme is provided, `https` is assumed.
 
-            of utility functions or additional generated methods of the Any
-            type.
+                  * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                    value in binary format, or produce an error.
+                  * Applications are allowed to cache lookup results based on
+                  the
+                    URL, or have them precompiled into a binary to avoid any
+                    lookup. Therefore, binary compatibility needs to be preserved
+                    on changes to types. (Use versioned type names to manage
+                    breaking changes.)
+
+                  Note: this functionality is not currently available in the
+                  official
+
+                  protobuf release, and it is not used for type URLs beginning
+                  with
+
+                  type.googleapis.com.
 
 
-            Example 1: Pack and unpack a message in C++.
+                  Schemes other than `http`, `https` (or the empty scheme) might
+                  be
 
-                Foo foo = ...;
-                Any any;
-                any.PackFrom(foo);
-                ...
-                if (any.UnpackTo(&foo)) {
+                  used with implementation specific semantics.
+              value:
+                type: string
+                format: byte
+                description: >-
+                  Must be a valid serialized protocol buffer of the above
+                  specified type.
+            description: >-
+              `Any` contains an arbitrary serialized protocol buffer message
+              along with a
+
+              URL that describes the type of the serialized message.
+
+
+              Protobuf library provides support to pack/unpack Any values in the
+              form
+
+              of utility functions or additional generated methods of the Any
+              type.
+
+
+              Example 1: Pack and unpack a message in C++.
+
+                  Foo foo = ...;
+                  Any any;
+                  any.PackFrom(foo);
                   ...
-                }
+                  if (any.UnpackTo(&foo)) {
+                    ...
+                  }
 
-            Example 2: Pack and unpack a message in Java.
+              Example 2: Pack and unpack a message in Java.
 
-                Foo foo = ...;
-                Any any = Any.pack(foo);
-                ...
-                if (any.is(Foo.class)) {
-                  foo = any.unpack(Foo.class);
-                }
-
-            Example 3: Pack and unpack a message in Python.
-
-                foo = Foo(...)
-                any = Any()
-                any.Pack(foo)
-                ...
-                if any.Is(Foo.DESCRIPTOR):
-                  any.Unpack(foo)
+                  Foo foo = ...;
+                  Any any = Any.pack(foo);
                   ...
+                  if (any.is(Foo.class)) {
+                    foo = any.unpack(Foo.class);
+                  }
 
-            Example 4: Pack and unpack a message in Go
+              Example 3: Pack and unpack a message in Python.
 
-                 foo := &pb.Foo{...}
-                 any, err := anypb.New(foo)
-                 if err != nil {
+                  foo = Foo(...)
+                  any = Any()
+                  any.Pack(foo)
+                  ...
+                  if any.Is(Foo.DESCRIPTOR):
+                    any.Unpack(foo)
+                    ...
+
+              Example 4: Pack and unpack a message in Go
+
+                   foo := &pb.Foo{...}
+                   any, err := anypb.New(foo)
+                   if err != nil {
+                     ...
+                   }
                    ...
-                 }
-                 ...
-                 foo := &pb.Foo{}
-                 if err := any.UnmarshalTo(foo); err != nil {
-                   ...
-                 }
+                   foo := &pb.Foo{}
+                   if err := any.UnmarshalTo(foo); err != nil {
+                     ...
+                   }
 
-            The pack methods provided by protobuf library will by default use
+              The pack methods provided by protobuf library will by default use
 
-            'type.googleapis.com/full.type.name' as the type URL and the unpack
+              'type.googleapis.com/full.type.name' as the type URL and the
+              unpack
 
-            methods only use the fully qualified type name after the last '/'
+              methods only use the fully qualified type name after the last '/'
 
-            in the type URL, for example "foo.bar.com/x/y.z" will yield type
+              in the type URL, for example "foo.bar.com/x/y.z" will yield type
 
-            name "y.z".
-
+              name "y.z".
 
 
-            JSON
+
+              JSON
 
 
-            The JSON representation of an `Any` value uses the regular
+              The JSON representation of an `Any` value uses the regular
 
-            representation of the deserialized, embedded message, with an
+              representation of the deserialized, embedded message, with an
 
-            additional field `@type` which contains the type URL. Example:
+              additional field `@type` which contains the type URL. Example:
 
-                package google.profile;
-                message Person {
-                  string first_name = 1;
-                  string last_name = 2;
-                }
+                  package google.profile;
+                  message Person {
+                    string first_name = 1;
+                    string last_name = 2;
+                  }
 
-                {
-                  "@type": "type.googleapis.com/google.profile.Person",
-                  "firstName": <string>,
-                  "lastName": <string>
-                }
+                  {
+                    "@type": "type.googleapis.com/google.profile.Person",
+                    "firstName": <string>,
+                    "lastName": <string>
+                  }
 
-            If the embedded message type is well-known and has a custom JSON
+              If the embedded message type is well-known and has a custom JSON
 
-            representation, that representation will be embedded adding a field
+              representation, that representation will be embedded adding a
+              field
 
-            `value` which holds the custom JSON in addition to the `@type`
+              `value` which holds the custom JSON in addition to the `@type`
 
-            field. Example (for message [google.protobuf.Duration][]):
+              field. Example (for message [google.protobuf.Duration][]):
 
-                {
-                  "@type": "type.googleapis.com/google.protobuf.Duration",
-                  "value": "1.212s"
-                }
+                  {
+                    "@type": "type.googleapis.com/google.protobuf.Duration",
+                    "value": "1.212s"
+                  }
+          block_height:
+            type: string
+            format: int64
+            description: The block height at which the message should be executed.
+        description: >-
+          DelayedMessage is a message that is delayed until a certain block
+          height.
+    description: QueryGetMessageResponse is the response type for the Message RPC method.
+  dydxprotocol.delaymsg.QueryNumMessagesResponse:
+    type: object
+    properties:
+      num_messages:
+        type: integer
+        format: int64
+    description: |-
+      QueryGetNumMessagesResponse is the response type for the NumMessages RPC
+      method.
   dydxprotocol.epochs.EpochInfo:
     type: object
     properties:
@@ -41687,15 +44719,203 @@ definitions:
               the current block time such that `(x - next_tick) % duration = 0`.
         description: EpochInfo stores metadata of an epoch timer.
     description: QueryEpochInfoResponse is response type for the GetEpochInfo RPC method.
+  dydxprotocol.feetiers.PerpetualFeeParams:
+    type: object
+    properties:
+      tiers:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Human-readable name of the tier, e.g. "Gold".
+            absolute_volume_requirement:
+              type: string
+              format: uint64
+              description: The trader's absolute volume requirement in quote quantums.
+            total_volume_share_requirement_ppm:
+              type: integer
+              format: int64
+              description: The total volume share requirement.
+            maker_volume_share_requirement_ppm:
+              type: integer
+              format: int64
+              description: The maker volume share requirement.
+            maker_fee_ppm:
+              type: integer
+              format: int32
+              description: The maker fee once this tier is reached.
+            taker_fee_ppm:
+              type: integer
+              format: int32
+              description: The taker fee once this tier is reached.
+          title: A fee tier for perpetuals
+        description: Sorted fee tiers (lowest requirements first).
+    description: PerpetualFeeParams defines the parameters for perpetual fees.
+  dydxprotocol.feetiers.PerpetualFeeTier:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Human-readable name of the tier, e.g. "Gold".
+      absolute_volume_requirement:
+        type: string
+        format: uint64
+        description: The trader's absolute volume requirement in quote quantums.
+      total_volume_share_requirement_ppm:
+        type: integer
+        format: int64
+        description: The total volume share requirement.
+      maker_volume_share_requirement_ppm:
+        type: integer
+        format: int64
+        description: The maker volume share requirement.
+      maker_fee_ppm:
+        type: integer
+        format: int32
+        description: The maker fee once this tier is reached.
+      taker_fee_ppm:
+        type: integer
+        format: int32
+        description: The taker fee once this tier is reached.
+    title: A fee tier for perpetuals
+  dydxprotocol.feetiers.QueryPerpetualFeeParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          tiers:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Human-readable name of the tier, e.g. "Gold".
+                absolute_volume_requirement:
+                  type: string
+                  format: uint64
+                  description: The trader's absolute volume requirement in quote quantums.
+                total_volume_share_requirement_ppm:
+                  type: integer
+                  format: int64
+                  description: The total volume share requirement.
+                maker_volume_share_requirement_ppm:
+                  type: integer
+                  format: int64
+                  description: The maker volume share requirement.
+                maker_fee_ppm:
+                  type: integer
+                  format: int32
+                  description: The maker fee once this tier is reached.
+                taker_fee_ppm:
+                  type: integer
+                  format: int32
+                  description: The taker fee once this tier is reached.
+              title: A fee tier for perpetuals
+            description: Sorted fee tiers (lowest requirements first).
+        description: PerpetualFeeParams defines the parameters for perpetual fees.
+    description: >-
+      QueryPerpetualFeeParamsResponse is a response type for the
+      PerpetualFeeParams
+
+      RPC method.
+  dydxprotocol.feetiers.QueryUserFeeTierResponse:
+    type: object
+    properties:
+      index:
+        type: integer
+        format: int64
+        description: Index of the fee tier in the list queried from PerpetualFeeParams.
+      tier:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Human-readable name of the tier, e.g. "Gold".
+          absolute_volume_requirement:
+            type: string
+            format: uint64
+            description: The trader's absolute volume requirement in quote quantums.
+          total_volume_share_requirement_ppm:
+            type: integer
+            format: int64
+            description: The total volume share requirement.
+          maker_volume_share_requirement_ppm:
+            type: integer
+            format: int64
+            description: The maker volume share requirement.
+          maker_fee_ppm:
+            type: integer
+            format: int32
+            description: The maker fee once this tier is reached.
+          taker_fee_ppm:
+            type: integer
+            format: int32
+            description: The taker fee once this tier is reached.
+        title: A fee tier for perpetuals
+    description: QueryUserFeeTierResponse is a request type for the UserFeeTier RPC method.
   dydxprotocol.perpetuals.Perpetual:
+    type: object
+    properties:
+      params:
+        description: PerpetualParams is the parameters of the perpetual.
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            description: Unique, sequentially-generated.
+          ticker:
+            type: string
+            description: The name of the `Perpetual` (e.g. `BTC-USD`).
+          market_id:
+            type: integer
+            format: int64
+            description: |-
+              The market associated with this `Perpetual`. It
+              acts as the oracle price for the purposes of calculating
+              collateral, margin requirements, and funding rates.
+          atomic_resolution:
+            type: integer
+            format: int32
+            description: |-
+              The exponent for converting an atomic amount (`size = 1`)
+              to a full coin. For example, if `AtomicResolution = -8`
+              then a `PerpetualPosition` with `size = 1e8` is equivalent to
+              a position size of one full coin.
+          default_funding_ppm:
+            type: integer
+            format: int32
+            description: |-
+              The default funding payment if there is no price premium. In
+              parts-per-million.
+          liquidity_tier:
+            type: integer
+            format: int64
+            description: The liquidity_tier that this perpetual is associated with.
+      funding_index:
+        type: string
+        format: byte
+        description: |-
+          The current index determined by the cumulative all-time
+          history of the funding mechanism. Starts at zero.
+      open_interest:
+        type: string
+        format: uint64
+        description: |-
+          The total open-interest of the perpetual used for
+          bookkeeping purposes. In base quantums.
+    description: Perpetual represents a perpetual on the dYdX exchange.
+  dydxprotocol.perpetuals.PerpetualParams:
     type: object
     properties:
       id:
         type: integer
         format: int64
-        description: |-
-          ==== Non-updatable fields. ====
-          Unique, sequentially-generated.
+        description: Unique, sequentially-generated.
       ticker:
         type: string
         description: The name of the `Perpetual` (e.g. `BTC-USD`).
@@ -41718,27 +44938,15 @@ definitions:
         type: integer
         format: int32
         description: |-
-          ==== Governance-updatable fields. ====
           The default funding payment if there is no price premium. In
           parts-per-million.
       liquidity_tier:
         type: integer
         format: int64
         description: The liquidity_tier that this perpetual is associated with.
-      funding_index:
-        type: string
-        format: byte
-        description: |-
-          / ==== Regularly-updated fields. ====
-          The current index determined by the cumulative all-time
-          history of the funding mechanism. Starts at zero.
-      open_interest:
-        type: string
-        format: uint64
-        description: |-
-          The total open-interest of the perpetual used for
-          bookkeeping purposes. In base quantums.
-    description: Perpetual represents a perpetual on the dYdX exchange.
+    description: |-
+      PerpetualParams represents the parameters of a perpetual on the dYdX
+      exchange.
   dydxprotocol.perpetuals.QueryAllPerpetualsResponse:
     type: object
     properties:
@@ -41747,46 +44955,50 @@ definitions:
         items:
           type: object
           properties:
-            id:
-              type: integer
-              format: int64
-              description: |-
-                ==== Non-updatable fields. ====
-                Unique, sequentially-generated.
-            ticker:
-              type: string
-              description: The name of the `Perpetual` (e.g. `BTC-USD`).
-            market_id:
-              type: integer
-              format: int64
-              description: |-
-                The market associated with this `Perpetual`. It
-                acts as the oracle price for the purposes of calculating
-                collateral, margin requirements, and funding rates.
-            atomic_resolution:
-              type: integer
-              format: int32
-              description: |-
-                The exponent for converting an atomic amount (`size = 1`)
-                to a full coin. For example, if `AtomicResolution = -8`
-                then a `PerpetualPosition` with `size = 1e8` is equivalent to
-                a position size of one full coin.
-            default_funding_ppm:
-              type: integer
-              format: int32
-              description: |-
-                ==== Governance-updatable fields. ====
-                The default funding payment if there is no price premium. In
-                parts-per-million.
-            liquidity_tier:
-              type: integer
-              format: int64
-              description: The liquidity_tier that this perpetual is associated with.
+            params:
+              description: PerpetualParams is the parameters of the perpetual.
+              type: object
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  description: Unique, sequentially-generated.
+                ticker:
+                  type: string
+                  description: The name of the `Perpetual` (e.g. `BTC-USD`).
+                market_id:
+                  type: integer
+                  format: int64
+                  description: |-
+                    The market associated with this `Perpetual`. It
+                    acts as the oracle price for the purposes of calculating
+                    collateral, margin requirements, and funding rates.
+                atomic_resolution:
+                  type: integer
+                  format: int32
+                  description: >-
+                    The exponent for converting an atomic amount (`size = 1`)
+
+                    to a full coin. For example, if `AtomicResolution = -8`
+
+                    then a `PerpetualPosition` with `size = 1e8` is equivalent
+                    to
+
+                    a position size of one full coin.
+                default_funding_ppm:
+                  type: integer
+                  format: int32
+                  description: |-
+                    The default funding payment if there is no price premium. In
+                    parts-per-million.
+                liquidity_tier:
+                  type: integer
+                  format: int64
+                  description: The liquidity_tier that this perpetual is associated with.
             funding_index:
               type: string
               format: byte
               description: |-
-                / ==== Regularly-updated fields. ====
                 The current index determined by the cumulative all-time
                 history of the funding mechanism. Starts at zero.
             open_interest:
@@ -41831,46 +45043,46 @@ definitions:
       perpetual:
         type: object
         properties:
-          id:
-            type: integer
-            format: int64
-            description: |-
-              ==== Non-updatable fields. ====
-              Unique, sequentially-generated.
-          ticker:
-            type: string
-            description: The name of the `Perpetual` (e.g. `BTC-USD`).
-          market_id:
-            type: integer
-            format: int64
-            description: |-
-              The market associated with this `Perpetual`. It
-              acts as the oracle price for the purposes of calculating
-              collateral, margin requirements, and funding rates.
-          atomic_resolution:
-            type: integer
-            format: int32
-            description: |-
-              The exponent for converting an atomic amount (`size = 1`)
-              to a full coin. For example, if `AtomicResolution = -8`
-              then a `PerpetualPosition` with `size = 1e8` is equivalent to
-              a position size of one full coin.
-          default_funding_ppm:
-            type: integer
-            format: int32
-            description: |-
-              ==== Governance-updatable fields. ====
-              The default funding payment if there is no price premium. In
-              parts-per-million.
-          liquidity_tier:
-            type: integer
-            format: int64
-            description: The liquidity_tier that this perpetual is associated with.
+          params:
+            description: PerpetualParams is the parameters of the perpetual.
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int64
+                description: Unique, sequentially-generated.
+              ticker:
+                type: string
+                description: The name of the `Perpetual` (e.g. `BTC-USD`).
+              market_id:
+                type: integer
+                format: int64
+                description: |-
+                  The market associated with this `Perpetual`. It
+                  acts as the oracle price for the purposes of calculating
+                  collateral, margin requirements, and funding rates.
+              atomic_resolution:
+                type: integer
+                format: int32
+                description: |-
+                  The exponent for converting an atomic amount (`size = 1`)
+                  to a full coin. For example, if `AtomicResolution = -8`
+                  then a `PerpetualPosition` with `size = 1e8` is equivalent to
+                  a position size of one full coin.
+              default_funding_ppm:
+                type: integer
+                format: int32
+                description: |-
+                  The default funding payment if there is no price premium. In
+                  parts-per-million.
+              liquidity_tier:
+                type: integer
+                format: int64
+                description: The liquidity_tier that this perpetual is associated with.
           funding_index:
             type: string
             format: byte
             description: |-
-              / ==== Regularly-updated fields. ====
               The current index determined by the cumulative all-time
               history of the funding mechanism. Starts at zero.
           open_interest:
@@ -42199,6 +45411,166 @@ definitions:
       `MarketPrice`
 
       RPC method.
+  dydxprotocol.rewards.Params:
+    type: object
+    properties:
+      treasury_account:
+        type: string
+        description: The module account to distribute rewards from.
+      denom:
+        type: string
+        description: The denom of the rewards token.
+      denom_exponent:
+        type: integer
+        format: int32
+        description: |-
+          The exponent of converting one unit of `denom` to a full coin.
+          For example, `denom=uatom, denom_exponent=-6` defines that
+          `1 uatom = 10^(-6) ATOM`. This conversion is needed since the
+          `market_id` retrieves the price of a full coin of the reward token.
+      market_id:
+        type: integer
+        format: int64
+        description: The id of the market that has the price of the rewards token.
+      fee_multiplier_ppm:
+        type: integer
+        format: int64
+        description: |-
+          The amount (in ppm) that fees are multiplied by to get
+          the maximum rewards amount.
+    description: Params defines the parameters for x/rewards module.
+  dydxprotocol.rewards.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          treasury_account:
+            type: string
+            description: The module account to distribute rewards from.
+          denom:
+            type: string
+            description: The denom of the rewards token.
+          denom_exponent:
+            type: integer
+            format: int32
+            description: >-
+              The exponent of converting one unit of `denom` to a full coin.
+
+              For example, `denom=uatom, denom_exponent=-6` defines that
+
+              `1 uatom = 10^(-6) ATOM`. This conversion is needed since the
+
+              `market_id` retrieves the price of a full coin of the reward
+              token.
+          market_id:
+            type: integer
+            format: int64
+            description: The id of the market that has the price of the rewards token.
+          fee_multiplier_ppm:
+            type: integer
+            format: int64
+            description: |-
+              The amount (in ppm) that fees are multiplied by to get
+              the maximum rewards amount.
+        description: Params defines the parameters for x/rewards module.
+    description: QueryParamsResponse is a response type for the Params RPC method.
+  dydxprotocol.stats.GlobalStats:
+    type: object
+    properties:
+      notional_traded:
+        type: string
+        format: uint64
+        title: Notional USDC traded in quantums
+    title: GlobalStats stores global stats
+  dydxprotocol.stats.Params:
+    type: object
+    properties:
+      window_duration:
+        type: string
+        description: The desired number of seconds in the look-back window.
+    description: Params defines the parameters for x/stats module.
+  dydxprotocol.stats.QueryGlobalStatsResponse:
+    type: object
+    properties:
+      stats:
+        type: object
+        properties:
+          notional_traded:
+            type: string
+            format: uint64
+            title: Notional USDC traded in quantums
+        title: GlobalStats stores global stats
+    description: >-
+      QueryGlobalStatsResponse is a response type for the GlobalStats RPC
+      method.
+  dydxprotocol.stats.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          window_duration:
+            type: string
+            description: The desired number of seconds in the look-back window.
+        description: Params defines the parameters for x/stats module.
+    description: QueryParamsResponse is a response type for the Params RPC method.
+  dydxprotocol.stats.QueryStatsMetadataResponse:
+    type: object
+    properties:
+      metadata:
+        type: object
+        properties:
+          trailing_epoch:
+            type: integer
+            format: int64
+            description: >-
+              The oldest epoch that is included in the stats. The next epoch to
+              be
+
+              removed from the window.
+        title: StatsMetadata stores metadata for the x/stats module
+    description: |-
+      QueryStatsMetadataResponse is a response type for the StatsMetadata RPC
+      method.
+  dydxprotocol.stats.QueryUserStatsResponse:
+    type: object
+    properties:
+      stats:
+        type: object
+        properties:
+          taker_notional:
+            type: string
+            format: uint64
+            title: Taker USDC in quantums
+          maker_notional:
+            type: string
+            format: uint64
+            title: Maker USDC in quantums
+        title: UserStats stores stats for a User
+    description: QueryUserStatsResponse is a request type for the UserStats RPC method.
+  dydxprotocol.stats.StatsMetadata:
+    type: object
+    properties:
+      trailing_epoch:
+        type: integer
+        format: int64
+        description: |-
+          The oldest epoch that is included in the stats. The next epoch to be
+          removed from the window.
+    title: StatsMetadata stores metadata for the x/stats module
+  dydxprotocol.stats.UserStats:
+    type: object
+    properties:
+      taker_notional:
+        type: string
+        format: uint64
+        title: Taker USDC in quantums
+      maker_notional:
+        type: string
+        format: uint64
+        title: Maker USDC in quantums
+    title: UserStats stores stats for a User
   dydxprotocol.subaccounts.AssetPosition:
     type: object
     properties:
@@ -42537,6 +45909,66 @@ definitions:
     description: |-
       Subaccount defines a single sub-account for a given address.
       Subaccounts are uniquely indexed by a subaccountNumber/owner pair.
+  dydxprotocol.vest.QueryVestEntryResponse:
+    type: object
+    properties:
+      entry:
+        type: object
+        properties:
+          vester_account:
+            type: string
+            description: |-
+              The module account to vest tokens from.
+              This is also the key to this `VestEntry` in state.
+          treasury_account:
+            type: string
+            description: The module account to vest tokens to.
+          denom:
+            type: string
+            description: The denom of the token to vest.
+          start_time:
+            type: string
+            format: date-time
+            description: The start time of vest. Before this time, no vest will occur.
+          end_time:
+            type: string
+            format: date-time
+            description: >-
+              The end time of vest. At this target date, all funds should be in
+              the
+
+              Treasury Account and none left in the Vester Account.
+        description: |-
+          VestEntry specifies a Vester Account and the rate at which tokens are
+          dripped into the corresponding Treasury Account.
+    description: QueryVestEntryResponse is a response type for the VestEntry RPC method.
+  dydxprotocol.vest.VestEntry:
+    type: object
+    properties:
+      vester_account:
+        type: string
+        description: |-
+          The module account to vest tokens from.
+          This is also the key to this `VestEntry` in state.
+      treasury_account:
+        type: string
+        description: The module account to vest tokens to.
+      denom:
+        type: string
+        description: The denom of the token to vest.
+      start_time:
+        type: string
+        format: date-time
+        description: The start time of vest. Before this time, no vest will occur.
+      end_time:
+        type: string
+        format: date-time
+        description: |-
+          The end time of vest. At this target date, all funds should be in the
+          Treasury Account and none left in the Vester Account.
+    description: |-
+      VestEntry specifies a Vester Account and the rate at which tokens are
+      dripped into the corresponding Treasury Account.
   cosmos.base.v1beta1.Coin:
     type: object
     properties:

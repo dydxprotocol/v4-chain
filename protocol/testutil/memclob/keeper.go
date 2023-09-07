@@ -26,6 +26,7 @@ type FakeMemClobKeeper struct {
 	timeToStatefulOrdersExpiring         map[time.Time][]types.OrderId
 	dirtyTimeToStatefulOrdersExpiring    map[time.Time][]types.OrderId
 	nextTransactionIndex                 uint32
+	subaccountsToDeleverage              map[satypes.SubaccountId]bool
 	statePositionFn                      types.GetStatePositionFn
 	useCollatCheckFnForSingleMatch       bool
 	indexerEventManager                  indexer_manager.IndexerEventManager
@@ -45,6 +46,7 @@ func NewFakeMemClobKeeper() *FakeMemClobKeeper {
 		timeToStatefulOrdersExpiring:         make(map[time.Time][]types.OrderId),
 		dirtyTimeToStatefulOrdersExpiring:    make(map[time.Time][]types.OrderId),
 		nextTransactionIndex:                 0,
+		subaccountsToDeleverage:              make(map[satypes.SubaccountId]bool),
 	}
 }
 
@@ -101,6 +103,16 @@ func (f *FakeMemClobKeeper) CancelShortTermOrder(
 	msgCancelOrder *types.MsgCancelOrder,
 ) error {
 	panic("CancelShortTermOrder not currently implemented on FakeMemClobKeeper")
+}
+
+func (f *FakeMemClobKeeper) CanDeleverageSubaccount(
+	ctx sdk.Context,
+	msg satypes.SubaccountId,
+) (
+	bool,
+	error,
+) {
+	return f.subaccountsToDeleverage[msg], nil
 }
 
 // Commit simulates `checkState.Commit()`.
