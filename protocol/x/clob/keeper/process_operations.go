@@ -336,36 +336,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	isLiquidatable, err := k.IsLiquidatable(ctx, matchLiquidation.Liquidated)
-	if err != nil {
-		return err
-	}
-	if !isLiquidatable {
-		return sdkerrors.Wrapf(
-			types.ErrSubaccountNotLiquidatable,
-			"PersistMatchLiquidationToState: Subaccount %s is not liquidatable",
-			matchLiquidation.Liquidated,
-		)
-	}
-
-	perpId := matchLiquidation.GetPerpetualId()
-	_, err = k.perpetualsKeeper.GetPerpetual(ctx, perpId)
-	if err != nil {
-		return sdkerrors.Wrapf(
-			types.ErrPerpetualDoesNotExist,
-			"Perpetual id %+v does not exist in state.",
-			perpId,
-		)
-	}
-	clobPair := matchLiquidation.ClobPairId
-	if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPair)); !found {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClob,
-			"Clob Pair id %+v does not exist in state.",
-			clobPair,
-		)
-	}
-
 	takerOrder, err := k.MaybeGetLiquidationOrder(ctx, matchLiquidation.Liquidated)
 	if err != nil {
 		return err

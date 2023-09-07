@@ -4363,7 +4363,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			err := ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, tc.liquidationConfig)
 			require.NoError(t, err)
 
-			clobPair, positionSize, err := ks.ClobKeeper.GetPerpetualPositionToLiquidate(
+			perpetualId, positionSize, err := ks.ClobKeeper.GetPerpetualPositionToLiquidate(
 				ks.Ctx,
 				*subaccount.Id,
 			)
@@ -4373,10 +4373,13 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				tc.expectedQuantums,
 				positionSize,
 			)
+
+			expectedPerpetualId, err := tc.expectedClobPair.GetPerpetualId()
+			require.NoError(t, err)
 			require.Equal(
 				t,
-				tc.expectedClobPair,
-				clobPair,
+				expectedPerpetualId,
+				perpetualId,
 			)
 		})
 	}
