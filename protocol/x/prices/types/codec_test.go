@@ -2,14 +2,11 @@ package types_test
 
 import (
 	"bytes"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,10 +21,10 @@ func TestRegisterCodec(t *testing.T) {
 }
 
 func TestRegisterInterfaces(t *testing.T) {
-	mockRegistry := new(mocks.InterfaceRegistry)
-	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
-	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
-	types.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 5)
-	mockRegistry.AssertExpectations(t)
+	registry := cdctypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+	require.NoError(t, registry.EnsureRegistered(&types.MsgUpdateMarketPrices{}))
+	require.NoError(t, registry.EnsureRegistered(&types.MsgUpdateMarketPricesResponse{}))
+	require.NoError(t, registry.EnsureRegistered(&types.MsgCreateOracleMarket{}))
+	require.NoError(t, registry.EnsureRegistered(&types.MsgCreateOracleMarketResponse{}))
 }
