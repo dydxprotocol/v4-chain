@@ -25,14 +25,14 @@ func TestGenesisState_Validate(t *testing.T) {
 		"valid genesis state": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
 							Limit:     1,
 						},
 						{
-							NumBlocks: types.MaxShortTermOrdersPerMarketPerNBlocksNumBlocks,
-							Limit:     types.MaxShortTermOrdersPerMarketPerNBlocksLimit,
+							NumBlocks: types.MaxShortTermOrdersPerNBlocksNumBlocks,
+							Limit:     types.MaxShortTermOrdersPerNBlocksLimit,
 						},
 					},
 					MaxStatefulOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
@@ -45,14 +45,14 @@ func TestGenesisState_Validate(t *testing.T) {
 							Limit:     types.MaxStatefulOrdersPerNBlocksLimit,
 						},
 					},
-					MaxShortTermOrderCancellationsPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
 							Limit:     1,
 						},
 						{
-							NumBlocks: types.MaxShortTermOrderCancellationsPerMarketPerNBlocksNumBlocks,
-							Limit:     types.MaxShortTermOrderCancellationsPerMarketPerNBlocksLimit,
+							NumBlocks: types.MaxShortTermOrderCancellationsPerNBlocksNumBlocks,
+							Limit:     types.MaxShortTermOrderCancellationsPerNBlocksLimit,
 						},
 					},
 				},
@@ -269,7 +269,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		"max num blocks for short term order rate limit is zero": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 0,
 							Limit:     1,
@@ -277,12 +277,12 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("0 is not a valid NumBlocks for MaxShortTermOrdersPerMarketPerNBlocks"),
+			expectedError: errors.New("0 is not a valid NumBlocks for MaxShortTermOrdersPerNBlocks"),
 		},
 		"max limit for short term order rate limit is zero": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
 							Limit:     0,
@@ -290,7 +290,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("0 is not a valid Limit for MaxShortTermOrdersPerMarketPerNBlocks"),
+			expectedError: errors.New("0 is not a valid Limit for MaxShortTermOrdersPerNBlocks"),
 		},
 		"max num blocks for stateful order rate limit is zero": {
 			genState: &types.GenesisState{
@@ -321,7 +321,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		"max num blocks for short term order cancellation rate limit is zero": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrderCancellationsPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 0,
 							Limit:     1,
@@ -329,12 +329,12 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("0 is not a valid NumBlocks for MaxShortTermOrderCancellationsPerMarketPerNBlocks"),
+			expectedError: errors.New("0 is not a valid NumBlocks for MaxShortTermOrderCancellationsPerNBlocks"),
 		},
 		"max limit for short term order cancellation rate limit is zero": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrderCancellationsPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
 							Limit:     0,
@@ -342,35 +342,35 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("0 is not a valid Limit for MaxShortTermOrderCancellationsPerMarketPerNBlocks"),
+			expectedError: errors.New("0 is not a valid Limit for MaxShortTermOrderCancellationsPerNBlocks"),
 		},
 		"max num blocks for short term order rate limit is greater than max": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
-							NumBlocks: types.MaxShortTermOrdersPerMarketPerNBlocksNumBlocks + 1,
+							NumBlocks: types.MaxShortTermOrdersPerNBlocksNumBlocks + 1,
 							Limit:     1,
 						},
 					},
 				},
 			},
-			expectedError: fmt.Errorf("%d is not a valid NumBlocks for MaxShortTermOrdersPerMarketPerNBlocks",
-				types.MaxShortTermOrdersPerMarketPerNBlocksNumBlocks+1),
+			expectedError: fmt.Errorf("%d is not a valid NumBlocks for MaxShortTermOrdersPerNBlocks",
+				types.MaxShortTermOrdersPerNBlocksNumBlocks+1),
 		},
 		"max limit for short term order rate limit is greater than max": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
-							Limit:     types.MaxShortTermOrdersPerMarketPerNBlocksLimit + 1,
+							Limit:     types.MaxShortTermOrdersPerNBlocksLimit + 1,
 						},
 					},
 				},
 			},
-			expectedError: fmt.Errorf("%d is not a valid Limit for MaxShortTermOrdersPerMarketPerNBlocks",
-				types.MaxShortTermOrdersPerMarketPerNBlocksLimit+1),
+			expectedError: fmt.Errorf("%d is not a valid Limit for MaxShortTermOrdersPerNBlocks",
+				types.MaxShortTermOrdersPerNBlocksLimit+1),
 		},
 		"max num blocks for stateful order rate limit is greater than max": {
 			genState: &types.GenesisState{
@@ -403,35 +403,35 @@ func TestGenesisState_Validate(t *testing.T) {
 		"max num blocks for short term order cancellation rate limit is greater than max": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrderCancellationsPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
-							NumBlocks: types.MaxShortTermOrderCancellationsPerMarketPerNBlocksNumBlocks + 1,
+							NumBlocks: types.MaxShortTermOrderCancellationsPerNBlocksNumBlocks + 1,
 							Limit:     1,
 						},
 					},
 				},
 			},
-			expectedError: fmt.Errorf("%d is not a valid NumBlocks for MaxShortTermOrderCancellationsPerMarketPerNBlocks",
-				types.MaxShortTermOrdersPerMarketPerNBlocksNumBlocks+1),
+			expectedError: fmt.Errorf("%d is not a valid NumBlocks for MaxShortTermOrderCancellationsPerNBlocks",
+				types.MaxShortTermOrdersPerNBlocksNumBlocks+1),
 		},
 		"max limit for short term order cancellation rate limit is greater than max": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrderCancellationsPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
-							Limit:     types.MaxShortTermOrderCancellationsPerMarketPerNBlocksLimit + 1,
+							Limit:     types.MaxShortTermOrderCancellationsPerNBlocksLimit + 1,
 						},
 					},
 				},
 			},
-			expectedError: fmt.Errorf("%d is not a valid Limit for MaxShortTermOrderCancellationsPerMarketPerNBlocks",
-				types.MaxShortTermOrdersPerMarketPerNBlocksLimit+1),
+			expectedError: fmt.Errorf("%d is not a valid Limit for MaxShortTermOrderCancellationsPerNBlocks",
+				types.MaxShortTermOrdersPerNBlocksLimit+1),
 		},
 		"duplicate short term order rate limit NumBlocks not allowed": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
 							Limit:     1,
@@ -465,7 +465,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		"duplicate short term order cancellation rate limit NumBlocks not allowed": {
 			genState: &types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrderCancellationsPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
 							Limit:     1,
