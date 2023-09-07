@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
@@ -189,6 +190,62 @@ func GetLiquidityTierUpsertEventsFromIndexerBlock(
 		liquidityTierEvents = append(liquidityTierEvents, &liquidityTierEvent)
 	}
 	return liquidityTierEvents
+}
+
+func CreateNPerpetuals(
+	t *testing.T,
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+	pricesKeeper *priceskeeper.Keeper,
+	n int,
+) ([]types.Perpetual, error) {
+	items := make([]types.Perpetual, n)
+	numLiquidityTiers := keeper.GetNumLiquidityTiers(ctx)
+	require.Greater(t, numLiquidityTiers, uint32(0))
+
+	for i := range items {
+		CreateNMarkets(t, ctx, pricesKeeper, n)
+
+		var defaultFundingPpm int32
+		if i%3 == 0 {
+			defaultFundingPpm = 1
+		} else if i%3 == 1 {
+			defaultFundingPpm = -1
+		} else {
+			defaultFundingPpm = 0
+		}
+
+		perpetual, err := keeper.CreatePerpetual(
+			ctx,
+			uint32(i),                        // Id
+			fmt.Sprintf("%v", i),             // Ticker
+			uint32(i),                        // MarketId
+			int32(i),                         // AtomicResolution
+			defaultFundingPpm,                // DefaultFundingPpm
+			uint32(i%int(numLiquidityTiers)), // LiquidityTier
+		)
+		if err != nil {
+			return items, err
+		}
+
+		items[i] = perpetual
+	}
+	return items, nil
+}
+
+func CreateLiquidityTiersAndNPerpetuals(
+	t *testing.T,
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+	pricesKeeper *priceskeeper.Keeper,
+	n int,
+) []types.Perpetual {
+	// Create liquidity tiers.
+	CreateTestLiquidityTiers(t, ctx, keeper)
+	// Create perpetuals.
+	perpetuals, err := CreateNPerpetuals(t, ctx, keeper, pricesKeeper, n)
+	require.NoError(t, err)
+	return perpetuals
 }
 
 // CreateTestPricesAndPerpetualMarkets is a test utility function that creates list of given
