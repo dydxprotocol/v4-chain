@@ -26,17 +26,17 @@ proto-export-deps:
 
 PROTO_DIRS=$(shell find .proto-export-deps -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 
-v4-telescope-py-gen: proto-export-deps
-	@rm -rf ./v4-telescope-py/v4-telescope-py
-	@mkdir -p ./v4-telescope-py/v4-telescope-py
+v4-proto-py-gen: proto-export-deps
+	@rm -rf ./v4-proto-py/v4-proto-py
+	@mkdir -p ./v4-proto-py/v4-proto-py
 	@for dir in $(PROTO_DIRS); do \
 		python3 -m grpc_tools.protoc \
 		-I .proto-export-deps \
-		--python_out=./v4-telescope-py/v4-telescope-py \
-		--pyi_out=./v4-telescope-py/v4-telescope-py \
-		--grpc_python_out=./v4-telescope-py/v4-telescope-py \
+		--python_out=./v4-proto-py/v4-proto-py \
+		--pyi_out=./v4-proto-py/v4-proto-py \
+		--grpc_python_out=./v4-proto-py/v4-proto-py \
 		$$(find ./$${dir} -type f -name '*.proto'); \
 	done; \
-	touch v4-telescope-py/v4-telescope-py/__init__.py
+	touch v4-proto-py/v4-proto-py/__init__.py
 
-.PHONY: proto-format proto-lint proto-check-bc-breaking proto-export proto-export-deps v4-telescope-py-gen
+.PHONY: proto-format proto-lint proto-check-bc-breaking proto-export proto-export-deps v4-proto-py-gen

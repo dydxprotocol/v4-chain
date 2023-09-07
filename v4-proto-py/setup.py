@@ -4,7 +4,7 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(
-    name="v4-telescope-py",
+    name="v4-proto",
     version="0.0.0",
     author="dYdX Trading Inc.",
     author_email="contact@dydx.exchange",
