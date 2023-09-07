@@ -121,11 +121,11 @@ jobs:
         run: |
           twine upload -r pypi dist/*
 
-  v4-telescope-js-release:
+  v4-proto-js-release:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./v4-telescope-js
+        working-directory: ./v4-proto-js
 
     steps:
       - name: Check out repository code
