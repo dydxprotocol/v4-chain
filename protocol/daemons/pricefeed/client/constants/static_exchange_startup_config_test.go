@@ -22,7 +22,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 			exchangeId: exchange_common.EXCHANGE_ID_BINANCE,
 			expectedValue: &types.ExchangeStartupConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_BINANCE,
-				IntervalMs: 4_250,
+				IntervalMs: 2_500,
 				TimeoutMs:  3_000,
 				MaxQueries: 1,
 			},
@@ -32,7 +32,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 			exchangeId: exchange_common.EXCHANGE_ID_BINANCE_US,
 			expectedValue: &types.ExchangeStartupConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_BINANCE_US,
-				IntervalMs: 4_250,
+				IntervalMs: 2_500,
 				TimeoutMs:  3_000,
 				MaxQueries: 1,
 			},

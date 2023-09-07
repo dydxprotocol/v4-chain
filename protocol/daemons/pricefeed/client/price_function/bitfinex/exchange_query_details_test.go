@@ -8,7 +8,7 @@ import (
 )
 
 func TestBitfinexUrl(t *testing.T) {
-	require.Equal(t, "https://api-pub.bitfinex.com/v2/tickers?symbols=$", bitfinex.BitfinexDetails.Url)
+	require.Equal(t, "https://api-pub.bitfinex.com/v2/tickers?symbols=ALL", bitfinex.BitfinexDetails.Url)
 }
 
 func TestBitfinexIsMultiMarket(t *testing.T) {
