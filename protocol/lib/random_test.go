@@ -1,7 +1,8 @@
-package lib
+package lib_test
 
 import (
 	"bytes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"math/rand"
 	"testing"
 
@@ -13,7 +14,7 @@ func TestRandomBool(t *testing.T) {
 	bools := make([]bool, numIterations)
 
 	for i := 0; i < numIterations; i++ {
-		bools[i] = RandomBool()
+		bools[i] = lib.RandomBool()
 	}
 
 	require.Contains(t, bools, true)
@@ -50,7 +51,7 @@ func TestRandomBytesBetween(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			rand := rand.New(rand.NewSource(53))
-			result := RandomBytesBetween(tc.start, tc.end, rand)
+			result := lib.RandomBytesBetween(tc.start, tc.end, rand)
 			require.LessOrEqual(t, tc.start, result)
 			require.GreaterOrEqual(t, tc.end, result)
 		})
@@ -66,10 +67,10 @@ func TestRandomBytesBetween_RandomlyGenerated(t *testing.T) {
 		rand.Read(end)
 		if bytes.Compare(start, end) > 0 {
 			require.Panics(t, func() {
-				RandomBytesBetween(start, end, rand)
+				lib.RandomBytesBetween(start, end, rand)
 			})
 		} else {
-			result := RandomBytesBetween(start, end, rand)
+			result := lib.RandomBytesBetween(start, end, rand)
 			require.LessOrEqual(t, start, result)
 			require.GreaterOrEqual(t, end, result)
 		}
@@ -78,6 +79,6 @@ func TestRandomBytesBetween_RandomlyGenerated(t *testing.T) {
 
 func TestRandomBytesBetween_InvalidInputs(t *testing.T) {
 	require.Panics(t, func() {
-		RandomBytesBetween([]byte{}, []byte{}, nil)
+		lib.RandomBytesBetween([]byte{}, []byte{}, nil)
 	})
 }
