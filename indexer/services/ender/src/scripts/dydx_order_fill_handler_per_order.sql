@@ -66,21 +66,21 @@ BEGIN
       TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
     */
     order_size = dydx_trim_scale(dydx_from_jsonlib_long(order_->'quantums') *
-                                 power(10::numeric, perpetual_market_record."atomicResolution"::numeric));
+                                 power(10, perpetual_market_record."atomicResolution")::numeric);
     order_price = dydx_trim_scale(dydx_from_jsonlib_long(order_->'subticks') *
-                                  power(10::numeric, perpetual_market_record."quantumConversionExponent"::numeric +
-                                                     asset_record."atomicResolution"::numeric -
-                                                     perpetual_market_record."atomicResolution"::numeric));
+                                  power(10, perpetual_market_record."quantumConversionExponent" +
+                                                     asset_record."atomicResolution" -
+                                                     perpetual_market_record."atomicResolution")::numeric);
     fill_amount = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'fillAmount') *
-                                  power(10::numeric, perpetual_market_record."atomicResolution"::numeric));
+                                  power(10, perpetual_market_record."atomicResolution")::numeric);
     maker_price = dydx_trim_scale(dydx_from_jsonlib_long(maker_order->'subticks') *
-                                  power(10::numeric, perpetual_market_record."quantumConversionExponent"::numeric +
-                                                     asset_record."atomicResolution"::numeric -
-                                                     perpetual_market_record."atomicResolution"::numeric));
+                                  power(10, perpetual_market_record."quantumConversionExponent" +
+                                                     asset_record."atomicResolution" -
+                                                     perpetual_market_record."atomicResolution")::numeric);
     total_filled = dydx_trim_scale(get_total_filled(fill_liquidity, event_data) *
-                                   power(10::numeric, perpetual_market_record."atomicResolution"::numeric));
+                                   power(10, perpetual_market_record."atomicResolution")::numeric);
     fee = dydx_trim_scale(get_fee(fill_liquidity, event_data) *
-                          power(10::numeric, asset_record."atomicResolution"::numeric));
+                          power(10, asset_record."atomicResolution")::numeric);
 
     order_uuid = dydx_uuid_from_order_id(order_->'orderId');
     subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));

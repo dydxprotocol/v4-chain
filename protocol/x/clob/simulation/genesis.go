@@ -23,8 +23,10 @@ func genNumClobPairs(r *rand.Rand, isReasonableGenesis bool, numPerpetuals int) 
 	}
 	return simtypes.RandIntBetween(
 		r,
-		sim_helpers.MinValidClobPairs,
-		sim_helpers.MaxValidClobPairs+1,
+		numPerpetuals/2+1,
+		// Since each clob pair is required to have a unique perpetual,
+		// we can't have more clob pairs than perpetuals.
+		numPerpetuals,
 	)
 }
 
@@ -80,17 +82,6 @@ func createPerpetualClobMetadata(perpetualId uint32) types.ClobPair_PerpetualClo
 // CLOB pair.
 func genClobPairToPerpetualSlice(r *rand.Rand, numClobPairs, numPerpetuals int) []uint32 {
 	perpetuals := sim_helpers.MakeRange(uint32(numPerpetuals))
-
-	// Add additional perpetuals if there are more CLOB pairs than perpetuals.
-	if numClobPairs > numPerpetuals {
-		diff := numClobPairs - numPerpetuals
-		extraPerpetuals := make([]uint32, diff)
-		for i := 0; i < diff; i++ {
-			randomIdx := simtypes.RandIntBetween(r, 0, numPerpetuals)
-			extraPerpetuals[i] = perpetuals[randomIdx]
-		}
-		perpetuals = append(perpetuals, extraPerpetuals...)
-	}
 
 	// Shuffle perpetuals, so we randomize which `ClobPair` gets matched with which `Perpetual`.
 	r.Shuffle(numPerpetuals, func(i, j int) { perpetuals[i], perpetuals[j] = perpetuals[j], perpetuals[i] })

@@ -128,7 +128,23 @@ describe('market-updater', () => {
     };
     expect(
       getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
-    ).toEqual('1.000000');
+    ).toEqual('1');
+    expect(
+      getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
+    ).toEqual(undefined);
+  });
+
+  it('getPriceChange with prices < 1e-6', () => {
+    const latestPrices: PriceMap = {
+      [testConstants.defaultOraclePrice.marketId]: '0.00000008',
+      [testConstants.defaultOraclePrice2.marketId]: '0.00000009',
+    };
+    const previousPrices: PriceMap = {
+      [testConstants.defaultOraclePrice.marketId]: '0.00000007',
+    };
+    expect(
+      getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
+    ).toEqual('0.00000001');
     expect(
       getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
     ).toEqual(undefined);
@@ -202,7 +218,7 @@ describe('market-updater', () => {
       trades24H: 0,
       volume24H: '0',
       openInterest: '0',
-      priceChange24H: '2.000000',
+      priceChange24H: '2',
     };
     newPerpetualMarketMap[testConstants.defaultPerpetualMarket2.id] = {
       ...perpetualMarketMap[testConstants.defaultPerpetualMarket2.id],

@@ -120,7 +120,7 @@ func TestGenesis(t *testing.T) {
 					{
 						Metadata: &types.ClobPair_PerpetualClobMetadata{
 							PerpetualClobMetadata: &types.PerpetualClobMetadata{
-								PerpetualId: 0,
+								PerpetualId: 1,
 							},
 						},
 						Id:               uint32(1),

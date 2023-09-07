@@ -214,7 +214,7 @@ export type OraclePriceMarketMessageContentsMapping = {
 };
 
 export interface OraclePriceMarket {
-  price: string,
+  oraclePrice: string,
   effectiveAt: IsoString,
   effectiveAtHeight: string,
   marketId: number,

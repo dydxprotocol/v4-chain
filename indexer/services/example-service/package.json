@@ -14,7 +14,7 @@
     "test": "NODE_ENV=test jest --runInBand --forceExit"
   },
   "author": "",
-  "license": "ISC",
+  "license": "BSL",
   "dependencies": {
     "dotenv-flow": "^3.2.0"
   },

@@ -321,6 +321,10 @@ func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOper
 		}
 	}
 
+	if err := liquidationMatch.Liquidated.Validate(); err != nil {
+		return err
+	}
+
 	if bigQuantumsFilled.Cmp(new(big.Int).SetUint64(totalSize)) == 1 {
 		return sdkerrors.Wrapf(
 			ErrTotalFillAmountExceedsOrderSize,
