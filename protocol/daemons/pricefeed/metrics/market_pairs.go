@@ -6,9 +6,17 @@ import (
 )
 
 var (
-	// marketToPair is a map of marketId to marketPair strings used for labelling metrics.
+	// marketToPair maps live marketIds to marketPair strings and is used for labelling metrics.
 	// This map is populated whenever markets are created or updated and access to this map is
 	// synchronized by the below mutex.
+	// The most correct approach here would be to get the marketPair from current chain state, so that
+	// we do not accidentally capture outdated or incorrect labels for market updates from rejected blocks.
+	// (A rejected block with a market creation should not present a problem as we will not log regular
+	// metrics for this market id unless it is later re-assigned - and re-updated.) However, these labels
+	// are used across the prices keeper, daemon, and daemon server code, so there is motive to avoid
+	// a solution that requires propagating references to centralized state. Furthermore, we judge that
+	// these market pairs are very unlikely to be updated, so this solution, while not perfect, is
+	// acceptable for the use case of logging/metrics in order to manage code complexity.
 	marketToPair = map[types.MarketId]string{}
 	// lock syncronizes access to the marketToPair map.
 	lock sync.RWMutex
