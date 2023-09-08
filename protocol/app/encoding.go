@@ -18,9 +18,11 @@ func GetEncodingConfig() params.EncodingConfig {
 func MakeEncodingConfig() params.EncodingConfig {
 	encodingConfig := params.MakeEncodingConfig()
 
+	// This is currently required in order to support various CLI commands such as the `dydxprotocold status` command.
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
+	// Skipping `ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)` because it's not needed.
 	basic_manager.ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
 	return encodingConfig
