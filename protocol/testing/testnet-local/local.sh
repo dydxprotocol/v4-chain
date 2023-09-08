@@ -101,6 +101,7 @@ create_validators() {
 		# Note: `edit_genesis` must be called before `add-genesis-account`.
 		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" "" ""
 		update_genesis_use_test_volatile_market "$VAL_CONFIG_DIR"
+		update_genesis_reduced_complete_bridge_delay "$VAL_CONFIG_DIR" "30"
 
 		echo "${MNEMONICS[$i]}" | dydxprotocold keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$VAL_HOME_DIR"
 
