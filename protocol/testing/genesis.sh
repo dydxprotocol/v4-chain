@@ -1483,7 +1483,7 @@ function update_genesis_use_test_volatile_market() {
 }
 
 # Modify the genesis file with reduced complete bridge delay (for testing in non-prod envs).
-update_genesis_reduced_complete_bridge_delay() {
+update_genesis_complete_bridge_delay() {
 	GENESIS=$1/genesis.json
 
 	# Reduce complete bridge delay to 600 blocks.

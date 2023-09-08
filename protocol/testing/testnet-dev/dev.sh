@@ -136,7 +136,7 @@ create_validators() {
 		# Note: `edit_genesis` must be called before `add-genesis-account`.
 		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" "" ""
 		update_genesis_use_test_volatile_market "$VAL_CONFIG_DIR"
-		update_genesis_reduced_complete_bridge_delay "$VAL_CONFIG_DIR" "600"
+		update_genesis_complete_bridge_delay "$VAL_CONFIG_DIR" "600"
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
 			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,100000000000$NATIVE_TOKEN --home "$VAL_HOME_DIR"
