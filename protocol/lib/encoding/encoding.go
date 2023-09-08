@@ -10,7 +10,7 @@ import (
 )
 
 // MakeEncodingConfig creates an EncodingConfig.
-func MakeEncodingConfig(moduleBasics module.BasicManager) params.EncodingConfig {
+func a(moduleBasics module.BasicManager) params.EncodingConfig {
 	amino := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
