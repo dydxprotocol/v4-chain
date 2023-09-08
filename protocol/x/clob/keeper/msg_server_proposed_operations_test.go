@@ -1,11 +1,11 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	keeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -63,7 +63,7 @@ func TestProposedOperations(t *testing.T) {
 			if tc.shouldPanic {
 				require.PanicsWithError(
 					t,
-					sdkerrors.Wrapf(
+					errorsmod.Wrapf(
 						tc.expectedErr,
 						"Block height: %d",
 						blockHeight,

@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"LDOUSDT\"",
+      "ticker": "LDOUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {

@@ -6,17 +6,11 @@ import (
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/go-playground/validator/v10"
-	"io"
 	"net/http"
 	"strings"
 )
 
-var (
-	validate *validator.Validate
-)
-
-// https://api.kraken.com/0/public/Ticker?pair=$
+// https://api.kraken.com/0/public/Ticker
 // https://docs.kraken.com/rest/#tag/Market-Data/operation/getTickerInformation
 type KrakenTickerResult struct {
 	pair            string
@@ -54,35 +48,6 @@ type KrakenResponseBody struct {
 	Tickers map[string]KrakenTickerResult `validate:"required_without=Errors,excluded_with=Errors,dive" json:"result"`
 }
 
-// unmarshalKrakenResponse converts a raw JSON string representation of the ticker REST API response from
-// Kraken into a strongly typed struct representation of relevant response fields.
-func unmarshalKrakenResponse(body io.ReadCloser) (*KrakenResponseBody, error) {
-	var responseBody KrakenResponseBody
-	err := json.NewDecoder(body).Decode(&responseBody)
-	if err != nil {
-		return nil, fmt.Errorf("kraken API response JSON parse error (%w)", err)
-	}
-
-	// The Kraken API will return an empty list of errors with an API result containing valid tickers. However, it's
-	// easier for us to validate that there were no errors if this field is set to nil whenever it's empty.
-	if len(responseBody.Errors) == 0 {
-		responseBody.Errors = nil
-	}
-
-	if validate == nil {
-		validate, err = price_function.GetApiResponseValidator()
-		if err != nil {
-			return nil, fmt.Errorf("Error creating API response validator (%w)", err)
-		}
-	}
-
-	err = validate.Struct(responseBody)
-	if err != nil {
-		return nil, fmt.Errorf("kraken API response validation error (%w)", err)
-	}
-	return &responseBody, nil
-}
-
 // KrakenPriceFunction transforms an API response from Kraken into a map of tickers to prices that have been
 // shifted by a market-specific exponent.
 func KrakenPriceFunction(
@@ -90,9 +55,14 @@ func KrakenPriceFunction(
 	tickerToExponent map[string]int32,
 	medianizer lib.Medianizer,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
-	responseBody, err := unmarshalKrakenResponse(response.Body)
-	if err != nil {
+	var responseBody KrakenResponseBody
+	if err := json.NewDecoder(response.Body).Decode(&responseBody); err != nil {
 		return nil, nil, err
+	}
+	// The Kraken API will return an empty list of errors with an API result containing valid tickers. However, it's
+	// easier for us to validate that there were no errors if this field is set to nil whenever it's empty.
+	if len(responseBody.Errors) == 0 {
+		responseBody.Errors = nil
 	}
 
 	if len(responseBody.Errors) > 0 {

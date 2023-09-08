@@ -67,4 +67,14 @@ type PerpetualsKeeper interface {
 	) (
 		err error,
 	)
+	HasAuthority(authority string) bool
+	CreatePerpetual(
+		ctx sdk.Context,
+		id uint32,
+		ticker string,
+		marketId uint32,
+		atomicResolution int32,
+		defaultFundingPpm int32,
+		liquidityTier uint32,
+	) (Perpetual, error)
 }

@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"AVAXUSDT\"",
+      "ticker": "AVAXUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {

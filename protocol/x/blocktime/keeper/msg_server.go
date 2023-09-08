@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -29,7 +29,7 @@ func (k msgServer) UpdateDowntimeParams(
 	msg *types.MsgUpdateDowntimeParams,
 ) (*types.MsgUpdateDowntimeParamsResponse, error) {
 	if !k.HasAuthority(msg.Authority) {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority %s",
 			msg.Authority,

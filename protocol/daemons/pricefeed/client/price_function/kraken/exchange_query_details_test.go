@@ -8,7 +8,7 @@ import (
 )
 
 func TestKrakenUrl(t *testing.T) {
-	require.Equal(t, "https://api.kraken.com/0/public/Ticker?pair=$", kraken.KrakenDetails.Url)
+	require.Equal(t, "https://api.kraken.com/0/public/Ticker", kraken.KrakenDetails.Url)
 }
 
 func TestKrakenIsMultiMarket(t *testing.T) {

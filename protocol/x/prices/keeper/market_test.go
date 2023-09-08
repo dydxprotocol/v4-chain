@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -70,21 +70,21 @@ func TestCreateMarket_Errors(t *testing.T) {
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(50),
 			price:             constants.FiveBillion,
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, constants.ErrorMsgMarketPairCannotBeEmpty).Error(),
+			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgMarketPairCannotBeEmpty).Error(),
 		},
 		"Invalid min price change: zero": {
 			pair:              constants.BtcUsdPair,
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(0), // must be > 0
 			price:             constants.FiveBillion,
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
+			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
 		"Invalid min price change: ten thousand": {
 			pair:              constants.BtcUsdPair,
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(10_000), // must be < 10,000
 			price:             constants.FiveBillion,
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
+			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
 		"Min exchanges cannot be zero": {
 			pair:              constants.BtcUsdPair,
@@ -99,7 +99,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 			minPriceChangePpm:                     uint32(50),
 			price:                                 constants.FiveBillion,
 			marketPriceIdDoesntMatchMarketParamId: true,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidInput,
 				"market param id 0 does not match market price id 1",
 			).Error(),
@@ -110,7 +110,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 			minPriceChangePpm: uint32(50),
 			price:             constants.FiveBillion,
 			marketPriceExponentDoesntMatchMarketParamExponent: true,
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidInput,
 				"market param 0 exponent -6 does not match market price 0 exponent -5",
 			).Error(),
@@ -120,7 +120,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(50),
 			price:             uint64(0),
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, "market 0 price cannot be zero").Error(),
+			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, "market 0 price cannot be zero").Error(),
 		},
 	}
 	for name, tc := range tests {
@@ -160,7 +160,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 			require.EqualError(
 				t,
 				err,
-				sdkerrors.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(0)).Error(),
+				errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(0)).Error(),
 			)
 
 			// Verify no new market event.

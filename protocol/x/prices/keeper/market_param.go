@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -36,7 +36,7 @@ func (k Keeper) ModifyMarketParam(
 	// Validate update is permitted.
 	if marketParam.Exponent != existingParam.Exponent {
 		return types.MarketParam{},
-			sdkerrors.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.Uint32ToString(marketParam.Id))
+			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.Uint32ToString(marketParam.Id))
 	}
 
 	// Store the modified market param.
@@ -67,7 +67,7 @@ func (k Keeper) GetMarketParam(
 	marketParamStore := k.newMarketParamStore(ctx)
 	b := marketParamStore.Get(types.MarketKey(id))
 	if b == nil {
-		return types.MarketParam{}, sdkerrors.Wrap(types.ErrMarketParamDoesNotExist, lib.Uint32ToString(id))
+		return types.MarketParam{}, errorsmod.Wrap(types.ErrMarketParamDoesNotExist, lib.Uint32ToString(id))
 	}
 
 	var market = types.MarketParam{}

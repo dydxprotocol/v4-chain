@@ -130,7 +130,7 @@ export interface MsgCancelOrderResponseSDKType {}
 export interface MsgUpdateClobPair {
   /** Authority is the address that may send this message. */
   authority: string;
-  /** clob_pair is the ClobPair to write to state. */
+  /** `clob_pair` is the ClobPair to write to state. */
 
   clobPair?: ClobPair;
 }
@@ -139,7 +139,7 @@ export interface MsgUpdateClobPair {
 export interface MsgUpdateClobPairSDKType {
   /** Authority is the address that may send this message. */
   authority: string;
-  /** clob_pair is the ClobPair to write to state. */
+  /** `clob_pair` is the ClobPair to write to state. */
 
   clob_pair?: ClobPairSDKType;
 }

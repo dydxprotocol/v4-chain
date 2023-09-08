@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"google.golang.org/grpc/codes"
@@ -58,7 +58,7 @@ func (k Keeper) MarketPrice(
 		req.Id,
 	)
 	if err != nil {
-		if sdkerrors.IsOf(err, types.ErrMarketPriceDoesNotExist) {
+		if errorsmod.IsOf(err, types.ErrMarketPriceDoesNotExist) {
 			return nil, status.Error(codes.NotFound, "not found")
 		} else {
 			return nil, status.Error(codes.Internal, "unknown error getting market price")
@@ -115,7 +115,7 @@ func (k Keeper) MarketParam(
 		req.Id,
 	)
 	if err != nil {
-		if sdkerrors.IsOf(err, types.ErrMarketParamDoesNotExist) {
+		if errorsmod.IsOf(err, types.ErrMarketParamDoesNotExist) {
 			return nil, status.Error(codes.NotFound, "not found")
 		} else {
 			return nil, status.Error(codes.Internal, "unknown error getting market param")
