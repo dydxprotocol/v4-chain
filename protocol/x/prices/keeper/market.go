@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -58,7 +58,7 @@ func (k Keeper) GetAllMarketParamPrices(ctx sdk.Context) ([]types.MarketParamPri
 	marketPrices := k.GetAllMarketPrices(ctx)
 
 	if len(marketParams) != len(marketPrices) {
-		return nil, sdkerrors.Wrap(types.ErrMarketPricesAndParamsDontMatch, "market param and price lengths do not match")
+		return nil, errorsmod.Wrap(types.ErrMarketPricesAndParamsDontMatch, "market param and price lengths do not match")
 	}
 
 	marketParamPrices := make([]types.MarketParamPrice, len(marketParams))
@@ -66,7 +66,7 @@ func (k Keeper) GetAllMarketParamPrices(ctx sdk.Context) ([]types.MarketParamPri
 		marketParamPrices[i].Param = param
 		price := marketPrices[i]
 		if param.Id != price.Id {
-			return nil, sdkerrors.Wrap(types.ErrMarketPricesAndParamsDontMatch,
+			return nil, errorsmod.Wrap(types.ErrMarketPricesAndParamsDontMatch,
 				fmt.Sprintf("market param and price ids do not match: %d != %d", param.Id, price.Id))
 		}
 		marketParamPrices[i].Price = price
@@ -83,7 +83,7 @@ func (k Keeper) GetNumMarkets(
 	marketPrices := k.GetAllMarketPrices(ctx)
 
 	if len(marketParams) != len(marketPrices) {
-		panic(sdkerrors.Wrap(types.ErrMarketPricesAndParamsDontMatch, "market param and price lengths do not match"))
+		panic(errorsmod.Wrap(types.ErrMarketPricesAndParamsDontMatch, "market param and price lengths do not match"))
 	}
 
 	return lib.MustConvertIntegerToUint32(len(marketParams))

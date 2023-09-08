@@ -1,11 +1,11 @@
 package rate_limit
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -99,7 +99,7 @@ func (r *multiBlockRateLimiter[K]) RateLimit(ctx sdk.Context, key K) error {
 	// Check the accumulated rate limit count to see if any rate limit has been exceeded.
 	for i, rl := range r.config {
 		if perRateLimitCounts[i] > rl.Limit {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrBlockRateLimitExceeded,
 				"Rate of %d exceeds configured block rate limit of %+v for %s and %+v",
 				perRateLimitCounts[i],

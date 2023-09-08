@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -14,7 +15,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -170,7 +170,7 @@ func (k Keeper) GetVestEntry(ctx sdk.Context, vesterAccount string) (
 
 	// If VestEntry does not exist in state, return error
 	if b == nil {
-		return types.VestEntry{}, sdkerrors.Wrapf(types.ErrVestEntryNotFound, "vesterAccount: %s", vesterAccount)
+		return types.VestEntry{}, errorsmod.Wrapf(types.ErrVestEntryNotFound, "vesterAccount: %s", vesterAccount)
 	}
 
 	k.cdc.MustUnmarshal(b, &val)
@@ -202,7 +202,7 @@ func (k Keeper) DeleteVestEntry(
 	err error,
 ) {
 	if _, err := k.GetVestEntry(ctx, vesterAccount); err != nil {
-		return sdkerrors.Wrap(err, "failed to delete vest entry")
+		return errorsmod.Wrap(err, "failed to delete vest entry")
 	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VestEntryKeyPrefix))
 	store.Delete(types.VestEntryKey(vesterAccount))

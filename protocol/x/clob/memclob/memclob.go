@@ -1,6 +1,7 @@
 package memclob
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math/big"
@@ -12,7 +13,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -1259,7 +1259,7 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		// If the cancelation has an equal-to-or-greater `GoodTilBlock` than the new order, return an error.
 		// If the cancelation has a lesser `GoodTilBlock` than the new order, we do not remove the cancelation.
 		if cancelTilBlock, cancelExists := m.cancels.get(orderId); cancelExists && cancelTilBlock >= order.GetGoodTilBlock() {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrOrderIsCanceled,
 				"Order: %+v, Cancellation GoodTilBlock: %d",
 				order,
@@ -1314,7 +1314,7 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
 	remainingAmount, hasRemainingAmount := m.getOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrOrderFullyFilled,
 			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
 			remainingAmount,
@@ -2136,7 +2136,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 
 	// Check the `ClobPair` is a perpetual.
 	if clobPair.GetPerpetualClobMetadata() == nil {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrPremiumWithNonPerpetualClobPair,
 			"ClobPair ID: %d",
 			clobPair.Id,
@@ -2154,7 +2154,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 
 	// Check `indexPriceSubticks` is non-zero.
 	if indexPriceSubticks.Sign() == 0 {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrZeroIndexPriceForPremiumCalculation,
 			"market = %+v, clobPair = %+v, baseAtomicResolution = %d, quoteAtomicResolution = %d",
 			params.MarketPrice,

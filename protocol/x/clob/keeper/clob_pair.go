@@ -1,12 +1,12 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -33,7 +33,7 @@ func (k Keeper) CreatePerpetualClobPair(
 ) (types.ClobPair, error) {
 	// If the desired CLOB pair ID is already in use, return an error.
 	if clobPair, exists := k.GetClobPair(ctx, types.ClobPairId(clobPairId)); exists {
-		return types.ClobPair{}, sdkerrors.Wrapf(
+		return types.ClobPair{}, errorsmod.Wrapf(
 			types.ErrClobPairAlreadyExists,
 			"id=%v, existing clob pair=%v",
 			clobPairId,
@@ -43,7 +43,7 @@ func (k Keeper) CreatePerpetualClobPair(
 
 	// Verify the perpetual ID is not already associated with an existing CLOB pair.
 	if clobPairId, found := k.PerpetualIdToClobPairId[perpetualId]; found {
-		return types.ClobPair{}, sdkerrors.Wrapf(
+		return types.ClobPair{}, errorsmod.Wrapf(
 			types.ErrPerpetualAssociatedWithExistingClobPair,
 			"perpetual id=%v, existing clob pair id=%v",
 			perpetualId,
@@ -111,7 +111,7 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 	case *types.ClobPair_PerpetualClobMetadata:
 		perpetualId, err := clobPair.GetPerpetualId()
 		if err != nil {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				err,
 				"CLOB pair (%+v) has invalid perpetual.",
 				clobPair,
@@ -119,14 +119,14 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 		}
 		// Validate the perpetual referenced by the CLOB pair exists.
 		if _, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId); err != nil {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				err,
 				"CLOB pair (%+v) has invalid perpetual.",
 				clobPair,
 			)
 		}
 	default:
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidClobPairParameter,
 			// TODO(DEC-1535): update this error message when we implement "spot"/"asset" clob pairs.
 			"CLOB pair (%+v) is not a perpetual CLOB.",
@@ -209,7 +209,7 @@ func (k Keeper) GetClobPairIdForPerpetual(
 ) {
 	clobPairIds, exists := k.PerpetualIdToClobPairId[perpetualId]
 	if !exists {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrNoClobPairForPerpetual,
 			"Perpetual ID %d has no associated CLOB pairs",
 			perpetualId,
@@ -303,7 +303,7 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 		// from controlling the price at which new orders can be placed. This is necessary when all orders
 		// are post-only.
 		if order.IsStatefulOrder() {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrOrderConflictsWithClobPairStatus,
 				"Order %+v must not be stateful for clob pair with status %+v",
 				order,
@@ -314,7 +314,7 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 		// Reject non-post-only orders. During the initializing phase we only allow post-only orders.
 		// This allows liquidity to build around the oracle price without any real trading happening.
 		if order.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrOrderConflictsWithClobPairStatus,
 				"Order %+v must be post-only for clob pair with status %+v",
 				order,
@@ -329,7 +329,7 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 		currentOraclePriceSubticks := lib.BigRatRound(currentOraclePriceSubticksRat, false).Uint64()
 		// Throw error if order is a buy and order subticks is greater than oracle price subticks
 		if order.IsBuy() && order.Subticks > currentOraclePriceSubticks {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrOrderConflictsWithClobPairStatus,
 				"Order subticks %+v must be less than or equal to oracle price subticks %+v for clob pair with status %+v",
 				order.Subticks,
@@ -339,7 +339,7 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 		}
 		// Throw error if order is a sell and order subticks is less than oracle price subticks
 		if !order.IsBuy() && order.Subticks < currentOraclePriceSubticks {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrOrderConflictsWithClobPairStatus,
 				"Order subticks %+v must be greater than or equal to oracle price subticks %+v for clob pair with status %+v",
 				order.Subticks,
@@ -395,25 +395,25 @@ func (k Keeper) UpdateClobPair(
 	// Note, only perpetual clob pairs are currently supported. Neither the old nor the
 	// new clob pair should be spot.
 	if clobPair.MustGetPerpetualId() != oldClobPair.MustGetPerpetualId() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			types.ErrInvalidClobPairUpdate,
 			"UpdateClobPair: cannot update ClobPair perpetual id",
 		)
 	}
 	if clobPair.StepBaseQuantums != oldClobPair.StepBaseQuantums {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidClobPairUpdate,
 			"UpdateClobPair: cannot update ClobPair step base quantums",
 		)
 	}
 	if clobPair.SubticksPerTick != oldClobPair.SubticksPerTick {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidClobPairUpdate,
 			"UpdateClobPair: cannot update ClobPair subticks per tick",
 		)
 	}
 	if clobPair.QuantumConversionExponent != oldClobPair.QuantumConversionExponent {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidClobPairUpdate,
 			"UpdateClobPair: cannot update ClobPair quantum conversion exponent",
 		)
@@ -422,7 +422,7 @@ func (k Keeper) UpdateClobPair(
 	oldStatus := oldClobPair.Status
 	newStatus := clobPair.Status
 	if oldStatus != newStatus && !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidClobPairStatusTransition,
 			"Cannot transition from status %+v to status %+v",
 			oldStatus,
@@ -501,7 +501,7 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 	// Fail if the ClobPair cannot be found.
 	clobPair, found := k.GetClobPair(ctx, clobPairId)
 	if !found {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidClob,
 			"CLOB pair ID %d not found in state",
 			clobPairId,
@@ -519,7 +519,7 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 	switch clobPair.Status {
 	case types.ClobPair_STATUS_INITIALIZING:
 		// All operations are invalid for initializing clob pairs.
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrOperationConflictsWithClobPairStatus,
 			"Operation %s invalid for ClobPair with id %d with status %s",
 			internalOperation.GetInternalOperationTextString(),
@@ -544,7 +544,7 @@ func (k Keeper) IsPerpetualClobPairActive(
 
 	clobPair, found := k.GetClobPair(ctx, clobPairId)
 	if !found {
-		return false, sdkerrors.Wrapf(
+		return false, errorsmod.Wrapf(
 			types.ErrInvalidClob,
 			"GetPerpetualClobPairStatus: did not find clob pair with id = %d",
 			clobPairId,

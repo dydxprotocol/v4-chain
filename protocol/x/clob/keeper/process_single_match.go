@@ -1,13 +1,13 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -69,7 +69,7 @@ func (k Keeper) ProcessSingleMatch(
 
 	// Perform stateless validation on the match.
 	if err := matchWithOrders.Validate(); err != nil {
-		return false, takerUpdateResult, makerUpdateResult, nil, sdkerrors.Wrapf(
+		return false, takerUpdateResult, makerUpdateResult, nil, errorsmod.Wrapf(
 			err,
 			"ProcessSingleMatch: Invalid MatchWithOrders: %+v",
 			matchWithOrders,
@@ -410,7 +410,7 @@ func (k Keeper) persistMatchedOrders(
 		lib.UsdcAssetId,
 		bigTotalFeeQuoteQuantums,
 	); err != nil {
-		return takerUpdateResult, makerUpdateResult, sdkerrors.Wrapf(
+		return takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
 			types.ErrSubaccountFeeTransferFailed,
 			"persistMatchedOrders: subaccounts (%v, %v) updated, but fee transfer (bigFeeQuoteQuantums: %v)"+
 				" to fee-collector failed. Err: %v",
@@ -531,7 +531,7 @@ func getUpdatedOrderFillAmount(
 	bigCurrentFillAmount := currentFillAmount.ToBigInt()
 	bigNewFillAmount := bigCurrentFillAmount.Add(bigCurrentFillAmount, fillQuantums.ToBigInt())
 	if bigNewFillAmount.Cmp(orderBaseQuantums.ToBigInt()) == 1 {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrInvalidMsgProposedOperations,
 			"Match with Quantums %v would exceed total Quantums %v of OrderId %v. New total filled quantums would be %v.",
 			fillQuantums,

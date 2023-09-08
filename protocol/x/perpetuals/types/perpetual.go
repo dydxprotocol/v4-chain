@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/pkg/errors"
 )
@@ -20,7 +20,7 @@ func (p *PerpetualParams) Validate() error {
 	// Validate `defaultFundingPpm`
 	defaultFundingPpm := lib.AbsInt32(p.DefaultFundingPpm)
 	if defaultFundingPpm > MaxDefaultFundingPpmAbs {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			ErrDefaultFundingPpmMagnitudeExceedsMax,
 			lib.Int32ToString(p.DefaultFundingPpm))
 	}

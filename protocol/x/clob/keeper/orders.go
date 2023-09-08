@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -9,7 +10,6 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -223,7 +223,7 @@ func (k Keeper) PlaceStatefulOrder(
 	)
 
 	if !successPerSubaccountUpdate[order.OrderId.SubaccountId].IsSuccess() {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrStatefulOrderCollateralizationCheckFailed,
 			"PlaceStatefulOrder: order (%+v), result (%s)",
 			order,
@@ -532,7 +532,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		// than the previous block time plus `StatefulOrderTimeWindow`.
 		endTime := previousBlockTime.Add(types.StatefulOrderTimeWindow)
 		if cancelGoodTilBlockTime > lib.MustConvertIntegerToUint32(endTime.Unix()) {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
 				"GoodTilBlockTime %v exceeds the previous blockTime plus StatefulOrderTimeWindow %v. MsgCancelOrder: %+v",
 				cancelGoodTilBlockTime,
@@ -545,7 +545,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		// existing uncommitted cancellation for this order ID.
 		existingCancellation, uncommittedCancelExists := k.GetUncommittedStatefulOrderCancellation(ctx, orderIdToCancel)
 		if uncommittedCancelExists {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrStatefulOrderCancellationAlreadyExists,
 				"An uncommitted stateful order cancellation with this OrderId already exists and stateful "+
 					"order cancellation replacement is not supported. Existing order cancellation GoodTilBlockTime "+
@@ -566,7 +566,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 			statefulOrderPlacement, orderToCancelExists = k.GetUncommittedStatefulOrderPlacement(ctx, orderIdToCancel)
 
 			if !orderToCancelExists {
-				return sdkerrors.Wrapf(
+				return errorsmod.Wrapf(
 					types.ErrStatefulOrderDoesNotExist,
 					"Order Id to cancel does not exist. OrderId : %+v",
 					orderIdToCancel,
@@ -578,7 +578,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		existingStatefulOrder := statefulOrderPlacement.Order
 		// Return an error if cancellation's GTBT is less than stateful order's GTBT.
 		if cancelGoodTilBlockTime < existingStatefulOrder.GetGoodTilBlockTime() {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrInvalidStatefulOrderCancellation,
 				"cancellation goodTilBlockTime less than stateful order goodTilBlockTime."+
 					" cancellation %+v, order %+v",
@@ -637,7 +637,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 	)
 	clobPair, found := k.GetClobPair(ctx, order.GetClobPairId())
 	if !found {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidClob,
 			"Clob %v is not a valid clob",
 			order.GetClobPairId(),
@@ -645,7 +645,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	if order.Subticks%uint64(clobPair.SubticksPerTick) != 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidPlaceOrder,
 			"Order subticks %v must be a multiple of the ClobPair's SubticksPerTick %v",
 			order.Subticks,
@@ -654,7 +654,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	if order.Quantums%clobPair.StepBaseQuantums != 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidPlaceOrder,
 			"Order Quantums %v must be a multiple of the ClobPair's StepBaseQuantums %v",
 			order.Quantums,
@@ -681,7 +681,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 
 		// Return an error if `goodTilBlock` is in the past.
 		if goodTilBlock < blockHeight {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrHeightExceedsGoodTilBlock,
 				"GoodTilBlock %v is less than the current blockHeight %v",
 				goodTilBlock,
@@ -691,7 +691,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 
 		// Return an error if `goodTilBlock` is further into the future than `ShortBlockWindow`.
 		if goodTilBlock > types.ShortBlockWindow+blockHeight {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrGoodTilBlockExceedsShortBlockWindow,
 				"The GoodTilBlock %v exceeds the current blockHeight %v plus ShortBlockWindow %v",
 				goodTilBlock,
@@ -707,7 +707,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		// Return an error if `goodTilBlockTime` is less than or equal to the
 		// block time of the previous block.
 		if goodTilBlockTimeUnix <= previousBlockTimeUnix {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrTimeExceedsGoodTilBlockTime,
 				"GoodTilBlockTime %v is less than the previous blockTime %v",
 				goodTilBlockTimeUnix,
@@ -721,7 +721,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 			previousBlockTime.Add(types.StatefulOrderTimeWindow).Unix(),
 		)
 		if goodTilBlockTimeUnix > endTimeUnix {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
 				"GoodTilBlockTime %v exceeds the previous blockTime plus StatefulOrderTimeWindow %v",
 				goodTilBlockTimeUnix,
@@ -734,7 +734,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		// TODO(DEC-1238): Support stateful order replacements.
 		if uncommittedCancel, uncommittedCancelExists := k.GetUncommittedStatefulOrderCancellation(
 			ctx, order.OrderId); uncommittedCancelExists {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrStatefulOrderPreviouslyCancelled,
 				"An uncommitted stateful order cancellation with this OrderId already exists. "+
 					"Existing order cancellation: (%+v). New order: (%+v).",
@@ -748,7 +748,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		statefulOrderPlacement, found := k.GetUncommittedStatefulOrderPlacement(ctx, order.OrderId)
 		if !isPreexistingStatefulOrder && found {
 			existingOrder := statefulOrderPlacement.GetOrder()
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrStatefulOrderAlreadyExists,
 				"An uncommitted stateful order with this OrderId already exists and stateful order replacement is not supported. "+
 					"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
@@ -780,7 +780,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		// TODO(DEC-1238): Support stateful order replacements.
 		if !isPreexistingStatefulOrder && found {
 			existingOrder := statefulOrderPlacement.GetOrder()
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrStatefulOrderAlreadyExists,
 				"A stateful order with this OrderId already exists and stateful order replacement is not supported. "+
 					"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
@@ -794,7 +794,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 
 		if order.IsConditionalOrder() {
 			if order.ConditionalOrderTriggerSubticks%uint64(clobPair.SubticksPerTick) != 0 {
-				return sdkerrors.Wrapf(
+				return errorsmod.Wrapf(
 					types.ErrInvalidPlaceOrder,
 					"Conditional order trigger subticks %v must be a multiple of the ClobPair's SubticksPerTick %v",
 					order.ConditionalOrderTriggerSubticks,
@@ -831,7 +831,7 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 	// Validate that the reduce-only order is on the opposite side of the existing position.
 	if order.IsBuy() {
 		if currentPositionSize.Sign() != -1 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrReduceOnlyWouldIncreasePositionSize,
 				"Reduce-only order failed validation while matching. Order: (%+v), position-size: (%+v)",
 				order,
@@ -840,7 +840,7 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 		}
 	} else {
 		if currentPositionSize.Sign() != 1 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrReduceOnlyWouldIncreasePositionSize,
 				"Reduce-only order failed validation while matching. Order: (%+v), position-size: (%+v)",
 				order,
@@ -852,7 +852,7 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 	// Validate that the reduce-only order does not change the subaccount's position side.
 	bigMatchedAmount := new(big.Int).SetUint64(matchedAmount)
 	if bigMatchedAmount.CmpAbs(currentPositionSize) == 1 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrReduceOnlyWouldChangePositionSide,
 			"Current position size: %v, reduce-only order fill amount: %v",
 			currentPositionSize,
@@ -938,7 +938,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 				)
 			} else if err != nil {
 				panic(
-					sdkerrors.Wrapf(
+					errorsmod.Wrapf(
 						err,
 						"perpetual id = (%d), oracle price = (%+v), is buy = (%t)",
 						perpetualId,
@@ -1017,7 +1017,7 @@ func (k Keeper) GetOraclePriceSubticksRat(ctx sdk.Context, clobPair types.ClobPa
 	perpetual, marketPrice, err := k.perpetualsKeeper.GetPerpetualAndMarketPrice(ctx, perpetualId)
 	// If an error is returned, this implies stateful order validation was not performed properly, therefore panic.
 	if err != nil {
-		panic(sdkerrors.Wrapf(err, "perpetual ID = (%d)", perpetualId))
+		panic(errorsmod.Wrapf(err, "perpetual ID = (%d)", perpetualId))
 	}
 
 	// Get the oracle price for the market.
@@ -1029,7 +1029,7 @@ func (k Keeper) GetOraclePriceSubticksRat(ctx sdk.Context, clobPair types.ClobPa
 	)
 	if oraclePriceSubticksRat.Cmp(big.NewRat(0, 1)) == 0 {
 		panic(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrZeroPriceForOracle,
 				"clob pair ID = (%d), perpetual ID = (%d), market ID = (%d)",
 				clobPair.Id,
@@ -1056,7 +1056,7 @@ func (k Keeper) GetStatePosition(ctx sdk.Context, subaccountId satypes.Subaccoun
 	perpetualId, err := clobPair.GetPerpetualId()
 	if err != nil {
 		panic(
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				err,
 				"GetStatePosition: Reduce-only orders for assets not implemented",
 			),

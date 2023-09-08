@@ -1,6 +1,7 @@
 package ante
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -31,7 +32,7 @@ func (vbd ValidateMsgTypeDecorator) AnteHandle(
 	msgs := tx.GetMsgs()
 	numMsgs := len(msgs)
 	if numMsgs == 0 { // invalid.
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "msgs cannot be empty")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "msgs cannot be empty")
 	}
 
 	containsAppInjectedMsg := false
@@ -43,30 +44,30 @@ func (vbd ValidateMsgTypeDecorator) AnteHandle(
 
 		// 2. Internal-only message check.
 		if libante.IsInternalMsg(msg) {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "internal msg cannot be submitted externally")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "internal msg cannot be submitted externally")
 		}
 
 		// 3. Nested message check.
 		if libante.IsNestedMsg(msg) {
 			if err := libante.ValidateNestedMsg(msg); err != nil {
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 			}
 		}
 
 		// 4. Unsupported message check.
 		if libante.IsUnsupportedMsg(msg) {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
 		}
 	}
 
 	// "App-injected message" must be the only msg in the tx.
 	if numMsgs > 1 && containsAppInjectedMsg {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "app-injected msg must be the only msg in a tx")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "app-injected msg must be the only msg in a tx")
 	}
 
 	// "App-injected message" must only be included in DeliverTx.
 	if containsAppInjectedMsg && !lib.IsDeliverTxMode(ctx) {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "app-injected msg must only be included in DeliverTx")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "app-injected msg must only be included in DeliverTx")
 	}
 
 	return next(ctx, tx, simulate)

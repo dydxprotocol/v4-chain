@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -8,7 +9,6 @@ import (
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -34,7 +34,7 @@ func (k Keeper) ProcessProposerOperations(
 	// Stateless validation of RawOperations and transforms them into InternalOperations to be used internally by memclob.
 	operations, err := types.ValidateAndTransformRawOperations(ctx, rawOperations, k.txDecoder, k.antehandler)
 	if err != nil {
-		return sdkerrors.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
+		return errorsmod.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
 	}
 
 	k.Logger(ctx).Debug(
@@ -131,7 +131,7 @@ func (k Keeper) ProcessInternalOperations(
 		case *types.InternalOperation_Match:
 			clobMatch := castedOperation.Match
 			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
-				return sdkerrors.Wrapf(
+				return errorsmod.Wrapf(
 					err,
 					"ProcessInternalOperations: Failed to process clobMatch: %+v",
 					clobMatch,
@@ -157,7 +157,7 @@ func (k Keeper) ProcessInternalOperations(
 			orderIdToRemove := orderRemoval.GetOrderId()
 			_, found := k.GetLongTermOrderPlacement(ctx, orderIdToRemove)
 			if !found {
-				return sdkerrors.Wrapf(
+				return errorsmod.Wrapf(
 					types.ErrStatefulOrderDoesNotExist,
 					"Stateful order id %+v does not exist in state.",
 					orderIdToRemove,
@@ -263,7 +263,7 @@ func (k Keeper) PersistMatchOrdersToState(
 
 	// Taker order cannot be post only.
 	if takerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_POST_ONLY {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidMatchOrder,
 			"Taker order %+v cannot be post only.",
 			takerOrder.GetOrderTextString(),
@@ -341,9 +341,9 @@ func (k Keeper) PersistMatchLiquidationToState(
 		return err
 	}
 	if !isLiquidatable {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrSubaccountNotLiquidatable,
-			"PersistMatchLiquidationToState: Subaccount %s is not liquidatable",
+			"PersistMatchLiquidationToState: Subaccount %+v is not liquidatable",
 			matchLiquidation.Liquidated,
 		)
 	}
@@ -351,7 +351,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 	perpId := matchLiquidation.GetPerpetualId()
 	_, err = k.perpetualsKeeper.GetPerpetual(ctx, perpId)
 	if err != nil {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrPerpetualDoesNotExist,
 			"Perpetual id %+v does not exist in state.",
 			perpId,
@@ -359,7 +359,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 	}
 	clobPair := matchLiquidation.ClobPairId
 	if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPair)); !found {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidClob,
 			"Clob Pair id %+v does not exist in state.",
 			clobPair,
@@ -461,7 +461,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 		)
 	} else if !canDeleverageSubaccount {
 		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidDeleveragedSubaccount,
 			"Subaccount %+v failed deleveraging validation",
 			liquidatedSubaccountId,
@@ -473,7 +473,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
 	if !exists {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrNoOpenPositionForPerpetual,
 			"Subaccount %+v does not have an open position for perpetual %+v",
 			liquidatedSubaccountId,
@@ -503,7 +503,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			perpetualId,
 			deltaQuantums,
 		); err != nil {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrInvalidDeleveragingFill,
 				"Failed to process deleveraging fill: %+v. liquidatedSubaccountId: %+v, "+
 					"perpetualId: %v, deltaQuantums: %v, error: %v",

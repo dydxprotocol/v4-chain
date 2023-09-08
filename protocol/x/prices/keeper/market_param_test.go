@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -56,28 +56,28 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 			pair:              constants.BtcUsdPair,
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(50),
-			expectedErr:       sdkerrors.Wrap(types.ErrMarketParamDoesNotExist, "99").Error(),
+			expectedErr:       errorsmod.Wrap(types.ErrMarketParamDoesNotExist, "99").Error(),
 		},
 		"Empty pair": {
 			targetId:          0,
 			pair:              "", // pair cannot be empty
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(50),
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, constants.ErrorMsgMarketPairCannotBeEmpty).Error(),
+			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgMarketPairCannotBeEmpty).Error(),
 		},
 		"Invalid min price change: zero": {
 			targetId:          0,
 			pair:              constants.BtcUsdPair,
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(0), // must be > 0
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
+			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
 		"Invalid min price change: ten thousand": {
 			targetId:          0,
 			pair:              constants.BtcUsdPair,
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(10_000), // must be < 10,000
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
+			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
 		"Min exchanges cannot be zero": {
 			pair:              constants.BtcUsdPair,
