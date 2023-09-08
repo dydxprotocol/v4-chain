@@ -25,6 +25,12 @@ var (
 	expectedBlock2MessageIds = []uint32{2, 4, 5}
 )
 
+func TestGetBlockMessageIds_NegativeBlockHeight(t *testing.T) {
+	ctx, delaymsg, _, _, _, _ := keeper.DelayMsgKeepers(t)
+	_, found := delaymsg.GetBlockMessageIds(ctx, -1)
+	require.False(t, found)
+}
+
 func TestGetBlockMessageIds_DeleteAllMgs(t *testing.T) {
 	ctx, delaymsg, _, _, _, _ := keeper.DelayMsgKeepers(t)
 
