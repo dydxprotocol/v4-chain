@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
-	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
-	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
+	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -72,8 +73,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgDelayMessage")
-	require.Contains(t, buf.String(), "delaymsg/DelayMessage")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -85,8 +84,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgDelayMessage")
-	require.Contains(t, buf.String(), "delaymsg/DelayMessage")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -96,7 +93,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 3)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 2)
 	mockRegistry.AssertExpectations(t)
 }
 

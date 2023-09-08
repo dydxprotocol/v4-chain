@@ -72,12 +72,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgCreateTransfer")
-	require.Contains(t, buf.String(), "sending/CreateTransfer")
-	require.Contains(t, buf.String(), "MsgDepositToSubaccount")
-	require.Contains(t, buf.String(), "sending/DepositToSubaccount")
-	require.Contains(t, buf.String(), "MsgWithdrawFromSubaccount")
-	require.Contains(t, buf.String(), "sending/WithdrawFromSubaccount")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -89,12 +83,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgCreateTransfer")
-	require.Contains(t, buf.String(), "sending/CreateTransfer")
-	require.Contains(t, buf.String(), "MsgDepositToSubaccount")
-	require.Contains(t, buf.String(), "sending/DepositToSubaccount")
-	require.Contains(t, buf.String(), "MsgWithdrawFromSubaccount")
-	require.Contains(t, buf.String(), "sending/WithdrawFromSubaccount")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -104,7 +92,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 9)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 6)
 	mockRegistry.AssertExpectations(t)
 }
 

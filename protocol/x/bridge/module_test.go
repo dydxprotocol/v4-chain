@@ -78,16 +78,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgAcknowledgeBridges")
-	require.Contains(t, buf.String(), "bridge/AcknowledgeBridges")
-	require.Contains(t, buf.String(), "MsgCompleteBridge")
-	require.Contains(t, buf.String(), "bridge/CompleteBridge")
-	require.Contains(t, buf.String(), "MsgUpdateEventParams")
-	require.Contains(t, buf.String(), "bridge/UpdateEventParams")
-	require.Contains(t, buf.String(), "MsgUpdateProposeParams")
-	require.Contains(t, buf.String(), "bridge/UpdateProposeParams")
-	require.Contains(t, buf.String(), "MsgUpdateSafetyParams")
-	require.Contains(t, buf.String(), "bridge/UpdateSafetyParams")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -99,16 +89,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgAcknowledgeBridges")
-	require.Contains(t, buf.String(), "bridge/AcknowledgeBridges")
-	require.Contains(t, buf.String(), "MsgCompleteBridge")
-	require.Contains(t, buf.String(), "bridge/CompleteBridge")
-	require.Contains(t, buf.String(), "MsgUpdateEventParams")
-	require.Contains(t, buf.String(), "bridge/UpdateEventParams")
-	require.Contains(t, buf.String(), "MsgUpdateProposeParams")
-	require.Contains(t, buf.String(), "bridge/UpdateProposeParams")
-	require.Contains(t, buf.String(), "MsgUpdateSafetyParams")
-	require.Contains(t, buf.String(), "bridge/UpdateSafetyParams")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -118,7 +98,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 15)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 10)
 	mockRegistry.AssertExpectations(t)
 }
 

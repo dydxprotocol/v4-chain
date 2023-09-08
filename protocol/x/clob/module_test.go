@@ -118,15 +118,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-
-	require.Contains(t, buf.String(), "MsgProposedOperations")
-	require.Contains(t, buf.String(), "clob/ProposedOperations")
-
-	require.Contains(t, buf.String(), "MsgPlaceOrder")
-	require.Contains(t, buf.String(), "clob/PlaceOrder")
-
-	require.Contains(t, buf.String(), "MsgCancelOrder")
-	require.Contains(t, buf.String(), "clob/CancelOrder")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -138,15 +129,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-
-	require.Contains(t, buf.String(), "MsgProposedOperations")
-	require.Contains(t, buf.String(), "clob/ProposedOperations")
-
-	require.Contains(t, buf.String(), "MsgPlaceOrder")
-	require.Contains(t, buf.String(), "clob/PlaceOrder")
-
-	require.Contains(t, buf.String(), "MsgCancelOrder")
-	require.Contains(t, buf.String(), "clob/CancelOrder")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -156,7 +138,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 19)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 16)
 	mockRegistry.AssertExpectations(t)
 }
 
