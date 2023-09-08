@@ -9,6 +9,7 @@ import (
 
 var encodingConfig params.EncodingConfig = MakeEncodingConfig()
 
+// GetEncodingConfig returns the EncodingConfig.
 func GetEncodingConfig() params.EncodingConfig {
 	return encodingConfig
 }
@@ -16,9 +17,11 @@ func GetEncodingConfig() params.EncodingConfig {
 // MakeEncodingConfig creates an EncodingConfig.
 func MakeEncodingConfig() params.EncodingConfig {
 	encodingConfig := params.MakeEncodingConfig()
+
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	basic_manager.ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
+
 	basic_manager.ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+
 	return encodingConfig
 }
