@@ -11,36 +11,60 @@ import (
 	"testing"
 )
 
-func TestRunCached_Success(t *testing.T) {
-	ms := &mocks.MultiStore{}
-	cms := &mocks.CacheMultiStore{}
-	// Expect that the cached store is created and returned.
-	ms.On("CacheMultiStore").Return(cms).Once()
-	// Expect that the cache is written to the underlying store.
-	cms.On("Write").Return(nil).Once()
+func TestRunCached_Mixed(t *testing.T) {
+	testEvent := sdk.NewEvent("test", sdk.NewAttribute("key", "value"))
+	tests := map[string]struct {
+		f             func(ctx sdk.Context) error
+		expectedError error
+	}{
+		"success": {
+			f: func(ctx sdk.Context) error {
+				ctx.EventManager().EmitEvent(testEvent)
+				return nil
+			},
+		},
+		"failure": {
+			f: func(ctx sdk.Context) error {
+				ctx.EventManager().EmitEvent(testEvent)
+				return fmt.Errorf("failure")
+			},
+			expectedError: fmt.Errorf("failure"),
+		},
+		"panic": {
+			f: func(ctx sdk.Context) error {
+				ctx.EventManager().EmitEvent(testEvent)
+				panic("panic")
+			},
+			expectedError: fmt.Errorf("panic"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ms := &mocks.MultiStore{}
+			cms := &mocks.CacheMultiStore{}
 
-	ctx := sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
+			// Expect that the cached store is created and returned.
+			ms.On("CacheMultiStore").Return(cms).Once()
 
-	err := abci.RunCached(ctx, func(ctx sdk.Context) error { return nil })
-	require.NoError(t, err)
+			if tc.expectedError == nil {
+				// For non-error cases, expect that the cache is written to the underlying store.
+				cms.On("Write").Return(nil).Once()
+			}
 
-	ms.AssertExpectations(t)
-	cms.AssertExpectations(t)
-}
+			ctx := sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
 
-func TestRunCached_Failure(t *testing.T) {
-	ms := &mocks.MultiStore{}
-	cms := &mocks.CacheMultiStore{} // We don't mock the Write method because it should not be called.
+			err := abci.RunCached(ctx, tc.f)
 
-	// Expect that the cached store is created and returned.
-	ms.On("CacheMultiStore").Return(cms).Once()
+			if tc.expectedError != nil {
+				require.ErrorContains(t, err, tc.expectedError.Error())
+				require.Len(t, ctx.EventManager().Events(), 0)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, ctx.EventManager().Events(), sdk.Events{testEvent})
+			}
 
-	ctx := sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
-
-	// Expect that the cache is discarded. The test will fail if the cache is persisted because the
-	// Write method of the CacheMultiStore is not mocked here.
-	err := abci.RunCached(ctx, func(ctx sdk.Context) error { return fmt.Errorf("failure") })
-	require.ErrorContains(t, err, "failure")
-
-	ms.AssertExpectations(t)
+			ms.AssertExpectations(t)
+			cms.AssertExpectations(t)
+		})
+	}
 }
