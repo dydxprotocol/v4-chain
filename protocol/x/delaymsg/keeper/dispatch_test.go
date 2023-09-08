@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +13,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"time"
 )
 
 var (
@@ -53,7 +52,8 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 	require.Equal(t, []uint32{0, 1, 2}, blockMessageIds.Ids)
 
 	// Mock the bridge keeper methods called by the bridge msg server.
-	bridgeKeeper.On("CompleteBridge", ctx, mock.Anything).Return(nil).Times(len(constants.AllMsgs))
+	bridgeKeeper.On("CompleteBridge", mock.AnythingOfType("types.Context"), mock.Anything).
+		Return(nil).Times(len(constants.AllMsgs))
 	bridgeKeeper.On("HasAuthority", DelayMsgAuthority).Return(true).Times(len(constants.AllMsgs))
 
 	// Dispatch messages for block 0.
@@ -119,6 +119,10 @@ func setupMockKeeperMessageNotFound(t *testing.T, ctx sdk.Context, k *mocks.Dela
 	// For error logging.
 	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
 
+	// 2 message executions are persisted.
+	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
+	cms.On("Write").Return(nil).Times(2)
+
 	// All deletes are called.
 	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
 	k.On("DeleteMessage", ctx, uint32(1)).Return(nil).Once()
@@ -156,6 +160,10 @@ func setupMockKeeperExecutionFailure(t *testing.T, ctx sdk.Context, k *mocks.Del
 	// For error logging.
 	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
 
+	// 2 message executions are persisted.
+	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
+	cms.On("Write").Return(nil).Times(2)
+
 	// All deletes are called.
 	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
 	k.On("DeleteMessage", ctx, uint32(1)).Return(nil).Once()
@@ -189,6 +197,10 @@ func setupMockKeeperDecodeFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayM
 
 	// 2 messages are routed.
 	k.On("Router").Return(mockSuccessRouter(ctx)).Times(2)
+
+	// 2 message executions are persisted.
+	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
+	cms.On("Write").Return(nil).Times(2)
 
 	// For error logging.
 	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
@@ -224,6 +236,10 @@ func setupMockKeeperDeletionFailure(t *testing.T, ctx sdk.Context, k *mocks.Dela
 	// All messages are routed.
 	k.On("Router").Return(mockSuccessRouter(ctx)).Times(3)
 
+	// All message executions are persisted.
+	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
+	cms.On("Write").Return(nil).Times(3)
+
 	// For error logging.
 	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
 
@@ -256,12 +272,17 @@ func TestDispatchMessageForBlock_Mixed(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			k := &mocks.DelayMsgKeeper{}
-			ctx := sdktest.NewContextWithBlockHeightAndTime(0, time.Now())
+			ms := &mocks.MultiStore{}
+			cms := &mocks.CacheMultiStore{}
+			// Expect that the cached store is accessed 0 or more times.
+			ms.On("CacheMultiStore").Return(cms).Maybe().Times(0)
+			ctx := sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
+
 			tc.setupMocks(t, ctx, k)
 
 			keeper.DispatchMessagesForBlock(k, ctx)
 
-			k.AssertExpectations(t)
+			mock.AssertExpectationsForObjects(t, k, ms, cms)
 		})
 	}
 }
