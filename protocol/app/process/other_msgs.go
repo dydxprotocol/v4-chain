@@ -1,8 +1,8 @@
 package process
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	libprocess "github.com/dydxprotocol/v4-chain/protocol/lib/process"
 )
@@ -22,20 +22,20 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 	// Decode.
 	tx, err := decoder(txBytes)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(ErrDecodingTxBytes, "OtherMsgsTx Error: %+v", err)
+		return nil, errorsmod.Wrapf(ErrDecodingTxBytes, "OtherMsgsTx Error: %+v", err)
 	}
 
 	// Check msg length.
 	allMsgs := tx.GetMsgs()
 	if len(allMsgs) == 0 {
-		return nil, sdkerrors.Wrapf(ErrUnexpectedNumMsgs, "OtherMsgs len cannot be zero")
+		return nil, errorsmod.Wrapf(ErrUnexpectedNumMsgs, "OtherMsgs len cannot be zero")
 	}
 
 	// Check msg type.
 	for _, msg := range allMsgs {
 		if ante.IsDisallowExternalSubmitMsg(msg) {
 			return nil,
-				sdkerrors.Wrapf(
+				errorsmod.Wrapf(
 					ErrUnexpectedMsgType,
 					"Invalid msg type or content in OtherTxs %T",
 					msg,
@@ -44,7 +44,7 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 
 		if libprocess.IsDisallowTopLevelMsgInOtherTxs(msg) {
 			return nil,
-				sdkerrors.Wrapf(
+				errorsmod.Wrapf(
 					ErrUnexpectedMsgType,
 					"Msg type %T is not allowed in OtherTxs",
 					msg,

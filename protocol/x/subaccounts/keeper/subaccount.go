@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math/big"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -719,7 +719,7 @@ func applyUpdatesToPositions[
 		_, exists := updateMap[id]
 		if exists {
 			errMsg := fmt.Sprintf("Multiple updates exist for position %v", update.GetId())
-			return nil, sdkerrors.Wrap(types.ErrNonUniqueUpdatesPosition, errMsg)
+			return nil, errorsmod.Wrap(types.ErrNonUniqueUpdatesPosition, errMsg)
 		}
 
 		updateMap[id] = update

@@ -1,13 +1,13 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"math"
 	"math/big"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -195,7 +195,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// Validate that the provided deltaQuantums is valid with respect to
 	// the current position size.
 	if psBig.Sign()*deltaQuantums.Sign() != -1 || psBig.CmpAbs(deltaQuantums) == -1 {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
 			"Position size delta %v is invalid for %v and perpetual %v, outstanding position size is %v",
 			deltaQuantums,
@@ -305,7 +305,7 @@ func (k Keeper) GetFillablePrice(
 	// Validate that the provided deltaQuantums is valid with respect to
 	// the current position size.
 	if psBig.Sign()*deltaQuantums.Sign() != -1 || psBig.CmpAbs(deltaQuantums) == -1 {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
 			"Position size delta %v is invalid for %v and perpetual %v, outstanding position size is %v",
 			deltaQuantums,
@@ -400,7 +400,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 ) {
 	// Verify that fill amount is not zero.
 	if fillAmount == 0 {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrInvalidQuantumsForInsuranceFundDeltaCalculation,
 			"FillAmount is zero for subaccount %v and perpetual %v.",
 			subaccountId,
@@ -502,7 +502,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	if perpetualPosition == nil {
 		return types.ClobPair{},
 			nil,
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrNoPerpetualPositionsToLiquidate,
 				"Subaccount ID: %v",
 				subaccount.Id,
@@ -602,7 +602,7 @@ func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
 
 	// Make sure that this subaccount <> perpetual has not previously been liquidated in the same block.
 	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrSubaccountHasLiquidatedPerpetual,
 			"Subaccount %v and perpetual %v have already been liquidated within the last block",
 			subaccountId,
@@ -619,7 +619,7 @@ func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
 	)
 	if bigTotalNotionalLiquidated.Cmp(bigNotionalLiquidatedBlockLimit) > 0 {
 		panic(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
 				"Subaccount %+v notional liquidated exceeds block limit. Current notional liquidated: %v, block limit: %v",
 				subaccountId,
@@ -653,7 +653,7 @@ func (k Keeper) GetSubaccountMaxInsuranceLost(
 
 	// Make sure that the subaccount has not previously liquidated this perpetual in the same block.
 	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrSubaccountHasLiquidatedPerpetual,
 			"Subaccount %v and perpetual %v have already been liquidated within the last block",
 			subaccountId,
@@ -670,7 +670,7 @@ func (k Keeper) GetSubaccountMaxInsuranceLost(
 	)
 	if bigCurrentInsuranceFundLost.Cmp(bigInsuranceFundLostBlockLimit) > 0 {
 		panic(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 				"Subaccount %+v insurance lost exceeds block limit. Current insurance lost: %v, block limit: %v",
 				subaccountId,

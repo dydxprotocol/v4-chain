@@ -2,9 +2,7 @@ package process
 
 // DONTCOVER
 
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+import errorsmod "cosmossdk.io/errors"
 
 const (
 	ModuleName = "process_proposal"
@@ -12,8 +10,8 @@ const (
 
 var (
 	// 1 - 99: Default.
-	ErrDecodingTxBytes   = sdkerrors.Register(ModuleName, 1, "Decoding tx bytes failed")
-	ErrMsgValidateBasic  = sdkerrors.Register(ModuleName, 2, "ValidateBasic failed on msg")
-	ErrUnexpectedNumMsgs = sdkerrors.Register(ModuleName, 3, "Unexpected num of msgs")
-	ErrUnexpectedMsgType = sdkerrors.Register(ModuleName, 4, "Unexpected msg type")
+	ErrDecodingTxBytes   = errorsmod.Register(ModuleName, 1, "Decoding tx bytes failed")
+	ErrMsgValidateBasic  = errorsmod.Register(ModuleName, 2, "ValidateBasic failed on msg")
+	ErrUnexpectedNumMsgs = errorsmod.Register(ModuleName, 3, "Unexpected num of msgs")
+	ErrUnexpectedMsgType = errorsmod.Register(ModuleName, 4, "Unexpected msg type")
 )

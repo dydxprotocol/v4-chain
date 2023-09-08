@@ -2,33 +2,31 @@ package types
 
 // DONTCOVER
 
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+import errorsmod "cosmossdk.io/errors"
 
 // x/epochs module sentinel errors
 var (
-	ErrEmptyEpochInfoName = sdkerrors.Register(
+	ErrEmptyEpochInfoName = errorsmod.Register(
 		ModuleName,
 		2,
 		"EpochInfo name is empty",
 	)
-	ErrDurationIsZero = sdkerrors.Register(
+	ErrDurationIsZero = errorsmod.Register(
 		ModuleName,
 		3,
 		"Duration is zero",
 	)
-	ErrEpochInfoAlreadyExists = sdkerrors.Register(
+	ErrEpochInfoAlreadyExists = errorsmod.Register(
 		ModuleName,
 		4,
 		"EpochInfo name already exists",
 	)
-	ErrEpochInfoNotFound = sdkerrors.Register(
+	ErrEpochInfoNotFound = errorsmod.Register(
 		ModuleName,
 		5,
 		"EpochInfo name not found",
 	)
-	ErrInvalidCurrentEpochAndCurrentEpochStartBlockTuple = sdkerrors.Register(
+	ErrInvalidCurrentEpochAndCurrentEpochStartBlockTuple = errorsmod.Register(
 		ModuleName,
 		6,
 		"Invalid CurrentEpoch and CurrentEpochStartBlock tuple: CurrentEpoch should"+

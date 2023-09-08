@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"testing"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -459,7 +459,7 @@ func TestGenesis(t *testing.T) {
 			if tc.expectedErr != "" {
 				require.PanicsWithError(
 					t,
-					sdkerrors.Wrap(
+					errorsmod.Wrap(
 						tc.expectedErrType,
 						tc.expectedErr,
 					).Error(),

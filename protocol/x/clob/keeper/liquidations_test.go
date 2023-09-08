@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"math"
 	"math/big"
 	"testing"
@@ -979,7 +980,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 			order: constants.LiquidationOrder_Carl_Num0_Clob1_Buy1ETH_Price3000,
 
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrSubaccountHasLiquidatedPerpetual,
 				"Subaccount %v and perpetual %v have already been liquidated within the last block",
 				constants.Carl_Num0,
@@ -4719,7 +4720,7 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 
 			expectedMaxInsuranceLost:             big.NewInt(50),
 			expectedMaxNotionalLiquidatablePanic: true,
-			expectedMaxNotionalLiquidatableErr: sdkerrors.Wrapf(
+			expectedMaxNotionalLiquidatableErr: errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
 				"Subaccount %+v notional liquidated exceeds block limit. Current notional liquidated: %v, block limit: %v",
 				constants.Alice_Num0,
@@ -4743,7 +4744,7 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 
 			expectedMaxNotionalLiquidatable: big.NewInt(50),
 			expectedMaxInsuranceLostPanic:   true,
-			expectedMaxInsuranceLostErr: sdkerrors.Wrapf(
+			expectedMaxInsuranceLostErr: errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 				"Subaccount %+v insurance lost exceeds block limit. Current insurance lost: %v, block limit: %v",
 				constants.Alice_Num0,

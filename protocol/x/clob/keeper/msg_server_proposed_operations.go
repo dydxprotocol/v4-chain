@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -19,7 +19,7 @@ func (k msgServer) ProposedOperations(
 		msg.GetOperationsQueue(),
 	); err != nil {
 		panic(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				err,
 				"Block height: %d",
 				ctx.BlockHeight(),

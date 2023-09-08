@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"math/big"
@@ -9,7 +10,6 @@ import (
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -50,7 +50,7 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 			metrics.Error,
 		)
 		return errorlib.WrapErrorWithSourceModuleContext(
-			sdkerrors.Wrap(err, "failed to get all market param prices"),
+			errorsmod.Wrap(err, "failed to get all market param prices"),
 			types.ModuleName,
 		)
 	}
@@ -121,7 +121,7 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 					pricefeedmetrics.GetLabelForMarketId(marketParamPrice.Param.Id),
 				},
 			)
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrIndexPriceNotAvailable,
 				"index price for market (%d) is not available",
 				priceUpdate.MarketId,
@@ -177,7 +177,7 @@ func (k Keeper) performDeterministicStatefulValidation(
 
 		// Check price respects min price change.
 		if !isAboveRequiredMinPriceChange(marketParamPrice, priceUpdate.Price) {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrInvalidMarketPriceUpdateDeterministic,
 				"update price (%d) for market (%d) does not meet min price change requirement"+
 					" (%d ppm) based on the current market price (%d)",
@@ -223,7 +223,7 @@ func (k Keeper) validatePriceAccuracy(
 		IndexPrice: indexPrice,
 		NewPrice:   priceUpdate.Price,
 	}) {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidMarketPriceUpdateNonDeterministic,
 			"update price (%d) for market (%d) trends in the opposite direction of the index price (%d) compared "+
 				"to the current price (%d)",
@@ -243,7 +243,7 @@ func (k Keeper) validatePriceAccuracy(
 	// and new_delta to determine if the price change is valid.
 	if priceDeltaIsWithinOneTick(oldDelta, tickSizePpm) {
 		if newDelta.Cmp(oldDelta) > 0 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrInvalidMarketPriceUpdateNonDeterministic,
 				"update price (%d) for market (%d) crosses the index price (%d) with current price (%d) "+
 					"and deviates from index price (%d) more than minimum allowed (%d)",
@@ -260,7 +260,7 @@ func (k Keeper) validatePriceAccuracy(
 
 	// Update price crosses index price and old_ticks > 1: check new_ticks <= sqrt(old_ticks)
 	if !newPriceMeetsSqrtCondition(oldDelta, newDelta, tickSizePpm) {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidMarketPriceUpdateNonDeterministic,
 			"update price (%d) for market (%d) crosses the index price (%d) with current price (%d) "+
 				"and deviates from index price (%d) more than minimum allowed (%d)",
@@ -324,7 +324,7 @@ func getMarketParamPrice(
 ) {
 	marketParamPrice, marketParamPriceExists := idToMarketParamPrice[marketId]
 	if !marketParamPriceExists {
-		return marketParamPrice, sdkerrors.Wrapf(
+		return marketParamPrice, errorsmod.Wrapf(
 			types.ErrInvalidMarketPriceUpdateDeterministic,
 			"market param price (%d) does not exist",
 			marketId,

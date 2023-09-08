@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -68,7 +68,7 @@ func (c *ClobPair) Validate() error {
 	switch c.Metadata.(type) {
 	// TODO(DEC-1535): update this when additional clob pair types are supported.
 	case *ClobPair_SpotClobMetadata:
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidClobPairParameter,
 			"CLOB pair (%+v) is not a perpetual CLOB.",
 			c,
@@ -76,7 +76,7 @@ func (c *ClobPair) Validate() error {
 	}
 
 	if !IsSupportedClobPairStatus(c.Status) {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidClobPairParameter,
 			"CLOB pair (%+v) has unsupported status %+v",
 			c,
@@ -85,7 +85,7 @@ func (c *ClobPair) Validate() error {
 	}
 
 	if c.StepBaseQuantums <= 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidClobPairParameter,
 			"invalid ClobPair parameter: StepBaseQuantums must be > 0. Got %v",
 			c.StepBaseQuantums,
@@ -95,7 +95,7 @@ func (c *ClobPair) Validate() error {
 	// Since a subtick will be calculated as (1 tick/SubticksPerTick), the denominator cannot be 0
 	// and negative numbers do not make sense.
 	if c.SubticksPerTick <= 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidClobPairParameter,
 			"invalid ClobPair parameter: SubticksPerTick must be > 0. Got %v",
 			c.SubticksPerTick,

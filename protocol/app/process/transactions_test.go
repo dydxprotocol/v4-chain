@@ -1,11 +1,11 @@
 package process_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -40,35 +40,35 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 	}{
 		"Less than min num txs": {
 			txsBytes: [][]byte{validOperationsTx, validAddFundingTx, validUpdatePriceTx}, // need at least 4.
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrUnexpectedNumMsgs,
 				"Expected the proposal to contain at least 4 txs, but got 3",
 			),
 		},
 		"Order tx decoding fails": {
 			txsBytes: [][]byte{invalidTxBytes, validAcknowledgeBridgesTx, validAddFundingTx, validUpdatePriceTx},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Acknowledge bridges tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, invalidTxBytes, validAddFundingTx, validUpdatePriceTx},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Add funding tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, invalidTxBytes, validUpdatePriceTx},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Update prices tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, validAddFundingTx, invalidTxBytes},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
@@ -82,7 +82,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
@@ -96,7 +96,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *types.MsgUpdateMarketPrices",
 			),
@@ -267,14 +267,14 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		},
 		"AddFunding tx validation fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, invalidAddFundingTx, validUpdatePriceTx},
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: errorsmod.Wrap(
 				process.ErrMsgValidateBasic,
 				"premium votes must be sorted by perpetual id in ascending order and "+
 					"cannot contain duplicates: MsgAddPremiumVotes is invalid"),
 		},
 		"UpdatePrices tx validation fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, validAddFundingTx, invalidUpdatePriceTx},
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: errorsmod.Wrap(
 				process.ErrMsgValidateBasic,
 				"price cannot be 0 for market id (0): Market price update is invalid: stateless.",
 			),
@@ -288,7 +288,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: sdkerrors.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
 		},
 		"Other txs validation fails: multi txs": {
 			txsBytes: [][]byte{
@@ -299,7 +299,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: sdkerrors.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
 		},
 	}
 
