@@ -1481,3 +1481,11 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().subticks_per_tick' -v '1000000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().quantum_conversion_exponent' -v '-8'
 }
+
+# Modify the genesis file with reduced complete bridge delay (for testing in non-prod envs).
+update_genesis_complete_bridge_delay() {
+	GENESIS=$1/genesis.json
+
+	# Reduce complete bridge delay to 600 blocks.
+	dasel put -t int -f "$GENESIS" '.app_state.bridge.safety_params.delay_blocks' -v "$2"
+}
