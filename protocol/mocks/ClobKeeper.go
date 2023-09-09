@@ -321,14 +321,14 @@ func (_m *ClobKeeper) GetMaxAndMinPositionNotionalLiquidatable(ctx types.Context
 }
 
 // GetPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
-func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (clobtypes.ClobPair, *big.Int, error) {
+func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (uint32, *big.Int, error) {
 	ret := _m.Called(ctx, subaccountId)
 
-	var r0 clobtypes.ClobPair
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) clobtypes.ClobPair); ok {
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) uint32); ok {
 		r0 = rf(ctx, subaccountId)
 	} else {
-		r0 = ret.Get(0).(clobtypes.ClobPair)
+		r0 = ret.Get(0).(uint32)
 	}
 
 	var r1 *big.Int

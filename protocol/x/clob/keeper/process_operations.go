@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -336,36 +337,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	isLiquidatable, err := k.IsLiquidatable(ctx, matchLiquidation.Liquidated)
-	if err != nil {
-		return err
-	}
-	if !isLiquidatable {
-		return errorsmod.Wrapf(
-			types.ErrSubaccountNotLiquidatable,
-			"PersistMatchLiquidationToState: Subaccount %+v is not liquidatable",
-			matchLiquidation.Liquidated,
-		)
-	}
-
-	perpId := matchLiquidation.GetPerpetualId()
-	_, err = k.perpetualsKeeper.GetPerpetual(ctx, perpId)
-	if err != nil {
-		return errorsmod.Wrapf(
-			types.ErrPerpetualDoesNotExist,
-			"Perpetual id %+v does not exist in state.",
-			perpId,
-		)
-	}
-	clobPair := matchLiquidation.ClobPairId
-	if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPair)); !found {
-		return errorsmod.Wrapf(
-			types.ErrInvalidClob,
-			"Clob Pair id %+v does not exist in state.",
-			clobPair,
-		)
-	}
-
 	takerOrder, err := k.MaybeGetLiquidationOrder(ctx, matchLiquidation.Liquidated)
 	if err != nil {
 		return err
