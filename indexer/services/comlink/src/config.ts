@@ -42,6 +42,11 @@ export const configSchema = {
   // point
   RATE_LIMIT_GET_POINTS: parseInteger({ default: 100 }),
   RATE_LIMIT_GET_DURATION_SECONDS: parseInteger({ default: 10 }), // 100 requests / 10 seconds
+
+  // Geo-blocking
+  RESTRICTED_COUNTRIES: parseString({
+    default: '',
+  }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////
