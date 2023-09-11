@@ -126,6 +126,7 @@ func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int)
 		items[i].Price.Id = uint32(i) + numExistingMarkets
 		items[i].Price.Exponent = int32(i)
 		items[i].Price.Price = uint64(1_000 + i)
+		items[i].Param.ExchangeConfigJson = "{}" // Use empty, valid JSON for testing.
 
 		_, err := keeper.CreateMarket(
 			ctx,

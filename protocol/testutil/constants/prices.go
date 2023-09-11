@@ -137,7 +137,7 @@ var (
 	}
 	InvalidMsgUpdateMarketPricesStatefulTxBytes []byte
 
-	marketExchangeConfigs = constants.GenerateExchangeConfigJson(constants.StaticExchangeMarketConfig)
+	TestMarketExchangeConfigs = constants.GenerateExchangeConfigJson(constants.StaticExchangeMarketConfig)
 
 	Prices_DefaultGenesisState = types.GenesisState{
 		// `ExchangeConfigJson` is left unset as it is not used by the server.
@@ -147,7 +147,7 @@ var (
 				Pair:               BtcUsdPair,
 				Exponent:           BtcUsdExponent,
 				MinExchanges:       uint32(2),
-				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
 				MinPriceChangePpm:  uint32(50),
 			},
 			{
@@ -155,7 +155,7 @@ var (
 				Pair:               EthUsdPair,
 				Exponent:           EthUsdExponent,
 				MinExchanges:       uint32(1),
-				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
 				MinPriceChangePpm:  uint32(50),
 			},
 		},
@@ -180,7 +180,7 @@ var (
 				Id:                 uint32(0),
 				Pair:               BtcUsdPair,
 				Exponent:           BtcUsdExponent,
-				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
 				MinExchanges:       uint32(2),
 				MinPriceChangePpm:  uint32(50),
 			},
@@ -188,7 +188,7 @@ var (
 				Id:                 uint32(1),
 				Pair:               EthUsdPair,
 				Exponent:           EthUsdExponent,
-				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
 				MinExchanges:       uint32(2),
 				MinPriceChangePpm:  uint32(50),
 			},
