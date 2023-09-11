@@ -9,18 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRandomBool(t *testing.T) {
-	numIterations := 128
-	bools := make([]bool, numIterations)
-
-	for i := 0; i < numIterations; i++ {
-		bools[i] = lib.RandomBool()
-	}
-
-	require.Contains(t, bools, true)
-	require.Contains(t, bools, false)
-}
-
 func TestRandomBytesBetween(t *testing.T) {
 	tests := map[string]struct {
 		start []byte
