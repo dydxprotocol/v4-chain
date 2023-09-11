@@ -1,6 +1,9 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import express from 'express';
-import { Controller, Get, Query, Route } from 'tsoa';
+import { checkSchema, matchedData } from 'express-validator';
+import {
+  Controller, Get, Query, Route,
+} from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
@@ -8,7 +11,6 @@ import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { ComplianceRequest, ComplianceResponse } from '../../../types';
-import { checkSchema, matchedData } from 'express-validator';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-controller';
@@ -16,9 +18,9 @@ const controllerName: string = 'compliance-controller';
 @Route('screen')
 class ComplianceController extends Controller {
   @Get('/')
-  async screen(
+  screen(
     @Query() address: string,
-  ): Promise<ComplianceResponse> {
+  ): ComplianceResponse {
     // TODO(IND-372): Add logic to either use cached data or query provider
     // Dummy logic for front-end testing
     if (
@@ -47,7 +49,7 @@ router.get(
     },
   }),
   ExportResponseCodeStats({ controllerName }),
-  async (req: express.Request, res: express.Response) => {
+  (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
 
     const {
@@ -58,7 +60,7 @@ router.get(
 
     try {
       const controller: ComplianceController = new ComplianceController();
-      const response: ComplianceResponse = await controller.screen(address);
+      const response: ComplianceResponse = controller.screen(address);
 
       return res.send(response);
     } catch (error) {
