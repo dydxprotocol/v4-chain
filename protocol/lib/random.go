@@ -7,6 +7,8 @@ import (
 )
 
 // RandomBytesBetween returns a random byte slice that is in the range [start, end] when compared lexicographically.
+// The slice will have a length in the range [len(start), len(end)].
+// In the current implementation, all possible permutations are not equally likely.
 // Nil slices for start and end will be treated as empty byte slices. Will panic if:
 //   - start compares lexicographically greater than end
 //   - nil rand is provided
