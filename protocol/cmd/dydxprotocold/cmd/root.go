@@ -36,7 +36,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/app/params"
@@ -58,7 +57,7 @@ const (
 // TODO(DEC-1097): improve `cmd/` by adding tests, custom app configs, custom init cmd, and etc.
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
 func NewRootCmd(option *RootCmdOption) *cobra.Command {
-	encodingConfig := app.GetEncodingConfig()
+	encodingConfig := dydxapp.GetEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
