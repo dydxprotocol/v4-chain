@@ -19,6 +19,7 @@ import config from '../../../config';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import {
   CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   CheckSubaccountSchema,
@@ -89,6 +90,7 @@ class HistoricalPnlController extends Controller {
 
 router.get(
   '/',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,

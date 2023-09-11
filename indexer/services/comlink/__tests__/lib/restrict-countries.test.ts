@@ -36,7 +36,7 @@ describe('rejectRestrictedCountries', () => {
     // empty headers
     req.headers = {};
 
-    await rejectRestrictedCountries(req, res, next);
+    rejectRestrictedCountries(req, res, next);
     expect(res.status).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalled();
   });
@@ -46,7 +46,7 @@ describe('rejectRestrictedCountries', () => {
     req.headers = nonRestrictedHeaders;
     isRestrictedCountrySpy.mockReturnValueOnce(false);
 
-    await rejectRestrictedCountries(req, res, next);
+    rejectRestrictedCountries(req, res, next);
     expect(res.status).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalled();
   });
@@ -56,7 +56,7 @@ describe('rejectRestrictedCountries', () => {
     req.headers = restrictedHeaders;
     isRestrictedCountrySpy.mockReturnValueOnce(true);
 
-    await rejectRestrictedCountries(req, res, next);
+    rejectRestrictedCountries(req, res, next);
     expect(res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
   });

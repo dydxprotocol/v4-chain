@@ -33,6 +33,7 @@ import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import {
   CheckSubaccountSchema,
 } from '../../../lib/validation/schemas';
@@ -151,6 +152,7 @@ class AddressesController extends Controller {
 
 router.get(
   '/',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   handleValidationErrors,
