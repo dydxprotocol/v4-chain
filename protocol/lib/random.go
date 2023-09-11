@@ -6,10 +6,6 @@ import (
 	"math/rand"
 )
 
-func RandomBool() bool {
-	return rand.Intn(2) == 0
-}
-
 // RandomBytesBetween returns a random byte slice that is in the range [start, end] when compared lexicographically.
 // Nil slices for start and end will be treated as empty byte slices. Will panic if:
 //   - start compares lexicographically less than end
