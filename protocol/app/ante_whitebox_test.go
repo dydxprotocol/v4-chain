@@ -15,9 +15,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -27,7 +25,7 @@ import (
 )
 
 func newTestHandlerOptions() HandlerOptions {
-	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
+	encodingConfig := GetEncodingConfig()
 	appCodec := encodingConfig.Codec
 	txConfig := encodingConfig.TxConfig
 
