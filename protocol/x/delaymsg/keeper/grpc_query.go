@@ -65,6 +65,11 @@ func (k Keeper) BlockMessageIds(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+
+	if req.BlockHeight < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid block height")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	blockMessageIds, found := k.GetBlockMessageIds(ctx, req.BlockHeight)
