@@ -2,13 +2,12 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"XRPUSDT\"",
+      "ticker": "XRPUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bitfinex",
-      "ticker": "tXRPUSD",
-      "adjustByMarket": "USDT-USD"
+      "ticker": "tXRPUSD"
     },
     {
       "exchangeName": "Bitstamp",

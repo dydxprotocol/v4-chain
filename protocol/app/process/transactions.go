@@ -1,9 +1,9 @@
 package process
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type txtype int
@@ -43,7 +43,7 @@ func DecodeProcessProposalTxs(
 	// Check len.
 	numTxs := len(req.Txs)
 	if numTxs < MinTxsCount {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			ErrUnexpectedNumMsgs,
 			"Expected the proposal to contain at least %d txs, but got %d",
 			MinTxsCount,

@@ -5,10 +5,11 @@ import (
 	"math/big"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -34,10 +35,10 @@ func (k Keeper) ProcessProposerOperations(
 	// Stateless validation of RawOperations and transforms them into InternalOperations to be used internally by memclob.
 	operations, err := types.ValidateAndTransformRawOperations(ctx, rawOperations, k.txDecoder, k.antehandler)
 	if err != nil {
-		return sdkerrors.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
+		return errorsmod.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
 	}
 
-	ctx.Logger().Debug(
+	k.Logger(ctx).Debug(
 		"Processing operations queue",
 		"operationsQueue",
 		types.GetInternalOperationsQueueTextString(operations),
@@ -131,7 +132,7 @@ func (k Keeper) ProcessInternalOperations(
 		case *types.InternalOperation_Match:
 			clobMatch := castedOperation.Match
 			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
-				return sdkerrors.Wrapf(
+				return errorsmod.Wrapf(
 					err,
 					"ProcessInternalOperations: Failed to process clobMatch: %+v",
 					clobMatch,
@@ -150,6 +151,7 @@ func (k Keeper) ProcessInternalOperations(
 			placedShortTermOrders[order.GetOrderId()] = order
 		case *types.InternalOperation_OrderRemoval:
 			orderRemoval := castedOperation.OrderRemoval
+
 			if err := k.PersistOrderRemovalToState(ctx, orderRemoval); err != nil {
 				return nil
 			}
@@ -260,7 +262,7 @@ func (k Keeper) PersistOrderRemovalToState(
 			subaccountOpenOrders,
 		)
 		if successPerSubaccountUpdate[orderIdToRemove.SubaccountId].IsSuccess() {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrInvalidOrderRemoval,
 				"Order Removal (%+v) invalid. Order passes collateralization check.",
 				*orderRemoval,
@@ -268,7 +270,7 @@ func (k Keeper) PersistOrderRemovalToState(
 		}
 	case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
 		if !orderToRemove.IsReduceOnly() {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrInvalidOrderRemoval,
 				"Order Removal (%+v) invalid. Order must be reduce only.",
 				*orderRemoval,
@@ -288,7 +290,7 @@ func (k Keeper) PersistOrderRemovalToState(
 		newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
 		orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
 		if !orderFillWouldIncreasePositionSize && !orderChangedSide {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrInvalidOrderRemoval,
 				"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
 				*orderRemoval,
@@ -301,7 +303,7 @@ func (k Keeper) PersistOrderRemovalToState(
 	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK:
 	case types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED:
 	default:
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidOrderRemoval,
 			"PersistOrderRemovalToState: Unrecognized order removal type for order removal: %+v",
 			orderIdToRemove,
@@ -352,7 +354,7 @@ func (k Keeper) PersistMatchOrdersToState(
 
 	// Taker order cannot be post only.
 	if takerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_POST_ONLY {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidMatchOrder,
 			"Taker order %+v cannot be post only.",
 			takerOrder.GetOrderTextString(),
@@ -425,38 +427,13 @@ func (k Keeper) PersistMatchLiquidationToState(
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	isLiquidatable, err := k.IsLiquidatable(ctx, matchLiquidation.Liquidated)
+	takerOrder, err := k.MaybeGetLiquidationOrder(ctx, matchLiquidation.Liquidated)
 	if err != nil {
 		return err
 	}
-	if !isLiquidatable {
-		return sdkerrors.Wrapf(
-			types.ErrSubaccountNotLiquidatable,
-			"PersistMatchLiquidationToState: Subaccount %s is not liquidatable",
-			matchLiquidation.Liquidated,
-		)
-	}
 
-	perpId := matchLiquidation.GetPerpetualId()
-	_, err = k.perpetualsKeeper.GetPerpetual(ctx, perpId)
-	if err != nil {
-		return sdkerrors.Wrapf(
-			types.ErrPerpetualDoesNotExist,
-			"Perpetual id %+v does not exist in state.",
-			perpId,
-		)
-	}
-	clobPair := matchLiquidation.ClobPairId
-	if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPair)); !found {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidClob,
-			"Clob Pair id %+v does not exist in state.",
-			clobPair,
-		)
-	}
-
-	takerOrder, err := k.ConstructTakerOrderFromMatchPerpetualLiquidation(ctx, matchLiquidation)
-	if err != nil {
+	// Perform stateless validation on the liquidation order.
+	if err := k.ValidateLiquidationOrderAgainstProposedLiquidation(ctx, takerOrder, matchLiquidation); err != nil {
 		return err
 	}
 
@@ -523,31 +500,31 @@ func (k Keeper) PersistMatchLiquidationToState(
 
 // PersistMatchDeleveragingToState writes a MatchPerpetualDeleveraging object to state.
 // This function returns an error if:
+// - CanDeleverageSubaccount returns false, indicating the subaccount failed deleveraging validation.
 // - OffsetSubaccountPerpetualPosition returns an error.
 // - The generated fills do not match the fills in the Operations object.
-// TODO(CLOB-654) Verify deleveraging is triggered by liquidation orders and for the correct amount.
+// TODO(CLOB-654) Verify deleveraging is triggered by unmatched liquidation orders and for the correct amount.
 func (k Keeper) PersistMatchDeleveragingToState(
 	ctx sdk.Context,
 	matchDeleveraging *types.MatchPerpetualDeleveraging,
 ) error {
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
 
-	isLiquidatable, err := k.IsLiquidatable(ctx, liquidatedSubaccountId)
-	if err != nil {
+	// Validate that the provided subaccount can be deleveraged.
+	if canDeleverageSubaccount, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId); err != nil {
 		panic(
 			fmt.Sprintf(
-				"PersistMatchDeleveragingToState: Failed to determine if subaccount is liquidatable. "+
-					"SubaccountId %v, error %s",
+				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
+					"SubaccountId %+v, error %+v",
 				liquidatedSubaccountId,
 				err,
 			),
 		)
-	}
-
-	if !isLiquidatable {
-		return sdkerrors.Wrapf(
-			types.ErrDeleveragedSubaccountNotLiquidatable,
-			"Subaccount %+v is not liquidatable",
+	} else if !canDeleverageSubaccount {
+		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
+		return errorsmod.Wrapf(
+			types.ErrInvalidDeleveragedSubaccount,
+			"Subaccount %+v failed deleveraging validation",
 			liquidatedSubaccountId,
 		)
 	}
@@ -557,7 +534,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
 	if !exists {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrNoOpenPositionForPerpetual,
 			"Subaccount %+v does not have an open position for perpetual %+v",
 			liquidatedSubaccountId,
@@ -587,7 +564,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			perpetualId,
 			deltaQuantums,
 		); err != nil {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrInvalidDeleveragingFill,
 				"Failed to process deleveraging fill: %+v. liquidatedSubaccountId: %+v, "+
 					"perpetualId: %v, deltaQuantums: %v, error: %v",

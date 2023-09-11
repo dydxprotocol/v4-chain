@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"math/big"
 	"testing"
@@ -8,7 +9,6 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -132,11 +132,18 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
 				0: {1},
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrInvalidClob,
 				"GetPricePremiumForPerpetual: did not find clob pair with clobPairId = %d",
 				1,
 			),
+		},
+		"Success, premium is zeroed for initializing clob pair": {
+			perpetualId: 0,
+			args: testMemClobMethodArgs{
+				clobPair: constants.ClobPair_Btc_Init,
+			},
+			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {},
 		},
 	}
 
@@ -172,7 +179,6 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 						tc.args.clobPair.QuantumConversionExponent,
 						perpetual.Params.AtomicResolution,
 						tc.args.clobPair.SubticksPerTick,
-						tc.args.clobPair.MinOrderBaseQuantums,
 						tc.args.clobPair.StepBaseQuantums,
 						perpetual.Params.LiquidityTier,
 					),
@@ -182,7 +188,6 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 				ks.Ctx,
 				tc.args.clobPair.Id,
 				clobtest.MustPerpetualId(tc.args.clobPair),
-				satypes.BaseQuantums(tc.args.clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(tc.args.clobPair.StepBaseQuantums),
 				tc.args.clobPair.QuantumConversionExponent,
 				tc.args.clobPair.SubticksPerTick,

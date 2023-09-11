@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
@@ -9,7 +9,7 @@ import (
 func (mp *MarketParam) Validate() error {
 	// Validate pair.
 	if mp.Pair == "" {
-		return sdkerrors.Wrap(ErrInvalidInput, "Pair cannot be empty")
+		return errorsmod.Wrap(ErrInvalidInput, "Pair cannot be empty")
 	}
 
 	if mp.MinExchanges == 0 {
@@ -18,7 +18,7 @@ func (mp *MarketParam) Validate() error {
 
 	// Validate min price change.
 	if mp.MinPriceChangePpm == 0 || mp.MinPriceChangePpm >= lib.MaxPriceChangePpm {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidInput,
 			"Min price change in parts-per-million must be greater than 0 and less than %d",
 			lib.MaxPriceChangePpm)

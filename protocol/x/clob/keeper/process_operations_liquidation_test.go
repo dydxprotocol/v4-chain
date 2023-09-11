@@ -86,7 +86,7 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 					Liquidated:  constants.Dave_Num0,
 					ClobPairId:  0,
 					PerpetualId: 0,
-					TotalSize:   10,
+					TotalSize:   100_000_000,
 					IsBuy:       false,
 					Fills: []types.MakerFill{
 						// Fill would be processed successfully.
@@ -333,7 +333,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_500_000_000, // Liquidated 1BTC at $50,500
+					NotionalLiquidated:    50_000_000_000, // Liquidated 1BTC at $50,000
 					QuantumsInsuranceLost: 1_000_000,
 				},
 				constants.Dave_Num0: {},
@@ -536,7 +536,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    25_250_000_000, // Liquidated 0.5 BTC at $50,500
+					NotionalLiquidated:    25_000_000_000, // Liquidated 0.5 BTC at $50,000
 					QuantumsInsuranceLost: 500_000,
 				},
 				constants.Dave_Num0: {},
@@ -640,7 +640,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_498_500_000,
+					NotionalLiquidated:    50_000_000_000,
 					QuantumsInsuranceLost: 250_000, // Insurance fund covered $0.25.
 				},
 				constants.Dave_Num0: {},
@@ -753,7 +753,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_498_500_000,
+					NotionalLiquidated:    50_000_000_000,
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -858,7 +858,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				constants.Dave_Num0: {},
 			},
 		},
-		"Liquidation succeeds with position size smaller than clobPair.MinOrderBaseQuantums": {
+		"Liquidation succeeds with position size smaller than clobPair.StepBaseQuantums": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -878,7 +878,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
 							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(-10), // Liquidatable position is smaller than MinOrderBaseQuantums
+							Quantums:    dtypes.NewInt(-10), // Liquidatable position is smaller than StepBaseQuantums
 						},
 					},
 				},
@@ -1177,7 +1177,7 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 						Liquidated:  constants.Dave_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
-						TotalSize:   20,
+						TotalSize:   100_000_000,
 						IsBuy:       false,
 						Fills: []types.MakerFill{
 							// Fill would be processed successfully.
@@ -1228,7 +1228,7 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 						Liquidated:  constants.Carl_Num0,
 						ClobPairId:  0,
 						PerpetualId: 0,
-						TotalSize:   50_000_000,
+						TotalSize:   100_000_000,
 						IsBuy:       true,
 						Fills: []types.MakerFill{
 							{
@@ -1506,7 +1506,10 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(ctx, constants.Carl_Num0, 0)
+			},
+			expectedError: types.ErrNoPerpetualPositionsToLiquidate,
 		},
 		"Stateful order validation: size of liquidation order exceeds position size": {
 			perpetuals: []*perptypes.Perpetual{
@@ -1540,7 +1543,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
+			expectedError: types.ErrInvalidLiquidationOrderTotalSize,
 		},
 		"Stateful order validation: liquidation order is on the wrong side": {
 			perpetuals: []*perptypes.Perpetual{
@@ -1574,7 +1577,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
+			expectedError: types.ErrInvalidLiquidationOrderSide,
 		},
 		"Stateful match validation: clob pair and perpetual ids do not match": {
 			perpetuals: []*perptypes.Perpetual{
@@ -1594,7 +1597,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 				clobtest.NewShortTermOrderPlacementOperationRaw(
 					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
-						Side:         types.Order_SIDE_BUY,
+						Side:         types.Order_SIDE_SELL,
 						Quantums:     1000,
 						Subticks:     1000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
@@ -2092,7 +2095,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrSubaccountHasLiquidatedPerpetual,
+			expectedError: types.ErrNoPerpetualPositionsToLiquidate,
 		},
 		"Subaccount block limit: fails when liquidation exceeds subaccount notional amount limit": {
 			perpetuals: []*perptypes.Perpetual{
@@ -2127,7 +2130,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 				),
 			},
 			liquidationConfig: &constants.LiquidationsConfig_Subaccount_Max10bNotionalLiquidated_Max10bInsuranceLost,
-			expectedError:     types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+			expectedError:     types.ErrInvalidLiquidationOrderTotalSize,
 		},
 		"Subaccount block limit: fails when a single liquidation fill exceeds max insurance lost block limit": {
 			perpetuals: []*perptypes.Perpetual{
@@ -2389,7 +2392,7 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			insuranceFundBalance: 999_999, // Insurance fund only has $0.999999
 			expectedError:        types.ErrInsuranceFundHasInsufficientFunds,
 		},
-		"Fails when insurance fund has enough balance but is less than MaxInsuranceFundQuantumsForDeleveraging": {
+		"Succeeds when insurance fund has enough balance but is less than MaxInsuranceFundQuantumsForDeleveraging": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -2431,7 +2434,13 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 				PositionBlockLimits:                     constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits:                   constants.SubaccountBlockLimits_No_Limit,
 			},
-			expectedError: types.ErrInsuranceFundHasInsufficientFunds,
+			expectedError: nil,
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: 5,
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.OrderId,
+				},
+			},
 		},
 	}
 

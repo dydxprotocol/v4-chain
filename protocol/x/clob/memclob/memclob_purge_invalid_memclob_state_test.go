@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -250,6 +251,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 			mockMemClobKeeper := &mocks.MemClobKeeper{}
 			memclob := NewMemClobPriceTimePriority(true)
 			memclob.SetClobKeeper(mockMemClobKeeper)
+			mockMemClobKeeper.On("Logger", mock.Anything).Return(log.NewNopLogger()).Maybe()
 
 			for _, operation := range tc.placedOperations {
 				switch operation.Operation.(type) {

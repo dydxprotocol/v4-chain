@@ -2,13 +2,16 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"DOTUSDT\"",
+      "ticker": "DOTUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bitfinex",
-      "ticker": "tDOTUSD",
-      "adjustByMarket": "USDT-USD"
+      "ticker": "tDOTUSD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "DOT-USD"
     },
     {
       "exchangeName": "CryptoCom",
@@ -17,11 +20,6 @@
     {
       "exchangeName": "Gate",
       "ticker": "DOT_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Huobi",
-      "ticker": "dotusdt",
       "adjustByMarket": "USDT-USD"
     },
     {

@@ -731,10 +731,6 @@
           "subticksPerTick": {
             "type": "number",
             "format": "double"
-          },
-          "minOrderBaseQuantums": {
-            "type": "number",
-            "format": "double"
           }
         },
         "required": [
@@ -756,8 +752,7 @@
           "tickSize",
           "stepSize",
           "stepBaseQuantums",
-          "subticksPerTick",
-          "minOrderBaseQuantums"
+          "subticksPerTick"
         ],
         "type": "object",
         "additionalProperties": false

@@ -1,5 +1,5 @@
 DOCKER := $(shell which docker)
-protoVer=0.13.3
+protoVer=0.14.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -26,17 +26,17 @@ proto-export-deps:
 
 PROTO_DIRS=$(shell find .proto-export-deps -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 
-dydxpy-gen: proto-export-deps
-	@rm -rf ./dydxpy/dydxpy
-	@mkdir -p ./dydxpy/dydxpy
+v4-proto-py-gen: proto-export-deps
+	@rm -rf ./v4-proto-py/v4_proto
+	@mkdir -p ./v4-proto-py/v4_proto
 	@for dir in $(PROTO_DIRS); do \
 		python3 -m grpc_tools.protoc \
 		-I .proto-export-deps \
-		--python_out=./dydxpy/dydxpy \
-		--pyi_out=./dydxpy/dydxpy \
-		--grpc_python_out=./dydxpy/dydxpy \
+		--python_out=./v4-proto-py/v4_proto \
+		--pyi_out=./v4-proto-py/v4_proto \
+		--grpc_python_out=./v4-proto-py/v4_proto \
 		$$(find ./$${dir} -type f -name '*.proto'); \
 	done; \
-	touch dydxpy/dydxpy/__init__.py
+	echo "import os\nimport sys\n\nsys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))" > v4-proto-py/v4_proto/__init__.py
 
-.PHONY: proto-format proto-lint proto-check-bc-breaking proto-export proto-export-deps dydxpy-gen
+.PHONY: proto-format proto-lint proto-check-bc-breaking proto-export proto-export-deps v4-proto-py-gen

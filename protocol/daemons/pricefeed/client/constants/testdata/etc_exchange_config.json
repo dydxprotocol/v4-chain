@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"ETCUSDT\"",
+      "ticker": "ETCUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -13,6 +13,15 @@
       "exchangeName": "Gate",
       "ticker": "ETC_USDT",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "etcusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "XETCZUSD"
     },
     {
       "exchangeName": "Okx",

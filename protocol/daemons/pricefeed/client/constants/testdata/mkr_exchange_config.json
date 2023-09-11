@@ -2,12 +2,31 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"MKRUSDT\"",
+      "ticker": "MKRUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
       "ticker": "MKR-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "MKR_USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "MKR-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "MKR_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "MKR-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

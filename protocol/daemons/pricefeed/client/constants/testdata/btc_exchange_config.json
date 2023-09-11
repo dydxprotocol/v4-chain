@@ -2,18 +2,17 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"BTCUSDT\"",
+      "ticker": "BTCUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "BinanceUS",
-      "ticker": "\"BTCUSD\"",
+      "ticker": "BTCUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bitfinex",
-      "ticker": "tBTCUSD",
-      "adjustByMarket": "USDT-USD"
+      "ticker": "tBTCUSD"
     },
     {
       "exchangeName": "Bitstamp",

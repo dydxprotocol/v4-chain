@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -36,6 +37,10 @@ type MemClobKeeper interface {
 		success bool,
 		successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
 	)
+	CanDeleverageSubaccount(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+	) (bool, error)
 	GetStatePosition(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
@@ -91,4 +96,7 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 		order Order,
 	) error
+	Logger(
+		ctx sdk.Context,
+	) log.Logger
 }

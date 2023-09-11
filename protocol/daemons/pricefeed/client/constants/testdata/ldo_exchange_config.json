@@ -2,12 +2,16 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"LDOUSDT\"",
+      "ticker": "LDOUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
       "ticker": "LDO-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "LDOUSD"
     },
     {
       "exchangeName": "Kucoin",
@@ -18,6 +22,10 @@
       "exchangeName": "Mexc",
       "ticker": "LDO_USDT",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "LDO-USDT"
     }
   ]
 }

@@ -52,6 +52,12 @@ describe('market-updater', () => {
     volume24H: '0',
     openInterest: '0',
   };
+  const perpMarketUpdate3: PerpetualMarketUpdateObject = {
+    id: testConstants.defaultPerpetualMarket3.id,
+    trades24H: 0,
+    volume24H: '0',
+    openInterest: '0',
+  };
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -122,7 +128,23 @@ describe('market-updater', () => {
     };
     expect(
       getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
-    ).toEqual('1.000000');
+    ).toEqual('1');
+    expect(
+      getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
+    ).toEqual(undefined);
+  });
+
+  it('getPriceChange with prices < 1e-6', () => {
+    const latestPrices: PriceMap = {
+      [testConstants.defaultOraclePrice.marketId]: '0.00000008',
+      [testConstants.defaultOraclePrice2.marketId]: '0.00000009',
+    };
+    const previousPrices: PriceMap = {
+      [testConstants.defaultOraclePrice.marketId]: '0.00000007',
+    };
+    expect(
+      getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
+    ).toEqual('0.00000001');
     expect(
       getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
     ).toEqual(undefined);
@@ -196,10 +218,16 @@ describe('market-updater', () => {
       trades24H: 0,
       volume24H: '0',
       openInterest: '0',
-      priceChange24H: '2.000000',
+      priceChange24H: '2',
     };
     newPerpetualMarketMap[testConstants.defaultPerpetualMarket2.id] = {
       ...perpetualMarketMap[testConstants.defaultPerpetualMarket2.id],
+      trades24H: 0,
+      volume24H: '0',
+      openInterest: '0',
+    };
+    newPerpetualMarketMap[testConstants.defaultPerpetualMarket3.id] = {
+      ...perpetualMarketMap[testConstants.defaultPerpetualMarket3.id],
       trades24H: 0,
       volume24H: '0',
       openInterest: '0',
@@ -253,6 +281,10 @@ describe('market-updater', () => {
       ...perpetualMarketMap[testConstants.defaultPerpetualMarket2.id],
       ...perpMarketUpdate2,
     };
+    newPerpetualMarketMap[testConstants.defaultPerpetualMarket3.id] = {
+      ...perpetualMarketMap[testConstants.defaultPerpetualMarket3.id],
+      ...perpMarketUpdate3,
+    };
 
     const contents: string = JSON.stringify(
       getUpdatedMarkets(perpetualMarketMap, newPerpetualMarketMap, liquidityTiersMap),
@@ -272,6 +304,7 @@ describe('market-updater', () => {
     await Promise.all([
       PerpetualMarketTable.update(perpMarketUpdate1),
       PerpetualMarketTable.update(perpMarketUpdate2),
+      PerpetualMarketTable.update(perpMarketUpdate3),
     ]);
 
     await marketUpdaterTask();
@@ -324,6 +357,10 @@ describe('market-updater', () => {
     newPerpetualMarketMap[testConstants.defaultPerpetualMarket2.id] = {
       ...perpetualMarketMap[testConstants.defaultPerpetualMarket2.id],
       ...perpMarketUpdate2,
+    };
+    newPerpetualMarketMap[testConstants.defaultPerpetualMarket3.id] = {
+      ...perpetualMarketMap[testConstants.defaultPerpetualMarket3.id],
+      ...perpMarketUpdate3,
     };
 
     const contents: string = JSON.stringify(
@@ -379,6 +416,10 @@ describe('market-updater', () => {
     newPerpetualMarketMap[testConstants.defaultPerpetualMarket2.id] = {
       ...perpetualMarketMap[testConstants.defaultPerpetualMarket2.id],
       ...perpMarketUpdate2,
+    };
+    newPerpetualMarketMap[testConstants.defaultPerpetualMarket3.id] = {
+      ...perpetualMarketMap[testConstants.defaultPerpetualMarket3.id],
+      ...perpMarketUpdate3,
     };
 
     const contents: string = JSON.stringify(

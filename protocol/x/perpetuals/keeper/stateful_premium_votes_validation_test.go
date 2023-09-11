@@ -3,10 +3,17 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
+
+type IsPerpetualClobPairActiveResp struct {
+	isPerpetualClobPairActive    bool
+	isPerpetualClobPairActiveErr error
+}
 
 func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 	// In below test cases, perpetual 0 is associated with liquidity tier 0,
@@ -19,9 +26,10 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 	// liquidity tier 4: 60_000_000 * (50% - 40%) = 6_000_000
 	tests := map[string]struct {
 		// Setup.
-		votes         []types.FundingPremium
-		numPerpetuals int
-		expectedErr   error
+		votes                         []types.FundingPremium
+		isPerpetualClobPairActiveResp *IsPerpetualClobPairActiveResp
+		numPerpetuals                 int
+		expectedErr                   error
 	}{
 		"Valid: empty votes": {
 			votes:         []types.FundingPremium{},
@@ -117,27 +125,73 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 			numPerpetuals: 4,
 			expectedErr:   types.ErrPremiumVoteNotClamped,
 		},
+		"Error: fails to determine clob pair status": {
+			votes: []types.FundingPremium{
+				{
+					PerpetualId: 0,
+					PremiumPpm:  0,
+				},
+			},
+			isPerpetualClobPairActiveResp: &IsPerpetualClobPairActiveResp{
+				isPerpetualClobPairActiveErr: clobtypes.ErrInvalidClob,
+			},
+			numPerpetuals: 1,
+			expectedErr:   clobtypes.ErrInvalidClob,
+		},
+		"Error: rejects the premium vote if the clob pair is initializing": {
+			votes: []types.FundingPremium{
+				{
+					PerpetualId: 0,
+					PremiumPpm:  1,
+				},
+			},
+			isPerpetualClobPairActiveResp: &IsPerpetualClobPairActiveResp{
+				isPerpetualClobPairActive:    false,
+				isPerpetualClobPairActiveErr: nil,
+			},
+			numPerpetuals: 1,
+			expectedErr:   types.ErrPremiumVoteForNonActiveMarket,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+			mockPerpetualsClobKeeper := &mocks.PerpetualsClobKeeper{}
+			ctx, k, pricesKeeper, _, _ := keepertest.PerpetualsKeepersWithClobHelpers(
+				t,
+				mockPerpetualsClobKeeper,
+			)
 
-			_, err := createLiquidityTiersAndNPerpetuals(t, ctx, k, pricesKeeper, tc.numPerpetuals)
-			require.NoError(t, err)
+			// set mock expectations
+			for _, vote := range tc.votes {
+				isActive := true
+				var err error
+				if tc.isPerpetualClobPairActiveResp != nil {
+					isActive = tc.isPerpetualClobPairActiveResp.isPerpetualClobPairActive
+					err = tc.isPerpetualClobPairActiveResp.isPerpetualClobPairActiveErr
+				}
+				mockPerpetualsClobKeeper.On("IsPerpetualClobPairActive", ctx, vote.PerpetualId).Once().Return(
+					isActive,
+					err,
+				)
+			}
+
+			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, k, pricesKeeper, tc.numPerpetuals)
 
 			// Run.
 			msg := &types.MsgAddPremiumVotes{
 				Votes: tc.votes,
 			}
 
-			err = k.PerformStatefulPremiumVotesValidation(ctx, msg)
+			err := k.PerformStatefulPremiumVotesValidation(ctx, msg)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, err, tc.expectedErr)
 				return
 			}
 
 			require.NoError(t, err)
+
+			mockPerpetualsClobKeeper.AssertExpectations(t)
 		})
 	}
 }

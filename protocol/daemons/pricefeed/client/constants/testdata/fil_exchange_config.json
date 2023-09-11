@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"FILUSDT\"",
+      "ticker": "FILUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {

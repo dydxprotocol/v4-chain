@@ -1,13 +1,13 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -52,7 +52,7 @@ func (k Keeper) ProcessSingleMatch(
 					ctx,
 					satypes.Update{SubaccountId: *takerSubaccount.Id},
 				)
-				ctx.Logger().Error(
+				k.Logger(ctx).Error(
 					"collateralization check failed for liquidation",
 					"takerSubaccount", fmt.Sprintf("%+v", takerSubaccount),
 					"takerTNC", takerTnc,
@@ -69,7 +69,7 @@ func (k Keeper) ProcessSingleMatch(
 
 	// Perform stateless validation on the match.
 	if err := matchWithOrders.Validate(); err != nil {
-		return false, takerUpdateResult, makerUpdateResult, nil, sdkerrors.Wrapf(
+		return false, takerUpdateResult, makerUpdateResult, nil, errorsmod.Wrapf(
 			err,
 			"ProcessSingleMatch: Invalid MatchWithOrders: %+v",
 			matchWithOrders,
@@ -148,7 +148,6 @@ func (k Keeper) ProcessSingleMatch(
 			perpetualId,
 			fillAmount,
 			makerMatchableOrder.GetOrderSubticks(),
-			bigFillQuoteQuantums,
 		)
 
 		if err != nil {
@@ -227,10 +226,19 @@ func (k Keeper) ProcessSingleMatch(
 
 	// Update subaccount total quantums liquidated and total insurance fund lost for liquidation orders.
 	if matchWithOrders.TakerOrder.IsLiquidation() {
+		notionalLiquidatedQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+			ctx,
+			perpetualId,
+			fillAmount.ToBigInt(),
+		)
+		if err != nil {
+			return false, takerUpdateResult, makerUpdateResult, nil, err
+		}
+
 		k.UpdateSubaccountLiquidationInfo(
 			ctx,
 			matchWithOrders.TakerOrder.GetSubaccountId(),
-			bigFillQuoteQuantums,
+			notionalLiquidatedQuoteQuantums,
 			takerInsuranceFundDelta,
 		)
 	}
@@ -402,7 +410,7 @@ func (k Keeper) persistMatchedOrders(
 		lib.UsdcAssetId,
 		bigTotalFeeQuoteQuantums,
 	); err != nil {
-		return takerUpdateResult, makerUpdateResult, sdkerrors.Wrapf(
+		return takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
 			types.ErrSubaccountFeeTransferFailed,
 			"persistMatchedOrders: subaccounts (%v, %v) updated, but fee transfer (bigFeeQuoteQuantums: %v)"+
 				" to fee-collector failed. Err: %v",
@@ -443,6 +451,7 @@ func (k Keeper) persistMatchedOrders(
 			bigMakerPerpetualQuantumsDelta,
 			insuranceFundDelta,
 			isTakerLiquidation,
+			false,
 			perpetualId,
 		),
 	)
@@ -473,7 +482,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 		// the same `OrderId` with a lower `GoodTilBlock` first if the proposer is using this unmodified application,
 		// but it's still not necessarily guaranteed due to MEV.
 		if curPruneableBlockHeight > order.GetGoodTilBlock()+types.ShortBlockWindow {
-			ctx.Logger().Info(
+			k.Logger(ctx).Info(
 				"Found an `orderId` in ProcessProposerMatches which had a lower GoodTilBlock than"+
 					" a previous order in the list of fills. This could mean a lower priority order was allowed on the book.",
 				"orderId",
@@ -498,7 +507,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 		if _, exists := k.MemClob.GetOrder(ctx, order.OrderId); exists {
 			// Generate an off-chain update message updating the total filled amount of order.
 			if message, success := off_chain_updates.CreateOrderUpdateMessage(
-				ctx.Logger(),
+				k.Logger(ctx),
 				order.OrderId,
 				newTotalFillAmount,
 			); success {
@@ -522,7 +531,7 @@ func getUpdatedOrderFillAmount(
 	bigCurrentFillAmount := currentFillAmount.ToBigInt()
 	bigNewFillAmount := bigCurrentFillAmount.Add(bigCurrentFillAmount, fillQuantums.ToBigInt())
 	if bigNewFillAmount.Cmp(orderBaseQuantums.ToBigInt()) == 1 {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrInvalidMsgProposedOperations,
 			"Match with Quantums %v would exceed total Quantums %v of OrderId %v. New total filled quantums would be %v.",
 			fillQuantums,

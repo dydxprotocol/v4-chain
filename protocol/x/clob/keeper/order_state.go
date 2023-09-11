@@ -234,7 +234,7 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 			prunedOrderIds = append(prunedOrderIds, orderId)
 
 			if prunableBlockHeight < blockHeight {
-				ctx.Logger().Error(fmt.Sprintf(
+				k.Logger(ctx).Error(fmt.Sprintf(
 					"prunableBlockHeight %v is less than blockHeight %v in PruneOrdersForBlockHeight, this should never happen.",
 					prunableBlockHeight,
 					blockHeight,

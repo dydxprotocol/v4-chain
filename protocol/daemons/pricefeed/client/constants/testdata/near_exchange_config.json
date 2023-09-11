@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"NEARUSDT\"",
+      "ticker": "NEARUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -10,7 +10,27 @@
       "ticker": "NEAR-USD"
     },
     {
+      "exchangeName": "CryptoCom",
+      "ticker": "NEAR_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "Gate",
+      "ticker": "NEAR_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "nearusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "NEAR-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
       "ticker": "NEAR_USDT",
       "adjustByMarket": "USDT-USD"
     }

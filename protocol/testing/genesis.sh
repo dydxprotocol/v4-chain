@@ -18,10 +18,16 @@ REWARD_TOKEN="dv4tnt"
 NATIVE_TOKEN="dv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
+# TODO(GENESIS): 11155111 is the chain ID for sepolia testnet.
 ETH_CHAIN_ID=11155111 # sepolia
-ETH_BRIDGE_ADDRESS="0xEf01c3A30eB57c91c40C52E996d29c202ae72193"
+# TODO(GENESIS): below is the bridge contract on sepolia testnet.
+# https://sepolia.etherscan.io/address/0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0
+ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0"
+# TODO(GENESIS): verify below balance is desired amount.
 BRIDGE_MODACC_BALANCE=1000000000000000000000000000 # 1e27
+# TODO(GENESIS): determine bridge events to manually include in genesis.
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0 # TODO(CORE-329)
+# TODO(GENESIS): determine bridge events to manually include in genesis.
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=0 # TODO(CORE-329)
 
 function edit_genesis() {
@@ -1268,23 +1274,24 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].quantum_conversion_exponent' -v '-13'
 
 	# Liquidations
+	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.max_insurance_fund_quantums_for_deleveraging' -v '100000000000'  # 100_000 USDC
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.max_liquidation_fee_ppm' -v '15000'  # 1.5%
+	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.position_block_limits.min_position_notional_liquidated' -v '1000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.position_block_limits.max_position_portion_liquidated_ppm' -v '100000'  # 10%
+	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.subaccount_block_limits.max_notional_liquidated' -v '100000000000'  # 100_000 USDC
+	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.subaccount_block_limits.max_quantums_insurance_lost' -v '1000000000000' # 1_000_000 USDC
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.fillable_price_config.bankruptcy_adjustment_ppm' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.fillable_price_config.spread_to_maintenance_margin_ratio_ppm' -v '1500000'  # 150%
-	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.position_block_limits.min_position_notional_liquidated' -v '1000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.position_block_limits.max_position_portion_liquidated_ppm' -v '1000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.subaccount_block_limits.max_notional_liquidated' -v '100000000000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.subaccount_block_limits.max_quantums_insurance_lost' -v '100000000000000'
 
 	# Block Rate Limit
-	# Max 50 short term orders per market and block
-	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_market_per_n_blocks.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_market_per_n_blocks.[0].limit' -v '50'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_market_per_n_blocks.[0].num_blocks' -v '1'
-	# Max 50 short term order cancellations per market and block
-	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_market_per_n_blocks.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_market_per_n_blocks.[0].limit' -v '50'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_market_per_n_blocks.[0].num_blocks' -v '1'
+	# Max 50 short term orders per block
+	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_n_blocks.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_n_blocks.[0].limit' -v '50'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_n_blocks.[0].num_blocks' -v '1'
+	# Max 50 short term order cancellations per block
+	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_n_blocks.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_n_blocks.[0].limit' -v '50'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_n_blocks.[0].num_blocks' -v '1'
 	# Max 2 stateful orders per block
 	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_stateful_orders_per_n_blocks.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_stateful_orders_per_n_blocks.[0].limit' -v '2'
@@ -1472,6 +1479,13 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().perpetual_clob_metadata.perpetual_id' -v "${NUM_PERPETUALS}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().subticks_per_tick' -v '1000000000'
-	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().min_order_base_quantums' -v '10000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().quantum_conversion_exponent' -v '-8'
+}
+
+# Modify the genesis file with reduced complete bridge delay (for testing in non-prod envs).
+update_genesis_complete_bridge_delay() {
+	GENESIS=$1/genesis.json
+
+	# Reduce complete bridge delay to 600 blocks.
+	dasel put -t int -f "$GENESIS" '.app_state.bridge.safety_params.delay_blocks' -v "$2"
 }

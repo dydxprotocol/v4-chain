@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse } from "./tx";
+import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse, MsgUpdateLiquidationsConfig, MsgUpdateLiquidationsConfigResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -38,6 +38,9 @@ export interface Msg {
    */
 
   updateBlockRateLimitConfiguration(request: MsgUpdateBlockRateLimitConfiguration): Promise<MsgUpdateBlockRateLimitConfigurationResponse>;
+  /** UpdateLiquidationsConfig updates the liquidations configuration in state. */
+
+  updateLiquidationsConfig(request: MsgUpdateLiquidationsConfig): Promise<MsgUpdateLiquidationsConfigResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -51,6 +54,7 @@ export class MsgClientImpl implements Msg {
     this.updateClobPair = this.updateClobPair.bind(this);
     this.updateEquityTierLimitConfiguration = this.updateEquityTierLimitConfiguration.bind(this);
     this.updateBlockRateLimitConfiguration = this.updateBlockRateLimitConfiguration.bind(this);
+    this.updateLiquidationsConfig = this.updateLiquidationsConfig.bind(this);
   }
 
   proposedOperations(request: MsgProposedOperations): Promise<MsgProposedOperationsResponse> {
@@ -93,6 +97,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgUpdateBlockRateLimitConfiguration.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateBlockRateLimitConfiguration", data);
     return promise.then(data => MsgUpdateBlockRateLimitConfigurationResponse.decode(new _m0.Reader(data)));
+  }
+
+  updateLiquidationsConfig(request: MsgUpdateLiquidationsConfig): Promise<MsgUpdateLiquidationsConfigResponse> {
+    const data = MsgUpdateLiquidationsConfig.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateLiquidationsConfig", data);
+    return promise.then(data => MsgUpdateLiquidationsConfigResponse.decode(new _m0.Reader(data)));
   }
 
 }

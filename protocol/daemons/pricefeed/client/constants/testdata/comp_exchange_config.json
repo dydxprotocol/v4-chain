@@ -2,12 +2,31 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"COMPUSDT\"",
+      "ticker": "COMPUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
       "ticker": "COMP-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "COMP_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "COMP_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "COMPUSD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "COMP-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

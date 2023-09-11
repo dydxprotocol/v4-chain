@@ -19,7 +19,6 @@ import {
   TransferFromDatabase,
   helpers,
   UpdatedPerpetualPositionSubaccountKafkaObject,
-  CURRENCY_DECIMAL_PRECISION,
   PerpetualPositionFromDatabase,
   AssetPositionSubaccountMessageContents,
   SubaccountTable,
@@ -144,7 +143,7 @@ export function getPnl(
     realizedPnl = priceDiff
       .mul(updateObject.sumClose)
       .plus(updateObject.settledFunding)
-      .toFixed(CURRENCY_DECIMAL_PRECISION);
+      .toFixed();
     unrealizedPnl = helpers.getUnrealizedPnl(updateObject, perpetualMarket, marketIdToMarket);
   }
   return { realizedPnl, unrealizedPnl };
@@ -252,6 +251,8 @@ export function generateTransferContents(
         transfer,
         SubaccountTable.uuid(subaccountId.owner, subaccountId.number),
       ),
+      createdAt: transfer.createdAt,
+      createdAtHeight: transfer.createdAtHeight,
       transactionHash: transfer.transactionHash,
     },
   };
@@ -264,7 +265,7 @@ export function generateOraclePriceContents(
   return {
     oraclePrices: {
       [ticker]: {
-        price: oraclePrice.price,
+        oraclePrice: oraclePrice.price,
         effectiveAt: oraclePrice.effectiveAt,
         effectiveAtHeight: oraclePrice.effectiveAtHeight,
         marketId: oraclePrice.marketId,
@@ -322,7 +323,6 @@ export function generatePerpetualMarketMessage(
         quantumConversionExponent: perpetualMarket.quantumConversionExponent,
         atomicResolution: perpetualMarket.atomicResolution,
         subticksPerTick: perpetualMarket.subticksPerTick,
-        minOrderBaseQuantums: perpetualMarket.minOrderBaseQuantums,
         stepBaseQuantums: perpetualMarket.stepBaseQuantums,
         initialMarginFraction: helpers.ppmToString(Number(liquidityTier.initialMarginPpm)),
         maintenanceMarginFraction: helpers.ppmToString(

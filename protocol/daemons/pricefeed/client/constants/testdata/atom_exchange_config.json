@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"ATOMUSDT\"",
+      "ticker": "ATOMUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -15,8 +15,9 @@
       "ticker": "ATOM-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "ATOM_USD"
+      "exchangeName": "Gate",
+      "ticker": "ATOM_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
@@ -24,6 +25,11 @@
     },
     {
       "exchangeName": "Kucoin",
+      "ticker": "ATOM-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
       "ticker": "ATOM-USDT",
       "adjustByMarket": "USDT-USD"
     }

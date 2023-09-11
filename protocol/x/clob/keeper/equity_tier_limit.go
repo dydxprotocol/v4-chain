@@ -1,9 +1,9 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -117,7 +117,7 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 	}
 	// Return immediately if the amount the subaccount can open is 0.
 	if equityTierLimit.Limit == 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
 			"Opening order would exceed equity tier limit of %d. Order id: %+v",
 			equityTierLimit.Limit,
@@ -168,7 +168,7 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 	// stateful orders on the memclob we should always have a negative number since we only count order
 	// cancellations/removals for orders that exist.
 	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
 			"Opening order would exceed equity tier limit of %d. Order id: %+v",
 			equityTierLimit.Limit,

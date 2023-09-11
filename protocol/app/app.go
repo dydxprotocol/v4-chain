@@ -247,7 +247,7 @@ type App struct {
 
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
-	PerpetualsKeeper perpetualsmodulekeeper.Keeper
+	PerpetualsKeeper *perpetualsmodulekeeper.Keeper
 
 	VestKeeper vestmodulekeeper.Keeper
 
@@ -638,12 +638,17 @@ func New(
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
 
-	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
+	app.PerpetualsKeeper = perpetualsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[perpetualsmoduletypes.StoreKey],
 		app.PricesKeeper,
 		app.EpochsKeeper,
 		app.IndexerEventManager,
+		// gov module and delayMsg module accounts are allowed to send messages to the bridge module.
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+		},
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper, app.AccountKeeper, app.BankKeeper)
 
@@ -752,7 +757,7 @@ func New(
 		memClob,
 		liquidatableSubaccountIds,
 	)
-	app.PerpetualsKeeper.SetPricePremiumGetter(app.ClobKeeper)
+	app.PerpetualsKeeper.SetClobKeeper(app.ClobKeeper)
 
 	app.SendingKeeper = *sendingmodulekeeper.NewKeeper(
 		appCodec,

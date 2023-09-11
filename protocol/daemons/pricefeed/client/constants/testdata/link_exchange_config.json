@@ -2,8 +2,12 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"LINKUSDT\"",
+      "ticker": "LINKUSDT",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bitstamp",
+      "ticker": "LINK/USD"
     },
     {
       "exchangeName": "Bybit",

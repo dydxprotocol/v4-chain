@@ -23,7 +23,7 @@ func TestUpdateBlockRateLimitConfig(t *testing.T) {
 		})
 		testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *clobtypes.GenesisState) {
 			state.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrdersPerMarketPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 1,
 						Limit:     2,
@@ -35,7 +35,7 @@ func TestUpdateBlockRateLimitConfig(t *testing.T) {
 						Limit:     4,
 					},
 				},
-				MaxShortTermOrderCancellationsPerMarketPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 5,
 						Limit:     6,
@@ -47,7 +47,7 @@ func TestUpdateBlockRateLimitConfig(t *testing.T) {
 	}).Build()
 
 	expectedConfig := clobtypes.BlockRateLimitConfiguration{
-		MaxShortTermOrdersPerMarketPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+		MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 			{
 				NumBlocks: 7,
 				Limit:     8,
@@ -59,7 +59,7 @@ func TestUpdateBlockRateLimitConfig(t *testing.T) {
 				Limit:     10,
 			},
 		},
-		MaxShortTermOrderCancellationsPerMarketPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+		MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 			{
 				NumBlocks: 11,
 				Limit:     12,

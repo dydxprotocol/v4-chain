@@ -1,4 +1,4 @@
-export VERSION := $(shell echo $(shell git describe --always --match "v*") | sed 's/^v//')
+export VERSION := $(shell echo $(shell git describe --tags --always --match "protocol/v*") | sed 's/^protocol\/v//')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
 HTTPS_GIT := https://github.com/dydxprotocol/v4.git
@@ -7,7 +7,7 @@ PROJECT_NAME := $(shell git remote get-url origin | xargs basename -s .git)
 CGO_ENABLED=1
 export GIT_COMMIT_HASH=$(shell git rev-parse --short HEAD)
 export COMMIT=$(shell git rev-parse HEAD)
-export TAG_VERSION=$(shell git describe --tags | sed 's/^v//')
+export TAG_VERSION=$(shell git describe --tags | sed 's/^protocol\/v//')
 
 export GO111MODULE = on
 
@@ -151,9 +151,8 @@ build-reproducible-linux-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name dydxv4builder || true
 	$(DOCKER) buildx use dydxv4builder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(GO_VERSION) \
-		--build-arg GIT_VERSION=$(VERSION) \
-		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg COMMIT=$(COMMIT) \
 		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/amd64 \
 		-t dydx:local-linux-amd64 \
@@ -167,9 +166,8 @@ build-reproducible-linux-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name dydxv4builder || true
 	$(DOCKER) buildx use dydxv4builder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(GO_VERSION) \
-		--build-arg GIT_VERSION=$(VERSION) \
-		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg COMMIT=$(COMMIT) \
 		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/arm64 \
 		-t dydx:local-linux-arm64 \
@@ -278,14 +276,16 @@ format:
 # Note: update github action workflow `proto.yaml` when updating version or images.
 protoVer=0.11.5
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+protoImage=$(DOCKER) run --user root --rm -v $(CURDIR)/..:/workspace --workdir /workspace $(protoImageName)
 
 proto-swagger-gen:
 	@make clean
 	@echo "Downloading Protobuf dependencies"
 	@make proto-download-deps
 	@echo "Generating Protobuf Swagger"
-	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
+	@$(protoImage) sh ./protocol/scripts/protoc-swagger-gen.sh
+	@echo "Generating static files for swagger docs"
+	$(MAKE) update-swagger-docs
 
 SWAGGER_DIR=./swagger-proto
 THIRD_PARTY_DIR=$(SWAGGER_DIR)/third_party
@@ -383,3 +383,18 @@ localnet-stop:
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark
+
+###############################################################################
+###                              Documentation                              ###
+###############################################################################
+
+update-swagger-docs: statik
+	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
+	@if [ -n "$(git status --porcelain)" ]; then \
+		echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
+		exit 1;\
+	else \
+		echo "\033[92mSwagger docs are in sync\033[0m";\
+	fi
+
+.PHONY: update-swagger-docs

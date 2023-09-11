@@ -2,7 +2,6 @@ package binance
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
@@ -20,7 +19,7 @@ type BinanceTicker struct {
 
 func (t BinanceTicker) GetPair() string {
 	// needs to be wrapped in quotes to be consistent with the API request format.
-	return fmt.Sprintf(`"%s"`, t.Pair)
+	return t.Pair
 }
 
 func (t BinanceTicker) GetAskPrice() string {

@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"BCHUSDT\"",
+      "ticker": "BCHUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -15,7 +15,8 @@
     },
     {
       "exchangeName": "CryptoCom",
-      "ticker": "BCH_USD"
+      "ticker": "BCH_USD",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Gate",

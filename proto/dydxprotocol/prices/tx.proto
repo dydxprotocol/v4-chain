@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.prices;
 
+import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/prices/market_param.proto";
@@ -27,7 +28,7 @@ message MsgCreateOracleMarket {
   string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 
   // `params` defines parameters for the new oracle market.
-  MarketParam params = 2;
+  MarketParam params = 2 [ (gogoproto.nullable) = false ];
 }
 
 // MsgCreateOracleMarketResponse defines the CreateOracleMarket response type.

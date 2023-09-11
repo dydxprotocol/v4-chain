@@ -762,12 +762,6 @@ export interface PerpetualMarketCreateEventV1 {
 
   subticksPerTick: number;
   /**
-   * Minimum size of an order on the CLOB, in base quantums.
-   * Defined in clob.clob_pair
-   */
-
-  minOrderBaseQuantums: Long;
-  /**
    * Minimum increment in the size of orders on the CLOB, in base quantums.
    * Defined in clob.clob_pair
    */
@@ -837,12 +831,6 @@ export interface PerpetualMarketCreateEventV1SDKType {
    */
 
   subticks_per_tick: number;
-  /**
-   * Minimum size of an order on the CLOB, in base quantums.
-   * Defined in clob.clob_pair
-   */
-
-  min_order_base_quantums: Long;
   /**
    * Minimum increment in the size of orders on the CLOB, in base quantums.
    * Defined in clob.clob_pair
@@ -949,12 +937,6 @@ export interface UpdateClobPairEventV1 {
 
   subticksPerTick: number;
   /**
-   * Minimum size of an order on the CLOB, in base quantums.
-   * Defined in clob.clob_pair
-   */
-
-  minOrderBaseQuantums: Long;
-  /**
    * Minimum increment in the size of orders on the CLOB, in base quantums.
    * Defined in clob.clob_pair
    */
@@ -991,12 +973,6 @@ export interface UpdateClobPairEventV1SDKType {
    */
 
   subticks_per_tick: number;
-  /**
-   * Minimum size of an order on the CLOB, in base quantums.
-   * Defined in clob.clob_pair
-   */
-
-  min_order_base_quantums: Long;
   /**
    * Minimum increment in the size of orders on the CLOB, in base quantums.
    * Defined in clob.clob_pair
@@ -2318,7 +2294,6 @@ function createBasePerpetualMarketCreateEventV1(): PerpetualMarketCreateEventV1 
     quantumConversionExponent: 0,
     atomicResolution: 0,
     subticksPerTick: 0,
-    minOrderBaseQuantums: Long.UZERO,
     stepBaseQuantums: Long.UZERO,
     liquidityTier: 0
   };
@@ -2358,16 +2333,12 @@ export const PerpetualMarketCreateEventV1 = {
       writer.uint32(64).uint32(message.subticksPerTick);
     }
 
-    if (!message.minOrderBaseQuantums.isZero()) {
-      writer.uint32(72).uint64(message.minOrderBaseQuantums);
-    }
-
     if (!message.stepBaseQuantums.isZero()) {
-      writer.uint32(80).uint64(message.stepBaseQuantums);
+      writer.uint32(72).uint64(message.stepBaseQuantums);
     }
 
     if (message.liquidityTier !== 0) {
-      writer.uint32(88).uint32(message.liquidityTier);
+      writer.uint32(80).uint32(message.liquidityTier);
     }
 
     return writer;
@@ -2415,14 +2386,10 @@ export const PerpetualMarketCreateEventV1 = {
           break;
 
         case 9:
-          message.minOrderBaseQuantums = (reader.uint64() as Long);
-          break;
-
-        case 10:
           message.stepBaseQuantums = (reader.uint64() as Long);
           break;
 
-        case 11:
+        case 10:
           message.liquidityTier = reader.uint32();
           break;
 
@@ -2445,7 +2412,6 @@ export const PerpetualMarketCreateEventV1 = {
     message.quantumConversionExponent = object.quantumConversionExponent ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
     message.subticksPerTick = object.subticksPerTick ?? 0;
-    message.minOrderBaseQuantums = object.minOrderBaseQuantums !== undefined && object.minOrderBaseQuantums !== null ? Long.fromValue(object.minOrderBaseQuantums) : Long.UZERO;
     message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
     message.liquidityTier = object.liquidityTier ?? 0;
     return message;
@@ -2544,7 +2510,6 @@ function createBaseUpdateClobPairEventV1(): UpdateClobPairEventV1 {
     status: 0,
     quantumConversionExponent: 0,
     subticksPerTick: 0,
-    minOrderBaseQuantums: Long.UZERO,
     stepBaseQuantums: Long.UZERO
   };
 }
@@ -2567,12 +2532,8 @@ export const UpdateClobPairEventV1 = {
       writer.uint32(32).uint32(message.subticksPerTick);
     }
 
-    if (!message.minOrderBaseQuantums.isZero()) {
-      writer.uint32(40).uint64(message.minOrderBaseQuantums);
-    }
-
     if (!message.stepBaseQuantums.isZero()) {
-      writer.uint32(48).uint64(message.stepBaseQuantums);
+      writer.uint32(40).uint64(message.stepBaseQuantums);
     }
 
     return writer;
@@ -2604,10 +2565,6 @@ export const UpdateClobPairEventV1 = {
           break;
 
         case 5:
-          message.minOrderBaseQuantums = (reader.uint64() as Long);
-          break;
-
-        case 6:
           message.stepBaseQuantums = (reader.uint64() as Long);
           break;
 
@@ -2626,7 +2583,6 @@ export const UpdateClobPairEventV1 = {
     message.status = object.status ?? 0;
     message.quantumConversionExponent = object.quantumConversionExponent ?? 0;
     message.subticksPerTick = object.subticksPerTick ?? 0;
-    message.minOrderBaseQuantums = object.minOrderBaseQuantums !== undefined && object.minOrderBaseQuantums !== null ? Long.fromValue(object.minOrderBaseQuantums) : Long.UZERO;
     message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
     return message;
   }

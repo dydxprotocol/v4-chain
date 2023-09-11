@@ -201,7 +201,7 @@ export function expectLiquidityTier(
     basePositionNotional: protocolTranslations.quantumsToHuman(
       event.basePositionNotional.toString(),
       QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-    ).toFixed(6),
+    ).toFixed(),
   }));
 }
 
@@ -268,7 +268,7 @@ function validateLiquidityTierRefresher(
     basePositionNotional: protocolTranslations.quantumsToHuman(
       liquidityTierEvent.basePositionNotional.toString(),
       QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-    ).toFixed(6),
+    ).toFixed(),
   });
 }
 

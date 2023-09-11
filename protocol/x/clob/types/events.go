@@ -24,6 +24,7 @@ const (
 	AttributeKeyTakerPerpetualQuantumsDeltaBaseQuantums = "taker_perpetual_quantums_delta_base_quantums"
 	AttributeKeyInsuranceFundDeltaQuoteQuantums         = "insurance_fund_delta_quote_quantums"
 	AttributeKeyIsLiquidation                           = "is_liquidation"
+	AttributeKeyIsDeleverage                            = "is_deleverage"
 	AttributeKeyPerpetualId                             = "perpetual_id"
 )
 
@@ -39,6 +40,7 @@ func NewCreateMatchEvent(
 	makerPerpetualQuantumsDelta *big.Int,
 	insuranceFundDelta *big.Int,
 	isLiquidation bool,
+	isDeleverage bool,
 	perpetualId uint32,
 ) sdk.Event {
 	return sdk.NewEvent(
@@ -55,6 +57,7 @@ func NewCreateMatchEvent(
 		sdk.NewAttribute(AttributeKeyMakerPerpetualQuantumsDeltaBaseQuantums, makerPerpetualQuantumsDelta.String()),
 		sdk.NewAttribute(AttributeKeyInsuranceFundDeltaQuoteQuantums, insuranceFundDelta.String()),
 		sdk.NewAttribute(AttributeKeyIsLiquidation, fmt.Sprint(isLiquidation)),
+		sdk.NewAttribute(AttributeKeyIsDeleverage, fmt.Sprint(isDeleverage)),
 		sdk.NewAttribute(AttributeKeyPerpetualId, fmt.Sprint(perpetualId)),
 	)
 }

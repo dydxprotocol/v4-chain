@@ -5,6 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 
 	sdklog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,8 +20,9 @@ type (
 		storeKey            storetypes.StoreKey
 		pricesKeeper        types.PricesKeeper
 		epochsKeeper        types.EpochsKeeper
-		pricePremiumGetter  types.PricePremiumGetter
+		clobKeeper          types.PerpetualsClobKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
+		authorities         map[string]struct{}
 	}
 )
 
@@ -30,6 +32,7 @@ func NewKeeper(
 	pricesKeeper types.PricesKeeper,
 	epochsKeeper types.EpochsKeeper,
 	indexerEventsManager indexer_manager.IndexerEventManager,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:                 cdc,
@@ -37,6 +40,7 @@ func NewKeeper(
 		pricesKeeper:        pricesKeeper,
 		epochsKeeper:        epochsKeeper,
 		indexerEventManager: indexerEventsManager,
+		authorities:         maps.ArrayToMapInterface(authorities),
 	}
 }
 
@@ -44,13 +48,13 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 
-// SetPricePremiumGetter sets the `PricePremiumGetter` reference, which is a Clob Keeper,
+// SetClobKeeper sets the `PerpetualsClobKeeper` reference, which is a Clob Keeper,
 // for this Perpetuals Keeper.
 // This method is called after the Perpetuals Keeper struct is initialized.
 // This reference is set with an explicit method call rather than during `NewKeeper`
 // due to the bidirectional dependency between the Perpetuals Keeper and the Clob Keeper.
-func (k *Keeper) SetPricePremiumGetter(getter types.PricePremiumGetter) {
-	k.pricePremiumGetter = getter
+func (k *Keeper) SetClobKeeper(getter types.PerpetualsClobKeeper) {
+	k.clobKeeper = getter
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

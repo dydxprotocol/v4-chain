@@ -197,7 +197,6 @@ function expectPerpetualMarketMatchesEvent(
     quantumConversionExponent: perpetual.quantumConversionExponent,
     atomicResolution: perpetual.atomicResolution,
     subticksPerTick: perpetual.subticksPerTick,
-    minOrderBaseQuantums: Number(perpetual.minOrderBaseQuantums),
     stepBaseQuantums: Number(perpetual.stepBaseQuantums),
     liquidityTierId: perpetual.liquidityTier,
   }));

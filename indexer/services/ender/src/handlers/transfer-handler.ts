@@ -149,30 +149,17 @@ export class TransferHandler extends Handler<TransferEventV1> {
     transfer: TransferFromDatabase,
     asset: AssetFromDatabase,
   ): ConsolidatedKafkaEvent[] {
-    let senderContents: SubaccountMessageContents = {};
-    let recipientContents: SubaccountMessageContents = {};
+    const kafkaEvents: ConsolidatedKafkaEvent[] = [];
+
     if (this.event.sender!.subaccountId) {
-      senderContents = generateTransferContents(
+      const senderContents: SubaccountMessageContents = generateTransferContents(
         transfer,
         asset,
         this.event.sender!.subaccountId!,
         this.event.sender!.subaccountId,
         this.event.recipient!.subaccountId,
       );
-    }
-    if (this.event.recipient!.subaccountId) {
-      recipientContents = generateTransferContents(
-        transfer,
-        asset,
-        this.event.recipient!.subaccountId!,
-        this.event.sender!.subaccountId,
-        this.event.recipient!.subaccountId,
-      );
-    }
 
-    const kafkaEvents: ConsolidatedKafkaEvent[] = [];
-
-    if (Object.keys(senderContents).length > 0) {
       kafkaEvents.push(
         this.generateConsolidatedSubaccountKafkaEvent(
           JSON.stringify(senderContents),
@@ -181,7 +168,15 @@ export class TransferHandler extends Handler<TransferEventV1> {
       );
     }
 
-    if (Object.keys(recipientContents).length > 0) {
+    if (this.event.recipient!.subaccountId) {
+      const recipientContents: SubaccountMessageContents = generateTransferContents(
+        transfer,
+        asset,
+        this.event.recipient!.subaccountId!,
+        this.event.sender!.subaccountId,
+        this.event.recipient!.subaccountId,
+      );
+
       kafkaEvents.push(
         this.generateConsolidatedSubaccountKafkaEvent(
           JSON.stringify(recipientContents),
@@ -189,6 +184,7 @@ export class TransferHandler extends Handler<TransferEventV1> {
         ),
       );
     }
+
     return kafkaEvents;
   }
 }

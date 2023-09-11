@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-SWAGGER_DIR=./swagger-proto
+SWAGGER_DIR=./protocol/swagger-proto
 
 # prepare swagger generation
 mkdir -p "$SWAGGER_DIR/proto"

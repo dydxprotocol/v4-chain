@@ -204,9 +204,9 @@ func TestAppModule_RegisterServices(t *testing.T) {
 	mockMsgServer := new(mocks.Server)
 
 	mockConfigurator.On("QueryServer").Return(mockQueryServer)
-	// Since there's no MsgServer for assets module, configurator does not call `MsgServer`.
+	mockConfigurator.On("MsgServer").Return(mockMsgServer)
 	mockQueryServer.On("RegisterService", mock.Anything, mock.Anything).Return()
-	// Since there's no MsgServer for assets module, MsgServer does not call `RegisterServer`.
+	mockMsgServer.On("RegisterService", mock.Anything, mock.Anything).Return()
 
 	am := createAppModule(t)
 	am.RegisterServices(mockConfigurator)

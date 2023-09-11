@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"UNIUSDT\"",
+      "ticker": "UNIUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -16,6 +16,15 @@
     },
     {
       "exchangeName": "Gate",
+      "ticker": "UNI_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "UNIUSD"
+    },
+    {
+      "exchangeName": "Mexc",
       "ticker": "UNI_USDT",
       "adjustByMarket": "USDT-USD"
     },
