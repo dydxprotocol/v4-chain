@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math"
 	"math/big"
 	"sort"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
@@ -270,13 +271,13 @@ func TestHasPerpetual(t *testing.T) {
 
 	_, err := pricesKeeper.CreateMarket(
 		ctx,
-		// `ExchangeConfigJson` is left unset as it is not used by the server.
 		pricestypes.MarketParam{
-			Id:                0,
-			Pair:              "marketName",
-			Exponent:          -10,
-			MinExchanges:      uint32(1),
-			MinPriceChangePpm: uint32(50),
+			Id:                 0,
+			Pair:               "marketName",
+			Exponent:           -10,
+			MinExchanges:       uint32(1),
+			MinPriceChangePpm:  uint32(50),
+			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
 			Id:       0,
@@ -348,13 +349,13 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 
 	_, err := pricesKeeper.CreateMarket(
 		ctx,
-		// `ExchangeConfigJson` is left unset as it is not used by the server.
 		pricestypes.MarketParam{
-			Id:                0,
-			Pair:              "marketName",
-			Exponent:          -10,
-			MinExchanges:      uint32(1),
-			MinPriceChangePpm: uint32(50),
+			Id:                 0,
+			Pair:               "marketName",
+			Exponent:           -10,
+			MinExchanges:       uint32(1),
+			MinPriceChangePpm:  uint32(50),
+			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
 			Id:       0,
@@ -620,13 +621,13 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			marketId := pricesKeeper.GetNumMarkets(ctx)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
-				// `ExchangeConfigJson` is left unset as it is not used by the server.
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -850,11 +851,12 @@ func TestGetNetNotional_Success(t *testing.T) {
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -1014,11 +1016,12 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -1179,11 +1182,12 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
