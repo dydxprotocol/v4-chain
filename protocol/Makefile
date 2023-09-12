@@ -346,6 +346,9 @@ localnet-new-validator:
 localnet-build:
 	docker build --build-arg VERSION=$(TAG_VERSION) --build-arg COMMIT=$(COMMIT) . -t dydxprotocol-base --no-cache
 
+localnet-build-amd64:
+	DOCKER_BUILDKIT=1 docker build --build-arg VERSION=$(TAG_VERSION) --build-arg COMMIT=$(COMMIT) -f Dockerfile . -t dydxprotocol-base --no-cache --platform linux/amd64
+
 localnet-init:
 	rm -rf localnet
 	# Creates the directories which store the chain data for each node.
