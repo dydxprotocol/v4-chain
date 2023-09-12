@@ -32,16 +32,18 @@ describe('Index', () => {
   let wsPingSpy: jest.SpyInstance;
   let invalidMsgHandlerSpy: jest.SpyInstance;
   let pingHandlerSpy: jest.SpyInstance;
-  let defaultRestricteCountries: string;
 
   const connectionId: string = 'conId';
   const restrictedCountries: string[] = ['US', 'CA'];
+  config.RESTRICTED_COUNTRIES = restrictedCountries.join(',');
+  const defaultRestrictedCountries = config.RESTRICTED_COUNTRIES;
 
   beforeAll(() => {
     jest.useFakeTimers();
   });
 
   afterAll(() => {
+    config.RESTRICTED_COUNTRIES = defaultRestrictedCountries;
     jest.resetAllMocks();
     jest.useRealTimers();
   });
@@ -63,13 +65,7 @@ describe('Index', () => {
     mockSub = new Subscriptions();
     invalidMsgHandlerSpy = jest.spyOn(InvalidMessageHandler.prototype, 'handleInvalidMessage');
     pingHandlerSpy = jest.spyOn(PingHandler.prototype, 'handlePing');
-    defaultRestricteCountries = config.RESTRICTED_COUNTRIES;
-    config.RESTRICTED_COUNTRIES = restrictedCountries.join(',');
     index = new Index(mockWss, mockSub);
-  });
-
-  afterEach(() => {
-    config.RESTRICTED_COUNTRIES = defaultRestricteCountries;
   });
 
   describe('connection', () => {

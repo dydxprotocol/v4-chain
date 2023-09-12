@@ -45,7 +45,7 @@ export const configSchema = {
 
   // Geo-blocking
   RESTRICTED_COUNTRIES: parseString({
-    default: '',
+    default: '', // comma de-limited
   }),
 };
 
