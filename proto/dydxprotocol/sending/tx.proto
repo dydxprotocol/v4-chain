@@ -17,6 +17,10 @@ service Msg {
   // subaccount to an `x/bank` account.
   rpc WithdrawFromSubaccount(MsgWithdrawFromSubaccount)
       returns (MsgWithdrawFromSubaccountResponse);
+  // SendFromModuleToAccount initiates a new transfer from a module to an
+  // `x/bank` account (should only be executed by governance).
+  rpc SendFromModuleToAccount(MsgSendFromModuleToAccount)
+      returns (MsgSendFromModuleToAccountResponse);
 }
 
 // MsgCreateTransfer is a request type used for initiating new transfers.
@@ -32,3 +36,7 @@ message MsgDepositToSubaccountResponse {}
 // MsgWithdrawFromSubaccountResponse is a response type used for new
 // subaccount-to-account transfers.
 message MsgWithdrawFromSubaccountResponse {}
+
+// MsgSendFromModuleToAccountResponse is a response type used for new
+// module-to-account transfers.
+message MsgSendFromModuleToAccountResponse {}
