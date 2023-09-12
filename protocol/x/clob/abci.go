@@ -237,8 +237,22 @@ func PrepareCheckState(
 		// Keep a count of partially and fully filled liquidations for this block.
 		if optimisticallyFilledQuantums > 0 {
 			numFilledLiquidations++
+		} else {
+			telemetry.IncrCounter(
+				1,
+				types.ModuleName,
+				metrics.PrepareCheckState,
+				metrics.UnfilledLiquidationOrders,
+			)
 		}
 	}
+
+	telemetry.IncrCounter(
+		float32(numFilledLiquidations),
+		types.ModuleName,
+		metrics.PrepareCheckState,
+		metrics.NumMatchedLiquidationOrders,
+	)
 
 	telemetry.ModuleSetGauge(
 		types.ModuleName,
