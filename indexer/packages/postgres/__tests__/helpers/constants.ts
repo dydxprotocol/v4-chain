@@ -4,6 +4,7 @@ import {
   ORDER_FLAG_SHORT_TERM,
 } from '@dydxprotocol-indexer/v4-proto-parser';
 import { DateTime } from 'luxon';
+import { ComplianceDataCreateObject } from 'packages/postgres/src/types/compliance-data-types';
 
 import * as AssetPositionTable from '../../src/stores/asset-position-table';
 import * as CandleTable from '../../src/stores/candle-table';
@@ -50,6 +51,7 @@ export const createdDateTime: DateTime = DateTime.utc();
 export const createdHeight: string = '2';
 export const invalidTicker: string = 'INVALID-INVALID';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
+export const sanctionedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
 
 // ============== Subaccounts ==============
 
@@ -546,3 +548,21 @@ export const defaultFundingIndexUpdateId: string = FundingIndexUpdatesTable.uuid
   defaultFundingIndexUpdate.eventId,
   defaultFundingIndexUpdate.perpetualId,
 );
+
+// ========= Compliance Data ==========
+
+export const sanctionedComplianceData: ComplianceDataCreateObject = {
+  address: sanctionedAddress,
+  chain: 'dydx',
+  sanctioned: true,
+  riskScore: '100.00',
+  updatedAt: createdDateTime.toISO(),
+};
+
+export const nonSanctionedComplianceData: ComplianceDataCreateObject = {
+  address: defaultAddress,
+  chain: 'dydx',
+  sanctioned: false,
+  riskScore: '10.00',
+  updatedAt: createdDateTime.plus(1).toISO(),
+};

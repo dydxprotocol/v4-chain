@@ -212,6 +212,14 @@ export interface FundingIndexUpdatesFromDatabase extends IdBasedModelFromDatabas
   effectiveAtHeight: string;
 }
 
+export interface ComplianceDataFromDatabase {
+  address: string;
+  chain?: string;
+  sanctioned: boolean;
+  riskScore?: string;
+  updatedAt: string;
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string } };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
