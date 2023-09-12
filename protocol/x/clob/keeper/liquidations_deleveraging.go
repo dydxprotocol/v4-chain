@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +17,33 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
+
+// DeleverageSubaccount is the main entry point to deleverage a subaccount. It attempts to find positions
+// on the opposite side of deltaQuantums and use them to offset the liquidated subaccount's position at
+// the bankruptcy price of the liquidated position.
+func (k Keeper) DeleverageSubaccount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	deltaQuantums *big.Int,
+) (
+	quantumsDeleveraged *big.Int,
+	err error,
+) {
+	lib.AssertCheckTxMode(ctx)
+
+	canPerformDeleveraging, err := k.CanDeleverageSubaccount(ctx, subaccountId)
+	if err != nil {
+		return new(big.Int), err
+	}
+
+	// Early return to skip deleveraging if the subaccount can't be deleveraged.
+	if !canPerformDeleveraging {
+		return new(big.Int), nil
+	}
+
+	return k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+}
 
 // GetInsuranceFundBalance returns the current balance of the insurance fund (in quote quantums).
 // This calls the Bank Keeper’s GetBalance() function for the Module Address of the insurance fund.

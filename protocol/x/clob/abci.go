@@ -238,12 +238,24 @@ func PrepareCheckState(
 		if optimisticallyFilledQuantums > 0 {
 			numFilledLiquidations++
 		} else {
-			telemetry.IncrCounter(
-				1,
-				types.ModuleName,
-				metrics.PrepareCheckState,
-				metrics.UnfilledLiquidationOrders,
-			)
+			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
+
+			// The liquidation order was unfilled. Try to deleverage the subaccount.
+			subaccountId := liquidationOrders[i].GetSubaccountId()
+			perpetualId := liquidationOrders[i].MustGetLiquidatedPerpetualId()
+			deltaQuantums := liquidationOrders[i].GetDeltaQuantums()
+
+			_, err := keeper.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+			if err != nil {
+				keeper.Logger(ctx).Error(
+					"Failed to deleverage subaccount.",
+					"subaccount", liquidationOrders[i].GetSubaccountId(),
+					"perpetualId", liquidationOrders[i].MustGetLiquidatedPerpetualId(),
+					"baseQuantums", liquidationOrders[i].GetBaseQuantums().ToBigInt(),
+					"error", err,
+				)
+				panic(err)
+			}
 		}
 	}
 

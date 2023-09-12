@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"math"
 	"math/big"
 	"testing"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 
@@ -2017,6 +2018,16 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					liquidationInfo,
 					ks.ClobKeeper.GetSubaccountLiquidationInfo(ctx, subaccountId),
 				)
+			}
+
+			if tc.expectedFilledSize == 0 {
+				_, err = ks.ClobKeeper.DeleverageSubaccount(
+					ctx,
+					tc.order.GetSubaccountId(),
+					tc.order.MustGetLiquidatedPerpetualId(),
+					tc.order.GetDeltaQuantums(),
+				)
+				require.NoError(t, err)
 			}
 
 			for _, expectedSubaccount := range tc.expectedSubaccounts {
