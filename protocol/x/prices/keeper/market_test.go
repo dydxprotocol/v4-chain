@@ -23,7 +23,7 @@ func TestCreateMarket(t *testing.T) {
 			Id:                 0,
 			Pair:               constants.BtcUsdPair,
 			Exponent:           int32(-6),
-			ExchangeConfigJson: "{\"test_config_placeholder\":{}}",
+			ExchangeConfigJson: `{"test_config_placeholder":{}}`,
 			MinExchanges:       2,
 			MinPriceChangePpm:  uint32(9_999),
 		},
@@ -42,7 +42,7 @@ func TestCreateMarket(t *testing.T) {
 	require.Equal(t, uint32(0), marketParam.Id)
 	require.Equal(t, constants.BtcUsdPair, marketParam.Pair)
 	require.Equal(t, int32(-6), marketParam.Exponent)
-	require.Equal(t, "{\"test_config_placeholder\":{}}", marketParam.ExchangeConfigJson)
+	require.Equal(t, `{"test_config_placeholder":{}}`, marketParam.ExchangeConfigJson)
 	require.Equal(t, uint32(2), marketParam.MinExchanges)
 	require.Equal(t, uint32(9999), marketParam.MinPriceChangePpm)
 
@@ -58,7 +58,7 @@ func TestCreateMarket(t *testing.T) {
 }
 
 func TestCreateMarket_Errors(t *testing.T) {
-	validExchangeConfigJson := "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"}]}"
+	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`
 	tests := map[string]struct {
 		// Setup
 		pair                                              string

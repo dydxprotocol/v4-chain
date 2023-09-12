@@ -40,7 +40,7 @@ func TestIsValidJSON(t *testing.T) {
 				"exchanges": [
 				  {
 					"exchangeName": "Binance",
-					"ticker": "\"LINKUSDT\"",
+					"ticker": "LINKUSDT",
 					"adjustByMarket": "USDT-USD"
 				  },
 				  {
@@ -62,7 +62,7 @@ func TestIsValidJSON(t *testing.T) {
 				"exchanges": [
 				  {
 					"exchangeName": "Binance",
-					"ticker": "\"LINKUSDT\"",
+					"ticker": "LINKUSDT",
 					"adjustByMarket": "USDT-USD"
 				  },
 				  {

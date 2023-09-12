@@ -17,7 +17,7 @@ func TestMsgCreateOracleMarket_GetSigners(t *testing.T) {
 }
 
 func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
-	validExchangeConfigJson := "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"}]}"
+	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`
 	tests := []struct {
 		desc        string
 		msg         types.MsgCreateOracleMarket
@@ -88,7 +88,7 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 					Pair:               "BTC-USD",
 					MinExchanges:       1,
 					MinPriceChangePpm:  1_000,
-					ExchangeConfigJson: "{\"exchanges\":[]", // missing a bracket
+					ExchangeConfigJson: `{"exchanges":[]`, // missing a bracket
 				},
 			},
 			expectedErr: "ExchangeConfigJson string is not valid",

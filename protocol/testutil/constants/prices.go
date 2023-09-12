@@ -1,8 +1,8 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	pricefeedclient "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -51,7 +51,157 @@ const (
 	ErrorMsgInvalidMinPriceChange   = "Min price change in parts-per-million must be greater than 0 and less than 10000"
 )
 
-var TestMarketExchangeConfigs = constants.GenerateExchangeConfigJson(constants.StaticExchangeMarketConfig)
+var TestMarketExchangeConfigs = map[pricefeedclient.MarketId]string{
+	exchange_common.MARKET_BTC_USD: `{
+		"exchanges": [
+		  {
+			"exchangeName": "Binance",
+			"ticker": "BTCUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "BinanceUS",
+			"ticker": "BTCUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Bitfinex",
+			"ticker": "tBTCUSD"
+		  },
+		  {
+			"exchangeName": "Bitstamp",
+			"ticker": "BTC/USD"
+		  },
+		  {
+			"exchangeName": "Bybit",
+			"ticker": "BTCUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "CoinbasePro",
+			"ticker": "BTC-USD"
+		  },
+		  {
+			"exchangeName": "CryptoCom",
+			"ticker": "BTC_USD"
+		  },
+		  {
+			"exchangeName": "Kraken",
+			"ticker": "XXBTZUSD"
+		  },
+		  {
+			"exchangeName": "Mexc",
+			"ticker": "BTC_USDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Okx",
+			"ticker": "BTC-USDT",
+			"adjustByMarket": "USDT-USD"
+		  }
+		]
+	  }`,
+	exchange_common.MARKET_ETH_USD: `{
+		"exchanges": [
+		  {
+			"exchangeName": "Binance",
+			"ticker": "ETHUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "BinanceUS",
+			"ticker": "ETHUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Bitfinex",
+			"ticker": "tETHUSD"
+		  },
+		  {
+			"exchangeName": "Bitstamp",
+			"ticker": "ETH/USD"
+		  },
+		  {
+			"exchangeName": "Bybit",
+			"ticker": "ETHUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "CoinbasePro",
+			"ticker": "ETH-USD"
+		  },
+		  {
+			"exchangeName": "CryptoCom",
+			"ticker": "ETH_USD"
+		  },
+		  {
+			"exchangeName": "Kraken",
+			"ticker": "XETHZUSD"
+		  },
+		  {
+			"exchangeName": "Mexc",
+			"ticker": "ETH_USDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Okx",
+			"ticker": "ETH-USDT",
+			"adjustByMarket": "USDT-USD"
+		  }
+		]
+	  }`,
+	exchange_common.MARKET_SOL_USD: `{
+		"exchanges": [
+		  {
+			"exchangeName": "Binance",
+			"ticker": "SOLUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Bitfinex",
+			"ticker": "tSOLUSD",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Bybit",
+			"ticker": "SOLUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "CoinbasePro",
+			"ticker": "SOL-USD"
+		  },
+		  {
+			"exchangeName": "CryptoCom",
+			"ticker": "SOL_USD"
+		  },
+		  {
+			"exchangeName": "Huobi",
+			"ticker": "solusdt",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Kraken",
+			"ticker": "SOLUSD"
+		  },
+		  {
+			"exchangeName": "Kucoin",
+			"ticker": "SOL-USDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Mexc",
+			"ticker": "SOL_USDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Okx",
+			"ticker": "SOL-USDT",
+			"adjustByMarket": "USDT-USD"
+		  }
+		]
+	  }`,
+}
 
 // The `MarketParam.ExchangeConfigJson` field is left unset as it is not used by the server.
 var TestMarketParams = []types.MarketParam{

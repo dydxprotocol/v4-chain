@@ -8,7 +8,7 @@ import (
 )
 
 func TestMarketParam_Validate(t *testing.T) {
-	validExchangeConfigJson := "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"}]}"
+	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`
 	testCases := []struct {
 		name      string
 		input     types.MarketParam
@@ -60,7 +60,7 @@ func TestMarketParam_Validate(t *testing.T) {
 				Pair:               "BTC-USD",
 				MinExchanges:       1,
 				MinPriceChangePpm:  1_000,
-				ExchangeConfigJson: "{\"exchanges\":[]", // missing a bracket
+				ExchangeConfigJson: `{"exchanges":[]`, // missing a bracket
 			},
 			expErrMsg: "ExchangeConfigJson string is not valid",
 		},
