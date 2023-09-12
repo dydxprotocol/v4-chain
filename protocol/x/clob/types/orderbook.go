@@ -8,13 +8,6 @@ import (
 	"github.com/zyedidia/generic/list"
 )
 
-// OrderHash is used to represent the SHA256 hash of an order.
-type OrderHash [32]byte
-
-func (oh OrderHash) ToBytes() []byte {
-	return oh[:]
-}
-
 // Subticks is used to represent the price level that an order will be placed on the orderbook.
 type Subticks uint64
 

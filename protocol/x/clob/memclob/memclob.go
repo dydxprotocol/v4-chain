@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/big"
 	"runtime/debug"
-	"sort"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
@@ -346,8 +345,7 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
 
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.
-	allSubaccounts := lib.ConvertMapToSliceOfKeys(subaccountTotalMatchedQuantums)
-	sort.Sort(satypes.SortedSubaccountIds(allSubaccounts))
+	allSubaccounts := lib.GetSortedKeys[satypes.SortedSubaccountIds](subaccountTotalMatchedQuantums)
 
 	// For each subaccount that had a match in the matching loop, determine whether we should cancel
 	// open reduce-only orders for the subaccount. This occurs when the sign of the position size before matching

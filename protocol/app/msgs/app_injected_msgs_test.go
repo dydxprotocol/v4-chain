@@ -1,6 +1,7 @@
 package msgs_test
 
 import (
+	"sort"
 	"strings"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 	"github.com/stretchr/testify/require"
@@ -39,7 +40,7 @@ func TestAppInjectedMsgSamples_Key(t *testing.T) {
 		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse",
 	}
 
-	require.Equal(t, expectedMsgs, maps.GetSortedKeys(msgs.AppInjectedMsgSamples))
+	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.AppInjectedMsgSamples))
 }
 
 func TestAppInjectedMsgSamples_Value(t *testing.T) {

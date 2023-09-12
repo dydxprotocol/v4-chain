@@ -2,7 +2,8 @@ package types
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 // MutableExchangeMarketConfig stores all mutable market configuration per exchange.
@@ -28,7 +29,7 @@ func (memc *MutableExchangeMarketConfig) Copy() *MutableExchangeMarketConfig {
 // GetMarketIds returns the ordered list of market ids supported by the exchange. This set is
 // currently implicitly defined by the keys of the MarketToTicker map.
 func (memc *MutableExchangeMarketConfig) GetMarketIds() []MarketId {
-	return maps.GetSortedKeys(memc.MarketToMarketConfig)
+	return lib.GetSortedKeys[lib.Sortable[uint32]](memc.MarketToMarketConfig)
 }
 
 func (memc *MutableExchangeMarketConfig) Validate(marketConfigs []*MutableMarketConfig) error {

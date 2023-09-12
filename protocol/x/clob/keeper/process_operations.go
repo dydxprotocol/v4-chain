@@ -529,11 +529,10 @@ func (k Keeper) GenerateProcessProposerMatchesEvents(
 			seenOrderIdsRemovedInLastBlock[orderId] = struct{}{}
 		}
 	}
-	filledOrderIds := lib.ConvertMapToSliceOfKeys(seenOrderIdsFilledInLastBlock)
-	removedOrderIds := lib.ConvertMapToSliceOfKeys(seenOrderIdsRemovedInLastBlock)
+
 	// Sort for deterministic ordering when writing to memstore.
-	types.MustSortAndHaveNoDuplicates(filledOrderIds)
-	types.MustSortAndHaveNoDuplicates(removedOrderIds)
+	filledOrderIds := lib.GetSortedKeys[types.SortedOrders](seenOrderIdsFilledInLastBlock)
+	removedOrderIds := lib.GetSortedKeys[types.SortedOrders](seenOrderIdsRemovedInLastBlock)
 
 	// PlacedLongTermOrderIds to be populated in MsgHandler for MsgPlaceOrder.
 	// PlacedConditionalOrderIds to be populated in MsgHandler for MsgPlaceOrder.
