@@ -38,7 +38,7 @@ func (t BitstampTicker) GetLastPrice() string {
 func BitstampPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into a list of tickers.
 	var bitstampTickers []BitstampTicker
@@ -50,6 +50,6 @@ func BitstampPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		bitstampTickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

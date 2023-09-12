@@ -50,7 +50,7 @@ func (t KucoinTicker) GetLastPrice() string {
 func KucoinPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body.
 	var kucoinResponseBody KucoinResponseBody
@@ -66,6 +66,6 @@ func KucoinPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		kucoinResponseBody.Data.Tickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

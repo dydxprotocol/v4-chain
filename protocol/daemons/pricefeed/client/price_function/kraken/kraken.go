@@ -54,7 +54,7 @@ type KrakenResponseBody struct {
 func KrakenPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	var responseBody KrakenResponseBody
 	if err := json.NewDecoder(response.Body).Decode(&responseBody); err != nil {
@@ -82,6 +82,6 @@ func KrakenPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		tickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

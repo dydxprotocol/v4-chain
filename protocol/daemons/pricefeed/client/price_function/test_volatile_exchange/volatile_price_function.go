@@ -44,7 +44,7 @@ func (t VolatileExchangeTicker) GetLastPrice() string {
 func VolatileExchangePriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	percentageThroughDay := float64(time.Now().Unix()%SECONDS_IN_DAY) / float64(SECONDS_IN_DAY)
 	radians := percentageThroughDay * TestVolatileExchangeParams.Frequency * 2 * math.Pi
@@ -58,6 +58,6 @@ func VolatileExchangePriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		[]VolatileExchangeTicker{volatile_exchange_ticker},
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

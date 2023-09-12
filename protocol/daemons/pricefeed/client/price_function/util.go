@@ -172,7 +172,7 @@ func GetOnlyTickerAndExponent(
 func GetUint64MedianFromReverseShiftedBigFloatValues(
 	bigFloatSlice []*big.Float,
 	exponent int32,
-	medianizer func([]uint64) (uint64, error),
+	resolver func([]uint64) (uint64, error),
 ) (uint64, error) {
 	// 1) Verify length of slice is > 0.
 	if len(bigFloatSlice) == 0 {
@@ -189,7 +189,7 @@ func GetUint64MedianFromReverseShiftedBigFloatValues(
 	}
 
 	// 4) Get the median value from the uint64 price values and return.
-	return medianizer(uint64Slice)
+	return resolver(uint64Slice)
 }
 
 // ReverseShiftBigFloat shifts the given float by exponent in the reverse direction.
@@ -247,7 +247,7 @@ type Ticker interface {
 func GetMedianPricesFromTickers[T Ticker](
 	tickers []T,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Create API response validator, if not already.
 	if apiResponseValidator == nil {
@@ -285,7 +285,7 @@ func GetMedianPricesFromTickers[T Ticker](
 			medianPrice, err := GetUint64MedianFromReverseShiftedBigFloatValues(
 				bigFloatSlice,
 				exponent,
-				medianizer,
+				resolver,
 			)
 			// If unsuccessful, mark tickerPair as unavailable with corresponding error.
 			// Otherwise, store median price for corresponding tickerPair.

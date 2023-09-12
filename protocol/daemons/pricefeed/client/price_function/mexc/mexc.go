@@ -45,7 +45,7 @@ func (t MexcTicker) GetLastPrice() string {
 func MexcPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body.
 	var mexcResponseBody MexcResponseBody
@@ -61,6 +61,6 @@ func MexcPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		mexcResponseBody.Tickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

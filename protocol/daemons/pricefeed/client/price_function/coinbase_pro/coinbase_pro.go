@@ -40,7 +40,7 @@ func (t CoinbaseProTicker) GetLastPrice() string {
 func CoinbaseProPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Get ticker. The API response should only contain information for one market.
 	ticker, _, err := price_function.GetOnlyTickerAndExponent(
@@ -64,6 +64,6 @@ func CoinbaseProPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		[]CoinbaseProTicker{coinbaseProTicker},
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

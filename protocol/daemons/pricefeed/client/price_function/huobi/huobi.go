@@ -45,7 +45,7 @@ func (t HuobiTicker) GetLastPrice() string {
 func HuobiPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body.
 	var huobiResponseBody HuobiResponseBody
@@ -61,6 +61,6 @@ func HuobiPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		huobiResponseBody.Tickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

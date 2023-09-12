@@ -50,7 +50,7 @@ func (t BybitTicker) GetLastPrice() string {
 func BybitPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into a list of tickers.
 	var bybitResponseBody BybitResponseBody
@@ -66,6 +66,6 @@ func BybitPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		bybitResponseBody.Result.Tickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

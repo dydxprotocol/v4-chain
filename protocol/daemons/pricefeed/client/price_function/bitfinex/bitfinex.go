@@ -52,7 +52,7 @@ func (t BitfinexTicker) GetLastPrice() string {
 func BitfinexPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into raw format first.
 	var rawResponse [][]interface{}
@@ -105,7 +105,7 @@ func BitfinexPriceFunction(
 	tickerToPrice, unavailableTickers, err = price_function.GetMedianPricesFromTickers(
 		bitfinexTickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 
 	// Mark as unavailable requested tickers whose raw ticker response was invalid.

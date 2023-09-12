@@ -38,7 +38,7 @@ func (t GateTicker) GetLastPrice() string {
 func GatePriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into a list of tickers.
 	var gateTickers []GateTicker
@@ -50,6 +50,6 @@ func GatePriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		gateTickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

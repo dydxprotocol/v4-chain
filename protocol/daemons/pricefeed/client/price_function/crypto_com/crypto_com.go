@@ -52,7 +52,7 @@ func (t CryptoComTicker) GetLastPrice() string {
 func CryptoComPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer types.Resolver,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into a list of tickers.
 	var cryptoComResponseBody CryptoComResponseBody
@@ -68,6 +68,6 @@ func CryptoComPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		cryptoComResponseBody.Result.Tickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

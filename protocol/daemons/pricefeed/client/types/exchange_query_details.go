@@ -14,7 +14,7 @@ type ExchangeQueryDetails struct {
 	PriceFunction func(
 		response *http.Response,
 		tickerToPriceExponent map[string]int32,
-		medianizer types.Resolver,
+		resolver types.Resolver,
 	) (
 		tickerToPrice map[string]uint64,
 		unavailableTickers map[string]error,
