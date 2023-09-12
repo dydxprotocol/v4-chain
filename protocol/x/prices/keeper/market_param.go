@@ -2,6 +2,7 @@ package keeper
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -55,6 +56,9 @@ func (k Keeper) ModifyMarketParam(
 			),
 		),
 	)
+
+	// Update the in-memory market pair map for labelling metrics.
+	metrics.AddMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
 
 	return marketParam, nil
 }

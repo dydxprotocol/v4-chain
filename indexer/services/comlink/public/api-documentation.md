@@ -477,6 +477,74 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/candles/perpetualMarkets/{tic
 This operation does not require authentication
 </aside>
 
+## Screen
+
+<a id="opIdScreen"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/screen', params={
+  'address': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://indexer.v4testnet2.dydx.exchange/v4/screen?address=string',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /screen`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "restricted": true
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ComplianceResponse](#schemacomplianceresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetFills
 
 <a id="opIdGetFills"></a>
@@ -2113,6 +2181,26 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |candles|[[CandleResponseObject](#schemacandleresponseobject)]|true|none|none|
+
+## ComplianceResponse
+
+<a id="schemacomplianceresponse"></a>
+<a id="schema_ComplianceResponse"></a>
+<a id="tocScomplianceresponse"></a>
+<a id="tocscomplianceresponse"></a>
+
+```json
+{
+  "restricted": true
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|restricted|boolean|true|none|none|
 
 ## OrderSide
 

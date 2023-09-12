@@ -21,6 +21,10 @@ func (k Keeper) GetBlockMessageIds(
 	blockMessageIds types.BlockMessageIds,
 	found bool,
 ) {
+	if blockHeight < 0 {
+		return types.BlockMessageIds{}, false
+	}
+
 	store := k.newBlockMessageIdsStore(ctx)
 	b := store.Get(lib.Int64ToBytesForState(blockHeight))
 
