@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
@@ -15,6 +16,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 
+	gometrics "github.com/armon/go-metrics"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -35,6 +37,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -97,6 +100,7 @@ import (
 	// Lib
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -1133,6 +1137,20 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
+
+	// Report app version and git commit if not in dev. Delay by 100 blocks to get a metric on initial startup.
+	// TODO(DEC-2107): Doing this based on chain id seems brittle.
+	if !strings.Contains(req.Header.ChainID, "dev") && ctx.BlockHeight()%10_100 == 0 {
+		version := version.NewInfo()
+		telemetry.SetGaugeWithLabels(
+			[]string{metrics.AppInfo},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
+				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
+			},
+		)
+	}
 
 	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx, req)
