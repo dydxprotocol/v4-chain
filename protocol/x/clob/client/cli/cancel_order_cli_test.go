@@ -7,14 +7,11 @@ import (
 	"math/big"
 	"testing"
 
-	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
-	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -58,17 +55,8 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 	// Generated from the above Mnemonic.
 	s.validatorAddress = constants.AliceAccAddress
 
-	appOptions := appoptions.NewFakeAppOptions()
-
 	// Configure test network.
-	s.cfg = network.DefaultConfig(&network.NetworkConfigOptions{
-		AppOptions: appOptions,
-		OnNewApp: func(val networktestutil.ValidatorI) {
-			// Disable the Bridge and Price daemons in the integration tests.
-			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
-			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
-		},
-	})
+	s.cfg = network.DefaultConfig(nil)
 
 	s.cfg.Mnemonics = append(s.cfg.Mnemonics, validatorMnemonic)
 	s.cfg.ChainID = app.AppName

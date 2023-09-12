@@ -165,6 +165,11 @@ const (
 	Memclob                              = "memclob"
 	RemovedFromOrderBook                 = "removed_from_orderbook"
 
+	// Daemon
+	DaemonServer    = "daemon_server"
+	ValidResponse   = "valid_response"
+	MissingResponse = "missing_response"
+
 	// Epochs.
 	EpochInfoName = "epoch_name"
 	EpochNumber   = "epoch_number"

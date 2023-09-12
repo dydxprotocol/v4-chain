@@ -26,6 +26,7 @@ func Start(
 	grpcClient lib.GrpcClient,
 ) error {
 	// Make a connection to the Cosmos gRPC query services.
+	logger.Error("LIQUIDATIONS DAEMON STARTED")
 	queryConn, err := grpcClient.NewTcpConnection(ctx, flags.Shared.GrpcServerAddress)
 	if err != nil {
 		logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
@@ -36,6 +37,7 @@ func Start(
 			err = connErr
 		}
 	}()
+	logger.Error("LIQUIDATIONS connected to query services")
 
 	// Make a connection to the private daemon gRPC server.
 	daemonConn, err := grpcClient.NewGrpcConnection(ctx, flags.Shared.SocketAddress)

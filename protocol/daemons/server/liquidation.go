@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
@@ -24,6 +25,14 @@ func (server *Server) WithLiquidatableSubaccountIds(
 	return server
 }
 
+// ExpectLiquidationsDaemon registers the liquidations daemon with the server. This is required
+// in order to ensure that the daemon service is called at least once during every
+// maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
+// respond regularly.
+func (server *Server) ExpectLiquidationsDaemon(maximumAcceptableUpdateDelay time.Duration) {
+	server.registerDaemon(liquidationsDaemonKey, maximumAcceptableUpdateDelay)
+}
+
 // LiquidateSubaccounts stores the list of potentially liquidatable subaccount ids
 // in a go-routine safe slice.
 func (s *Server) LiquidateSubaccounts(
@@ -37,6 +46,9 @@ func (s *Server) LiquidateSubaccounts(
 		metrics.Received,
 		metrics.Count,
 	)
+	if err := s.registerValidResponse(liquidationsDaemonKey); err != nil {
+		s.logger.Error("Failed to register valid response for liquidations daemon", "error", err)
+	}
 	s.liquidatableSubaccountIds.UpdateSubaccountIds(req.SubaccountIds)
 	return &api.LiquidateSubaccountsResponse{}, nil
 }

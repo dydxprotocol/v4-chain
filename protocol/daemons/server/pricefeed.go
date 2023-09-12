@@ -30,6 +30,14 @@ func (server *Server) WithPriceFeedMarketToExchangePrices(
 	return server
 }
 
+// ExpectPricefeedDaemon registers the pricefeed daemon with the server. This is required
+// in order to ensure that the daemon service is called at least once during every
+// maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
+// respond regularly.
+func (server *Server) ExpectPricefeedDaemon(maximumAcceptableUpdateDelay time.Duration) {
+	server.registerDaemon(pricefeedDaemonKey, maximumAcceptableUpdateDelay)
+}
+
 // UpdateMarketPrices updates prices from exchanges for each market provided.
 func (s *Server) UpdateMarketPrices(
 	ctx context.Context,
@@ -42,6 +50,10 @@ func (s *Server) UpdateMarketPrices(
 		metrics.PricefeedServerUpdatePrices,
 		metrics.Latency,
 	)
+
+	if err := s.registerValidResponse(pricefeedDaemonKey); err != nil {
+		s.logger.Error("Failed to register valid response for pricefeed daemon", "error", err)
+	}
 
 	if s.marketToExchange == nil {
 		panic(

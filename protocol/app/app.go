@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
@@ -545,6 +546,7 @@ func New(
 				panic(err)
 			}
 		}()
+		app.Server.ExpectLiquidationsDaemon(time.Duration(2*daemonFlags.Liquidation.LoopDelayMs) * time.Millisecond)
 	}
 
 	// Non-validating full-nodes have no need to run the price daemon.
@@ -565,6 +567,7 @@ func New(
 			constants.StaticExchangeDetails,
 			&pricefeedclient.SubTaskRunnerImpl{},
 		)
+		app.Server.ExpectPricefeedDaemon(time.Duration(2*daemonFlags.Price.LoopDelayMs) * time.Millisecond)
 	}
 
 	// Start Bridge Daemon.
@@ -582,6 +585,7 @@ func New(
 				panic(err)
 			}
 		}()
+		app.Server.ExpectBridgeDaemon(time.Duration(2*daemonFlags.Bridge.LoopDelayMs) * time.Millisecond)
 	}
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(

@@ -86,10 +86,13 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 				panic("incorrect validator type")
 			}
 
-			// Disable the Bridge daemon in the integration tests.
+			// Disable the Liquidations daemon.
+			appOptions.Set(daemonflags.FlagLiquidationDaemonEnabled, false)
+
+			// Disable the Bridge Daemon.
 			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
 
-			// Enable the Price daemon in the integration tests.
+			// Enable the Price daemon.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, true)
 			homeDir := filepath.Join(testval.Dir, "simd")
 			configs.WriteDefaultPricefeedExchangeToml(homeDir) // must manually create config file.
