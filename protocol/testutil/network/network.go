@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"os"
 	"os/signal"
 	"syscall"
@@ -88,7 +89,10 @@ func New(t *testing.T, configs ...network.Config) *network.Network {
 		panic(err)
 	}
 
-	t.Cleanup(net.Cleanup)
+	t.Cleanup(func() {
+		stoppable.StopServices()
+		net.Cleanup()
+	})
 	return net
 }
 

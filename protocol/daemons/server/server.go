@@ -4,6 +4,7 @@ import (
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	bridgeapi "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	liquidationapi "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
@@ -26,7 +27,7 @@ type Server struct {
 	fileHandler   lib.FileHandler
 	socketAddress string
 
-	updateMonitor *types.UpdateFrequencyMonitor
+	updateMonitor *types.UpdateMonitor
 
 	BridgeServer
 	PriceFeedServer
@@ -47,12 +48,12 @@ func NewServer(
 		socketAddress: socketAddress,
 		updateMonitor: types.NewUpdateFrequencyMonitor(),
 	}
+	stoppable.RegisterServiceForCleanup("daemon-server", srv)
 	return srv
 }
 
 // Stop stops the daemon server's gRPC service.
 func (server *Server) Stop() {
-	server.logger.Info("STOPPING DAEMON SERVER")
 	server.updateMonitor.Stop()
 	server.gsrv.Stop()
 }
