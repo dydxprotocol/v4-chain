@@ -3,6 +3,7 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -49,6 +50,9 @@ func (k Keeper) CreateMarket(
 			),
 		),
 	)
+
+	metrics.AddMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
+
 	return marketParam, nil
 }
 

@@ -3,7 +3,6 @@ package error
 import (
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/logging"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -55,7 +54,7 @@ func TestWrapErrorWithSourceModuleContext(t *testing.T) {
 
 	// Assert that logging context was added to the logger.
 	require.Len(t, logger.loggingContext, 1)
-	source_module, ok := logger.loggingContext[logging.SourceModuleKey]
+	source_module, ok := logger.loggingContext[SourceModuleKey]
 	require.True(t, ok)
 	require.Equal(t, "x/test-module", source_module)
 

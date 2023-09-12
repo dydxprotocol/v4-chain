@@ -220,19 +220,39 @@ func PrepareCheckState(
 	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.SortLiquidationOrders)
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
-		liquidationOrder := liquidationOrders[i]
-		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
+	numFilledLiquidations := uint32(0)
+	for i := 0; numFilledLiquidations < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
+		optimisticallyFilledQuantums, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrders[i])
+		if err != nil {
 			keeper.Logger(ctx).Error(
 				fmt.Sprintf(
 					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
-					liquidationOrder,
+					liquidationOrders[i],
 					err,
 				),
 			)
 			panic(err)
 		}
+
+		// Keep a count of partially and fully filled liquidations for this block.
+		if optimisticallyFilledQuantums > 0 {
+			numFilledLiquidations++
+		} else {
+			telemetry.IncrCounter(
+				1,
+				types.ModuleName,
+				metrics.PrepareCheckState,
+				metrics.UnfilledLiquidationOrders,
+			)
+		}
 	}
+
+	telemetry.IncrCounter(
+		float32(numFilledLiquidations),
+		types.ModuleName,
+		metrics.PrepareCheckState,
+		metrics.NumMatchedLiquidationOrders,
+	)
 
 	telemetry.ModuleSetGauge(
 		types.ModuleName,

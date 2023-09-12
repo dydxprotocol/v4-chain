@@ -7,8 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
 )
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
@@ -19,7 +18,7 @@ func CreateTestTx(
 	chainID string,
 	msgs []sdk.Msg,
 ) (xauthsigning.Tx, error) {
-	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
+	encodingConfig := app.GetEncodingConfig()
 	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 	txBuilder := clientCtx.TxConfig.NewTxBuilder()
 	err := txBuilder.SetMsgs(msgs...)

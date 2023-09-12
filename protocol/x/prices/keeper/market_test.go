@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -48,6 +49,8 @@ func TestCreateMarket(t *testing.T) {
 	require.Equal(t, uint32(0), marketPrice.Id)
 	require.Equal(t, int32(-6), marketPrice.Exponent)
 	require.Equal(t, constants.FiveBillion, marketPrice.Price)
+
+	require.Equal(t, marketParam.Pair, metrics.GetMarketPairForTelemetry(marketParam.Id))
 
 	// Verify expected market event.
 	keepertest.AssertMarketCreateEventInIndexerBlock(t, keeper, ctx, marketParam)
