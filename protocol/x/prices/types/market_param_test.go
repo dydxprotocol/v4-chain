@@ -60,7 +60,7 @@ func TestMarketParam_Validate(t *testing.T) {
 				Pair:               "BTC-USD",
 				MinExchanges:       1,
 				MinPriceChangePpm:  1_000,
-				ExchangeConfigJson: "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"}]", // missing a bracket
+				ExchangeConfigJson: "{\"exchanges\":[]", // missing a bracket
 			},
 			expErrMsg: "ExchangeConfigJson string is not valid",
 		},

@@ -51,28 +51,33 @@ const (
 	ErrorMsgInvalidMinPriceChange   = "Min price change in parts-per-million must be greater than 0 and less than 10000"
 )
 
+var TestMarketExchangeConfigs = constants.GenerateExchangeConfigJson(constants.StaticExchangeMarketConfig)
+
 // The `MarketParam.ExchangeConfigJson` field is left unset as it is not used by the server.
 var TestMarketParams = []types.MarketParam{
 	{
-		Id:                0,
-		Pair:              BtcUsdPair,
-		Exponent:          BtcUsdExponent,
-		MinExchanges:      1,
-		MinPriceChangePpm: 50,
+		Id:                 0,
+		Pair:               BtcUsdPair,
+		Exponent:           BtcUsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
 	},
 	{
-		Id:                1,
-		Pair:              EthUsdPair,
-		Exponent:          EthUsdExponent,
-		MinExchanges:      1,
-		MinPriceChangePpm: 50,
+		Id:                 1,
+		Pair:               EthUsdPair,
+		Exponent:           EthUsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
 	},
 	{
-		Id:                2,
-		Pair:              SolUsdPair,
-		Exponent:          SolUsdExponent,
-		MinExchanges:      1,
-		MinPriceChangePpm: 50,
+		Id:                 2,
+		Pair:               SolUsdPair,
+		Exponent:           SolUsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_SOL_USD],
 	},
 }
 
@@ -136,8 +141,6 @@ var (
 		},
 	}
 	InvalidMsgUpdateMarketPricesStatefulTxBytes []byte
-
-	TestMarketExchangeConfigs = constants.GenerateExchangeConfigJson(constants.StaticExchangeMarketConfig)
 
 	Prices_DefaultGenesisState = types.GenesisState{
 		// `ExchangeConfigJson` is left unset as it is not used by the server.

@@ -88,7 +88,7 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 					Pair:               "BTC-USD",
 					MinExchanges:       1,
 					MinPriceChangePpm:  1_000,
-					ExchangeConfigJson: "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"}]", // missing a bracket
+					ExchangeConfigJson: "{\"exchanges\":[]", // missing a bracket
 				},
 			},
 			expectedErr: "ExchangeConfigJson string is not valid",
