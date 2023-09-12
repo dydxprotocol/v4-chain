@@ -380,3 +380,11 @@ export interface Risk {
   initial: Big;
   maintenance: Big;
 }
+
+/* ------- COMPLIANCE TYPES ------- */
+
+export interface ComplianceResponse {
+  restricted: boolean;
+}
+
+export interface ComplianceRequest extends AddressRequest {}
