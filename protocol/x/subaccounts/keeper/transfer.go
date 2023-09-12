@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -97,7 +97,7 @@ func (k Keeper) TransferFundsFromSubaccountToModule(
 	}
 
 	if quantums.Sign() <= 0 {
-		return sdkerrors.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.Uint32ToString(assetId))
+		return errorsmod.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.Uint32ToString(assetId))
 	}
 
 	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
@@ -158,7 +158,7 @@ func (k Keeper) TransferFundsFromModuleToSubaccount(
 	}
 
 	if quantums.Sign() <= 0 {
-		return sdkerrors.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.Uint32ToString(assetId))
+		return errorsmod.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.Uint32ToString(assetId))
 	}
 
 	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
@@ -217,7 +217,7 @@ func (k Keeper) DepositFundsFromAccountToSubaccount(
 	}
 
 	if quantums.Sign() <= 0 {
-		return sdkerrors.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.Uint32ToString(assetId))
+		return errorsmod.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.Uint32ToString(assetId))
 	}
 
 	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
@@ -274,7 +274,7 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 	}
 
 	if quantums.Sign() <= 0 {
-		return sdkerrors.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.Uint32ToString(assetId))
+		return errorsmod.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.Uint32ToString(assetId))
 	}
 
 	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(

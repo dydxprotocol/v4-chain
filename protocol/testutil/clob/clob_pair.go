@@ -52,6 +52,16 @@ func WithPerpetualMetadata(metadata *clobtypes.ClobPair_PerpetualClobMetadata) C
 	}
 }
 
+func WithPerpetualId(perpetualId uint32) ClobModifierOption {
+	return func(cp *clobtypes.ClobPair) {
+		cp.Metadata = &clobtypes.ClobPair_PerpetualClobMetadata{
+			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
+				PerpetualId: perpetualId,
+			},
+		}
+	}
+}
+
 func WithSpotMetadata(metadata *clobtypes.ClobPair_SpotClobMetadata) ClobModifierOption {
 	return func(cp *clobtypes.ClobPair) {
 		cp.Metadata = metadata

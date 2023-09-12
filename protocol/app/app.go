@@ -96,7 +96,6 @@ import (
 
 	// Lib
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -287,7 +286,7 @@ func New(
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
-	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
+	encodingConfig := GetEncodingConfig()
 
 	appCodec := encodingConfig.Codec
 	legacyAmino := encodingConfig.Amino
@@ -644,6 +643,11 @@ func New(
 		app.PricesKeeper,
 		app.EpochsKeeper,
 		app.IndexerEventManager,
+		// gov module and delayMsg module accounts are allowed to send messages to the bridge module.
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+		},
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper, app.AccountKeeper, app.BankKeeper)
 

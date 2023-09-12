@@ -270,6 +270,18 @@
         "type": "object",
         "additionalProperties": false
       },
+      "ComplianceResponse": {
+        "properties": {
+          "restricted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "restricted"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "OrderSide": {
         "enum": [
           "BUY",
@@ -731,10 +743,6 @@
           "subticksPerTick": {
             "type": "number",
             "format": "double"
-          },
-          "minOrderBaseQuantums": {
-            "type": "number",
-            "format": "double"
           }
         },
         "required": [
@@ -756,8 +764,7 @@
           "tickSize",
           "stepSize",
           "stepBaseQuantums",
-          "subticksPerTick",
-          "minOrderBaseQuantums"
+          "subticksPerTick"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1134,6 +1141,34 @@
             "in": "query",
             "name": "toISO",
             "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/screen": {
+      "get": {
+        "operationId": "Screen",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
             "schema": {
               "type": "string"
             }
@@ -1816,7 +1851,7 @@
   },
   "servers": [
     {
-      "url": "https://indexer.v4testnet2.dydx.exchange/v4",
+      "url": "https://indexer.v4testnet.dydx.exchange/v4",
       "description": "Public Testnet"
     }
   ]

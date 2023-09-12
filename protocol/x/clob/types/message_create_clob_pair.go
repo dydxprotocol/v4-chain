@@ -1,8 +1,7 @@
 package types
 
 import (
-	"errors"
-
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,6 +13,9 @@ func (msg *MsgCreateClobPair) GetSigners() []sdk.AccAddress {
 }
 
 func (msg *MsgCreateClobPair) ValidateBasic() error {
-	// TODO(CORE-504): Implement message validation.
-	return errors.New("not implemented")
+	if msg.Authority == "" {
+		return errorsmod.Wrap(ErrInvalidAuthority, "authority cannot be empty")
+	}
+
+	return msg.ClobPair.Validate()
 }

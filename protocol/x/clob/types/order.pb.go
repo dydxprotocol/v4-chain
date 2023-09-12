@@ -574,8 +574,7 @@ type Order struct {
 	OrderId OrderId    `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id"`
 	Side    Order_Side `protobuf:"varint,2,opt,name=side,proto3,enum=dydxprotocol.clob.Order_Side" json:"side,omitempty"`
 	// The size of this order in base quantums. Must be a multiple of
-	// `ClobPair.StepBaseQuantums` and above `ClobPair.MinOrderBaseQuantums`
-	// (where `ClobPair.Id = orderId.ClobPairId`).
+	// `ClobPair.StepBaseQuantums` (where `ClobPair.Id = orderId.ClobPairId`).
 	Quantums uint64 `protobuf:"varint,3,opt,name=quantums,proto3" json:"quantums,omitempty"`
 	// The price level that this order will be placed at on the orderbook,
 	// in subticks. Must be a multiple of ClobPair.SubticksPerTick

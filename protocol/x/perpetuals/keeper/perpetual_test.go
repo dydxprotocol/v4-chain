@@ -7,6 +7,8 @@ import (
 	"sort"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -21,7 +23,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -31,74 +32,14 @@ import (
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
-
-func createNPerpetuals(
-	t *testing.T,
-	ctx sdk.Context,
-	keeper *keeper.Keeper,
-	pricesKeeper *priceskeeper.Keeper,
-	n int,
-) ([]types.Perpetual, error) {
-	items := make([]types.Perpetual, n)
-	numLiquidityTiers := keeper.GetNumLiquidityTiers(ctx)
-	require.Greater(t, numLiquidityTiers, uint32(0))
-
-	for i := range items {
-		keepertest.CreateNMarkets(t, ctx, pricesKeeper, n)
-
-		var defaultFundingPpm int32
-		if i%3 == 0 {
-			defaultFundingPpm = 1
-		} else if i%3 == 1 {
-			defaultFundingPpm = -1
-		} else {
-			defaultFundingPpm = 0
-		}
-
-		perpetual, err := keeper.CreatePerpetual(
-			ctx,
-			uint32(i),                        // Id
-			fmt.Sprintf("%v", i),             // Ticker
-			uint32(i),                        // MarketId
-			int32(i),                         // AtomicResolution
-			defaultFundingPpm,                // DefaultFundingPpm
-			uint32(i%int(numLiquidityTiers)), // LiquidityTier
-		)
-		if err != nil {
-			return items, err
-		}
-
-		items[i] = perpetual
-	}
-	return items, nil
-}
-
-func createLiquidityTiersAndNPerpetuals(
-	t *testing.T,
-	ctx sdk.Context,
-	keeper *keeper.Keeper,
-	pricesKeeper *priceskeeper.Keeper,
-	n int,
-) ([]types.Perpetual, error) {
-	// Create liquidity tiers.
-	keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
-	// Create perpetuals.
-	perpetuals, err := createNPerpetuals(t, ctx, keeper, pricesKeeper, n)
-	if err != nil {
-		return perpetuals, err
-	}
-	return perpetuals, nil
-}
 
 func TestModifyPerpetual_Success(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 	numLiquidityTiers := 4
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 100)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 100)
 	numMarkets := pricesKeeper.GetNumMarkets(ctx)
 	for i, item := range perps {
 		// Modify each field arbitrarily and
@@ -168,7 +109,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
+			expectedError:     errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Positive default funding magnitude exceeds maximum": {
 			id:                0,
@@ -177,7 +118,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: int32(lib.OneMillion + 1),
 			liquidityTier:     0,
-			expectedError: sdkerrors.Wrap(
+			expectedError: errorsmod.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(int32(lib.OneMillion+1)),
 			),
@@ -189,7 +130,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0 - int32(lib.OneMillion) - 1,
 			liquidityTier:     0,
-			expectedError: sdkerrors.Wrap(
+			expectedError: errorsmod.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(0-int32(lib.OneMillion)-1),
 			),
@@ -201,7 +142,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: math.MinInt32,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, fmt.Sprint(math.MinInt32)),
+			expectedError:     errorsmod.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, fmt.Sprint(math.MinInt32)),
 		},
 		"Ticker is an empty string": {
 			id:                0,
@@ -254,7 +195,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			marketId:          0,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(999)),
+			expectedError:     errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(999)),
 		},
 		"Price doesn't exist": {
 			id:                0,
@@ -262,7 +203,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			marketId:          999,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
-			expectedError:     sdkerrors.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
+			expectedError:     errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Ticker is an empty string": {
 			id:                0,
@@ -277,13 +218,12 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 	// Test setup.
 	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 	// Create liquidity tiers and perpetuals,
-	_, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
-	require.NoError(t, err)
+	_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
 
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, err = keeper.ModifyPerpetual(
+			_, err := keeper.ModifyPerpetual(
 				ctx,
 				tc.id,
 				tc.ticker,
@@ -301,8 +241,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 func TestGetPerpetual_Success(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 10)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 10)
 
 	for _, perp := range perps {
 		rst, err := keeper.GetPerpetual(ctx,
@@ -332,13 +271,13 @@ func TestHasPerpetual(t *testing.T) {
 
 	_, err := pricesKeeper.CreateMarket(
 		ctx,
-		// `ExchangeConfigJson` is left unset as it is not used by the server.
 		pricestypes.MarketParam{
-			Id:                0,
-			Pair:              "marketName",
-			Exponent:          -10,
-			MinExchanges:      uint32(1),
-			MinPriceChangePpm: uint32(50),
+			Id:                 0,
+			Pair:               "marketName",
+			Exponent:           -10,
+			MinExchanges:       uint32(1),
+			MinPriceChangePpm:  uint32(50),
+			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
 			Id:       0,
@@ -378,15 +317,14 @@ func TestGetPerpetual_NotFound(t *testing.T) {
 		ctx,
 		nonExistentPerpetualId,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
 func TestGetPerpetuals_Success(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 10)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 10)
 
 	require.ElementsMatch(t,
 		nullify.Fill(perps),                        //nolint:staticcheck
@@ -411,13 +349,13 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 
 	_, err := pricesKeeper.CreateMarket(
 		ctx,
-		// `ExchangeConfigJson` is left unset as it is not used by the server.
 		pricestypes.MarketParam{
-			Id:                0,
-			Pair:              "marketName",
-			Exponent:          -10,
-			MinExchanges:      uint32(1),
-			MinPriceChangePpm: uint32(50),
+			Id:                 0,
+			Pair:               "marketName",
+			Exponent:           -10,
+			MinExchanges:       uint32(1),
+			MinPriceChangePpm:  uint32(50),
+			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
 			Id:       0,
@@ -683,13 +621,13 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			marketId := pricesKeeper.GetNumMarkets(ctx)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
-				// `ExchangeConfigJson` is left unset as it is not used by the server.
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -768,7 +706,7 @@ func TestGetMarginRequirements_PerpetualNotFound(t *testing.T) {
 		nonExistentPerpetualId,
 		big.NewInt(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -776,8 +714,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, storeKey := keepertest.PerpetualsKeepers(t)
 
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
 	perpetual := perps[0]
 
 	// Store the perpetual with a bad MarketId.
@@ -792,7 +729,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
-	_, _, err = keeper.GetMarginRequirements(
+	_, _, err := keeper.GetMarginRequirements(
 		ctx,
 		perpetual.Params.Id,
 		big.NewInt(-1),
@@ -803,7 +740,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 		perpetual.Params.MarketId,
 		perpetual.Params.Id,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
 }
 
@@ -811,8 +748,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, storeKey := keepertest.PerpetualsKeepers(t)
 
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
 	perpetual := perps[0]
 
 	// Store the perpetual with a bad LiquidityTier.
@@ -827,7 +763,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	), b)
 
 	// Getting margin requirements for perpetual with bad LiquidityTier should return an error.
-	_, _, err = keeper.GetMarginRequirements(
+	_, _, err := keeper.GetMarginRequirements(
 		ctx,
 		perpetual.Params.Id,
 		big.NewInt(-1),
@@ -836,7 +772,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	require.EqualError(
 		t,
 		err,
-		sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, fmt.Sprint(nonExistentLiquidityTier)).Error(),
+		errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, fmt.Sprint(nonExistentLiquidityTier)).Error(),
 	)
 	require.ErrorIs(t, err, types.ErrLiquidityTierDoesNotExist)
 }
@@ -915,11 +851,12 @@ func TestGetNetNotional_Success(t *testing.T) {
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -969,7 +906,7 @@ func TestGetNetNotional_PerpetualNotFound(t *testing.T) {
 		nonExistentPerpetualId,
 		big.NewInt(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -977,8 +914,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, storeKey := keepertest.PerpetualsKeepers(t)
 
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
 	perpetual := perps[0]
 
 	// Store the perpetual with a bad MarketId.
@@ -993,7 +929,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 	), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
-	_, err = keeper.GetNetNotional(
+	_, err := keeper.GetNetNotional(
 		ctx,
 		perpetual.Params.Id,
 		big.NewInt(-1),
@@ -1003,7 +939,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 		perpetual.Params.MarketId,
 		perpetual.Params.Id,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
 }
 
@@ -1080,11 +1016,12 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -1134,7 +1071,7 @@ func TestGetNotionalInBaseQuantums_PerpetualNotFound(t *testing.T) {
 		nonExistentPerpetualId,
 		big.NewInt(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -1142,8 +1079,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, storeKey := keepertest.PerpetualsKeepers(t)
 
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
 	perpetual := perps[0]
 
 	// Store the perpetual with a bad MarketId.
@@ -1158,7 +1094,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 	), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
-	_, err = keeper.GetNotionalInBaseQuantums(
+	_, err := keeper.GetNotionalInBaseQuantums(
 		ctx,
 		perpetual.Params.Id,
 		big.NewInt(-1),
@@ -1168,7 +1104,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 		perpetual.Params.MarketId,
 		perpetual.Params.Id,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
 }
 
@@ -1246,11 +1182,12 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -1300,7 +1237,7 @@ func TestGetNetCollateral_PerpetualNotFound(t *testing.T) {
 		nonExistentPerpetualId,
 		big.NewInt(-1),
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -1308,8 +1245,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, storeKey := keepertest.PerpetualsKeepers(t)
 
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
 	perpetual := perps[0]
 
 	// Store the perpetual with a bad MarketId.
@@ -1324,7 +1260,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
-	_, err = keeper.GetNetCollateral(
+	_, err := keeper.GetNetCollateral(
 		ctx,
 		perpetual.Params.Id,
 		big.NewInt(-1),
@@ -1334,7 +1270,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 		perpetual.Params.MarketId,
 		perpetual.Params.Id,
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
 }
 
@@ -1427,7 +1363,7 @@ func TestGetSettlement_Success(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
 
-			perps, err := createNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
+			perps, err := keepertest.CreateNPerpetuals(t, ctx, keeper, pricesKeeper, 1)
 			require.NoError(t, err)
 
 			perpetualId := perps[0].Params.Id
@@ -1467,15 +1403,14 @@ func TestGetSettlement_PerpetualNotFound(t *testing.T) {
 		big.NewInt(-100),       // quantum
 		big.NewInt(0),          // index
 	)
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
 func TestModifyFundingIndex_Success(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 100)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 100)
 
 	for _, perp := range perps {
 		testFundingIndexDelta := big.NewInt(2*(int64(perp.Params.Id)%2) - 1)
@@ -1508,7 +1443,7 @@ func TestModifyFundingIndex_PerpetualDoesNotExist(t *testing.T) {
 		big.NewInt(1),
 	)
 
-	require.EqualError(t, err, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
@@ -1535,11 +1470,10 @@ func TestModifyFundingIndex_IntegerOverflowUnderflow(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx, perpsKeeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 			// Create liquidity tiers and perpetuals,
-			_, err := createLiquidityTiersAndNPerpetuals(t, ctx, perpsKeeper, pricesKeeper, 1)
-			require.NoError(t, err)
+			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, perpsKeeper, pricesKeeper, 1)
 
 			// Set up intitial funding index, should succeed.
-			err = perpsKeeper.ModifyFundingIndex(
+			err := perpsKeeper.ModifyFundingIndex(
 				ctx,
 				tc.perpetualId,
 				tc.initialFundingIndex,
@@ -2108,7 +2042,7 @@ func TestMaybeProcessNewFundingTickEpoch_Failure(t *testing.T) {
 					Duration:               3600,
 				},
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				epochstypes.ErrEpochInfoNotFound,
 				"name: %s",
 				epochstypes.FundingSampleEpochInfoName,
@@ -2171,10 +2105,9 @@ func TestMaybeProcessNewFundingTickEpoch_NoNewEpoch(t *testing.T) {
 
 	ctx, perpsKeeper, pricesKeeper, epochsKeeper, _ := keepertest.PerpetualsKeepers(t)
 	// Create liquidity tiers and perpetuals,
-	perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, perpsKeeper, pricesKeeper, 100)
-	require.NoError(t, err)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, perpsKeeper, pricesKeeper, 100)
 
-	err = epochsKeeper.CreateEpochInfo(
+	err := epochsKeeper.CreateEpochInfo(
 		ctx,
 		epochstypes.EpochInfo{
 			Name:                   string(epochstypes.FundingTickEpochInfoName),
@@ -2291,10 +2224,9 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			)
 
 			// Create liquidity tiers and perpetuals,
-			_, err := createLiquidityTiersAndNPerpetuals(t, ctx, perpsKeeper, pricesKeeper, tc.numPerpetuals)
-			require.NoError(t, err)
+			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, perpsKeeper, pricesKeeper, tc.numPerpetuals)
 
-			err = epochsKeeper.CreateEpochInfo(
+			err := epochsKeeper.CreateEpochInfo(
 				ctx,
 				epochstypes.EpochInfo{
 					Name:                   string(epochstypes.FundingSampleEpochInfoName),
@@ -2422,8 +2354,7 @@ func TestAddPremiums_Success(t *testing.T) {
 
 		// Create liquidity tiers and perpetuals,
 		numPerpetuals := 10
-		perps, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, numPerpetuals)
-		require.NoError(t, err)
+		perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, numPerpetuals)
 
 		// Insert one round of premiums for all perps.
 		firstPremiums := make([]types.FundingPremium, numPerpetuals)
@@ -2435,7 +2366,7 @@ func TestAddPremiums_Success(t *testing.T) {
 			}
 		}
 
-		err = tc.addPremiumFunc(keeper, ctx, firstPremiums)
+		err := tc.addPremiumFunc(keeper, ctx, firstPremiums)
 		require.NoError(t, err)
 
 		// Check each perp has expected number of premiums stored after first around of addPremiumFunc().
@@ -2553,14 +2484,13 @@ func TestAddPremiums_NonExistingPerpetuals(t *testing.T) {
 		}
 
 		// Create liquidity tiers and perpetuals,
-		_, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 3)
-		require.NoError(t, err)
+		_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 3)
 
-		err = tc.addPremiumFunc(keeper, ctx, newPremiums)
+		err := tc.addPremiumFunc(keeper, ctx, newPremiums)
 		require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 		require.Error(t,
 			err,
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"perpetual ID = %d",
 				1000,
@@ -2824,7 +2754,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create liquidity tiers and perpetuals,
-			_, err = createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 4)
+			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 4)
 			require.NoError(t, err)
 
 			err = keeper.SetMinNumVotesPerSample(ctx, tc.minNumVotesPerSample)
@@ -2913,7 +2843,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: 500_000,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
+			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
 			id:                     1,
@@ -2922,7 +2852,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
+			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Base Position Notional is zero": {
 			id:                     1,
@@ -2931,7 +2861,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          errorsmod.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
 		},
 		"Impact Notional is zero": {
 			id:                     1,
@@ -2940,7 +2870,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
-			expectedError:          sdkerrors.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          errorsmod.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
 		},
 	}
 
@@ -3051,7 +2981,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: 500_000,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
+			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
 			id:                     1,
@@ -3060,7 +2990,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
+			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Base Position Notional is zero": {
 			id:                     1,
@@ -3069,7 +2999,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          sdkerrors.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          errorsmod.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
 		},
 		"Impact Notional is zero": {
 			id:                     1,
@@ -3078,7 +3008,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
-			expectedError:          sdkerrors.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          errorsmod.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
 		},
 	}
 

@@ -31,7 +31,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		"Success": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPair: &types.ClobPair{
+				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
@@ -61,7 +61,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		"Error: unsupported status transition from active to initializing": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPair: &types.ClobPair{
+				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
@@ -91,7 +91,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		"Panic: clob pair not found": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPair: &types.ClobPair{
+				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
@@ -109,7 +109,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		"Error: invalid authority": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: "foobar",
-				ClobPair: &types.ClobPair{
+				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
@@ -138,7 +138,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		"Error: cannot update metadata with new perpetual id": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPair: &types.ClobPair{
+				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
@@ -167,7 +167,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		"Error: cannot update step base quantums": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPair: &types.ClobPair{
+				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
@@ -196,7 +196,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		"Error: cannot update subticks per tick": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPair: &types.ClobPair{
+				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
@@ -225,7 +225,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		"Error: cannot update quantum converstion exponent": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				ClobPair: &types.ClobPair{
+				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
@@ -283,7 +283,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					require.NoError(t, err)
 					clobPair, found := k.GetClobPair(ks.Ctx, types.ClobPairId(tc.msg.ClobPair.Id))
 					require.True(t, found)
-					require.Equal(t, clobPair, *tc.msg.ClobPair)
+					require.Equal(t, clobPair, tc.msg.ClobPair)
 				}
 			}
 		})

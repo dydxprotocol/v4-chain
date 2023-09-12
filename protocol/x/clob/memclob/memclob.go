@@ -1,6 +1,7 @@
 package memclob
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math/big"
@@ -12,7 +13,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -121,7 +121,7 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	offchainUpdates = types.NewOffchainUpdates()
 	if m.generateOffchainUpdates {
 		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-			ctx.Logger(),
+			m.clobKeeper.Logger(ctx),
 			orderIdToCancel,
 			indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
@@ -440,7 +440,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			orderId := order.OrderId
 			if _, found := m.openOrders.getOrder(ctx, orderId); found {
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					ctx.Logger(),
+					m.clobKeeper.Logger(ctx),
 					orderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
@@ -450,7 +450,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			}
 		}
 		if message, success := off_chain_updates.CreateOrderPlaceMessage(
-			ctx.Logger(),
+			m.clobKeeper.Logger(ctx),
 			order,
 		); success {
 			offchainUpdates.AddPlaceMessage(order.OrderId, message)
@@ -458,7 +458,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	// Attempt to match the order against the orderbook.
-	takerOrderStatus, takerOffchainUpdates, err := m.matchOrder(ctx, &order)
+	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
 	offchainUpdates.Append(takerOffchainUpdates)
 
 	if err != nil {
@@ -491,7 +491,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				err,
@@ -513,7 +513,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				nil,
@@ -543,7 +543,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		// during uncrossing.
 		if m.generateOffchainUpdates {
 			if message, success := off_chain_updates.CreateOrderUpdateMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				order.GetBaseQuantums(),
 			); success {
@@ -560,7 +560,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				orderStatus,
 				nil,
@@ -595,7 +595,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx.Logger(),
+				m.clobKeeper.Logger(ctx),
 				order.OrderId,
 				addOrderOrderStatus,
 				nil,
@@ -632,7 +632,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	// the total filled size of the order (size of order - remaining size).
 	if m.generateOffchainUpdates {
 		if message, success := off_chain_updates.CreateOrderUpdateMessage(
-			ctx.Logger(),
+			m.clobKeeper.Logger(ctx),
 			order.OrderId,
 			order.GetBaseQuantums()-remainingSize,
 		); success {
@@ -671,7 +671,7 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 ) {
 	// Attempt to match the liquidation order against the orderbook.
 	// TODO(DEC-1157): Update liquidations flow to send off-chain indexer messages.
-	liquidationOrderStatus, offchainUpdates, err := m.matchOrder(ctx, &liquidationOrder)
+	liquidationOrderStatus, offchainUpdates, _, err := m.matchOrder(ctx, &liquidationOrder)
 	if err != nil {
 		return 0, 0, nil, err
 	}
@@ -734,6 +734,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 ) (
 	orderStatus types.TakerOrderStatus,
 	offchainUpdates *types.OffchainUpdates,
+	makerOrdersToRemove []OrderWithRemovalReason,
 	err error,
 ) {
 	offchainUpdates = types.NewOffchainUpdates()
@@ -834,7 +835,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		writeCache()
 	}
 
-	return takerOrderStatus, offchainUpdates, matchingErr
+	return takerOrderStatus, offchainUpdates, makerOrdersToRemove, matchingErr
 }
 
 // ReplayOperations will replay the provided operations onto the memclob.
@@ -858,7 +859,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	defer func() {
 		if r := recover(); r != nil {
 			stackTrace := string(debug.Stack())
-			ctx.Logger().Error("panic in replay operations", "panic", r, "stackTrace", stackTrace)
+			m.clobKeeper.Logger(ctx).Error("panic in replay operations", "panic", r, "stackTrace", stackTrace)
 		}
 	}()
 
@@ -894,7 +895,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				msg,
 			)
 
-			ctx.Logger().Debug(
+			m.clobKeeper.Logger(ctx).Debug(
 				"Received new order",
 				"orderHash",
 				log.NewLazySprintf("%X", order.GetOrderHash()),
@@ -910,39 +911,15 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx.BlockHeight(),
 			)
 
-			if err != nil {
-				ctx.Logger().Debug(
-					"ReplayOperations: PlaceOrder() returned an error.",
-					"error",
-					err,
-					"operation",
-					operation,
-					"order",
-					order,
-				)
-
-				// If the order is dropped while adding it to the book, return an off-chain order remove
-				// message for the order.
-				// Note: Currently, the error returned from placing the order determines whether an order
-				// removal message is sent to the Indexer. This may change later on to be a check on whether
-				// the order has an existing nonce.
-				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
-					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-						ctx.Logger(),
-						order.OrderId,
-						orderStatus,
-						err,
-						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-					); success {
-						existingOffchainUpdates.AddRemoveMessage(order.OrderId, message)
-					}
-				}
-			} else {
-				if m.generateOffchainUpdates {
-					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-				}
-			}
+			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
+				ctx,
+				err,
+				operation,
+				order,
+				orderStatus,
+				placeOrderOffchainUpdates,
+				existingOffchainUpdates,
+			)
 
 		// Replay all pre-existing stateful order placements.
 		case *types.InternalOperation_PreexistingStatefulOrder:
@@ -966,39 +943,15 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			if err != nil {
-				ctx.Logger().Debug(
-					"ReplayOperations: PlaceOrder() returned an error for a pre-existing stateful order.",
-					"error",
-					err,
-					"operation",
-					operation,
-					"statefulOrderPlacement",
-					statefulOrderPlacement,
-				)
-
-				// If the stateful order is dropped while adding it to the book, return an off-chain order remove
-				// message for the order.
-				// Note: Currently, the error returned from placing the order determines whether an order
-				// removal message is sent to the Indexer. This may change later on to be a check on whether
-				// the order has an existing nonce.
-				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
-					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-						ctx.Logger(),
-						*orderId,
-						orderStatus,
-						err,
-						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-					); success {
-						existingOffchainUpdates.AddRemoveMessage(*orderId, message)
-					}
-				}
-			} else {
-				if m.generateOffchainUpdates {
-					existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-				}
-			}
+			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
+				ctx,
+				err,
+				operation,
+				statefulOrderPlacement.Order,
+				orderStatus,
+				placeOrderOffchainUpdates,
+				existingOffchainUpdates,
+			)
 		// Matches are a no-op.
 		case *types.InternalOperation_Match:
 		case *types.InternalOperation_OrderRemoval:
@@ -1017,40 +970,74 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			if err != nil {
-				ctx.Logger().Debug(
-					"ReplayOperations: PlaceOrder() returned an error for a removed stateful order which was re-placed.",
-					"error",
-					err,
-					"operation",
-					operation,
-					"statefulOrderPlacement",
-					statefulOrderPlacement,
-				)
-
-				// If the stateful order is dropped while adding it to the book, return an off-chain order remove
-				// message for the order.
-				if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
-					if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-						ctx.Logger(),
-						orderId,
-						orderStatus,
-						err,
-						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-					); success {
-						existingOffchainUpdates.AddRemoveMessage(orderId, message)
-					}
-				}
-			} else if m.generateOffchainUpdates {
-				existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-			}
+			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
+				ctx,
+				err,
+				operation,
+				statefulOrderPlacement.Order,
+				orderStatus,
+				placeOrderOffchainUpdates,
+				existingOffchainUpdates,
+			)
 		default:
 			panic(fmt.Sprintf("unknown operation type: %T", operation.Operation))
 		}
 	}
 
 	existingOffchainUpdates.CondenseMessagesForReplay()
+	return existingOffchainUpdates
+}
+
+// GenerateOffchainUpdatesForReplayPlaceOrder is a helper function intended to be used in ReplayOperations.
+// It takes the results of a PlaceOrder function call, emits the according logs, and appends offchain updates for
+// the replay operation to the existingOffchainUpdates object.
+func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
+	ctx sdk.Context,
+	err error,
+	operation types.InternalOperation,
+	order types.Order,
+	orderStatus types.OrderStatus,
+	placeOrderOffchainUpdates *types.OffchainUpdates,
+	existingOffchainUpdates *types.OffchainUpdates,
+) *types.OffchainUpdates {
+	orderId := order.OrderId
+	if err != nil {
+		var loggerString string
+		switch operation.Operation.(type) {
+		case *types.InternalOperation_ShortTermOrderPlacement:
+			loggerString = "ReplayOperations: PlaceOrder() returned an error"
+		case *types.InternalOperation_PreexistingStatefulOrder:
+			loggerString = "ReplayOperations: PlaceOrder() returned an error for a pre-existing stateful order."
+		case *types.InternalOperation_OrderRemoval:
+			loggerString = "ReplayOperations: PlaceOrder() returned an error for a removed stateful order which was re-placed."
+		}
+		m.clobKeeper.Logger(ctx).Debug(
+			loggerString,
+			"error",
+			err,
+			"operation",
+			operation,
+			"order",
+			order,
+		)
+
+		// If the order is dropped while adding it to the book, return an off-chain order remove
+		// message for the order.
+		if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
+			if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
+				m.clobKeeper.Logger(ctx),
+				orderId,
+				orderStatus,
+				err,
+				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+			); success {
+				existingOffchainUpdates.AddRemoveMessage(orderId, message)
+			}
+		}
+	} else if m.generateOffchainUpdates {
+		existingOffchainUpdates.Append(placeOrderOffchainUpdates)
+	}
 	return existingOffchainUpdates
 }
 
@@ -1181,7 +1168,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				// orderbook on the Indexer. As the order is expired, the status of the order is canceled
 				// and not best-effort-canceled.
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					ctx.Logger(),
+					m.clobKeeper.Logger(ctx),
 					statefulOrderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
@@ -1200,7 +1187,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				// orderbook on the Indexer. As the order is expired, the status of the order is canceled
 				// and not best-effort-canceled.
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					ctx.Logger(),
+					m.clobKeeper.Logger(ctx),
 					shortTermOrderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
@@ -1272,7 +1259,7 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		// If the cancelation has an equal-to-or-greater `GoodTilBlock` than the new order, return an error.
 		// If the cancelation has a lesser `GoodTilBlock` than the new order, we do not remove the cancelation.
 		if cancelTilBlock, cancelExists := m.cancels.get(orderId); cancelExists && cancelTilBlock >= order.GetGoodTilBlock() {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrOrderIsCanceled,
 				"Order: %+v, Cancellation GoodTilBlock: %d",
 				order,
@@ -1327,7 +1314,7 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
 	remainingAmount, hasRemainingAmount := m.getOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrOrderFullyFilled,
 			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
 			remainingAmount,
@@ -1640,7 +1627,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			}
 
 			// Panic since this is an unknown error.
-			ctx.Logger().Error(
+			m.clobKeeper.Logger(ctx).Error(
 				"Unexpected error from `ProcessSingleMatch`",
 				"error",
 				err,
@@ -1879,7 +1866,7 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 		// Send an off-chain update message to the indexer to update the total filled size of the maker
 		// order.
 		if message, success := off_chain_updates.CreateOrderUpdateMessage(
-			ctx.Logger(),
+			m.clobKeeper.Logger(ctx),
 			makerOrder.OrderId,
 			newTotalFilledAmount,
 		); success {
@@ -1995,7 +1982,7 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 				}
 				if m.generateOffchainUpdates {
 					if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-						ctx.Logger(),
+						m.clobKeeper.Logger(ctx),
 						orderId,
 						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
 						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
@@ -2149,7 +2136,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 
 	// Check the `ClobPair` is a perpetual.
 	if clobPair.GetPerpetualClobMetadata() == nil {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrPremiumWithNonPerpetualClobPair,
 			"ClobPair ID: %d",
 			clobPair.Id,
@@ -2167,7 +2154,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 
 	// Check `indexPriceSubticks` is non-zero.
 	if indexPriceSubticks.Sign() == 0 {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrZeroIndexPriceForPremiumCalculation,
 			"market = %+v, clobPair = %+v, baseAtomicResolution = %d, quoteAtomicResolution = %d",
 			params.MarketPrice,

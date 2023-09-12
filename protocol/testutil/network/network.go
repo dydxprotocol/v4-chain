@@ -23,7 +23,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/ci"
 	"github.com/gofrs/flock"
@@ -120,7 +119,7 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 		onNewApp = options.OnNewApp
 	}
 
-	encoding := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
+	encoding := app.GetEncodingConfig()
 	return network.Config{
 		Codec:             encoding.Codec,
 		TxConfig:          encoding.TxConfig,

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"testing"
 	"time"
 
@@ -8,7 +9,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -1217,7 +1217,7 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
@@ -1272,7 +1272,7 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
@@ -1669,7 +1669,6 @@ func setupProcessProposerOperationsTestCase(
 						clobPair.QuantumConversionExponent,
 						tc.perpetuals[perpetualId].Params.AtomicResolution,
 						clobPair.SubticksPerTick,
-						clobPair.MinOrderBaseQuantums,
 						clobPair.StepBaseQuantums,
 						tc.perpetuals[perpetualId].Params.LiquidityTier,
 					),
@@ -1681,7 +1680,6 @@ func setupProcessProposerOperationsTestCase(
 			ctx,
 			clobPair.Id,
 			clobtest.MustPerpetualId(clobPair),
-			satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 			satypes.BaseQuantums(clobPair.StepBaseQuantums),
 			clobPair.QuantumConversionExponent,
 			clobPair.SubticksPerTick,

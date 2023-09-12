@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -24,7 +25,6 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		clobPairId uint32,
 		perpetualId uint32,
-		minOrderInBaseQuantums satypes.BaseQuantums,
 		stepSizeInBaseQuantums satypes.BaseQuantums,
 		quantumConversionExponent int32,
 		subticksPerTick uint32,
@@ -120,6 +120,7 @@ type ClobKeeper interface {
 	RateLimitPlaceOrder(ctx sdk.Context, order *MsgPlaceOrder) error
 	InitializeBlockRateLimit(ctx sdk.Context, config BlockRateLimitConfiguration) error
 	InitializeEquityTierLimit(ctx sdk.Context, config EquityTierLimitConfiguration) error
+	Logger(ctx sdk.Context) log.Logger
 	UpdateClobPair(
 		ctx sdk.Context,
 		clobPair ClobPair,

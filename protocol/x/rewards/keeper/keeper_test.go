@@ -623,11 +623,12 @@ func TestProcessRewardsForBlock(t *testing.T) {
 			_, err := tApp.App.PricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                testRewardTokenMarketId,
-					Pair:              testRewardTokenMarket,
-					Exponent:          tc.tokenPrice.Exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 testRewardTokenMarketId,
+					Pair:               testRewardTokenMarket,
+					Exponent:           tc.tokenPrice.Exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				tc.tokenPrice,
 			)

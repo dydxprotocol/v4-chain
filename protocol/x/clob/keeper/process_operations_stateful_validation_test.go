@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math"
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
@@ -50,7 +50,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful long term order id %+v does not exist in state.",
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
@@ -82,7 +82,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful long term order id %+v does not exist in state.",
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
@@ -118,7 +118,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful long term order id %+v does not exist in state.",
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
@@ -158,7 +158,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrInvalidMatchOrder,
 				"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.GetOrderTextString(),
@@ -197,7 +197,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrInvalidMatchOrder,
 				"Taker order %+v cannot be post only.",
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_PO.GetOrderTextString(),
@@ -235,7 +235,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrInvalidMatchOrder,
 				"Maker order %+v cannot be FOK or IOC.",
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK.GetOrderTextString(),
@@ -273,7 +273,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrInvalidMatchOrder,
 				"Maker order %+v cannot be FOK or IOC.",
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC.GetOrderTextString(),
@@ -430,7 +430,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
@@ -462,7 +462,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
@@ -498,7 +498,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
@@ -533,7 +533,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
@@ -573,7 +573,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrInvalidMatchOrder,
 				"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.GetOrderTextString(),

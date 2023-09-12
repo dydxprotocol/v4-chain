@@ -63,7 +63,6 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
       quantumConversionExponent: perpetualMarketCreateEventV1.quantumConversionExponent,
       atomicResolution: perpetualMarketCreateEventV1.atomicResolution,
       subticksPerTick: perpetualMarketCreateEventV1.subticksPerTick,
-      minOrderBaseQuantums: Number(perpetualMarketCreateEventV1.minOrderBaseQuantums),
       stepBaseQuantums: Number(perpetualMarketCreateEventV1.stepBaseQuantums),
       liquidityTierId: perpetualMarketCreateEventV1.liquidityTier,
     };

@@ -1,8 +1,8 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
@@ -34,7 +34,7 @@ func (msg *MsgCreateTransfer) ValidateBasic() error {
 	}
 
 	if msg.Transfer.Sender == msg.Transfer.Recipient {
-		return sdkerrors.Wrapf(ErrSenderSameAsRecipient, "Sender is the same as recipient (%s)", &msg.Transfer.Sender)
+		return errorsmod.Wrapf(ErrSenderSameAsRecipient, "Sender is the same as recipient (%s)", &msg.Transfer.Sender)
 	}
 
 	if msg.Transfer.AssetId != lib.UsdcAssetId {

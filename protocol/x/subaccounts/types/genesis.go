@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 // DefaultGenesis returns the default Capability genesis state
@@ -21,7 +21,7 @@ func (gs GenesisState) Validate() error {
 			return err
 		}
 		if includedAccounts[*subaccountId] {
-			return sdkerrors.Wrapf(ErrDuplicateSubaccountIds,
+			return errorsmod.Wrapf(ErrDuplicateSubaccountIds,
 				"duplicate subaccount id %+v found within genesis state", subaccountId)
 		}
 		includedAccounts[*subaccountId] = true

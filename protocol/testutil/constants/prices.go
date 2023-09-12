@@ -1,8 +1,8 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	pricefeedclient "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -51,28 +51,182 @@ const (
 	ErrorMsgInvalidMinPriceChange   = "Min price change in parts-per-million must be greater than 0 and less than 10000"
 )
 
-// The `MarketParam.ExchangeConfigJson` field is left unset as it is not used by the server.
+var TestMarketExchangeConfigs = map[pricefeedclient.MarketId]string{
+	exchange_common.MARKET_BTC_USD: `{
+		"exchanges": [
+		  {
+			"exchangeName": "Binance",
+			"ticker": "BTCUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "BinanceUS",
+			"ticker": "BTCUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Bitfinex",
+			"ticker": "tBTCUSD"
+		  },
+		  {
+			"exchangeName": "Bitstamp",
+			"ticker": "BTC/USD"
+		  },
+		  {
+			"exchangeName": "Bybit",
+			"ticker": "BTCUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "CoinbasePro",
+			"ticker": "BTC-USD"
+		  },
+		  {
+			"exchangeName": "CryptoCom",
+			"ticker": "BTC_USD"
+		  },
+		  {
+			"exchangeName": "Kraken",
+			"ticker": "XXBTZUSD"
+		  },
+		  {
+			"exchangeName": "Mexc",
+			"ticker": "BTC_USDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Okx",
+			"ticker": "BTC-USDT",
+			"adjustByMarket": "USDT-USD"
+		  }
+		]
+	  }`,
+	exchange_common.MARKET_ETH_USD: `{
+		"exchanges": [
+		  {
+			"exchangeName": "Binance",
+			"ticker": "ETHUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "BinanceUS",
+			"ticker": "ETHUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Bitfinex",
+			"ticker": "tETHUSD"
+		  },
+		  {
+			"exchangeName": "Bitstamp",
+			"ticker": "ETH/USD"
+		  },
+		  {
+			"exchangeName": "Bybit",
+			"ticker": "ETHUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "CoinbasePro",
+			"ticker": "ETH-USD"
+		  },
+		  {
+			"exchangeName": "CryptoCom",
+			"ticker": "ETH_USD"
+		  },
+		  {
+			"exchangeName": "Kraken",
+			"ticker": "XETHZUSD"
+		  },
+		  {
+			"exchangeName": "Mexc",
+			"ticker": "ETH_USDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Okx",
+			"ticker": "ETH-USDT",
+			"adjustByMarket": "USDT-USD"
+		  }
+		]
+	  }`,
+	exchange_common.MARKET_SOL_USD: `{
+		"exchanges": [
+		  {
+			"exchangeName": "Binance",
+			"ticker": "SOLUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Bitfinex",
+			"ticker": "tSOLUSD",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Bybit",
+			"ticker": "SOLUSDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "CoinbasePro",
+			"ticker": "SOL-USD"
+		  },
+		  {
+			"exchangeName": "CryptoCom",
+			"ticker": "SOL_USD"
+		  },
+		  {
+			"exchangeName": "Huobi",
+			"ticker": "solusdt",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Kraken",
+			"ticker": "SOLUSD"
+		  },
+		  {
+			"exchangeName": "Kucoin",
+			"ticker": "SOL-USDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Mexc",
+			"ticker": "SOL_USDT",
+			"adjustByMarket": "USDT-USD"
+		  },
+		  {
+			"exchangeName": "Okx",
+			"ticker": "SOL-USDT",
+			"adjustByMarket": "USDT-USD"
+		  }
+		]
+	  }`,
+}
+
 var TestMarketParams = []types.MarketParam{
 	{
-		Id:                0,
-		Pair:              BtcUsdPair,
-		Exponent:          BtcUsdExponent,
-		MinExchanges:      1,
-		MinPriceChangePpm: 50,
+		Id:                 0,
+		Pair:               BtcUsdPair,
+		Exponent:           BtcUsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
 	},
 	{
-		Id:                1,
-		Pair:              EthUsdPair,
-		Exponent:          EthUsdExponent,
-		MinExchanges:      1,
-		MinPriceChangePpm: 50,
+		Id:                 1,
+		Pair:               EthUsdPair,
+		Exponent:           EthUsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
 	},
 	{
-		Id:                2,
-		Pair:              SolUsdPair,
-		Exponent:          SolUsdExponent,
-		MinExchanges:      1,
-		MinPriceChangePpm: 50,
+		Id:                 2,
+		Pair:               SolUsdPair,
+		Exponent:           SolUsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_SOL_USD],
 	},
 }
 
@@ -137,17 +291,14 @@ var (
 	}
 	InvalidMsgUpdateMarketPricesStatefulTxBytes []byte
 
-	marketExchangeConfigs = constants.GenerateExchangeConfigJson(constants.StaticExchangeMarketConfig)
-
 	Prices_DefaultGenesisState = types.GenesisState{
-		// `ExchangeConfigJson` is left unset as it is not used by the server.
 		MarketParams: []types.MarketParam{
 			{
 				Id:                 uint32(0),
 				Pair:               BtcUsdPair,
 				Exponent:           BtcUsdExponent,
 				MinExchanges:       uint32(2),
-				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
 				MinPriceChangePpm:  uint32(50),
 			},
 			{
@@ -155,7 +306,7 @@ var (
 				Pair:               EthUsdPair,
 				Exponent:           EthUsdExponent,
 				MinExchanges:       uint32(1),
-				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
 				MinPriceChangePpm:  uint32(50),
 			},
 		},
@@ -174,13 +325,12 @@ var (
 	}
 
 	Prices_MultiExchangeMarketGenesisState = types.GenesisState{
-		// `ExchangeConfigJson` is left unset as it is unused by the server.
 		MarketParams: []types.MarketParam{
 			{ // BTC-USD
 				Id:                 uint32(0),
 				Pair:               BtcUsdPair,
 				Exponent:           BtcUsdExponent,
-				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
 				MinExchanges:       uint32(2),
 				MinPriceChangePpm:  uint32(50),
 			},
@@ -188,7 +338,7 @@ var (
 				Id:                 uint32(1),
 				Pair:               EthUsdPair,
 				Exponent:           EthUsdExponent,
-				ExchangeConfigJson: marketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
 				MinExchanges:       uint32(2),
 				MinPriceChangePpm:  uint32(50),
 			},

@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"testing"
 
@@ -37,31 +38,31 @@ var (
 
 	testMsg = &testdata.TestMsg{Signers: []string{"meh"}}
 
-	invalidReqErrCannotBeEmpty = sdkerrors.Wrap(
+	invalidReqErrCannotBeEmpty = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		"msgs cannot be empty",
 	)
-	invalidReqErrAppInjectedMustBeOnlyMsg = sdkerrors.Wrap(
+	invalidReqErrAppInjectedMustBeOnlyMsg = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		"app-injected msg must be the only msg in a tx",
 	)
-	invalidReqErrInternalMsg = sdkerrors.Wrap(
+	invalidReqErrInternalMsg = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		"internal msg cannot be submitted externally",
 	)
-	invalidReqErrNestedUnsupportedMsg = sdkerrors.Wrap(
+	invalidReqErrNestedUnsupportedMsg = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		fmt.Errorf("Invalid nested msg: unsupported msg type").Error(),
 	)
-	invalidReqErrNestedAppInjectedMsg = sdkerrors.Wrap(
+	invalidReqErrNestedAppInjectedMsg = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		fmt.Errorf("Invalid nested msg: app-injected msg type").Error(),
 	)
-	invalidReqErrNestedDoubleNested = sdkerrors.Wrap(
+	invalidReqErrNestedDoubleNested = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		fmt.Errorf("Invalid nested msg: double-nested msg type").Error(),
 	)
-	invalidReqErrUnsupportedMsg = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
+	invalidReqErrUnsupportedMsg = errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
 )
 
 func TestValidateMsgType_Empty(t *testing.T) {
@@ -123,7 +124,7 @@ func TestValidateMsgType_AppInjectedMsg(t *testing.T) {
 
 			expectedErr: map[txMode]error{
 				reCheckTx: nil, // ReCheck skips the AnteHandler.
-				checkTx: sdkerrors.Wrap( // Should only be included in DeliverTx
+				checkTx: errorsmod.Wrap( // Should only be included in DeliverTx
 					sdkerrors.ErrInvalidRequest,
 					"app-injected msg must only be included in DeliverTx",
 				),

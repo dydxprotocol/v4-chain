@@ -2,6 +2,9 @@ package keeper_test
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"testing"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -21,7 +24,7 @@ func TestCreateMarket(t *testing.T) {
 			Id:                 0,
 			Pair:               constants.BtcUsdPair,
 			Exponent:           int32(-6),
-			ExchangeConfigJson: "test_config_placeholder",
+			ExchangeConfigJson: `{"test_config_placeholder":{}}`,
 			MinExchanges:       2,
 			MinPriceChangePpm:  uint32(9_999),
 		},
@@ -41,7 +44,7 @@ func TestCreateMarket(t *testing.T) {
 	require.Equal(t, uint32(0), marketParam.Id)
 	require.Equal(t, constants.BtcUsdPair, marketParam.Pair)
 	require.Equal(t, int32(-6), marketParam.Exponent)
-	require.Equal(t, "test_config_placeholder", marketParam.ExchangeConfigJson)
+	require.Equal(t, `{"test_config_placeholder":{}}`, marketParam.ExchangeConfigJson)
 	require.Equal(t, uint32(2), marketParam.MinExchanges)
 	require.Equal(t, uint32(9999), marketParam.MinPriceChangePpm)
 
@@ -49,6 +52,8 @@ func TestCreateMarket(t *testing.T) {
 	require.Equal(t, uint32(0), marketPrice.Id)
 	require.Equal(t, int32(-6), marketPrice.Exponent)
 	require.Equal(t, constants.FiveBillion, marketPrice.Price)
+
+	require.Equal(t, marketParam.Pair, metrics.GetMarketPairForTelemetry(marketParam.Id))
 
 	// Verify expected market event.
 	keepertest.AssertMarketCreateEventInIndexerBlock(t, keeper, ctx, marketParam)
@@ -73,6 +78,7 @@ func TestMarketIsRecentlyAdded(t *testing.T) {
 }
 
 func TestCreateMarket_Errors(t *testing.T) {
+	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`
 	tests := map[string]struct {
 		// Setup
 		pair                                              string
@@ -81,36 +87,40 @@ func TestCreateMarket_Errors(t *testing.T) {
 		price                                             uint64
 		marketPriceIdDoesntMatchMarketParamId             bool
 		marketPriceExponentDoesntMatchMarketParamExponent bool
+		exchangeConfigJson                                string
 		// Expected
 		expectedErr string
 	}{
 		"Empty pair": {
-			pair:              "", // pair cannot be empty
-			minExchanges:      uint32(2),
-			minPriceChangePpm: uint32(50),
-			price:             constants.FiveBillion,
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, constants.ErrorMsgMarketPairCannotBeEmpty).Error(),
+			pair:               "", // pair cannot be empty
+			minExchanges:       uint32(2),
+			minPriceChangePpm:  uint32(50),
+			price:              constants.FiveBillion,
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr:        errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgMarketPairCannotBeEmpty).Error(),
 		},
 		"Invalid min price change: zero": {
-			pair:              constants.BtcUsdPair,
-			minExchanges:      uint32(2),
-			minPriceChangePpm: uint32(0), // must be > 0
-			price:             constants.FiveBillion,
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
+			pair:               constants.BtcUsdPair,
+			minExchanges:       uint32(2),
+			minPriceChangePpm:  uint32(0), // must be > 0
+			price:              constants.FiveBillion,
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr:        errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
 		"Invalid min price change: ten thousand": {
 			pair:              constants.BtcUsdPair,
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(10_000), // must be < 10,000
 			price:             constants.FiveBillion,
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
+			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
 		"Min exchanges cannot be zero": {
-			pair:              constants.BtcUsdPair,
-			minExchanges:      uint32(0), // cannot be zero
-			minPriceChangePpm: uint32(50),
-			price:             constants.FiveBillion,
-			expectedErr:       types.ErrZeroMinExchanges.Error(),
+			pair:               constants.BtcUsdPair,
+			minExchanges:       uint32(0), // cannot be zero
+			minPriceChangePpm:  uint32(50),
+			price:              constants.FiveBillion,
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr:        types.ErrZeroMinExchanges.Error(),
 		},
 		"Market param and price ids don't match": {
 			pair:                                  constants.BtcUsdPair,
@@ -118,7 +128,8 @@ func TestCreateMarket_Errors(t *testing.T) {
 			minPriceChangePpm:                     uint32(50),
 			price:                                 constants.FiveBillion,
 			marketPriceIdDoesntMatchMarketParamId: true,
-			expectedErr: sdkerrors.Wrap(
+			exchangeConfigJson:                    validExchangeConfigJson,
+			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidInput,
 				"market param id 0 does not match market price id 1",
 			).Error(),
@@ -129,17 +140,19 @@ func TestCreateMarket_Errors(t *testing.T) {
 			minPriceChangePpm: uint32(50),
 			price:             constants.FiveBillion,
 			marketPriceExponentDoesntMatchMarketParamExponent: true,
-			expectedErr: sdkerrors.Wrap(
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidInput,
 				"market param 0 exponent -6 does not match market price 0 exponent -5",
 			).Error(),
 		},
 		"Market price is 0": {
-			pair:              constants.BtcUsdPair,
-			minExchanges:      uint32(2),
-			minPriceChangePpm: uint32(50),
-			price:             uint64(0),
-			expectedErr:       sdkerrors.Wrap(types.ErrInvalidInput, "market 0 price cannot be zero").Error(),
+			pair:               constants.BtcUsdPair,
+			minExchanges:       uint32(2),
+			minPriceChangePpm:  uint32(50),
+			price:              uint64(0),
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr:        errorsmod.Wrap(types.ErrInvalidInput, "market 0 price cannot be zero").Error(),
 		},
 	}
 	for name, tc := range tests {
@@ -160,11 +173,12 @@ func TestCreateMarket_Errors(t *testing.T) {
 			_, err := keeper.CreateMarket(
 				ctx,
 				types.MarketParam{
-					Id:                0,
-					Pair:              tc.pair,
-					Exponent:          int32(-6),
-					MinExchanges:      tc.minExchanges,
-					MinPriceChangePpm: tc.minPriceChangePpm,
+					Id:                 0,
+					Pair:               tc.pair,
+					Exponent:           int32(-6),
+					MinExchanges:       tc.minExchanges,
+					MinPriceChangePpm:  tc.minPriceChangePpm,
+					ExchangeConfigJson: tc.exchangeConfigJson,
 				},
 				types.MarketPrice{
 					Id:       0 + marketPriceIdOffset,
@@ -179,7 +193,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 			require.EqualError(
 				t,
 				err,
-				sdkerrors.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(0)).Error(),
+				errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(0)).Error(),
 			)
 
 			// Verify no new market event.

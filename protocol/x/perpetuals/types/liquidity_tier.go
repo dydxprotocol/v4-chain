@@ -1,9 +1,9 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"math/big"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
@@ -12,20 +12,20 @@ import (
 // - Base position notional is not 0.
 func (liquidityTier LiquidityTier) Validate() error {
 	if liquidityTier.InitialMarginPpm > MaxInitialMarginPpm {
-		return sdkerrors.Wrap(ErrInitialMarginPpmExceedsMax, lib.Uint32ToString(liquidityTier.InitialMarginPpm))
+		return errorsmod.Wrap(ErrInitialMarginPpmExceedsMax, lib.Uint32ToString(liquidityTier.InitialMarginPpm))
 	}
 
 	if liquidityTier.MaintenanceFractionPpm > MaxMaintenanceFractionPpm {
-		return sdkerrors.Wrap(ErrMaintenanceFractionPpmExceedsMax,
+		return errorsmod.Wrap(ErrMaintenanceFractionPpmExceedsMax,
 			lib.Uint32ToString(liquidityTier.MaintenanceFractionPpm))
 	}
 
 	if liquidityTier.BasePositionNotional == 0 {
-		return sdkerrors.Wrap(ErrBasePositionNotionalIsZero, lib.Uint32ToString(0))
+		return errorsmod.Wrap(ErrBasePositionNotionalIsZero, lib.Uint32ToString(0))
 	}
 
 	if liquidityTier.ImpactNotional == 0 {
-		return sdkerrors.Wrap(ErrImpactNotionalIsZero, lib.Uint32ToString(0))
+		return errorsmod.Wrap(ErrImpactNotionalIsZero, lib.Uint32ToString(0))
 	}
 
 	return nil
@@ -35,7 +35,7 @@ func (liquidityTier LiquidityTier) Validate() error {
 // and maintenance fraction ppm.
 func (liquidityTier LiquidityTier) GetMaintenanceMarginPpm() uint32 {
 	if liquidityTier.MaintenanceFractionPpm > MaxMaintenanceFractionPpm {
-		panic(sdkerrors.Wrapf(ErrMaintenanceFractionPpmExceedsMax, "maintenance fraction ppm: %d",
+		panic(errorsmod.Wrapf(ErrMaintenanceFractionPpmExceedsMax, "maintenance fraction ppm: %d",
 			liquidityTier.MaintenanceFractionPpm))
 	}
 	// maintenance margin = initial margin * maintenance fraction

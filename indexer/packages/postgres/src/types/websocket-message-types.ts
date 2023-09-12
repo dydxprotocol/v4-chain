@@ -155,6 +155,8 @@ export interface TransferSubaccountMessageContents {
   size: string,
   type: TransferType,
   transactionHash: string,
+  createdAt: IsoString;
+  createdAtHeight: string;
 }
 
 /* ------- TradeMessageContents ------- */
@@ -199,7 +201,6 @@ export interface TradingPerpetualMarketMessage {
   quantumConversionExponent?: number;
   atomicResolution?: number;
   subticksPerTick?: number;
-  minOrderBaseQuantums?: number;
   stepBaseQuantums?: number;
 
   // Fields that are likely to change

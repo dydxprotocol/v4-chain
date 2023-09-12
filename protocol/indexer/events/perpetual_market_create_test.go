@@ -1,9 +1,10 @@
 package events
 
 import (
+	"testing"
+
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +19,6 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		-8,
 		8,
 		5,
-		10,
 		5,
 		0,
 	)
@@ -31,7 +31,6 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		QuantumConversionExponent: -8,
 		AtomicResolution:          8,
 		SubticksPerTick:           5,
-		MinOrderBaseQuantums:      10,
 		StepBaseQuantums:          5,
 		LiquidityTier:             0,
 	}

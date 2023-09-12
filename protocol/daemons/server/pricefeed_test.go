@@ -2,12 +2,12 @@ package server_test
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	pricefeedconstants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server"
@@ -50,7 +50,7 @@ func TestUpdateMarketPrices_NotInitialized(t *testing.T) {
 	req := &api.UpdateMarketPricesRequest{MarketPriceUpdates: constants.AtTimeTPriceUpdate}
 	require.PanicsWithError(
 		t,
-		sdkerrors.Wrapf(
+		errorsmod.Wrapf(
 			types.ErrServerNotInitializedCorrectly,
 			"MarketToExchange not initialized",
 		).Error(),
@@ -150,7 +150,7 @@ func TestUpdateMarketPrices_InvalidExchangePrices(t *testing.T) {
 			).WithPriceFeedMarketToExchangePrices(
 				pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge),
 			)
-			expectedErr := sdkerrors.Wrapf(
+			expectedErr := errorsmod.Wrapf(
 				tc.expectedError,
 				"ExchangePrice: %v and MarketId: %d",
 				// Assumes first ExchangePrice is the one with a validation error.

@@ -1,8 +1,8 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ sdk.Msg = &MsgUpdateLiquidationsConfig{}
@@ -17,7 +17,7 @@ func (msg *MsgUpdateLiquidationsConfig) GetSigners() []sdk.AccAddress {
 // is empty or if the LiquidationsConfig is invalid.
 func (msg *MsgUpdateLiquidationsConfig) ValidateBasic() error {
 	if msg.Authority == "" {
-		return sdkerrors.Wrap(ErrInvalidAuthority, "authority cannot be empty")
+		return errorsmod.Wrap(ErrInvalidAuthority, "authority cannot be empty")
 	}
 
 	return msg.LiquidationsConfig.Validate()

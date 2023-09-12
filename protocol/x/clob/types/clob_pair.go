@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -60,4 +61,46 @@ func (c *ClobPair) MustGetPerpetualId() uint32 {
 // GetId returns the `ClobPairId` for the provided `clobPair`.
 func (c *ClobPair) GetClobPairId() ClobPairId {
 	return ClobPairId(c.Id)
+}
+
+// Stateless validation on ClobPair.
+func (c *ClobPair) Validate() error {
+	switch c.Metadata.(type) {
+	// TODO(DEC-1535): update this when additional clob pair types are supported.
+	case *ClobPair_SpotClobMetadata:
+		return errorsmod.Wrapf(
+			ErrInvalidClobPairParameter,
+			"CLOB pair (%+v) is not a perpetual CLOB.",
+			c,
+		)
+	}
+
+	if !IsSupportedClobPairStatus(c.Status) {
+		return errorsmod.Wrapf(
+			ErrInvalidClobPairParameter,
+			"CLOB pair (%+v) has unsupported status %+v",
+			c,
+			c.Status,
+		)
+	}
+
+	if c.StepBaseQuantums <= 0 {
+		return errorsmod.Wrapf(
+			ErrInvalidClobPairParameter,
+			"invalid ClobPair parameter: StepBaseQuantums must be > 0. Got %v",
+			c.StepBaseQuantums,
+		)
+	}
+
+	// Since a subtick will be calculated as (1 tick/SubticksPerTick), the denominator cannot be 0
+	// and negative numbers do not make sense.
+	if c.SubticksPerTick <= 0 {
+		return errorsmod.Wrapf(
+			ErrInvalidClobPairParameter,
+			"invalid ClobPair parameter: SubticksPerTick must be > 0. Got %v",
+			c.SubticksPerTick,
+		)
+	}
+
+	return nil
 }

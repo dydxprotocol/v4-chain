@@ -24,7 +24,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 	}{
 		"Short term orders": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrdersPerMarketPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
 						Limit:     1,
@@ -32,7 +32,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				},
 			},
 			firstMsg:  &PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
-			secondMsg: &PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
+			secondMsg: &PlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB20,
 		},
 		"Stateful orders": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
@@ -48,14 +48,14 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 		},
 		"Short term order cancellations": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrderCancellationsPerMarketPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
 						Limit:     1,
 					},
 				},
 			},
-			firstMsg:  &CancelOrder_Alice_Num0_Id0_Clob0_GTB5,
+			firstMsg:  &CancelOrder_Alice_Num0_Id0_Clob1_GTB5,
 			secondMsg: &CancelOrder_Alice_Num0_Id0_Clob0_GTB20,
 		},
 	}
@@ -83,7 +83,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				tc.firstMsg,
 			)
 			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
-			// First order should be allowed.
+			// First transaction should be allowed.
 			require.True(t, tApp.CheckTx(firstCheckTx).IsOK())
 
 			secondCheckTx := testapp.MustMakeCheckTx(
@@ -118,93 +118,6 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
 			resp = tApp.CheckTx(secondCheckTx)
 			require.True(t, resp.IsOK())
-		})
-	}
-}
-
-func TestRateLimitingOrders_ShortTermOrderRateLimitsArePerMarket(t *testing.T) {
-	tests := map[string]struct {
-		blockRateLimitConifg clobtypes.BlockRateLimitConfiguration
-		firstMarketMsg       sdktypes.Msg
-		secondMarketMsg      sdktypes.Msg
-		firstMarketSecondMsg sdktypes.Msg
-	}{
-		"Short term orders": {
-			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrdersPerMarketPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
-					{
-						NumBlocks: 2,
-						Limit:     1,
-					},
-				},
-			},
-			firstMarketMsg:       &PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
-			secondMarketMsg:      &PlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB20,
-			firstMarketSecondMsg: &PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-		},
-		"Short term order cancellations": {
-			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrderCancellationsPerMarketPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
-					{
-						NumBlocks: 2,
-						Limit:     1,
-					},
-				},
-			},
-			firstMarketMsg:       &CancelOrder_Alice_Num0_Id0_Clob0_GTB5,
-			secondMarketMsg:      &CancelOrder_Alice_Num0_Id0_Clob1_GTB5,
-			firstMarketSecondMsg: &CancelOrder_Alice_Num0_Id0_Clob0_GTB20,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-				genesis = testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *clobtypes.GenesisState) {
-						genesisState.BlockRateLimitConfig = tc.blockRateLimitConifg
-					},
-				)
-				return genesis
-			}).WithTesting(t).Build()
-			ctx := tApp.InitChain()
-
-			firstMarketCheckTx := testapp.MustMakeCheckTx(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(tc.firstMarketMsg),
-				},
-				tc.firstMarketMsg,
-			)
-			secondMarketCheckTx := testapp.MustMakeCheckTx(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(tc.secondMarketMsg),
-				},
-				tc.secondMarketMsg,
-			)
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
-			// First order for each market should be allowed.
-			require.True(t, tApp.CheckTx(firstMarketCheckTx).IsOK())
-			require.True(t, tApp.CheckTx(secondMarketCheckTx).IsOK())
-
-			firstMarketSecondCheckTx := testapp.MustMakeCheckTx(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(tc.firstMarketSecondMsg),
-				},
-				tc.firstMarketSecondMsg,
-			)
-			// Rate limit is 1 over two block, second attempt should be blocked.
-			resp := tApp.CheckTx(firstMarketSecondCheckTx)
-			require.True(t, resp.IsErr())
-			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
-			require.Contains(t, resp.Log, "Rate of 2 exceeds configured block rate limit")
 		})
 	}
 }

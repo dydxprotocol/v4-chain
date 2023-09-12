@@ -1,9 +1,9 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"math/big"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 )
 
@@ -49,7 +49,7 @@ func (m *AssetPosition) GetBigQuantums() *big.Int {
 	}
 
 	if m.Quantums.BigInt().Sign() == 0 {
-		panic(sdkerrors.Wrapf(
+		panic(errorsmod.Wrapf(
 			ErrAssetPositionZeroQuantum,
 			"asset position (asset Id: %v) has zero quantum",
 			m.AssetId,
@@ -81,7 +81,7 @@ func (m *PerpetualPosition) GetBigQuantums() *big.Int {
 	}
 
 	if m.Quantums.BigInt().Sign() == 0 {
-		panic(sdkerrors.Wrapf(
+		panic(errorsmod.Wrapf(
 			ErrPerpPositionZeroQuantum,
 			"perpetual position (perpetual Id: %v) has zero quantum",
 			m.PerpetualId,

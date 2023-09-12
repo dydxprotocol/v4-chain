@@ -7,9 +7,9 @@ import (
 
 const (
 	defaultIntervalMs = 2_000
-	// Binance / BinanceUS has a limit of 1_200 request weight per minute.
-	// From testing, a 4_250 interval reaches a peak weight of around 1_040 in a minute.
-	binanceIntervalMs = 4_250
+	// Binance / BinanceUS has a limit of 1_200 request weight per minute. At 40 request weight per
+	// iteration, we can query once every 2 seconds, but increase to 2.5s to allow for some jitter.
+	binanceIntervalMs = 2_500
 	// Bitfinex has a rate limit of 30 requests per minute, so we query every 2.5 seconds
 	// to allow for some jitter, as the 2-second interval occasionally produces 429 responses.
 	bitfinexIntervalMs           = 2_500

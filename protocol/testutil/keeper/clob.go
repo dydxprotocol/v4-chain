@@ -6,7 +6,11 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
@@ -30,6 +34,7 @@ import (
 	rewardskeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
 	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	subkeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type ClobKeepersTestContext struct {
@@ -216,4 +221,84 @@ func createClobKeeper(
 	k.SetAnteHandler(constants.EmptyAnteHandler)
 
 	return k, storeKey, memKey
+}
+
+func CreateTestClobPairs(
+	t *testing.T,
+	ctx sdk.Context,
+	clobKeeper *keeper.Keeper,
+	clobPairs []types.ClobPair,
+) {
+	for _, clobPair := range clobPairs {
+		_, err := clobKeeper.CreatePerpetualClobPair(
+			ctx,
+			clobPair.Id,
+			clobPair.MustGetPerpetualId(),
+			satypes.BaseQuantums(clobPair.StepBaseQuantums),
+			clobPair.QuantumConversionExponent,
+			clobPair.SubticksPerTick,
+			clobPair.Status,
+		)
+		require.NoError(t, err)
+	}
+}
+
+func CreateNClobPair(
+	t *testing.T,
+	keeper *keeper.Keeper,
+	perpKeeper *perpkeeper.Keeper,
+	pricesKeeper *priceskeeper.Keeper,
+	ctx sdk.Context,
+	n int,
+	mockIndexerEventManager *mocks.IndexerEventManager,
+) []types.ClobPair {
+	perps := CreateLiquidityTiersAndNPerpetuals(t, ctx, perpKeeper, pricesKeeper, n)
+
+	items := make([]types.ClobPair, n)
+	for i := range items {
+		items[i].Id = uint32(i)
+		items[i].Metadata = &types.ClobPair_PerpetualClobMetadata{
+			PerpetualClobMetadata: &types.PerpetualClobMetadata{
+				PerpetualId: uint32(i),
+			},
+		}
+		items[i].SubticksPerTick = 5
+		items[i].StepBaseQuantums = 5
+		items[i].Status = types.ClobPair_STATUS_ACTIVE
+
+		// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
+		// the indexer event manager to expect these events.
+		mockIndexerEventManager.On("AddTxnEvent",
+			ctx,
+			indexerevents.SubtypePerpetualMarket,
+			indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.NewPerpetualMarketCreateEvent(
+					clobtest.MustPerpetualId(items[i]),
+					items[i].Id,
+					perps[i].Params.Ticker,
+					perps[i].Params.MarketId,
+					items[i].Status,
+					items[i].QuantumConversionExponent,
+					perps[i].Params.AtomicResolution,
+					items[i].SubticksPerTick,
+					items[i].StepBaseQuantums,
+					perps[i].Params.LiquidityTier,
+				),
+			),
+		).Return()
+
+		_, err := keeper.CreatePerpetualClobPair(
+			ctx,
+			items[i].Id,
+			clobtest.MustPerpetualId(items[i]),
+			satypes.BaseQuantums(items[i].StepBaseQuantums),
+			items[i].QuantumConversionExponent,
+			items[i].SubticksPerTick,
+			items[i].Status,
+		)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return items
 }
