@@ -1851,7 +1851,7 @@
   },
   "servers": [
     {
-      "url": "https://indexer.v4testnet2.dydx.exchange/v4",
+      "url": "https://indexer.v4testnet.dydx.exchange/v4",
       "description": "Public Testnet"
     }
   ]
