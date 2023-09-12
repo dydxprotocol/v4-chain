@@ -3,6 +3,7 @@ package keeper_test
 import (
 	errorsmod "cosmossdk.io/errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -36,6 +37,9 @@ func TestModifyMarketParam(t *testing.T) {
 		require.Equal(t, uint32(2), newItem.MinExchanges)
 		require.Equal(t, uint32(9999-i), newItem.MinPriceChangePpm)
 		require.Equal(t, fmt.Sprintf("config_%v", i), newItem.ExchangeConfigJson)
+
+		require.Equal(t, fmt.Sprintf("foo_%v", i), metrics.GetMarketPairForTelemetry(item.Param.Id))
+
 		keepertest.AssertMarketModifyEventInIndexerBlock(t, keeper, ctx, newItem)
 	}
 }
