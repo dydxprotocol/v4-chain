@@ -22,7 +22,8 @@ class ComplianceController extends Controller {
     @Query() address: string,
   ): ComplianceResponse {
     // TODO(IND-372): Add logic to either use cached data or query provider
-    // Dummy logic for front-end testing
+    // Dummy logic for front-end testing, returns true if the address ends in a letter between
+    // 'a' and 'm'
     if (
       address.charCodeAt(address.length - 1) > 'a'.charCodeAt(0) &&
       address.charCodeAt(address.length - 1) < 'm'.charCodeAt(0)
