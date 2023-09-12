@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // OkxResponseBody defines the overall Okx response.
@@ -45,7 +45,7 @@ func (t OkxTicker) GetLastPrice() string {
 func OkxPriceFunction(
 	response *http.Response,
 	marketPriceExponent map[string]int32,
-	medianizer lib.Medianizer,
+	medianizer types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body.
 	var okxResponseBody OkxResponseBody

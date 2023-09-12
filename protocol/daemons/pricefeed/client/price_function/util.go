@@ -3,11 +3,13 @@ package price_function
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/go-playground/validator/v10"
 	"math/big"
 	"regexp"
 	"strconv"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/go-playground/validator/v10"
 )
 
 var (
@@ -170,7 +172,7 @@ func GetOnlyTickerAndExponent(
 func GetUint64MedianFromReverseShiftedBigFloatValues(
 	bigFloatSlice []*big.Float,
 	exponent int32,
-	medianizer lib.Medianizer,
+	medianizer func([]uint64) (uint64, error),
 ) (uint64, error) {
 	// 1) Verify length of slice is > 0.
 	if len(bigFloatSlice) == 0 {
@@ -187,7 +189,7 @@ func GetUint64MedianFromReverseShiftedBigFloatValues(
 	}
 
 	// 4) Get the median value from the uint64 price values and return.
-	return medianizer.MedianUint64(uint64Slice)
+	return medianizer(uint64Slice)
 }
 
 // ReverseShiftBigFloat shifts the given float by exponent in the reverse direction.
@@ -245,7 +247,7 @@ type Ticker interface {
 func GetMedianPricesFromTickers[T Ticker](
 	tickers []T,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	medianizer types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Create API response validator, if not already.
 	if apiResponseValidator == nil {

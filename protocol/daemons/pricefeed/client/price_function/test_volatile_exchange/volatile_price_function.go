@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // VolatileExchangeTicker is our representation of ticker information for a test market.
@@ -44,7 +44,7 @@ func (t VolatileExchangeTicker) GetLastPrice() string {
 func VolatileExchangePriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	medianizer types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	percentageThroughDay := float64(time.Now().Unix()%SECONDS_IN_DAY) / float64(SECONDS_IN_DAY)
 	radians := percentageThroughDay * TestVolatileExchangeParams.Frequency * 2 * math.Pi

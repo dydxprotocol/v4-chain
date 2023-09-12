@@ -6,7 +6,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // CoinbaseProTicker is our representation of ticker information returned in CoinbasePro response.
@@ -40,7 +40,7 @@ func (t CoinbaseProTicker) GetLastPrice() string {
 func CoinbaseProPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	medianizer types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Get ticker. The API response should only contain information for one market.
 	ticker, _, err := price_function.GetOnlyTickerAndExponent(

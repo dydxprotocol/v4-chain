@@ -3,7 +3,7 @@ package types
 import (
 	"net/http"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // ExchangeQueryDetails represents the information needed to query a specific exchange.
@@ -14,7 +14,7 @@ type ExchangeQueryDetails struct {
 	PriceFunction func(
 		response *http.Response,
 		tickerToPriceExponent map[string]int32,
-		medianizer lib.Medianizer,
+		medianizer types.Resolver,
 	) (
 		tickerToPrice map[string]uint64,
 		unavailableTickers map[string]error,

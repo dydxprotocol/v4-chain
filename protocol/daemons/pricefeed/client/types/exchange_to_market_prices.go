@@ -3,10 +3,10 @@ package types
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
@@ -22,7 +22,7 @@ type ExchangeToMarketPrices interface {
 	GetIndexPrice(
 		marketId MarketId,
 		cutoffTime time.Time,
-		medianizer lib.Medianizer,
+		medianizer types.Resolver,
 	) (
 		medianPrice uint64,
 		numPricesMedianized int,
@@ -112,7 +112,7 @@ func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) GetAllPrices() map[Exc
 func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) GetIndexPrice(
 	marketId MarketId,
 	cutoffTime time.Time,
-	medianizer lib.Medianizer,
+	medianizer types.Resolver,
 ) (
 	medianPrice uint64,
 	numPricesMedianized int,
@@ -128,7 +128,7 @@ func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) GetIndexPrice(
 	if len(prices) == 0 {
 		return 0, 0
 	}
-	median, err := medianizer.MedianUint64(prices)
+	median, err := medianizer(prices)
 
 	if err != nil {
 		return 0, 0

@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"net/http"
 	"strings"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // https://api.kraken.com/0/public/Ticker
@@ -53,7 +54,7 @@ type KrakenResponseBody struct {
 func KrakenPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	medianizer types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	var responseBody KrakenResponseBody
 	if err := json.NewDecoder(response.Body).Decode(&responseBody); err != nil {

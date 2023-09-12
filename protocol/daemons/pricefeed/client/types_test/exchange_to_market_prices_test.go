@@ -312,7 +312,7 @@ func TestGetIndexPrice_Mixed(t *testing.T) {
 			}
 
 			// Execute.
-			medianizer := &lib.MedianizerImpl{}
+			medianizer := lib.Median[uint64]
 			medianPrice, numPricesMedianized := etmp.GetIndexPrice(tc.market, tc.cutoffTime, medianizer)
 
 			// Assert.

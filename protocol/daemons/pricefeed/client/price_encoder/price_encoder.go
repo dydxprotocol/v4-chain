@@ -155,7 +155,7 @@ func (p PriceEncoderImpl) convertPriceUpdate(marketPriceTimestamp *types.MarketP
 		adjustByIndexPrice, numPricesMedianized := p.exchangeToMarketPrices.GetIndexPrice(
 			conversionDetails.AdjustByMarketDetails.MarketId,
 			time.Now().Add(-pricefeedtypes.MaxPriceAge),
-			&lib.MedianizerImpl{},
+			lib.Median[uint64],
 		)
 		// If the index price is not valid due to insufficient pricing data, return an error.
 		if numPricesMedianized < int(conversionDetails.AdjustByMarketDetails.MinExchanges) {
