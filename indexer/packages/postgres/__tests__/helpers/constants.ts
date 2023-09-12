@@ -4,7 +4,6 @@ import {
   ORDER_FLAG_SHORT_TERM,
 } from '@dydxprotocol-indexer/v4-proto-parser';
 import { DateTime } from 'luxon';
-import { ComplianceDataCreateObject } from 'packages/postgres/src/types/compliance-data-types';
 
 import * as AssetPositionTable from '../../src/stores/asset-position-table';
 import * as CandleTable from '../../src/stores/candle-table';
@@ -22,6 +21,7 @@ import {
   BlockCreateObject,
   CandleCreateObject,
   CandleResolution,
+  ComplianceDataCreateObject,
   FillCreateObject,
   FillType,
   FundingIndexUpdatesCreateObject,
