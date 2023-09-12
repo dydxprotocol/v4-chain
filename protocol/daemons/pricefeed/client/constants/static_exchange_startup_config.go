@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	defaultIntervalMs = 2_000
+	defaultIntervalMs = 6_000
 	// Binance / BinanceUS has a limit of 1_200 request weight per minute. At 40 request weight per
 	// iteration, we can query once every 2 seconds, but increase to 2.5s to allow for some jitter.
-	binanceIntervalMs = 2_500
+	binanceIntervalMs = 6_500
 	// Bitfinex has a rate limit of 30 requests per minute, so we query every 2.5 seconds
 	// to allow for some jitter, as the 2-second interval occasionally produces 429 responses.
-	bitfinexIntervalMs           = 2_500
+	bitfinexIntervalMs           = 6_500
 	defaultTimeoutMs             = 3_000
 	defaultMaxQueries            = 3
 	defaultMultiMarketMaxQueries = 1

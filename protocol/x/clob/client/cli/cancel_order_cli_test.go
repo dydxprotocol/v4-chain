@@ -4,6 +4,9 @@ package cli_test
 
 import (
 	"fmt"
+	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
+	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"math/big"
 	"testing"
 
@@ -56,10 +59,30 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 	s.validatorAddress = constants.AliceAccAddress
 
 	// Configure test network.
-	s.cfg = network.DefaultConfig(nil)
+	appOptions := appoptions.NewFakeAppOptions()
+	s.cfg = network.DefaultConfig(&network.NetworkConfigOptions{
+		AppOptions: appOptions,
+		OnNewApp: func(val networktestutil.ValidatorI) {
+			testval, ok := val.(networktestutil.Validator)
+			if !ok {
+				panic("incorrect validator type")
+			}
+
+			// Disable the Bridge and Price daemons in the integration tests.
+			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
+			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
+
+			s.T().Log("setting up cancel order integration test GRPC ", testval.AppConfig.GRPC.Address)
+
+			// Enable the liquidations daemon in the integration tests.
+			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
+			appOptions.Set(daemonflags.FlagUnixSocketAddress, "/tmp/cancel_order_cli_test.sock")
+		},
+	})
 
 	s.cfg.Mnemonics = append(s.cfg.Mnemonics, validatorMnemonic)
 	s.cfg.ChainID = app.AppName
+	s.cfg.EnableTMLogging = true
 
 	s.cfg.MinGasPrices = fmt.Sprintf("0%s", sdk.DefaultBondDenom)
 

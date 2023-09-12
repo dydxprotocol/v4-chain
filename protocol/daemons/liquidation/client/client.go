@@ -51,6 +51,7 @@ func Start(
 		}
 	}()
 
+	logger.Error("LIQUIDATIONS connected to daemon server")
 	subaccountQueryClient := satypes.NewQueryClient(queryConn)
 	clobQueryClient := clobtypes.NewQueryClient(queryConn)
 	liquidationServiceClient := api.NewLiquidationServiceClient(daemonConn)

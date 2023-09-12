@@ -52,7 +52,7 @@ func NewServer(
 
 // Stop stops the daemon server's gRPC service.
 func (server *Server) Stop() {
-	server.logger.Info("Stopping daemon gRPC server")
+	server.logger.Info("STOPPING DAEMON SERVER")
 	server.updateMonitor.Stop()
 	server.gsrv.Stop()
 }

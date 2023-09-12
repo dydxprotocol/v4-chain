@@ -80,6 +80,7 @@ func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
 
 	cfg.Mnemonics = append(cfg.Mnemonics, validatorMnemonic)
 	cfg.ChainID = app.AppName
+	cfg.EnableTMLogging = true
 
 	suite.Run(t, NewLiquidationsIntegrationTestSuite(cfg, validatorAddress))
 }

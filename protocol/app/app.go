@@ -534,6 +534,7 @@ func New(
 
 	// Start liquidations client for sending potentially liquidatable subaccounts to the application.
 	if daemonFlags.Liquidation.Enabled {
+		app.Server.ExpectLiquidationsDaemon(time.Duration(2*daemonFlags.Liquidation.LoopDelayMs) * time.Millisecond)
 		go func() {
 			if err := liquidationclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
@@ -546,13 +547,12 @@ func New(
 				panic(err)
 			}
 		}()
-		app.Server.ExpectLiquidationsDaemon(time.Duration(2*daemonFlags.Liquidation.LoopDelayMs) * time.Millisecond)
 	}
 
 	// Non-validating full-nodes have no need to run the price daemon.
 	if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
 		exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
-
+		app.Server.ExpectPricefeedDaemon(time.Duration(2*daemonFlags.Price.LoopDelayMs) * time.Millisecond)
 		// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 		// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 		// periodically sent via gRPC to a shared socket with the server.
@@ -567,12 +567,12 @@ func New(
 			constants.StaticExchangeDetails,
 			&pricefeedclient.SubTaskRunnerImpl{},
 		)
-		app.Server.ExpectPricefeedDaemon(time.Duration(2*daemonFlags.Price.LoopDelayMs) * time.Millisecond)
 	}
 
 	// Start Bridge Daemon.
 	// Non-validating full-nodes have no need to run the bridge daemon.
 	if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
+		app.Server.ExpectBridgeDaemon(time.Duration(2*daemonFlags.Bridge.LoopDelayMs) * time.Millisecond)
 		go func() {
 			if err := bridgeclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
@@ -585,7 +585,6 @@ func New(
 				panic(err)
 			}
 		}()
-		app.Server.ExpectBridgeDaemon(time.Duration(2*daemonFlags.Bridge.LoopDelayMs) * time.Millisecond)
 	}
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(

@@ -31,6 +31,7 @@ var _ = strconv.IntSize
 func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.ClobPair) {
 	t.Helper()
 	cfg := network.DefaultConfig(nil)
+	cfg.EnableTMLogging = true
 
 	// Init Prices genesis state.
 	pricesState := constants.Prices_DefaultGenesisState
