@@ -85,12 +85,17 @@ func mockSuccessRouter(_ sdk.Context) *mocks.MsgRouter {
 	return router
 }
 
-// mockFailingRouter returns a handler that fails on the first call, then returns a handler
-// that succeeds on the next two.
+// mockFailingRouter returns a handler that fails on the first call.
 func mockFailingRouter(ctx sdk.Context) *mocks.MsgRouter {
 	router := mocks.MsgRouter{}
 	router.On("Handler", mock.Anything).Return(HandlerFailure).Once()
-	router.On("Handler", mock.Anything).Return(HandlerSuccess).Times(2)
+	return &router
+}
+
+// mockPanickingRouter returns a handler that panics on the first call.
+func mockPanickingRouter(ctx sdk.Context) *mocks.MsgRouter {
+	router := mocks.MsgRouter{}
+	router.On("Handler", mock.Anything).Panic("panic").Once()
 	return &router
 }
 
@@ -155,6 +160,47 @@ func setupMockKeeperExecutionFailure(t *testing.T, ctx sdk.Context, k *mocks.Del
 	successRouter := mockSuccessRouter(ctx)
 	failureRouter := mockFailingRouter(ctx)
 	k.On("Router").Return(failureRouter).Times(1)
+	k.On("Router").Return(successRouter).Times(2)
+
+	// For error logging.
+	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
+
+	// 2 message executions are persisted.
+	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
+	cms.On("Write").Return(nil).Times(2)
+
+	// All deletes are called.
+	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(1)).Return(nil).Once()
+	k.On("DeleteMessage", ctx, uint32(2)).Return(nil).Once()
+}
+
+func setupMockKeeperMessageHandlerPanic(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
+	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+		Ids: []uint32{0, 1, 2},
+	}, true).Once()
+
+	// All messages found.
+	k.On("GetMessage", ctx, uint32(0)).Return(types.DelayedMessage{
+		Id:          0,
+		Msg:         delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+		BlockHeight: 0,
+	}, true).Once()
+	k.On("GetMessage", ctx, uint32(1)).Return(types.DelayedMessage{
+		Id:          1,
+		Msg:         delaymsg.EncodeMessageToAny(t, constants.TestMsg2),
+		BlockHeight: 0,
+	}, true).Once()
+	k.On("GetMessage", ctx, uint32(2)).Return(types.DelayedMessage{
+		Id:          2,
+		Msg:         delaymsg.EncodeMessageToAny(t, constants.TestMsg3),
+		BlockHeight: 0,
+	}, true).Once()
+
+	// 1st message fails to execute. Following 2 succeed.
+	successRouter := mockSuccessRouter(ctx)
+	panicRouter := mockPanickingRouter(ctx)
+	k.On("Router").Return(panicRouter).Times(1)
 	k.On("Router").Return(successRouter).Times(2)
 
 	// For error logging.
@@ -249,7 +295,7 @@ func setupMockKeeperDeletionFailure(t *testing.T, ctx sdk.Context, k *mocks.Dela
 	k.On("DeleteMessage", ctx, uint32(2)).Return(nil).Once()
 }
 
-func TestDispatchMessageForBlock_Mixed(t *testing.T) {
+func TestDispatchMessagesForBlock_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		setupMocks func(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper)
 	}{
@@ -261,6 +307,9 @@ func TestDispatchMessageForBlock_Mixed(t *testing.T) {
 		},
 		"Execution error does not affect remaining messages": {
 			setupMocks: setupMockKeeperExecutionFailure,
+		},
+		"Execution panic does not affect remaining messages": {
+			setupMocks: setupMockKeeperMessageHandlerPanic,
 		},
 		"Decode failure does not affect remaining messages": {
 			setupMocks: setupMockKeeperDecodeFailure,
