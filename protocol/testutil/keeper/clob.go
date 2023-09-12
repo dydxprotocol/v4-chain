@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"testing"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

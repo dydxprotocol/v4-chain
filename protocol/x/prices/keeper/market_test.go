@@ -1,10 +1,8 @@
 package keeper_test
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"testing"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	errorsmod "cosmossdk.io/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"

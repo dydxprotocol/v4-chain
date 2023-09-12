@@ -3,8 +3,8 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
