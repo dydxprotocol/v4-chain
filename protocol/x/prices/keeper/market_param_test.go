@@ -49,7 +49,7 @@ func TestModifyMarketParam(t *testing.T) {
 }
 
 func TestModifyMarketParam_Errors(t *testing.T) {
-	validExchangeConfigJson := "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"}]}"
+	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`
 	tests := map[string]struct {
 		// Setup
 		targetId           uint32

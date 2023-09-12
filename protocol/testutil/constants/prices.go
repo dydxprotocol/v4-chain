@@ -203,7 +203,6 @@ var TestMarketExchangeConfigs = map[pricefeedclient.MarketId]string{
 	  }`,
 }
 
-// The `MarketParam.ExchangeConfigJson` field is left unset as it is not used by the server.
 var TestMarketParams = []types.MarketParam{
 	{
 		Id:                 0,
@@ -293,7 +292,6 @@ var (
 	InvalidMsgUpdateMarketPricesStatefulTxBytes []byte
 
 	Prices_DefaultGenesisState = types.GenesisState{
-		// `ExchangeConfigJson` is left unset as it is not used by the server.
 		MarketParams: []types.MarketParam{
 			{
 				Id:                 uint32(0),
@@ -327,7 +325,6 @@ var (
 	}
 
 	Prices_MultiExchangeMarketGenesisState = types.GenesisState{
-		// `ExchangeConfigJson` is left unset as it is unused by the server.
 		MarketParams: []types.MarketParam{
 			{ // BTC-USD
 				Id:                 uint32(0),

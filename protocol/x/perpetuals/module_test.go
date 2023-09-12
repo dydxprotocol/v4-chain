@@ -290,11 +290,12 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	if _, err := pricesKeeper.CreateMarket(
 		ctx,
 		pricetypes.MarketParam{
-			Id:                0,
-			Pair:              constants.EthUsdPair,
-			Exponent:          -2,
-			MinExchanges:      1,
-			MinPriceChangePpm: 1_000,
+			Id:                 0,
+			Pair:               constants.EthUsdPair,
+			Exponent:           -2,
+			MinExchanges:       1,
+			MinPriceChangePpm:  1_000,
+			ExchangeConfigJson: "{}",
 		},
 		pricetypes.MarketPrice{
 			Id:       0,
