@@ -8,17 +8,17 @@
   </a>
 </div>
 
-## Indexer
+## indexer/
 The v4 Indexer is a set of microservices which provides a set of rich APIs and websocket channels for a dYdX v4 application.
 
-## Proto
+## proto/
 This directory defines all protos for the v4 Chain.
 
-## Protocol
+## protocol/
 Sovereign Blockchain built using Cosmos SDK & CometBFT for v4 of the dYdX Protocol.
 
-## v4-proto-js
+## v4-proto-js/
 Generated Javascript package for v4 Chain protobufs.
 
-## v4-proto-py
+## v4-proto-py/
 Generated Python package for v4 Chain protobufs.
