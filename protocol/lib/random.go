@@ -1,94 +1,72 @@
 package lib
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math/rand"
 )
 
-// RandomBytesBetween returns a random byte slice that is in the range [start, end] when compared lexicographically.
-// The slice will have a length in the range [len(start), len(end)].
-// In the current implementation, all possible permutations are not equally likely.
-// Nil slices for start and end will be treated as empty byte slices. Will panic if:
-//   - start compares lexicographically greater than end
+// RandomBytesBetween returns a random byte slice that is in the range [lo, hi] when compared lexicographically.
+// The slice will have a length at most max(len(lo), len(hi)).
+// Nil slices for lo and hi will be treated as empty byte slices. Will panic if:
+//   - lo compares lexicographically greater than hi
 //   - nil rand is provided
-func RandomBytesBetween(start []byte, end []byte, rand *rand.Rand) []byte {
+func RandomBytesBetween(lo []byte, hi []byte, rand *rand.Rand) []byte {
 	if rand == nil {
 		panic(errors.New("rand expected to be non-nil."))
 	}
 
-	minLen := len(start)
-	maxLen := len(end)
-	if minLen > maxLen {
-		minLen, maxLen = maxLen, minLen
+	if bytes.Compare(lo, hi) > 0 {
+		panic(fmt.Errorf("lo %x compares lexicographically greater than hi %x", lo, hi))
 	}
 
+	// Determine the maximum length.
+	maxLen := Max(len(lo), len(hi))
+
+	// Allocate the bytes.
 	bytes := make([]byte, maxLen)
-	i := 0
 
-	// Copy the common bytes between the two keys.
-	for ; i < minLen; i++ {
-		// Lexographically compare the byte.
-		// If equal, copy the byte.
-		// If not equal, then either panic or stop copying (depending on which byte is greater).
-		if start[i] == end[i] {
-			bytes[i] = start[i]
-		} else if start[i] > end[i] {
-			panic(fmt.Errorf("start %x compares lexicographically greater than end %x at position %d.", start, end, i))
-		} else {
-			break
+	// Track if written bytes is a prefix of lo or hi.
+	isLoPrefix, isHiPrefix := true, true
+
+	for i := 0; i < maxLen; i++ {
+		// Get the minimum and maximum values.
+		a, b := byte(0), byte(255)
+		if isLoPrefix && i < len(lo) {
+			a = lo[i]
+		}
+		if isHiPrefix && i < len(hi) {
+			b = hi[i]
+		}
+
+		// If we are in the process of copying a common prefix, then continue to copy.
+		if isLoPrefix && isHiPrefix && a == b {
+			bytes[i] = a
+			continue
+		}
+
+		// Number of possibilities.
+		numPossibilities := int32(b) - int32(a) + 1
+
+		// If we are not a prefix of lo, then we may return early.
+		// The probability of returning early is equal to the probability of any unique byte.
+		if !isLoPrefix && rand.Int31n(numPossibilities+1) == 0 {
+			return bytes[:i]
+		}
+
+		// Determine the random byte
+		cur := byte(int32(a) + rand.Int31n(numPossibilities))
+		bytes[i] = cur
+
+		// Check if we need to set either prefix variable to false.
+		if isLoPrefix && i < len(lo) && cur == lo[i] {
+			isLoPrefix = false
+		}
+		if isHiPrefix && i < len(hi) && cur == hi[i] {
+			isHiPrefix = false
 		}
 	}
 
-	// If start == end then we are done and can return bytes.
-	if i == maxLen {
-		return bytes
-	}
-
-	// Remember the floor and ceiling starting at the first byte that differs between the two keys.
-	// Note that if floor is -1, then len(start) <= len(bytes)
-	isPrefixOfStart, isPrefixOfEnd := true, true
-	floor := int32(0)
-	if i < len(start) {
-		floor = int32(start[i])
-	}
-	ceiling := int32(end[i])
-
-	// Compute a random byte length that gives each byte string an equal probability.
-	// Note that [0, 255] represents the possible values and 256 represents the "unset" byte.
-	targetLength := maxLen
-	for j := minLen; j < maxLen && rand.Int31n(257) == 256; j++ {
-		targetLength--
-	}
-
-	// Generate the remainder of the random bytes producing a value that compares lexicographically
-	// between start and end.
-	for ; i < targetLength; i++ {
-		current := floor + rand.Int31n(ceiling-floor+1)
-		bytes[i] = byte(current)
-
-		// Ensure that if bytes is a prefix of start that the next byte in start is the new floor.
-		if isPrefixOfStart && current == floor && i+1 < len(start) {
-			floor = int32(start[i+1])
-		} else {
-			floor = 0
-			isPrefixOfStart = false
-		}
-
-		// Ensure that if bytes is a prefix of end that the next byte in end is the new ceiling.
-		if isPrefixOfEnd && current == ceiling {
-			// If bytes == end then we must return now as we can't generate any more bytes as
-			// the result would be greater than end.
-			if i+1 < len(end) {
-				ceiling = int32(end[i+1])
-			} else {
-				return bytes[:i+1]
-			}
-		} else {
-			ceiling = 255
-			isPrefixOfEnd = false
-		}
-	}
-
-	return bytes[:targetLength]
+	return bytes
 }
