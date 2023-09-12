@@ -38,12 +38,8 @@ func TestModifyMarketParam(t *testing.T) {
 		require.Equal(t, item.Param.Exponent, newItem.Exponent)
 		require.Equal(t, uint32(2), newItem.MinExchanges)
 		require.Equal(t, uint32(9999-i), newItem.MinPriceChangePpm)
-<<<<<<< HEAD
 		require.Equal(t, fmt.Sprintf("foo_%v", i), metrics.GetMarketPairForTelemetry(item.Param.Id))
-		require.Equal(t, fmt.Sprintf("{\"id\":\"%v\"}", i), newItem.ExchangeConfigJson)
-=======
 		require.Equal(t, fmt.Sprintf(`{"id":"%v"}`, i), newItem.ExchangeConfigJson)
->>>>>>> dea84f7 (comments)
 		keepertest.AssertMarketModifyEventInIndexerBlock(t, keeper, ctx, newItem)
 	}
 }
