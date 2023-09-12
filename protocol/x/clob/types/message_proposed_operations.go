@@ -1,9 +1,10 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	fmt "fmt"
 	"math/big"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -105,7 +106,7 @@ func ValidateAndTransformRawOperations(
 				return nil, err
 			}
 			if orderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
-				return nil, sdkerrors.Wrapf(
+				return nil, errorsmod.Wrapf(
 					ErrInvalidOrderRemoval,
 					"Invalid order removal reason: %+v",
 					orderRemoval.RemovalReason,

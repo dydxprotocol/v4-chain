@@ -404,7 +404,7 @@ var (
 		4005,
 		"Deleveraged subaccount in proposed deleveraged operation failed deleveraging validation",
 	)
-	ErrInvalidOrderRemoval = sdkerrors.Register(
+	ErrInvalidOrderRemoval = errorsmod.Register(
 		ModuleName,
 		4006,
 		"Order Removal is invalid",

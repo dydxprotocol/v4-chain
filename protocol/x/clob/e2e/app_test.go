@@ -333,7 +333,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 	}
 }
 
-func TestProcessProposalFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
+func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 	tests := map[string]struct {
 		accAddressForSigning string
 		msg                  sdktypes.Msg
@@ -401,7 +401,7 @@ func TestProcessProposalFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testi
 	}
 }
 
-func TestProcessProposalFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
+func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 	tests := map[string]struct {
 		proposedOperationsTx []byte
 	}{

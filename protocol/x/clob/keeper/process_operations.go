@@ -153,7 +153,7 @@ func (k Keeper) ProcessInternalOperations(
 			orderRemoval := castedOperation.OrderRemoval
 
 			if err := k.PersistOrderRemovalToState(ctx, orderRemoval); err != nil {
-				return nil
+				return err
 			}
 		case *types.InternalOperation_PreexistingStatefulOrder:
 			// When we fetch operations to propose, preexisting stateful orders are not included
@@ -232,8 +232,6 @@ func (k Keeper) PersistOrderRemovalToState(
 	// Statefully validate that the removal reason is valid.
 	switch removalReason := orderRemoval.RemovalReason; removalReason {
 	case types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED:
-		// The subaccount must be under-collateralized if this order was filled.
-
 		// For the collateralization check, use the remaining amount of the order that is resting on the book.
 		remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
 		if !hasRemainingAmount {
@@ -276,9 +274,8 @@ func (k Keeper) PersistOrderRemovalToState(
 				*orderRemoval,
 			)
 		}
-		// The reduce-only order must increase the size of the position, or change the side.
 
-		// Fetch the quantum size of the current position.
+		// The reduce-only order must increase or change the side of the position to trigger removal.
 		currentPositionSize := k.GetStatePosition(
 			ctx,
 			orderIdToRemove.SubaccountId,
@@ -286,7 +283,8 @@ func (k Keeper) PersistOrderRemovalToState(
 		)
 		orderQuantumsToFill := orderToRemove.GetBigQuantums()
 
-		orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == 1
+		orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == currentPositionSize.Sign()
+
 		newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
 		orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
 		if !orderFillWouldIncreasePositionSize && !orderChangedSide {
@@ -297,16 +295,106 @@ func (k Keeper) PersistOrderRemovalToState(
 			)
 		}
 	case types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
+		// TODO
+		//
+		// This removal reason implies the stateful taker order could not be placed on the book because it crossed
+		// some unspecified maker order. We must verify that the stateful taker order should have been placed in this block
+		// and that the maker order it crossed with actually exists on the proposer's orderbook.
+
+		// The order should be post-only
+		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
+			return errorsmod.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order is not post-only.",
+				*orderRemoval,
+			)
+		}
 	case types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE:
-		// The order must have been triggered in the last block.
+		// TODO
+		//
+		// This removal reason implies the maker order was removed during a self-trade encountered during matching.
+		// We must verify that the stateful order had already been placed, and that the taker order matching which caused
+		// this removal would have matched against this order.
 	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED:
+		// TODO: The order must have been triggered in the last block
+
+		// The order should be in triggered state.
+		_, found := k.GetTriggeredConditionalOrderPlacement(ctx, orderIdToRemove)
+		if !found {
+			return errorsmod.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order is not in triggered state.",
+				*orderRemoval,
+			)
+		}
+
+		// The order should be FOK
+		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_FILL_OR_KILL {
+			return errorsmod.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order is not fill-or-kill.",
+				*orderRemoval,
+			)
+		}
+
+		// The order should not be fully filled.
+		_, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		if !hasRemainingAmount {
+			return errorsmod.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Fill-or-kill order is fully filled.",
+				*orderRemoval,
+			)
+		}
 	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK:
+		// TODO: The order must have been triggered in the last block (we cannot currently verify this)
+
+		// The order should be in triggered state.
+		_, found := k.GetTriggeredConditionalOrderPlacement(ctx, orderIdToRemove)
+		if !found {
+			return errorsmod.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order is not in triggered state.",
+				*orderRemoval,
+			)
+		}
+
+		// The order should be IOC.
+		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_IOC {
+			return errorsmod.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order is not immediate-or-cancel.",
+				*orderRemoval,
+			)
+		}
+
+		// The order should not be fully filled.
+		_, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		if !hasRemainingAmount {
+			return errorsmod.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Immediate-or-cancel order is fully filled.",
+				*orderRemoval,
+			)
+		}
 	case types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED:
+		// The order should be fully filled.
+		remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		if hasRemainingAmount {
+			return errorsmod.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order is not fully filled. Has fill amount (%+v)"+
+					" and total size (%+v).",
+				*orderRemoval,
+				remainingAmount,
+				orderToRemove.GetBaseQuantums(),
+			)
+		}
 	default:
 		return errorsmod.Wrapf(
 			types.ErrInvalidOrderRemoval,
 			"PersistOrderRemovalToState: Unrecognized order removal type for order removal: %+v",
-			orderIdToRemove,
+			orderRemoval,
 		)
 	}
 
