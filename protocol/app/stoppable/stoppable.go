@@ -10,9 +10,10 @@ var (
 	lock                     sync.Mutex
 )
 
-// Stoppable is an interface for objects that can be stopped. A global map of these objects is maintained in the
-// protocol/app package. This map is used to stop all running services that aren't cleaned up by the Network test
-// object for our cli test suite.
+// Stoppable is an interface for objects that can be stopped. A global map of these objects is maintained here. This
+// map is used to stop all running services that aren't cleaned up by the Network test object for our cli test suite.
+// Services are organized by a uuid per test case, which is that test's GRPC address, since the network package chooses
+// these to not overlap.
 type Stoppable interface {
 	Stop()
 }
