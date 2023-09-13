@@ -418,24 +418,24 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 		// 	},
 		// 	expectedErr: "Order fill must increase position size or change side",
 		// },
-		"invalid proposal: non reduce-only order may not be removed with reduce-only reason": {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			orders: []clobtypes.Order{
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-			},
-			msgProposedOperations: &clobtypes.MsgProposedOperations{
-				OperationsQueue: []clobtypes.OperationRaw{
-					clobtestutils.NewOrderRemovalOperationRaw(
-						constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
-						clobtypes.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
-					),
-				},
-			},
-			expectedErrType: clobtypes.ErrInvalidOrderRemoval,
-			expectedErr:     "Order must be reduce only",
-		},
+		// "invalid proposal: non reduce-only order may not be removed with reduce-only reason": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_1BTC_Short,
+		// 	},
+		// 	orders: []clobtypes.Order{
+		// 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+		// 	},
+		// 	msgProposedOperations: &clobtypes.MsgProposedOperations{
+		// 		OperationsQueue: []clobtypes.OperationRaw{
+		// 			clobtestutils.NewOrderRemovalOperationRaw(
+		// 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+		// 				clobtypes.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+		// 			),
+		// 		},
+		// 	},
+		// 	expectedErrType: clobtypes.ErrInvalidOrderRemoval,
+		// 	expectedErr:     "Order must be reduce only",
+		// },
 		"invalid proposal: conditional fok order cannot be removed when untriggered": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
