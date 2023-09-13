@@ -4,7 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 func CreateUpgradeHandler(
@@ -93,15 +95,29 @@ func CreateUpgradeHandler(
 		}
 
 		// Delete all stateful ordes.
+		removedOrderIds := make([]clobtypes.OrderId, 0)
 		placedStatefulOrders := clobKeeper.GetAllPlacedStatefulOrders(ctx)
 		for _, order := range placedStatefulOrders {
 			clobKeeper.MustRemoveStatefulOrder(ctx, order.OrderId)
+			removedOrderIds = append(removedOrderIds, order.OrderId)
 		}
 
 		untriggeredConditionalOrders := clobKeeper.GetAllUntriggeredConditionalOrders(ctx)
 		for _, order := range untriggeredConditionalOrders {
 			clobKeeper.MustRemoveStatefulOrder(ctx, order.OrderId)
+			removedOrderIds = append(removedOrderIds, order.OrderId)
 		}
+
+		// Purge invalid orders from memclob.
+		offchainUpdates := clobKeeper.MemClob.PurgeInvalidMemclobState(
+			ctx,
+			[]clobtypes.OrderId{},
+			[]clobtypes.OrderId{},
+			[]clobtypes.OrderId{},
+			removedOrderIds,
+			clobtypes.NewOffchainUpdates(),
+		)
+		clobKeeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
