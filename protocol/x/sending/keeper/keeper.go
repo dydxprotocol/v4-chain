@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
@@ -42,7 +42,7 @@ func NewKeeper(
 		bankKeeper:          bankKeeper,
 		subaccountsKeeper:   subaccountsKeeper,
 		indexerEventManager: indexerEventManager,
-		authorities:         maps.ArrayToMapInterface(authorities),
+		authorities:         lib.SliceToSet(authorities),
 	}
 }
 
