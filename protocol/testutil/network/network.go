@@ -88,9 +88,7 @@ func New(t *testing.T, configs ...network.Config) *network.Network {
 		panic(err)
 	}
 
-	t.Cleanup(func() {
-		net.Cleanup()
-	})
+	t.Cleanup(net.Cleanup)
 	return net
 }
 
