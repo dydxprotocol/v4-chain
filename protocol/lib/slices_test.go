@@ -60,43 +60,6 @@ func TestGetSortedKeys(t *testing.T) {
 	}
 }
 
-func TestMustRemoveIndex(t *testing.T) {
-	// Remove first index of uint32 slice case and doesn't modify original slice.
-	uint32Slice := []uint32{1, 2, 3, 4}
-	require.Equal(t, []uint32{2, 3, 4}, lib.MustRemoveIndex(uint32Slice, 0))
-	require.Equal(t, []uint32{1, 2, 3, 4}, uint32Slice)
-
-	// Remove last index of uint32 case and doesn't modify original slice.
-	require.Equal(t, []uint32{1, 2, 3}, lib.MustRemoveIndex(uint32Slice, 3))
-	require.Equal(t, []uint32{1, 2, 3, 4}, uint32Slice)
-
-	// Remove middle element of uint32 case and doesn't modify original slice.
-	require.Equal(t, []uint32{1, 2, 4}, lib.MustRemoveIndex(uint32Slice, 2))
-	require.Equal(t, []uint32{1, 2, 3, 4}, uint32Slice)
-
-	// Remove first index of string slice case and doesn't modify original slice.
-	stringSlice := []string{"h", "e", "l", "l", "o"}
-	require.Equal(t, []string{"e", "l", "l", "o"}, lib.MustRemoveIndex(stringSlice, 0))
-	require.Equal(t, []string{"h", "e", "l", "l", "o"}, stringSlice)
-
-	// Remove last index of string case and doesn't modify original slice.
-	require.Equal(t, []string{"h", "e", "l", "l"}, lib.MustRemoveIndex(stringSlice, 4))
-	require.Equal(t, []string{"h", "e", "l", "l", "o"}, stringSlice)
-
-	// Remove middle element of string case and doesn't modify original slice.
-	require.Equal(t, []string{"h", "e", "l", "o"}, lib.MustRemoveIndex(stringSlice, 2))
-	require.Equal(t, []string{"h", "e", "l", "l", "o"}, stringSlice)
-
-	// Panics if provided index greater than slice length.
-	require.PanicsWithValue(
-		t,
-		"MustRemoveIndex: index 0 is greater than array length 0",
-		func() {
-			lib.MustRemoveIndex([]types.OrderId{}, 0)
-		},
-	)
-}
-
 func TestMapSlice(t *testing.T) {
 	// Can increment all numbers in a slice by 1, and change type to `uint64`.
 	require.Equal(

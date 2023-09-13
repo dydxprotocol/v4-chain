@@ -49,25 +49,6 @@ func SliceToSet[K comparable](values []K) map[K]struct{} {
 	return set
 }
 
-// MustRemoveIndex returns a copy of the provided slice with the value at `index` removed. This function
-// will not change the ordering of other elements within the original slice.
-// Note that function will panic if `index >= len(values)`.
-func MustRemoveIndex[V any](values []V, index uint) []V {
-	numValues := uint(len(values))
-	if numValues <= index {
-		panic(
-			fmt.Sprintf(
-				"MustRemoveIndex: index %d is greater than array length %d",
-				index,
-				numValues,
-			),
-		)
-	}
-	ret := make([]V, 0, numValues-1)
-	ret = append(ret, values[:index]...)
-	return append(ret, values[index+1:]...)
-}
-
 // MapSlice takes a function and executes that function on each element of a slice, returning the result.
 // Note the function must return one result for each element of the slice.
 func MapSlice[V any, E any](values []V, mapFunc func(V) E) []E {
