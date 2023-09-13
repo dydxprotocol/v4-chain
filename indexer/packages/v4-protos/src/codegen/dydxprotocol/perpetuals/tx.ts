@@ -1,4 +1,4 @@
-import { PerpetualParams, PerpetualParamsSDKType } from "./perpetual";
+import { PerpetualParams, PerpetualParamsSDKType, LiquidityTier, LiquidityTierSDKType } from "./perpetual";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** MsgCreatePerpetual is a message used by x/gov to create a new perpetual. */
@@ -31,6 +31,30 @@ export interface MsgCreatePerpetualResponse {}
  */
 
 export interface MsgCreatePerpetualResponseSDKType {}
+/** MsgSetLiquidityTier is a message used by x/gov to create or update a liquidity tier. */
+
+export interface MsgSetLiquidityTier {
+  /** The address that controls the module. */
+  authority: string;
+  /** The liquidity tier to create or update. */
+
+  liquidityTier?: LiquidityTier;
+}
+/** MsgSetLiquidityTier is a message used by x/gov to create or update a liquidity tier. */
+
+export interface MsgSetLiquidityTierSDKType {
+  /** The address that controls the module. */
+  authority: string;
+  /** The liquidity tier to create or update. */
+
+  liquidity_tier?: LiquidityTierSDKType;
+}
+/** MsgSetLiquidityTierResponse defines the SetLiquidityTier response type. */
+
+export interface MsgSetLiquidityTierResponse {}
+/** MsgSetLiquidityTierResponse defines the SetLiquidityTier response type. */
+
+export interface MsgSetLiquidityTierResponseSDKType {}
 /**
  * FundingPremium represents a funding premium value for a perpetual
  * market. Can be used to represent a premium vote or a premium sample.
@@ -162,6 +186,95 @@ export const MsgCreatePerpetualResponse = {
 
   fromPartial(_: DeepPartial<MsgCreatePerpetualResponse>): MsgCreatePerpetualResponse {
     const message = createBaseMsgCreatePerpetualResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgSetLiquidityTier(): MsgSetLiquidityTier {
+  return {
+    authority: "",
+    liquidityTier: undefined
+  };
+}
+
+export const MsgSetLiquidityTier = {
+  encode(message: MsgSetLiquidityTier, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.liquidityTier !== undefined) {
+      LiquidityTier.encode(message.liquidityTier, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetLiquidityTier {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetLiquidityTier();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.liquidityTier = LiquidityTier.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgSetLiquidityTier>): MsgSetLiquidityTier {
+    const message = createBaseMsgSetLiquidityTier();
+    message.authority = object.authority ?? "";
+    message.liquidityTier = object.liquidityTier !== undefined && object.liquidityTier !== null ? LiquidityTier.fromPartial(object.liquidityTier) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgSetLiquidityTierResponse(): MsgSetLiquidityTierResponse {
+  return {};
+}
+
+export const MsgSetLiquidityTierResponse = {
+  encode(_: MsgSetLiquidityTierResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetLiquidityTierResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetLiquidityTierResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgSetLiquidityTierResponse>): MsgSetLiquidityTierResponse {
+    const message = createBaseMsgSetLiquidityTierResponse();
     return message;
   }
 

@@ -63,8 +63,10 @@ var (
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           nil,
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":         &perpetuals.MsgCreatePerpetual{},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse": nil,
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          &perpetuals.MsgCreatePerpetual{},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  nil,
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         &perpetuals.MsgSetLiquidityTier{},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": nil,
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
