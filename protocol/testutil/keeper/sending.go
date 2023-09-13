@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -14,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -27,6 +29,7 @@ func SendingKeepers(t testing.TB) (
 	ctx sdk.Context,
 	sendingKeeper *keeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
+	bankKeeper *bankkeeper.BaseKeeper,
 	pricesKeeper *priceskeeper.Keeper,
 	perpetualsKeeper *perpkeeper.Keeper,
 	assetsKeeper *assetskeeper.Keeper,
@@ -40,6 +43,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 	ctx sdk.Context,
 	sendingKeeper *keeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
+	bankKeeper *bankkeeper.BaseKeeper,
 	pricesKeeper *priceskeeper.Keeper,
 	perpetualsKeeper *perpkeeper.Keeper,
 	assetsKeeper *assetskeeper.Keeper,
@@ -74,7 +78,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 			true,
 		)
 		accountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
-		bankKeeper, _ := createBankKeeper(stateStore, db, cdc, accountKeeper)
+		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
 		if saKeeper == nil {
 			subaccountsKeeper, _ = createSubaccountsKeeper(
 				stateStore,
@@ -108,6 +112,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 	return ctx,
 		sendingKeeper,
 		accountKeeper,
+		bankKeeper,
 		pricesKeeper,
 		perpetualsKeeper,
 		assetsKeeper,

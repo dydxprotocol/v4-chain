@@ -36,7 +36,7 @@ func createAppModuleWithKeeper(t *testing.T) (sending.AppModule, *sending_keeper
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, _, _, _, _, subaccountsKeeper, _ := keeper.SendingKeepers(t)
+	ctx, keeper, _, _, _, _, _, subaccountsKeeper, _ := keeper.SendingKeepers(t)
 
 	return sending.NewAppModule(
 		appCodec,

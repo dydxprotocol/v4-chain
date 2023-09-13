@@ -13,6 +13,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -116,7 +117,7 @@ func assertWithdrawEventInIndexerBlock(
 }
 
 func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
-	ctx, keeper, accountKeeper, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
+	ctx, keeper, accountKeeper, _, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
 	ctx = ctx.WithBlockHeight(5)
 	keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
@@ -240,7 +241,7 @@ func TestProcessTransfer(t *testing.T) {
 }
 
 func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
-	ctx, keeper, accountKeeper, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
+	ctx, keeper, accountKeeper, _, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
 	ctx = ctx.WithBlockHeight(5)
 	keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
@@ -340,7 +341,7 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 			// Create mock subaccounts keeper.
 			mockSubaccountsKeeper := &mocks.SubaccountsKeeper{}
 			// Create sending keeper with mock subaccounts keeper.
-			ctx, keeper, _, _, _, _, _, _ :=
+			ctx, keeper, _, _, _, _, _, _, _ :=
 				keepertest.SendingKeepersWithSubaccountsKeeper(t, mockSubaccountsKeeper)
 			// Set up mock calls.
 			if tc.setUpMocks != nil {
@@ -426,7 +427,7 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 			// Create mock subaccounts keeper.
 			mockSubaccountsKeeper := &mocks.SubaccountsKeeper{}
 			// Create sending keeper with mock subaccounts keeper.
-			ctx, keeper, _, _, _, _, _, _ :=
+			ctx, keeper, _, _, _, _, _, _, _ :=
 				keepertest.SendingKeepersWithSubaccountsKeeper(t, mockSubaccountsKeeper)
 			// Set up mock calls.
 			if tc.setUpMocks != nil {
@@ -458,6 +459,114 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 					// Verify that corresponding indexer withdraw event was emitted.
 					assertWithdrawEventInIndexerBlock(t, ctx, keeper, &msg)
 				}
+			}
+		})
+	}
+}
+
+func TestSendFromModuleToAccount(t *testing.T) {
+	testDenom := "TestSendFromModuleToAccount/Coin"
+	testModuleName := "bridge"
+
+	tests := map[string]struct {
+		// Setup.
+		initialModuleBalance int64
+		balanceToSend        int64
+		recipientAddress     string
+
+		// Expectations
+		expectedErrContains string
+	}{
+		"Success - send to user account": {
+			initialModuleBalance: 1000,
+			balanceToSend:        100,
+			recipientAddress:     constants.AliceAccAddress.String(),
+		},
+		"Success - send to module account": {
+			initialModuleBalance: 1000,
+			balanceToSend:        100,
+			recipientAddress:     authtypes.NewModuleAddress("community_treasury").String(),
+		},
+		"Error - insufficient fund": {
+			initialModuleBalance: 100,
+			balanceToSend:        101,
+			recipientAddress:     constants.AliceAccAddress.String(),
+			expectedErrContains:  "insufficient fund",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Initiate keepers and fund module with initial balance.
+			ctx, sendingKeeper, accountKeeper, bankKeeper, _, _, _, _, _ := keepertest.SendingKeepers(t)
+			err := bankKeeper.MintCoins(
+				ctx,
+				testModuleName,
+				sdk.NewCoins(sdk.NewCoin(testDenom, sdk.NewInt(int64(tc.initialModuleBalance)))),
+			)
+			require.NoError(t, err)
+			startingModuleBalance := bankKeeper.GetBalance(
+				ctx,
+				accountKeeper.GetModuleAddress(testModuleName),
+				testDenom,
+			)
+			startingRecipientBalance := bankKeeper.GetBalance(
+				ctx,
+				sdk.MustAccAddressFromBech32(tc.recipientAddress),
+				testDenom,
+			)
+
+			// Send coins from module to account.
+			err = sendingKeeper.SendFromModuleToAccount(
+				ctx,
+				&types.MsgSendFromModuleToAccount{
+					Authority:        constants.GovModuleAccAddressString,
+					SenderModuleName: testModuleName,
+					Recipient:        tc.recipientAddress,
+					Coin:             sdk.NewCoin(testDenom, sdk.NewInt(int64(tc.balanceToSend))),
+				},
+			)
+
+			// Verify ending balances and error.
+			endingModuleBalance := bankKeeper.GetBalance(
+				ctx,
+				accountKeeper.GetModuleAddress(testModuleName),
+				testDenom,
+			)
+			endingRecipientBalance := bankKeeper.GetBalance(
+				ctx,
+				sdk.MustAccAddressFromBech32(tc.recipientAddress),
+				testDenom,
+			)
+			if tc.expectedErrContains != "" { // if error should occur.
+				// Verify that error is as expected.
+				require.ErrorContains(t, err, tc.expectedErrContains)
+				// Verify that module balance is unchanged.
+				require.Equal(
+					t,
+					startingModuleBalance.Amount.Int64(),
+					endingModuleBalance.Amount.Int64(),
+				)
+				// Verify that recipient balance is unchanged.
+				require.Equal(
+					t,
+					startingRecipientBalance.Amount.Int64(),
+					endingRecipientBalance.Amount.Int64(),
+				)
+			} else { // if send should succeed.
+				// Verify that no error occurred.
+				require.NoError(t, err)
+				// Verify that module balance is reduced by amount sent.
+				require.Equal(
+					t,
+					startingModuleBalance.Amount.Int64()-tc.balanceToSend,
+					endingModuleBalance.Amount.Int64(),
+				)
+				// Verify that recipient balance is increased by amount sent.
+				require.Equal(
+					t,
+					startingRecipientBalance.Amount.Int64()+tc.balanceToSend,
+					endingRecipientBalance.Amount.Int64(),
+				)
 			}
 		})
 	}
