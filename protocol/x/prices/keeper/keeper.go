@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -21,7 +21,7 @@ type (
 		storeKey               storetypes.StoreKey
 		indexPriceCache        *pricefeedtypes.MarketToExchangePrices
 		marketToSmoothedPrices types.MarketToSmoothedPrices
-		timeProvider           lib.TimeProvider
+		timeProvider           libtime.TimeProvider
 		indexerEventManager    indexer_manager.IndexerEventManager
 	}
 )
@@ -33,7 +33,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	marketToSmoothedPrices types.MarketToSmoothedPrices,
-	timeProvider lib.TimeProvider,
+	timeProvider libtime.TimeProvider,
 	indexerEventManager indexer_manager.IndexerEventManager,
 ) *Keeper {
 	return &Keeper{
