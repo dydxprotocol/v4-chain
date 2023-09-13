@@ -475,8 +475,8 @@ github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkp
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/dvsekhvalnov/jose2go v1.5.0 h1:3j8ya4Z4kMCwT5nXIKFSV84YS+HdqSSO0VsTQxaLAeM=
 github.com/dvsekhvalnov/jose2go v1.5.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
-github.com/dydxprotocol/cometbft v0.37.3-0.20230728195034-23effc208078 h1:gIBKK/wL+OTnMAEX8ZI3pxjGKq5nOHHoeGoMdk+3xR4=
-github.com/dydxprotocol/cometbft v0.37.3-0.20230728195034-23effc208078/go.mod h1:cpghf0+1GJpJvrqpTHE6UyTcD05m/xllo0xpufL3PgA=
+github.com/dydxprotocol/cometbft v0.37.3-0.20230908230338-65f7a2f25c18 h1:1RIco92QcPS24BeNCNWJC4zXza4GEHHuoviWIQEQ/NI=
+github.com/dydxprotocol/cometbft v0.37.3-0.20230908230338-65f7a2f25c18/go.mod h1:cpghf0+1GJpJvrqpTHE6UyTcD05m/xllo0xpufL3PgA=
 github.com/dydxprotocol/cosmos-sdk v0.47.5-0.20230825173621-e13fdea30f46 h1:WsjiFUrEk3+qwB2owq3LPouJu1/1PEEtSUrL3OoHey4=
 github.com/dydxprotocol/cosmos-sdk v0.47.5-0.20230825173621-e13fdea30f46/go.mod h1:iaAXVu5Jcd//vREctLTuxLqj5ScUP4psgqW7M6XsaQ8=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=

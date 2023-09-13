@@ -53,6 +53,7 @@ func PerpetualsKeepersWithClobHelpers(
 	epochsKeeper *epochskeeper.Keeper,
 	storeKey storetypes.StoreKey,
 ) {
+	var mockTimeProvider *mocks.TimeProvider
 	ctx = initKeepers(t, func(
 		db *tmdb.MemDB,
 		registry codectypes.InterfaceRegistry,
@@ -61,7 +62,7 @@ func PerpetualsKeepersWithClobHelpers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		pricesKeeper, _, _, _, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 		epochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
 		keeper, storeKey = createPerpetualsKeeperWithClobHelpers(
 			stateStore,
@@ -75,6 +76,9 @@ func PerpetualsKeepersWithClobHelpers(
 
 		return []GenesisInitializer{pricesKeeper, keeper}
 	})
+
+	// Mock time provider response for market creation.
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	// Initialize perpetuals module parameters to default genesis values.
 	perpetuals.InitGenesis(ctx, *keeper, constants.Perpetuals_GenesisState_ParamsOnly)

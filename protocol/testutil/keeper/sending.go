@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -42,6 +43,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 	subaccountsKeeper types.SubaccountsKeeper,
 	storeKey storetypes.StoreKey,
 ) {
+	var mockTimeProvider *mocks.TimeProvider
 	ctx = initKeepers(t, func(
 		db *tmdb.MemDB,
 		registry codectypes.InterfaceRegistry,
@@ -51,7 +53,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
-		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		pricesKeeper, _, _, _, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 		perpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,
 			db,
@@ -95,6 +97,9 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 
 		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, sendingKeeper}
 	})
+
+	// Mock time provider response for market creation.
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	return ctx,
 		sendingKeeper,

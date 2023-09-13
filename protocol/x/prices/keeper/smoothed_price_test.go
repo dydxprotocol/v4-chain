@@ -53,13 +53,13 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+
 			keepertest.CreateTestMarkets(t, ctx, k)
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 			for market, smoothedPrice := range tc.smoothedPrices {
 				marketToSmoothedPrices.PushSmoothedPrice(market, smoothedPrice)
 			}
-
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			// Run.
 			err := k.UpdateSmoothedPrices(ctx)

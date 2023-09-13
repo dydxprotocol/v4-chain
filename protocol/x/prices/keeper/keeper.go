@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	sdklog "cosmossdk.io/log"
 
@@ -23,6 +24,7 @@ type (
 		marketToSmoothedPrices types.MarketToSmoothedPrices
 		timeProvider           lib.TimeProvider
 		indexerEventManager    indexer_manager.IndexerEventManager
+		marketToCreatedAt      map[uint32]time.Time
 	}
 )
 
@@ -43,6 +45,7 @@ func NewKeeper(
 		marketToSmoothedPrices: marketToSmoothedPrices,
 		timeProvider:           timeProvider,
 		indexerEventManager:    indexerEventManager,
+		marketToCreatedAt:      map[uint32]time.Time{},
 	}
 }
 

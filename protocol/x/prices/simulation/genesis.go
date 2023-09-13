@@ -77,6 +77,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 			Exponent:          int32(marketExponent),
 			MinExchanges:      uint32(minExchanges),
 			MinPriceChangePpm: uint32(simtypes.RandIntBetween(r, 1, int(lib.MaxPriceChangePpm))),
+			// The simulation tests don't run the daemon currently so we pass in empty exchange config.
+			ExchangeConfigJson: "{}",
 		}
 		marketPrices[i] = types.MarketPrice{
 			Id:       uint32(i),

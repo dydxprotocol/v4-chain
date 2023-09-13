@@ -3,9 +3,8 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -51,9 +50,23 @@ func (k Keeper) CreateMarket(
 		),
 	)
 
+	k.marketToCreatedAt[marketParam.Id] = k.timeProvider.Now()
 	metrics.AddMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
 
 	return marketParam, nil
+}
+
+// IsRecentlyAdded returns true if the market was added recently. Since it takes a few seconds for
+// index prices to populate, we would not consider missing index prices for a recently added market
+// to be an error.
+func (k Keeper) IsRecentlyAdded(marketId uint32) bool {
+	createdAt, ok := k.marketToCreatedAt[marketId]
+
+	if !ok {
+		return false
+	}
+
+	return k.timeProvider.Now().Sub(createdAt) < types.MarketIsRecentDuration
 }
 
 // GetAllMarketParamPrices returns a slice of MarketParam, MarketPrice tuples for all markets.

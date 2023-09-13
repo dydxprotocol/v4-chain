@@ -2020,6 +2020,16 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				)
 			}
 
+			if tc.expectedFilledSize == 0 {
+				_, err = ks.ClobKeeper.MaybeDeleverageSubaccount(
+					ctx,
+					tc.order.GetSubaccountId(),
+					tc.order.MustGetLiquidatedPerpetualId(),
+					tc.order.GetDeltaQuantums(),
+				)
+				require.NoError(t, err)
+			}
+
 			for _, expectedSubaccount := range tc.expectedSubaccounts {
 				require.Equal(t, expectedSubaccount, ks.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.GetId()))
 			}

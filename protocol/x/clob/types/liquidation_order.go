@@ -2,6 +2,7 @@ package types
 
 import (
 	"crypto/sha256"
+	"math/big"
 
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -112,4 +113,13 @@ func (lo *LiquidationOrder) MustGetLiquidatedPerpetualId() uint32 {
 // for liquidation orders.
 func (o *LiquidationOrder) IsReduceOnly() bool {
 	return false
+}
+
+// GetDeltaQuantums returns the delta quantums of this liquidation order.
+func (o *LiquidationOrder) GetDeltaQuantums() *big.Int {
+	deltaQuantums := o.GetBaseQuantums().ToBigInt()
+	if !o.IsBuy() {
+		deltaQuantums.Neg(deltaQuantums)
+	}
+	return deltaQuantums
 }

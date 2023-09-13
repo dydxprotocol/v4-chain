@@ -34,4 +34,11 @@ var (
 		ModuleName, 401, "Market price update is invalid: deterministic.")
 	ErrInvalidMarketPriceUpdateNonDeterministic = errorsmod.Register(
 		ModuleName, 402, "Market price update is invalid: non-deterministic.")
+
+	// 500 - 599: sdk.Msg related errors.
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		500,
+		"Authority is invalid",
+	)
 )

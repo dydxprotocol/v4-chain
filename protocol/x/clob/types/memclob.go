@@ -1,6 +1,7 @@
 package types
 
 import (
+	"math/big"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -76,6 +77,15 @@ type MemClob interface {
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 		orderStatus OrderStatus,
 		offchainUpdates *OffchainUpdates,
+		err error,
+	)
+	DeleverageSubaccount(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		perpetualId uint32,
+		deltaQuantums *big.Int,
+	) (
+		quantumsDeleveraged *big.Int,
 		err error,
 	)
 	RemoveOrderIfFilled(
