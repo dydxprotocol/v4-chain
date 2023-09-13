@@ -10,6 +10,8 @@ mock-clean:
 mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=InterfaceRegistry --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/codec --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=Configurator --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=MultiStore --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/store/types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=CacheMultiStore --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/store/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=AnteDecorator --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=TxConfig --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/client --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=TxBuilder --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/client --recursive --output=./mocks

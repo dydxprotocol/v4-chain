@@ -1168,6 +1168,7 @@ func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Res
 	app.IndexerEventManager.SendOnchainData(block)
 	app.IndexerEventManager.ClearEvents(ctx)
 
+	app.Logger().Info("Initialized chain", "blockHeight", ctx.BlockHeight())
 	return initResponse
 }
 

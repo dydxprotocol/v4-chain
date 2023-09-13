@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/abci"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
@@ -30,8 +31,11 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 			continue
 		}
 
-		handler := k.Router().Handler(msg)
-		if _, err := handler(ctx, msg); err != nil {
+		if err = abci.RunCached(ctx, func(ctx sdk.Context) error {
+			handler := k.Router().Handler(msg)
+			_, err := handler(ctx, msg)
+			return err
+		}); err != nil {
 			k.Logger(ctx).Error("failed to execute delayed message with id %v: %v", id, err)
 		}
 	}
