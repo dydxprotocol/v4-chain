@@ -6,6 +6,8 @@ import (
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -207,4 +209,11 @@ func (k Keeper) GenerateWithdrawEvent(withdraw *types.MsgWithdrawFromSubaccount)
 		withdraw.AssetId,
 		satypes.BaseQuantums(withdraw.Quantums),
 	)
+}
+
+func (k Keeper) SendFromModuleToAccount(
+	ctx sdk.Context,
+	msg *types.MsgSendFromModuleToAccount,
+) (err error) {
+	return status.Errorf(codes.Unimplemented, "SendFromModuleToAccount not implemented")
 }

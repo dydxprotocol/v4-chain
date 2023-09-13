@@ -64,9 +64,11 @@ type AccountKeeper interface {
 	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 	SetAccount(ctx sdk.Context, acc types.AccountI)
 	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetModuleAddress(moduleName string) sdk.AccAddress
 }
 
 // BankKeeper defines the expected bank keeper used for simulations.
 type BankKeeper interface {
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 }

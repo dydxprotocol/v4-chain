@@ -20,6 +20,7 @@ import (
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	vest "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
@@ -112,6 +113,10 @@ var (
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},
 		"/dydxprotocol.rewards.MsgUpdateParamsResponse": nil,
+
+		// sending
+		"/dydxprotocol.sending.MsgSendFromModuleToAccount":         &sending.MsgSendFromModuleToAccount{},
+		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse": nil,
 
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         &stats.MsgUpdateParams{},

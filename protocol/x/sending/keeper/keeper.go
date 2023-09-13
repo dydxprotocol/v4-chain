@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
@@ -18,8 +19,10 @@ type (
 		cdc                 codec.BinaryCodec
 		storeKey            storetypes.StoreKey
 		accountKeeper       types.AccountKeeper
+		bankKeeper          types.BankKeeper
 		subaccountsKeeper   types.SubaccountsKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
+		authorities         map[string]struct{}
 	}
 )
 
@@ -27,16 +30,25 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	accountKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
 	subaccountsKeeper types.SubaccountsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		accountKeeper:       accountKeeper,
+		bankKeeper:          bankKeeper,
 		subaccountsKeeper:   subaccountsKeeper,
 		indexerEventManager: indexerEventManager,
+		authorities:         maps.ArrayToMapInterface(authorities),
 	}
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {

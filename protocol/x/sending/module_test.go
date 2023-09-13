@@ -78,6 +78,8 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	require.Contains(t, buf.String(), "sending/DepositToSubaccount")
 	require.Contains(t, buf.String(), "MsgWithdrawFromSubaccount")
 	require.Contains(t, buf.String(), "sending/WithdrawFromSubaccount")
+	require.Contains(t, buf.String(), "MsgSendFromModuleToAccount")
+	require.Contains(t, buf.String(), "sending/SendFromModuleToAccount")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -95,6 +97,8 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	require.Contains(t, buf.String(), "sending/DepositToSubaccount")
 	require.Contains(t, buf.String(), "MsgWithdrawFromSubaccount")
 	require.Contains(t, buf.String(), "sending/WithdrawFromSubaccount")
+	require.Contains(t, buf.String(), "MsgSendFromModuleToAccount")
+	require.Contains(t, buf.String(), "sending/SendFromModuleToAccount")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -104,7 +108,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 9)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 12)
 	mockRegistry.AssertExpectations(t)
 }
 

@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (k msgServer) CreateTransfer(
@@ -93,4 +95,12 @@ func (k msgServer) WithdrawFromSubaccount(
 	)
 
 	return &types.MsgWithdrawFromSubaccountResponse{}, nil
+}
+
+// SendFromModuleToAccount sends a coin from a module to an account.
+func (k msgServer) SendFromModuleToAccount(
+	goCtx context.Context,
+	msg *types.MsgSendFromModuleToAccount,
+) (*types.MsgSendFromModuleToAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "SendFromModuleToAccount not implemented")
 }

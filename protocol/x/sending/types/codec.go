@@ -11,6 +11,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateTransfer{}, "sending/CreateTransfer", nil)
 	cdc.RegisterConcrete(&MsgDepositToSubaccount{}, "sending/DepositToSubaccount", nil)
 	cdc.RegisterConcrete(&MsgWithdrawFromSubaccount{}, "sending/WithdrawFromSubaccount", nil)
+	cdc.RegisterConcrete(&MsgSendFromModuleToAccount{}, "sending/SendFromModuleToAccount", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -22,6 +23,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgWithdrawFromSubaccount{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgSendFromModuleToAccount{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

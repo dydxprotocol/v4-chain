@@ -762,8 +762,14 @@ func New(
 		appCodec,
 		keys[sendingmoduletypes.StoreKey],
 		app.AccountKeeper,
+		app.BankKeeper,
 		app.SubaccountsKeeper,
 		app.IndexerEventManager,
+		// gov module and delayMsg module accounts are allowed to send messages to the sending module.
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+		},
 	)
 	sendingModule := sendingmodule.NewAppModule(
 		appCodec,

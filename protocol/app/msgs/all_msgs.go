@@ -185,12 +185,14 @@ var (
 		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse": {},
 
 		// sending
-		"/dydxprotocol.sending.MsgCreateTransfer":                 {},
-		"/dydxprotocol.sending.MsgCreateTransferResponse":         {},
-		"/dydxprotocol.sending.MsgDepositToSubaccount":            {},
-		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    {},
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         {},
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": {},
+		"/dydxprotocol.sending.MsgCreateTransfer":                  {},
+		"/dydxprotocol.sending.MsgCreateTransferResponse":          {},
+		"/dydxprotocol.sending.MsgDepositToSubaccount":             {},
+		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":     {},
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":          {},
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse":  {},
+		"/dydxprotocol.sending.MsgSendFromModuleToAccount":         {},
+		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse": {},
 
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         {},

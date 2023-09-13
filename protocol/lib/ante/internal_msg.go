@@ -19,6 +19,7 @@ import (
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	vest "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
@@ -73,6 +74,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// prices
 		*prices.MsgCreateOracleMarket,
+
+		// sending
+		*sending.MsgSendFromModuleToAccount,
 
 		// upgrade
 		*upgrade.MsgCancelUpgrade,

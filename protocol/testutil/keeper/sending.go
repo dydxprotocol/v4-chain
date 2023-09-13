@@ -12,7 +12,10 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
@@ -89,6 +92,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 			db,
 			cdc,
 			accountKeeper,
+			bankKeeper,
 			subaccountsKeeper,
 			transientStoreKey,
 		)
@@ -111,6 +115,7 @@ func createSendingKeeper(
 	db *tmdb.MemDB,
 	cdc *codec.ProtoCodec,
 	accKeeper *authkeeper.AccountKeeper,
+	bankKeeper types.BankKeeper,
 	saKeeper types.SubaccountsKeeper,
 	transientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey) {
@@ -125,8 +130,13 @@ func createSendingKeeper(
 		cdc,
 		storeKey,
 		accKeeper,
+		bankKeeper,
 		saKeeper,
 		mockIndexerEventsManager,
+		[]string{
+			authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 
 	return k, storeKey
