@@ -18,6 +18,15 @@ type LiquidationsKeeper interface {
 		orderStatus OrderStatus,
 		err error,
 	)
+	MaybeDeleverageSubaccount(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		perpetualId uint32,
+		deltaQuantums *big.Int,
+	) (
+		quantumsDeleveraged *big.Int,
+		err error,
+	)
 	IsLiquidatable(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
