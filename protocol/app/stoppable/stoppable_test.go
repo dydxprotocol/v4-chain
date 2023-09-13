@@ -1,41 +1,42 @@
-package stoppable
+package stoppable_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-type MockStoppable struct {
-	StopCalled bool
+type TestStoppable struct {
+	stopCalled bool
 }
 
-func (m *MockStoppable) Stop() {
-	if m.StopCalled {
+func (m *TestStoppable) Stop() {
+	if m.stopCalled {
 		panic("Stop called twice")
 	}
-	m.StopCalled = true
+	m.stopCalled = true
 }
 
 func TestStopServices(t *testing.T) {
-	mockStoppable := &MockStoppable{}
-	mockStoppable2 := &MockStoppable{}
-	mockStoppableSeparateTest := &MockStoppable{}
-	RegisterServiceForTestCleanup("test", mockStoppable)
-	RegisterServiceForTestCleanup("test", mockStoppable2)
-	RegisterServiceForTestCleanup("test2", mockStoppableSeparateTest)
+	mockStoppable := &TestStoppable{}
+	mockStoppable2 := &TestStoppable{}
+	mockStoppableSeparateTest := &TestStoppable{}
+	stoppable.RegisterServiceForTestCleanup("test", mockStoppable)
+	stoppable.RegisterServiceForTestCleanup("test", mockStoppable2)
+	stoppable.RegisterServiceForTestCleanup("test2", mockStoppableSeparateTest)
 
 	// Stop test services, verify.
-	StopServices(t, "test")
+	stoppable.StopServices(t, "test")
 
 	// Verify test services stopped, test2 services unaffected.
-	require.True(t, mockStoppable.StopCalled)
-	require.True(t, mockStoppable2.StopCalled)
-	require.False(t, mockStoppableSeparateTest.StopCalled)
+	require.True(t, mockStoppable.stopCalled)
+	require.True(t, mockStoppable2.stopCalled)
+	require.False(t, mockStoppableSeparateTest.stopCalled)
 
 	// Stop test services again. This should not cause any panics.
-	StopServices(t, "test")
+	stoppable.StopServices(t, "test")
 
 	// Stop test2 services, verify.
-	StopServices(t, "test2")
-	require.True(t, mockStoppableSeparateTest.StopCalled)
+	stoppable.StopServices(t, "test2")
+	require.True(t, mockStoppableSeparateTest.stopCalled)
 }

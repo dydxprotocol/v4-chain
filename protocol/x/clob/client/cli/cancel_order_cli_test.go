@@ -73,8 +73,6 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
 			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
 
-			s.T().Log("setting up cancel order integration test GRPC ", testval.AppConfig.GRPC.Address)
-
 			// Enable the liquidations daemon in the integration tests.
 			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
 			// Make sure all daemon-related services are properly stopped.
