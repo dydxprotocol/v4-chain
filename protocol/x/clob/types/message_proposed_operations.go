@@ -37,13 +37,22 @@ func (msg *MsgProposedOperations) ValidateBasic() error {
 				)
 			}
 
-			if operation.OrderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
+			switch operation.OrderRemoval.RemovalReason {
+			case OrderRemoval_REMOVAL_REASON_UNSPECIFIED:
 				return errorsmod.Wrapf(
 					ErrInvalidMsgProposedOperations,
 					"order removal reason must be specified: %v",
 					orderId,
 				)
+			case OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
+				// TODO: remove this case when reduce-only orders are enabled.
+				return errorsmod.Wrapf(
+					ErrInvalidMsgProposedOperations,
+					"order removals for invalid reduce-only orders are not allowed. Reduce-only orders" +
+					" are not currently supported.",
+				)
 			}
+			
 		default:
 			return errorsmod.Wrapf(
 				ErrInvalidMsgProposedOperations,
