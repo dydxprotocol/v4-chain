@@ -32,17 +32,6 @@ func GetSortedKeys[R interface {
 	return keys
 }
 
-// ContainsValue returns true if the slice contains the provided value, false if not.
-func ContainsValue[V comparable](values []V, value V) bool {
-	for _, sliceVal := range values {
-		if sliceVal == value {
-			return true
-		}
-	}
-
-	return false
-}
-
 // SliceToSet converts a slice to a set. Function will panic if there are duplicate values.
 func SliceToSet[K comparable](values []K) map[K]struct{} {
 	set := make(map[K]struct{}, len(values))

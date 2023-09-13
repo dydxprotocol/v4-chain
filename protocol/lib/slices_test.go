@@ -60,25 +60,6 @@ func TestGetSortedKeys(t *testing.T) {
 	}
 }
 
-func TestContainsValue(t *testing.T) {
-	// Empty case.
-	require.False(t, lib.ContainsValue([]types.OrderId{}, types.OrderId{}))
-
-	// Contains uint32 case.
-	uint32Slice := []uint32{1, 2, 3, 4}
-	require.True(t, lib.ContainsValue(uint32Slice, 3))
-
-	// Doesn't contain uint32 case.
-	require.False(t, lib.ContainsValue(uint32Slice, 0))
-
-	// Contains string case.
-	stringSlice := []string{"hello", "world", "h", "w"}
-	require.True(t, lib.ContainsValue(stringSlice, "hello"))
-
-	// Doesn't contain string case.
-	require.False(t, lib.ContainsValue(stringSlice, "hh"))
-}
-
 func TestMustRemoveIndex(t *testing.T) {
 	// Remove first index of uint32 slice case and doesn't modify original slice.
 	uint32Slice := []uint32{1, 2, 3, 4}
