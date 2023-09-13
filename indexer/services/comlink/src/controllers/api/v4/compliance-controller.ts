@@ -9,9 +9,9 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { ComplianceRequest, ComplianceResponse } from '../../../types';
-import { handleValidationErrors } from '../../../request-helpers/error-handler';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-controller';
