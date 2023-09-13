@@ -1,7 +1,8 @@
-package metrics
+package metrics_test
 
 import (
 	gometrics "github.com/armon/go-metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"math"
 	"math/big"
 	"testing"
@@ -19,7 +20,7 @@ func TestIncrCountMetricWithLabels(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 3; i++ {
-		IncrCountMetricWithLabels(
+		metrics.IncrCountMetricWithLabels(
 			"testModule",
 			"testMetric",
 			gometrics.Label{
@@ -42,7 +43,7 @@ func TestIncrCountMetricWithLabels(t *testing.T) {
 				}},
 				metric.Labels)
 			require.Equal(t, 3, metric.Count)
-			require.Equal(t, 3, metric.Sum)
+			require.Equal(t, float64(3), metric.Sum)
 			found = true
 		}
 	}
@@ -51,7 +52,7 @@ func TestIncrCountMetricWithLabels(t *testing.T) {
 
 func TestIncrCountMetricWithLabelsDoesntPanic(t *testing.T) {
 	require.NotPanics(t, func() {
-		IncrCountMetricWithLabels("module", "metric", NewBinaryStringLabel("label", true))
+		metrics.IncrCountMetricWithLabels("module", "metric", metrics.NewBinaryStringLabel("label", true))
 	})
 }
 
@@ -64,17 +65,17 @@ func TestNewBinaryStringLabel(t *testing.T) {
 		"positive condition": {
 			name:               "labelname",
 			condition:          true,
-			expectedLabelValue: Yes,
+			expectedLabelValue: metrics.Yes,
 		},
 		"negative condition": {
 			name:               "labelname",
 			condition:          false,
-			expectedLabelValue: No,
+			expectedLabelValue: metrics.No,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			label := NewBinaryStringLabel(tc.name, tc.condition)
+			label := metrics.NewBinaryStringLabel(tc.name, tc.condition)
 			require.Equal(t, tc.name, label.Name)
 			require.Equal(t, tc.expectedLabelValue, label.Value)
 		})
@@ -100,7 +101,7 @@ func TestGetLabelForBoolValue(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			label := GetLabelForBoolValue(tc.name, tc.condition)
+			label := metrics.GetLabelForBoolValue(tc.name, tc.condition)
 			require.Equal(t, tc.name, label.Name)
 			require.Equal(t, tc.expectedLabelValue, label.Value)
 		})
@@ -141,7 +142,7 @@ func TestGetLabelForIntValue(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			label := GetLabelForIntValue(tc.name, tc.value)
+			label := metrics.GetLabelForIntValue(tc.name, tc.value)
 			require.Equal(t, tc.name, label.Name)
 			require.Equal(t, tc.expectedLabelValue, label.Value)
 		})
@@ -172,7 +173,7 @@ func TestGetLabelForStringValue(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			label := GetLabelForStringValue(tc.name, tc.value)
+			label := metrics.GetLabelForStringValue(tc.name, tc.value)
 			require.Equal(t, tc.name, label.Name)
 			require.Equal(t, tc.expectedLabelValue, label.Value)
 		})
@@ -207,7 +208,7 @@ func TestGetMetricValueFromBigInt(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tc.expected, GetMetricValueFromBigInt(tc.input))
+			require.Equal(t, tc.expected, metrics.GetMetricValueFromBigInt(tc.input))
 		})
 	}
 }
@@ -221,7 +222,7 @@ func TestModuleMeasureSinceWithLabels(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 3; i++ {
-		ModuleMeasureSinceWithLabels(
+		metrics.ModuleMeasureSinceWithLabels(
 			"testModule",
 			[]string{"testKey1", "testKey2"},
 			time.Now(),
