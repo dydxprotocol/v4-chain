@@ -10,6 +10,9 @@ type MockStoppable struct {
 }
 
 func (m *MockStoppable) Stop() {
+	if m.StopCalled {
+		panic("Stop called twice")
+	}
 	m.StopCalled = true
 }
 
@@ -28,6 +31,9 @@ func TestStopServices(t *testing.T) {
 	require.True(t, mockStoppable.StopCalled)
 	require.True(t, mockStoppable2.StopCalled)
 	require.False(t, mockStoppableSeparateTest.StopCalled)
+
+	// Stop test services again. This should not cause any panics.
+	StopServices(t, "test")
 
 	// Stop test2 services, verify.
 	StopServices(t, "test2")
