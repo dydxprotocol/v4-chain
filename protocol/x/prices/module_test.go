@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -50,7 +51,9 @@ func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.K
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, _, _, _, _ := keeper.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keeper.PricesKeepers(t)
+	// Mock the time provider response for market creation.
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	return prices.NewAppModule(
 		appCodec,

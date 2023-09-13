@@ -15,7 +15,8 @@ import (
 )
 
 func TestModifyMarketParam(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for i, item := range items {
@@ -111,7 +112,8 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
+			mockTimeKeeper.On("Now").Return(constants.TimeT)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
 			keepertest.CreateNMarkets(t, ctx, keeper, 1)
 			_, err := keeper.ModifyMarketParam(
@@ -130,7 +132,8 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 }
 
 func TestGetMarketParam(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for _, item := range items {
 		rst, err := keeper.GetMarketParam(ctx, item.Param.Id)
@@ -150,7 +153,8 @@ func TestGetMarketParam_NotFound(t *testing.T) {
 }
 
 func TestGetAllMarketParams(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	params := make([]types.MarketParam, len(items))
 	for i, item := range items {

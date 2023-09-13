@@ -234,9 +234,9 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			mockClobKeeper := &mocks.ProcessClobKeeper{}
 			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)

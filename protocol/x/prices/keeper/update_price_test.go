@@ -255,6 +255,8 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, marketSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+
 			if !tc.skipCreateMarketsAndExchanges {
 				keepertest.CreateTestMarkets(t, ctx, k)
 			}
@@ -267,8 +269,6 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 					marketSmoothedPrices.PushSmoothedPrice(market, historicalSmoothedPrices[i])
 				}
 			}
-
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			// Run.
 			result := k.GetValidMarketPriceUpdates(ctx)
