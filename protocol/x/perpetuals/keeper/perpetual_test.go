@@ -40,7 +40,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 	numLiquidityTiers := 4
 	// Create liquidity tiers and perpetuals,
 	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 100)
-	numMarkets := pricesKeeper.GetNumMarkets(ctx)
+	numMarkets := keepertest.GetNumMarkets(t, ctx, pricesKeeper)
 	for i, item := range perps {
 		// Modify each field arbitrarily and
 		// verify the fields were modified in state.
@@ -618,7 +618,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// Individual test setup.
 			ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 			// Create a new market param and price.
-			marketId := pricesKeeper.GetNumMarkets(ctx)
+			marketId := keepertest.GetNumMarkets(t, ctx, pricesKeeper)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
@@ -1012,7 +1012,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
 			// Create a new market param and price.
-			marketId := pricesKeeper.GetNumMarkets(ctx)
+			marketId := keepertest.GetNumMarkets(t, ctx, pricesKeeper)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
@@ -1178,7 +1178,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
 			// Test setup.
 			// Create a new market.
-			marketId := pricesKeeper.GetNumMarkets(ctx)
+			marketId := keepertest.GetNumMarkets(t, ctx, pricesKeeper)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{

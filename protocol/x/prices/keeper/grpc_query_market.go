@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -110,16 +111,12 @@ func (k Keeper) MarketParam(
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, err := k.GetMarketParam(
+	val, exists := k.GetMarketParam(
 		ctx,
 		req.Id,
 	)
-	if err != nil {
-		if errorsmod.IsOf(err, types.ErrMarketParamDoesNotExist) {
-			return nil, status.Error(codes.NotFound, "not found")
-		} else {
-			return nil, status.Error(codes.Internal, "unknown error getting market param")
-		}
+	if !exists {
+		return nil, status.Error(codes.NotFound, "not found")
 	}
 
 	return &types.QueryMarketParamResponse{MarketParam: val}, nil

@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"math/big"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -128,7 +129,7 @@ func TestModifyAsset_Success(t *testing.T) {
 	items, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
 	require.NoError(t, err)
 
-	numMarkets := pricesKeeper.GetNumMarkets(ctx)
+	numMarkets := keepertest.GetNumMarkets(t, ctx, pricesKeeper)
 	for i, item := range items {
 		// Modify each field arbitrarily and
 		// verify the fields were modified in state

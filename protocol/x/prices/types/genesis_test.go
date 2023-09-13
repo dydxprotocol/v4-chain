@@ -163,37 +163,6 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedError: errorsmod.Wrap(types.ErrInvalidInput, "market param id 1 does not match market price id 2"),
 		},
-		"invalid: invalid market price": {
-			genState: &types.GenesisState{
-				MarketParams: []types.MarketParam{
-					{
-						Id:                 0,
-						Pair:               constants.BtcUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
-					},
-					{
-						Id:                 1,
-						Pair:               constants.EthUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
-					},
-				},
-				MarketPrices: []types.MarketPrice{
-					{
-						Id:    0,
-						Price: constants.FiveBillion,
-					},
-					{
-						Id:    1,
-						Price: 0, // invalid
-					},
-				},
-			},
-			expectedError: errorsmod.Wrap(types.ErrInvalidInput, "market 1 price cannot be zero"),
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

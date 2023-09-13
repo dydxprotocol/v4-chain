@@ -136,8 +136,8 @@ func TestGetMarketParam(t *testing.T) {
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for _, item := range items {
-		rst, err := keeper.GetMarketParam(ctx, item.Param.Id)
-		require.NoError(t, err)
+		rst, exists := keeper.GetMarketParam(ctx, item.Param.Id)
+		require.True(t, exists)
 		require.Equal(
 			t,
 			&item.Param,
@@ -148,8 +148,8 @@ func TestGetMarketParam(t *testing.T) {
 
 func TestGetMarketParam_NotFound(t *testing.T) {
 	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
-	_, err := keeper.GetMarketParam(ctx, uint32(0))
-	require.EqualError(t, err, "0: Market param does not exist")
+	_, exists := keeper.GetMarketParam(ctx, uint32(0))
+	require.False(t, exists)
 }
 
 func TestGetAllMarketParams(t *testing.T) {
