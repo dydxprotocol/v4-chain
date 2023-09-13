@@ -9,6 +9,8 @@ const (
 	// a long time to start the protocol, it's possible this value could be increased.
 	DaemonStartupGracePeriod = 30 * time.Second
 
+	MaximumLoopDelayMultiple = 3
+
 	liquidationsDaemonServiceName = "liquidations-daemon"
 	pricefeedDaemonServiceName    = "pricefeed-daemon"
 	bridgeDaemonServiceName       = "bridge-daemon"

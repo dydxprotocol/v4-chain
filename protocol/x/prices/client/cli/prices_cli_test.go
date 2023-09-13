@@ -105,7 +105,6 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 			s.T().Cleanup(func() {
 				stoppable.StopServices(s.T(), testval.AppConfig.GRPC.Address)
 			})
-
 		},
 	})
 
