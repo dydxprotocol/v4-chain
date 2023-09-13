@@ -35,7 +35,7 @@ func (server *Server) WithPriceFeedMarketToExchangePrices(
 // maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
 // respond regularly.
 func (server *Server) ExpectPricefeedDaemon(maximumAcceptableUpdateDelay time.Duration) {
-	server.registerDaemon(pricefeedDaemonKey, maximumAcceptableUpdateDelay)
+	server.registerDaemon(pricefeedDaemonServiceName, maximumAcceptableUpdateDelay)
 }
 
 // UpdateMarketPrices updates prices from exchanges for each market provided.
@@ -51,9 +51,7 @@ func (s *Server) UpdateMarketPrices(
 		metrics.Latency,
 	)
 
-	if err := s.registerValidResponse(pricefeedDaemonKey); err != nil {
-		s.logger.Error("Failed to register valid response for pricefeed daemon", "error", err)
-	}
+	_ = s.reportResponse(pricefeedDaemonServiceName)
 
 	if s.marketToExchange == nil {
 		panic(

@@ -70,10 +70,10 @@ func TestPlaceOrderIntegrationTestSuite(t *testing.T) {
 
 			// Enable the liquidations daemon in the integration tests.
 			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
+			// Make sure all daemon-related services are properly stopped.
 			t.Cleanup(func() {
 				stoppable.StopServices(t, testval.AppConfig.GRPC.Address)
 			})
-
 		},
 	})
 

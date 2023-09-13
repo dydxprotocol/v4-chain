@@ -43,7 +43,7 @@ func NewServer(
 	grpcServer lib.GrpcServer,
 	fileHandler lib.FileHandler,
 	socketAddress string,
-	cosmosGrpcServiceAddress string,
+	uniqueTestIdentifier string,
 ) *Server {
 	srv := &Server{
 		logger:        logger,
@@ -52,7 +52,7 @@ func NewServer(
 		socketAddress: socketAddress,
 		updateMonitor: types.NewUpdateFrequencyMonitor(),
 	}
-	stoppable.RegisterServiceForTestCleanup(cosmosGrpcServiceAddress, srv)
+	stoppable.RegisterServiceForTestCleanup(uniqueTestIdentifier, srv)
 	return srv
 }
 
@@ -62,20 +62,23 @@ func (server *Server) Stop() {
 	server.gsrv.Stop()
 }
 
-// registerDaemon registers a daemon service with the update freque		net.Config.GRPCAddressncy monitor.
+// registerDaemon registers a daemon service with the update monitor.
 func (server *Server) registerDaemon(
 	daemonKey string,
 	maximumAcceptableUpdateDelay time.Duration,
 ) {
 	go func() {
 		// Give the protocol time to come up and start the gRPC query service. The daemons are unable
-		// to respond until this connection is established.
+		// to complete startup until this connection is established.
 		time.Sleep(DaemonStartupGracePeriod)
 		server.updateMonitor.RegisterDaemonService(daemonKey, maximumAcceptableUpdateDelay)
 	}()
 }
 
-func (server *Server) registerValidResponse(
+// reportResponse reports a response from a daemon service with the update monitor. This is used to
+// ensure that the daemon continues to operate. If the update monitor does not see a response from a
+// registered daemon within the maximumAcceptableUpdateDelay, it will cause the protocol to panic.
+func (server *Server) reportResponse(
 	daemonKey string,
 ) error {
 	telemetry.IncrCounterWithLabels(

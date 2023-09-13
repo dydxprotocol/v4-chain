@@ -166,6 +166,7 @@ func createServerWithMocks(
 		mockGrpcServer,
 		mockFileHandler,
 		grpc.SocketPath,
+		"test",
 	)
 	return server
 }

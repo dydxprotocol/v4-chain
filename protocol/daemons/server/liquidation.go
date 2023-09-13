@@ -30,7 +30,7 @@ func (server *Server) WithLiquidatableSubaccountIds(
 // maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
 // respond regularly.
 func (server *Server) ExpectLiquidationsDaemon(maximumAcceptableUpdateDelay time.Duration) {
-	server.registerDaemon(liquidationsDaemonKey, maximumAcceptableUpdateDelay)
+	server.registerDaemon(liquidationsDaemonServiceName, maximumAcceptableUpdateDelay)
 }
 
 // LiquidateSubaccounts stores the list of potentially liquidatable subaccount ids
@@ -46,9 +46,7 @@ func (s *Server) LiquidateSubaccounts(
 		metrics.Received,
 		metrics.Count,
 	)
-	if err := s.registerValidResponse(liquidationsDaemonKey); err != nil {
-		s.logger.Error("Failed to register valid response for liquidations daemon", "error", err)
-	}
+	_ = s.reportResponse(liquidationsDaemonServiceName)
 	s.liquidatableSubaccountIds.UpdateSubaccountIds(req.SubaccountIds)
 	return &api.LiquidateSubaccountsResponse{}, nil
 }

@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"time"
 
 	"path/filepath"
@@ -100,6 +101,11 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 
 			// Enable the common gRPC daemon server.
 			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
+			// Make sure all daemon-related services are properly stopped.
+			s.T().Cleanup(func() {
+				stoppable.StopServices(s.T(), testval.AppConfig.GRPC.Address)
+			})
+
 		},
 	})
 

@@ -264,6 +264,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		s.daemonFlags.Shared.SocketAddress,
+		"test",
 	)
 	s.exchangePriceCache = pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 	s.daemonServer.WithPriceFeedMarketToExchangePrices(s.exchangePriceCache)

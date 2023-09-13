@@ -27,7 +27,7 @@ func (server *Server) WithBridgeEventManager(
 // maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
 // respond regularly.
 func (server *Server) ExpectBridgeDaemon(maximumAcceptableUpdateDelay time.Duration) {
-	server.registerDaemon(bridgeDaemonKey, maximumAcceptableUpdateDelay)
+	server.registerDaemon(bridgeDaemonServiceName, maximumAcceptableUpdateDelay)
 }
 
 // AddBridgeEvents stores any bridge events recognized by the daemon
@@ -39,9 +39,7 @@ func (s *Server) AddBridgeEvents(
 	*api.AddBridgeEventsResponse,
 	error,
 ) {
-	if err := s.registerValidResponse(bridgeDaemonKey); err != nil {
-		s.logger.Error("Failed to register valid response for bridge daemon", "error", err)
-	}
+	_ = s.reportResponse(bridgeDaemonServiceName)
 	if err := s.bridgeEventManager.AddBridgeEvents(req.BridgeEvents); err != nil {
 		return nil, err
 	}
