@@ -23,7 +23,7 @@ func ContainsDuplicates[V comparable](values []V) bool {
 func GetSortedKeys[R interface {
 	~[]K
 	sort.Interface
-}, K comparable, V any](m map[K]V) R {
+}, K comparable, V any](m map[K]V) []K {
 	keys := make([]K, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
