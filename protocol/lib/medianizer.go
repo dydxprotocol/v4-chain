@@ -11,7 +11,7 @@ type Medianizer interface {
 	MedianUint64(input []uint64) (uint64, error)
 }
 
-// MedianUint64 wraps `lib.MedianUint64` which gets the median of a uint64 slice.
+// MedianUint64 wraps `lib.Median` which gets the median of a uint64 slice.
 func (r *MedianizerImpl) MedianUint64(input []uint64) (uint64, error) {
-	return MedianUint64(input)
+	return Median(input)
 }
