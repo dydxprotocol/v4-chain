@@ -28,7 +28,7 @@ func TestUpdateMarketPrices(t *testing.T) {
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
-	require.Equal(t, uint32(10), keeper.GetNumMarkets(ctx))
+	require.Equal(t, uint32(10), keepertest.GetNumMarkets(t, ctx, keeper))
 
 	// Create firstPriceUpdates which should be overwritten by secondPriceUpdates
 	firstPriceUpdates := createNMarketPriceUpdates(10)

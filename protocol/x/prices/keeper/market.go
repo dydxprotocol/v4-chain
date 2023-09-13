@@ -1,13 +1,13 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -20,6 +20,14 @@ func (k Keeper) CreateMarket(
 	marketParam types.MarketParam,
 	marketPrice types.MarketPrice,
 ) (types.MarketParam, error) {
+	if _, exists := k.GetMarketParam(ctx, marketParam.Id); exists {
+		return types.MarketParam{}, errorsmod.Wrapf(
+			types.ErrMarketParamAlreadyExists,
+			"market param with id %d already exists",
+			marketParam.Id,
+		)
+	}
+
 	// Validate input.
 	if err := marketParam.Validate(); err != nil {
 		return types.MarketParam{}, err
@@ -89,19 +97,4 @@ func (k Keeper) GetAllMarketParamPrices(ctx sdk.Context) ([]types.MarketParamPri
 		marketParamPrices[i].Price = price
 	}
 	return marketParamPrices, nil
-}
-
-// GetNumMarkets returns the total number of markets.
-// Panics if the length of market params and prices does not match.
-func (k Keeper) GetNumMarkets(
-	ctx sdk.Context,
-) uint32 {
-	marketParams := k.GetAllMarketParams(ctx)
-	marketPrices := k.GetAllMarketPrices(ctx)
-
-	if len(marketParams) != len(marketPrices) {
-		panic(errorsmod.Wrap(types.ErrMarketPricesAndParamsDontMatch, "market param and price lengths do not match"))
-	}
-
-	return lib.MustConvertIntegerToUint32(len(marketParams))
 }

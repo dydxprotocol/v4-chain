@@ -591,6 +591,11 @@ func New(
 		pricesmoduletypes.NewMarketToSmoothedPrices(pricesmoduletypes.SmoothedPriceTrackingBlockHistoryLength),
 		timeProvider,
 		app.IndexerEventManager,
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	pricesModule := pricesmodule.NewAppModule(appCodec, app.PricesKeeper, app.AccountKeeper, app.BankKeeper)
 
