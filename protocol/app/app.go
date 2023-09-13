@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
@@ -95,7 +96,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	// Lib
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/time"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -489,7 +490,7 @@ func New(
 		tkeys[indexer_manager.TransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
-	timeProvider := &lib.TimeProviderImpl{}
+	timeProvider := &time.TimeProviderImpl{}
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
 		appCodec,

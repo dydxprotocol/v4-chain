@@ -2,9 +2,12 @@ package client
 
 import (
 	"context"
-	sdklog "cosmossdk.io/log"
 	"errors"
 	"fmt"
+	"sync"
+	"time"
+
+	sdklog "cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
@@ -12,9 +15,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"sync"
-	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
 )
@@ -169,7 +171,7 @@ func (c *Client) start(ctx context.Context,
 	}
 
 	// 4. Start PriceEncoder and PriceFetcher per exchange.
-	timeProvider := &lib.TimeProviderImpl{}
+	timeProvider := &libtime.TimeProviderImpl{}
 	for _exchangeId := range exchangeIdToStartupConfig {
 		// Assign these within the loop to avoid unexpected values being passed to the goroutines.
 		exchangeId := _exchangeId

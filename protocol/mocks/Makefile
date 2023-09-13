@@ -38,7 +38,7 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=FileHandler --dir=./lib --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=GrpcServer --dir=./lib --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=GrpcClient --dir=./lib --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=TimeProvider --dir=./lib --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=TimeProvider --dir=./lib/time --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=Marshaler --dir=./indexer/common --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=QueryClient --dir=./testutil/grpc --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=QueryServer --dir=./testutil/grpc --recursive --output=./mocks
