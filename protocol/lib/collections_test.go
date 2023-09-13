@@ -234,7 +234,6 @@ func TestMergeAllMapsWithDistinctKeys(t *testing.T) {
 		"Success: nil input": {
 			inputMaps:   nil,
 			expectedMap: map[string]string{},
-			expectedErr: false,
 		},
 		"Success: single map": {
 			inputMaps: []map[string]string{
@@ -243,19 +242,16 @@ func TestMergeAllMapsWithDistinctKeys(t *testing.T) {
 			expectedMap: map[string]string{
 				"a": "1", "b": "2",
 			},
-			expectedErr: false,
 		},
 		"Success: single map, empty": {
 			inputMaps:   []map[string]string{},
 			expectedMap: map[string]string{},
-			expectedErr: false,
 		},
 		"Success: multiple maps, all empty or nil": {
 			inputMaps: []map[string]string{
 				{}, nil,
 			},
 			expectedMap: map[string]string{},
-			expectedErr: false,
 		},
 		"Success: multiple maps, some empty": {
 			inputMaps: []map[string]string{
@@ -264,7 +260,6 @@ func TestMergeAllMapsWithDistinctKeys(t *testing.T) {
 			expectedMap: map[string]string{
 				"a": "1", "b": "2",
 			},
-			expectedErr: false,
 		},
 		"Success: multiple maps, no empty": {
 			inputMaps: []map[string]string{
@@ -274,7 +269,6 @@ func TestMergeAllMapsWithDistinctKeys(t *testing.T) {
 			expectedMap: map[string]string{
 				"a": "1", "b": "2", "c": "3", "d": "4",
 			},
-			expectedErr: false,
 		},
 		"Error: duplicate keys": {
 			inputMaps: []map[string]string{
@@ -282,7 +276,6 @@ func TestMergeAllMapsWithDistinctKeys(t *testing.T) {
 				{"c": "3", "d": "4"},
 				{"a": "5"}, // duplicate key
 			},
-			expectedMap: nil,
 			expectedErr: true,
 		},
 	}
