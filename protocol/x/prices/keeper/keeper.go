@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
@@ -49,7 +49,7 @@ func NewKeeper(
 		timeProvider:           timeProvider,
 		indexerEventManager:    indexerEventManager,
 		marketToCreatedAt:      map[uint32]time.Time{},
-		authorities:            maps.ArrayToMapInterface(authorities),
+		authorities:            lib.SliceToSet(authorities),
 	}
 }
 
