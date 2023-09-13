@@ -91,18 +91,3 @@ func FilterSlice[V any](values []V, filterFunc func(V) bool) []V {
 
 	return filteredValues
 }
-
-// MustGetValue returns the element at `index` position in a slice and panics if `index` is greater than or
-// equal to slice length.
-func MustGetValue[V any](values []V, index uint) V {
-	if index >= uint(len(values)) {
-		panic(
-			fmt.Sprintf(
-				"MustGetValue: index %d is greater than or equal to array length %d",
-				index,
-				len(values),
-			),
-		)
-	}
-	return values[index]
-}

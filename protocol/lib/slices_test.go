@@ -209,56 +209,6 @@ func TestFilterSlice(t *testing.T) {
 	)
 }
 
-func TestMustGetValue(t *testing.T) {
-	// Gets middle value successfully.
-	require.Equal(
-		t,
-		uint32(2),
-		lib.MustGetValue(
-			[]uint32{1, 2, 3, 4},
-			1,
-		),
-	)
-
-	// Gets 0th value successfully.
-	require.Equal(
-		t,
-		"hello",
-		lib.MustGetValue(
-			[]string{"hello", "world", "hello"},
-			0,
-		),
-	)
-
-	// Gets last value successfully.
-	require.Equal(
-		t,
-		big.NewInt(4),
-		lib.MustGetValue(
-			[]*big.Int{big.NewInt(1), big.NewInt(2), big.NewInt(3), big.NewInt(4)},
-			3,
-		),
-	)
-
-	// Panics if index is equal to array length.
-	require.PanicsWithValue(
-		t,
-		"MustGetValue: index 2 is greater than or equal to array length 2",
-		func() {
-			lib.MustGetValue([]uint32{1, 2}, 2)
-		},
-	)
-
-	// Panics if index is greater than array length.
-	require.PanicsWithValue(
-		t,
-		"MustGetValue: index 3 is greater than or equal to array length 2",
-		func() {
-			lib.MustGetValue([]uint32{1, 2}, 3)
-		},
-	)
-}
-
 func TestSliceToSet(t *testing.T) {
 	slice := make([]int, 0)
 	for i := 0; i < 3; i++ {
