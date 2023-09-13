@@ -68,6 +68,7 @@ export enum QueryableField {
   FEE = 'fee',
   TRIGGER_PRICE = 'triggerPrice',
   UPDATED_BEFORE_OR_AT = 'updatedBeforeOrAt',
+  PROVIDER = 'provider',
 }
 
 export interface QueryConfig {
@@ -254,4 +255,5 @@ export interface LiquidityTiersQueryConfig extends QueryConfig {
 
 export interface ComplianceDataQueryConfig extends QueryConfig {
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
+  [QueryableField.PROVIDER]?: string;
 }

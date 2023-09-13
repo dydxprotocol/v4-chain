@@ -22,6 +22,7 @@ import {
   CandleCreateObject,
   CandleResolution,
   ComplianceDataCreateObject,
+  ComplianceProvider,
   FillCreateObject,
   FillType,
   FundingIndexUpdatesCreateObject,
@@ -553,6 +554,7 @@ export const defaultFundingIndexUpdateId: string = FundingIndexUpdatesTable.uuid
 
 export const sanctionedComplianceData: ComplianceDataCreateObject = {
   address: sanctionedAddress,
+  provider: ComplianceProvider.ELLIPTIC,
   chain: 'dydx',
   sanctioned: true,
   riskScore: '100.00',
@@ -561,6 +563,7 @@ export const sanctionedComplianceData: ComplianceDataCreateObject = {
 
 export const nonSanctionedComplianceData: ComplianceDataCreateObject = {
   address: defaultAddress,
+  provider: ComplianceProvider.ELLIPTIC,
   chain: 'dydx',
   sanctioned: false,
   riskScore: '10.00',

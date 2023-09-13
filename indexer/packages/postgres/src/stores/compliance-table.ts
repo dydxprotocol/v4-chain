@@ -16,6 +16,7 @@ import { ComplianceDataColumns, ComplianceDataCreateObject, ComplianceDataUpdate
 export async function findAll(
   {
     updatedBeforeOrAt,
+    provider,
     limit,
   }: ComplianceDataQueryConfig,
   requiredFields: QueryableField[],
@@ -24,6 +25,7 @@ export async function findAll(
   verifyAllRequiredFields(
     {
       updatedBeforeOrAt,
+      provider,
       limit,
     } as QueryConfig,
     requiredFields,
@@ -36,6 +38,10 @@ export async function findAll(
 
   if (updatedBeforeOrAt !== undefined) {
     baseQuery = baseQuery.where(ComplianceDataColumns.updatedAt, '<=', updatedBeforeOrAt);
+  }
+
+  if (provider !== undefined) {
+    baseQuery = baseQuery.where(ComplianceDataColumns.provider, provider);
   }
 
   if (options.orderBy !== undefined) {
@@ -71,20 +77,25 @@ export async function create(
 export async function update(
   {
     address,
+    provider,
     ...fields
   }: ComplianceDataUpdateObject,
   options: Options = { txId: undefined },
 ): Promise<ComplianceDataFromDatabase | undefined> {
   const complianceData = await ComplianceDataModel.query(
     Transaction.get(options.txId),
-  ).findById(address);
-  const updatedComplianceData = await complianceData.$query().patch(fields as PartialModelObject<ComplianceDataModel>).returning('*');
+  ).findById([address, provider]);
+  const updatedComplianceData = await complianceData
+    .$query()
+    .patch(fields as PartialModelObject<ComplianceDataModel>)
+    .returning('*');
   // The objection types mistakenly think the query returns an array of ComplianceData.
   return updatedComplianceData as unknown as (ComplianceDataFromDatabase | undefined);
 }
 
-export async function findByAddress(
+export async function findByAddressAndProvider(
   address: string,
+  provider: string,
   options: Options = {},
 ): Promise<ComplianceDataFromDatabase | undefined> {
   const baseQuery: QueryBuilder<ComplianceDataModel> = setupBaseQuery<ComplianceDataModel>(
@@ -92,6 +103,6 @@ export async function findByAddress(
     options,
   );
   return baseQuery
-    .findById(address)
+    .findById([address, provider])
     .returning('*');
 }

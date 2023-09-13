@@ -1,7 +1,7 @@
 import { Model } from 'objection';
 
 import { NumericPattern } from '../lib/validators';
-import { IsoString } from '../types';
+import { ComplianceProvider, IsoString } from '../types';
 
 export default class ComplianceDataModel extends Model {
   static get tableName() {
@@ -9,7 +9,7 @@ export default class ComplianceDataModel extends Model {
   }
 
   static get idColumn() {
-    return 'address';
+    return ['address', 'provider'];
   }
 
   static relationMappings = {};
@@ -19,11 +19,13 @@ export default class ComplianceDataModel extends Model {
       type: 'object',
       required: [
         'address',
+        'provider',
         'sanctioned',
         'updatedAt',
       ],
       properties: {
         address: { type: 'string' },
+        provider: { type: 'string', enum: [...Object.values(ComplianceProvider)] },
         chain: { type: ['string', 'null'], default: null },
         sanctioned: { type: 'boolean' },
         riskScore: { type: ['string', 'null'], pattern: NumericPattern, default: null },
@@ -33,6 +35,8 @@ export default class ComplianceDataModel extends Model {
   }
 
   address!: string;
+
+  provider!: string;
 
   chain?: string;
 

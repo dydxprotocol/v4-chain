@@ -1,4 +1,4 @@
-import { ComplianceDataFromDatabase } from '../../src/types';
+import { ComplianceDataFromDatabase, ComplianceProvider } from '../../src/types';
 import * as ComplianceDataTable from '../../src/stores/compliance-table';
 import {
   clearData,
@@ -67,15 +67,35 @@ describe('Compliance data store', () => {
     expect(complianceData[0]).toEqual(expect.objectContaining(sanctionedComplianceData));
   });
 
-  it('Successfully finds compliance data by address', async () => {
+  it('Successfully finds compliance data with provider', async () => {
+    await Promise.all([
+      ComplianceDataTable.create(sanctionedComplianceData),
+      ComplianceDataTable.create(nonSanctionedComplianceData),
+    ]);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
+      {
+        provider: ComplianceProvider.ELLIPTIC,
+      },
+      [],
+      { readReplica: true },
+    );
+
+    expect(complianceData.length).toEqual(2);
+    expect(complianceData[0]).toEqual(expect.objectContaining(sanctionedComplianceData));
+    expect(complianceData[1]).toEqual(expect.objectContaining(nonSanctionedComplianceData));
+  });
+
+  it('Successfully finds compliance data by address and provider', async () => {
     await Promise.all([
       ComplianceDataTable.create(sanctionedComplianceData),
       ComplianceDataTable.create(nonSanctionedComplianceData),
     ]);
 
     const complianceData:
-    ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddress(
+    ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddressAndProvider(
       sanctionedAddress,
+      ComplianceProvider.ELLIPTIC,
       { readReplica: true },
     );
 
@@ -85,8 +105,9 @@ describe('Compliance data store', () => {
 
   it('Unable finds compliance data', async () => {
     const complianceData:
-    ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddress(
+    ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddressAndProvider(
       sanctionedAddress,
+      ComplianceProvider.ELLIPTIC,
       { readReplica: true },
     );
     expect(complianceData).toEqual(undefined);
@@ -108,13 +129,15 @@ describe('Compliance data store', () => {
 
     await ComplianceDataTable.update({
       address: nonSanctionedComplianceData.address,
+      provider: nonSanctionedComplianceData.provider,
       riskScore: '30.00',
       sanctioned: true,
       updatedAt: updatedTime,
     });
     const updatedComplianceData:
-    ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddress(
+    ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddressAndProvider(
       nonSanctionedComplianceData.address,
+      nonSanctionedComplianceData.provider,
       { readReplica: true },
     );
 
