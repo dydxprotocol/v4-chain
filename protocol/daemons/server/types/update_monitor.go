@@ -63,6 +63,8 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 	return true
 }
 
+// PanicServiceNotResponding returns a function that panics with a message indicating that the specified daemon
+// service is not responding. This is ideal for creating the callback function when registering a daemon service.
 func PanicServiceNotResponding(service string) func() {
 	return func() {
 		panic(fmt.Sprintf("%v daemon not responding", service))
