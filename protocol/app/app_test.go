@@ -150,11 +150,11 @@ func TestSimulationManager(t *testing.T) {
 }
 
 func TestUpgrades(t *testing.T) {
-	require.Len(t, app.Upgrades, 0, "Expected no Upgrades")
+	require.Len(t, app.Upgrades, 1, "Expected 1 Upgrades")
 }
 
 func TestForks(t *testing.T) {
-	require.Len(t, app.Forks, 0, "Expected no Forks")
+	require.Len(t, app.Forks, 1, "Expected 1 Forks")
 }
 
 func TestModuleBasics(t *testing.T) {

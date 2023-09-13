@@ -1,12 +1,13 @@
 package app_test
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestDefaultUpgradesAndForks(t *testing.T) {
-	require.Empty(t, app.Upgrades, "Expected empty upgrades list")
-	require.Empty(t, app.Forks, "Expected empty forks list")
+	require.Len(t, app.Upgrades, 1, "Expected 1 upgrade")
+	require.Len(t, app.Forks, 1, "Expected 1 fork")
 }
