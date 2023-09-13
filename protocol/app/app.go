@@ -510,6 +510,7 @@ func New(
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
+		daemonFlags.Shared.GrpcServerAddress,
 	)
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.

@@ -5,6 +5,7 @@ package cli_test
 import (
 	"fmt"
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"math/big"
@@ -76,13 +77,14 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 
 			// Enable the liquidations daemon in the integration tests.
 			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
-			appOptions.Set(daemonflags.FlagUnixSocketAddress, "/tmp/cancel_order_cli_test.sock")
+			s.T().Cleanup(func() {
+				stoppable.StopServices(s.T(), testval.AppConfig.GRPC.Address)
+			})
 		},
 	})
 
 	s.cfg.Mnemonics = append(s.cfg.Mnemonics, validatorMnemonic)
 	s.cfg.ChainID = app.AppName
-	s.cfg.EnableTMLogging = true
 
 	s.cfg.MinGasPrices = fmt.Sprintf("0%s", sdk.DefaultBondDenom)
 

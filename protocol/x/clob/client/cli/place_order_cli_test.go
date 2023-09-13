@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"math/big"
 	"testing"
 
@@ -69,13 +70,15 @@ func TestPlaceOrderIntegrationTestSuite(t *testing.T) {
 
 			// Enable the liquidations daemon in the integration tests.
 			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
-			appOptions.Set(daemonflags.FlagUnixSocketAddress, "/tmp/place_order_cli_test.sock")
+			t.Cleanup(func() {
+				stoppable.StopServices(t, testval.AppConfig.GRPC.Address)
+			})
+
 		},
 	})
 
 	cfg.Mnemonics = append(cfg.Mnemonics, validatorMnemonic)
 	cfg.ChainID = app.AppName
-	cfg.EnableTMLogging = true
 
 	suite.Run(t, NewPlaceOrderIntegrationTestSuite(cfg, validatorAddress))
 }

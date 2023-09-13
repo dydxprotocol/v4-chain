@@ -35,11 +35,15 @@ type Server struct {
 }
 
 // NewServer creates a single gRPC server that's shared across multiple daemons for communication.
+// cosmosGrpcServiceAddress is the address of the Cosmos gRPC query service. This address is used to uniquely
+// identify services spawned by a particular test case, so that they can be cleaned up after the test case is
+// complete.
 func NewServer(
 	logger log.Logger,
 	grpcServer lib.GrpcServer,
 	fileHandler lib.FileHandler,
 	socketAddress string,
+	cosmosGrpcServiceAddress string,
 ) *Server {
 	srv := &Server{
 		logger:        logger,
@@ -48,7 +52,7 @@ func NewServer(
 		socketAddress: socketAddress,
 		updateMonitor: types.NewUpdateFrequencyMonitor(),
 	}
-	stoppable.RegisterServiceForCleanup("daemon-server", srv)
+	stoppable.RegisterServiceForTestCleanup(cosmosGrpcServiceAddress, srv)
 	return srv
 }
 
@@ -58,7 +62,7 @@ func (server *Server) Stop() {
 	server.gsrv.Stop()
 }
 
-// registerDaemon registers a daemon service with the update frequency monitor.
+// registerDaemon registers a daemon service with the update freque		net.Config.GRPCAddressncy monitor.
 func (server *Server) registerDaemon(
 	daemonKey string,
 	maximumAcceptableUpdateDelay time.Duration,
