@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/process"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
@@ -15,7 +15,7 @@ func TestIsDisallowTopLevelMsgInOtherTxs_Empty(t *testing.T) {
 }
 
 func TestIsDisallowTopLevelMsgInOtherTxs(t *testing.T) {
-	allMsgSamples := maps.MergeAllMapsMustHaveDistinctKeys(
+	allMsgSamples := lib.MergeAllMapsMustHaveDistinctKeys(
 		msgs.AllowMsgs,
 		msgs.DisallowMsgs,
 	)
