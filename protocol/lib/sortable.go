@@ -9,8 +9,8 @@ import (
 type Sortable[K constraints.Ordered] []K
 
 // The below methods are required to implement `sort.Interface` for sorting using the sort package.
-// uint is used as an example.
-var _ sort.Interface = Sortable[uint]{}
+// int is used as an example.
+var _ sort.Interface = Sortable[int]{}
 
 func (s Sortable[K]) Len() int {
 	return len(s)
