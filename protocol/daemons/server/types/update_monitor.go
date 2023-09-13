@@ -32,8 +32,8 @@ func NewUpdateFrequencyMonitor() *UpdateMonitor {
 	}
 }
 
-// RegisterDaemonService registers a new daemon service with the update frequency monitor. If the daemon service fails
-// to respond within the maximum acceptable update delay, the monitor will execute the callback function.
+// RegisterDaemonServiceWithCallback registers a new daemon service with the update frequency monitor. If the daemon
+// service fails to respond within the maximum acceptable update delay, the monitor will execute the callback function.
 // This method is synchronized. The method returns true if the daemon service was successfully registered,
 // and false if the daemon service was already registered or the monitor has already been stopped.
 func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
