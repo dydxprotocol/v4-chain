@@ -109,6 +109,9 @@ func CreateUpgradeHandler(
 		}
 
 		// Purge invalid orders from memclob.
+		localValidatorOperationsQueue, _ := clobKeeper.MemClob.GetOperationsToReplay(ctx)
+		clobKeeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
+
 		offchainUpdates := clobKeeper.MemClob.PurgeInvalidMemclobState(
 			ctx,
 			[]clobtypes.OrderId{},
