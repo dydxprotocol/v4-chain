@@ -11,6 +11,7 @@ import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { ComplianceRequest, ComplianceResponse } from '../../../types';
+import { handleValidationErrors } from '../../../request-helpers/error-handler';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-controller';
@@ -45,10 +46,11 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     address: {
-      in: ['params'],
+      in: ['query'],
       isString: true,
     },
   }),
+  handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
@@ -73,7 +75,7 @@ router.get(
       );
     } finally {
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.get_latest_block_height.timing`,
+        `${config.SERVICE_NAME}.${controllerName}.compliance_screen.timing`,
         Date.now() - start,
       );
     }
