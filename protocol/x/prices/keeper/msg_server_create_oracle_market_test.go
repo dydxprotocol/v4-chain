@@ -35,6 +35,31 @@ func TestCreateOracleMarket(t *testing.T) {
 			},
 			expectedMarkets: []pricestypes.MarketParamPrice{testMarket1},
 		},
+		"Failure: empty pair": {
+			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
+			msg: &pricestypes.MsgCreateOracleMarket{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: pricestest.GenerateMarketParamPrice(
+					pricestest.WithPair(""),
+					pricestest.WithExponent(-8), // for both Param and Price
+				).Param,
+			},
+			expectedMarkets: []pricestypes.MarketParamPrice{},
+			expectedErr:     "Pair cannot be empty",
+		},
+		"Failure: typo in exchange config json": {
+			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
+			msg: &pricestypes.MsgCreateOracleMarket{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: pricestest.GenerateMarketParamPrice(
+					pricestest.WithPair("BTC-USD"),
+					pricestest.WithExponent(-8), // for both Param and Price
+					pricestest.WithExchangeConfigJson(`{"exchanges":[{"exchangeName":"Binance"""}]}`),
+				).Param,
+			},
+			expectedMarkets: []pricestypes.MarketParamPrice{},
+			expectedErr:     "ExchangeConfigJson string is not valid",
+		},
 		"Failure: oracle market id already exists": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {
 				keepertest.CreateTestPriceMarkets(

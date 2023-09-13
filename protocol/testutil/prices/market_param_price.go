@@ -32,6 +32,12 @@ func WithPriceValue(price uint64) MarketParamPriceModifierOption {
 	}
 }
 
+func WithExchangeConfigJson(configJson string) MarketParamPriceModifierOption {
+	return func(cp *pricestypes.MarketParamPrice) {
+		cp.Param.ExchangeConfigJson = configJson
+	}
+}
+
 // GenerateMarketParamPrice returns a `MarketParamPrice` object set to default values.
 // Passing in `MarketParamPriceModifierOption` methods alters the value of the `MarketParamPrice` returned.
 // It will start with the default, valid `MarketParamPrice` value defined within the method
