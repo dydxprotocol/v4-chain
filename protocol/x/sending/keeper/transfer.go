@@ -215,5 +215,6 @@ func (k Keeper) SendFromModuleToAccount(
 	ctx sdk.Context,
 	msg *types.MsgSendFromModuleToAccount,
 ) (err error) {
+	// TODO(CORE-559): Implement this method.
 	return status.Errorf(codes.Unimplemented, "SendFromModuleToAccount not implemented")
 }

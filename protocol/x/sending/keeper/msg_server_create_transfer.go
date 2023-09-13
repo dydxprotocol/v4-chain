@@ -102,5 +102,6 @@ func (k msgServer) SendFromModuleToAccount(
 	goCtx context.Context,
 	msg *types.MsgSendFromModuleToAccount,
 ) (*types.MsgSendFromModuleToAccountResponse, error) {
+	// TODO(CORE-559): Implement this method.
 	return nil, status.Errorf(codes.Unimplemented, "SendFromModuleToAccount not implemented")
 }
