@@ -10,8 +10,8 @@ ARG GOLANG_1_19_ALPINE_DIGEST="4147c2ad24a347e53a8a361b663dcf82fca4157a3f9a5136d
 # --------------------------------------------------------
 
 FROM golang@sha256:${GOLANG_1_19_ALPINE_DIGEST} as builder
-ARG VERSION
-ARG COMMIT
+ARG VERSION=unknown
+ARG COMMIT=unknown
 
 RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers bash
 

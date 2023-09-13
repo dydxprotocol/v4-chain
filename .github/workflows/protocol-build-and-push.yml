@@ -37,11 +37,13 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev-validator
         run: |
+          commit_hash=$(git rev-parse --short=7 HEAD)
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
+            --build-arg VERSION=$commit_hash \
+            --build-arg COMMIT=$commit_hash \
             -t dydxprotocol-base \
             -f Dockerfile .
-          commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
@@ -76,11 +78,13 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev2-validator
         run: |
+          commit_hash=$(git rev-parse --short=7 HEAD)
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
+            --build-arg VERSION=$commit_hash \
+            --build-arg COMMIT=$commit_hash \
             -t dydxprotocol-base \
             -f Dockerfile .
-          commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
@@ -115,11 +119,13 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev3-validator
         run: |
+          commit_hash=$(git rev-parse --short=7 HEAD)
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
+            --build-arg VERSION=$commit_hash \
+            --build-arg COMMIT=$commit_hash \
             -t dydxprotocol-base \
             -f Dockerfile .
-          commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
@@ -154,11 +160,13 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev4-validator
         run: |
+          commit_hash=$(git rev-parse --short=7 HEAD)
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
+            --build-arg VERSION=$commit_hash \
+            --build-arg COMMIT=$commit_hash \
             -t dydxprotocol-base \
             -f Dockerfile .
-          commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
@@ -193,11 +201,13 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev5-validator
         run: |
+          commit_hash=$(git rev-parse --short=7 HEAD)
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
+            --build-arg VERSION=$commit_hash \
+            --build-arg COMMIT=$commit_hash \
             -t dydxprotocol-base \
             -f Dockerfile .
-          commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
@@ -232,11 +242,13 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: staging-validator
         run: |
+          commit_hash=$(git rev-parse --short=7 HEAD)
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
+            --build-arg VERSION=$commit_hash \
+            --build-arg COMMIT=$commit_hash \
             -t dydxprotocol-base \
             -f Dockerfile .
-          commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \

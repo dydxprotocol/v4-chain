@@ -64,6 +64,8 @@ commit_hash=$(git rev-parse --short=7 HEAD)
 
 DOCKER_BUILDKIT=1 docker build \
 	--platform linux/amd64 \
+	--build-arg VERSION=$current_time-$commit_hash \
+	--build-arg COMMIT=$commit_hash \
 	-t dydxprotocol-base \
 	-f Dockerfile .
 
