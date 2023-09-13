@@ -172,6 +172,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+
+	v0_2_2 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v0.2.2"
 )
 
 var (
@@ -180,8 +182,8 @@ var (
 
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
-	Upgrades = []upgrades.Upgrade{}
-	Forks    = []upgrades.Fork{}
+	Upgrades = []upgrades.Upgrade{v0_2_2.Upgrade}
+	Forks    = []upgrades.Fork{v0_2_2.Fork}
 )
 
 var (
