@@ -31,7 +31,10 @@ export interface MsgCreatePerpetualResponse {}
  */
 
 export interface MsgCreatePerpetualResponseSDKType {}
-/** MsgSetLiquidityTier is a message used by x/gov to create or update a liquidity tier. */
+/**
+ * MsgSetLiquidityTier is a message used by x/gov to create or update a
+ * liquidity tier.
+ */
 
 export interface MsgSetLiquidityTier {
   /** The address that controls the module. */
@@ -40,7 +43,10 @@ export interface MsgSetLiquidityTier {
 
   liquidityTier?: LiquidityTier;
 }
-/** MsgSetLiquidityTier is a message used by x/gov to create or update a liquidity tier. */
+/**
+ * MsgSetLiquidityTier is a message used by x/gov to create or update a
+ * liquidity tier.
+ */
 
 export interface MsgSetLiquidityTierSDKType {
   /** The address that controls the module. */

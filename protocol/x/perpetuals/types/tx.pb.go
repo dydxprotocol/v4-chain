@@ -123,7 +123,8 @@ func (m *MsgCreatePerpetualResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreatePerpetualResponse proto.InternalMessageInfo
 
-// MsgSetLiquidityTier is a message used by x/gov to create or update a liquidity tier.
+// MsgSetLiquidityTier is a message used by x/gov to create or update a
+// liquidity tier.
 type MsgSetLiquidityTier struct {
 	// The address that controls the module.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`

@@ -17,7 +17,8 @@ service Msg {
   rpc CreatePerpetual(MsgCreatePerpetual) returns (MsgCreatePerpetualResponse);
   // SetLiquidityTier creates an liquidity tier if the ID doesn't exist, and
   // updates the existing liquidity tier otherwise.
-  rpc SetLiquidityTier(MsgSetLiquidityTier) returns (MsgSetLiquidityTierResponse);
+  rpc SetLiquidityTier(MsgSetLiquidityTier)
+      returns (MsgSetLiquidityTierResponse);
 }
 
 // MsgCreatePerpetual is a message used by x/gov to create a new perpetual.
@@ -35,7 +36,8 @@ message MsgCreatePerpetual {
 // response type.
 message MsgCreatePerpetualResponse {}
 
-// MsgSetLiquidityTier is a message used by x/gov to create or update a liquidity tier.
+// MsgSetLiquidityTier is a message used by x/gov to create or update a
+// liquidity tier.
 message MsgSetLiquidityTier {
   option (cosmos.msg.v1.signer) = "authority";
 
