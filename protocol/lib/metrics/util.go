@@ -45,8 +45,8 @@ func GetLabelForStringValue(labelName string, labelValue string) gometrics.Label
 // GetMetricValueFromBigInt returns a telemetry value (float32) from an integer value.
 // Any rounding information is ignored, so this function should only be used for metrics.
 func GetMetricValueFromBigInt(i *big.Int) float32 {
-	r, _ := i.Float64()
-	return float32(r)
+	r, _ := new(big.Float).SetInt(i).Float32()
+	return r
 }
 
 // ModuleMeasureSinceWithLabels provides a short hand method for emitting a time measure
