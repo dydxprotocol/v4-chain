@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 
 	"math/big"
 	"testing"
@@ -49,6 +50,10 @@ func (s *SendingIntegrationTestSuite) SetupTest() {
 
 	// Configure test network.
 	s.cfg = network.DefaultConfig(nil)
+
+	s.T().Cleanup(func() {
+		stoppable.StopServices(s.T(), s.cfg.GRPCAddress)
+	})
 
 	s.cfg.Mnemonics = append(s.cfg.Mnemonics, validatorMnemonic)
 	s.cfg.ChainID = app.AppName

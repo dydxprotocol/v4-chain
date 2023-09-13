@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
@@ -47,6 +48,11 @@ func setupNetwork(
 	// Create network.
 	net := network.New(t, cfg)
 	ctx := net.Validators[0].ClientCtx
+
+	t.Cleanup(func() {
+		stoppable.StopServices(t, cfg.GRPCAddress)
+	})
+
 	return net, ctx
 }
 

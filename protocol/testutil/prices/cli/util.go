@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -44,5 +45,10 @@ func NetworkWithMarketObjects(t *testing.T, n int) (*network.Network, []types.Ma
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
+
+	t.Cleanup(func() {
+		stoppable.StopServices(t, cfg.GRPCAddress)
+	})
+
 	return network.New(t, cfg), state.MarketParams, state.MarketPrices
 }

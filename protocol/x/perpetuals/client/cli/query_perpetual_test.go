@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"testing"
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -76,6 +77,10 @@ func networkWithLiquidityTierAndPerpetualObjects(
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
+
+	t.Cleanup(func() {
+		stoppable.StopServices(t, cfg.GRPCAddress)
+	})
 
 	return network.New(t, cfg), state.LiquidityTiers, state.Perpetuals
 }

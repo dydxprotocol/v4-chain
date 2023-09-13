@@ -97,7 +97,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	// Lib
-	"github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -491,7 +491,7 @@ func New(
 		tkeys[indexer_manager.TransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
-	timeProvider := &time.TimeProviderImpl{}
+	timeProvider := &timelib.TimeProviderImpl{}
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
 		appCodec,
