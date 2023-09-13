@@ -12,7 +12,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 )
 
@@ -35,7 +34,7 @@ func NewKeeper(
 		cdc:         cdc,
 		statsKeeper: statsKeeper,
 		storeKey:    storeKey,
-		authorities: maps.ArrayToMapInterface(authorities),
+		authorities: lib.SliceToSet(authorities),
 	}
 }
 

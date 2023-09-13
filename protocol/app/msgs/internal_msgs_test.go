@@ -1,9 +1,11 @@
 package msgs_test
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/stretchr/testify/require"
 )
@@ -123,5 +125,5 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.vest.MsgSetVestEntryResponse",
 	}
 
-	require.Equal(t, expectedMsgs, maps.GetSortedKeys(msgs.InternalMsgSamplesGovAuth))
+	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.InternalMsgSamplesGovAuth))
 }
