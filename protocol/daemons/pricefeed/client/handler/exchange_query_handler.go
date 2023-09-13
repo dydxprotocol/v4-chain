@@ -156,7 +156,7 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	prices, unavailableTickers, err := exchangeQueryDetails.PriceFunction(
 		response,
 		tickerToPriceExponent,
-		&lib.MedianizerImpl{},
+		lib.Median[uint64],
 	)
 	if err != nil {
 		return nil, nil, price_function.NewExchangeError(exchangeQueryDetails.Exchange, err.Error())
