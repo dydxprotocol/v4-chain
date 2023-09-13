@@ -1,13 +1,14 @@
 package memclob
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math/big"
 	"runtime/debug"
 	"sort"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
@@ -179,19 +180,6 @@ func (m *MemClobPriceTimePriority) GetCancelOrder(
 	orderId types.OrderId,
 ) (tilBlock uint32, found bool) {
 	return m.cancels.get(orderId)
-}
-
-// GetOrderFilledAmount returns the total filled amount of an order from state.
-func (m *MemClobPriceTimePriority) GetOrderFilledAmount(
-	ctx sdk.Context,
-	orderId types.OrderId,
-) satypes.BaseQuantums {
-	exists, orderStateFilledAmount, _ := m.clobKeeper.GetOrderFillAmount(ctx, orderId)
-	if !exists {
-		orderStateFilledAmount = 0
-	}
-
-	return orderStateFilledAmount
 }
 
 // GetSubaccountOrders gets all of a subaccount's order on a specific CLOB and side.
@@ -1312,7 +1300,7 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	// Check if the order being replaced has at least `MinOrderBaseQuantums` of size remaining, otherwise the order
 	// is considered fully filled and cannot be placed/replaced.
 	orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
-	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
+	remainingAmount, hasRemainingAmount := m.clobKeeper.GetOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
 		return errorsmod.Wrapf(
 			types.ErrOrderFullyFilled,
@@ -1351,7 +1339,7 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 	subaccountId := orderId.SubaccountId
 
 	// For the collateralization check, use the remaining amount of the order that is resting on the book.
-	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
+	remainingAmount, hasRemainingAmount := m.clobKeeper.GetOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount {
 		panic(fmt.Sprintf("addOrderToOrderbookCollateralizationCheck: order has no remaining amount %v", order))
 	}
@@ -1397,7 +1385,7 @@ func (m *MemClobPriceTimePriority) mustAddOrderToOrderbook(
 	)
 
 	// Ensure that the order is not fully-filled.
-	if _, hasRemainingQuantums := m.GetOrderRemainingAmount(ctx, newOrder); !hasRemainingQuantums {
+	if _, hasRemainingQuantums := m.clobKeeper.GetOrderRemainingAmount(ctx, newOrder); !hasRemainingQuantums {
 		panic(fmt.Sprintf("mustAddOrderToOrderbook: order has no remaining amount %+v", newOrder))
 	}
 
@@ -1454,7 +1442,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		takerRemainingSize = newTakerOrder.GetBaseQuantums()
 	} else {
 		var takerHasRemainingSize bool
-		takerRemainingSize, takerHasRemainingSize = m.GetOrderRemainingAmount(
+		takerRemainingSize, takerHasRemainingSize = m.clobKeeper.GetOrderRemainingAmount(
 			ctx,
 			newTakerOrder.MustGetOrder(),
 		)
@@ -1532,7 +1520,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			continue
 		}
 
-		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder.Order)
+		makerRemainingSize, makerHasRemainingSize := m.clobKeeper.GetOrderRemainingAmount(ctx, makerOrder.Order)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("mustPerformTakerOrderMatching: maker order has no remaining amount %v", makerOrder.Order))
 		}
@@ -1846,7 +1834,7 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 ) *types.OffchainUpdates {
 	offchainUpdates := types.NewOffchainUpdates()
 	makerOrderBaseQuantums := makerOrder.GetBaseQuantums()
-	newTotalFilledAmount := m.GetOrderFilledAmount(ctx, makerOrder.OrderId)
+	_, newTotalFilledAmount, _ := m.clobKeeper.GetOrderFillAmount(ctx, makerOrder.OrderId)
 
 	// If the filled amount of the maker order is greater than the order size, panic to avoid silent failure.
 	if newTotalFilledAmount > makerOrderBaseQuantums {
@@ -1887,25 +1875,6 @@ func updateResultToOrderStatus(updateResult satypes.UpdateResult) types.OrderSta
 	}
 
 	return types.Undercollateralized
-}
-
-// GetOrderRemainingAmount returns the remaining amount of an order (its size minus its filled amount).
-// It also returns a boolean indicating whether the remaining amount is positive (true) or not (false).
-func (m *MemClobPriceTimePriority) GetOrderRemainingAmount(
-	ctx sdk.Context,
-	order types.Order,
-) (
-	remainingAmount satypes.BaseQuantums,
-	hasRemainingAmount bool,
-) {
-	totalFillAmount := m.GetOrderFilledAmount(ctx, order.OrderId)
-
-	// Case: order is completely filled.
-	if totalFillAmount >= order.GetBaseQuantums() {
-		return 0, false
-	}
-
-	return order.GetBaseQuantums() - totalFillAmount, true
 }
 
 // RemoveOrderIfFilled removes an order from the orderbook if it currently fully filled in state.
@@ -2047,7 +2016,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 
 	for remainingImpactQuoteQuantums.Sign() > 0 && foundMakerOrder {
 		makerOrder := makerLevelOrder.Value.Order
-		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder)
+		makerRemainingSize, makerHasRemainingSize := m.clobKeeper.GetOrderRemainingAmount(ctx, makerOrder)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("getImpactPriceSubticks: maker order has no remaining amount (%+v)", makerOrder))
 		}

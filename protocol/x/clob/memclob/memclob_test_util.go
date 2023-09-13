@@ -210,11 +210,12 @@ func assertMemclobHasMatches(
 ) {
 	expectedOrderIdToFilledAmount := createMatchExpectationsFromMatches(expectedMatches)
 
-	for orderId, amount := range expectedOrderIdToFilledAmount {
+	for orderId, expectedAmount := range expectedOrderIdToFilledAmount {
+		_, amount, _ := memclob.clobKeeper.GetOrderFillAmount(ctx, orderId)
 		require.Equal(
 			t,
+			expectedAmount,
 			amount,
-			memclob.GetOrderFilledAmount(ctx, orderId),
 		)
 	}
 }
@@ -231,11 +232,12 @@ func assertMemclobHasOperations(
 ) {
 	expectedOrderIdToFilledAmount, _ := createMatchExpectationsFromOperations(expectedOperations)
 
-	for orderId, amount := range expectedOrderIdToFilledAmount {
+	for orderId, expectedAmount := range expectedOrderIdToFilledAmount {
+		_, amount, _ := memclob.clobKeeper.GetOrderFillAmount(ctx, orderId)
 		require.Equal(
 			t,
+			expectedAmount,
 			amount,
-			memclob.GetOrderFilledAmount(ctx, orderId),
 		)
 	}
 
@@ -457,7 +459,7 @@ func AssertMemclobHasOrders(
 				require.Fail(t, fmt.Sprintf("Bid with order ID %s has 0 remaining quantums", orderId.String()))
 			}
 
-			remainingAmount, hasRemainingAmount := memclob.GetOrderRemainingAmount(
+			remainingAmount, hasRemainingAmount := memclob.clobKeeper.GetOrderRemainingAmount(
 				ctx,
 				order.Order,
 			)

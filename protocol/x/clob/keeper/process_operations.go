@@ -233,9 +233,13 @@ func (k Keeper) PersistOrderRemovalToState(
 	switch removalReason := orderRemoval.RemovalReason; removalReason {
 	case types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED:
 		// For the collateralization check, use the remaining amount of the order that is resting on the book.
-		remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		remainingAmount, hasRemainingAmount := k.GetOrderRemainingAmount(ctx, orderToRemove)
 		if !hasRemainingAmount {
-			panic(fmt.Sprintf("addOrderToOrderbookCollateralizationCheck: order has no remaining amount %v", orderToRemove))
+			return errorsmod.Wrapf(
+				types.ErrOrderFullyFilled,
+				"addOrderToOrderbookCollateralizationCheck: order has no remaining amount %v",
+				orderToRemove,
+			)
 		}
 
 		pendingOpenOrder := types.PendingOpenOrder{
@@ -267,33 +271,36 @@ func (k Keeper) PersistOrderRemovalToState(
 			)
 		}
 	case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
-		if !orderToRemove.IsReduceOnly() {
-			return errorsmod.Wrapf(
-				types.ErrInvalidOrderRemoval,
-				"Order Removal (%+v) invalid. Order must be reduce only.",
-				*orderRemoval,
-			)
-		}
+		// TODO: uncomment when enabling reduce-only orders. Currently reduce-only order removals
+		// will be rejected in ValidateBasic.
+		
+		// if !orderToRemove.IsReduceOnly() {
+		// 	return errorsmod.Wrapf(
+		// 		types.ErrInvalidOrderRemoval,
+		// 		"Order Removal (%+v) invalid. Order must be reduce only.",
+		// 		*orderRemoval,
+		// 	)
+		// }
 
-		// The reduce-only order must increase or change the side of the position to trigger removal.
-		currentPositionSize := k.GetStatePosition(
-			ctx,
-			orderIdToRemove.SubaccountId,
-			orderToRemove.GetClobPairId(),
-		)
-		orderQuantumsToFill := orderToRemove.GetBigQuantums()
+		// // The reduce-only order must increase or change the side of the position to trigger removal.
+		// currentPositionSize := k.GetStatePosition(
+		// 	ctx,
+		// 	orderIdToRemove.SubaccountId,
+		// 	orderToRemove.GetClobPairId(),
+		// )
+		// orderQuantumsToFill := orderToRemove.GetBigQuantums()
 
-		orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == currentPositionSize.Sign()
+		// orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == currentPositionSize.Sign()
 
-		newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
-		orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
-		if !orderFillWouldIncreasePositionSize && !orderChangedSide {
-			return errorsmod.Wrapf(
-				types.ErrInvalidOrderRemoval,
-				"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
-				*orderRemoval,
-			)
-		}
+		// newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
+		// orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
+		// if !orderFillWouldIncreasePositionSize && !orderChangedSide {
+		// 	return errorsmod.Wrapf(
+		// 		types.ErrInvalidOrderRemoval,
+		// 		"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
+		// 		*orderRemoval,
+		// 	)
+		// }
 	case types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
 		// TODO
 		//
@@ -338,7 +345,7 @@ func (k Keeper) PersistOrderRemovalToState(
 		}
 
 		// The order should not be fully filled.
-		_, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		_, hasRemainingAmount := k.GetOrderRemainingAmount(ctx, orderToRemove)
 		if !hasRemainingAmount {
 			return errorsmod.Wrapf(
 				types.ErrInvalidOrderRemoval,
@@ -369,7 +376,7 @@ func (k Keeper) PersistOrderRemovalToState(
 		}
 
 		// The order should not be fully filled.
-		_, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		_, hasRemainingAmount := k.GetOrderRemainingAmount(ctx, orderToRemove)
 		if !hasRemainingAmount {
 			return errorsmod.Wrapf(
 				types.ErrInvalidOrderRemoval,
@@ -379,7 +386,7 @@ func (k Keeper) PersistOrderRemovalToState(
 		}
 	case types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED:
 		// The order should be fully filled.
-		remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		remainingAmount, hasRemainingAmount := k.GetOrderRemainingAmount(ctx, orderToRemove)
 		if hasRemainingAmount {
 			return errorsmod.Wrapf(
 				types.ErrInvalidOrderRemoval,

@@ -145,6 +145,24 @@ func (k Keeper) GetOrderFillAmount(
 	return true, satypes.BaseQuantums(orderFillState.FillAmount), orderFillState.PrunableBlockHeight
 }
 
+// GetOrderRemainingAmount returns the remaining amount of an order (its size minus its filled amount).
+// It also returns a boolean indicating whether the remaining amount is positive (true) or not (false).
+func (k Keeper) GetOrderRemainingAmount(
+	ctx sdk.Context,
+	order types.Order,
+) (
+	remainingAmount satypes.BaseQuantums,
+	hasRemainingAmount bool,
+) {
+	_, totalFillAmount, _ := k.GetOrderFillAmount(ctx, order.OrderId)
+
+	if totalFillAmount >= order.GetBaseQuantums() {
+		return 0, false
+	}
+
+	return order.GetBaseQuantums() - totalFillAmount, true
+}
+
 // AddOrdersForPruning creates or updates a slice of `orderIds` to state for potential future pruning from state.
 // These orders will be checked for pruning from state at `prunableBlockHeight`. If the `orderIds` slice provided
 // contains duplicates, the duplicates will be ignored.

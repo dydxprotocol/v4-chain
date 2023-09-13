@@ -259,11 +259,10 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 					order := operation.GetShortTermOrderPlacement().Order
 					orderId := order.OrderId
 					// Mock out the first 4 calls to GetOrderFillAmount, which is called during test setup.
-					mockMemClobKeeper.On("GetOrderFillAmount", mock.Anything, orderId).Return(
-						false,
-						satypes.BaseQuantums(0),
-						uint32(0),
-					).Times(4)
+					mockMemClobKeeper.On("GetOrderRemainingAmount", mock.Anything, order).Return(
+						order.GetBaseQuantums(),
+						true,
+					).Times(5)
 					mockMemClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
 						Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult)).Once()
 					mockMemClobKeeper.On("ValidateSubaccountEquityTierLimitForNewOrder", mock.Anything, mock.Anything).Return(nil)

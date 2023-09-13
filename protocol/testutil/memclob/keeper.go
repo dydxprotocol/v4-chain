@@ -487,3 +487,14 @@ func (f *FakeMemClobKeeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk
 func (f *FakeMemClobKeeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger()
 }
+
+func (f *FakeMemClobKeeper) GetOrderRemainingAmount(
+	ctx sdk.Context,
+	order types.Order,
+) (
+	remainingAmount satypes.BaseQuantums,
+	hasRemainingAmount bool,
+) {
+	fillAmount := f.fillAmounts[order.OrderId] + f.dirtyFillAmounts[order.OrderId]
+	return order.GetBaseQuantums() - fillAmount, fillAmount < order.GetBaseQuantums()
+}

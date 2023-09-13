@@ -2630,13 +2630,11 @@ func TestAddOrderToOrderbook_ErrorPlaceNewFullyFilledOrder(t *testing.T) {
 		Return(nil)
 
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
-	orderId := order.OrderId
-	quantums := order.GetBaseQuantums()
 
 	// Set state filled amount as though we learned about this fill
 	// from a block, but had not yet learned about the order.
-	memClobKeeper.On("GetOrderFillAmount", mock.Anything, orderId).
-		Return(true, quantums, uint32(0))
+	memClobKeeper.On("GetOrderRemainingAmount", mock.Anything, order).
+		Return(satypes.BaseQuantums(0), false)
 
 	// Place an order which was already fully-filled in a previous block as though
 	// we are only now learning of the order itself via p2p.

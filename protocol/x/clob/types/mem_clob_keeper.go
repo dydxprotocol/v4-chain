@@ -19,6 +19,13 @@ type MemClobKeeper interface {
 		fillAmount satypes.BaseQuantums,
 		prunableBlockHeight uint32,
 	)
+	GetOrderRemainingAmount(
+		ctx sdk.Context,
+		order Order,
+	) (
+		remainingAmount satypes.BaseQuantums,
+		hasRemainingAmount bool,
+	)
 	ProcessSingleMatch(
 		ctx sdk.Context,
 		matchWithOrders *MatchWithOrders,
