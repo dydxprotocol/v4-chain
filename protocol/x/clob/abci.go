@@ -245,7 +245,7 @@ func PrepareCheckState(
 			perpetualId := liquidationOrders[i].MustGetLiquidatedPerpetualId()
 			deltaQuantums := liquidationOrders[i].GetDeltaQuantums()
 
-			_, err := keeper.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+			_, err := keeper.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 			if err != nil {
 				keeper.Logger(ctx).Error(
 					"Failed to deleverage subaccount.",

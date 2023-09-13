@@ -18,7 +18,7 @@ type LiquidationsKeeper interface {
 		orderStatus OrderStatus,
 		err error,
 	)
-	DeleverageSubaccount(
+	MaybeDeleverageSubaccount(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,

@@ -263,6 +263,7 @@ const (
 	LiquidationRequiresDeleveraging       = "liquidation_requires_deleveraging"
 
 	// Deleveraging.
+	CannotDeleverageSubaccount     = "cannot_deleverage_subaccount"
 	Deleveraging                   = "deleveraging"
 	DeltaQuoteQuantums             = "delta_quote_quantums"
 	NumSubaccountsIterated         = "num_subaccounts_iterated"

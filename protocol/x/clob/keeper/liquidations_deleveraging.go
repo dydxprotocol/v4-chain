@@ -18,10 +18,10 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-// DeleverageSubaccount is the main entry point to deleverage a subaccount. It attempts to find positions
+// MaybeDeleverageSubaccount is the main entry point to deleverage a subaccount. It attempts to find positions
 // on the opposite side of deltaQuantums and use them to offset the liquidated subaccount's position at
 // the bankruptcy price of the liquidated position.
-func (k Keeper) DeleverageSubaccount(
+func (k Keeper) MaybeDeleverageSubaccount(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
@@ -39,6 +39,12 @@ func (k Keeper) DeleverageSubaccount(
 
 	// Early return to skip deleveraging if the subaccount can't be deleveraged.
 	if !canPerformDeleveraging {
+		telemetry.IncrCounter(
+			1,
+			types.ModuleName,
+			metrics.PrepareCheckState,
+			metrics.CannotDeleverageSubaccount,
+		)
 		return new(big.Int), nil
 	}
 

@@ -682,7 +682,7 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 }
 
 // DeleverageSubaccount will deleverage a subaccount by finding perpetual positions that can be used to offset
-// the offendign subaccount. All position will be closed at the bankruptcy price of the subaccount that is being
+// the offending subaccount. All position will be closed at the bankruptcy price of the subaccount that is being
 // deleveraged.
 func (m *MemClobPriceTimePriority) DeleverageSubaccount(
 	ctx sdk.Context,
