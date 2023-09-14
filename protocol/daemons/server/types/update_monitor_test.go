@@ -9,6 +9,7 @@ import (
 
 // The following tests may still intermittently fail on an overloaded system as they rely
 // on `time.Sleep`, which is not guaranteed to wake up after the specified amount of time.
+
 func TestRegisterDaemonService_Success(t *testing.T) {
 	ufm := NewUpdateFrequencyMonitor()
 	success := ufm.RegisterDaemonService("test-service", 200*time.Millisecond)
