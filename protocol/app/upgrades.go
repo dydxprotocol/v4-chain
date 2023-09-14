@@ -16,7 +16,7 @@ func (app *App) setupUpgradeHandlers() {
 	}
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v0_2_2.UpgradeName,
-		v0_2_2.CreateUpgradeHandler(app.ModuleManager, app.configurator, *app.ClobKeeper),
+		v0_2_2.CreateUpgradeHandler(app.ModuleManager, app.configurator, *app.ClobKeeper, app.IndexerEventManager),
 	)
 }
 
