@@ -104,7 +104,7 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 		// The number of valid prices must be >= min number of exchanges.
 		if len(validPrices) >= int(marketParam.MinExchanges) {
 			// Calculate the median. Returns an error if the input is empty.
-			median, err := lib.MedianUint64(validPrices)
+			median, err := lib.Median(validPrices)
 			if err != nil {
 				telemetry.IncrCounterWithLabels(
 					[]string{

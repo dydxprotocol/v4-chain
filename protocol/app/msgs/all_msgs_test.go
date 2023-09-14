@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/stretchr/testify/require"
@@ -32,7 +33,7 @@ func TestAllTypeMessages(t *testing.T) {
 	sort.Strings(allTypes)
 
 	// Assert.
-	require.Equal(t, allTypes, maps.GetSortedKeys(msgs.AllTypeMessages))
+	require.Equal(t, allTypes, lib.GetSortedKeys[sort.StringSlice](msgs.AllTypeMessages))
 }
 
 func TestAllTypeMessages_SumOfDistinctLists(t *testing.T) {
@@ -44,7 +45,11 @@ func TestAllTypeMessages_SumOfDistinctLists(t *testing.T) {
 		msgs.UnsupportedMsgSamples,
 		msgs.NormalMsgs,
 	)
-	require.Equal(t, maps.GetSortedKeys(expectedAllTypeMsgs), maps.GetSortedKeys(msgs.AllTypeMessages))
+	require.Equal(
+		t,
+		lib.GetSortedKeys[sort.StringSlice](expectedAllTypeMsgs),
+		lib.GetSortedKeys[sort.StringSlice](msgs.AllTypeMessages),
+	)
 }
 
 func TestAllTypeMessages_EachMsgBelongsToSingleListOnly(t *testing.T) {
@@ -107,5 +112,9 @@ func TestAllTypeMessages_SumOfAllowDisallow_MinusUnregistered(t *testing.T) {
 		_, exists := msgs.AllTypeMessages[k]
 		require.False(t, exists, "msg %s is unregistered", k)
 	}
-	require.Equal(t, maps.GetSortedKeys(expectedAllTypeMsgs), maps.GetSortedKeys(msgs.AllTypeMessages))
+	require.Equal(
+		t,
+		lib.GetSortedKeys[sort.StringSlice](expectedAllTypeMsgs),
+		lib.GetSortedKeys[sort.StringSlice](msgs.AllTypeMessages),
+	)
 }

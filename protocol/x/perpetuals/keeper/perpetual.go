@@ -235,9 +235,8 @@ func (k Keeper) processStoredPremiums(
 		// if block times are longer than expected and hence there were not enough blocks to
 		// collect votes.
 		// Note `NumPremiums >= len(marketPremiums.Premiums)`, so `lenPadding >= 0`.
-		lenPadding := int64(
-			lib.MaxUint32(premiumStore.NumPremiums,
-				minNumPremiumsRequired)) - int64(len(marketPremiums.Premiums))
+		lenPadding := int64(lib.Max(premiumStore.NumPremiums, minNumPremiumsRequired)) -
+			int64(len(marketPremiums.Premiums))
 
 		padding := make([]int32, lenPadding)
 		paddedPremiums := append(marketPremiums.Premiums, padding...)
@@ -265,7 +264,7 @@ func (k Keeper) processPremiumVotesIntoSamples(
 		newFundingSampleEpoch,
 		types.PremiumVotesKey,
 		k.GetMinNumVotesPerSample(ctx),
-		lib.MustGetMedianInt32, // combineFunc
+		lib.MustGetMedian[int32], // combineFunc
 		func(input []int32) []int32 { return input }, // filterFunc
 	)
 

@@ -173,12 +173,13 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarkets(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			// Run.
 			_, err := msgServer.UpdateMarketPrices(
@@ -291,12 +292,13 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarkets(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			// Run.
 			_, err := msgServer.UpdateMarketPrices(
@@ -354,7 +356,8 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
+			mockTimeKeeper.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarkets(t, ctx, k)

@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math"
 	"math/big"
 	"sort"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
@@ -39,7 +40,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 	numLiquidityTiers := 4
 	// Create liquidity tiers and perpetuals,
 	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 100)
-	numMarkets := pricesKeeper.GetNumMarkets(ctx)
+	numMarkets := keepertest.GetNumMarkets(t, ctx, pricesKeeper)
 	for i, item := range perps {
 		// Modify each field arbitrarily and
 		// verify the fields were modified in state.
@@ -270,13 +271,13 @@ func TestHasPerpetual(t *testing.T) {
 
 	_, err := pricesKeeper.CreateMarket(
 		ctx,
-		// `ExchangeConfigJson` is left unset as it is not used by the server.
 		pricestypes.MarketParam{
-			Id:                0,
-			Pair:              "marketName",
-			Exponent:          -10,
-			MinExchanges:      uint32(1),
-			MinPriceChangePpm: uint32(50),
+			Id:                 0,
+			Pair:               "marketName",
+			Exponent:           -10,
+			MinExchanges:       uint32(1),
+			MinPriceChangePpm:  uint32(50),
+			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
 			Id:       0,
@@ -348,13 +349,13 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 
 	_, err := pricesKeeper.CreateMarket(
 		ctx,
-		// `ExchangeConfigJson` is left unset as it is not used by the server.
 		pricestypes.MarketParam{
-			Id:                0,
-			Pair:              "marketName",
-			Exponent:          -10,
-			MinExchanges:      uint32(1),
-			MinPriceChangePpm: uint32(50),
+			Id:                 0,
+			Pair:               "marketName",
+			Exponent:           -10,
+			MinExchanges:       uint32(1),
+			MinPriceChangePpm:  uint32(50),
+			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
 			Id:       0,
@@ -617,16 +618,16 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// Individual test setup.
 			ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
 			// Create a new market param and price.
-			marketId := pricesKeeper.GetNumMarkets(ctx)
+			marketId := keepertest.GetNumMarkets(t, ctx, pricesKeeper)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
-				// `ExchangeConfigJson` is left unset as it is not used by the server.
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -850,11 +851,12 @@ func TestGetNetNotional_Success(t *testing.T) {
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -1010,15 +1012,16 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
 			// Create a new market param and price.
-			marketId := pricesKeeper.GetNumMarkets(ctx)
+			marketId := keepertest.GetNumMarkets(t, ctx, pricesKeeper)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,
@@ -1175,15 +1178,16 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
 			// Test setup.
 			// Create a new market.
-			marketId := pricesKeeper.GetNumMarkets(ctx)
+			marketId := keepertest.GetNumMarkets(t, ctx, pricesKeeper)
 			_, err := pricesKeeper.CreateMarket(
 				ctx,
 				pricestypes.MarketParam{
-					Id:                marketId,
-					Pair:              "marketName",
-					Exponent:          tc.exponent,
-					MinExchanges:      uint32(1),
-					MinPriceChangePpm: uint32(50),
+					Id:                 marketId,
+					Pair:               "marketName",
+					Exponent:           tc.exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
 					Id:       marketId,

@@ -2,6 +2,7 @@ package lib_test
 
 import (
 	"math/big"
+	"sort"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -31,18 +32,32 @@ func TestContainsDuplicates(t *testing.T) {
 	require.True(t, lib.ContainsDuplicates(containsDuplicateString))
 }
 
-func TestConvertMapToSliceOfKeys(t *testing.T) {
-	intMap := map[int]bool{0: true, 1: false, 2: false}
-	intSlice := lib.ConvertMapToSliceOfKeys(intMap)
-	require.ElementsMatch(t, []int{0, 1, 2}, intSlice)
-
-	stringMap := map[string]int{"0": 0, "1": 1, "2": 2}
-	stringSlice := lib.ConvertMapToSliceOfKeys(stringMap)
-	require.ElementsMatch(t, []string{"0", "1", "2"}, stringSlice)
-
-	emptyMap := map[string]bool{}
-	stringSlice = lib.ConvertMapToSliceOfKeys(emptyMap)
-	require.ElementsMatch(t, []string{}, stringSlice)
+func TestGetSortedKeys(t *testing.T) {
+	tests := map[string]struct {
+		inputMap       map[string]string
+		expectedResult []string
+	}{
+		"Nil input": {
+			inputMap:       nil,
+			expectedResult: []string{},
+		},
+		"Empty map": {
+			inputMap:       map[string]string{},
+			expectedResult: []string{},
+		},
+		"Non-empty map": {
+			inputMap: map[string]string{
+				"d": "4", "b": "2", "a": "1", "c": "3",
+			},
+			expectedResult: []string{"a", "b", "c", "d"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualResult := lib.GetSortedKeys[sort.StringSlice](tc.inputMap)
+			require.Equal(t, tc.expectedResult, actualResult)
+		})
+	}
 }
 
 func TestContainsValue(t *testing.T) {

@@ -307,9 +307,9 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", mock.Anything).Return(
@@ -396,9 +396,9 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", mock.Anything).Return(

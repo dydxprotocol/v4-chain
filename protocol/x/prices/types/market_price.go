@@ -24,12 +24,5 @@ func (mp *MarketPrice) ValidateFromParam(marketParam MarketParam) error {
 			mp.Exponent,
 		)
 	}
-	if mp.Price == 0 {
-		return errorsmod.Wrapf(
-			ErrInvalidInput,
-			"market %d price cannot be zero",
-			mp.Id,
-		)
-	}
 	return nil
 }

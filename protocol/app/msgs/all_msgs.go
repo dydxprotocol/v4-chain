@@ -173,10 +173,12 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":         {},
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse": {},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":         {},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse": {},
+		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":          {},
+		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":  {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  {},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         {},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": {},
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         {},
@@ -185,12 +187,14 @@ var (
 		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse": {},
 
 		// sending
-		"/dydxprotocol.sending.MsgCreateTransfer":                 {},
-		"/dydxprotocol.sending.MsgCreateTransferResponse":         {},
-		"/dydxprotocol.sending.MsgDepositToSubaccount":            {},
-		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    {},
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         {},
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": {},
+		"/dydxprotocol.sending.MsgCreateTransfer":                  {},
+		"/dydxprotocol.sending.MsgCreateTransferResponse":          {},
+		"/dydxprotocol.sending.MsgDepositToSubaccount":             {},
+		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":     {},
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":          {},
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse":  {},
+		"/dydxprotocol.sending.MsgSendFromModuleToAccount":         {},
+		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse": {},
 
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         {},

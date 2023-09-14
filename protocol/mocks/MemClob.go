@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	big "math/big"
+
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	mock "github.com/stretchr/testify/mock"
 
@@ -58,6 +60,29 @@ func (_m *MemClob) CountSubaccountOrders(ctx types.Context, subaccountId subacco
 // CreateOrderbook provides a mock function with given fields: ctx, clobPair
 func (_m *MemClob) CreateOrderbook(ctx types.Context, clobPair clobtypes.ClobPair) {
 	_m.Called(ctx, clobPair)
+}
+
+// DeleverageSubaccount provides a mock function with given fields: ctx, subaccountId, perpetualId, deltaQuantums
+func (_m *MemClob) DeleverageSubaccount(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantums *big.Int) (*big.Int, error) {
+	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums)
+
+	var r0 *big.Int
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Int); ok {
+		r0 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
+		r1 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetCancelOrder provides a mock function with given fields: ctx, orderId

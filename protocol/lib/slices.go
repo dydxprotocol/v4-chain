@@ -1,6 +1,9 @@
 package lib
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 // ContainsDuplicates returns true if the slice contains duplicates, false if not.
 func ContainsDuplicates[V comparable](values []V) bool {
@@ -16,17 +19,17 @@ func ContainsDuplicates[V comparable](values []V) bool {
 	return false
 }
 
-// ConvertMapToSliceOfKeys converts a map to a slice of keys.
-// Note that this method returns the keys in a non-deterministic order.
-func ConvertMapToSliceOfKeys[K comparable, V any](m map[K]V) []K {
-	var slice = make([]K, len(m))
-	index := 0
-	for key := range m {
-		slice[index] = key
-		index += 1
+// GetSortedKeys returns the keys of the map in sorted order.
+func GetSortedKeys[R interface {
+	~[]K
+	sort.Interface
+}, K comparable, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
 	}
-
-	return slice
+	sort.Sort(R(keys))
+	return keys
 }
 
 // ContainsValue returns true if the slice contains the provided value, false if not.

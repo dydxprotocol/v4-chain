@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
-
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	"github.com/cometbft/cometbft/libs/log"
 
@@ -90,7 +88,7 @@ func NewKeeper(
 		storeKey:                     storeKey,
 		memKey:                       memKey,
 		transientStoreKey:            liquidationsStoreKey,
-		authorities:                  maps.ArrayToMapInterface(authorities),
+		authorities:                  lib.SliceToSet(authorities),
 		MemClob:                      memClob,
 		UntriggeredConditionalOrders: make(map[types.ClobPairId]*UntriggeredConditionalOrders),
 		PerpetualIdToClobPairId:      make(map[uint32][]types.ClobPairId),
