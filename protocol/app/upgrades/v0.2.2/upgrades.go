@@ -13,7 +13,7 @@ import (
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	clobKeeper clobmodulekeeper.Keeper,
+	clobKeeper *clobmodulekeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -145,6 +145,8 @@ func CreateUpgradeHandler(
 
 		// Update memclob.
 		clobKeeper.MemClob = clobmodulememclob.NewMemClobPriceTimePriority(indexerEventManager.Enabled())
+		clobKeeper.MemClob.SetClobKeeper(clobKeeper)
+
 		clobKeeper.PerpetualIdToClobPairId = make(map[uint32][]clobtypes.ClobPairId)
 		clobKeeper.InitMemClobOrderbooks(ctx)
 
