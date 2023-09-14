@@ -4,9 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
-	clobmodulememclob "github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -14,7 +12,6 @@ func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	clobKeeper *clobmodulekeeper.Keeper,
-	indexerEventManager indexer_manager.IndexerEventManager,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx.Logger().Info("Running v0.2.2 hard fork...")
@@ -144,8 +141,7 @@ func CreateUpgradeHandler(
 		)
 
 		// Update memclob.
-		clobKeeper.MemClob = clobmodulememclob.NewMemClobPriceTimePriority(indexerEventManager.Enabled())
-		clobKeeper.MemClob.SetClobKeeper(clobKeeper)
+		clobKeeper.MemClob.UnsafeResetMemclob(ctx)
 
 		clobKeeper.PerpetualIdToClobPairId = make(map[uint32][]clobtypes.ClobPairId)
 		clobKeeper.InitMemClobOrderbooks(ctx)

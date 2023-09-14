@@ -69,6 +69,14 @@ func (m *MemClobPriceTimePriority) SetClobKeeper(clobKeeper types.MemClobKeeper)
 	m.clobKeeper = clobKeeper
 }
 
+func (m *MemClobPriceTimePriority) UnsafeResetMemclob(
+	ctx sdk.Context,
+) {
+	m.openOrders = newMemclobOpenOrders()
+	m.cancels = newMemclobCancels()
+	m.operationsToPropose = *types.NewOperationsToPropose()
+}
+
 // CancelOrder removes a Short-Term order by `OrderId` (if it exists) from all order-related data structures
 // in the memclob. This method manages only Short-Term cancellations. For stateful cancellations, see
 // `msg_server_cancel_orders.go`.
