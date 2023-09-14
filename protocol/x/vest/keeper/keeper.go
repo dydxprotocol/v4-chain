@@ -18,7 +18,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
@@ -45,7 +44,7 @@ func NewKeeper(
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
-		authorities:     maps.ArrayToMapInterface(authorities),
+		authorities:     lib.SliceToSet(authorities),
 	}
 }
 

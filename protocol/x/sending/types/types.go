@@ -14,4 +14,9 @@ type SendingKeeper interface {
 		ctx sdk.Context,
 		msgWithdrawFromSubaccount *MsgWithdrawFromSubaccount,
 	) error
+	SendFromModuleToAccount(
+		ctx sdk.Context,
+		msg *MsgSendFromModuleToAccount,
+	) error
+	HasAuthority(authority string) bool
 }

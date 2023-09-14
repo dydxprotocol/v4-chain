@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -583,7 +585,7 @@ func TestPlaceOrder(t *testing.T) {
 			require.ElementsMatch(t, tc.expectedOffchainMessagesInNextBlock, msgSender.GetOffchainMessages())
 			require.ElementsMatch(t, tc.expectedOnchainMessagesInNextBlock, msgSender.GetOnchainMessages())
 			for _, order := range tc.orders {
-				if lib.ContainsValue(tc.expectedOrdersFilled, order.Order.OrderId) {
+				if slices.Contains(tc.expectedOrdersFilled, order.Order.OrderId) {
 					exists, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(
 						ctx,
 						order.Order.OrderId,

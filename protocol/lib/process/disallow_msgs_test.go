@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/process"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -17,7 +17,7 @@ func TestIsDisallowClobOrderMsgInOtherTxs_Empty(t *testing.T) {
 }
 
 func TestIsDisallowClobOrderMsgInOtherTxs(t *testing.T) {
-	allMsgSamples := maps.MergeAllMapsMustHaveDistinctKeys(
+	allMsgSamples := lib.MergeAllMapsMustHaveDistinctKeys(
 		msgs.AllowMsgs,
 		msgs.DisallowMsgs,
 	)

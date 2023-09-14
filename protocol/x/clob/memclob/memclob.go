@@ -1,13 +1,13 @@
 package memclob
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math/big"
 	"runtime/debug"
-	"sort"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
@@ -346,8 +346,7 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
 
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.
-	allSubaccounts := lib.ConvertMapToSliceOfKeys(subaccountTotalMatchedQuantums)
-	sort.Sort(satypes.SortedSubaccountIds(allSubaccounts))
+	allSubaccounts := lib.GetSortedKeys[satypes.SortedSubaccountIds](subaccountTotalMatchedQuantums)
 
 	// For each subaccount that had a match in the matching loop, determine whether we should cancel
 	// open reduce-only orders for the subaccount. This occurs when the sign of the position size before matching
@@ -658,8 +657,6 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 //     perform collateralization checks on the taker order.
 //   - If there were any matches resulting from matching the liquidation order, memclob state will
 //     be updated accordingly.
-//
-// TODO(CLOB-852): Separate out deleveraging flow from liquidations flow.
 func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 	ctx sdk.Context,
 	liquidationOrder types.LiquidationOrder,
@@ -676,53 +673,41 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 		return 0, 0, nil, err
 	}
 
-	// Skip checking if the account needs to be deleveraged if the liquidation order was partially
-	// or fully-filled.
-	if liquidationOrderStatus.OrderOptimisticallyFilledQuantums > 0 {
-		return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
-			liquidationOrderStatus.OrderStatus,
-			offchainUpdates,
-			err
-	}
+	return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
+		liquidationOrderStatus.OrderStatus,
+		offchainUpdates,
+		err
+}
 
-	canPerformDeleveraging, deleverageErr := m.clobKeeper.CanDeleverageSubaccount(ctx, liquidationOrder.GetSubaccountId())
-	if deleverageErr != nil {
-		return 0, 0, offchainUpdates, deleverageErr
-	}
-
-	// Early return to skip deleveraging if the subaccount can't be deleveraged.
-	if !canPerformDeleveraging {
-		return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
-			liquidationOrderStatus.OrderStatus,
-			offchainUpdates,
-			err
-	}
-
-	// Deleverage the full liquidation order size from the subaccount's position size.
-	deltaQuantums := liquidationOrder.GetBaseQuantums().ToBigInt()
-	if !liquidationOrder.IsBuy() {
-		deltaQuantums = deltaQuantums.Neg(deltaQuantums)
-	}
-
-	fills, _ := m.clobKeeper.OffsetSubaccountPerpetualPosition(
+// DeleverageSubaccount will deleverage a subaccount by finding perpetual positions that can be used to offset
+// the offending subaccount. All position will be closed at the bankruptcy price of the subaccount that is being
+// deleveraged.
+func (m *MemClobPriceTimePriority) DeleverageSubaccount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	deltaQuantums *big.Int,
+) (
+	quantumsDeleveraged *big.Int,
+	err error,
+) {
+	fills, deltaQuantumsRemaining := m.clobKeeper.OffsetSubaccountPerpetualPosition(
 		ctx,
-		liquidationOrder.GetSubaccountId(),
-		liquidationOrder.MustGetLiquidatedPerpetualId(),
+		subaccountId,
+		perpetualId,
 		deltaQuantums,
 	)
 
 	if len(fills) > 0 {
 		m.operationsToPropose.MustAddDeleveragingToOperationsQueue(
-			liquidationOrder.GetSubaccountId(),
-			liquidationOrder.MustGetLiquidatedPerpetualId(),
+			subaccountId,
+			perpetualId,
 			fills,
 		)
 	}
 
-	return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
-		liquidationOrderStatus.OrderStatus,
-		offchainUpdates,
-		err
+	quantumsDeleveraged = new(big.Int).Abs(new(big.Int).Sub(deltaQuantums, deltaQuantumsRemaining))
+	return quantumsDeleveraged, nil
 }
 
 // matchOrder will match the provided `MatchableOrder` as a taker order against the respective orderbook.

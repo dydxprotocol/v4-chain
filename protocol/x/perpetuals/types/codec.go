@@ -9,11 +9,15 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddPremiumVotes{}, "perpetuals/FundingSamples", nil)
+	cdc.RegisterConcrete(&MsgSetLiquidityTier{}, "perpetuals/SetLiquidityTier", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddPremiumVotes{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgSetLiquidityTier{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

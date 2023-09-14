@@ -15,6 +15,10 @@ service Msg {
   rpc AddPremiumVotes(MsgAddPremiumVotes) returns (MsgAddPremiumVotesResponse);
   // CreatePerpetual creates a new perpetual object.
   rpc CreatePerpetual(MsgCreatePerpetual) returns (MsgCreatePerpetualResponse);
+  // SetLiquidityTier creates an liquidity tier if the ID doesn't exist, and
+  // updates the existing liquidity tier otherwise.
+  rpc SetLiquidityTier(MsgSetLiquidityTier)
+      returns (MsgSetLiquidityTierResponse);
 }
 
 // MsgCreatePerpetual is a message used by x/gov to create a new perpetual.
@@ -31,6 +35,21 @@ message MsgCreatePerpetual {
 // MsgCreatePerpetualResponse defines the CreatePerpetual
 // response type.
 message MsgCreatePerpetualResponse {}
+
+// MsgSetLiquidityTier is a message used by x/gov to create or update a
+// liquidity tier.
+message MsgSetLiquidityTier {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // The address that controls the module.
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The liquidity tier to create or update.
+  LiquidityTier liquidity_tier = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgSetLiquidityTierResponse defines the SetLiquidityTier response type.
+message MsgSetLiquidityTierResponse {}
 
 // FundingPremium represents a funding premium value for a perpetual
 // market. Can be used to represent a premium vote or a premium sample.

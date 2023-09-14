@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgAddPremiumVotes, MsgAddPremiumVotesResponse, MsgCreatePerpetual, MsgCreatePerpetualResponse } from "./tx";
+import { MsgAddPremiumVotes, MsgAddPremiumVotesResponse, MsgCreatePerpetual, MsgCreatePerpetualResponse, MsgSetLiquidityTier, MsgSetLiquidityTierResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -12,6 +12,12 @@ export interface Msg {
   /** CreatePerpetual creates a new perpetual object. */
 
   createPerpetual(request: MsgCreatePerpetual): Promise<MsgCreatePerpetualResponse>;
+  /**
+   * SetLiquidityTier creates an liquidity tier if the ID doesn't exist, and
+   * updates the existing liquidity tier otherwise.
+   */
+
+  setLiquidityTier(request: MsgSetLiquidityTier): Promise<MsgSetLiquidityTierResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -20,6 +26,7 @@ export class MsgClientImpl implements Msg {
     this.rpc = rpc;
     this.addPremiumVotes = this.addPremiumVotes.bind(this);
     this.createPerpetual = this.createPerpetual.bind(this);
+    this.setLiquidityTier = this.setLiquidityTier.bind(this);
   }
 
   addPremiumVotes(request: MsgAddPremiumVotes): Promise<MsgAddPremiumVotesResponse> {
@@ -32,6 +39,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgCreatePerpetual.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.perpetuals.Msg", "CreatePerpetual", data);
     return promise.then(data => MsgCreatePerpetualResponse.decode(new _m0.Reader(data)));
+  }
+
+  setLiquidityTier(request: MsgSetLiquidityTier): Promise<MsgSetLiquidityTierResponse> {
+    const data = MsgSetLiquidityTier.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.perpetuals.Msg", "SetLiquidityTier", data);
+    return promise.then(data => MsgSetLiquidityTierResponse.decode(new _m0.Reader(data)));
   }
 
 }

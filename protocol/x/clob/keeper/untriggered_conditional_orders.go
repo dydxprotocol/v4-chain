@@ -4,7 +4,6 @@ import (
 	"fmt"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"math/big"
-	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -274,8 +273,7 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 	triggeredConditionalOrderIds = make([]types.OrderId, 0)
 	// Sort the keys for the untriggered conditional orders struct. We need to trigger
 	// the conditional orders in an ordered way to have deterministic state writes.
-	sortedKeys := types.SortedClobPairId(lib.ConvertMapToSliceOfKeys(k.UntriggeredConditionalOrders))
-	sort.Sort(sortedKeys)
+	sortedKeys := lib.GetSortedKeys[types.SortedClobPairId](k.UntriggeredConditionalOrders)
 
 	// For all clob pair ids in UntriggeredConditionalOrders, fetch the updated
 	// oracle price and poll out triggered conditional orders.

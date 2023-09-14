@@ -3,8 +3,6 @@ package clob
 import (
 	"errors"
 	"fmt"
-	"sort"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -214,10 +212,8 @@ func PrepareCheckState(
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
 	}
 
-	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
-	start := time.Now()
-	sort.Sort(types.SortedLiquidationOrders(liquidationOrders))
-	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.SortLiquidationOrders)
+	// Sort liquidation orders.
+	keeper.SortLiquidationOrders(ctx, liquidationOrders)
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	numFilledLiquidations := uint32(0)
@@ -238,12 +234,24 @@ func PrepareCheckState(
 		if optimisticallyFilledQuantums > 0 {
 			numFilledLiquidations++
 		} else {
-			telemetry.IncrCounter(
-				1,
-				types.ModuleName,
-				metrics.PrepareCheckState,
-				metrics.UnfilledLiquidationOrders,
-			)
+			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
+
+			// The liquidation order was unfilled. Try to deleverage the subaccount.
+			subaccountId := liquidationOrders[i].GetSubaccountId()
+			perpetualId := liquidationOrders[i].MustGetLiquidatedPerpetualId()
+			deltaQuantums := liquidationOrders[i].GetDeltaQuantums()
+
+			_, err := keeper.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+			if err != nil {
+				keeper.Logger(ctx).Error(
+					"Failed to deleverage subaccount.",
+					"subaccount", liquidationOrders[i].GetSubaccountId(),
+					"perpetualId", liquidationOrders[i].MustGetLiquidatedPerpetualId(),
+					"baseQuantums", liquidationOrders[i].GetBaseQuantums().ToBigInt(),
+					"error", err,
+				)
+				panic(err)
+			}
 		}
 	}
 

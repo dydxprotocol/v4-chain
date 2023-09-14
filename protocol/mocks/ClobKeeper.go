@@ -535,6 +535,29 @@ func (_m *ClobKeeper) Logger(ctx types.Context) log.Logger {
 	return r0
 }
 
+// MaybeDeleverageSubaccount provides a mock function with given fields: ctx, subaccountId, perpetualId, deltaQuantums
+func (_m *ClobKeeper) MaybeDeleverageSubaccount(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantums *big.Int) (*big.Int, error) {
+	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums)
+
+	var r0 *big.Int
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Int); ok {
+		r0 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
+		r1 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // MaybeGetLiquidationOrder provides a mock function with given fields: ctx, subaccountId
 func (_m *ClobKeeper) MaybeGetLiquidationOrder(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (*clobtypes.LiquidationOrder, error) {
 	ret := _m.Called(ctx, subaccountId)

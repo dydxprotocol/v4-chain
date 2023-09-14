@@ -3,16 +3,13 @@ package bitstamp_test
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"testing"
-
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/bitstamp"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/testutil"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/stretchr/testify/mock"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,11 +36,11 @@ var (
 
 // Test response strings.
 var (
-	btcTicker = `{"timestamp": "1686600672", "open": "25940", "high": "26209", "low": "25634", "last": "25846", 
-		"volume": "1903.95560640", "vwap": "25868", "bid": "25841", "ask": "25842", "open_24": "26183", 
+	btcTicker = `{"timestamp": "1686600672", "open": "25940", "high": "26209", "low": "25634", "last": "25846",
+		"volume": "1903.95560640", "vwap": "25868", "bid": "25841", "ask": "25842", "open_24": "26183",
 		"percent_change_24": "-1.29", "pair": "BTC/USD"}`
-	ethTicker = `{"timestamp": "1686600672", "open": "1753.4", "high": "1777.7", "low": "1720.1", "last": "1734.9", 
-		"volume": "6462.32622552", "vwap": "1738.6", "bid": "1734.3", "ask": "1734.9", "open_24": "1777.0", 
+	ethTicker = `{"timestamp": "1686600672", "open": "1753.4", "high": "1777.7", "low": "1720.1", "last": "1734.9",
+		"volume": "6462.32622552", "vwap": "1738.6", "bid": "1734.3", "ask": "1734.9", "open_24": "1777.0",
 		"percent_change_24": "-2.37", "pair": "ETH/USD"}`
 
 	BtcResponseString       = fmt.Sprintf("[%s]", btcTicker)
@@ -193,11 +190,9 @@ func TestBitstampPriceFunction_Mixed(t *testing.T) {
 			var unavailable map[string]error
 			var err error
 			if tc.medianFunctionFails {
-				medianizer := &mocks.Medianizer{}
-				medianizer.On("MedianUint64", mock.Anything).Return(uint64(0), testutil.MedianizationError)
-				prices, unavailable, err = bitstamp.BitstampPriceFunction(response, tc.exponentMap, medianizer)
+				prices, unavailable, err = bitstamp.BitstampPriceFunction(response, tc.exponentMap, testutil.MedianErr)
 			} else {
-				prices, unavailable, err = bitstamp.BitstampPriceFunction(response, tc.exponentMap, &lib.MedianizerImpl{})
+				prices, unavailable, err = bitstamp.BitstampPriceFunction(response, tc.exponentMap, lib.Median[uint64])
 			}
 
 			if tc.expectedError != nil {

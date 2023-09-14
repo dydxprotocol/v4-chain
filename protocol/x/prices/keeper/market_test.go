@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -8,7 +10,6 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestCreateMarket(t *testing.T) {
@@ -144,14 +145,6 @@ func TestCreateMarket_Errors(t *testing.T) {
 				"market param 0 exponent -6 does not match market price 0 exponent -5",
 			).Error(),
 		},
-		"Market price is 0": {
-			pair:               constants.BtcUsdPair,
-			minExchanges:       uint32(2),
-			minPriceChangePpm:  uint32(50),
-			price:              uint64(0),
-			exchangeConfigJson: validExchangeConfigJson,
-			expectedErr:        errorsmod.Wrap(types.ErrInvalidInput, "market 0 price cannot be zero").Error(),
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -198,16 +191,6 @@ func TestCreateMarket_Errors(t *testing.T) {
 			keepertest.AssertMarketEventsNotInIndexerBlock(t, keeper, ctx)
 		})
 	}
-}
-
-func TestGetNumMarkets(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
-	mockTimeProvider.On("Now").Return(constants.TimeT)
-
-	require.Equal(t, uint32(0), keeper.GetNumMarkets(ctx))
-
-	keepertest.CreateNMarkets(t, ctx, keeper, 10)
-	require.Equal(t, uint32(10), keeper.GetNumMarkets(ctx))
 }
 
 func TestGetAllMarketParamPrices(t *testing.T) {

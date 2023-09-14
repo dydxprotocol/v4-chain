@@ -3,16 +3,13 @@ package kucoin_test
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"testing"
-
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/kucoin"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/testutil"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/stretchr/testify/mock"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"github.com/stretchr/testify/require"
 )
 
@@ -222,11 +219,9 @@ func TestKucoinPriceFunction_Mixed(t *testing.T) {
 			var unavailable map[string]error
 			var err error
 			if tc.medianFunctionFails {
-				medianizer := &mocks.Medianizer{}
-				medianizer.On("MedianUint64", mock.Anything).Return(uint64(0), testutil.MedianizationError)
-				prices, unavailable, err = kucoin.KucoinPriceFunction(response, tc.exponentMap, medianizer)
+				prices, unavailable, err = kucoin.KucoinPriceFunction(response, tc.exponentMap, testutil.MedianErr)
 			} else {
-				prices, unavailable, err = kucoin.KucoinPriceFunction(response, tc.exponentMap, &lib.MedianizerImpl{})
+				prices, unavailable, err = kucoin.KucoinPriceFunction(response, tc.exponentMap, lib.Median[uint64])
 			}
 
 			if tc.expectedError != nil {
