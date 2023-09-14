@@ -4,6 +4,7 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
+      - 'ecr/[a-z]+'
       - 'release/v[0-9]+.x'  # e.g. release/v1.x
       - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/ibctestnet/v1.x
       - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
