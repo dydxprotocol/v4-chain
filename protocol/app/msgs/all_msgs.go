@@ -1,7 +1,7 @@
 package msgs
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 var (
@@ -280,7 +280,7 @@ var (
 	}
 
 	// DisallowMsgs are messages that cannot be externally submitted.
-	DisallowMsgs = maps.MergeAllMapsMustHaveDistinctKeys(
+	DisallowMsgs = lib.MergeAllMapsMustHaveDistinctKeys(
 		AppInjectedMsgSamples,
 		InternalMsgSamplesAll,
 		NestedMsgSamples,

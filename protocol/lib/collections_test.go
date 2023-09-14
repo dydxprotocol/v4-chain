@@ -1,7 +1,6 @@
 package lib_test
 
 import (
-	"math/big"
 	"sort"
 	"testing"
 
@@ -58,62 +57,6 @@ func TestGetSortedKeys(t *testing.T) {
 			require.Equal(t, tc.expectedResult, actualResult)
 		})
 	}
-}
-
-func TestContainsValue(t *testing.T) {
-	// Empty case.
-	require.False(t, lib.ContainsValue([]types.OrderId{}, types.OrderId{}))
-
-	// Contains uint32 case.
-	uint32Slice := []uint32{1, 2, 3, 4}
-	require.True(t, lib.ContainsValue(uint32Slice, 3))
-
-	// Doesn't contain uint32 case.
-	require.False(t, lib.ContainsValue(uint32Slice, 0))
-
-	// Contains string case.
-	stringSlice := []string{"hello", "world", "h", "w"}
-	require.True(t, lib.ContainsValue(stringSlice, "hello"))
-
-	// Doesn't contain string case.
-	require.False(t, lib.ContainsValue(stringSlice, "hh"))
-}
-
-func TestMustRemoveIndex(t *testing.T) {
-	// Remove first index of uint32 slice case and doesn't modify original slice.
-	uint32Slice := []uint32{1, 2, 3, 4}
-	require.Equal(t, []uint32{2, 3, 4}, lib.MustRemoveIndex(uint32Slice, 0))
-	require.Equal(t, []uint32{1, 2, 3, 4}, uint32Slice)
-
-	// Remove last index of uint32 case and doesn't modify original slice.
-	require.Equal(t, []uint32{1, 2, 3}, lib.MustRemoveIndex(uint32Slice, 3))
-	require.Equal(t, []uint32{1, 2, 3, 4}, uint32Slice)
-
-	// Remove middle element of uint32 case and doesn't modify original slice.
-	require.Equal(t, []uint32{1, 2, 4}, lib.MustRemoveIndex(uint32Slice, 2))
-	require.Equal(t, []uint32{1, 2, 3, 4}, uint32Slice)
-
-	// Remove first index of string slice case and doesn't modify original slice.
-	stringSlice := []string{"h", "e", "l", "l", "o"}
-	require.Equal(t, []string{"e", "l", "l", "o"}, lib.MustRemoveIndex(stringSlice, 0))
-	require.Equal(t, []string{"h", "e", "l", "l", "o"}, stringSlice)
-
-	// Remove last index of string case and doesn't modify original slice.
-	require.Equal(t, []string{"h", "e", "l", "l"}, lib.MustRemoveIndex(stringSlice, 4))
-	require.Equal(t, []string{"h", "e", "l", "l", "o"}, stringSlice)
-
-	// Remove middle element of string case and doesn't modify original slice.
-	require.Equal(t, []string{"h", "e", "l", "o"}, lib.MustRemoveIndex(stringSlice, 2))
-	require.Equal(t, []string{"h", "e", "l", "l", "o"}, stringSlice)
-
-	// Panics if provided index greater than slice length.
-	require.PanicsWithValue(
-		t,
-		"MustRemoveIndex: index 0 is greater than array length 0",
-		func() {
-			lib.MustRemoveIndex([]types.OrderId{}, 0)
-		},
-	)
 }
 
 func TestMapSlice(t *testing.T) {
@@ -228,56 +171,6 @@ func TestFilterSlice(t *testing.T) {
 	)
 }
 
-func TestMustGetValue(t *testing.T) {
-	// Gets middle value successfully.
-	require.Equal(
-		t,
-		uint32(2),
-		lib.MustGetValue(
-			[]uint32{1, 2, 3, 4},
-			1,
-		),
-	)
-
-	// Gets 0th value successfully.
-	require.Equal(
-		t,
-		"hello",
-		lib.MustGetValue(
-			[]string{"hello", "world", "hello"},
-			0,
-		),
-	)
-
-	// Gets last value successfully.
-	require.Equal(
-		t,
-		big.NewInt(4),
-		lib.MustGetValue(
-			[]*big.Int{big.NewInt(1), big.NewInt(2), big.NewInt(3), big.NewInt(4)},
-			3,
-		),
-	)
-
-	// Panics if index is equal to array length.
-	require.PanicsWithValue(
-		t,
-		"MustGetValue: index 2 is greater than or equal to array length 2",
-		func() {
-			lib.MustGetValue([]uint32{1, 2}, 2)
-		},
-	)
-
-	// Panics if index is greater than array length.
-	require.PanicsWithValue(
-		t,
-		"MustGetValue: index 3 is greater than or equal to array length 2",
-		func() {
-			lib.MustGetValue([]uint32{1, 2}, 3)
-		},
-	)
-}
-
 func TestSliceToSet(t *testing.T) {
 	slice := make([]int, 0)
 	for i := 0; i < 3; i++ {
@@ -329,4 +222,75 @@ func TestSliceToSet_PanicOnDuplicate(t *testing.T) {
 			lib.SliceToSet(stringSlice)
 		},
 	)
+}
+
+func TestMergeAllMapsWithDistinctKeys(t *testing.T) {
+	tests := map[string]struct {
+		inputMaps []map[string]string
+
+		expectedMap map[string]string
+		expectedErr bool
+	}{
+		"Success: nil input": {
+			inputMaps:   nil,
+			expectedMap: map[string]string{},
+		},
+		"Success: single map": {
+			inputMaps: []map[string]string{
+				{"a": "1", "b": "2"},
+			},
+			expectedMap: map[string]string{
+				"a": "1", "b": "2",
+			},
+		},
+		"Success: single map, empty": {
+			inputMaps:   []map[string]string{},
+			expectedMap: map[string]string{},
+		},
+		"Success: multiple maps, all empty or nil": {
+			inputMaps: []map[string]string{
+				{}, nil,
+			},
+			expectedMap: map[string]string{},
+		},
+		"Success: multiple maps, some empty": {
+			inputMaps: []map[string]string{
+				{}, nil, {"a": "1", "b": "2"},
+			},
+			expectedMap: map[string]string{
+				"a": "1", "b": "2",
+			},
+		},
+		"Success: multiple maps, no empty": {
+			inputMaps: []map[string]string{
+				{"a": "1", "b": "2"},
+				{"c": "3", "d": "4"},
+			},
+			expectedMap: map[string]string{
+				"a": "1", "b": "2", "c": "3", "d": "4",
+			},
+		},
+		"Error: duplicate keys": {
+			inputMaps: []map[string]string{
+				{"a": "1", "b": "2"},
+				{"c": "3", "d": "4"},
+				{"a": "5"}, // duplicate key
+			},
+			expectedErr: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if tc.expectedErr {
+				require.PanicsWithValue(
+					t,
+					"duplicate key: a",
+					func() { lib.MergeAllMapsMustHaveDistinctKeys(tc.inputMaps...) })
+			} else {
+				actualMap := lib.MergeAllMapsMustHaveDistinctKeys(tc.inputMaps...)
+				require.Equal(t, tc.expectedMap, actualMap)
+			}
+		})
+	}
 }
