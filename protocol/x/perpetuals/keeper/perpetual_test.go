@@ -3154,7 +3154,7 @@ func TestIsPerpetualTradable(t *testing.T) {
 		expectedIsTradable bool
 		expectedErr        string
 	}{
-		"Is tradable": {
+		"Tradable": {
 			perp: *perptest.GeneratePerpetual(
 				perptest.WithId(1),
 				perptest.WithMarketId(1),
@@ -3166,7 +3166,7 @@ func TestIsPerpetualTradable(t *testing.T) {
 			),
 			expectedIsTradable: true,
 		},
-		"Is non-tradable due to zero oracle price": {
+		"Not tradable due to zero oracle price": {
 			perp: *perptest.GeneratePerpetual(
 				perptest.WithId(1),
 				perptest.WithMarketId(1),

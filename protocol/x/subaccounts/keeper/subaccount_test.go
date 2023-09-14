@@ -2060,7 +2060,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 		},
-		"2 updates, 1 update involves non-tradable perp": {
+		"2 updates, 1 update involves not-tradable perp": {
 			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
 			expectedErr:    types.ErrPerpNotTradable,
 			perpetuals: []perptypes.Perpetual{
@@ -2703,7 +2703,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
-		"2 updates, 1 update involves non-tradable perp": {
+		"2 updates, 1 update involves not-tradable perp": {
 			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
 			expectedErr:    types.ErrPerpNotTradable,
 			perpetuals: []perptypes.Perpetual{

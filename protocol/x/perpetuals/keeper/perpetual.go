@@ -1476,9 +1476,9 @@ func (k Keeper) getLiquidityTiertoMaxAbsPremiumVotePpm(ctx sdk.Context) []*big.I
 }
 
 // IsPerpetualTradable returns whether the perptual is tradable.
-// A perpetual is non-trdable if it satifies:
-//   - Perpetual has zero oracle price. Since new oracle prices are created at zero by default,
-//     this indicates the absence of a valid oracle price update.
+// A perpetual is not tradable if it satifies:
+//   - Perpetual has zero oracle price. Since new oracle prices are created at zero by default and valid
+//     oracle priceupdates are non-zero, this indicates the absence of a valid oracle price update.
 func (k Keeper) IsPerpetualTradable(
 	ctx sdk.Context,
 	perpetualId uint32,
