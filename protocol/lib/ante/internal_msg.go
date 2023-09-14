@@ -71,6 +71,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// perpetuals
 		*perpetuals.MsgCreatePerpetual,
+		*perpetuals.MsgSetLiquidityTier,
 
 		// prices
 		*prices.MsgCreateOracleMarket,

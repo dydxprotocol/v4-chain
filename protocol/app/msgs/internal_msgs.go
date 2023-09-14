@@ -11,7 +11,7 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -27,7 +27,7 @@ import (
 
 var (
 	// InternalMsgSamplesAll are msgs that are used only used internally.
-	InternalMsgSamplesAll = maps.MergeAllMapsMustHaveDistinctKeys(InternalMsgSamplesGovAuth)
+	InternalMsgSamplesAll = lib.MergeAllMapsMustHaveDistinctKeys(InternalMsgSamplesGovAuth)
 
 	// InternalMsgSamplesGovAuth are msgs that are used only used internally.
 	// GovAuth means that these messages must originate from the gov module and
@@ -63,8 +63,10 @@ var (
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           nil,
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":         &perpetuals.MsgCreatePerpetual{},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse": nil,
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          &perpetuals.MsgCreatePerpetual{},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  nil,
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         &perpetuals.MsgSetLiquidityTier{},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": nil,
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
