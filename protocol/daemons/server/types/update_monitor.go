@@ -14,7 +14,7 @@ type updateMetadata struct {
 // UpdateMonitor monitors the update frequency of daemon services. If a daemon service does not respond within
 // the maximum acceptable update delay set when the daemon is registered, the monitor will panic and halt the
 // protocol. This was judged to be the best solution for network performance because it prevents any validator from
-// interacting with the network at all if a daemon service is not responding.
+// participating in the network at all if a daemon service is not responding.
 type UpdateMonitor struct {
 	// serviceToUpdateMetadata maps daemon service names to their update metadata.
 	serviceToUpdateMetadata map[string]updateMetadata
@@ -54,6 +54,13 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 	ufm.lock.Lock()
 	defer ufm.lock.Unlock()
 
+	if maximumAcceptableUpdateDelay <= 0 {
+		return fmt.Errorf(
+			"registration failure for service %v: maximum acceptable update delay must be positive",
+			service,
+		)
+	}
+
 	// Don't register daemon services if the monitor has been disabled.
 	if ufm.disabled {
 		return nil
@@ -63,7 +70,7 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 	// This could be a concern for short-running integration test cases, where the network
 	// stops before all daemon services have been registered.
 	if ufm.stopped {
-		return fmt.Errorf("monitor has been stopped")
+		return fmt.Errorf("registration failure for service %v: monitor has been stopped", service)
 	}
 
 	_, ok := ufm.serviceToUpdateMetadata[service]

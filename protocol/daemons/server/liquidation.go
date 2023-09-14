@@ -29,7 +29,7 @@ func (server *Server) WithLiquidatableSubaccountIds(
 // ExpectLiquidationsDaemon registers the liquidations daemon with the server. This is required
 // in order to ensure that the daemon service is called at least once during every
 // maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
-// respond regularly.
+// respond within maximumAcceptableUpdateDelay duration.
 func (server *Server) ExpectLiquidationsDaemon(maximumAcceptableUpdateDelay time.Duration) {
 	server.registerDaemon(types.LiquidationsDaemonServiceName, maximumAcceptableUpdateDelay)
 }
@@ -47,8 +47,10 @@ func (s *Server) LiquidateSubaccounts(
 		metrics.Received,
 		metrics.Count,
 	)
+	// If the daemon is unable to report a response, there is either an error in the registration of
+	// this daemon, or another one. In either case, the protocol should panic.
 	if err := s.reportResponse(types.LiquidationsDaemonServiceName); err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	s.liquidatableSubaccountIds.UpdateSubaccountIds(req.SubaccountIds)

@@ -73,7 +73,15 @@ func (server *Server) registerDaemon(
 	maximumAcceptableUpdateDelay time.Duration,
 ) {
 	if err := server.updateMonitor.RegisterDaemonService(daemonKey, maximumAcceptableUpdateDelay); err != nil {
-		server.logger.Error("Failed to register daemon service with update monitor", "error", err)
+		server.logger.Error(
+			"Failed to register daemon service with update monitor",
+			"error",
+			err,
+			"service",
+			daemonKey,
+			"maximumAcceptableUpdateDelay",
+			maximumAcceptableUpdateDelay,
+		)
 		panic(err)
 	}
 }
