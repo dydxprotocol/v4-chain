@@ -1581,7 +1581,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarkets/{ticker}', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarket/{ticker}', params={
   'limit': '0'
 }, headers = headers)
 
@@ -1595,7 +1595,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarkets/{ticker}?limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarket/{ticker}?limit=0',
 {
   method: 'GET',
 
@@ -1609,7 +1609,7 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarkets/{ticke
 
 ```
 
-`GET /trades/perpetualMarkets/{ticker}`
+`GET /trades/perpetualMarket/{ticker}`
 
 ### Parameters
 
