@@ -42,9 +42,10 @@ func (s *Server) AddBridgeEvents(
 ) {
 	// If the daemon is unable to report a response, there is either an error in the registration of
 	// this daemon, or another one. In either case, the protocol should panic.
-	if err := s.reportResponse(types.BridgeDaemonServiceName); err != nil {
-		panic(err)
-	}
+	// TODO(CORE-582): Re-enable this check once the bridge daemon is fixed in local / CI environments.
+	//if err := s.reportResponse(types.BridgeDaemonServiceName); err != nil {
+	//	panic(err)
+	//}
 	if err := s.bridgeEventManager.AddBridgeEvents(req.BridgeEvents); err != nil {
 		return nil, err
 	}

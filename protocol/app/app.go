@@ -574,7 +574,9 @@ func New(
 	// Start Bridge Daemon.
 	// Non-validating full-nodes have no need to run the bridge daemon.
 	if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
-		app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
+		// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
+		// environments.
+		// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
 		go func() {
 			if err := bridgeclient.Start(
 				// The client will use `context.Background` so that it can have a different context from

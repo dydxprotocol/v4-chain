@@ -56,8 +56,9 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 
 	if maximumAcceptableUpdateDelay <= 0 {
 		return fmt.Errorf(
-			"registration failure for service %v: maximum acceptable update delay must be positive",
+			"registration failure for service %v: maximum acceptable update delay %v must be positive",
 			service,
+			maximumAcceptableUpdateDelay,
 		)
 	}
 
@@ -73,9 +74,8 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 		return fmt.Errorf("registration failure for service %v: monitor has been stopped", service)
 	}
 
-	_, ok := ufm.serviceToUpdateMetadata[service]
-	if ok {
-		return fmt.Errorf("service already registered")
+	if _, ok := ufm.serviceToUpdateMetadata[service]; ok {
+		return fmt.Errorf("service %v already registered", service)
 	}
 
 	ufm.serviceToUpdateMetadata[service] = updateMetadata{

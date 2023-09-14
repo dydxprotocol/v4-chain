@@ -131,13 +131,13 @@ func TestRegisterDaemonServiceWithCallback_RegistrationFailsAfterStop(t *testing
 func TestRegisterValidResponse_NegativeUpdateDelay(t *testing.T) {
 	ufm := NewUpdateFrequencyMonitor()
 	err := ufm.RegisterDaemonService("test-service", -50*time.Millisecond)
-	require.ErrorContains(t, err, "update delay must be positive")
+	require.ErrorContains(t, err, "update delay -50ms must be positive")
 }
 
 func TestRegisterValidResponseWithCallback_NegativeUpdateDelay(t *testing.T) {
 	ufm := NewUpdateFrequencyMonitor()
 	err := ufm.RegisterDaemonServiceWithCallback("test-service", -50*time.Millisecond, func() {})
-	require.ErrorContains(t, err, "update delay must be positive")
+	require.ErrorContains(t, err, "update delay -50ms must be positive")
 }
 
 func TestPanicServiceNotResponding(t *testing.T) {
