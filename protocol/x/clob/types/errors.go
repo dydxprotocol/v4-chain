@@ -191,6 +191,16 @@ var (
 		41,
 		"perpetual ID is already associated with an existing CLOB pair",
 	)
+	ErrUnexpectedTimeInForce = errorsmod.Register(
+		ModuleName,
+		42,
+		"Unexpected time in force",
+	)
+	ErrOrderHasRemainingSize = errorsmod.Register(
+		ModuleName,
+		43,
+		"Order has remaining size",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(
@@ -409,6 +419,11 @@ var (
 		4006,
 		"Order Removal is invalid",
 	)
+	ErrInvalidOrderRemovalReason = errorsmod.Register(
+		ModuleName,
+		4007,
+		"Order Removal reason is invalid",
+	)
 
 	// Block rate limit errors.
 	ErrInvalidBlockRateLimitConfig = errorsmod.Register(
@@ -432,6 +447,11 @@ var (
 		ModuleName,
 		6001,
 		"Conditional order trigger subticks is invalid",
+	)
+	ErrConditionalOrderUntriggered = errorsmod.Register(
+		ModuleName,
+		6002,
+		"Conditional order is untriggered",
 	)
 
 	// Errors for unimplemented and disabled functionality.

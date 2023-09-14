@@ -1,11 +1,11 @@
 package clob_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
 
-	errorsmod "cosmossdk.io/errors"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -377,9 +377,36 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 		// Optional field to override MsgProposedOperations to inject invalid order removals
 		msgProposedOperations *clobtypes.MsgProposedOperations
 
-		expectedErr     string
-		expectedErrType *errorsmod.Error
+		expectedErr string
 	}{
+		"invalid proposal: undercollateralized order removal invalid for fully-filled order": {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+			},
+			msgProposedOperations: &clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewMatchOperationRaw(
+						&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+						[]clobtypes.MakerFill{
+							{
+								FillAmount:   5,
+								MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.OrderId,
+							},
+						},
+					),
+					clobtestutils.NewOrderRemovalOperationRaw(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.OrderId,
+						clobtypes.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+					),
+				},
+			},
+			expectedErr: "Order is fully filled",
+		},
 		"invalid proposal: order for well collateralized account cannot be removed": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
@@ -387,8 +414,6 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 			},
-			// Proposer tries to remove first order but cannot because subaccount would still be well
-			// collateralized if order was fully filled.
 			msgProposedOperations: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.OperationRaw{
 					clobtestutils.NewOrderRemovalOperationRaw(
@@ -397,8 +422,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					),
 				},
 			},
-			expectedErrType: clobtypes.ErrInvalidOrderRemoval,
-			expectedErr:     "Order passes collateralization check",
+			expectedErr: "Order passes collateralization check",
 		},
 		// Re-enable when reduce-only orders are re-enabled.
 		// "invalid proposal: valid reduce-only order cannot be removed": {
@@ -451,8 +475,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					),
 				},
 			},
-			expectedErrType: clobtypes.ErrStatefulOrderDoesNotExist,
-			expectedErr:     "does not exist in triggered conditional state",
+			expectedErr: "does not exist in triggered conditional state",
 		},
 		"invalid proposal: conditional fok order removal is for non fok order": {
 			subaccounts: []satypes.Subaccount{
@@ -474,8 +497,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					),
 				},
 			},
-			expectedErrType: clobtypes.ErrInvalidOrderRemoval,
-			expectedErr:     "Order is not fill-or-kill",
+			expectedErr: "Order is not fill-or-kill",
 		},
 		"invalid proposal: conditional fok order cannot be removed when fully filled": {
 			subaccounts: []satypes.Subaccount{
@@ -508,8 +530,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					),
 				},
 			},
-			expectedErrType: clobtypes.ErrInvalidOrderRemoval,
-			expectedErr:     "Fill-or-kill order is fully filled",
+			expectedErr: "Fill-or-kill order is fully filled",
 		},
 		"invalid proposal: conditional ioc order cannot be removed when untriggered": {
 			subaccounts: []satypes.Subaccount{
@@ -526,8 +547,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					),
 				},
 			},
-			expectedErrType: clobtypes.ErrStatefulOrderDoesNotExist,
-			expectedErr:     "does not exist in triggered conditional state",
+			expectedErr: "does not exist in triggered conditional state",
 		},
 		"invalid proposal: conditional ioc order removal is for non ioc order": {
 			subaccounts: []satypes.Subaccount{
@@ -549,8 +569,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					),
 				},
 			},
-			expectedErrType: clobtypes.ErrInvalidOrderRemoval,
-			expectedErr:     "Order is not immediate-or-cancel",
+			expectedErr: "Order is not immediate-or-cancel",
 		},
 		"invalid proposal: conditional ioc order cannot be removed when fully filled": {
 			subaccounts: []satypes.Subaccount{
@@ -583,8 +602,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					),
 				},
 			},
-			expectedErrType: clobtypes.ErrInvalidOrderRemoval,
-			expectedErr:     "Immediate-or-cancel order is fully filled",
+			expectedErr: "Immediate-or-cancel order is fully filled",
 		},
 		"invalid proposal: non fully-filled long-term order cannot be removed with fully filled removal reason": {
 			subaccounts: []satypes.Subaccount{
@@ -601,8 +619,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					),
 				},
 			},
-			expectedErrType: clobtypes.ErrInvalidOrderRemoval,
-			expectedErr:     "Order is not fully filled",
+			expectedErr: "Order has remaining size",
 		},
 		"invalid proposal: post-only removal reason used for non post-only order": {
 			subaccounts: []satypes.Subaccount{
@@ -619,8 +636,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					),
 				},
 			},
-			expectedErrType: clobtypes.ErrInvalidOrderRemoval,
-			expectedErr:     "Order is not post-only",
+			expectedErr: "Order is not post-only",
 		},
 	}
 
@@ -711,8 +727,9 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					request abcitypes.RequestDeliverTx,
 					response abcitypes.ResponseDeliverTx,
 				) (haltchain bool) {
+					fmt.Println(response.Log)
 					require.True(t, response.IsErr())
-					require.Equal(t, tc.expectedErrType.ABCICode(), response.Code)
+					require.Equal(t, clobtypes.ErrInvalidOrderRemoval.ABCICode(), response.Code)
 					require.Contains(t, response.Log, tc.expectedErr)
 					return false
 				},

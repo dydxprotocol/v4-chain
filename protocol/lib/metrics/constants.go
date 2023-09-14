@@ -156,6 +156,7 @@ const (
 	TotalOrdersClobPair                          = "total_orders_in_clob"
 	UnfilledLiquidationOrders                    = "unfilled_liquidation_orders"
 	UnknownPlaceOrders                           = "unknown_place_orders"
+	UnverifiedStatefulOrderRemoval               = "unverified_stateful_order_removal"
 	ValidateMatches                              = "validate_matches"
 	ValidateOrder                                = "validate_order"
 

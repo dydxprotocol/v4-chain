@@ -23,6 +23,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -46,6 +47,7 @@ type ClobKeepersTestContext struct {
 	PerpetualsKeeper  *perpkeeper.Keeper
 	StatsKeeper       *statskeeper.Keeper
 	RewardsKeeper     *rewardskeeper.Keeper
+	StakingKeeper     *stakingkeeper.Keeper
 	SubaccountsKeeper *subkeeper.Keeper
 	StoreKey          storetypes.StoreKey
 	MemKey            storetypes.StoreKey
@@ -120,6 +122,13 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			db,
 			cdc,
 		)
+		ks.StakingKeeper, _ = createStakingKeeper(
+			stateStore,
+			db,
+			cdc,
+			registry,
+			bankKeeper,
+		)
 		ks.SubaccountsKeeper, _ = createSubaccountsKeeper(
 			stateStore,
 			db,
@@ -142,6 +151,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.PerpetualsKeeper,
 			ks.StatsKeeper,
 			ks.RewardsKeeper,
+			ks.StakingKeeper,
 			ks.SubaccountsKeeper,
 			indexerEventManager,
 			indexerEventsTransientStoreKey,
@@ -178,6 +188,7 @@ func createClobKeeper(
 	perpKeeper *perpkeeper.Keeper,
 	statsKeeper *statskeeper.Keeper,
 	rewardsKeeper types.RewardsKeeper,
+	stakingKeeper types.StakingKeeper,
 	saKeeper *subkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
@@ -208,6 +219,7 @@ func createClobKeeper(
 		perpKeeper,
 		statsKeeper,
 		rewardsKeeper,
+		stakingKeeper,
 		indexerEventManager,
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		flags.GetDefaultClobFlags(),

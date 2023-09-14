@@ -48,11 +48,11 @@ func (msg *MsgProposedOperations) ValidateBasic() error {
 				// TODO: remove this case when reduce-only orders are enabled.
 				return errorsmod.Wrapf(
 					ErrInvalidMsgProposedOperations,
-					"order removals for invalid reduce-only orders are not allowed. Reduce-only orders" +
-					" are not currently supported.",
+					"order removals for invalid reduce-only orders are not allowed. Reduce-only orders"+
+						" are not currently supported.",
 				)
 			}
-			
+
 		default:
 			return errorsmod.Wrapf(
 				ErrInvalidMsgProposedOperations,

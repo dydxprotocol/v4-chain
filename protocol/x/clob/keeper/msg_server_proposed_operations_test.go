@@ -65,7 +65,6 @@ func TestProposedOperations(t *testing.T) {
 				require.NotNil(t, resp)
 			}
 
-
 			// Assert mock expectations.
 			result := mockKeeper.AssertExpectations(t)
 			require.True(t, result)

@@ -42,6 +42,7 @@ type (
 		perpetualsKeeper    types.PerpetualsKeeper
 		statsKeeper         types.StatsKeeper
 		rewardsKeeper       types.RewardsKeeper
+		stakingKeeper       types.StakingKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
 
 		memStoreInitialized *atomic.Bool
@@ -79,6 +80,7 @@ func NewKeeper(
 	perpetualsKeeper types.PerpetualsKeeper,
 	statsKeeper types.StatsKeeper,
 	rewardsKeeper types.RewardsKeeper,
+	stakingKeeper types.StakingKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	txDecoder sdk.TxDecoder,
 	clobFlags flags.ClobFlags,
@@ -102,6 +104,7 @@ func NewKeeper(
 		perpetualsKeeper:             perpetualsKeeper,
 		statsKeeper:                  statsKeeper,
 		rewardsKeeper:                rewardsKeeper,
+		stakingKeeper:                stakingKeeper,
 		indexerEventManager:          indexerEventManager,
 		memStoreInitialized:          &atomic.Bool{},
 		txDecoder:                    txDecoder,
