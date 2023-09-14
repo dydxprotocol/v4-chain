@@ -145,6 +145,7 @@ func CreateUpgradeHandler(
 
 		// Update memclob.
 		clobKeeper.MemClob = clobmodulememclob.NewMemClobPriceTimePriority(indexerEventManager.Enabled())
+		clobKeeper.PerpetualIdToClobPairId = make(map[uint32][]clobtypes.ClobPairId)
 		clobKeeper.InitMemClobOrderbooks(ctx)
 
 		return mm.RunMigrations(ctx, configurator, vm)
