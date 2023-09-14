@@ -452,6 +452,11 @@ var (
 		9003,
 		"Reduce-only is currently disabled",
 	)
+	ErrTradingDisabled = sdkerrors.Register(
+		ModuleName,
+		9004,
+		"Trading is currently disabled",
+	)
 
 	// Equity tier limit errors.
 	ErrInvalidEquityTierLimitConfig = sdkerrors.Register(
