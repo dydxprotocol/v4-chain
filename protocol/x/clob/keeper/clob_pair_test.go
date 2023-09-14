@@ -611,11 +611,11 @@ func TestUpdateClobPair(t *testing.T) {
 					indexerevents.SubtypeUpdateClobPair,
 					indexer_manager.GetB64EncodedEventMessage(
 						indexerevents.NewUpdateClobPairEvent(
-							clobPair.Id,
+							clobPair.GetClobPairId(),
 							types.ClobPair_STATUS_ACTIVE,
 							clobPair.QuantumConversionExponent,
-							clobPair.SubticksPerTick,
-							clobPair.StepBaseQuantums,
+							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
 						),
 					),
 				).Once().Return()

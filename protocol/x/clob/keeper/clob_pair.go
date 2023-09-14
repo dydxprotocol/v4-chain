@@ -443,11 +443,11 @@ func (k Keeper) UpdateClobPair(
 		indexerevents.SubtypeUpdateClobPair,
 		indexer_manager.GetB64EncodedEventMessage(
 			indexerevents.NewUpdateClobPairEvent(
-				clobPair.Id,
+				clobPair.GetClobPairId(),
 				clobPair.Status,
 				clobPair.QuantumConversionExponent,
-				clobPair.SubticksPerTick,
-				clobPair.StepBaseQuantums,
+				types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
 			),
 		),
 	)
