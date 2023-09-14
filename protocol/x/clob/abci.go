@@ -241,7 +241,7 @@ func PrepareCheckState(
 		} else {
 			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
 
-			if numAttemptedDeleveraging < keeper.MaxDeleveragedSubaccountsPerBlock {
+			if numAttemptedDeleveraging < keeper.MaxDeleveragingAttemptsPerBlock {
 				// The liquidation order was unfilled. Try to deleverage the subaccount.
 				subaccountId := liquidationOrders[i].GetSubaccountId()
 				perpetualId := liquidationOrders[i].MustGetLiquidatedPerpetualId()
