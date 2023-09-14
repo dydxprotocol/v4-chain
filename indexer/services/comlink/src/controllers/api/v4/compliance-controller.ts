@@ -25,6 +25,7 @@ class ComplianceController extends Controller {
     @Query() address: string,
   ): Promise<ComplianceResponse> {
     // TODO(IND-372): Add logic to either use cached data or query provider
+    // TODO(IND-369): Use Ellptic client
     const response:
     ComplianceClientResponse = await placeHolderProvider.client.getComplianceResponse(
       address,
