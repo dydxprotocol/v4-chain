@@ -560,4 +560,19 @@ func (k Keeper) UnsafeSetClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
 	// Write the `ClobPair` to state.
 	store.Set(types.ClobPairKey(clobPair.GetClobPairId()), b)
+
+	// Send UpdateClobPair to indexer.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpdateClobPair,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewUpdateClobPairEvent(
+				clobPair.Id,
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				clobPair.SubticksPerTick,
+				clobPair.StepBaseQuantums,
+			),
+		),
+	)
 }
