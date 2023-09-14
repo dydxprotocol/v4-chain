@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
@@ -71,6 +72,7 @@ var (
 		upgrade.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
+		ica.AppModuleBasic{},
 
 		// Custom modules
 		pricesmodule.AppModuleBasic{},
