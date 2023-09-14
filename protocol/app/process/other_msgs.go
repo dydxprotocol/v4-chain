@@ -4,7 +4,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	libprocess "github.com/dydxprotocol/v4-chain/protocol/lib/process"
 )
 
 // OtherMsgsTx represents tx msgs in the "other" category that can be validated.
@@ -44,7 +43,7 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 				)
 		}
 
-		if libprocess.IsDisallowClobOrderMsgInOtherTxs(msg) {
+		if IsDisallowClobOrderMsgInOtherTxs(msg) {
 			return nil,
 				errorsmod.Wrapf(
 					ErrUnexpectedMsgType,
