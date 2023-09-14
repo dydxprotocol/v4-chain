@@ -15,7 +15,9 @@ type OtherMsgsTx struct {
 // DecodeOtherMsgsTx returns a new `OtherMsgsTx` after validating the following:
 //   - decodes the given tx bytes
 //   - checks the num of msgs in the tx is not 0
-//   - checks the msgs do not contain "app-injected msgs"
+//   - checks the msgs do not contain "app-injected msgs" or "internal msgs" or "unsupported msgs"
+//   - checks the msgs do not contain "nested msgs" that fail `ValidateNestedMsg`
+//   - checks the msgs do not contain top-level msgs that are not allowed in OtherTxs
 //
 // If error occurs during any of the checks, returns error.
 func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, error) {
@@ -42,7 +44,7 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 				)
 		}
 
-		if libprocess.IsDisallowTopLevelMsgInOtherTxs(msg) {
+		if libprocess.IsDisallowClobOrderMsgInOtherTxs(msg) {
 			return nil,
 				errorsmod.Wrapf(
 					ErrUnexpectedMsgType,
