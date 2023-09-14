@@ -15,8 +15,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
+	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -269,6 +272,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		perpetuals        []perptypes.Perpetual
 		newFundingIndices []*big.Int // 1:1 mapped to perpetuals list
 		assets            []*asstypes.Asset
+		marketParamPrices []pricestypes.MarketParamPrice
 
 		// subaccount state
 		perpetualPositions []*types.PerpetualPosition
@@ -2056,6 +2060,73 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 		},
+		"2 updates, 1 update involves non-tradable perp": {
+			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			expectedErr:    types.ErrPerpNotTradable,
+			perpetuals: []perptypes.Perpetual{
+				*perptest.GeneratePerpetual(
+					perptest.WithId(100),
+					perptest.WithMarketId(100),
+				),
+				*perptest.GeneratePerpetual(
+					perptest.WithId(101),
+					perptest.WithMarketId(101),
+				),
+			},
+			marketParamPrices: []pricestypes.MarketParamPrice{
+				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100)),
+				*pricestest.GenerateMarketParamPrice(
+					pricestest.WithId(101),
+					pricestest.WithPriceValue(0),
+				),
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(100),
+					Quantums:     dtypes.NewInt(1_000_000_000),
+					FundingIndex: dtypes.NewInt(0),
+				},
+				{
+					PerpetualId:  uint32(101),
+					Quantums:     dtypes.NewInt(1_000_000_000),
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(100),
+					Quantums:     dtypes.NewInt(1_000_000_000),
+					FundingIndex: dtypes.NewInt(0),
+				},
+				{
+					PerpetualId:  uint32(101),
+					Quantums:     dtypes.NewInt(1_000_000_000),
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(1_000_000_000_000),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(100),
+							BigQuantumsDelta: big.NewInt(-1_000),
+						},
+						{
+							PerpetualId:      uint32(101),
+							BigQuantumsDelta: big.NewInt(1_000),
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+		},
 	}
 
 	for name, tc := range tests {
@@ -2067,6 +2138,15 @@ func TestUpdateSubaccounts(t *testing.T) {
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
 			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
 			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+
+			for _, m := range tc.marketParamPrices {
+				_, err := pricesKeeper.CreateMarket(
+					ctx,
+					m.Param,
+					m.Price,
+				)
+				require.NoError(t, err)
+			}
 
 			for _, a := range tc.assets {
 				_, err := assetsKeeper.CreateAsset(
@@ -2163,8 +2243,9 @@ func TestUpdateSubaccounts(t *testing.T) {
 func TestCanUpdateSubaccounts(t *testing.T) {
 	tests := map[string]struct {
 		// State.
-		perpetuals []perptypes.Perpetual
-		assets     []*asstypes.Asset
+		perpetuals        []perptypes.Perpetual
+		assets            []*asstypes.Asset
+		marketParamPrices []pricestypes.MarketParamPrice
 
 		// Subaccount state.
 		useEmptySubaccount bool
@@ -2622,6 +2703,53 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
+		"2 updates, 1 update involves non-tradable perp": {
+			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			expectedErr:    types.ErrPerpNotTradable,
+			perpetuals: []perptypes.Perpetual{
+				*perptest.GeneratePerpetual(
+					perptest.WithId(100),
+					perptest.WithMarketId(100),
+				),
+				*perptest.GeneratePerpetual(
+					perptest.WithId(101),
+					perptest.WithMarketId(101),
+				),
+			},
+			marketParamPrices: []pricestypes.MarketParamPrice{
+				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100)),
+				*pricestest.GenerateMarketParamPrice(
+					pricestest.WithId(101),
+					pricestest.WithPriceValue(0),
+				),
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(100),
+					Quantums:     dtypes.NewInt(1_000_000_000),
+					FundingIndex: dtypes.NewInt(0),
+				},
+				{
+					PerpetualId:  uint32(101),
+					Quantums:     dtypes.NewInt(1_000_000_000),
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(100),
+							BigQuantumsDelta: big.NewInt(-1_000),
+						},
+						{
+							PerpetualId:      uint32(101),
+							BigQuantumsDelta: big.NewInt(1_000),
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -2639,6 +2767,15 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					a.HasMarket,
 					a.MarketId,
 					a.AtomicResolution,
+				)
+				require.NoError(t, err)
+			}
+
+			for _, m := range tc.marketParamPrices {
+				_, err := pricesKeeper.CreateMarket(
+					ctx,
+					m.Param,
+					m.Price,
 				)
 				require.NoError(t, err)
 			}

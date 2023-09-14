@@ -29,6 +29,7 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
+	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -3141,6 +3142,74 @@ func TestSetMinNumVotesPerSample(t *testing.T) {
 			// Check that value in store is as expected.
 			got := keeper.GetMinNumVotesPerSample(ctx)
 			require.Equal(t, tc.minNumVotesPerSample, got)
+		})
+	}
+}
+
+func TestIsPerpetualTradable(t *testing.T) {
+	testCases := map[string]struct {
+		perp               types.Perpetual
+		marketParamPrice   pricestypes.MarketParamPrice
+		queryPerpId        uint32
+		expectedIsTradable bool
+		expectedErr        string
+	}{
+		"Is tradable": {
+			perp: *perptest.GeneratePerpetual(
+				perptest.WithId(1),
+				perptest.WithMarketId(1),
+			),
+			queryPerpId: 1,
+			marketParamPrice: *pricestest.GenerateMarketParamPrice(
+				pricestest.WithId(1),
+				pricestest.WithPriceValue(1000), // non-zero
+			),
+			expectedIsTradable: true,
+		},
+		"Is non-tradable due to zero oracle price": {
+			perp: *perptest.GeneratePerpetual(
+				perptest.WithId(1),
+				perptest.WithMarketId(1),
+			),
+			queryPerpId: 1,
+			marketParamPrice: *pricestest.GenerateMarketParamPrice(
+				pricestest.WithId(1),
+				pricestest.WithPriceValue(0),
+			),
+			expectedIsTradable: false,
+		},
+		"Error: Perp Id not found": {
+			perp: *perptest.GeneratePerpetual(
+				perptest.WithId(1),
+				perptest.WithMarketId(1),
+			),
+			queryPerpId: 100, // doesn't exist
+			marketParamPrice: *pricestest.GenerateMarketParamPrice(
+				pricestest.WithId(1),
+			),
+			expectedErr: "Perpetual does not exist",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, perpKeeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+			keepertest.CreateTestPricesAndPerpetualMarkets(
+				t,
+				ctx,
+				perpKeeper,
+				pricesKeeper,
+				[]types.Perpetual{tc.perp},
+				[]pricestypes.MarketParamPrice{tc.marketParamPrice},
+			)
+
+			isTradable, err := perpKeeper.IsPerpetualTradable(ctx, tc.queryPerpId)
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedIsTradable, isTradable)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr)
+			}
 		})
 	}
 }

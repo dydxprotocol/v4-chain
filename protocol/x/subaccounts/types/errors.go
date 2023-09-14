@@ -31,6 +31,7 @@ var (
 	// 400 - 499: perpetual position related.
 	ErrPerpPositionsOutOfOrder = errorsmod.Register(ModuleName, 400, "perpetual positions are out of order")
 	ErrPerpPositionZeroQuantum = errorsmod.Register(ModuleName, 401, "perpetual position's quantum cannot be zero")
+	ErrPerpNotTradable         = errorsmod.Register(ModuleName, 402, "perpetual is not tradable")
 
 	// 500 - 599: transfer related.
 	ErrAssetTransferQuantumsNotPositive = errorsmod.Register(

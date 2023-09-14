@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -442,6 +443,21 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
+		// Check all updated perps are tradable.
+		for _, perpUpdate := range u.PerpetualUpdates {
+			tradable, err := k.perpetualsKeeper.IsPerpetualTradable(ctx, perpUpdate.PerpetualId)
+			if err != nil {
+				return false, nil, err
+			}
+			if !tradable {
+				return false, nil, errorsmod.Wrapf(
+					types.ErrPerpNotTradable,
+					"perpetual %d",
+					perpUpdate.PerpetualId,
+				)
+			}
+		}
+
 		// Get the new collateralization and margin requirements with the update applied.
 		bigNewNetCollateral,
 			bigNewInitialMargin,
