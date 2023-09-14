@@ -132,12 +132,3 @@ func TestPanicServiceNotResponding(t *testing.T) {
 	panicFunc := PanicServiceNotResponding("test-service")
 	require.Panics(t, panicFunc)
 }
-
-// This test is disabled because the panic is not recoverable, since it's thrown
-// in a separate goroutine.
-//func TestUpdateFrequencyMonitor_Panics(t *testing.T) {
-//	// Expect the following sequence to panic
-//	ufm := NewUpdateFrequencyMonitor()
-//	ufm.RegisterDaemonService("test-service", 100*time.Millisecond)
-//	time.Sleep(150 * time.Millisecond)
-//}
