@@ -27,9 +27,9 @@ func TestIsDisallowClobOrderMsgInOtherTxs(t *testing.T) {
 		switch msg.(type) {
 		case *clobtypes.MsgCancelOrder, *clobtypes.MsgPlaceOrder:
 			// The sample msgs are short-term orders, so we expect these to be disallowed.
-			require.True(t, result)
+			require.True(t, result) // true -> disallow
 		default:
-			require.False(t, result)
+			require.False(t, result) // false -> not disallow -> allow
 		}
 	}
 
@@ -40,6 +40,6 @@ func TestIsDisallowClobOrderMsgInOtherTxs(t *testing.T) {
 	}
 	for _, msg := range longTermOrders {
 		result := process.IsDisallowClobOrderMsgInOtherTxs(msg)
-		require.False(t, result) // (false = not disallow = allow).
+		require.False(t, result) // false -> not disallow -> allow
 	}
 }
