@@ -5,6 +5,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	v0_2_2 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v0.2.2"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -56,6 +57,11 @@ func (cd ClobDecorator) AnteHandle(
 
 	if !isSingleClobMsgTx {
 		return next(ctx, tx, simulate)
+	}
+
+	// Disable trading until after the v0.2.2 upgrade.
+	if ctx.BlockHeight() <= v0_2_2.UpgradeHeight+int64(types.ShortBlockWindow) {
+		return ctx, types.ErrTradingDisabled
 	}
 
 	msgs := tx.GetMsgs()

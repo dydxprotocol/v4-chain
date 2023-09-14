@@ -348,6 +348,11 @@ func (_m *MemClob) SetMemclobGauges(ctx types.Context) {
 	_m.Called(ctx)
 }
 
+// UnsafeResetMemclob provides a mock function with given fields: ctx
+func (_m *MemClob) UnsafeResetMemclob(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 type mockConstructorTestingTNewMemClob interface {
 	mock.TestingT
 	Cleanup(func())
