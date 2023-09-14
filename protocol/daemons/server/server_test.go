@@ -168,6 +168,7 @@ func createServerWithMocks(
 		grpc.SocketPath,
 		"test",
 	)
+	server.DisableUpdateMonitoringForTesting()
 	return server
 }
 

@@ -1,4 +1,4 @@
-package server
+package types
 
 import "time"
 
@@ -9,9 +9,11 @@ const (
 	// a long time to start the protocol, it's possible this value could be increased.
 	DaemonStartupGracePeriod = 30 * time.Second
 
+	// MaximumLoopDelayMultiple defines the maximum acceptable update delay for a daemon as a multiple of the
+	// daemon's loop delay.
 	MaximumLoopDelayMultiple = 3
 
-	liquidationsDaemonServiceName = "liquidations-daemon"
-	pricefeedDaemonServiceName    = "pricefeed-daemon"
-	bridgeDaemonServiceName       = "bridge-daemon"
+	LiquidationsDaemonServiceName = "liquidations-daemon"
+	PricefeedDaemonServiceName    = "pricefeed-daemon"
+	BridgeDaemonServiceName       = "bridge-daemon"
 )

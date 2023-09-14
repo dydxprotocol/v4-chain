@@ -53,7 +53,7 @@ func TestRegisterDaemonService_DoubleRegistrationFails(t *testing.T) {
 
 	// Register the same daemon service again. This should fail, and 50ms update frequency should be ignored.
 	err = ufm.RegisterDaemonService("test-service", 50*time.Millisecond)
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "service already registered")
 
 	// Confirm that the original 200ms update frequency is still in effect. 50ms would have triggered a panic.
 	// Note there is a possibility that 200ms will still cause a panic due to the semantics of Sleep, which is

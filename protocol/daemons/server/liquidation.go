@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -30,7 +31,7 @@ func (server *Server) WithLiquidatableSubaccountIds(
 // maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
 // respond regularly.
 func (server *Server) ExpectLiquidationsDaemon(maximumAcceptableUpdateDelay time.Duration) {
-	server.registerDaemon(liquidationsDaemonServiceName, maximumAcceptableUpdateDelay)
+	server.registerDaemon(types.LiquidationsDaemonServiceName, maximumAcceptableUpdateDelay)
 }
 
 // LiquidateSubaccounts stores the list of potentially liquidatable subaccount ids
@@ -46,7 +47,10 @@ func (s *Server) LiquidateSubaccounts(
 		metrics.Received,
 		metrics.Count,
 	)
-	_ = s.reportResponse(liquidationsDaemonServiceName)
+	if err := s.reportResponse(types.LiquidationsDaemonServiceName); err != nil {
+		return nil, err
+	}
+
 	s.liquidatableSubaccountIds.UpdateSubaccountIds(req.SubaccountIds)
 	return &api.LiquidateSubaccountsResponse{}, nil
 }

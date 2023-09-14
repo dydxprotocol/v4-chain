@@ -61,19 +61,21 @@ func (server *Server) Stop() {
 	server.gsrv.Stop()
 }
 
+// DisableUpdateMonitoringForTesting disables the update monitor for testing purposes. This is needed in integration
+// tests that do not run the full protocol.
+func (server *Server) DisableUpdateMonitoringForTesting() {
+	server.updateMonitor.DisableForTesting()
+}
+
 // registerDaemon registers a daemon service with the update monitor.
 func (server *Server) registerDaemon(
 	daemonKey string,
 	maximumAcceptableUpdateDelay time.Duration,
 ) {
-	go func() {
-		// Give the protocol time to come up and start the gRPC query service. The daemons are unable
-		// to complete startup until this connection is established.
-		time.Sleep(DaemonStartupGracePeriod)
-		if err := server.updateMonitor.RegisterDaemonService(daemonKey, maximumAcceptableUpdateDelay); err != nil {
-			server.logger.Error("Failed to register daemon service with update monitor", "error", err)
-		}
-	}()
+	if err := server.updateMonitor.RegisterDaemonService(daemonKey, maximumAcceptableUpdateDelay); err != nil {
+		server.logger.Error("Failed to register daemon service with update monitor", "error", err)
+		panic(err)
+	}
 }
 
 // reportResponse reports a response from a daemon service with the update monitor. This is used to

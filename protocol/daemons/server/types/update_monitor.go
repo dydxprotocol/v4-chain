@@ -21,6 +21,9 @@ type UpdateMonitor struct {
 	// stopped indicates whether the monitor has been stopped. Additional daemon services cannot be registered
 	// after the monitor has been stopped.
 	stopped bool
+	// disabled indicates whether the monitor has been disabled. This is used to disable the monitor in testApp
+	// tests, where app.New is not executed.
+	disabled bool
 	// lock is used to synchronize access to the monitor.
 	lock sync.Mutex
 }
@@ -30,6 +33,13 @@ func NewUpdateFrequencyMonitor() *UpdateMonitor {
 	return &UpdateMonitor{
 		serviceToUpdateMetadata: make(map[string]updateMetadata),
 	}
+}
+
+func (ufm *UpdateMonitor) DisableForTesting() {
+	ufm.lock.Lock()
+	defer ufm.lock.Unlock()
+
+	ufm.disabled = true
 }
 
 // RegisterDaemonServiceWithCallback registers a new daemon service with the update frequency monitor. If the daemon
@@ -44,6 +54,11 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 	ufm.lock.Lock()
 	defer ufm.lock.Unlock()
 
+	// Don't register daemon services if the monitor has been disabled.
+	if ufm.disabled {
+		return nil
+	}
+
 	// Don't register additional daemon services if the monitor has already been stopped.
 	// This could be a concern for short-running integration test cases, where the network
 	// stops before all daemon services have been registered.
@@ -57,7 +72,7 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 	}
 
 	ufm.serviceToUpdateMetadata[service] = updateMetadata{
-		timer:           time.AfterFunc(maximumAcceptableUpdateDelay, callback),
+		timer:           time.AfterFunc(DaemonStartupGracePeriod+maximumAcceptableUpdateDelay, callback),
 		updateFrequency: maximumAcceptableUpdateDelay,
 	}
 	return nil
@@ -108,6 +123,11 @@ func (ufm *UpdateMonitor) RegisterValidResponse(service string) error {
 	ufm.lock.Lock()
 	defer ufm.lock.Unlock()
 
+	// Don't return an error if the monitor has been disabled.
+	if ufm.disabled {
+		return nil
+	}
+
 	// Don't bother to reset the timer if the monitor has already been stopped.
 	if ufm.stopped {
 		return nil
@@ -115,7 +135,7 @@ func (ufm *UpdateMonitor) RegisterValidResponse(service string) error {
 
 	metadata, ok := ufm.serviceToUpdateMetadata[service]
 	if !ok {
-		return fmt.Errorf("service not registered")
+		return fmt.Errorf("service %v not registered", service)
 	}
 
 	metadata.timer.Reset(metadata.updateFrequency)

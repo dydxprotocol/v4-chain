@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
@@ -27,7 +28,7 @@ func (server *Server) WithBridgeEventManager(
 // maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
 // respond regularly.
 func (server *Server) ExpectBridgeDaemon(maximumAcceptableUpdateDelay time.Duration) {
-	server.registerDaemon(bridgeDaemonServiceName, maximumAcceptableUpdateDelay)
+	server.registerDaemon(types.BridgeDaemonServiceName, maximumAcceptableUpdateDelay)
 }
 
 // AddBridgeEvents stores any bridge events recognized by the daemon
@@ -39,7 +40,9 @@ func (s *Server) AddBridgeEvents(
 	*api.AddBridgeEventsResponse,
 	error,
 ) {
-	_ = s.reportResponse(bridgeDaemonServiceName)
+	if err := s.reportResponse(types.BridgeDaemonServiceName); err != nil {
+		return nil, err
+	}
 	if err := s.bridgeEventManager.AddBridgeEvents(req.BridgeEvents); err != nil {
 		return nil, err
 	}
