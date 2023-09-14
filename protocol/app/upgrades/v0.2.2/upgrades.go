@@ -139,7 +139,9 @@ func CreateUpgradeHandler(
 		for _, order := range untriggeredConditionalOrders {
 			clobKeeper.MustRemoveStatefulOrder(ctx, order.OrderId)
 		}
-		clobKeeper.UntriggeredConditionalOrders = make(map[clobtypes.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
+		clobKeeper.UntriggeredConditionalOrders = make(
+			map[clobtypes.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders,
+		)
 
 		// Update memclob.
 		clobKeeper.MemClob = clobmodulememclob.NewMemClobPriceTimePriority(indexerEventManager.Enabled())
