@@ -1,4 +1,5 @@
 import { stats } from '@dydxprotocol-indexer/base';
+import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import {
@@ -7,6 +8,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { placeHolderProvider } from '../../../helpers/compliance/compliance-clients';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -19,23 +21,17 @@ const controllerName: string = 'compliance-controller';
 @Route('screen')
 class ComplianceController extends Controller {
   @Get('/')
-  screen(
+  async screen(
     @Query() address: string,
-  ): ComplianceResponse {
+  ): Promise<ComplianceResponse> {
     // TODO(IND-372): Add logic to either use cached data or query provider
-    // Dummy logic for front-end testing, returns true if the address ends in a letter between
-    // 'a' and 'm'
-    if (
-      address.charCodeAt(address.length - 1) > 'a'.charCodeAt(0) &&
-      address.charCodeAt(address.length - 1) < 'm'.charCodeAt(0)
-    ) {
-      return {
-        restricted: true,
-      };
-    }
+    const response:
+    ComplianceClientResponse = await placeHolderProvider.client.getComplianceResponse(
+      address,
+    );
 
     return {
-      restricted: false,
+      restricted: response.blocked,
     };
   }
 }
@@ -52,7 +48,7 @@ router.get(
   }),
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
-  (req: express.Request, res: express.Response) => {
+  async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
 
     const {
@@ -63,7 +59,7 @@ router.get(
 
     try {
       const controller: ComplianceController = new ComplianceController();
-      const response: ComplianceResponse = controller.screen(address);
+      const response: ComplianceResponse = await controller.screen(address);
 
       return res.send(response);
     } catch (error) {
