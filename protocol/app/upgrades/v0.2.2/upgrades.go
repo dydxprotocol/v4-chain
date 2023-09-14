@@ -7,6 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	clobmodulememclob "github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 func CreateUpgradeHandler(
@@ -138,8 +139,9 @@ func CreateUpgradeHandler(
 		for _, order := range untriggeredConditionalOrders {
 			clobKeeper.MustRemoveStatefulOrder(ctx, order.OrderId)
 		}
+		clobKeeper.UntriggeredConditionalOrders = make(map[clobtypes.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
 
-		// update memclob.
+		// Update memclob.
 		clobKeeper.MemClob = clobmodulememclob.NewMemClobPriceTimePriority(indexerEventManager.Enabled())
 		clobKeeper.InitMemClobOrderbooks(ctx)
 
