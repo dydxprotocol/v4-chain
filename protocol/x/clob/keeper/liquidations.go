@@ -1,8 +1,11 @@
 package keeper
 
 import (
+	"bytes"
 	"math"
 	"math/big"
+	"sort"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -806,4 +809,68 @@ func (k Keeper) ConvertFillablePriceToSubticks(
 	}
 
 	return types.Subticks(boundedSubticks)
+}
+
+// SortLiquidationOrders deterministically sorts the liquidation orders in place.
+// Orders are first ordered by their absolute percentage difference from the oracle price in descending order,
+// followed by the their size in quote quantums in descending order, and finally by order hashes.
+func (k Keeper) SortLiquidationOrders(
+	ctx sdk.Context,
+	liquidationOrders []types.LiquidationOrder,
+) {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.SortLiquidationOrders)
+
+	sort.Slice(liquidationOrders, func(i, j int) bool {
+		x, y := liquidationOrders[i], liquidationOrders[j]
+
+		// First, sort by abs percentage difference from oracle price in descending order.
+		xAbsPercentageDiffFromOraclePrice := k.getAbsPercentageDiffFromOraclePrice(ctx, x)
+		yAbsPercentageDiffFromOraclePrice := k.getAbsPercentageDiffFromOraclePrice(ctx, y)
+		if xAbsPercentageDiffFromOraclePrice.Cmp(yAbsPercentageDiffFromOraclePrice) != 0 {
+			return xAbsPercentageDiffFromOraclePrice.Cmp(yAbsPercentageDiffFromOraclePrice) == 1
+		}
+
+		// Then sort by order quote quantums in descending order.
+		xQuoteQuantums := k.getQuoteQuantumsForLiquidationOrder(ctx, x)
+		yQuoteQuantums := k.getQuoteQuantumsForLiquidationOrder(ctx, y)
+		if xQuoteQuantums.Cmp(yQuoteQuantums) != 0 {
+			return xQuoteQuantums.Cmp(yQuoteQuantums) == 1
+		}
+
+		// Sort by order hash by default.
+		xHash := x.GetOrderHash()
+		yHash := y.GetOrderHash()
+		return bytes.Compare(xHash[:], yHash[:]) == -1
+	})
+}
+
+func (k Keeper) getAbsPercentageDiffFromOraclePrice(
+	ctx sdk.Context,
+	liquidationOrder types.LiquidationOrder,
+) *big.Rat {
+	clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
+	oraclePriceRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+	fillablePriceRat := liquidationOrder.GetOrderSubticks().ToBigRat()
+
+	return new(big.Rat).Abs(
+		new(big.Rat).Quo(
+			new(big.Rat).Sub(fillablePriceRat, oraclePriceRat),
+			oraclePriceRat,
+		),
+	)
+}
+
+func (k Keeper) getQuoteQuantumsForLiquidationOrder(
+	ctx sdk.Context,
+	liquidationOrder types.LiquidationOrder,
+) *big.Int {
+	quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		liquidationOrder.MustGetLiquidatedPerpetualId(),
+		liquidationOrder.GetBaseQuantums().ToBigInt(),
+	)
+	if err != nil {
+		panic(err)
+	}
+	return quoteQuantums
 }
