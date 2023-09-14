@@ -19,11 +19,13 @@ func (k msgServer) ProposedOperations(
 		ctx,
 		msg.GetOperationsQueue(),
 	); err != nil {
-		return nil, errorsmod.Wrapf(
+		err = errorsmod.Wrapf(
 			err,
 			"Block height: %d",
 			ctx.BlockHeight(),
 		)
+		ctx.Logger().Error(err.Error())
+		return nil, err
 	}
 
 	return &types.MsgProposedOperationsResponse{}, nil
