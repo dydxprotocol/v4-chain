@@ -110,7 +110,6 @@ func EndBlocker(
 func PrepareCheckState(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
-	memClob types.MemClob,
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) {
 	// Get the events generated from processing the matches in the latest block.
@@ -126,7 +125,7 @@ func PrepareCheckState(
 	}
 
 	// 1. Remove all operations in the local validators operations queue from the memclob.
-	localValidatorOperationsQueue, shortTermOrderTxBytes := memClob.GetOperationsToReplay(ctx)
+	localValidatorOperationsQueue, shortTermOrderTxBytes := keeper.MemClob.GetOperationsToReplay(ctx)
 	keeper.Logger(ctx).Debug(
 		"Clearing local operations queue",
 		"localValidatorOperationsQueue",
@@ -135,11 +134,11 @@ func PrepareCheckState(
 		ctx.BlockHeight(),
 	)
 
-	memClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
+	keeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
 
 	// 2. Purge invalid state from the memclob.
 	offchainUpdates := types.NewOffchainUpdates()
-	offchainUpdates = memClob.PurgeInvalidMemclobState(
+	offchainUpdates = keeper.MemClob.PurgeInvalidMemclobState(
 		ctx,
 		processProposerMatchesEvents.OrderIdsFilledInLastBlock,
 		processProposerMatchesEvents.ExpiredStatefulOrderIds,
@@ -163,7 +162,7 @@ func PrepareCheckState(
 	)
 
 	// 5. Replay the local validator’s operations onto the book.
-	replayUpdates := memClob.ReplayOperations(
+	replayUpdates := keeper.MemClob.ReplayOperations(
 		ctx,
 		localValidatorOperationsQueue,
 		shortTermOrderTxBytes,
@@ -271,7 +270,7 @@ func PrepareCheckState(
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
-	newLocalValidatorOperationsQueue, _ := memClob.GetOperationsToReplay(ctx)
+	newLocalValidatorOperationsQueue, _ := keeper.MemClob.GetOperationsToReplay(ctx)
 	keeper.Logger(ctx).Debug(
 		"Local operations queue after PrepareCheckState",
 		"newLocalValidatorOperationsQueue",
@@ -281,5 +280,5 @@ func PrepareCheckState(
 	)
 
 	// Set per-orderbook gauges.
-	memClob.SetMemclobGauges(ctx)
+	keeper.MemClob.SetMemclobGauges(ctx)
 }

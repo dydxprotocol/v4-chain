@@ -108,7 +108,6 @@ type AppModule struct {
 	accountKeeper             types.AccountKeeper
 	bankKeeper                types.BankKeeper
 	subaccountsKeeper         types.SubaccountsKeeper
-	memClob                   types.MemClob
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds
 }
 
@@ -118,7 +117,6 @@ func NewAppModule(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	subaccountsKeeper types.SubaccountsKeeper,
-	memClob types.MemClob,
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) AppModule {
 	return AppModule{
@@ -127,7 +125,6 @@ func NewAppModule(
 		accountKeeper:             accountKeeper,
 		bankKeeper:                bankKeeper,
 		subaccountsKeeper:         subaccountsKeeper,
-		memClob:                   memClob,
 		liquidatableSubaccountIds: liquidatableSubaccountIds,
 	}
 }
@@ -197,7 +194,6 @@ func (am AppModule) Commit(ctx sdk.Context) {
 	PrepareCheckState(
 		ctx,
 		*am.keeper,
-		am.memClob,
 		am.liquidatableSubaccountIds,
 	)
 }
