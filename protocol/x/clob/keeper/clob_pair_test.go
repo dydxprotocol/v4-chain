@@ -575,17 +575,50 @@ func TestUpdateClobPair(t *testing.T) {
 	}{
 		"Succeeds with valid status transition": {
 			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
-				// write a clob pair to the store with status initializing
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
-
 				clobPair := constants.ClobPair_Btc
-				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
-				b := cdc.MustMarshal(&clobPair)
-				store.Set(types.ClobPairKey(
-					types.ClobPairId(clobPair.Id),
-				), b)
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							0,
+							0,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+							types.ClobPair_STATUS_INITIALIZING,
+							clobPair.QuantumConversionExponent,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+						),
+					),
+				).Once().Return()
+
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
+					clobPair.Id,
+					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					types.ClobPair_STATUS_INITIALIZING,
+				)
+				require.NoError(t, err)
+
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypeUpdateClobPair,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewUpdateClobPairEvent(
+							clobPair.Id,
+							types.ClobPair_STATUS_ACTIVE,
+							clobPair.QuantumConversionExponent,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+						),
+					),
+				).Once().Return()
 			},
 			status: types.ClobPair_STATUS_ACTIVE,
 		},
@@ -652,7 +685,7 @@ func TestUpdateClobPair(t *testing.T) {
 						),
 					),
 				).Once().Return()
-
+				
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobPair.Id,
@@ -691,6 +724,7 @@ func TestUpdateClobPair(t *testing.T) {
 				)
 			} else {
 				err := ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
+				mockIndexerEventManager.AssertExpectations(t)
 
 				if tc.expectedErr != "" {
 					require.ErrorContains(t, err, tc.expectedErr)
