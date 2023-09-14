@@ -34,13 +34,13 @@ func NewUpdateFrequencyMonitor() *UpdateMonitor {
 
 // RegisterDaemonServiceWithCallback registers a new daemon service with the update frequency monitor. If the daemon
 // service fails to respond within the maximum acceptable update delay, the monitor will execute the callback function.
-// This method is synchronized. The method returns true if the daemon service was successfully registered,
-// and false if the daemon service was already registered or the monitor has already been stopped.
+// This method is synchronized. The method returns an error if the daemon service was already registered or the
+// monitor has already been stopped.
 func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 	service string,
 	maximumAcceptableUpdateDelay time.Duration,
 	callback func(),
-) bool {
+) error {
 	ufm.lock.Lock()
 	defer ufm.lock.Unlock()
 
@@ -48,19 +48,19 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 	// This could be a concern for short-running integration test cases, where the network
 	// stops before all daemon services have been registered.
 	if ufm.stopped {
-		return false
+		return fmt.Errorf("monitor has been stopped")
 	}
 
 	_, ok := ufm.serviceToUpdateMetadata[service]
 	if ok {
-		return false
+		return fmt.Errorf("service already registered")
 	}
 
 	ufm.serviceToUpdateMetadata[service] = updateMetadata{
 		timer:           time.AfterFunc(maximumAcceptableUpdateDelay, callback),
 		updateFrequency: maximumAcceptableUpdateDelay,
 	}
-	return true
+	return nil
 }
 
 // PanicServiceNotResponding returns a function that panics with a message indicating that the specified daemon
@@ -73,12 +73,12 @@ func PanicServiceNotResponding(service string) func() {
 
 // RegisterDaemonService registers a new daemon service with the update frequency monitor. If the daemon service
 // fails to respond within the maximum acceptable update delay, the monitor will execute a panic and halt the protocol.
-// This method is synchronized. The method returns true if the daemon service was successfully registered,
-// and false if the daemon service was already registered or the monitor has already been stopped.
+// This method is synchronized. The method an error if the daemon service was already registered or the monitor has
+// already been stopped.
 func (ufm *UpdateMonitor) RegisterDaemonService(
 	service string,
 	maximumAcceptableUpdateDelay time.Duration,
-) bool {
+) error {
 	return ufm.RegisterDaemonServiceWithCallback(
 		service,
 		maximumAcceptableUpdateDelay,

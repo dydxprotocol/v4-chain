@@ -12,8 +12,8 @@ import (
 
 func TestRegisterDaemonService_Success(t *testing.T) {
 	ufm := NewUpdateFrequencyMonitor()
-	success := ufm.RegisterDaemonService("test-service", 200*time.Millisecond)
-	require.True(t, success)
+	err := ufm.RegisterDaemonService("test-service", 200*time.Millisecond)
+	require.NoError(t, err)
 
 	// As long as responses come in before the 200ms deadline, no panic should occur.
 	time.Sleep(80 * time.Millisecond)
@@ -29,10 +29,10 @@ func TestRegisterDaemonServiceWithCallback_Success(t *testing.T) {
 	callbackCalled := atomic.Bool{}
 
 	ufm := NewUpdateFrequencyMonitor()
-	success := ufm.RegisterDaemonServiceWithCallback("test-service", 200*time.Millisecond, func() {
+	err := ufm.RegisterDaemonServiceWithCallback("test-service", 200*time.Millisecond, func() {
 		callbackCalled.Store(true)
 	})
-	require.True(t, success)
+	require.NoError(t, err)
 
 	// As long as responses come in before the 200ms deadline, no panic should occur.
 	time.Sleep(80 * time.Millisecond)
@@ -48,12 +48,12 @@ func TestRegisterDaemonServiceWithCallback_Success(t *testing.T) {
 
 func TestRegisterDaemonService_DoubleRegistrationFails(t *testing.T) {
 	ufm := NewUpdateFrequencyMonitor()
-	success := ufm.RegisterDaemonService("test-service", 200*time.Millisecond)
-	require.True(t, success)
+	err := ufm.RegisterDaemonService("test-service", 200*time.Millisecond)
+	require.NoError(t, err)
 
 	// Register the same daemon service again. This should fail, and 50ms update frequency should be ignored.
-	success = ufm.RegisterDaemonService("test-service", 50*time.Millisecond)
-	require.False(t, success)
+	err = ufm.RegisterDaemonService("test-service", 50*time.Millisecond)
+	require.NoError(t, err)
 
 	// Confirm that the original 200ms update frequency is still in effect. 50ms would have triggered a panic.
 	// Note there is a possibility that 200ms will still cause a panic due to the semantics of Sleep, which is
@@ -71,16 +71,16 @@ func TestRegisterDaemonServiceWithCallback_DoubleRegistrationFails(t *testing.T)
 
 	ufm := NewUpdateFrequencyMonitor()
 	// First registration should succeed.
-	success := ufm.RegisterDaemonServiceWithCallback("test-service", 200*time.Millisecond, func() {
+	err := ufm.RegisterDaemonServiceWithCallback("test-service", 200*time.Millisecond, func() {
 		callback1Called.Store(true)
 	})
-	require.True(t, success)
+	require.NoError(t, err)
 
 	// Register the same daemon service again. This should fail, and 50ms update frequency should be ignored.
-	success = ufm.RegisterDaemonServiceWithCallback("test-service", 50*time.Millisecond, func() {
+	err = ufm.RegisterDaemonServiceWithCallback("test-service", 50*time.Millisecond, func() {
 		callback2Called.Store(true)
 	})
-	require.False(t, success)
+	require.ErrorContains(t, err, "service already registered")
 
 	// Validate that the original callback is still in effect for the original 200ms update frequency.
 	// The 50ms update frequency should have invoked a callback if it were applied.
@@ -102,8 +102,8 @@ func TestRegisterDaemonServiceWithCallback_DoubleRegistrationFails(t *testing.T)
 func TestRegisterDaemonService_RegistrationFailsAfterStop(t *testing.T) {
 	ufm := NewUpdateFrequencyMonitor()
 	ufm.Stop()
-	success := ufm.RegisterDaemonService("test-service", 50*time.Millisecond)
-	require.False(t, success)
+	err := ufm.RegisterDaemonService("test-service", 50*time.Millisecond)
+	require.ErrorContains(t, err, "monitor has been stopped")
 
 	// Any accidentally scheduled functions with panics should fire before this timer expires.
 	time.Sleep(100 * time.Millisecond)
@@ -116,10 +116,10 @@ func TestRegisterDaemonServiceWithCallback_RegistrationFailsAfterStop(t *testing
 	callbackCalled := atomic.Bool{}
 
 	// Registering a daemon service with a callback should fail after the monitor has been stopped.
-	success := ufm.RegisterDaemonServiceWithCallback("test-service", 50*time.Millisecond, func() {
+	err := ufm.RegisterDaemonServiceWithCallback("test-service", 50*time.Millisecond, func() {
 		callbackCalled.Store(true)
 	})
-	require.False(t, success)
+	require.ErrorContains(t, err, "monitor has been stopped")
 
 	// Wait until after the callback duration has expired. The callback should not be called.
 	time.Sleep(75 * time.Millisecond)

@@ -70,7 +70,9 @@ func (server *Server) registerDaemon(
 		// Give the protocol time to come up and start the gRPC query service. The daemons are unable
 		// to complete startup until this connection is established.
 		time.Sleep(DaemonStartupGracePeriod)
-		server.updateMonitor.RegisterDaemonService(daemonKey, maximumAcceptableUpdateDelay)
+		if err := server.updateMonitor.RegisterDaemonService(daemonKey, maximumAcceptableUpdateDelay); err != nil {
+			server.logger.Error("Failed to register daemon service with update monitor", "error", err)
+		}
 	}()
 }
 
