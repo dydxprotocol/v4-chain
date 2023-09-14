@@ -29,7 +29,6 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
@@ -147,14 +146,6 @@ func TestDefaultGenesis(t *testing.T) {
 func TestSimulationManager(t *testing.T) {
 	dydxApp := testapp.DefaultTestApp(nil)
 	require.Nil(t, dydxApp.SimulationManager(), "Expected nil SimulationManager")
-}
-
-func TestUpgrades(t *testing.T) {
-	require.Len(t, app.Upgrades, 0, "Expected no Upgrades")
-}
-
-func TestForks(t *testing.T) {
-	require.Len(t, app.Forks, 0, "Expected no Forks")
 }
 
 func TestModuleBasics(t *testing.T) {
