@@ -20,14 +20,14 @@ export default class ComplianceDataModel extends Model {
       required: [
         'address',
         'provider',
-        'sanctioned',
+        'blocked',
         'updatedAt',
       ],
       properties: {
         address: { type: 'string' },
         provider: { type: 'string', enum: [...Object.values(ComplianceProvider)] },
         chain: { type: ['string', 'null'], default: null },
-        sanctioned: { type: 'boolean' },
+        blocked: { type: 'boolean' },
         riskScore: { type: ['string', 'null'], pattern: NumericPattern, default: null },
         updatedAt: { type: 'string', format: 'date-time' },
       },
@@ -40,7 +40,7 @@ export default class ComplianceDataModel extends Model {
 
   chain?: string;
 
-  sanctioned!: boolean;
+  blocked!: boolean;
 
   riskScore?: string;
 

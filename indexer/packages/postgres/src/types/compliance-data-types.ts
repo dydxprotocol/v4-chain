@@ -10,7 +10,7 @@ export interface ComplianceDataCreateObject {
   address: string;
   provider: string;
   chain?: string;
-  sanctioned: boolean;
+  blocked: boolean;
   riskScore?: string;
   updatedAt: IsoString;
 }
@@ -19,7 +19,7 @@ export interface ComplianceDataUpdateObject {
   address: string;
   provider: string;
   chain?: string;
-  sanctioned?: boolean;
+  blocked?: boolean;
   riskScore?: string;
   updatedAt?: IsoString;
 }
@@ -28,7 +28,7 @@ export enum ComplianceDataColumns {
   address = 'address',
   provider = 'provider',
   chain = 'chain',
-  sanctioned = 'sanctioned',
+  blocked = 'blocked',
   riskScore = 'riskScore',
   updatedAt = 'updatedAt',
 }

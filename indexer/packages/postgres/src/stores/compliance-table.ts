@@ -17,6 +17,7 @@ export async function findAll(
   {
     updatedBeforeOrAt,
     provider,
+    blocked,
     limit,
   }: ComplianceDataQueryConfig,
   requiredFields: QueryableField[],
@@ -26,6 +27,7 @@ export async function findAll(
     {
       updatedBeforeOrAt,
       provider,
+      blocked,
       limit,
     } as QueryConfig,
     requiredFields,
@@ -42,6 +44,10 @@ export async function findAll(
 
   if (provider !== undefined) {
     baseQuery = baseQuery.where(ComplianceDataColumns.provider, provider);
+  }
+
+  if (blocked !== undefined) {
+    baseQuery = baseQuery.where(ComplianceDataColumns.blocked, blocked);
   }
 
   if (options.orderBy !== undefined) {

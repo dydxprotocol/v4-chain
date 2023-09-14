@@ -215,7 +215,7 @@ export interface FundingIndexUpdatesFromDatabase extends IdBasedModelFromDatabas
 export interface ComplianceDataFromDatabase {
   address: string;
   chain?: string;
-  sanctioned: boolean;
+  blocked: boolean;
   riskScore?: string;
   updatedAt: string;
 }

@@ -9,7 +9,7 @@ export async function up(knex: Knex): Promise<void> {
         'ELLIPTIC',
       ]).notNullable();
       table.string('chain').nullable();
-      table.boolean('sanctioned').notNullable();
+      table.boolean('blocked').notNullable();
       table.decimal('riskScore').nullable();
       table.timestamp('updatedAt').notNullable();
 
@@ -18,6 +18,7 @@ export async function up(knex: Knex): Promise<void> {
 
       // Index
       table.index(['updatedAt']);
+      table.index(['blocked']);
     });
 }
 

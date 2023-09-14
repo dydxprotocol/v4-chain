@@ -6,9 +6,9 @@ import {
   teardown,
 } from '../../src/helpers/db-helpers';
 import {
-  sanctionedComplianceData,
-  sanctionedAddress,
-  nonSanctionedComplianceData,
+  blockedComplianceData,
+  blockedAddress,
+  nonBlockedComplianceData,
 } from '../helpers/constants';
 import { DateTime } from 'luxon';
 
@@ -27,15 +27,15 @@ describe('Compliance data store', () => {
 
   it('Successfully creates compliance data', async () => {
     await Promise.all([
-      ComplianceDataTable.create(sanctionedComplianceData),
-      ComplianceDataTable.create(nonSanctionedComplianceData),
+      ComplianceDataTable.create(blockedComplianceData),
+      ComplianceDataTable.create(nonBlockedComplianceData),
     ]);
   });
 
   it('Successfully finds all compliance data', async () => {
     await Promise.all([
-      ComplianceDataTable.create(sanctionedComplianceData),
-      ComplianceDataTable.create(nonSanctionedComplianceData),
+      ComplianceDataTable.create(blockedComplianceData),
+      ComplianceDataTable.create(nonBlockedComplianceData),
     ]);
 
     const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
@@ -45,32 +45,32 @@ describe('Compliance data store', () => {
     );
 
     expect(complianceData.length).toEqual(2);
-    expect(complianceData[0]).toEqual(expect.objectContaining(sanctionedComplianceData));
-    expect(complianceData[1]).toEqual(expect.objectContaining(nonSanctionedComplianceData));
+    expect(complianceData[0]).toEqual(expect.objectContaining(blockedComplianceData));
+    expect(complianceData[1]).toEqual(expect.objectContaining(nonBlockedComplianceData));
   });
 
   it('Successfully finds compliance data with updatedBeforeOrAt', async () => {
     await Promise.all([
-      ComplianceDataTable.create(sanctionedComplianceData),
-      ComplianceDataTable.create(nonSanctionedComplianceData),
+      ComplianceDataTable.create(blockedComplianceData),
+      ComplianceDataTable.create(nonBlockedComplianceData),
     ]);
 
     const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
       {
-        updatedBeforeOrAt: sanctionedComplianceData.updatedAt,
+        updatedBeforeOrAt: blockedComplianceData.updatedAt,
       },
       [],
       { readReplica: true },
     );
 
     expect(complianceData.length).toEqual(1);
-    expect(complianceData[0]).toEqual(expect.objectContaining(sanctionedComplianceData));
+    expect(complianceData[0]).toEqual(expect.objectContaining(blockedComplianceData));
   });
 
   it('Successfully finds compliance data with provider', async () => {
     await Promise.all([
-      ComplianceDataTable.create(sanctionedComplianceData),
-      ComplianceDataTable.create(nonSanctionedComplianceData),
+      ComplianceDataTable.create(blockedComplianceData),
+      ComplianceDataTable.create(nonBlockedComplianceData),
     ]);
 
     const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
@@ -82,31 +82,49 @@ describe('Compliance data store', () => {
     );
 
     expect(complianceData.length).toEqual(2);
-    expect(complianceData[0]).toEqual(expect.objectContaining(sanctionedComplianceData));
-    expect(complianceData[1]).toEqual(expect.objectContaining(nonSanctionedComplianceData));
+    expect(complianceData[0]).toEqual(expect.objectContaining(blockedComplianceData));
+    expect(complianceData[1]).toEqual(expect.objectContaining(nonBlockedComplianceData));
+  });
+
+  it('Successfully finds compliance data with blocked', async () => {
+    await Promise.all([
+      ComplianceDataTable.create(blockedComplianceData),
+      ComplianceDataTable.create(nonBlockedComplianceData),
+    ]);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
+      {
+        blocked: false,
+      },
+      [],
+      { readReplica: true },
+    );
+
+    expect(complianceData.length).toEqual(1);
+    expect(complianceData[0]).toEqual(expect.objectContaining(nonBlockedComplianceData));
   });
 
   it('Successfully finds compliance data by address and provider', async () => {
     await Promise.all([
-      ComplianceDataTable.create(sanctionedComplianceData),
-      ComplianceDataTable.create(nonSanctionedComplianceData),
+      ComplianceDataTable.create(blockedComplianceData),
+      ComplianceDataTable.create(nonBlockedComplianceData),
     ]);
 
     const complianceData:
     ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddressAndProvider(
-      sanctionedAddress,
+      blockedAddress,
       ComplianceProvider.ELLIPTIC,
       { readReplica: true },
     );
 
     expect(complianceData).toBeDefined();
-    expect(complianceData).toEqual(expect.objectContaining(sanctionedComplianceData));
+    expect(complianceData).toEqual(expect.objectContaining(blockedComplianceData));
   });
 
   it('Unable finds compliance data', async () => {
     const complianceData:
     ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddressAndProvider(
-      sanctionedAddress,
+      blockedAddress,
       ComplianceProvider.ELLIPTIC,
       { readReplica: true },
     );
@@ -114,7 +132,7 @@ describe('Compliance data store', () => {
   });
 
   it('Successfully updates compliance data', async () => {
-    await ComplianceDataTable.create(nonSanctionedComplianceData);
+    await ComplianceDataTable.create(nonBlockedComplianceData);
 
     const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
       {},
@@ -124,27 +142,27 @@ describe('Compliance data store', () => {
     expect(complianceData.length).toEqual(1);
 
     const updatedTime: string = DateTime.fromISO(
-      nonSanctionedComplianceData.updatedAt,
+      nonBlockedComplianceData.updatedAt,
     ).plus(10).toUTC().toISO();
 
     await ComplianceDataTable.update({
-      address: nonSanctionedComplianceData.address,
-      provider: nonSanctionedComplianceData.provider,
+      address: nonBlockedComplianceData.address,
+      provider: nonBlockedComplianceData.provider,
       riskScore: '30.00',
-      sanctioned: true,
+      blocked: true,
       updatedAt: updatedTime,
     });
     const updatedComplianceData:
     ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddressAndProvider(
-      nonSanctionedComplianceData.address,
-      nonSanctionedComplianceData.provider,
+      nonBlockedComplianceData.address,
+      nonBlockedComplianceData.provider,
       { readReplica: true },
     );
 
     expect(updatedComplianceData).toEqual(expect.objectContaining({
-      ...nonSanctionedComplianceData,
+      ...nonBlockedComplianceData,
       riskScore: '30.00',
-      sanctioned: true,
+      blocked: true,
       updatedAt: updatedTime,
     }));
   });
