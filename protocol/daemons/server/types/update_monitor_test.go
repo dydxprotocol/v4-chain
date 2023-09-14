@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/stretchr/testify/require"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -24,11 +25,11 @@ func TestRegisterDaemonService_Success(t *testing.T) {
 }
 
 func TestRegisterDaemonServiceWithCallback_Success(t *testing.T) {
-	callbackCalled := false
+	callbackCalled := atomic.Bool{}
 
 	ufm := NewUpdateFrequencyMonitor()
 	success := ufm.RegisterDaemonServiceWithCallback("test-service", 200*time.Millisecond, func() {
-		callbackCalled = true
+		callbackCalled.Store(true)
 	})
 	require.True(t, success)
 
@@ -39,7 +40,7 @@ func TestRegisterDaemonServiceWithCallback_Success(t *testing.T) {
 	require.NoError(t, ufm.RegisterValidResponse("test-service"))
 	time.Sleep(80 * time.Millisecond)
 
-	require.False(t, callbackCalled)
+	require.False(t, callbackCalled.Load())
 
 	ufm.Stop()
 }
@@ -63,35 +64,36 @@ func TestRegisterDaemonService_DoubleRegistrationFails(t *testing.T) {
 }
 
 func TestRegisterDaemonServiceWithCallback_DoubleRegistrationFails(t *testing.T) {
-	callback1Called := false
-	callback2Called := false
+	// lock synchronizes callback flags and was added to avoid race test failures.
+	callback1Called := atomic.Bool{}
+	callback2Called := atomic.Bool{}
 
 	ufm := NewUpdateFrequencyMonitor()
 	// First registration should succeed.
 	success := ufm.RegisterDaemonServiceWithCallback("test-service", 200*time.Millisecond, func() {
-		callback1Called = true
+		callback1Called.Store(true)
 	})
 	require.True(t, success)
 
 	// Register the same daemon service again. This should fail, and 50ms update frequency should be ignored.
 	success = ufm.RegisterDaemonServiceWithCallback("test-service", 50*time.Millisecond, func() {
-		callback2Called = true
+		callback2Called.Store(true)
 	})
 	require.False(t, success)
 
 	// Validate that the original callback is still in effect for the original 200ms update frequency.
 	// The 50ms update frequency should have invoked a callback if it were applied.
 	time.Sleep(80 * time.Millisecond)
-	require.False(t, callback1Called)
-	require.False(t, callback2Called)
+	require.False(t, callback1Called.Load())
+	require.False(t, callback2Called.Load())
 
 	// Validate no issues with RegisterValidResponse after a double registration was attempted.
 	require.NoError(t, ufm.RegisterValidResponse("test-service"))
 
 	// Sleep until the callback should be called.
 	time.Sleep(250 * time.Millisecond)
-	require.True(t, callback1Called)
-	require.False(t, callback2Called)
+	require.True(t, callback1Called.Load())
+	require.False(t, callback2Called.Load())
 
 	ufm.Stop()
 }
@@ -110,11 +112,11 @@ func TestRegisterDaemonServiceWithCallback_RegistrationFailsAfterStop(t *testing
 	ufm := NewUpdateFrequencyMonitor()
 	ufm.Stop()
 
-	callbackCalled := false
+	callbackCalled := atomic.Bool{}
 
 	// Registering a daemon service with a callback should fail after the monitor has been stopped.
 	success := ufm.RegisterDaemonServiceWithCallback("test-service", 50*time.Millisecond, func() {
-		callbackCalled = true
+		callbackCalled.Store(true)
 	})
 	require.False(t, success)
 
@@ -122,7 +124,7 @@ func TestRegisterDaemonServiceWithCallback_RegistrationFailsAfterStop(t *testing
 	time.Sleep(75 * time.Millisecond)
 
 	// Validate that the callback was not called.
-	require.False(t, callbackCalled)
+	require.False(t, callbackCalled.Load())
 }
 
 func TestPanicServiceNotResponding(t *testing.T) {
