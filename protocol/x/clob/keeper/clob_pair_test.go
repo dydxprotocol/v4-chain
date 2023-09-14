@@ -493,6 +493,42 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 
 	// Initialize the `ClobPairs` from Keeper state.
 	ks.ClobKeeper.InitMemClobOrderbooks(ks.Ctx)
+}
+
+func TestHydratClobPairAndPerpetualMapping(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	ks := keepertest.NewClobKeepersTestContext(
+		t,
+		memClob,
+		&mocks.BankKeeper{},
+		&mocks.IndexerEventManager{},
+	)
+
+	// Read a new `ClobPair` and make sure it does not exist.
+	_, err := ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 1)
+	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
+
+	// Write multiple `ClobPairs` to state, but don't call `MemClob.CreateOrderbook`.
+	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+
+	b := cdc.MustMarshal(&constants.ClobPair_Eth)
+	store.Set(types.ClobPairKey(
+		types.ClobPairId(constants.ClobPair_Eth.Id),
+	), b)
+
+	b = cdc.MustMarshal(&constants.ClobPair_Btc)
+	store.Set(types.ClobPairKey(
+		types.ClobPairId(constants.ClobPair_Btc.Id),
+	), b)
+
+	// Read the new `ClobPairs` and make sure they do not exist.
+	_, err = ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 1)
+	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
+
+	// Initialize the `ClobPairs` from Keeper state.
+	ks.ClobKeeper.HydrateClobPairAndPerpetualMapping(ks.Ctx)
 
 	// Read the new `ClobPairs` and make sure they exist.
 	_, err = ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 0)
