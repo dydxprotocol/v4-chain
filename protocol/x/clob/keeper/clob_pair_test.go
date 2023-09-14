@@ -685,7 +685,7 @@ func TestUpdateClobPair(t *testing.T) {
 						),
 					),
 				).Once().Return()
-				
+
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobPair.Id,
