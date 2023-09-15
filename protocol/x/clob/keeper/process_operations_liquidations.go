@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -24,7 +24,7 @@ func (k Keeper) ValidateLiquidationOrderAgainstProposedLiquidation(
 	proposedMatch *types.MatchPerpetualLiquidation,
 ) error {
 	if order.GetClobPairId() != types.ClobPairId(proposedMatch.GetClobPairId()) {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrClobPairAndPerpetualDoNotMatch,
 			"Order CLOB Pair ID: %v, Match CLOB Pair ID: %v",
 			order.GetClobPairId(),
@@ -33,7 +33,7 @@ func (k Keeper) ValidateLiquidationOrderAgainstProposedLiquidation(
 	}
 
 	if order.MustGetLiquidatedPerpetualId() != proposedMatch.GetPerpetualId() {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrClobPairAndPerpetualDoNotMatch,
 			"Order Perpetual ID: %v, Match Perpetual ID: %v",
 			order.MustGetLiquidatedPerpetualId(),
@@ -42,7 +42,7 @@ func (k Keeper) ValidateLiquidationOrderAgainstProposedLiquidation(
 	}
 
 	if order.GetBaseQuantums() != satypes.BaseQuantums(proposedMatch.TotalSize) {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidLiquidationOrderTotalSize,
 			"Order Size: %v, Match Size: %v",
 			order.GetBaseQuantums(),
@@ -51,7 +51,7 @@ func (k Keeper) ValidateLiquidationOrderAgainstProposedLiquidation(
 	}
 
 	if order.IsBuy() != proposedMatch.GetIsBuy() {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidLiquidationOrderSide,
 			"Order Side: %v, Match Side: %v",
 			order.IsBuy(),
@@ -103,7 +103,7 @@ func (k Keeper) validateMatchedLiquidation(
 	// in the insurance fund (such that the liquidation couldn't have possibly continued).
 	if !k.IsValidInsuranceFundDelta(ctx, insuranceFundDelta) {
 		k.Logger(ctx).Info("ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrInsuranceFundHasInsufficientFunds,
 			"Liquidation order %v, insurance fund delta %v",
 			order,
@@ -160,7 +160,7 @@ func (k Keeper) validateLiquidationAgainstSubaccountBlockLimits(
 	}
 
 	if bigNotionalLiquidated.CmpAbs(bigMaxNotionalLiquidatable) > 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
 			"Subaccount ID: %v, Perpetual ID: %v, Max Notional Liquidatable: %v, Notional Liquidated: %v",
 			subaccountId,
@@ -183,7 +183,7 @@ func (k Keeper) validateLiquidationAgainstSubaccountBlockLimits(
 		}
 
 		if insuranceFundDeltaQuoteQuantums.CmpAbs(bigMaxQuantumsInsuranceLost) > 0 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 				"Subaccount ID: %v, Perpetual ID: %v, Max Insurance Lost: %v, Insurance Lost: %v",
 				subaccountId,

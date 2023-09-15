@@ -3,8 +3,6 @@ package clob
 import (
 	"errors"
 	"fmt"
-	"sort"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -214,25 +212,55 @@ func PrepareCheckState(
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
 	}
 
-	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
-	start := time.Now()
-	sort.Sort(types.SortedLiquidationOrders(liquidationOrders))
-	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.SortLiquidationOrders)
+	// Sort liquidation orders.
+	keeper.SortLiquidationOrders(ctx, liquidationOrders)
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
-		liquidationOrder := liquidationOrders[i]
-		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
+	numFilledLiquidations := uint32(0)
+	for i := 0; numFilledLiquidations < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
+		optimisticallyFilledQuantums, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrders[i])
+		if err != nil {
 			keeper.Logger(ctx).Error(
 				fmt.Sprintf(
 					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
-					liquidationOrder,
+					liquidationOrders[i],
 					err,
 				),
 			)
 			panic(err)
 		}
+
+		// Keep a count of partially and fully filled liquidations for this block.
+		if optimisticallyFilledQuantums > 0 {
+			numFilledLiquidations++
+		} else {
+			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
+
+			// The liquidation order was unfilled. Try to deleverage the subaccount.
+			subaccountId := liquidationOrders[i].GetSubaccountId()
+			perpetualId := liquidationOrders[i].MustGetLiquidatedPerpetualId()
+			deltaQuantums := liquidationOrders[i].GetDeltaQuantums()
+
+			_, err := keeper.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+			if err != nil {
+				keeper.Logger(ctx).Error(
+					"Failed to deleverage subaccount.",
+					"subaccount", liquidationOrders[i].GetSubaccountId(),
+					"perpetualId", liquidationOrders[i].MustGetLiquidatedPerpetualId(),
+					"baseQuantums", liquidationOrders[i].GetBaseQuantums().ToBigInt(),
+					"error", err,
+				)
+				panic(err)
+			}
+		}
 	}
+
+	telemetry.IncrCounter(
+		float32(numFilledLiquidations),
+		types.ModuleName,
+		metrics.PrepareCheckState,
+		metrics.NumMatchedLiquidationOrders,
+	)
 
 	telemetry.ModuleSetGauge(
 		types.ModuleName,

@@ -1,15 +1,16 @@
 package msgs_test
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInternalMsgSamples_All_Key(t *testing.T) {
-	expectedAllInternalMsgs := maps.MergeAllMapsMustHaveDistinctKeys(msgs.InternalMsgSamplesGovAuth)
+	expectedAllInternalMsgs := lib.MergeAllMapsMustHaveDistinctKeys(msgs.InternalMsgSamplesGovAuth)
 	require.Equal(t, expectedAllInternalMsgs, msgs.InternalMsgSamplesAll)
 }
 
@@ -99,6 +100,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier",
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse",
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket",
@@ -107,6 +110,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams",
 		"/dydxprotocol.rewards.MsgUpdateParamsResponse",
+
+		// sending
+		"/dydxprotocol.sending.MsgSendFromModuleToAccount",
+		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse",
 
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams",
@@ -119,5 +126,5 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.vest.MsgSetVestEntryResponse",
 	}
 
-	require.Equal(t, expectedMsgs, maps.GetSortedKeys(msgs.InternalMsgSamplesGovAuth))
+	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.InternalMsgSamplesGovAuth))
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	sdklog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -40,7 +40,7 @@ func NewKeeper(
 		pricesKeeper:        pricesKeeper,
 		epochsKeeper:        epochsKeeper,
 		indexerEventManager: indexerEventsManager,
-		authorities:         maps.ArrayToMapInterface(authorities),
+		authorities:         lib.SliceToSet(authorities),
 	}
 }
 

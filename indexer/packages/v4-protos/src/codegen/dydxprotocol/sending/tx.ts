@@ -43,6 +43,18 @@ export interface MsgWithdrawFromSubaccountResponse {}
  */
 
 export interface MsgWithdrawFromSubaccountResponseSDKType {}
+/**
+ * MsgSendFromModuleToAccountResponse is a response type used for new
+ * module-to-account transfers.
+ */
+
+export interface MsgSendFromModuleToAccountResponse {}
+/**
+ * MsgSendFromModuleToAccountResponse is a response type used for new
+ * module-to-account transfers.
+ */
+
+export interface MsgSendFromModuleToAccountResponseSDKType {}
 
 function createBaseMsgCreateTransfer(): MsgCreateTransfer {
   return {
@@ -186,6 +198,40 @@ export const MsgWithdrawFromSubaccountResponse = {
 
   fromPartial(_: DeepPartial<MsgWithdrawFromSubaccountResponse>): MsgWithdrawFromSubaccountResponse {
     const message = createBaseMsgWithdrawFromSubaccountResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgSendFromModuleToAccountResponse(): MsgSendFromModuleToAccountResponse {
+  return {};
+}
+
+export const MsgSendFromModuleToAccountResponse = {
+  encode(_: MsgSendFromModuleToAccountResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSendFromModuleToAccountResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSendFromModuleToAccountResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgSendFromModuleToAccountResponse>): MsgSendFromModuleToAccountResponse {
+    const message = createBaseMsgSendFromModuleToAccountResponse();
     return message;
   }
 

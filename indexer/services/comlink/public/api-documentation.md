@@ -5,7 +5,7 @@
 
 Base URLs:
 
-* <a href="https://indexer.v4testnet2.dydx.exchange/v4">https://indexer.v4testnet2.dydx.exchange/v4</a>
+* <a href="https://indexer.v4testnet.dydx.exchange/v4">https://indexer.v4testnet.dydx.exchange/v4</a>
 
 # Authentication
 
@@ -23,7 +23,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/addresses/{address}', headers = headers)
 
 print(r.json())
 
@@ -35,7 +35,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/addresses/{address}',
 {
   method: 'GET',
 
@@ -193,7 +193,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
 
 print(r.json())
 
@@ -205,7 +205,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}',
 {
   method: 'GET',
 
@@ -314,7 +314,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/assetPositions', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/assetPositions', params={
   'address': 'string',  'subaccountNumber': '0'
 }, headers = headers)
 
@@ -328,7 +328,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/assetPositions?address=string&subaccountNumber=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/assetPositions?address=string&subaccountNumber=0',
 {
   method: 'GET',
 
@@ -390,7 +390,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/candles/perpetualMarkets/{ticker}', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/candles/perpetualMarkets/{ticker}', params={
   'resolution': '1MIN',  'limit': '0'
 }, headers = headers)
 
@@ -404,7 +404,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN&limit=0',
 {
   method: 'GET',
 
@@ -477,6 +477,74 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/candles/perpetualMarkets/{tic
 This operation does not require authentication
 </aside>
 
+## Screen
+
+<a id="opIdScreen"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/screen', params={
+  'address': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://indexer.v4testnet.dydx.exchange/v4/screen?address=string',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /screen`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "restricted": true
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ComplianceResponse](#schemacomplianceresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetFills
 
 <a id="opIdGetFills"></a>
@@ -489,7 +557,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/fills', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/fills', params={
   'address': 'string',  'subaccountNumber': '0',  'market': 'string',  'marketType': 'PERPETUAL',  'limit': '0'
 }, headers = headers)
 
@@ -503,7 +571,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/fills?address=string&subaccountNumber=0&market=string&marketType=PERPETUAL&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/fills?address=string&subaccountNumber=0&market=string&marketType=PERPETUAL&limit=0',
 {
   method: 'GET',
 
@@ -586,7 +654,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/height', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/height', headers = headers)
 
 print(r.json())
 
@@ -598,7 +666,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/height',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/height',
 {
   method: 'GET',
 
@@ -647,7 +715,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/historicalFunding/{ticker}', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/historicalFunding/{ticker}', params={
   'limit': '0'
 }, headers = headers)
 
@@ -661,7 +729,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/historicalFunding/{ticker}?limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/historicalFunding/{ticker}?limit=0',
 {
   method: 'GET',
 
@@ -726,7 +794,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/historical-pnl', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/historical-pnl', params={
   'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
@@ -740,7 +808,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/historical-pnl?address=string&subaccountNumber=0&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/historical-pnl?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -811,7 +879,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}', headers = headers)
 
 print(r.json())
 
@@ -823,7 +891,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}',
 {
   method: 'GET',
 
@@ -888,7 +956,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/orders', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/orders', params={
   'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
@@ -902,7 +970,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders?address=string&subaccountNumber=0&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/orders?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -1074,7 +1142,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/orders/{orderId}', headers = headers)
 
 print(r.json())
 
@@ -1086,7 +1154,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/orders/{orderId}',
 {
   method: 'GET',
 
@@ -1159,7 +1227,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/perpetualMarkets', params={
   'limit': '0'
 }, headers = headers)
 
@@ -1173,7 +1241,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/perpetualMarkets?limit=0',
 {
   method: 'GET',
 
@@ -1271,7 +1339,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/perpetualPositions', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/perpetualPositions', params={
   'address': 'string',  'subaccountNumber': '0',  'status': [
   "OPEN"
 ],  'limit': '0'
@@ -1287,7 +1355,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualPositions?address=string&subaccountNumber=0&status=OPEN&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/perpetualPositions?address=string&subaccountNumber=0&status=OPEN&limit=0',
 {
   method: 'GET',
 
@@ -1372,7 +1440,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/sparklines', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/sparklines', params={
   'timePeriod': 'ONE_DAY'
 }, headers = headers)
 
@@ -1386,7 +1454,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/sparklines?timePeriod=ONE_DAY',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/sparklines?timePeriod=ONE_DAY',
 {
   method: 'GET',
 
@@ -1452,7 +1520,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/time', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/time', headers = headers)
 
 print(r.json())
 
@@ -1464,7 +1532,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/time',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/time',
 {
   method: 'GET',
 
@@ -1513,7 +1581,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/trades/perpetualMarkets/{ticker}', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarket/{ticker}', params={
   'limit': '0'
 }, headers = headers)
 
@@ -1527,7 +1595,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/trades/perpetualMarkets/{ticker}?limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarket/{ticker}?limit=0',
 {
   method: 'GET',
 
@@ -1541,7 +1609,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/trades/perpetualMarkets/{tick
 
 ```
 
-`GET /trades/perpetualMarkets/{ticker}`
+`GET /trades/perpetualMarket/{ticker}`
 
 ### Parameters
 
@@ -1593,7 +1661,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/transfers', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/transfers', params={
   'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
@@ -1607,7 +1675,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/transfers?address=string&subaccountNumber=0&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/transfers?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -2113,6 +2181,26 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |candles|[[CandleResponseObject](#schemacandleresponseobject)]|true|none|none|
+
+## ComplianceResponse
+
+<a id="schemacomplianceresponse"></a>
+<a id="schema_ComplianceResponse"></a>
+<a id="tocScomplianceresponse"></a>
+<a id="tocscomplianceresponse"></a>
+
+```json
+{
+  "restricted": true
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|restricted|boolean|true|none|none|
 
 ## OrderSide
 

@@ -5,6 +5,8 @@ import (
 	"sort"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
@@ -13,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -115,7 +116,7 @@ func (k Keeper) GetMarketPrice(
 	store := k.newMarketPriceStore(ctx)
 	b := store.Get(types.MarketKey(id))
 	if b == nil {
-		return types.MarketPrice{}, sdkerrors.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(id))
+		return types.MarketPrice{}, errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(id))
 	}
 
 	var marketPrice = types.MarketPrice{}

@@ -9,18 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRandomBool(t *testing.T) {
-	numIterations := 128
-	bools := make([]bool, numIterations)
-
-	for i := 0; i < numIterations; i++ {
-		bools[i] = lib.RandomBool()
-	}
-
-	require.Contains(t, bools, true)
-	require.Contains(t, bools, false)
-}
-
 func TestRandomBytesBetween(t *testing.T) {
 	tests := map[string]struct {
 		start []byte
@@ -34,9 +22,21 @@ func TestRandomBytesBetween(t *testing.T) {
 			start: []byte{7, 7},
 			end:   []byte{7, 7, 0},
 		},
+		"no shared bytes": {
+			start: []byte{1, 7, 255},
+			end:   []byte{7, 8, 125},
+		},
 		"start is longer then end": {
 			start: []byte{7, 7, 255},
 			end:   []byte{7, 8},
+		},
+		"start is shorter then end": {
+			start: []byte{7, 7},
+			end:   []byte{7, 8, 255},
+		},
+		"both are the same length": {
+			start: []byte{1, 2, 3},
+			end:   []byte{3, 2, 1},
 		},
 		"both are empty": {
 			start: []byte{},

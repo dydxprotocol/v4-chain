@@ -24,10 +24,11 @@ func createNMarketPriceUpdates(
 }
 
 func TestUpdateMarketPrices(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
-	require.Equal(t, uint32(10), keeper.GetNumMarkets(ctx))
+	require.Equal(t, uint32(10), keepertest.GetNumMarkets(t, ctx, keeper))
 
 	// Create firstPriceUpdates which should be overwritten by secondPriceUpdates
 	firstPriceUpdates := createNMarketPriceUpdates(10)
@@ -58,7 +59,8 @@ func TestUpdateMarketPrices(t *testing.T) {
 }
 
 func TestUpdateMarketPrices_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	priceUpdates := createNMarketPriceUpdates(10)
 	err := keeper.UpdateMarketPrices(
@@ -86,7 +88,8 @@ func TestUpdateMarketPrices_NotFound(t *testing.T) {
 }
 
 func TestGetMarketPrice(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for _, item := range items {
 		rst, err := keeper.GetMarketPrice(ctx, item.Param.Id)
@@ -106,7 +109,8 @@ func TestGetMarketPrice_NotFound(t *testing.T) {
 }
 
 func TestGetAllMarketPrices(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	prices := make([]types.MarketPrice, len(items))
 	for i, item := range items {

@@ -3,11 +3,11 @@ package keeper
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -20,6 +20,14 @@ func (k Keeper) CreateMarket(
 	marketParam types.MarketParam,
 	marketPrice types.MarketPrice,
 ) (types.MarketParam, error) {
+	if _, exists := k.GetMarketParam(ctx, marketParam.Id); exists {
+		return types.MarketParam{}, errorsmod.Wrapf(
+			types.ErrMarketParamAlreadyExists,
+			"market param with id %d already exists",
+			marketParam.Id,
+		)
+	}
+
 	// Validate input.
 	if err := marketParam.Validate(); err != nil {
 		return types.MarketParam{}, err
@@ -49,7 +57,24 @@ func (k Keeper) CreateMarket(
 			),
 		),
 	)
+
+	k.marketToCreatedAt[marketParam.Id] = k.timeProvider.Now()
+	metrics.AddMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
+
 	return marketParam, nil
+}
+
+// IsRecentlyAdded returns true if the market was added recently. Since it takes a few seconds for
+// index prices to populate, we would not consider missing index prices for a recently added market
+// to be an error.
+func (k Keeper) IsRecentlyAdded(marketId uint32) bool {
+	createdAt, ok := k.marketToCreatedAt[marketId]
+
+	if !ok {
+		return false
+	}
+
+	return k.timeProvider.Now().Sub(createdAt) < types.MarketIsRecentDuration
 }
 
 // GetAllMarketParamPrices returns a slice of MarketParam, MarketPrice tuples for all markets.
@@ -58,7 +83,7 @@ func (k Keeper) GetAllMarketParamPrices(ctx sdk.Context) ([]types.MarketParamPri
 	marketPrices := k.GetAllMarketPrices(ctx)
 
 	if len(marketParams) != len(marketPrices) {
-		return nil, sdkerrors.Wrap(types.ErrMarketPricesAndParamsDontMatch, "market param and price lengths do not match")
+		return nil, errorsmod.Wrap(types.ErrMarketPricesAndParamsDontMatch, "market param and price lengths do not match")
 	}
 
 	marketParamPrices := make([]types.MarketParamPrice, len(marketParams))
@@ -66,25 +91,10 @@ func (k Keeper) GetAllMarketParamPrices(ctx sdk.Context) ([]types.MarketParamPri
 		marketParamPrices[i].Param = param
 		price := marketPrices[i]
 		if param.Id != price.Id {
-			return nil, sdkerrors.Wrap(types.ErrMarketPricesAndParamsDontMatch,
+			return nil, errorsmod.Wrap(types.ErrMarketPricesAndParamsDontMatch,
 				fmt.Sprintf("market param and price ids do not match: %d != %d", param.Id, price.Id))
 		}
 		marketParamPrices[i].Price = price
 	}
 	return marketParamPrices, nil
-}
-
-// GetNumMarkets returns the total number of markets.
-// Panics if the length of market params and prices does not match.
-func (k Keeper) GetNumMarkets(
-	ctx sdk.Context,
-) uint32 {
-	marketParams := k.GetAllMarketParams(ctx)
-	marketPrices := k.GetAllMarketPrices(ctx)
-
-	if len(marketParams) != len(marketPrices) {
-		panic(sdkerrors.Wrap(types.ErrMarketPricesAndParamsDontMatch, "market param and price lengths do not match"))
-	}
-
-	return lib.MustConvertIntegerToUint32(len(marketParams))
 }

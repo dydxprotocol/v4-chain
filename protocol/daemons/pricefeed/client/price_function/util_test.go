@@ -500,7 +500,7 @@ func TestGetUint64MedianFromShiftedBigFloatValues(t *testing.T) {
 			median, err := GetUint64MedianFromReverseShiftedBigFloatValues(
 				tc.bigFloatSlice,
 				tc.exponent,
-				&lib.MedianizerImpl{},
+				lib.Median[uint64],
 			)
 
 			if tc.expectedError != nil {

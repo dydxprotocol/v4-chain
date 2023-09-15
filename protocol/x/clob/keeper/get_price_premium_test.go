@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"math/big"
 	"testing"
@@ -8,7 +9,6 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -132,7 +132,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
 				0: {1},
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrInvalidClob,
 				"GetPricePremiumForPerpetual: did not find clob pair with clobPairId = %d",
 				1,

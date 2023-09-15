@@ -23,10 +23,11 @@ func NetworkWithMarketObjects(t *testing.T, n int) (*network.Network, []types.Ma
 	// Market params
 	for i := 0; i < n; i++ {
 		marketParam := types.MarketParam{
-			Id:                uint32(i),
-			Pair:              fmt.Sprint(constants.BtcUsdPair, i),
-			MinExchanges:      uint32(1),
-			MinPriceChangePpm: uint32((i + 1) * 2),
+			Id:                 uint32(i),
+			Pair:               fmt.Sprint(constants.BtcUsdPair, i),
+			MinExchanges:       uint32(1),
+			MinPriceChangePpm:  uint32((i + 1) * 2),
+			ExchangeConfigJson: "{}",
 		}
 		state.MarketParams = append(state.MarketParams, marketParam)
 	}

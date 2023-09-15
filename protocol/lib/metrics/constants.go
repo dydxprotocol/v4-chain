@@ -53,6 +53,7 @@ const (
 	OtherTxs             = "other_txs"
 	RemoveDisallowMsgs   = "remove_disallow_msgs"
 	PrepareProposalTxs   = "prepare_proposal_txs"
+	PrepareCheckState    = "prepare_check_state"
 	PricesTx             = "prices_tx"
 	TotalNumBytes        = "total_num_bytes"
 	TotalNumTxs          = "total_num_txs"
@@ -153,6 +154,7 @@ const (
 	SubaccountPendingMatches                     = "subaccount_pending_matches"
 	TimeInForce                                  = "time_in_force"
 	TotalOrdersClobPair                          = "total_orders_in_clob"
+	UnfilledLiquidationOrders                    = "unfilled_liquidation_orders"
 	UnknownPlaceOrders                           = "unknown_place_orders"
 	ValidateMatches                              = "validate_matches"
 	ValidateOrder                                = "validate_order"
@@ -261,6 +263,7 @@ const (
 	LiquidationRequiresDeleveraging       = "liquidation_requires_deleveraging"
 
 	// Deleveraging.
+	CannotDeleverageSubaccount     = "cannot_deleverage_subaccount"
 	Deleveraging                   = "deleveraging"
 	DeltaQuoteQuantums             = "delta_quote_quantums"
 	NumSubaccountsIterated         = "num_subaccounts_iterated"

@@ -14,6 +14,7 @@ const (
 )
 
 func TestGetLabelForMarketIdSuccess(t *testing.T) {
+	pricefeedmetrics.AddMarketPairForTelemetry(exchange_common.MARKET_BTC_USD, "BTCUSD")
 	require.Equal(
 		t,
 		metrics.GetLabelForStringValue(metrics.MarketId, "BTCUSD"),

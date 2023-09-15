@@ -1,10 +1,10 @@
 package types_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"math/big"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
@@ -44,7 +44,7 @@ func TestPerpetualPosition_GetIsLong(t *testing.T) {
 		longPosition.GetIsLong(),
 	)
 	require.PanicsWithError(t,
-		sdkerrors.Wrapf(
+		errorsmod.Wrapf(
 			types.ErrPerpPositionZeroQuantum,
 			"perpetual position (perpetual Id: 0) has zero quantum",
 		).Error(),
@@ -76,7 +76,7 @@ func TestAssetPosition_GetIsLong(t *testing.T) {
 		longPosition.GetIsLong(),
 	)
 	require.PanicsWithError(t,
-		sdkerrors.Wrapf(
+		errorsmod.Wrapf(
 			types.ErrAssetPositionZeroQuantum,
 			"asset position (asset Id: 0) has zero quantum",
 		).Error(),

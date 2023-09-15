@@ -48,6 +48,13 @@ var (
 		10_000_000_000, // 100 BTC
 		101_000_000,    // $101
 	)
+	LiquidationOrder_Carl_Num0_Clob0_Buy01BTC_Price50000 = *clobtypes.NewLiquidationOrder(
+		Carl_Num0,
+		ClobPair_Btc,
+		true,
+		10_000_000,
+		50_000_000_000,
+	)
 	LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50000 = *clobtypes.NewLiquidationOrder(
 		Carl_Num0,
 		ClobPair_Btc,

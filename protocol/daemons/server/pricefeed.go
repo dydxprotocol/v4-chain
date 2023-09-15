@@ -2,11 +2,11 @@ package server
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -45,7 +45,7 @@ func (s *Server) UpdateMarketPrices(
 
 	if s.marketToExchange == nil {
 		panic(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrServerNotInitializedCorrectly,
 				"MarketToExchange not initialized",
 			),
@@ -112,5 +112,5 @@ func validateMarketPriceUpdate(mpu *api.MarketPriceUpdate) error {
 
 // generateSdkErrorForExchangePrice generates an error for an invalid `ExchangePrice`.
 func generateSdkErrorForExchangePrice(err error, ep *api.ExchangePrice, marketId uint32) error {
-	return sdkerrors.Wrapf(err, "ExchangePrice: %v and MarketId: %d", ep, marketId)
+	return errorsmod.Wrapf(err, "ExchangePrice: %v and MarketId: %d", ep, marketId)
 }

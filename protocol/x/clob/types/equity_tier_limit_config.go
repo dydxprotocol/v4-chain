@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"sort"
 )
 
@@ -63,7 +63,7 @@ func (l equityTierLimits) validate(field string, maxOrders uint32) error {
 		}
 
 		if i > 0 && l[i-1].UsdTncRequired.Cmp(l[i].UsdTncRequired) >= 0 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				ErrInvalidEquityTierLimitConfig,
 				"Expected %s equity tier UsdTncRequired to be strictly ascending. "+
 					"Found %+v and %+v out of order",
@@ -78,7 +78,7 @@ func (l equityTierLimits) validate(field string, maxOrders uint32) error {
 
 func (l EquityTierLimit) validate(field string, maxOrders uint32) error {
 	if l.Limit > maxOrders {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidEquityTierLimitConfig,
 			"%d is not a valid Limit for %s equity tier limit %+v",
 			l.Limit,
@@ -87,7 +87,7 @@ func (l EquityTierLimit) validate(field string, maxOrders uint32) error {
 		)
 	}
 	if l.UsdTncRequired.IsNil() || l.UsdTncRequired.BigInt().Sign() < 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidEquityTierLimitConfig,
 			"%d is not a valid UsdTncRequired for %s equity tier limit %+v",
 			l.UsdTncRequired.BigInt(),

@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"bytes"
+	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -86,7 +86,7 @@ func (k Keeper) DeleteMessage(
 ) {
 	delayedMsg, found := k.GetMessage(ctx, id)
 	if !found {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"failed to delete message: message with id %d not found",
 			id,
@@ -97,7 +97,7 @@ func (k Keeper) DeleteMessage(
 
 	// Remove message id from block message ids.
 	if err := k.deleteMessageIdFromBlock(ctx, id, delayedMsg.BlockHeight); err != nil {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"failed to delete message: %v",
 			err,
@@ -115,7 +115,7 @@ func (k Keeper) SetDelayedMessage(
 	err error,
 ) {
 	if msg.BlockHeight < ctx.BlockHeight() {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"failed to delay message: block height %d is in the past",
 			msg.BlockHeight,
@@ -136,14 +136,14 @@ func (k Keeper) SetDelayedMessage(
 func validateSigners(msg sdk.Msg) error {
 	signers := msg.GetSigners()
 	if len(signers) != 1 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidSigner,
 			"message must have exactly one signer",
 		)
 	}
 	moduleAddress := authtypes.NewModuleAddress(types.ModuleName)
 	if !bytes.Equal(signers[0], moduleAddress) {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidSigner,
 			"message signer must be delaymsg module address",
 		)
@@ -163,14 +163,14 @@ func (k Keeper) DelayMessageByBlocks(
 	handler := k.router.Handler(msg)
 	// If the message type is not routable, return an error.
 	if handler == nil {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrMsgIsUnroutable,
 			sdk.MsgTypeURL(msg),
 		)
 	}
 
 	if err := msg.ValidateBasic(); err != nil {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"message failed basic validation: %v",
 			err,
@@ -184,7 +184,7 @@ func (k Keeper) DelayMessageByBlocks(
 	nextId := k.GetNumMessages(ctx)
 	blockHeight, err := lib.AddUint32(ctx.BlockHeight(), blockDelay)
 	if err != nil {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"failed to add block delay to current block height: %v",
 			err,
@@ -193,7 +193,7 @@ func (k Keeper) DelayMessageByBlocks(
 
 	anyMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return 0, sdkerrors.Wrapf(
+		return 0, errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"failed to convert message to Any: %v",
 			err,

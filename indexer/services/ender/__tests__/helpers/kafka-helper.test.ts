@@ -357,6 +357,8 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: transfer.size,
         type: TransferType.TRANSFER_OUT,
+        createdAt: transfer.createdAt,
+        createdAtHeight: transfer.createdAtHeight,
         transactionHash: transfer.transactionHash,
       });
     });
@@ -382,6 +384,8 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: transfer.size,
         type: TransferType.TRANSFER_IN,
+        createdAt: transfer.createdAt,
+        createdAtHeight: transfer.createdAtHeight,
         transactionHash: transfer.transactionHash,
       });
     });
@@ -406,6 +410,8 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: deposit.size,
         type: TransferType.DEPOSIT,
+        createdAt: deposit.createdAt,
+        createdAtHeight: deposit.createdAtHeight,
         transactionHash: deposit.transactionHash,
       });
     });
@@ -430,6 +436,8 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: deposit.size,
         type: TransferType.WITHDRAWAL,
+        createdAt: withdrawal.createdAt,
+        createdAtHeight: withdrawal.createdAtHeight,
         transactionHash: withdrawal.transactionHash,
       });
     });

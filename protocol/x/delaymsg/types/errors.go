@@ -1,13 +1,13 @@
 package types
 
-import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+import errorsmod "cosmossdk.io/errors"
 
 // x/delaymsg module sentinel errors
 var (
-	ErrInvalidInput    = sdkerrors.Register(ModuleName, 1, "Invalid input")
-	ErrMsgIsNil        = sdkerrors.Register(ModuleName, 2, "Delayed msg is nil")
-	ErrMsgIsUnroutable = sdkerrors.Register(ModuleName, 3, "Message not recognized by router")
-	ErrInvalidSigner   = sdkerrors.Register(ModuleName, 4, "Invalid signer")
+	ErrInvalidInput    = errorsmod.Register(ModuleName, 1, "Invalid input")
+	ErrMsgIsNil        = errorsmod.Register(ModuleName, 2, "Delayed msg is nil")
+	ErrMsgIsUnroutable = errorsmod.Register(ModuleName, 3, "Message not recognized by router")
+	ErrInvalidSigner   = errorsmod.Register(ModuleName, 4, "Invalid signer")
 
-	ErrInvalidGenesisState = sdkerrors.Register(ModuleName, 10, "Invalid genesis state")
+	ErrInvalidGenesisState = errorsmod.Register(ModuleName, 10, "Invalid genesis state")
 )

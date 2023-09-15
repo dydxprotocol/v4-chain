@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -173,12 +173,13 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarkets(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			// Run.
 			_, err := msgServer.UpdateMarketPrices(
@@ -291,12 +292,13 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarkets(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			// Run.
 			_, err := msgServer.UpdateMarketPrices(
@@ -330,7 +332,7 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
 				types.NewMarketPriceUpdate(99, 11), // Market with id 99 does not exist.
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrInvalidMarketPriceUpdateDeterministic,
 				"market param price (99) does not exist",
 			),
@@ -343,7 +345,7 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 					constants.FiveBillion+(constants.FiveBillion*50/uint64(lib.OneMillion))-1,
 				),
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrInvalidMarketPriceUpdateDeterministic,
 				"update price (5000249999) for market (0) does not meet min price change requirement"+
 					" (50 ppm) based on the current market price (5000000000)",
@@ -354,7 +356,8 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
+			mockTimeKeeper.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(k)
 			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarkets(t, ctx, k)

@@ -15,11 +15,12 @@ import (
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 )
 
 // ExchangeQueryHandlerImpl is the struct that implements the `ExchangeQueryHandler` interface.
 type ExchangeQueryHandlerImpl struct {
-	lib.TimeProvider
+	libtime.TimeProvider
 }
 
 // Ensure the `ExchangeQueryHandlerImpl` struct is implemented at compile time
@@ -27,7 +28,7 @@ var _ ExchangeQueryHandler = (*ExchangeQueryHandlerImpl)(nil)
 
 // ExchangeQueryHandler is an interface that encapsulates querying an exchange for price info.
 type ExchangeQueryHandler interface {
-	lib.TimeProvider
+	libtime.TimeProvider
 	Query(
 		ctx context.Context,
 		exchangeQueryDetails *types.ExchangeQueryDetails,
@@ -155,7 +156,7 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	prices, unavailableTickers, err := exchangeQueryDetails.PriceFunction(
 		response,
 		tickerToPriceExponent,
-		&lib.MedianizerImpl{},
+		lib.Median[uint64],
 	)
 	if err != nil {
 		return nil, nil, price_function.NewExchangeError(exchangeQueryDetails.Exchange, err.Error())

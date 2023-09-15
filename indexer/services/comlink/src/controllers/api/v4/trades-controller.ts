@@ -39,7 +39,7 @@ const controllerName: string = 'trades-controller';
 
 @Route('trades')
 class TradesController extends Controller {
-  @Get('/perpetualMarkets/:ticker')
+  @Get('/perpetualMarket/:ticker')
   async getTrades(
     @Path() ticker: string,
       @Query() limit: number,

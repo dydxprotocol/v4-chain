@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 const (
@@ -63,7 +63,7 @@ func (rl maxPerNBlocksRateLimits) validate(field string, maxBlocks uint32, maxOr
 			return err
 		}
 		if existing, found := duplicates[rateLimit.NumBlocks]; found {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				ErrInvalidBlockRateLimitConfig,
 				"Multiple rate limits %+v and %+v for the same block height found for %s",
 				existing,
@@ -77,7 +77,7 @@ func (rl maxPerNBlocksRateLimits) validate(field string, maxBlocks uint32, maxOr
 
 func (rl MaxPerNBlocksRateLimit) validate(field string, maxBlocks uint32, maxOrders uint32) error {
 	if rl.Limit == 0 || rl.Limit > maxOrders {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidBlockRateLimitConfig,
 			"%d is not a valid Limit for %s rate limit %+v",
 			rl.Limit,
@@ -85,7 +85,7 @@ func (rl MaxPerNBlocksRateLimit) validate(field string, maxBlocks uint32, maxOrd
 			rl)
 	}
 	if rl.NumBlocks == 0 || rl.NumBlocks > maxBlocks {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidBlockRateLimitConfig,
 			"%d is not a valid NumBlocks for %s rate limit %+v",
 			rl.NumBlocks,

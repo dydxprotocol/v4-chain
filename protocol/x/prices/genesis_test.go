@@ -12,7 +12,8 @@ import (
 func TestGenesis(t *testing.T) {
 	genesisState := constants.Prices_DefaultGenesisState
 
-	ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, k, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	prices.InitGenesis(ctx, *k, genesisState)
 	got := prices.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
@@ -21,7 +22,8 @@ func TestGenesis(t *testing.T) {
 }
 
 func TestInitGenesisEmitsMarketUpdates(t *testing.T) {
-	ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, k, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	prices.InitGenesis(ctx, *k, constants.Prices_DefaultGenesisState)
 

@@ -3,9 +3,11 @@ package keeper
 import (
 	"sort"
 
+	errorsmod "cosmossdk.io/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -28,15 +30,18 @@ func (k Keeper) ModifyMarketParam(
 	}
 
 	// Get existing market param.
-	existingParam, err := k.GetMarketParam(ctx, marketParam.Id)
-	if err != nil {
-		return types.MarketParam{}, err
+	existingParam, exists := k.GetMarketParam(ctx, marketParam.Id)
+	if !exists {
+		return types.MarketParam{}, errorsmod.Wrap(
+			types.ErrMarketParamDoesNotExist,
+			lib.Uint32ToString(marketParam.Id),
+		)
 	}
 
 	// Validate update is permitted.
 	if marketParam.Exponent != existingParam.Exponent {
 		return types.MarketParam{},
-			sdkerrors.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.Uint32ToString(marketParam.Id))
+			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.Uint32ToString(marketParam.Id))
 	}
 
 	// Store the modified market param.
@@ -56,6 +61,9 @@ func (k Keeper) ModifyMarketParam(
 		),
 	)
 
+	// Update the in-memory market pair map for labelling metrics.
+	metrics.AddMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
+
 	return marketParam, nil
 }
 
@@ -63,16 +71,18 @@ func (k Keeper) ModifyMarketParam(
 func (k Keeper) GetMarketParam(
 	ctx sdk.Context,
 	id uint32,
-) (types.MarketParam, error) {
+) (
+	market types.MarketParam,
+	exists bool,
+) {
 	marketParamStore := k.newMarketParamStore(ctx)
 	b := marketParamStore.Get(types.MarketKey(id))
 	if b == nil {
-		return types.MarketParam{}, sdkerrors.Wrap(types.ErrMarketParamDoesNotExist, lib.Uint32ToString(id))
+		return types.MarketParam{}, false
 	}
 
-	var market = types.MarketParam{}
 	k.cdc.MustUnmarshal(b, &market)
-	return market, nil
+	return market, true
 }
 
 // GetAllMarketParams returns all market params.

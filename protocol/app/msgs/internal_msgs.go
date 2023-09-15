@@ -11,7 +11,7 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -20,13 +20,14 @@ import (
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	vest "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
 
 var (
 	// InternalMsgSamplesAll are msgs that are used only used internally.
-	InternalMsgSamplesAll = maps.MergeAllMapsMustHaveDistinctKeys(InternalMsgSamplesGovAuth)
+	InternalMsgSamplesAll = lib.MergeAllMapsMustHaveDistinctKeys(InternalMsgSamplesGovAuth)
 
 	// InternalMsgSamplesGovAuth are msgs that are used only used internally.
 	// GovAuth means that these messages must originate from the gov module and
@@ -62,8 +63,10 @@ var (
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           nil,
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":         &perpetuals.MsgCreatePerpetual{},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse": nil,
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          &perpetuals.MsgCreatePerpetual{},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  nil,
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         &perpetuals.MsgSetLiquidityTier{},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": nil,
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
@@ -112,6 +115,10 @@ var (
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},
 		"/dydxprotocol.rewards.MsgUpdateParamsResponse": nil,
+
+		// sending
+		"/dydxprotocol.sending.MsgSendFromModuleToAccount":         &sending.MsgSendFromModuleToAccount{},
+		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse": nil,
 
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         &stats.MsgUpdateParams{},
