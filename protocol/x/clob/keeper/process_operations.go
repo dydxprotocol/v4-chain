@@ -219,8 +219,13 @@ func (k Keeper) PersistMatchToState(
 	return nil
 }
 
-// statUnverifiedOrderRemoval stats the unverified order removal along with the block proposer, removal reason, and order size.
-func (k Keeper) statUnverifiedOrderRemoval(ctx sdk.Context, orderRemoval types.OrderRemoval, orderToRemove types.Order) {
+// statUnverifiedOrderRemoval stats the unverified order removal along with
+// the block proposer, removal reason, and order size.
+func (k Keeper) statUnverifiedOrderRemoval(
+	ctx sdk.Context,
+	orderRemoval types.OrderRemoval,
+	orderToRemove types.Order,
+) {
 	proposerConsAddress := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.ProcessOperations, metrics.UnverifiedStatefulOrderRemoval, metrics.Count},
