@@ -61,16 +61,16 @@ func setUpTestCase(
 	msgServer types.MsgServer,
 	goCtx context.Context,
 ) {
-	// Initialize Mocks and Context.
+	// Initialize mocks, keepers, and context.
 	mockKeeper = &mocks.SendingKeeper{}
 	ks := keepertest.SendingKeepers(t)
-	ks.Ctx = ks.Ctx.WithBlockHeight(25)
+	ctx := ks.Ctx.WithBlockHeight(25)
 
 	// Setup mocks.
-	tc.setupMocks(ks.Ctx, mockKeeper)
+	tc.setupMocks(ctx, mockKeeper)
 
 	// Return message server and sdk context.
-	return mockKeeper, keeper.NewMsgServerImpl(mockKeeper), sdk.WrapSDKContext(ks.Ctx)
+	return mockKeeper, keeper.NewMsgServerImpl(mockKeeper), sdk.WrapSDKContext(ctx)
 }
 
 func TestCreateTransfer(t *testing.T) {
