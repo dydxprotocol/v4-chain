@@ -33,56 +33,43 @@ var (
 	// GovAuth means that these messages must originate from the gov module and
 	// signed by gov module account.
 	InternalMsgSamplesGovAuth = map[string]sdk.Msg{
-		// MsgUpdateParams
-		"/cosmos.auth.v1beta1.MsgUpdateParams":                 &auth.MsgUpdateParams{},
-		"/cosmos.bank.v1beta1.MsgUpdateParams":                 &bank.MsgUpdateParams{},
-		"/cosmos.bank.v1beta1.MsgUpdateParamsResponse":         nil,
-		"/cosmos.consensus.v1.MsgUpdateParams":                 &consensus.MsgUpdateParams{},
-		"/cosmos.consensus.v1.MsgUpdateParamsResponse":         nil,
-		"/cosmos.crisis.v1beta1.MsgUpdateParams":               &crisis.MsgUpdateParams{},
-		"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse":       nil,
-		"/cosmos.distribution.v1beta1.MsgUpdateParams":         &distribution.MsgUpdateParams{},
-		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse": nil,
-		"/cosmos.gov.v1.MsgUpdateParams":                       &gov.MsgUpdateParams{},
-		"/cosmos.gov.v1.MsgUpdateParamsResponse":               nil,
-		"/cosmos.slashing.v1beta1.MsgUpdateParams":             &slashing.MsgUpdateParams{},
-		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse":     nil,
-		"/cosmos.staking.v1beta1.MsgUpdateParams":              &staking.MsgUpdateParams{},
-		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse":      nil,
-
-		// clob
-		"/dydxprotocol.clob.MsgCreateClobPair":                             &clob.MsgCreateClobPair{},
-		"/dydxprotocol.clob.MsgCreateClobPairResponse":                     nil,
-		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration":          &clob.MsgUpdateBlockRateLimitConfiguration{},
-		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse":  nil,
-		"/dydxprotocol.clob.MsgUpdateClobPair":                             &clob.MsgUpdateClobPair{},
-		"/dydxprotocol.clob.MsgUpdateClobPairResponse":                     nil,
-		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration":         &clob.MsgUpdateEquityTierLimitConfiguration{},
-		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": nil,
-		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig":                   &clob.MsgUpdateLiquidationsConfig{},
-		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           nil,
-
-		// perpetuals
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          &perpetuals.MsgCreatePerpetual{},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  nil,
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         &perpetuals.MsgSetLiquidityTier{},
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": nil,
-
-		// prices
-		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
-		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": nil,
+		// ------- CosmosSDK default modules
+		// auth
+		"/cosmos.auth.v1beta1.MsgUpdateParams": &auth.MsgUpdateParams{},
 
 		// bank
 		"/cosmos.bank.v1beta1.MsgSetSendEnabled":         &bank.MsgSetSendEnabled{},
 		"/cosmos.bank.v1beta1.MsgSetSendEnabledResponse": nil,
+		"/cosmos.bank.v1beta1.MsgUpdateParams":           &bank.MsgUpdateParams{},
+		"/cosmos.bank.v1beta1.MsgUpdateParamsResponse":   nil,
+
+		// consensus
+		"/cosmos.consensus.v1.MsgUpdateParams":         &consensus.MsgUpdateParams{},
+		"/cosmos.consensus.v1.MsgUpdateParamsResponse": nil,
+
+		// crisis
+		"/cosmos.crisis.v1beta1.MsgUpdateParams":         &crisis.MsgUpdateParams{},
+		"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse": nil,
 
 		// distribution
 		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":         &distribution.MsgCommunityPoolSpend{},
 		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse": nil,
+		"/cosmos.distribution.v1beta1.MsgUpdateParams":               &distribution.MsgUpdateParams{},
+		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse":       nil,
 
 		// gov
 		"/cosmos.gov.v1.MsgExecLegacyContent":         &gov.MsgExecLegacyContent{},
 		"/cosmos.gov.v1.MsgExecLegacyContentResponse": nil,
+		"/cosmos.gov.v1.MsgUpdateParams":              &gov.MsgUpdateParams{},
+		"/cosmos.gov.v1.MsgUpdateParamsResponse":      nil,
+
+		// slashing
+		"/cosmos.slashing.v1beta1.MsgUpdateParams":         &slashing.MsgUpdateParams{},
+		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse": nil,
+
+		// staking
+		"/cosmos.staking.v1beta1.MsgUpdateParams":         &staking.MsgUpdateParams{},
+		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse": nil,
 
 		// upgrade
 		"/cosmos.upgrade.v1beta1.MsgCancelUpgrade":           &upgrade.MsgCancelUpgrade{},
@@ -90,6 +77,7 @@ var (
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade":         &upgrade.MsgSoftwareUpgrade{},
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse": nil,
 
+		// ------- Custom modules
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": nil,
@@ -104,6 +92,18 @@ var (
 		"/dydxprotocol.bridge.MsgUpdateSafetyParams":          &bridge.MsgUpdateSafetyParams{},
 		"/dydxprotocol.bridge.MsgUpdateSafetyParamsResponse":  nil,
 
+		// clob
+		"/dydxprotocol.clob.MsgCreateClobPair":                             &clob.MsgCreateClobPair{},
+		"/dydxprotocol.clob.MsgCreateClobPairResponse":                     nil,
+		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration":          &clob.MsgUpdateBlockRateLimitConfiguration{},
+		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse":  nil,
+		"/dydxprotocol.clob.MsgUpdateClobPair":                             &clob.MsgUpdateClobPair{},
+		"/dydxprotocol.clob.MsgUpdateClobPairResponse":                     nil,
+		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration":         &clob.MsgUpdateEquityTierLimitConfiguration{},
+		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": nil,
+		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig":                   &clob.MsgUpdateLiquidationsConfig{},
+		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           nil,
+
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage":         &delaymsg.MsgDelayMessage{},
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": nil,
@@ -111,6 +111,16 @@ var (
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": nil,
+
+		// perpetuals
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          &perpetuals.MsgCreatePerpetual{},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  nil,
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         &perpetuals.MsgSetLiquidityTier{},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": nil,
+
+		// prices
+		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
+		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": nil,
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},
