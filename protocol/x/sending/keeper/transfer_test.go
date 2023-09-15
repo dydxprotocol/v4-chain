@@ -609,5 +609,6 @@ func TestSendFromModuleToAccount_NonExistentSenderModule(t *testing.T) {
 		}
 	}()
 	ks := keepertest.SendingKeepers(t)
-	ks.SendingKeeper.SendFromModuleToAccount(ks.Ctx, msgNonExistentSender)
+	err := ks.SendingKeeper.SendFromModuleToAccount(ks.Ctx, msgNonExistentSender)
+	require.NoError(t, err) // this line is never reached, just here for lint check.
 }
