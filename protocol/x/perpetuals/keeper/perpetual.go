@@ -235,9 +235,8 @@ func (k Keeper) processStoredPremiums(
 		// if block times are longer than expected and hence there were not enough blocks to
 		// collect votes.
 		// Note `NumPremiums >= len(marketPremiums.Premiums)`, so `lenPadding >= 0`.
-		lenPadding := int64(
-			lib.MaxUint32(premiumStore.NumPremiums,
-				minNumPremiumsRequired)) - int64(len(marketPremiums.Premiums))
+		lenPadding := int64(lib.Max(premiumStore.NumPremiums, minNumPremiumsRequired)) -
+			int64(len(marketPremiums.Premiums))
 
 		padding := make([]int32, lenPadding)
 		paddedPremiums := append(marketPremiums.Premiums, padding...)
@@ -265,7 +264,7 @@ func (k Keeper) processPremiumVotesIntoSamples(
 		newFundingSampleEpoch,
 		types.PremiumVotesKey,
 		k.GetMinNumVotesPerSample(ctx),
-		lib.MustGetMedianInt32, // combineFunc
+		lib.MustGetMedian[int32], // combineFunc
 		func(input []int32) []int32 { return input }, // filterFunc
 	)
 
@@ -460,7 +459,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		}
 
 		// Get impact notional corresponding to this perpetual market (panic if its liquidity tier doesn't exist).
-		liquidityTier := lib.MustGetValue(allLiquidityTiers, uint(perp.Params.LiquidityTier))
+		liquidityTier := allLiquidityTiers[perp.Params.LiquidityTier]
 		bigImpactNotionalQuoteQuantums := new(big.Int).SetUint64(liquidityTier.ImpactNotional)
 
 		premiumPpm, err := k.clobKeeper.GetPricePremiumForPerpetual(
@@ -472,7 +471,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: bigImpactNotionalQuoteQuantums,
 				// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-				MaxAbsPremiumVotePpm: lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perp.Params.LiquidityTier)),
+				MaxAbsPremiumVotePpm: liquidityTierToMaxAbsPremiumVotePpm[perp.Params.LiquidityTier],
 			},
 		)
 		if err != nil {
@@ -1222,7 +1221,7 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 		}
 
 		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-		maxAbsPremiumVotePpm := lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perpetual.Params.LiquidityTier))
+		maxAbsPremiumVotePpm := liquidityTierToMaxAbsPremiumVotePpm[perpetual.Params.LiquidityTier]
 		// Check premium vote value is within bounds.
 		bigAbsPremiumPpm := new(big.Int).SetUint64(uint64(
 			lib.AbsInt32(vote.PremiumPpm),

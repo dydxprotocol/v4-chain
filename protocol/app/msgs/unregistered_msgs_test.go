@@ -1,10 +1,11 @@
 package msgs_test
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +23,7 @@ func TestUnregisteredMsgs_Key(t *testing.T) {
 		"/cosmos.group.v1beta1.MsgSubmitProposal",
 		"/cosmos.group.v1beta1.MsgSubmitProposalResponse",
 	}
-	require.Equal(t, expectedMsgs, maps.GetSortedKeys(msgs.UnregisteredMsgs))
+	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.UnregisteredMsgs))
 }
 
 func TestUnregisteredMsgs_Value(t *testing.T) {

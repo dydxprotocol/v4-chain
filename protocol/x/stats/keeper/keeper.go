@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
@@ -47,7 +47,7 @@ func NewKeeper(
 		epochsKeeper:      epochsKeeper,
 		storeKey:          storeKey,
 		transientStoreKey: transientStoreKey,
-		authorities:       maps.ArrayToMapInterface(authorities),
+		authorities:       lib.SliceToSet(authorities),
 	}
 }
 

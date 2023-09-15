@@ -1,10 +1,8 @@
 package types
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"math/big"
-	"sort"
 
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -51,55 +49,6 @@ func NewLiquidationOrder(
 		quantums:   quantums,
 		subticks:   subticks,
 	}
-}
-
-// SortedLiquidationOrders is type alias for `*LiquidationOrder` which supports deterministic
-// sorting. Orders are first ordered by `ClobPairId` of the order,
-// followed by the side of the order, followed by the fillable price, followed by the size of the order,
-// and finally by order hashes.
-type SortedLiquidationOrders []LiquidationOrder
-
-// The below methods are required to implement `sort.Interface` for sorting using the sort package.
-var _ sort.Interface = SortedLiquidationOrders{}
-
-func (s SortedLiquidationOrders) Len() int {
-	return len(s)
-}
-
-func (s SortedLiquidationOrders) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s SortedLiquidationOrders) Less(i, j int) bool {
-	x := s[i]
-	y := s[j]
-	if x.GetClobPairId() != y.GetClobPairId() {
-		return x.GetClobPairId() < y.GetClobPairId()
-	}
-
-	// Buy orders before sell orders.
-	if x.IsBuy() != y.IsBuy() {
-		return x.IsBuy()
-	}
-
-	if x.GetOrderSubticks() != y.GetOrderSubticks() {
-		if x.IsBuy() {
-			// Buy orders are sorted in descending order.
-			return x.GetOrderSubticks() > y.GetOrderSubticks()
-		} else {
-			// Sell orders are sorted in ascending order.
-			return x.GetOrderSubticks() < y.GetOrderSubticks()
-		}
-	}
-
-	// Sort by order size.
-	if x.GetBaseQuantums() != y.GetBaseQuantums() {
-		return x.GetBaseQuantums() > y.GetBaseQuantums()
-	}
-
-	xHash := x.GetOrderHash()
-	yHash := y.GetOrderHash()
-	return bytes.Compare(xHash[:], yHash[:]) == -1
 }
 
 // IsBuy returns true if this is a buy order, false if not.

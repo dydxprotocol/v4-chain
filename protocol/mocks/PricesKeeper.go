@@ -93,7 +93,7 @@ func (_m *PricesKeeper) GetAllMarketPrices(ctx types.Context) []pricestypes.Mark
 }
 
 // GetMarketParam provides a mock function with given fields: ctx, id
-func (_m *PricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestypes.MarketParam, error) {
+func (_m *PricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestypes.MarketParam, bool) {
 	ret := _m.Called(ctx, id)
 
 	var r0 pricestypes.MarketParam
@@ -103,11 +103,11 @@ func (_m *PricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestype
 		r0 = ret.Get(0).(pricestypes.MarketParam)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(types.Context, uint32) error); ok {
+	var r1 bool
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) bool); ok {
 		r1 = rf(ctx, id)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
 	return r0, r1
@@ -132,6 +132,20 @@ func (_m *PricesKeeper) GetMarketPrice(ctx types.Context, id uint32) (pricestype
 	}
 
 	return r0, r1
+}
+
+// HasAuthority provides a mock function with given fields: authority
+func (_m *PricesKeeper) HasAuthority(authority string) bool {
+	ret := _m.Called(authority)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(authority)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
 }
 
 // Logger provides a mock function with given fields: ctx

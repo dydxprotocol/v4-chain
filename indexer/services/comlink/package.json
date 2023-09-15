@@ -24,6 +24,7 @@
     "@bugsnag/node": "^7.18.0",
     "@bugsnag/plugin-express": "^7.18.0",
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/compliance": "workspace:^0.0.1",
     "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
     "@dydxprotocol-indexer/redis": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",

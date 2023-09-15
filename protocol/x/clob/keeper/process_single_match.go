@@ -472,7 +472,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 	if !order.IsStatefulOrder() {
 		// Compute the block at which this state fill amount can be pruned. This is the greater of
 		// `GoodTilBlock + ShortBlockWindow` and the existing `pruneableBlockHeight`.
-		pruneableBlockHeight = lib.MaxUint32(
+		pruneableBlockHeight = lib.Max(
 			order.GetGoodTilBlock()+types.ShortBlockWindow,
 			curPruneableBlockHeight,
 		)

@@ -10,7 +10,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
@@ -34,7 +33,7 @@ func NewKeeper(
 	return &Keeper{
 		cdc:         cdc,
 		storeKey:    storeKey,
-		authorities: maps.ArrayToMapInterface(authorities),
+		authorities: lib.SliceToSet(authorities),
 		router:      router,
 	}
 }

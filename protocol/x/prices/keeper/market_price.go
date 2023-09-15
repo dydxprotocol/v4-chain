@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"math/big"
 	"sort"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"

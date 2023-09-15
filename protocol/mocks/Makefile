@@ -10,6 +10,8 @@ mock-clean:
 mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=InterfaceRegistry --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/codec --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=Configurator --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=MultiStore --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/store/types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=CacheMultiStore --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/store/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=AnteDecorator --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=TxConfig --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/client --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=TxBuilder --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/client --recursive --output=./mocks
@@ -38,13 +40,12 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=FileHandler --dir=./lib --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=GrpcServer --dir=./lib --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=GrpcClient --dir=./lib --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=TimeProvider --dir=./lib --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=TimeProvider --dir=./lib/time --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=Marshaler --dir=./indexer/common --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=QueryClient --dir=./testutil/grpc --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=QueryServer --dir=./testutil/grpc --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ExchangeQueryHandler --dir=./daemons/pricefeed/client/handler --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=RequestHandler --dir=./lib --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=Medianizer --dir=./lib --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=IndexerMessageSender --dir=./indexer --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PerpetualsClobKeeper --dir=x/perpetuals/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=IndexerEventManager --dir=./indexer/indexer_manager --recursive --output=./mocks

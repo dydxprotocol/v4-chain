@@ -19,6 +19,25 @@ func WithPair(pair string) MarketParamPriceModifierOption {
 	}
 }
 
+func WithExponent(exp int32) MarketParamPriceModifierOption {
+	return func(cp *pricestypes.MarketParamPrice) {
+		cp.Param.Exponent = exp
+		cp.Price.Exponent = exp
+	}
+}
+
+func WithPriceValue(price uint64) MarketParamPriceModifierOption {
+	return func(cp *pricestypes.MarketParamPrice) {
+		cp.Price.Price = price
+	}
+}
+
+func WithExchangeConfigJson(configJson string) MarketParamPriceModifierOption {
+	return func(cp *pricestypes.MarketParamPrice) {
+		cp.Param.ExchangeConfigJson = configJson
+	}
+}
+
 // GenerateMarketParamPrice returns a `MarketParamPrice` object set to default values.
 // Passing in `MarketParamPriceModifierOption` methods alters the value of the `MarketParamPrice` returned.
 // It will start with the default, valid `MarketParamPrice` value defined within the method

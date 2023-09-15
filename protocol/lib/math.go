@@ -63,14 +63,6 @@ func Min[T constraints.Ordered](x, y T) T {
 	return x
 }
 
-func MaxUint32(x, y uint32) uint32 {
-	if x < y {
-		return y
-	}
-
-	return x
-}
-
 func Int64MulPpm(x int64, ppm uint32) int64 {
 	xMulPpm := BigIntMulPpm(big.NewInt(x), ppm)
 
@@ -163,25 +155,9 @@ func ChangeRateUint64(originalV uint64, newV uint64) (float32, error) {
 	return result, nil
 }
 
-// MedianUint64 returns the median value of the input slice. Note that if the
-// input has an even number of elements, then the returned median is rounded up
-// the nearest uint64. For example, 6.5 is rounded up to 7.
-func MedianUint64(input []uint64) (uint64, error) {
-	return medianIntGeneric(input)
-}
-
-// MedianInt32 returns the median value of the input slice. Note that if the
-// input has an even number of elements, then the returned median is rounded
-// towards positive/negative infinity, to the nearest int32. For example,
-// 6.5 is rounded to 7 and -4.5 is rounded to -5.
-func MedianInt32(input []int32) (int32, error) {
-	return medianIntGeneric(input)
-}
-
-// MustGetMedianInt32 is a wrapper around `MedianInt32` that panics if
-// input length is zero.
-func MustGetMedianInt32(input []int32) int32 {
-	ret, err := MedianInt32(input)
+// MustGetMedian is a wrapper around `Median` that panics if input length is zero.
+func MustGetMedian[V uint64 | uint32 | int64 | int32](input []V) V {
+	ret, err := Median(input)
 
 	if err != nil {
 		panic(err)
@@ -190,9 +166,9 @@ func MustGetMedianInt32(input []int32) int32 {
 	return ret
 }
 
-// medianIntGeneric is a generic median calculator.
-// It currently supports `uint64`, `int32` and more types can be added.
-func medianIntGeneric[V uint64 | int32](input []V) (V, error) {
+// Median is a generic median calculator.
+// If the input has an even number of elements, then the average of the two middle numbers is rounded away from zero.
+func Median[V uint64 | uint32 | int64 | int32](input []V) (V, error) {
 	l := len(input)
 	if l == 0 {
 		return 0, errors.New("input cannot be empty")

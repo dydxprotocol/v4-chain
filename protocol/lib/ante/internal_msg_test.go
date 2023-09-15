@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appmsgs "github.com/dydxprotocol/v4-chain/protocol/app/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 	"github.com/stretchr/testify/require"
 )
@@ -32,7 +32,7 @@ func TestIsInternalMsg_Empty(t *testing.T) {
 }
 
 func TestIsInternalMsg_Invalid(t *testing.T) {
-	allMsgsMinusInternal := maps.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
+	allMsgsMinusInternal := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
 	for key := range appmsgs.InternalMsgSamplesAll {
 		delete(allMsgsMinusInternal, key)
 	}

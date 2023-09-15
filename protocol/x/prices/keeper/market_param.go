@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"sort"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
-	"sort"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,9 +30,12 @@ func (k Keeper) ModifyMarketParam(
 	}
 
 	// Get existing market param.
-	existingParam, err := k.GetMarketParam(ctx, marketParam.Id)
-	if err != nil {
-		return types.MarketParam{}, err
+	existingParam, exists := k.GetMarketParam(ctx, marketParam.Id)
+	if !exists {
+		return types.MarketParam{}, errorsmod.Wrap(
+			types.ErrMarketParamDoesNotExist,
+			lib.Uint32ToString(marketParam.Id),
+		)
 	}
 
 	// Validate update is permitted.
@@ -67,16 +71,18 @@ func (k Keeper) ModifyMarketParam(
 func (k Keeper) GetMarketParam(
 	ctx sdk.Context,
 	id uint32,
-) (types.MarketParam, error) {
+) (
+	market types.MarketParam,
+	exists bool,
+) {
 	marketParamStore := k.newMarketParamStore(ctx)
 	b := marketParamStore.Get(types.MarketKey(id))
 	if b == nil {
-		return types.MarketParam{}, errorsmod.Wrap(types.ErrMarketParamDoesNotExist, lib.Uint32ToString(id))
+		return types.MarketParam{}, false
 	}
 
-	var market = types.MarketParam{}
 	k.cdc.MustUnmarshal(b, &market)
-	return market, nil
+	return market, true
 }
 
 // GetAllMarketParams returns all market params.

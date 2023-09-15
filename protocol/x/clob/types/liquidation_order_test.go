@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"sort"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -199,94 +198,4 @@ func TestNewLiquidationOrder_PanicsOnNonPerpetualClob(t *testing.T) {
 func TestLiquidationOrder_IsReduceOnly(t *testing.T) {
 	order := types.LiquidationOrder{}
 	require.False(t, order.IsReduceOnly())
-}
-
-func TestSortedLiquidationOrder(t *testing.T) {
-	tests := map[string]struct {
-		orders []types.LiquidationOrder
-
-		expectedOrdering []types.LiquidationOrder
-	}{
-		"sorts by clob pair id": {
-			orders: []types.LiquidationOrder{
-				constants.LiquidationOrder_Carl_Num0_Clob1_Buy1ETH_Price3000,
-				constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
-			},
-			expectedOrdering: []types.LiquidationOrder{
-				constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
-				constants.LiquidationOrder_Carl_Num0_Clob1_Buy1ETH_Price3000,
-			},
-		},
-		"sorts by order side": {
-			orders: []types.LiquidationOrder{
-				constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
-				constants.LiquidationOrder_Bob_Num0_Clob0_Buy100_Price20_BTC,
-			},
-			expectedOrdering: []types.LiquidationOrder{
-				constants.LiquidationOrder_Bob_Num0_Clob0_Buy100_Price20_BTC,
-				constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
-			},
-		},
-		"sorts buys in descending order": {
-			orders: []types.LiquidationOrder{
-				constants.LiquidationOrder_Bob_Num0_Clob0_Buy25_Price30_BTC,
-				constants.LiquidationOrder_Carl_Num0_Clob0_Buy3_Price50_BTC,
-			},
-			expectedOrdering: []types.LiquidationOrder{
-				constants.LiquidationOrder_Carl_Num0_Clob0_Buy3_Price50_BTC,
-				constants.LiquidationOrder_Bob_Num0_Clob0_Buy25_Price30_BTC,
-			},
-		},
-		"sorts sells ascending order": {
-			orders: []types.LiquidationOrder{
-				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
-				constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
-			},
-			expectedOrdering: []types.LiquidationOrder{
-				constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
-				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
-			},
-		},
-		"sorts by order size": {
-			orders: []types.LiquidationOrder{
-				constants.LiquidationOrder_Dave_Num1_Clob0_Sell01BTC_Price50000,
-				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
-			},
-			expectedOrdering: []types.LiquidationOrder{
-				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
-				constants.LiquidationOrder_Dave_Num1_Clob0_Sell01BTC_Price50000,
-			},
-		},
-		"tie breaker ordering": {
-			orders: []types.LiquidationOrder{
-				constants.LiquidationOrder_Carl_Num0_Clob1_Buy1ETH_Price3000,
-				constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
-				constants.LiquidationOrder_Bob_Num0_Clob0_Buy100_Price20_BTC,
-				constants.LiquidationOrder_Carl_Num0_Clob0_Buy3_Price50_BTC,
-				constants.LiquidationOrder_Bob_Num0_Clob0_Buy25_Price30_BTC,
-				constants.LiquidationOrder_Dave_Num1_Clob0_Sell01BTC_Price50000,
-				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
-			},
-			expectedOrdering: []types.LiquidationOrder{
-				constants.LiquidationOrder_Carl_Num0_Clob0_Buy3_Price50_BTC,
-				constants.LiquidationOrder_Bob_Num0_Clob0_Buy25_Price30_BTC,
-				constants.LiquidationOrder_Bob_Num0_Clob0_Buy100_Price20_BTC,
-				constants.LiquidationOrder_Alice_Num0_Clob0_Sell20_Price25_BTC,
-				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
-				constants.LiquidationOrder_Dave_Num1_Clob0_Sell01BTC_Price50000,
-				constants.LiquidationOrder_Carl_Num0_Clob1_Buy1ETH_Price3000,
-			},
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			sort.Sort(types.SortedLiquidationOrders(tc.orders))
-			require.Equal(
-				t,
-				tc.expectedOrdering,
-				tc.orders,
-			)
-		})
-	}
 }

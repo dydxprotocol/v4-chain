@@ -16,7 +16,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -60,7 +59,7 @@ func NewKeeper(
 		bankKeeper:        bankKeeper,
 		feeTiersKeeper:    feeTiersKeeper,
 		pricesKeeper:      pricesKeeper,
-		authorities:       maps.ArrayToMapInterface(authorities),
+		authorities:       lib.SliceToSet(authorities),
 	}
 }
 
