@@ -92,6 +92,8 @@ var ExpectedEvent6 = indexer_manager.IndexerTendermintEvent{
 	EventIndex: 1,
 }
 
+var EventVersion uint32 = 1
+
 func assertIsEnabled(t *testing.T, isEnabled bool) {
 	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	mockMsgSender := &mocks.IndexerMessageSender{}
@@ -143,6 +145,7 @@ func TestProduceBlockBasicTxnEvent(t *testing.T) {
 		indexer_manager.GetB64EncodedEventMessage(
 			&OrderFillEvent,
 		),
+		EventVersion,
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
@@ -171,6 +174,7 @@ func TestProduceBlockBasicBlockEvent(t *testing.T) {
 			&FundingRateAndIndexEvent,
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		EventVersion,
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
@@ -198,6 +202,7 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 		indexer_manager.GetB64EncodedEventMessage(
 			&OrderFillEvent,
 		),
+		EventVersion,
 	)
 	indexerEventManager.AddTxnEvent(
 		ctx,
@@ -205,6 +210,7 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 		indexer_manager.GetB64EncodedEventMessage(
 			&SubaccountEvent,
 		),
+		EventVersion,
 	)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes1)
 	indexerEventManager.AddTxnEvent(
@@ -213,6 +219,7 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 		indexer_manager.GetB64EncodedEventMessage(
 			&TransferEvent,
 		),
+		EventVersion,
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
@@ -245,6 +252,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 		indexer_manager.GetB64EncodedEventMessage(
 			&OrderFillEvent,
 		),
+		EventVersion,
 	)
 	indexerEventManager.AddTxnEvent(
 		ctx,
@@ -252,6 +260,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 		indexer_manager.GetB64EncodedEventMessage(
 			&SubaccountEvent,
 		),
+		EventVersion,
 	)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes1)
 	indexerEventManager.AddTxnEvent(
@@ -260,6 +269,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 		indexer_manager.GetB64EncodedEventMessage(
 			&TransferEvent,
 		),
+		EventVersion,
 	)
 	indexerEventManager.AddBlockEvent(
 		ctx,
@@ -268,6 +278,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 			&FundingRateAndIndexEvent,
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		EventVersion,
 	)
 	indexerEventManager.AddBlockEvent(
 		ctx,
@@ -276,6 +287,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 			&FundingPremiumSampleEvent,
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		EventVersion,
 	)
 	indexerEventManager.AddBlockEvent(
 		ctx,
@@ -284,6 +296,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 			&FundingPremiumSampleEvent,
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
+		EventVersion,
 	)
 	indexerEventManager.AddBlockEvent(
 		ctx,
@@ -292,6 +305,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 			&FundingRateAndIndexEvent,
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
+		EventVersion,
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
@@ -328,6 +342,7 @@ func TestClearEvents(t *testing.T) {
 		indexer_manager.GetB64EncodedEventMessage(
 			&OrderFillEvent,
 		),
+		EventVersion,
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)

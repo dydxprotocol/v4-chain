@@ -75,6 +75,7 @@ func (k Keeper) CreateAsset(
 				asset.AtomicResolution,
 			),
 		),
+		indexerevents.AssetEventVersion,
 	)
 
 	return asset, nil

@@ -325,6 +325,7 @@ func (k Keeper) processPremiumVotesIntoSamples(
 			indexerevents.NewPremiumSamplesEvent(newSamplesForEvent),
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		indexerevents.FundingValuesEventVersion,
 	)
 
 	k.SetEmptyPremiumVotes(ctx)
@@ -696,6 +697,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			indexerevents.NewFundingRatesAndIndicesEvent(newFundingRatesAndIndicesForEvent),
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		indexerevents.FundingValuesEventVersion,
 	)
 
 	// Clear premium samples.
@@ -1289,6 +1291,7 @@ func (k Keeper) CreateLiquidityTier(
 				basePositionNotional,
 			),
 		),
+		indexerevents.LiquidityTierEventVersion,
 	)
 
 	return liquidityTier, nil
@@ -1341,6 +1344,7 @@ func (k Keeper) ModifyLiquidityTier(
 				basePositionNotional,
 			),
 		),
+		indexerevents.LiquidityTierEventVersion,
 	)
 
 	return liquidityTier, nil

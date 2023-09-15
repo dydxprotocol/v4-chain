@@ -179,6 +179,7 @@ func (k Keeper) ProcessInternalOperations(
 						),
 					),
 				),
+				indexerevents.StatefulOrderEventVersion,
 			)
 
 			telemetry.IncrCounterWithLabels(
@@ -324,6 +325,7 @@ func (k Keeper) PersistMatchOrdersToState(
 					totalFilledTaker,
 				),
 			),
+			indexerevents.OrderFillEventVersion,
 		)
 	}
 
@@ -396,6 +398,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 					totalFilledMaker,
 				),
 			),
+			indexerevents.OrderFillEventVersion,
 		)
 	}
 
