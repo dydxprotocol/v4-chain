@@ -1,7 +1,6 @@
 package clob_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
@@ -727,7 +726,6 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					request abcitypes.RequestDeliverTx,
 					response abcitypes.ResponseDeliverTx,
 				) (haltchain bool) {
-					fmt.Println(response.Log)
 					require.True(t, response.IsErr())
 					require.Equal(t, clobtypes.ErrInvalidOrderRemoval.ABCICode(), response.Code)
 					require.Contains(t, response.Log, tc.expectedErr)

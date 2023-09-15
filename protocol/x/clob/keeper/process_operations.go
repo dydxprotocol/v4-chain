@@ -219,21 +219,19 @@ func (k Keeper) PersistMatchToState(
 	return nil
 }
 
-// statUnverifiedOrderRemoval stats the unverified order removal along with the block proposer.
+// statUnverifiedOrderRemoval stats the unverified order removal along with the block proposer, removal reason, and order size.
 func (k Keeper) statUnverifiedOrderRemoval(ctx sdk.Context, orderRemoval types.OrderRemoval, orderToRemove types.Order) {
-	proposer, err := k.getProposer(ctx)
-	if err == nil {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.ProcessOperations, metrics.UnverifiedStatefulOrderRemoval, metrics.Count},
-			1,
-			append(
-				orderRemoval.OrderId.GetOrderIdLabels(),
-				metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
-				metrics.GetLabelForStringValue(metrics.Proposer, proposer.Description.Moniker),
-				metrics.GetLabelForIntValue(metrics.BaseQuantums, int(orderToRemove.GetBaseQuantums())),
-			),
-		)
-	}
+	proposerConsAddress := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.ProcessOperations, metrics.UnverifiedStatefulOrderRemoval, metrics.Count},
+		1,
+		append(
+			orderRemoval.OrderId.GetOrderIdLabels(),
+			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
+			metrics.GetLabelForStringValue(metrics.Proposer, proposerConsAddress.String()),
+			metrics.GetLabelForIntValue(metrics.BaseQuantums, int(orderToRemove.GetBaseQuantums())),
+		),
+	)
 }
 
 // PersistOrderRemovalToState takes in an OrderRemoval, statefully validates it according to
@@ -295,7 +293,7 @@ func (k Keeper) PersistOrderRemovalToState(
 	// 		return errorsmod.Wrapf(
 	// 			types.ErrInvalidOrderRemoval,
 	// 			"Order Removal (%+v) invalid. Order must be reduce only.",
-	// 			*orderRemoval,
+	// 			orderRemoval,
 	// 		)
 	// 	}
 
@@ -315,7 +313,7 @@ func (k Keeper) PersistOrderRemovalToState(
 	// 		return errorsmod.Wrapf(
 	// 			types.ErrInvalidOrderRemoval,
 	// 			"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
-	// 			*orderRemoval,
+	// 			orderRemoval,
 	// 		)
 	// 	}
 	case types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:

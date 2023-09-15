@@ -741,7 +741,6 @@ func New(
 		app.PerpetualsKeeper,
 		app.StatsKeeper,
 		app.RewardsKeeper,
-		app.StakingKeeper,
 		app.IndexerEventManager,
 		txConfig.TxDecoder(),
 		clobFlags,
