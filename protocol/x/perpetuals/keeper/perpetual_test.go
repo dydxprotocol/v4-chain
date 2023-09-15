@@ -27,6 +27,7 @@ import (
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	lttest "github.com/dydxprotocol/v4-chain/protocol/testutil/liquidity_tier"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -651,6 +652,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// Create `LiquidityTier` struct.
 			_, err = keeper.CreateLiquidityTier(
 				ctx,
+				0,
 				"name",
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
@@ -2796,12 +2798,89 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 	}
 }
 
+func TestGetAllLiquidityTiers_Sorted(t *testing.T) {
+	// Setup context and keepers
+	ctx, keeper, _, _, _ := keepertest.PerpetualsKeepers(t)
+
+	// Create liquidity tiers and perpetuals
+	// keepertest.CreateTestLiquidityTiers(t, ctx, keeper)
+
+	lts := []types.LiquidityTier{
+		*lttest.GenerateLiquidityTier(lttest.WithId(0)),
+		*lttest.GenerateLiquidityTier(lttest.WithId(100)),
+		*lttest.GenerateLiquidityTier(lttest.WithId(5)),
+		*lttest.GenerateLiquidityTier(lttest.WithId(72)),
+		*lttest.GenerateLiquidityTier(lttest.WithId(16)),
+	}
+
+	for _, lt := range lts {
+		_, err := keeper.CreateLiquidityTier(
+			ctx,
+			lt.Id,
+			lt.Name,
+			lt.InitialMarginPpm,
+			lt.MaintenanceFractionPpm,
+			lt.BasePositionNotional,
+			lt.ImpactNotional,
+		)
+		require.NoError(t, err)
+	}
+
+	got := keeper.GetAllLiquidityTiers(ctx)
+	require.Equal(
+		t,
+		[]types.LiquidityTier{
+			*lttest.GenerateLiquidityTier(lttest.WithId(0)),
+			*lttest.GenerateLiquidityTier(lttest.WithId(5)),
+			*lttest.GenerateLiquidityTier(lttest.WithId(16)),
+			*lttest.GenerateLiquidityTier(lttest.WithId(72)),
+			*lttest.GenerateLiquidityTier(lttest.WithId(100)),
+		},
+		got,
+	)
+}
+
+func TestHasLiquidityTier(t *testing.T) {
+	// Setup context and keepers
+	ctx, keeper, _, _, _ := keepertest.PerpetualsKeepers(t)
+
+	lts := []types.LiquidityTier{
+		*lttest.GenerateLiquidityTier(lttest.WithId(0)),
+		*lttest.GenerateLiquidityTier(lttest.WithId(5)),
+		*lttest.GenerateLiquidityTier(lttest.WithId(16)),
+		*lttest.GenerateLiquidityTier(lttest.WithId(72)),
+		*lttest.GenerateLiquidityTier(lttest.WithId(100)),
+	}
+
+	for _, lt := range lts {
+		_, err := keeper.CreateLiquidityTier(
+			ctx,
+			lt.Id,
+			lt.Name,
+			lt.InitialMarginPpm,
+			lt.MaintenanceFractionPpm,
+			lt.BasePositionNotional,
+			lt.ImpactNotional,
+		)
+		require.NoError(t, err)
+	}
+
+	for _, lt := range lts {
+		// Test if HasLiquidityTier correctly identifies an existing liquidity tier.
+		require.True(t, keeper.HasLiquidityTier(ctx, lt.Id))
+	}
+
+	found := keeper.HasLiquidityTier(ctx, 9999)
+	require.False(t, found, "Expected not to find liquidity tier with id 9999, but it was found")
+}
+
 func TestCreateLiquidityTier_Success(t *testing.T) {
 	ctx, keeper, _, _, _ := keepertest.PerpetualsKeepers(t)
-	for i, lt := range constants.LiquidityTiers {
+	for _, lt := range constants.LiquidityTiers {
 		// Create LiquidityTier without error.
 		_, err := keeper.CreateLiquidityTier(
 			ctx,
+			lt.Id,
 			lt.Name,
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
@@ -2810,12 +2889,11 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		// Validate number of LiquidityTiers in store.
-		numLiquidityTiers := keeper.GetNumLiquidityTiers(ctx)
-		require.Equal(t, uint32(i+1), numLiquidityTiers)
+		// Validate liquidity tier exists in store.
+		require.True(t, keeper.HasLiquidityTier(ctx, lt.Id))
 
 		// Validate fields of LiquidityTier object in store.
-		liquidityTier, err := keeper.GetLiquidityTier(ctx, uint32(i))
+		liquidityTier, err := keeper.GetLiquidityTier(ctx, lt.Id)
 		require.NoError(t, err)
 		require.Equal(t, lt.Id, liquidityTier.Id)
 		require.Equal(t, lt.Name, liquidityTier.Name)
@@ -2882,6 +2960,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			_, err := keeper.CreateLiquidityTier(
 				ctx,
+				tc.id,
 				tc.name,
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
@@ -2900,6 +2979,7 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 	for _, lt := range constants.LiquidityTiers {
 		_, err := keeper.CreateLiquidityTier(
 			ctx,
+			lt.Id,
 			lt.Name,
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,

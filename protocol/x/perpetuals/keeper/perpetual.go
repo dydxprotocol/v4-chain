@@ -1,11 +1,12 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 	"sort"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
@@ -439,7 +440,6 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 	err error,
 ) {
 	allPerpetuals := k.GetAllPerpetuals(ctx)
-	allLiquidityTiers := k.GetAllLiquidityTiers(ctx)
 
 	// Calculate `maxAbsPremiumVotePpm` of each liquidity tier.
 	liquidityTierToMaxAbsPremiumVotePpm := k.getLiquidityTiertoMaxAbsPremiumVotePpm(ctx)
@@ -459,9 +459,17 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		}
 
 		// Get impact notional corresponding to this perpetual market (panic if its liquidity tier doesn't exist).
-		liquidityTier := allLiquidityTiers[perp.Params.LiquidityTier]
+		liquidityTier, err := k.GetLiquidityTier(ctx, perp.Params.LiquidityTier)
+		if err != nil {
+			panic(err)
+		}
 		bigImpactNotionalQuoteQuantums := new(big.Int).SetUint64(liquidityTier.ImpactNotional)
 
+		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if not found).
+		maxAbsPremiumVotePpm, exists := liquidityTierToMaxAbsPremiumVotePpm[perp.Params.LiquidityTier]
+		if !exists {
+			panic(types.ErrLiquidityTierDoesNotExist)
+		}
 		premiumPpm, err := k.clobKeeper.GetPricePremiumForPerpetual(
 			ctx,
 			perp.Params.Id,
@@ -470,8 +478,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 				BaseAtomicResolution:        perp.Params.AtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: bigImpactNotionalQuoteQuantums,
-				// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-				MaxAbsPremiumVotePpm: liquidityTierToMaxAbsPremiumVotePpm[perp.Params.LiquidityTier],
+				MaxAbsPremiumVotePpm:        maxAbsPremiumVotePpm,
 			},
 		)
 		if err != nil {
@@ -1139,7 +1146,7 @@ func (k Keeper) validatePerpetual(
 	}
 
 	// Validate `liquidityTier` exists.
-	if perpetual.Params.LiquidityTier >= k.GetNumLiquidityTiers(ctx) {
+	if !k.HasLiquidityTier(ctx, perpetual.Params.LiquidityTier) {
 		return errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.Params.LiquidityTier))
 	}
 
@@ -1220,8 +1227,11 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 			)
 		}
 
-		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-		maxAbsPremiumVotePpm := liquidityTierToMaxAbsPremiumVotePpm[perpetual.Params.LiquidityTier]
+		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if not found).
+		maxAbsPremiumVotePpm, exists := liquidityTierToMaxAbsPremiumVotePpm[perpetual.Params.LiquidityTier]
+		if !exists {
+			panic(types.ErrLiquidityTierDoesNotExist)
+		}
 		// Check premium vote value is within bounds.
 		bigAbsPremiumPpm := new(big.Int).SetUint64(uint64(
 			lib.AbsInt32(vote.PremiumPpm),
@@ -1242,10 +1252,20 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 
 /* === LIQUIDITY TIER FUNCTIONS === */
 
+// HasLiquidityTier checks if a liquidity tier exists in the store.
+func (k Keeper) HasLiquidityTier(
+	ctx sdk.Context,
+	id uint32,
+) (found bool) {
+	ltStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LiquidityTierKeyPrefix))
+	return ltStore.Has(types.LiquidityTierKey(id))
+}
+
 // `CreateLiquidityTier` creates a new liquidity tier in the store.
 // Returns an error if any of its fields fails validation.
 func (k Keeper) CreateLiquidityTier(
 	ctx sdk.Context,
+	id uint32,
 	name string,
 	initialMarginPpm uint32,
 	maintenanceFractionPpm uint32,
@@ -1255,11 +1275,16 @@ func (k Keeper) CreateLiquidityTier(
 	liquidityTier types.LiquidityTier,
 	err error,
 ) {
-	// Get id for a new liquidity tier.
-	nextId := k.GetNumLiquidityTiers(ctx)
+	// Check if liquidity tier exists.
+	if k.HasLiquidityTier(ctx, id) {
+		return types.LiquidityTier{}, errorsmod.Wrap(
+			types.ErrLiquidityTierAlreadyExists,
+			lib.Uint32ToString(id),
+		)
+	}
 
 	liquidityTier = types.LiquidityTier{
-		Id:                     nextId,
+		Id:                     id,
 		Name:                   name,
 		InitialMarginPpm:       initialMarginPpm,
 		MaintenanceFractionPpm: maintenanceFractionPpm,
@@ -1274,15 +1299,13 @@ func (k Keeper) CreateLiquidityTier(
 
 	// Set liquidity tier in store.
 	k.setLiquidityTier(ctx, liquidityTier)
-	// Increase `numLiquidityTiers` by 1.
-	k.setNumLiquidityTiers(ctx, nextId+1)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeLiquidityTier,
 		indexer_manager.GetB64EncodedEventMessage(
 			indexerevents.NewLiquidityTierUpsertEvent(
-				nextId,
+				id,
 				name,
 				initialMarginPpm,
 				maintenanceFractionPpm,
@@ -1346,22 +1369,6 @@ func (k Keeper) ModifyLiquidityTier(
 	return liquidityTier, nil
 }
 
-// `GetNumLiquidityTiers` returns the number of liquidity tiers created (`numLiquidityTiers`).
-func (k Keeper) GetNumLiquidityTiers(ctx sdk.Context) (
-	numLiquidityTiers uint32,
-) {
-	return k.getUint32InStore(ctx, types.NumLiquidityTiersKey)
-}
-
-// `setNumLiquidityTiers` sets number of liquidity tiers in store.
-func (k Keeper) setNumLiquidityTiers(
-	ctx sdk.Context,
-	num uint32,
-) {
-	// Set `numLiquidityTiers`.
-	k.setUint32InStore(ctx, types.NumLiquidityTiersKey, num)
-}
-
 // `GetLiquidityTier` gets a liquidity tier given its id.
 func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 	liquidityTier types.LiquidityTier,
@@ -1379,22 +1386,23 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 }
 
 // `GetAllLiquidityTiers` returns all liquidity tiers, sorted by id.
-func (k Keeper) GetAllLiquidityTiers(ctx sdk.Context) (
-	liquidityTiers []types.LiquidityTier,
-) {
-	num := k.GetNumLiquidityTiers(ctx)
-	liquidityTiers = make([]types.LiquidityTier, num)
+func (k Keeper) GetAllLiquidityTiers(ctx sdk.Context) (list []types.LiquidityTier) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LiquidityTierKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
-	for i := uint32(0); i < num; i++ {
-		liquidityTier, err := k.GetLiquidityTier(ctx, i)
-		if err != nil {
-			panic(err)
-		}
+	defer iterator.Close()
 
-		liquidityTiers[i] = liquidityTier
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.LiquidityTier
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
 	}
 
-	return liquidityTiers
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Id < list[j].Id
+	})
+
+	return list
 }
 
 // `setLiquidityTier` sets a liquidity tier in store.
@@ -1463,13 +1471,16 @@ func (k Keeper) SetMinNumVotesPerSample(ctx sdk.Context, num uint32) error {
 }
 
 // `getLiquidityTiertoMaxAbsPremiumVotePpm` returns `maxAbsPremiumVotePpm` for each liquidity tier
-// (used for clamping premium votes), sorted by increasing liquidity tier ID.
-func (k Keeper) getLiquidityTiertoMaxAbsPremiumVotePpm(ctx sdk.Context) []*big.Int {
+// (used for clamping premium votes) as a map whose key is liquidity tier ID.
+func (k Keeper) getLiquidityTiertoMaxAbsPremiumVotePpm(
+	ctx sdk.Context,
+) (ltToMaxAbsPremiumVotePpm map[uint32]*big.Int) {
 	premiumVoteClampFactorPpm := k.GetPremiumVoteClampFactorPpm(ctx)
 	allLiquidityTiers := k.GetAllLiquidityTiers(ctx)
-	var maxAbsPremiumVotePpms = make([]*big.Int, len(allLiquidityTiers))
-	for i, liquidityTier := range allLiquidityTiers {
-		maxAbsPremiumVotePpms[i] = liquidityTier.GetMaxAbsFundingClampPpm(premiumVoteClampFactorPpm)
+	ltToMaxAbsPremiumVotePpm = make(map[uint32]*big.Int)
+	for _, liquidityTier := range allLiquidityTiers {
+		ltToMaxAbsPremiumVotePpm[liquidityTier.Id] =
+			liquidityTier.GetMaxAbsFundingClampPpm(premiumVoteClampFactorPpm)
 	}
-	return maxAbsPremiumVotePpms
+	return ltToMaxAbsPremiumVotePpm
 }
