@@ -137,25 +137,10 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 	return nil
 }
 
-// createOrderbook creates a new orderbook in the memclob and stores the perpetualId to clobPairId mapping
-// in memory on the keeper.
+// createOrderbook creates a new orderbook in the memclob.
 func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	// Create the corresponding orderbook in the memclob.
 	k.MemClob.CreateOrderbook(ctx, clobPair)
-
-	// If this `ClobPair` is for a perpetual, add the `clobPairId` to the list of CLOB pair IDs
-	// that facilitate trading of this perpetual.
-	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {
-		perpetualId := perpetualClobMetadata.PerpetualId
-		clobPairIds, exists := k.PerpetualIdToClobPairId[perpetualId]
-		if !exists {
-			clobPairIds = make([]types.ClobPairId, 0)
-		}
-		k.PerpetualIdToClobPairId[perpetualId] = append(
-			clobPairIds,
-			clobPair.GetClobPairId(),
-		)
-	}
 }
 
 // createClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
@@ -176,6 +161,9 @@ func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 
 	// Create the corresponding orderbook in the memclob.
 	k.createOrderbook(ctx, clobPair)
+
+	// Create the mapping between clob pair and perpetual.
+	k.SetClobPairIdForPerpetual(ctx, clobPair)
 }
 
 // setClobPair sets a specific `ClobPair` in the store from its index.
@@ -195,6 +183,35 @@ func (k Keeper) InitMemClobOrderbooks(ctx sdk.Context) {
 		k.createOrderbook(
 			ctx,
 			clobPair,
+		)
+	}
+}
+
+// HydrateClobPairAndPerpetualMapping hydrates the in-memory mapping between clob pair and perpetual.
+func (k Keeper) HydrateClobPairAndPerpetualMapping(ctx sdk.Context) {
+	clobPairs := k.GetAllClobPairs(ctx)
+	for _, clobPair := range clobPairs {
+		// Create the corresponding mapping between clob pair and perpetual.
+		k.SetClobPairIdForPerpetual(
+			ctx,
+			clobPair,
+		)
+	}
+}
+
+// SetClobPairIdForPerpetual sets the mapping between clob pair and perpetual.
+func (k Keeper) SetClobPairIdForPerpetual(ctx sdk.Context, clobPair types.ClobPair) {
+	// If this `ClobPair` is for a perpetual, add the `clobPairId` to the list of CLOB pair IDs
+	// that facilitate trading of this perpetual.
+	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {
+		perpetualId := perpetualClobMetadata.PerpetualId
+		clobPairIds, exists := k.PerpetualIdToClobPairId[perpetualId]
+		if !exists {
+			clobPairIds = make([]types.ClobPairId, 0)
+		}
+		k.PerpetualIdToClobPairId[perpetualId] = append(
+			clobPairIds,
+			clobPair.GetClobPairId(),
 		)
 	}
 }
