@@ -124,7 +124,7 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
 	}
-	keepertest.CreateUsdcAsset(ctx, aKeeper)
+	require.NoError(t, keepertest.CreateUsdcAsset(ctx, aKeeper))
 
 	for _, p := range perpetuals {
 		_, err := perpKeeper.CreatePerpetual(
@@ -250,7 +250,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
 	}
-	keepertest.CreateUsdcAsset(ctx, aKeeper)
+	require.NoError(t, keepertest.CreateUsdcAsset(ctx, aKeeper))
 
 	for _, p := range perpetuals {
 		_, err := perpKeeper.CreatePerpetual(
