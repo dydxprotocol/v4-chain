@@ -63,14 +63,14 @@ func setUpTestCase(
 ) {
 	// Initialize Mocks and Context.
 	mockKeeper = &mocks.SendingKeeper{}
-	ctx, _, _, _, _, _, _, _, _ := keepertest.SendingKeepers(t)
-	ctx = ctx.WithBlockHeight(25)
+	ks := keepertest.SendingKeepers(t)
+	ks.Ctx = ks.Ctx.WithBlockHeight(25)
 
 	// Setup mocks.
-	tc.setupMocks(ctx, mockKeeper)
+	tc.setupMocks(ks.Ctx, mockKeeper)
 
 	// Return message server and sdk context.
-	return mockKeeper, keeper.NewMsgServerImpl(mockKeeper), sdk.WrapSDKContext(ctx)
+	return mockKeeper, keeper.NewMsgServerImpl(mockKeeper), sdk.WrapSDKContext(ks.Ctx)
 }
 
 func TestCreateTransfer(t *testing.T) {
@@ -304,13 +304,13 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 			// Initialize Mocks and Context.
 			mockKeeper := &mocks.SendingKeeper{}
 			msgServer := keeper.NewMsgServerImpl(mockKeeper)
-			ctx, k, _, _, _, _, _, _, _ := keepertest.SendingKeepers(t)
+			ks := keepertest.SendingKeepers(t)
 			mockKeeper.On("HasAuthority", tc.testMsg.Authority).Return(
-				k.HasAuthority(tc.testMsg.Authority),
+				ks.SendingKeeper.HasAuthority(tc.testMsg.Authority),
 			)
-			mockKeeper.On("SendFromModuleToAccount", ctx, &tc.testMsg).Return(tc.keeperResp)
+			mockKeeper.On("SendFromModuleToAccount", ks.Ctx, &tc.testMsg).Return(tc.keeperResp)
 
-			resp, err := msgServer.SendFromModuleToAccount(sdk.WrapSDKContext(ctx), &tc.testMsg)
+			resp, err := msgServer.SendFromModuleToAccount(sdk.WrapSDKContext(ks.Ctx), &tc.testMsg)
 
 			// Assert msg server response.
 			require.Equal(t, tc.expectedResp, resp)

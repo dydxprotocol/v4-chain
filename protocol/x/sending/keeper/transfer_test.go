@@ -117,17 +117,17 @@ func assertWithdrawEventInIndexerBlock(
 }
 
 func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
-	ctx, keeper, accountKeeper, _, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
-	ctx = ctx.WithBlockHeight(5)
-	keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
-	keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
+	ks := keepertest.SendingKeepers(t)
+	ks.Ctx = ks.Ctx.WithBlockHeight(5)
+	keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+	keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
 	}
 	for _, p := range perpetuals {
-		_, err := perpKeeper.CreatePerpetual(
-			ctx,
+		_, err := ks.PerpetualsKeeper.CreatePerpetual(
+			ks.Ctx,
 			p.Params.Id,
 			p.Params.Ticker,
 			p.Params.MarketId,
@@ -139,19 +139,19 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	}
 
 	for _, s := range tc.subaccounts {
-		saKeeper.SetSubaccount(
-			ctx,
+		ks.SubaccountsKeeper.SetSubaccount(
+			ks.Ctx,
 			s,
 		)
-		accountKeeper.SetAccount(
-			ctx,
-			accountKeeper.NewAccountWithAddress(ctx, s.GetId().MustGetAccAddress()),
+		ks.AccountKeeper.SetAccount(
+			ks.Ctx,
+			ks.AccountKeeper.NewAccountWithAddress(ks.Ctx, s.GetId().MustGetAccAddress()),
 		)
 	}
 
-	err := keeper.ProcessTransfer(ctx, tc.transfer)
+	err := ks.SendingKeeper.ProcessTransfer(ks.Ctx, tc.transfer)
 	for subaccountId, expectedQuoteBalance := range tc.expectedSubaccountBalance {
-		subaccount := saKeeper.GetSubaccount(ctx, subaccountId)
+		subaccount := ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, subaccountId)
 		require.Equal(t, expectedQuoteBalance, subaccount.GetUsdcPosition())
 	}
 	if tc.expectedErr != "" {
@@ -160,8 +160,8 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 		require.NoError(t, err)
 		assertTransferEventInIndexerBlock(
 			t,
-			keeper,
-			ctx,
+			ks.SendingKeeper,
+			ks.Ctx,
 			tc.transfer,
 		)
 	}
@@ -241,17 +241,17 @@ func TestProcessTransfer(t *testing.T) {
 }
 
 func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
-	ctx, keeper, accountKeeper, _, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
-	ctx = ctx.WithBlockHeight(5)
-	keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
-	keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
+	ks := keepertest.SendingKeepers(t)
+	ks.Ctx = ks.Ctx.WithBlockHeight(5)
+	keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+	keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
 	}
 	for _, p := range perpetuals {
-		_, err := perpKeeper.CreatePerpetual(
-			ctx,
+		_, err := ks.PerpetualsKeeper.CreatePerpetual(
+			ks.Ctx,
 			p.Params.Id,
 			p.Params.Ticker,
 			p.Params.MarketId,
@@ -261,10 +261,10 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 		)
 		require.NoError(t, err)
 	}
-	saKeeper.SetSubaccount(ctx, constants.Carl_Num0_599USD)
-	accountKeeper.SetAccount(
-		ctx,
-		accountKeeper.NewAccountWithAddress(ctx, constants.Carl_Num0.MustGetAccAddress()),
+	ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, constants.Carl_Num0_599USD)
+	ks.AccountKeeper.SetAccount(
+		ks.Ctx,
+		ks.AccountKeeper.NewAccountWithAddress(ks.Ctx, constants.Carl_Num0.MustGetAccAddress()),
 	)
 
 	// Create a sample recipient address.
@@ -273,7 +273,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the recipient account does not exist.
-	require.False(t, accountKeeper.HasAccount(ctx, recipientAddr))
+	require.False(t, ks.AccountKeeper.HasAccount(ks.Ctx, recipientAddr))
 
 	// Process the transfer.
 	transfer := types.Transfer{
@@ -285,11 +285,11 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 		AssetId: lib.UsdcAssetId,
 		Amount:  500_000_000, // $500
 	}
-	err = keeper.ProcessTransfer(ctx, &transfer)
+	err = ks.SendingKeeper.ProcessTransfer(ks.Ctx, &transfer)
 	require.NoError(t, err)
 
 	// The account should've been created for the recipient address.
-	require.True(t, accountKeeper.HasAccount(ctx, recipientAddr))
+	require.True(t, ks.AccountKeeper.HasAccount(ks.Ctx, recipientAddr))
 }
 
 func TestProcessDepositToSubaccount(t *testing.T) {
@@ -341,13 +341,12 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 			// Create mock subaccounts keeper.
 			mockSubaccountsKeeper := &mocks.SubaccountsKeeper{}
 			// Create sending keeper with mock subaccounts keeper.
-			ctx, keeper, _, _, _, _, _, _, _ :=
-				keepertest.SendingKeepersWithSubaccountsKeeper(t, mockSubaccountsKeeper)
+			ks := keepertest.SendingKeepersWithSubaccountsKeeper(t, mockSubaccountsKeeper)
 			// Set up mock calls.
 			if tc.setUpMocks != nil {
 				mockCall := mockSubaccountsKeeper.On(
 					"DepositFundsFromAccountToSubaccount",
-					ctx,
+					ks.Ctx,
 					sdk.MustAccAddressFromBech32(msg.Sender),
 					msg.Recipient,
 					msg.AssetId,
@@ -359,10 +358,10 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 			if tc.shouldPanic {
 				require.PanicsWithValue(t, tc.expectedErr.Error(), func() {
 					//nolint:errcheck
-					keeper.ProcessDepositToSubaccount(ctx, &msg)
+					ks.SendingKeeper.ProcessDepositToSubaccount(ks.Ctx, &msg)
 				})
 			} else {
-				err := keeper.ProcessDepositToSubaccount(ctx, &msg)
+				err := ks.SendingKeeper.ProcessDepositToSubaccount(ks.Ctx, &msg)
 				if tc.expectedErr != nil {
 					require.ErrorIs(t, err, tc.expectedErr)
 				} else if tc.expectedErrContains != "" {
@@ -371,7 +370,7 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 					require.NoError(t, err)
 
 					// Verify that corresponding indexer deposit event was emitted.
-					assertDepositEventInIndexerBlock(t, ctx, keeper, &msg)
+					assertDepositEventInIndexerBlock(t, ks.Ctx, ks.SendingKeeper, &msg)
 				}
 			}
 		})
@@ -427,13 +426,12 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 			// Create mock subaccounts keeper.
 			mockSubaccountsKeeper := &mocks.SubaccountsKeeper{}
 			// Create sending keeper with mock subaccounts keeper.
-			ctx, keeper, _, _, _, _, _, _, _ :=
-				keepertest.SendingKeepersWithSubaccountsKeeper(t, mockSubaccountsKeeper)
+			ks := keepertest.SendingKeepersWithSubaccountsKeeper(t, mockSubaccountsKeeper)
 			// Set up mock calls.
 			if tc.setUpMocks != nil {
 				mockCall := mockSubaccountsKeeper.On(
 					"WithdrawFundsFromSubaccountToAccount",
-					ctx,
+					ks.Ctx,
 					msg.Sender,
 					sdk.MustAccAddressFromBech32(msg.Recipient),
 					msg.AssetId,
@@ -445,10 +443,10 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 			if tc.shouldPanic {
 				require.PanicsWithValue(t, tc.expectedErr.Error(), func() {
 					//nolint:errcheck
-					keeper.ProcessWithdrawFromSubaccount(ctx, &msg)
+					ks.SendingKeeper.ProcessWithdrawFromSubaccount(ks.Ctx, &msg)
 				})
 			} else {
-				err := keeper.ProcessWithdrawFromSubaccount(ctx, &msg)
+				err := ks.SendingKeeper.ProcessWithdrawFromSubaccount(ks.Ctx, &msg)
 				if tc.expectedErr != nil {
 					require.ErrorIs(t, err, tc.expectedErr)
 				} else if tc.expectedErrContains != "" {
@@ -457,7 +455,7 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 					require.NoError(t, err)
 
 					// Verify that corresponding indexer withdraw event was emitted.
-					assertWithdrawEventInIndexerBlock(t, ctx, keeper, &msg)
+					assertWithdrawEventInIndexerBlock(t, ks.Ctx, ks.SendingKeeper, &msg)
 				}
 			}
 		})
@@ -487,6 +485,11 @@ func TestSendFromModuleToAccount(t *testing.T) {
 			balanceToSend:        100,
 			recipientAddress:     authtypes.NewModuleAddress("community_treasury").String(),
 		},
+		"Success - send to self": {
+			initialModuleBalance: 1000,
+			balanceToSend:        100,
+			recipientAddress:     authtypes.NewModuleAddress(testModuleName).String(),
+		},
 		"Error - insufficient fund": {
 			initialModuleBalance: 100,
 			balanceToSend:        101,
@@ -497,7 +500,8 @@ func TestSendFromModuleToAccount(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Initiate keepers and fund module with initial balance.
-			ctx, sendingKeeper, accountKeeper, bankKeeper, _, _, _, _, _ := keepertest.SendingKeepers(t)
+			ks := keepertest.SendingKeepers(t)
+			ctx, sendingKeeper, bankKeeper, accountKeeper := ks.Ctx, ks.SendingKeeper, ks.BankKeeper, ks.AccountKeeper
 			err := bankKeeper.MintCoins(
 				ctx,
 				testModuleName,
@@ -555,19 +559,55 @@ func TestSendFromModuleToAccount(t *testing.T) {
 			} else { // if send should succeed.
 				// Verify that no error occurred.
 				require.NoError(t, err)
-				// Verify that module balance is reduced by amount sent.
-				require.Equal(
-					t,
-					startingModuleBalance.Amount.Int64()-tc.balanceToSend,
-					endingModuleBalance.Amount.Int64(),
-				)
-				// Verify that recipient balance is increased by amount sent.
-				require.Equal(
-					t,
-					startingRecipientBalance.Amount.Int64()+tc.balanceToSend,
-					endingRecipientBalance.Amount.Int64(),
-				)
+				if tc.recipientAddress == authtypes.NewModuleAddress(testModuleName).String() {
+					// If module sent to itself, verify that module balance is unchanged.
+					require.Equal(t, startingModuleBalance, endingModuleBalance)
+				} else {
+					// Otherwise, verify that module balance is reduced by amount sent.
+					require.Equal(
+						t,
+						startingModuleBalance.Amount.Int64()-tc.balanceToSend,
+						endingModuleBalance.Amount.Int64(),
+					)
+					// Verify that recipient balance is increased by amount sent.
+					require.Equal(
+						t,
+						startingRecipientBalance.Amount.Int64()+tc.balanceToSend,
+						endingRecipientBalance.Amount.Int64(),
+					)
+				}
 			}
 		})
 	}
+}
+
+func TestSendFromModuleToAccount_InvalidMsg(t *testing.T) {
+	msgEmptySender := &types.MsgSendFromModuleToAccount{
+		Authority:        constants.GovModuleAccAddressString,
+		SenderModuleName: "",
+		Recipient:        constants.AliceAccAddress.String(),
+		Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+	}
+
+	ks := keepertest.SendingKeepers(t)
+	err := ks.SendingKeeper.SendFromModuleToAccount(ks.Ctx, msgEmptySender)
+	require.ErrorContains(t, err, "Module name is empty")
+}
+
+func TestSendFromModuleToAccount_NonExistentSenderModule(t *testing.T) {
+	msgNonExistentSender := &types.MsgSendFromModuleToAccount{
+		Authority:        constants.GovModuleAccAddressString,
+		SenderModuleName: "nonexistent",
+		Recipient:        constants.AliceAccAddress.String(),
+		Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+	}
+
+	// Calling SendFromModuleToAccount with a non-existent sender module will panic.
+	defer func() {
+		if r := recover(); r != nil {
+			require.ErrorContains(t, r.(error), "module account nonexistent does not exist")
+		}
+	}()
+	ks := keepertest.SendingKeepers(t)
+	ks.SendingKeeper.SendFromModuleToAccount(ks.Ctx, msgNonExistentSender)
 }

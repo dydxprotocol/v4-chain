@@ -217,9 +217,9 @@ func (k Keeper) SendFromModuleToAccount(
 		return err
 	}
 
-	return k.bankKeeper.SendCoins(
+	return k.bankKeeper.SendCoinsFromModuleToAccount(
 		ctx,
-		k.accountKeeper.GetModuleAddress(msg.GetSenderModuleName()),
+		msg.GetSenderModuleName(),
 		sdk.MustAccAddressFromBech32(msg.GetRecipient()),
 		sdk.NewCoins(msg.Coin),
 	)
