@@ -219,8 +219,8 @@ func (k Keeper) PersistMatchToState(
 	return nil
 }
 
-// statUnverifiedOrderRemoval stats the unverified order removal along with
-// the block proposer, removal reason, and order size.
+// statUnverifiedOrderRemoval increments the unverified order removal counter
+// and the base quantums counter for the order to be removed.
 func (k Keeper) statUnverifiedOrderRemoval(
 	ctx sdk.Context,
 	orderRemoval types.OrderRemoval,
@@ -234,7 +234,15 @@ func (k Keeper) statUnverifiedOrderRemoval(
 			orderRemoval.OrderId.GetOrderIdLabels(),
 			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
 			metrics.GetLabelForStringValue(metrics.Proposer, proposerConsAddress.String()),
-			metrics.GetLabelForIntValue(metrics.BaseQuantums, int(orderToRemove.GetBaseQuantums())),
+		),
+	)
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.ProcessOperations, metrics.UnverifiedStatefulOrderRemoval, metrics.BaseQuantums},
+		float32(orderToRemove.Quantums),
+		append(
+			orderRemoval.OrderId.GetOrderIdLabels(),
+			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
+			metrics.GetLabelForStringValue(metrics.Proposer, proposerConsAddress.String()),
 		),
 	)
 }
