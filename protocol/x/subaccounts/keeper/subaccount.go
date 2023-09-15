@@ -419,7 +419,7 @@ func (k Keeper) getSettledSubaccount(
 	return newSubaccount, fundingPayments, nil
 }
 
-func checkPositionUpdateable(
+func checkPositionUpdatable(
 	ctx sdk.Context,
 	pk types.ProductKeeper,
 	p types.PositionSize,
@@ -471,7 +471,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	for i, u := range settledUpdates {
 		// Check all updated perps are updatable.
 		for _, perpUpdate := range u.PerpetualUpdates {
-			err := checkPositionUpdateable(ctx, k.perpetualsKeeper, perpUpdate)
+			err := checkPositionUpdatable(ctx, k.perpetualsKeeper, perpUpdate)
 			if err != nil {
 				return false, nil, err
 			}
@@ -479,7 +479,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 		// Check all updated assets are updatable.
 		for _, assetUpdate := range u.AssetUpdates {
-			err := checkPositionUpdateable(ctx, k.assetsKeeper, assetUpdate)
+			err := checkPositionUpdatable(ctx, k.assetsKeeper, assetUpdate)
 			if err != nil {
 				return false, nil, err
 			}
