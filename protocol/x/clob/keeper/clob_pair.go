@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"sort"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -383,7 +384,7 @@ func (k Keeper) mustGetClobPairForPerpetualId(
 	return k.mustGetClobPair(ctx, clobPairId)
 }
 
-// UpdateClobPair overwrites a ClobPair in state.
+// UpdateClobPair overwrites a ClobPair in state and sends an update to the indexer.
 // This function returns an error if the update includes an unsupported transition
 // for the ClobPair's status.
 func (k Keeper) UpdateClobPair(
@@ -435,6 +436,21 @@ func (k Keeper) UpdateClobPair(
 	}
 
 	k.setClobPair(ctx, clobPair)
+
+	// Send UpdateClobPair to indexer.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpdateClobPair,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewUpdateClobPairEvent(
+				clobPair.GetClobPairId(),
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+			),
+		),
+	)
 
 	return nil
 }
