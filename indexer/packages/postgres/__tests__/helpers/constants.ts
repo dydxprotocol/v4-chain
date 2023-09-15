@@ -21,6 +21,8 @@ import {
   BlockCreateObject,
   CandleCreateObject,
   CandleResolution,
+  ComplianceDataCreateObject,
+  ComplianceProvider,
   FillCreateObject,
   FillType,
   FundingIndexUpdatesCreateObject,
@@ -49,7 +51,9 @@ import {
 export const createdDateTime: DateTime = DateTime.utc();
 export const createdHeight: string = '2';
 export const invalidTicker: string = 'INVALID-INVALID';
+export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
+export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
 
 // ============== Subaccounts ==============
 
@@ -546,3 +550,23 @@ export const defaultFundingIndexUpdateId: string = FundingIndexUpdatesTable.uuid
   defaultFundingIndexUpdate.eventId,
   defaultFundingIndexUpdate.perpetualId,
 );
+
+// ========= Compliance Data ==========
+
+export const blockedComplianceData: ComplianceDataCreateObject = {
+  address: blockedAddress,
+  provider: ComplianceProvider.ELLIPTIC,
+  chain: dydxChain,
+  blocked: true,
+  riskScore: '100.00',
+  updatedAt: createdDateTime.toISO(),
+};
+
+export const nonBlockedComplianceData: ComplianceDataCreateObject = {
+  address: defaultAddress,
+  provider: ComplianceProvider.ELLIPTIC,
+  chain: dydxChain,
+  blocked: false,
+  riskScore: '10.00',
+  updatedAt: createdDateTime.plus(1).toISO(),
+};

@@ -50,6 +50,19 @@ importers:
       express: 4.18.1
       typescript: 4.7.4
 
+  packages/compliance:
+    specifiers:
+      '@dydxprotocol-indexer/dev': workspace:^0.0.1
+      '@dydxprotocol-indexer/postgres': workspace:^0.0.1
+      dotenv-flow: ^3.2.0
+      typescript: ^4.7.4
+    dependencies:
+      '@dydxprotocol-indexer/postgres': link:../postgres
+      dotenv-flow: 3.2.0
+    devDependencies:
+      '@dydxprotocol-indexer/dev': link:../dev
+      typescript: 4.9.5
+
   packages/dev:
     specifiers:
       '@types/jest': ^28.1.4
@@ -386,6 +399,7 @@ importers:
       '@bugsnag/node': ^7.18.0
       '@bugsnag/plugin-express': ^7.18.0
       '@dydxprotocol-indexer/base': workspace:^0.0.1
+      '@dydxprotocol-indexer/compliance': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
       '@dydxprotocol-indexer/redis': workspace:^0.0.1
@@ -434,6 +448,7 @@ importers:
       '@bugsnag/node': 7.18.0
       '@bugsnag/plugin-express': 7.18.0_@bugsnag+core@7.18.0
       '@dydxprotocol-indexer/base': link:../../packages/base
+      '@dydxprotocol-indexer/compliance': link:../../packages/compliance
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/redis': link:../../packages/redis
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
