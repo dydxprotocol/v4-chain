@@ -1483,7 +1483,7 @@ func (k Keeper) IsPositionUpdatable(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (
-	tradable bool,
+	updatable bool,
 	err error,
 ) {
 	_, oraclePrice, err := k.GetPerpetualAndMarketPrice(
@@ -1494,7 +1494,7 @@ func (k Keeper) IsPositionUpdatable(
 		return false, err
 	}
 
-	// If perpetual has zero oracle price, it is considered not tradable.
+	// If perpetual has zero oracle price, it is considered not updatable.
 	if oraclePrice.Price == 0 {
 		return false, nil
 	}
