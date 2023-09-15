@@ -74,7 +74,6 @@ func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
 			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
 
 			// Enable the liquidations daemon in the integration tests.
-			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
 			appOptions.Set(daemonflags.FlagUnixSocketAddress, liqTestUnixSocketAddress)
 			// Make sure all daemon-related services are properly stopped.
 			t.Cleanup(func() {

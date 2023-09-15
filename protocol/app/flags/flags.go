@@ -1,6 +1,7 @@
 package flags
 
 import (
+	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cobra"
 )
@@ -10,6 +11,9 @@ type Flags struct {
 	DdAgentHost           string
 	DdTraceAgentPort      uint16
 	NonValidatingFullNode bool
+
+	// Existing flags
+	GrpcAddress string
 }
 
 // List of CLI flags.
@@ -17,6 +21,9 @@ const (
 	DdAgentHost               = "dd-agent-host"
 	DdTraceAgentPort          = "dd-trace-agent-port"
 	NonValidatingFullNodeFlag = "non-validating-full-node"
+
+	// Cosmos flags below. These config values can be set as flags or in config.toml.
+	GrpcAddress = "grpc.address"
 )
 
 // Default values.
@@ -59,6 +66,7 @@ func GetFlagValuesFromOptions(
 		NonValidatingFullNode: DefaultNonValidatingFullNode,
 		DdAgentHost:           DefaultDdAgentHost,
 		DdTraceAgentPort:      DefaultDdTraceAgentPort,
+		GrpcAddress:           config.DefaultGRPCAddress,
 	}
 
 	// Populate the flags if they exist.
@@ -72,6 +80,10 @@ func GetFlagValuesFromOptions(
 
 	if v, ok := appOpts.Get(DdTraceAgentPort).(uint16); ok {
 		result.DdTraceAgentPort = v
+	}
+
+	if v, ok := appOpts.Get(GrpcAddress).(string); ok {
+		result.GrpcAddress = v
 	}
 
 	return result

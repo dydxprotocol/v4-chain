@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -22,11 +23,12 @@ import (
 func Start(
 	ctx context.Context,
 	flags flags.DaemonFlags,
+	appFlags appflags.Flags,
 	logger log.Logger,
 	grpcClient lib.GrpcClient,
 ) error {
 	// Make a connection to the Cosmos gRPC query services.
-	queryConn, err := grpcClient.NewTcpConnection(ctx, flags.Shared.GrpcServerAddress)
+	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {
 		logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
 		return err

@@ -99,8 +99,6 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 			configs.WriteDefaultPricefeedExchangeToml(homeDir) // must manually create config file.
 			appOptions.Set(daemonflags.FlagPriceDaemonLoopDelayMs, 1_000)
 
-			// Enable the common gRPC daemon server.
-			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
 			// Make sure all daemon-related services are properly stopped.
 			s.T().Cleanup(func() {
 				stoppable.StopServices(s.T(), testval.AppConfig.GRPC.Address)
