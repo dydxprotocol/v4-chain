@@ -20,11 +20,22 @@ func IsSingleAppInjectedMsg(msgs []sdk.Msg) bool {
 func IsAppInjectedMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
+		// ------- Custom modules
+		// blocktime
 		*blocktimetypes.MsgIsDelayedBlock,
+
+		// bridge
 		*bridgetypes.MsgAcknowledgeBridges,
+
+		// clob
 		*clobtypes.MsgProposedOperations,
+
+		// perpetuals
 		*perpetualstypes.MsgAddPremiumVotes,
+
+		// prices
 		*pricestypes.MsgUpdateMarketPrices:
+
 		return true
 	}
 	return false

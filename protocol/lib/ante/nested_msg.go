@@ -11,6 +11,7 @@ import (
 func IsNestedMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
+		// ------- CosmosSDK default modules
 		// gov
 		*gov.MsgSubmitProposal:
 		return true
