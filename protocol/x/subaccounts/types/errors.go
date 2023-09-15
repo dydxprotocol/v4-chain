@@ -14,7 +14,8 @@ var (
 		ModuleName, 100, "multiple updates were specified for the same position id")
 	ErrNonUniqueUpdatesSubaccount = errorsmod.Register(
 		ModuleName, 101, "multiple updates were specified for the same subaccountId")
-	ErrFailedToUpdateSubaccounts = errorsmod.Register(ModuleName, 102, "failed to apply subaccount updates")
+	ErrFailedToUpdateSubaccounts   = errorsmod.Register(ModuleName, 102, "failed to apply subaccount updates")
+	ErrProductPositionNotUpdatable = errorsmod.Register(ModuleName, 103, "product position is not updatable")
 
 	// 200 - 299: subaccount id related.
 	ErrInvalidSubaccountIdNumber = errorsmod.Register(ModuleName, 200, "subaccount id number cannot exceed 127")
@@ -31,7 +32,6 @@ var (
 	// 400 - 499: perpetual position related.
 	ErrPerpPositionsOutOfOrder = errorsmod.Register(ModuleName, 400, "perpetual positions are out of order")
 	ErrPerpPositionZeroQuantum = errorsmod.Register(ModuleName, 401, "perpetual position's quantum cannot be zero")
-	ErrPerpNotTradable         = errorsmod.Register(ModuleName, 402, "perpetual is not tradable")
 
 	// 500 - 599: transfer related.
 	ErrAssetTransferQuantumsNotPositive = errorsmod.Register(

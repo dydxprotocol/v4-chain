@@ -28,6 +28,13 @@ type ProductKeeper interface {
 		bigMaintenanceMarginQuoteQuantums *big.Int,
 		err error,
 	)
+	IsPositionUpdatable(
+		ctx sdk.Context,
+		id uint32,
+	) (
+		updatable bool,
+		err error,
+	)
 }
 
 type AssetsKeeper interface {
@@ -63,13 +70,6 @@ type PerpetualsKeeper interface {
 		err error,
 	)
 	GetAllPerpetuals(ctx sdk.Context) []perptypes.Perpetual
-	IsPerpetualTradable(
-		ctx sdk.Context,
-		id uint32,
-	) (
-		tradable bool,
-		err error,
-	)
 }
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

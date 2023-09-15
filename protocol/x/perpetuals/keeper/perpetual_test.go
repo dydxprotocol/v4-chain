@@ -3146,15 +3146,15 @@ func TestSetMinNumVotesPerSample(t *testing.T) {
 	}
 }
 
-func TestIsPerpetualTradable(t *testing.T) {
+func TestIsPositionUpdatable(t *testing.T) {
 	testCases := map[string]struct {
-		perp               types.Perpetual
-		marketParamPrice   pricestypes.MarketParamPrice
-		queryPerpId        uint32
-		expectedIsTradable bool
-		expectedErr        string
+		perp              types.Perpetual
+		marketParamPrice  pricestypes.MarketParamPrice
+		queryPerpId       uint32
+		expectedUpdatable bool
+		expectedErr       string
 	}{
-		"Tradable": {
+		"Updatable": {
 			perp: *perptest.GeneratePerpetual(
 				perptest.WithId(1),
 				perptest.WithMarketId(1),
@@ -3164,9 +3164,9 @@ func TestIsPerpetualTradable(t *testing.T) {
 				pricestest.WithId(1),
 				pricestest.WithPriceValue(1000), // non-zero
 			),
-			expectedIsTradable: true,
+			expectedUpdatable: true,
 		},
-		"Not tradable due to zero oracle price": {
+		"Not updatable due to zero oracle price": {
 			perp: *perptest.GeneratePerpetual(
 				perptest.WithId(1),
 				perptest.WithMarketId(1),
@@ -3176,7 +3176,7 @@ func TestIsPerpetualTradable(t *testing.T) {
 				pricestest.WithId(1),
 				pricestest.WithPriceValue(0),
 			),
-			expectedIsTradable: false,
+			expectedUpdatable: false,
 		},
 		"Error: Perp Id not found": {
 			perp: *perptest.GeneratePerpetual(
@@ -3203,10 +3203,10 @@ func TestIsPerpetualTradable(t *testing.T) {
 				[]pricestypes.MarketParamPrice{tc.marketParamPrice},
 			)
 
-			isTradable, err := perpKeeper.IsPerpetualTradable(ctx, tc.queryPerpId)
+			updatable, err := perpKeeper.IsPositionUpdatable(ctx, tc.queryPerpId)
 			if tc.expectedErr == "" {
 				require.NoError(t, err)
-				require.Equal(t, tc.expectedIsTradable, isTradable)
+				require.Equal(t, tc.expectedUpdatable, updatable)
 			} else {
 				require.ErrorContains(t, err, tc.expectedErr)
 			}
