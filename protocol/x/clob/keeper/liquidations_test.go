@@ -2610,6 +2610,8 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
+			keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
+
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(

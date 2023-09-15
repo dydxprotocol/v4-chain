@@ -11,6 +11,7 @@ import (
 const (
 	AssetProductType     = "asset"
 	PerpetualProductType = "perpetual"
+	UnknownProductTYpe   = "unknown"
 )
 
 // PositionSize is an interface for expressing the size of a position
@@ -162,5 +163,5 @@ func (pu PositionUpdate) GetBigQuantums() *big.Int {
 }
 func (pu PositionUpdate) GetProductType() string {
 	// PositionUpdate is generic and doesn't have a product type.
-	return ""
+	return UnknownProductTYpe
 }

@@ -116,7 +116,7 @@ func assertWithdrawEventInIndexerBlock(
 }
 
 func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
-	ctx, keeper, accountKeeper, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
+	ctx, keeper, accountKeeper, pricesKeeper, perpKeeper, aKeeper, saKeeper, _ := keepertest.SendingKeepers(t)
 	ctx = ctx.WithBlockHeight(5)
 	keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
@@ -124,6 +124,8 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
 	}
+	keepertest.CreateUsdcAsset(ctx, aKeeper)
+
 	for _, p := range perpetuals {
 		_, err := perpKeeper.CreatePerpetual(
 			ctx,
@@ -240,7 +242,7 @@ func TestProcessTransfer(t *testing.T) {
 }
 
 func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
-	ctx, keeper, accountKeeper, pricesKeeper, perpKeeper, _, saKeeper, _ := keepertest.SendingKeepers(t)
+	ctx, keeper, accountKeeper, pricesKeeper, perpKeeper, aKeeper, saKeeper, _ := keepertest.SendingKeepers(t)
 	ctx = ctx.WithBlockHeight(5)
 	keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
@@ -248,6 +250,8 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
 	}
+	keepertest.CreateUsdcAsset(ctx, aKeeper)
+
 	for _, p := range perpetuals {
 		_, err := perpKeeper.CreatePerpetual(
 			ctx,
