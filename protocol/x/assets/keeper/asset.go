@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"math/big"
+
 	errorsmod "cosmossdk.io/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -389,4 +390,20 @@ func (k Keeper) ConvertAssetToCoin(
 	bigConvertedQuantums := bigRatConvertedQuantums.Num()
 
 	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdk.NewIntFromBigInt(bigConvertedDenomAmount)), nil
+}
+
+// IsPositionUpdatable returns whether position of an asset is updatable.
+func (k Keeper) IsPositionUpdatable(
+	ctx sdk.Context,
+	id uint32,
+) (
+	updatable bool,
+	err error,
+) {
+	_, err = k.GetAsset(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	// All existing assets are by default updatable.
+	return true, nil
 }

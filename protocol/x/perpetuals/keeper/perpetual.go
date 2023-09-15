@@ -1,11 +1,12 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 	"sort"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
@@ -1472,4 +1473,30 @@ func (k Keeper) getLiquidityTiertoMaxAbsPremiumVotePpm(ctx sdk.Context) []*big.I
 		maxAbsPremiumVotePpms[i] = liquidityTier.GetMaxAbsFundingClampPpm(premiumVoteClampFactorPpm)
 	}
 	return maxAbsPremiumVotePpms
+}
+
+// IsPositionUpdatable returns whether position of a perptual is updatable.
+// A perpetual is not updatable if it satifies:
+//   - Perpetual has zero oracle price. Since new oracle prices are created at zero by default and valid
+//     oracle priceupdates are non-zero, this indicates the absence of a valid oracle price update.
+func (k Keeper) IsPositionUpdatable(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (
+	updatable bool,
+	err error,
+) {
+	_, oraclePrice, err := k.GetPerpetualAndMarketPrice(
+		ctx,
+		perpetualId,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	// If perpetual has zero oracle price, it is considered not updatable.
+	if oraclePrice.Price == 0 {
+		return false, nil
+	}
+	return true, nil
 }
