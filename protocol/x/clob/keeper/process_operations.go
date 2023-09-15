@@ -219,10 +219,8 @@ func (k Keeper) PersistMatchToState(
 	return nil
 }
 
-// statUnverifiedOrderRemoval stats the unverified order removal along with the block proposer. This
-// is used to track the number of unverified order removals a proposer has made, which may indicate malicious
-// behavior.
-func (k Keeper) statUnverifiedOrderRemoval(ctx sdk.Context, orderRemoval types.OrderRemoval) {
+// statUnverifiedOrderRemoval stats the unverified order removal along with the block proposer.
+func (k Keeper) statUnverifiedOrderRemoval(ctx sdk.Context, orderRemoval types.OrderRemoval, orderToRemove types.Order) {
 	proposer, err := k.getProposer(ctx)
 	if err == nil {
 		telemetry.IncrCounterWithLabels(
@@ -232,6 +230,7 @@ func (k Keeper) statUnverifiedOrderRemoval(ctx sdk.Context, orderRemoval types.O
 				orderRemoval.OrderId.GetOrderIdLabels(),
 				metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
 				metrics.GetLabelForStringValue(metrics.Proposer, proposer.Description.Moniker),
+				metrics.GetLabelForIntValue(metrics.BaseQuantums, int(orderToRemove.GetBaseQuantums())),
 			),
 		)
 	}
@@ -246,7 +245,8 @@ func (k Keeper) PersistOrderRemovalToState(
 	orderIdToRemove := orderRemoval.GetOrderId()
 	orderIdToRemove.MustBeStatefulOrder()
 
-	// Order removals are always for stateful orders that must exist.
+	// Order removals are always for long-term orders which must exist or conditional orders
+	// which must be triggered.
 	orderToRemove, err := k.FetchOrderFromOrderId(ctx, orderIdToRemove, make(map[types.OrderId]types.Order, 0))
 	if err != nil {
 		return err
@@ -320,11 +320,7 @@ func (k Keeper) PersistOrderRemovalToState(
 	// 	}
 	case types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
 		// TODO (CLOB-877)
-		// This removal reason implies the stateful taker order could not be placed on the book because it crossed
-		// some unspecified maker order. We must verify that the stateful taker order should have been placed in this block
-		// and that the maker order it crossed with actually exists on the proposer's orderbook. This information is not
-		// currently available.
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval) // remove when above is complete
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 
 		// The order should be post-only
 		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
@@ -335,23 +331,10 @@ func (k Keeper) PersistOrderRemovalToState(
 		}
 	case types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE:
 		// TODO (CLOB-877)
-		// This removal reason implies the maker order was removed during a self-trade encountered during matching.
-		// We must verify that the stateful order had already been placed, and that the taker order matching which caused
-		// this removal would have matched against this order. This information is not currently available.
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval) // remove when above is complete
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED:
 		// TODO (CLOB-877)
-		// The order must have been triggered in the last block. This information is not currently available.
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval) // removed when above is complete
-
-		// The order should be in triggered state.
-		_, found := k.GetTriggeredConditionalOrderPlacement(ctx, orderIdToRemove)
-		if !found {
-			return errorsmod.Wrap(
-				types.ErrConditionalOrderUntriggered,
-				"Order is not in triggered state.",
-			)
-		}
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 
 		// The order should be FOK
 		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_FILL_OR_KILL {
@@ -371,14 +354,7 @@ func (k Keeper) PersistOrderRemovalToState(
 		}
 	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK:
 		// TODO (CLOB-877)
-		// The order must have been triggered in the last block. This information is not currently available.
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval) // removed when above is complete
-
-		// The order should be in triggered state.
-		_, found := k.GetTriggeredConditionalOrderPlacement(ctx, orderIdToRemove)
-		if !found {
-			return types.ErrConditionalOrderUntriggered
-		}
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 
 		// The order should be IOC.
 		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_IOC {
