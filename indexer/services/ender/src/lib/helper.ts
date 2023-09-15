@@ -81,6 +81,7 @@ export function indexerTendermintEventToEventProtoWithType(
   event: IndexerTendermintEvent,
 ): EventProtoWithTypeAndVersion | undefined {
   const eventDataBinary: Uint8Array = base64StringToBinary(event.data);
+  // set the default version to 1
   const version: number = event.version === 0 ? 1 : event.version;
   switch (event.subtype) {
     case (DydxIndexerSubtypes.ORDER_FILL.toString()): {
