@@ -50,7 +50,7 @@ func (s *Server) LiquidateSubaccounts(
 	// If the daemon is unable to report a response, there is either an error in the registration of
 	// this daemon, or another one. In either case, the protocol should panic.
 	if err := s.reportResponse(types.LiquidationsDaemonServiceName); err != nil {
-		panic(err)
+		s.logger.Error("Failed to report liquidations response to update monitor", "error", err)
 	}
 
 	s.liquidatableSubaccountIds.UpdateSubaccountIds(req.SubaccountIds)

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
@@ -558,7 +559,7 @@ func New(
 		// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 		// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 		// periodically sent via gRPC to a shared socket with the server.
-		pricefeedclient.StartNewClient(
+		client := pricefeedclient.StartNewClient(
 			// The client will use `context.Background` so that it can have a different context from
 			// the main application.
 			context.Background(),
@@ -569,6 +570,7 @@ func New(
 			constants.StaticExchangeDetails,
 			&pricefeedclient.SubTaskRunnerImpl{},
 		)
+		stoppable.RegisterServiceForTestCleanup(daemonFlags.Shared.GrpcServerAddress, client)
 	}
 
 	// Start Bridge Daemon.
