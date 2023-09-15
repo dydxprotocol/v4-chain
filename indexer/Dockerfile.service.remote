@@ -19,6 +19,7 @@ COPY ./packages/postgres/package.json ./packages/postgres/
 COPY ./packages/redis/package.json ./packages/redis/
 COPY ./packages/v4-protos/package.json ./packages/v4-protos/
 COPY ./packages/v4-proto-parser/package.json ./packages/v4-proto-parser/package.json
+COPY ./packages/compliance/package.json ./packages/compliance/
 
 # Copy build files from all packages being run
 COPY ./packages/base/build ./packages/base/build/
@@ -27,6 +28,7 @@ COPY ./packages/postgres/build ./packages/postgres/build/
 COPY ./packages/redis/build ./packages/redis/build/
 COPY ./packages/v4-protos/build ./packages/v4-protos/build/
 COPY ./packages/v4-proto-parser/build ./packages/v4-proto-parser/build/
+COPY ./packages/compliance/build ./packages/compliance/build/
 
 # Copy package.json, build files, and environment files from service being run
 COPY ./services/${service}/package.json ./services/${service}/

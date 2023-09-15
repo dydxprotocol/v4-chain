@@ -3,6 +3,7 @@ import express from 'express';
 import AddressesController from './v4/addresses-controller';
 import AssetPositionsController from './v4/asset-positions-controller';
 import CandlesController from './v4/candles-controller';
+import ComplianceController from './v4/compliance-controller';
 import FillsController from './v4/fills-controller';
 import HeightController from './v4/height-controller';
 import HistoricalFundingController from './v4/historical-funding-controller';
@@ -34,5 +35,6 @@ router.use('/sparklines', SparklinesController);
 router.use('/time', TimeController);
 router.use('/trades', TradesController);
 router.use('/transfers', TransfersController);
+router.use('/screen', ComplianceController);
 
 export default router;

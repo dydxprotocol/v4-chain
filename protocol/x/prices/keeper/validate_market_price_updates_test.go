@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -122,10 +122,10 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarkets(t, ctx, k)
-
-			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
+
+			keepertest.CreateTestMarkets(t, ctx, k)
+			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run.
 			msg := &types.MsgUpdateMarketPrices{
@@ -207,10 +207,10 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarkets(t, ctx, k)
-
-			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
+
+			keepertest.CreateTestMarkets(t, ctx, k)
+			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run.
 			msg := &types.MsgUpdateMarketPrices{
@@ -238,7 +238,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 				types.NewMarketPriceUpdate(99, 11), // Market with id 99 does not exist.
 			},
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrInvalidMarketPriceUpdateDeterministic,
 				"market param price (99) does not exist",
 			).Error(),
@@ -252,7 +252,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 				),
 			},
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrInvalidMarketPriceUpdateDeterministic,
 				"update price (5000249999) for market (0) does not meet min price change requirement"+
 					" (50 ppm) based on the current market price (5000000000)",
@@ -263,7 +263,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 				types.NewMarketPriceUpdate(constants.MarketId0, 11),
 			},
 			// Skipping price cache update, so the index price does not exist.
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrIndexPriceNotAvailable,
 				"index price for market (0) is not available",
 			).Error(),
@@ -284,7 +284,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidMarketPriceUpdateNonDeterministic,
 				"update price (5015000000) for market (0) crosses the index price (5010000000) with "+
 					"current price (5000000000) and deviates from index price (5000000) more than minimum allowed "+
@@ -307,7 +307,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidMarketPriceUpdateNonDeterministic,
 				"update price (5015000000) for market (0) crosses the index price (5000250000) with current "+
 					"price (5000000000) and deviates from index price (14750000) more than minimum allowed (250000)",
@@ -329,7 +329,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidMarketPriceUpdateNonDeterministic,
 				"update price (5005000000) for market (0) trends in the opposite direction of the index "+
 					"price (4999999999) compared to the current price (5000000000)",
@@ -340,10 +340,10 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-			keepertest.CreateTestMarkets(t, ctx, k)
-
-			indexPriceCache.UpdatePrices(tc.indexPrices)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
+
+			keepertest.CreateTestMarkets(t, ctx, k)
+			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run and Validate.
 			msg := &types.MsgUpdateMarketPrices{
@@ -407,12 +407,13 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, k, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+
 			keepertest.CreateTestMarkets(t, ctx, k)
 			for market, price := range tc.smoothedIndexPrices {
 				marketToSmoothedPrices.PushSmoothedPrice(market, price)
 			}
 			indexPriceCache.UpdatePrices(tc.indexPrices)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			// Run.
 			missingMarketIds := k.GetMarketsMissingFromPriceUpdates(ctx, tc.msgUpdateMarketPrices)

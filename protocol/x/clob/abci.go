@@ -3,8 +3,6 @@ package clob
 import (
 	"errors"
 	"fmt"
-	"sort"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -111,8 +109,7 @@ func EndBlocker(
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
 func PrepareCheckState(
 	ctx sdk.Context,
-	keeper keeper.Keeper,
-	memClob types.MemClob,
+	keeper *keeper.Keeper,
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) {
 	// Get the events generated from processing the matches in the latest block.
@@ -128,7 +125,7 @@ func PrepareCheckState(
 	}
 
 	// 1. Remove all operations in the local validators operations queue from the memclob.
-	localValidatorOperationsQueue, shortTermOrderTxBytes := memClob.GetOperationsToReplay(ctx)
+	localValidatorOperationsQueue, shortTermOrderTxBytes := keeper.MemClob.GetOperationsToReplay(ctx)
 	keeper.Logger(ctx).Debug(
 		"Clearing local operations queue",
 		"localValidatorOperationsQueue",
@@ -137,11 +134,11 @@ func PrepareCheckState(
 		ctx.BlockHeight(),
 	)
 
-	memClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
+	keeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
 
 	// 2. Purge invalid state from the memclob.
 	offchainUpdates := types.NewOffchainUpdates()
-	offchainUpdates = memClob.PurgeInvalidMemclobState(
+	offchainUpdates = keeper.MemClob.PurgeInvalidMemclobState(
 		ctx,
 		processProposerMatchesEvents.OrderIdsFilledInLastBlock,
 		processProposerMatchesEvents.ExpiredStatefulOrderIds,
@@ -165,7 +162,7 @@ func PrepareCheckState(
 	)
 
 	// 5. Replay the local validator’s operations onto the book.
-	replayUpdates := memClob.ReplayOperations(
+	replayUpdates := keeper.MemClob.ReplayOperations(
 		ctx,
 		localValidatorOperationsQueue,
 		shortTermOrderTxBytes,
@@ -214,25 +211,59 @@ func PrepareCheckState(
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
 	}
 
-	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
-	start := time.Now()
-	sort.Sort(types.SortedLiquidationOrders(liquidationOrders))
-	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.SortLiquidationOrders)
+	// Sort liquidation orders.
+	keeper.SortLiquidationOrders(ctx, liquidationOrders)
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
-		liquidationOrder := liquidationOrders[i]
-		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
+	numFilledLiquidations := uint32(0)
+	numAttemptedDeleveraging := uint32(0)
+	for i := 0; numFilledLiquidations < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
+		optimisticallyFilledQuantums, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrders[i])
+		if err != nil {
 			keeper.Logger(ctx).Error(
 				fmt.Sprintf(
 					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
-					liquidationOrder,
+					liquidationOrders[i],
 					err,
 				),
 			)
 			panic(err)
 		}
+
+		// Keep a count of partially and fully filled liquidations for this block.
+		if optimisticallyFilledQuantums > 0 {
+			numFilledLiquidations++
+		} else {
+			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
+
+			if numAttemptedDeleveraging < keeper.MaxDeleveragingAttemptsPerBlock {
+				// The liquidation order was unfilled. Try to deleverage the subaccount.
+				subaccountId := liquidationOrders[i].GetSubaccountId()
+				perpetualId := liquidationOrders[i].MustGetLiquidatedPerpetualId()
+				deltaQuantums := liquidationOrders[i].GetDeltaQuantums()
+
+				_, err := keeper.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+				if err != nil {
+					keeper.Logger(ctx).Error(
+						"Failed to deleverage subaccount.",
+						"subaccount", liquidationOrders[i].GetSubaccountId(),
+						"perpetualId", liquidationOrders[i].MustGetLiquidatedPerpetualId(),
+						"baseQuantums", liquidationOrders[i].GetBaseQuantums().ToBigInt(),
+						"error", err,
+					)
+					panic(err)
+				}
+				numAttemptedDeleveraging++
+			}
+		}
 	}
+
+	telemetry.IncrCounter(
+		float32(numFilledLiquidations),
+		types.ModuleName,
+		metrics.PrepareCheckState,
+		metrics.NumMatchedLiquidationOrders,
+	)
 
 	telemetry.ModuleSetGauge(
 		types.ModuleName,
@@ -243,7 +274,7 @@ func PrepareCheckState(
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
-	newLocalValidatorOperationsQueue, _ := memClob.GetOperationsToReplay(ctx)
+	newLocalValidatorOperationsQueue, _ := keeper.MemClob.GetOperationsToReplay(ctx)
 	keeper.Logger(ctx).Debug(
 		"Local operations queue after PrepareCheckState",
 		"newLocalValidatorOperationsQueue",
@@ -253,5 +284,5 @@ func PrepareCheckState(
 	)
 
 	// Set per-orderbook gauges.
-	memClob.SetMemclobGauges(ctx)
+	keeper.MemClob.SetMemclobGauges(ctx)
 }

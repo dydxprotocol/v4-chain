@@ -1,6 +1,7 @@
 package ante
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -170,7 +171,7 @@ func IsSingleClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 
 	numMsgs := len(msgs)
 	if numMsgs > 1 {
-		return false, sdkerrors.Wrap(
+		return false, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)
@@ -214,7 +215,7 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 
 	numMsgs := len(msgs)
 	if numMsgs > 1 {
-		return false, sdkerrors.Wrap(
+		return false, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)

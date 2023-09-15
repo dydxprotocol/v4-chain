@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
-
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	"github.com/cometbft/cometbft/libs/log"
 
@@ -46,7 +44,8 @@ type (
 
 		memStoreInitialized *atomic.Bool
 
-		MaxLiquidationOrdersPerBlock uint32
+		MaxLiquidationOrdersPerBlock    uint32
+		MaxDeleveragingAttemptsPerBlock uint32
 
 		mevTelemetryConfig MevTelemetryConfig
 
@@ -89,7 +88,7 @@ func NewKeeper(
 		storeKey:                     storeKey,
 		memKey:                       memKey,
 		transientStoreKey:            liquidationsStoreKey,
-		authorities:                  maps.ArrayToMapInterface(authorities),
+		authorities:                  lib.SliceToSet(authorities),
 		MemClob:                      memClob,
 		UntriggeredConditionalOrders: make(map[types.ClobPairId]*UntriggeredConditionalOrders),
 		PerpetualIdToClobPairId:      make(map[uint32][]types.ClobPairId),
@@ -109,9 +108,10 @@ func NewKeeper(
 			Host:       clobFlags.MevTelemetryHost,
 			Identifier: clobFlags.MevTelemetryIdentifier,
 		},
-		MaxLiquidationOrdersPerBlock: clobFlags.MaxLiquidationOrdersPerBlock,
-		placeOrderRateLimiter:        placeOrderRateLimiter,
-		cancelOrderRateLimiter:       cancelOrderRateLimiter,
+		MaxLiquidationOrdersPerBlock:    clobFlags.MaxLiquidationOrdersPerBlock,
+		MaxDeleveragingAttemptsPerBlock: clobFlags.MaxDeleveragingAttemptsPerBlock,
+		placeOrderRateLimiter:           placeOrderRateLimiter,
+		cancelOrderRateLimiter:          cancelOrderRateLimiter,
 	}
 
 	// Provide the keeper to the MemClob.

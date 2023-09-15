@@ -272,6 +272,8 @@ export interface TransferSubaccountMessageContents {
   symbol: string,
   size: string,
   type: TransferType,
+  createdAt: IsoString,
+  createdAtHeight: string,
   transactionHash: string,
 }
 

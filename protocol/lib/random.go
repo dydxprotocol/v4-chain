@@ -6,13 +6,11 @@ import (
 	"math/rand"
 )
 
-func RandomBool() bool {
-	return rand.Intn(2) == 0
-}
-
 // RandomBytesBetween returns a random byte slice that is in the range [start, end] when compared lexicographically.
+// The slice will have a length in the range [len(start), len(end)].
+// In the current implementation, all possible permutations are not equally likely.
 // Nil slices for start and end will be treated as empty byte slices. Will panic if:
-//   - start compares lexicographically less than end
+//   - start compares lexicographically greater than end
 //   - nil rand is provided
 func RandomBytesBetween(start []byte, end []byte, rand *rand.Rand) []byte {
 	if rand == nil {
@@ -30,12 +28,14 @@ func RandomBytesBetween(start []byte, end []byte, rand *rand.Rand) []byte {
 
 	// Copy the common bytes between the two keys.
 	for ; i < minLen; i++ {
+		// Lexographically compare the byte.
+		// If equal, copy the byte.
+		// If not equal, then either panic or stop copying (depending on which byte is greater).
 		if start[i] == end[i] {
 			bytes[i] = start[i]
+		} else if start[i] > end[i] {
+			panic(fmt.Errorf("start %x compares lexicographically greater than end %x at position %d.", start, end, i))
 		} else {
-			if start[i] > end[i] {
-				panic(fmt.Errorf("start %x compares lexicographically greater than end %x at position %d.", start, end, i))
-			}
 			break
 		}
 	}

@@ -2,41 +2,40 @@ package types
 
 // DONTCOVER
 
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+import errorsmod "cosmossdk.io/errors"
 
 // x/subaccounts module sentinel errors
 var (
 	// 0 - 99: generic.
-	ErrIntegerOverflow = sdkerrors.Register(ModuleName, 0, "integer overflow")
+	ErrIntegerOverflow = errorsmod.Register(ModuleName, 0, "integer overflow")
 
 	// 100 - 199: update related.
-	ErrNonUniqueUpdatesPosition = sdkerrors.Register(
+	ErrNonUniqueUpdatesPosition = errorsmod.Register(
 		ModuleName, 100, "multiple updates were specified for the same position id")
-	ErrNonUniqueUpdatesSubaccount = sdkerrors.Register(
+	ErrNonUniqueUpdatesSubaccount = errorsmod.Register(
 		ModuleName, 101, "multiple updates were specified for the same subaccountId")
-	ErrFailedToUpdateSubaccounts = sdkerrors.Register(ModuleName, 102, "failed to apply subaccount updates")
+	ErrFailedToUpdateSubaccounts   = errorsmod.Register(ModuleName, 102, "failed to apply subaccount updates")
+	ErrProductPositionNotUpdatable = errorsmod.Register(ModuleName, 103, "product position is not updatable")
 
 	// 200 - 299: subaccount id related.
-	ErrInvalidSubaccountIdNumber = sdkerrors.Register(ModuleName, 200, "subaccount id number cannot exceed 127")
-	ErrInvalidSubaccountIdOwner  = sdkerrors.Register(ModuleName, 201, "subaccount id owner is an invalid address")
-	ErrDuplicateSubaccountIds    = sdkerrors.Register(ModuleName, 202, "duplicate subaccount id found in genesis")
+	ErrInvalidSubaccountIdNumber = errorsmod.Register(ModuleName, 200, "subaccount id number cannot exceed 127")
+	ErrInvalidSubaccountIdOwner  = errorsmod.Register(ModuleName, 201, "subaccount id owner is an invalid address")
+	ErrDuplicateSubaccountIds    = errorsmod.Register(ModuleName, 202, "duplicate subaccount id found in genesis")
 
 	// 300 - 399: asset position related.
-	ErrAssetPositionsOutOfOrder       = sdkerrors.Register(ModuleName, 300, "asset positions are out of order")
-	ErrAssetPositionZeroQuantum       = sdkerrors.Register(ModuleName, 301, "asset position's quantum cannot be zero")
-	ErrAssetPositionNotSupported      = sdkerrors.Register(ModuleName, 302, "asset position is not supported")
-	ErrMultAssetPositionsNotSupported = sdkerrors.Register(
+	ErrAssetPositionsOutOfOrder       = errorsmod.Register(ModuleName, 300, "asset positions are out of order")
+	ErrAssetPositionZeroQuantum       = errorsmod.Register(ModuleName, 301, "asset position's quantum cannot be zero")
+	ErrAssetPositionNotSupported      = errorsmod.Register(ModuleName, 302, "asset position is not supported")
+	ErrMultAssetPositionsNotSupported = errorsmod.Register(
 		ModuleName, 303, "having multiple asset positions is not supported")
 
 	// 400 - 499: perpetual position related.
-	ErrPerpPositionsOutOfOrder = sdkerrors.Register(ModuleName, 400, "perpetual positions are out of order")
-	ErrPerpPositionZeroQuantum = sdkerrors.Register(ModuleName, 401, "perpetual position's quantum cannot be zero")
+	ErrPerpPositionsOutOfOrder = errorsmod.Register(ModuleName, 400, "perpetual positions are out of order")
+	ErrPerpPositionZeroQuantum = errorsmod.Register(ModuleName, 401, "perpetual position's quantum cannot be zero")
 
 	// 500 - 599: transfer related.
-	ErrAssetTransferQuantumsNotPositive = sdkerrors.Register(
+	ErrAssetTransferQuantumsNotPositive = errorsmod.Register(
 		ModuleName, 500, "asset transfer quantums is not positive")
-	ErrAssetTransferThroughBankNotImplemented = sdkerrors.Register(
+	ErrAssetTransferThroughBankNotImplemented = errorsmod.Register(
 		ModuleName, 501, "asset transfer (other than USDC) through the bank module is not implemented")
 )

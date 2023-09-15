@@ -5,6 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	sdklog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,6 +22,7 @@ type (
 		epochsKeeper        types.EpochsKeeper
 		clobKeeper          types.PerpetualsClobKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
+		authorities         map[string]struct{}
 	}
 )
 
@@ -30,6 +32,7 @@ func NewKeeper(
 	pricesKeeper types.PricesKeeper,
 	epochsKeeper types.EpochsKeeper,
 	indexerEventsManager indexer_manager.IndexerEventManager,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:                 cdc,
@@ -37,6 +40,7 @@ func NewKeeper(
 		pricesKeeper:        pricesKeeper,
 		epochsKeeper:        epochsKeeper,
 		indexerEventManager: indexerEventsManager,
+		authorities:         lib.SliceToSet(authorities),
 	}
 }
 

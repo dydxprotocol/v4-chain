@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // GateTicker is our representation of ticker information returned in Gate response.
@@ -38,7 +38,7 @@ func (t GateTicker) GetLastPrice() string {
 func GatePriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into a list of tickers.
 	var gateTickers []GateTicker
@@ -50,6 +50,6 @@ func GatePriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		gateTickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

@@ -7,15 +7,56 @@ import (
 	"math/rand"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
+
+// MaybeDeleverageSubaccount is the main entry point to deleverage a subaccount. It attempts to find positions
+// on the opposite side of deltaQuantums and use them to offset the liquidated subaccount's position at
+// the bankruptcy price of the liquidated position.
+func (k Keeper) MaybeDeleverageSubaccount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	deltaQuantums *big.Int,
+) (
+	quantumsDeleveraged *big.Int,
+	err error,
+) {
+	lib.AssertCheckTxMode(ctx)
+
+	canPerformDeleveraging, err := k.CanDeleverageSubaccount(ctx, subaccountId)
+	if err != nil {
+		return new(big.Int), err
+	}
+
+	// Early return to skip deleveraging if the subaccount can't be deleveraged.
+	if !canPerformDeleveraging {
+		telemetry.IncrCounter(
+			1,
+			types.ModuleName,
+			metrics.PrepareCheckState,
+			metrics.CannotDeleverageSubaccount,
+		)
+		return new(big.Int), nil
+	}
+
+	telemetry.IncrCounter(
+		1,
+		types.ModuleName,
+		metrics.PrepareCheckState,
+		metrics.DeleverageSubaccount,
+	)
+
+	return k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+}
 
 // GetInsuranceFundBalance returns the current balance of the insurance fund (in quote quantums).
 // This calls the Bank Keeper’s GetBalance() function for the Module Address of the insurance fund.
@@ -274,7 +315,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count,
 		)
 		k.Logger(ctx).Error(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrPositionCannotBeFullyOffset,
 				"OffsetSubaccountPerpetualPosition: Not enough position to fully offset position, "+
 					"subaccount = (%+v), perpetual = (%d), quantums remaining = (%+v)",
@@ -326,7 +367,7 @@ func (k Keeper) ProcessDeleveraging(
 		liquidatedPositionQuantums.CmpAbs(deltaQuantums) == -1 ||
 		offsettingPositionQuantums.Sign()*deltaQuantums.Sign() != 1 ||
 		offsettingPositionQuantums.CmpAbs(deltaQuantums) == -1 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
 			"ProcessDeleveraging: liquidated = (%+v), offsetting = (%+v), perpetual id = (%d), deltaQuantums = (%+v)",
 			liquidatedSubaccount,

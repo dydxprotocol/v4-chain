@@ -2,11 +2,10 @@ package binance
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // BinanceTicker is our representation of ticker information returned in Binance response.
@@ -20,7 +19,7 @@ type BinanceTicker struct {
 
 func (t BinanceTicker) GetPair() string {
 	// needs to be wrapped in quotes to be consistent with the API request format.
-	return fmt.Sprintf(`"%s"`, t.Pair)
+	return t.Pair
 }
 
 func (t BinanceTicker) GetAskPrice() string {
@@ -40,7 +39,7 @@ func (t BinanceTicker) GetLastPrice() string {
 func BinancePriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into a list of tickers.
 	var binanceTickers []BinanceTicker
@@ -52,6 +51,6 @@ func BinancePriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		binanceTickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

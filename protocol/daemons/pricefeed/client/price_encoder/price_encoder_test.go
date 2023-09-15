@@ -6,7 +6,7 @@ import (
 	pf_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	pft "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -98,7 +98,7 @@ type MockExchangeToMarketPrices struct {
 	numPricesMedianized int
 }
 
-func (m *MockExchangeToMarketPrices) GetIndexPrice(types.MarketId, time.Time, lib.Medianizer) (uint64, int) {
+func (m *MockExchangeToMarketPrices) GetIndexPrice(types.MarketId, time.Time, pft.Resolver) (uint64, int) {
 	return m.indexPrice, m.numPricesMedianized
 }
 

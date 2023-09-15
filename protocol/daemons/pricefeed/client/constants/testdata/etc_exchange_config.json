@@ -2,7 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"ETCUSDT\"",
+      "ticker": "ETCUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {

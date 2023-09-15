@@ -1,10 +1,11 @@
 package msgs_test
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/stretchr/testify/require"
 )
 
@@ -188,7 +189,7 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.lightclients.tendermint.v1.Misbehaviour",
 	}
 
-	require.Equal(t, expectedMsgs, maps.GetSortedKeys(msgs.NormalMsgs))
+	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.NormalMsgs))
 }
 
 func TestNormalMsgs_Value(t *testing.T) {

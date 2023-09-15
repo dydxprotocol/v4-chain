@@ -6,13 +6,14 @@ import (
 	"sort"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -20,7 +21,6 @@ import (
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/pkg/errors"
 )
 
 // CreatePerpetual creates a new perpetual in the store.
@@ -37,7 +37,7 @@ func (k Keeper) CreatePerpetual(
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
 	if k.HasPerpetual(ctx, id) {
-		return types.Perpetual{}, sdkerrors.Wrap(
+		return types.Perpetual{}, errorsmod.Wrap(
 			types.ErrPerpetualAlreadyExists,
 			lib.Uint32ToString(id),
 		)
@@ -80,6 +80,11 @@ func (k Keeper) HasPerpetual(
 ) (found bool) {
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
 	return perpetualStore.Has(types.PerpetualKey(id))
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) ModifyPerpetual(
@@ -135,7 +140,7 @@ func (k Keeper) GetPerpetual(
 
 	b := store.Get(types.PerpetualKey(id))
 	if b == nil {
-		return val, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, lib.Uint32ToString(id))
+		return val, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, lib.Uint32ToString(id))
 	}
 
 	k.cdc.MustUnmarshal(b, &val)
@@ -231,9 +236,8 @@ func (k Keeper) processStoredPremiums(
 		// if block times are longer than expected and hence there were not enough blocks to
 		// collect votes.
 		// Note `NumPremiums >= len(marketPremiums.Premiums)`, so `lenPadding >= 0`.
-		lenPadding := int64(
-			lib.MaxUint32(premiumStore.NumPremiums,
-				minNumPremiumsRequired)) - int64(len(marketPremiums.Premiums))
+		lenPadding := int64(lib.Max(premiumStore.NumPremiums, minNumPremiumsRequired)) -
+			int64(len(marketPremiums.Premiums))
 
 		padding := make([]int32, lenPadding)
 		paddedPremiums := append(marketPremiums.Premiums, padding...)
@@ -261,7 +265,7 @@ func (k Keeper) processPremiumVotesIntoSamples(
 		newFundingSampleEpoch,
 		types.PremiumVotesKey,
 		k.GetMinNumVotesPerSample(ctx),
-		lib.MustGetMedianInt32, // combineFunc
+		lib.MustGetMedian[int32], // combineFunc
 		func(input []int32) []int32 { return input }, // filterFunc
 	)
 
@@ -456,7 +460,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		}
 
 		// Get impact notional corresponding to this perpetual market (panic if its liquidity tier doesn't exist).
-		liquidityTier := lib.MustGetValue(allLiquidityTiers, uint(perp.Params.LiquidityTier))
+		liquidityTier := allLiquidityTiers[perp.Params.LiquidityTier]
 		bigImpactNotionalQuoteQuantums := new(big.Int).SetUint64(liquidityTier.ImpactNotional)
 
 		premiumPpm, err := k.clobKeeper.GetPricePremiumForPerpetual(
@@ -468,7 +472,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: bigImpactNotionalQuoteQuantums,
 				// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-				MaxAbsPremiumVotePpm: lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perp.Params.LiquidityTier)),
+				MaxAbsPremiumVotePpm: liquidityTierToMaxAbsPremiumVotePpm[perp.Params.LiquidityTier],
 			},
 		)
 		if err != nil {
@@ -615,7 +619,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 
 		// Panic if maintenance fraction ppm is larger than its maximum value.
 		if liquidityTier.MaintenanceFractionPpm > types.MaxMaintenanceFractionPpm {
-			panic(sdkerrors.Wrapf(
+			panic(errorsmod.Wrapf(
 				types.ErrMaintenanceFractionPpmExceedsMax,
 				"perpetual Id = (%d), liquidity tier Id = (%d), maintenance fraction ppm = (%v)",
 				perp.Params.Id, perp.Params.LiquidityTier, liquidityTier.MaintenanceFractionPpm,
@@ -648,7 +652,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 		)
 
 		if bigFundingRatePpm.Cmp(lib.BigMaxInt32()) > 0 {
-			panic(sdkerrors.Wrapf(
+			panic(errorsmod.Wrapf(
 				types.ErrFundingRateInt32Overflow,
 				"perpetual Id = (%d), funding rate = (%v)",
 				perp.Params.Id, bigFundingRatePpm,
@@ -975,7 +979,7 @@ func (k Keeper) addToPremiumStore(
 
 	for _, sample := range newSamples {
 		if !k.HasPerpetual(ctx, sample.PerpetualId) {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"perpetual ID = %d",
 				sample.PerpetualId,
@@ -1100,8 +1104,8 @@ func (k Keeper) GetPerpetualAndMarketPrice(
 	// Get market price.
 	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId)
 	if err != nil {
-		if sdkerrors.IsOf(err, pricestypes.ErrMarketPriceDoesNotExist) {
-			return perpetual, marketPrice, sdkerrors.Wrap(
+		if errorsmod.IsOf(err, pricestypes.ErrMarketPriceDoesNotExist) {
+			return perpetual, marketPrice, errorsmod.Wrap(
 				types.ErrMarketDoesNotExist,
 				fmt.Sprintf(
 					"Market ID %d does not exist on perpetual ID %d",
@@ -1125,36 +1129,19 @@ func (k Keeper) validatePerpetual(
 	ctx sdk.Context,
 	perpetual *types.Perpetual,
 ) error {
-	if err := k.validatePerpetualStateless(perpetual); err != nil {
+	// Stateless validation.
+	if err := perpetual.Params.Validate(); err != nil {
 		return err
 	}
-	// Validate `marketId`.
+
+	// Validate `marketId` exists.
 	if _, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId); err != nil {
 		return err
 	}
-	// Validate `liquidityTier`.
+
+	// Validate `liquidityTier` exists.
 	if perpetual.Params.LiquidityTier >= k.GetNumLiquidityTiers(ctx) {
-		return sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.Params.LiquidityTier))
-	}
-
-	return nil
-}
-
-// Performs the following validation (stateful and stateless) on a `Perpetual`
-// structs fields, returning an error if any conditions are false:
-// - Ticker is a non-empty string.
-func (k Keeper) validatePerpetualStateless(perpetual *types.Perpetual) error {
-	// Validate `ticker`.
-	if len(perpetual.Params.Ticker) == 0 {
-		return errors.WithStack(types.ErrTickerEmptyString)
-	}
-
-	// Validate `defaultFundingPpm`
-	defaultFundingPpm := lib.AbsInt32(perpetual.Params.DefaultFundingPpm)
-	if defaultFundingPpm > types.MaxDefaultFundingPpmAbs {
-		return sdkerrors.Wrap(
-			types.ErrDefaultFundingPpmMagnitudeExceedsMax,
-			lib.Int32ToString(perpetual.Params.DefaultFundingPpm))
+		return errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.Params.LiquidityTier))
 	}
 
 	return nil
@@ -1203,7 +1190,7 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 	for _, vote := range msg.Votes {
 		// Check that the perpetual Id is valid.
 		if _, err := k.GetPerpetual(ctx, vote.PerpetualId); err != nil {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"perpetualId = %d",
 				vote.PerpetualId,
@@ -1221,13 +1208,13 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 		if isActive, err := k.clobKeeper.IsPerpetualClobPairActive(
 			ctx, vote.PerpetualId,
 		); err != nil {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				err,
 				"PerformStatefulPremiumVotesValidation: failed to determine ClobPair status for perpetual with id %d",
 				vote.PerpetualId,
 			)
 		} else if !isActive { // reject premium votes for non active markets
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrPremiumVoteForNonActiveMarket,
 				"PerformStatefulPremiumVotesValidation: no premium vote should be included for inactive perpetual with id %d",
 				vote.PerpetualId,
@@ -1235,13 +1222,13 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 		}
 
 		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-		maxAbsPremiumVotePpm := lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perpetual.Params.LiquidityTier))
+		maxAbsPremiumVotePpm := liquidityTierToMaxAbsPremiumVotePpm[perpetual.Params.LiquidityTier]
 		// Check premium vote value is within bounds.
 		bigAbsPremiumPpm := new(big.Int).SetUint64(uint64(
 			lib.AbsInt32(vote.PremiumPpm),
 		))
 		if bigAbsPremiumPpm.Cmp(maxAbsPremiumVotePpm) > 0 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrPremiumVoteNotClamped,
 				"perpetualId = %d, premium vote = %d, maxAbsPremiumVotePpm = %d",
 				vote.PerpetualId,
@@ -1385,7 +1372,7 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 
 	b := store.Get(types.LiquidityTierKey(id))
 	if b == nil {
-		return liquidityTier, sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(id))
+		return liquidityTier, errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(id))
 	}
 
 	k.cdc.MustUnmarshal(b, &liquidityTier)
@@ -1486,4 +1473,30 @@ func (k Keeper) getLiquidityTiertoMaxAbsPremiumVotePpm(ctx sdk.Context) []*big.I
 		maxAbsPremiumVotePpms[i] = liquidityTier.GetMaxAbsFundingClampPpm(premiumVoteClampFactorPpm)
 	}
 	return maxAbsPremiumVotePpms
+}
+
+// IsPositionUpdatable returns whether position of a perptual is updatable.
+// A perpetual is not updatable if it satifies:
+//   - Perpetual has zero oracle price. Since new oracle prices are created at zero by default and valid
+//     oracle priceupdates are non-zero, this indicates the absence of a valid oracle price update.
+func (k Keeper) IsPositionUpdatable(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (
+	updatable bool,
+	err error,
+) {
+	_, oraclePrice, err := k.GetPerpetualAndMarketPrice(
+		ctx,
+		perpetualId,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	// If perpetual has zero oracle price, it is considered not updatable.
+	if oraclePrice.Price == 0 {
+		return false, nil
+	}
+	return true, nil
 }

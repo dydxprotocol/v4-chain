@@ -4,18 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"net/http"
 	"testing"
 	"time"
 
 	pf_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	pft "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -71,7 +71,7 @@ func TestQuery(t *testing.T) {
 		priceFunc func(
 			response *http.Response,
 			tickerToPriceExponent map[string]int32,
-			medianizer lib.Medianizer,
+			resolver pft.Resolver,
 		) (prices map[string]uint64, unavailable map[string]error, err error)
 		marketIds      []types.MarketId
 		requestHandler *mocks.RequestHandler
@@ -319,7 +319,7 @@ func generateTestMarketPriceExponentMap() map[types.MarketId]types.Exponent {
 func priceFunc(
 	response *http.Response,
 	tickerToPriceExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver pft.Resolver,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
 	prices = make(map[string]uint64, len(tickerToPriceExponent))
 	for ticker := range tickerToPriceExponent {
@@ -331,7 +331,7 @@ func priceFunc(
 func priceFuncWithInvalidResponse(
 	response *http.Response,
 	tickerToPriceExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver pft.Resolver,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
 	prices = make(map[string]uint64, len(tickerToPriceExponent))
 	for range tickerToPriceExponent {
@@ -343,7 +343,7 @@ func priceFuncWithInvalidResponse(
 func priceFuncWithValidAndUnavailableTickers(
 	response *http.Response,
 	tickerToPriceExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver pft.Resolver,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
 	prices = make(map[string]uint64, len(tickerToPriceExponent))
 	for ticker := range tickerToPriceExponent {
@@ -357,7 +357,7 @@ func priceFuncWithValidAndUnavailableTickers(
 func priceFuncReturnsInvalidUnavailableTicker(
 	response *http.Response,
 	tickerToPriceExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver pft.Resolver,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
 	return nil, map[string]error{noMarketTicker: tickerNotAvailableError}, nil
 }
@@ -365,7 +365,7 @@ func priceFuncReturnsInvalidUnavailableTicker(
 func priceFuncWithErr(
 	response *http.Response,
 	tickerToPriceExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver pft.Resolver,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
 	return nil, nil, priceFuncError
 }

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -979,7 +981,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 			order: constants.LiquidationOrder_Carl_Num0_Clob1_Buy1ETH_Price3000,
 
-			expectedError: sdkerrors.Wrapf(
+			expectedError: errorsmod.Wrapf(
 				types.ErrSubaccountHasLiquidatedPerpetual,
 				"Subaccount %v and perpetual %v have already been liquidated within the last block",
 				constants.Carl_Num0,
@@ -2018,6 +2020,16 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				)
 			}
 
+			if tc.expectedFilledSize == 0 {
+				_, err = ks.ClobKeeper.MaybeDeleverageSubaccount(
+					ctx,
+					tc.order.GetSubaccountId(),
+					tc.order.MustGetLiquidatedPerpetualId(),
+					tc.order.GetDeltaQuantums(),
+				)
+				require.NoError(t, err)
+			}
+
 			for _, expectedSubaccount := range tc.expectedSubaccounts {
 				require.Equal(t, expectedSubaccount, ks.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.GetId()))
 			}
@@ -2597,6 +2609,8 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
@@ -4350,7 +4364,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			err := ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, tc.liquidationConfig)
 			require.NoError(t, err)
 
-			clobPair, positionSize, err := ks.ClobKeeper.GetPerpetualPositionToLiquidate(
+			perpetualId, positionSize, err := ks.ClobKeeper.GetPerpetualPositionToLiquidate(
 				ks.Ctx,
 				*subaccount.Id,
 			)
@@ -4360,10 +4374,13 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				tc.expectedQuantums,
 				positionSize,
 			)
+
+			expectedPerpetualId, err := tc.expectedClobPair.GetPerpetualId()
+			require.NoError(t, err)
 			require.Equal(
 				t,
-				tc.expectedClobPair,
-				clobPair,
+				expectedPerpetualId,
+				perpetualId,
 			)
 		})
 	}
@@ -4719,7 +4736,7 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 
 			expectedMaxInsuranceLost:             big.NewInt(50),
 			expectedMaxNotionalLiquidatablePanic: true,
-			expectedMaxNotionalLiquidatableErr: sdkerrors.Wrapf(
+			expectedMaxNotionalLiquidatableErr: errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
 				"Subaccount %+v notional liquidated exceeds block limit. Current notional liquidated: %v, block limit: %v",
 				constants.Alice_Num0,
@@ -4743,7 +4760,7 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 
 			expectedMaxNotionalLiquidatable: big.NewInt(50),
 			expectedMaxInsuranceLostPanic:   true,
-			expectedMaxInsuranceLostErr: sdkerrors.Wrapf(
+			expectedMaxInsuranceLostErr: errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 				"Subaccount %+v insurance lost exceeds block limit. Current insurance lost: %v, block limit: %v",
 				constants.Alice_Num0,
@@ -4976,6 +4993,150 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 				require.Equal(t, tc.expectedMinPosNotionalLiquidatable, actualMinPosNotionalLiquidatable)
 				require.Equal(t, tc.expectedMaxPosNotionalLiquidatable, actualMaxPosNotionalLiquidatable)
 			}
+		})
+	}
+}
+
+func TestSortLiquidationOrders(t *testing.T) {
+	tests := map[string]struct {
+		orders   []types.LiquidationOrder
+		expected []types.LiquidationOrder
+	}{
+		"Sorts liquidations by abs percentage difference from oracle price (long vs long)": {
+			orders: []types.LiquidationOrder{
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50501_01,
+			},
+			expected: []types.LiquidationOrder{
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50501_01,
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
+			},
+		},
+		"Sorts liquidations by abs percentage difference from oracle price (short vs short)": {
+			orders: []types.LiquidationOrder{
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price49500,
+			},
+			expected: []types.LiquidationOrder{
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price49500,
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+			},
+		},
+		"Sorts liquidations by abs percentage difference from oracle price (long vs short)": {
+			orders: []types.LiquidationOrder{
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price49500,
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50501_01,
+			},
+			expected: []types.LiquidationOrder{
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50501_01,
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price49500,
+			},
+		},
+		"Sorts liquidations by order size in quote quantums (long vs long)": {
+			orders: []types.LiquidationOrder{
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy01BTC_Price50000,
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50000,
+			},
+			expected: []types.LiquidationOrder{
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50000,
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy01BTC_Price50000,
+			},
+		},
+		"Sorts liquidations by order size in quote quantums (short vs short)": {
+			orders: []types.LiquidationOrder{
+				constants.LiquidationOrder_Dave_Num1_Clob0_Sell01BTC_Price50000,
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+			},
+			expected: []types.LiquidationOrder{
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+				constants.LiquidationOrder_Dave_Num1_Clob0_Sell01BTC_Price50000,
+			},
+		},
+		"Sorts liquidations by order size in quote quantums (long vs short)": {
+			orders: []types.LiquidationOrder{
+				constants.LiquidationOrder_Dave_Num1_Clob0_Sell01BTC_Price50000,
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50000,
+			},
+			expected: []types.LiquidationOrder{
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50000,
+				constants.LiquidationOrder_Dave_Num1_Clob0_Sell01BTC_Price50000,
+			},
+		},
+		"Sorts liquidations by order hash": {
+			orders: []types.LiquidationOrder{
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50000,
+			},
+			expected: []types.LiquidationOrder{
+				constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50000,
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup keeper state.
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			// Create perpetual.
+			_, err := ks.PerpetualsKeeper.CreatePerpetual(
+				ks.Ctx,
+				constants.BtcUsd_100PercentMarginRequirement.Params.Id,
+				constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+				constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+				constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+				constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
+				constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+			)
+			require.NoError(t, err)
+
+			// Create all CLOBs.
+			mockIndexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
+			).Once().Return()
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				ks.Ctx,
+				constants.ClobPair_Btc.Id,
+				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.Status,
+			)
+			require.NoError(t, err)
+
+			err = ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, types.LiquidationsConfig_Default)
+			require.NoError(t, err)
+
+			ks.ClobKeeper.SortLiquidationOrders(
+				ks.Ctx,
+				tc.orders,
+			)
+			require.Equal(t, tc.expected, tc.orders)
 		})
 	}
 }

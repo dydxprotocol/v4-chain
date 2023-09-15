@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -23,7 +23,7 @@ func (k Keeper) FetchOrderFromOrderId(
 	if orderId.IsShortTermOrder() {
 		order, exists := shortTermOrdersMap[orderId]
 		if !exists {
-			return order, sdkerrors.Wrapf(
+			return order, errorsmod.Wrapf(
 				types.ErrInvalidMatchOrder,
 				"Failed fetching short term order id %+v from previous operations in operations queue",
 				orderId,
@@ -36,7 +36,7 @@ func (k Keeper) FetchOrderFromOrderId(
 	if orderId.IsLongTermOrder() {
 		statefulOrderPlacement, found := k.GetLongTermOrderPlacement(ctx, orderId)
 		if !found {
-			return order, sdkerrors.Wrapf(
+			return order, errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful long term order id %+v does not exist in state.",
 				orderId,
@@ -46,7 +46,7 @@ func (k Keeper) FetchOrderFromOrderId(
 	} else if orderId.IsConditionalOrder() {
 		conditionalOrderPlacement, found := k.GetTriggeredConditionalOrderPlacement(ctx, orderId)
 		if !found {
-			return order, sdkerrors.Wrapf(
+			return order, errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"stateful conditional order id %+v does not exist in triggered conditional state.",
 				orderId,
@@ -100,7 +100,7 @@ func (k Keeper) StatefulValidateMakerFill(
 	// Orders must be on different sides of the book.
 	if takerOrder != nil {
 		if takerOrder.IsBuy() == makerOrder.IsBuy() {
-			return makerOrder, sdkerrors.Wrapf(
+			return makerOrder, errorsmod.Wrapf(
 				types.ErrInvalidMatchOrder,
 				"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
 				takerOrder.GetOrderTextString(),
@@ -112,7 +112,7 @@ func (k Keeper) StatefulValidateMakerFill(
 	// Maker order cannot be FOK or IOC.
 	if makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
 		makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
-		return makerOrder, sdkerrors.Wrapf(
+		return makerOrder, errorsmod.Wrapf(
 			types.ErrInvalidMatchOrder,
 			"Maker order %+v cannot be FOK or IOC.",
 			makerOrder.GetOrderTextString(),

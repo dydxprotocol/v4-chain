@@ -1,13 +1,17 @@
 package keeper
 
 import (
+	"bytes"
 	"math"
 	"math/big"
+	"sort"
+	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -35,11 +39,10 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	}
 
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
-	clobPair, positionSizeBig, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
+	perpetualId, positionSizeBig, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
 	if err != nil {
 		return nil, err
 	}
-	perpetualId := clobPair.GetPerpetualClobMetadata().PerpetualId
 
 	// Get the fillable price of the liquidation order in subticks.
 	deltaQuantumsBig := positionSizeBig.Neg(positionSizeBig)
@@ -47,7 +50,10 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	if err != nil {
 		return nil, err
 	}
+
+	// Calculate the fillable price.
 	isLiquidatingLong := deltaQuantumsBig.Sign() == -1
+	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	fillablePriceSubticks := k.ConvertFillablePriceToSubticks(
 		ctx,
 		fillablePriceRat,
@@ -195,7 +201,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// Validate that the provided deltaQuantums is valid with respect to
 	// the current position size.
 	if psBig.Sign()*deltaQuantums.Sign() != -1 || psBig.CmpAbs(deltaQuantums) == -1 {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
 			"Position size delta %v is invalid for %v and perpetual %v, outstanding position size is %v",
 			deltaQuantums,
@@ -305,7 +311,7 @@ func (k Keeper) GetFillablePrice(
 	// Validate that the provided deltaQuantums is valid with respect to
 	// the current position size.
 	if psBig.Sign()*deltaQuantums.Sign() != -1 || psBig.CmpAbs(deltaQuantums) == -1 {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
 			"Position size delta %v is invalid for %v and perpetual %v, outstanding position size is %v",
 			deltaQuantums,
@@ -400,7 +406,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 ) {
 	// Verify that fill amount is not zero.
 	if fillAmount == 0 {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrInvalidQuantumsForInsuranceFundDeltaCalculation,
 			"FillAmount is zero for subaccount %v and perpetual %v.",
 			subaccountId,
@@ -470,7 +476,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 }
 
 // GetPerpetualPositionToLiquidate determines which position and position size to liquidate on the
-// passed-in subaccount (after accounting for the `update`). It will return the `ClobPair` that
+// passed-in subaccount (after accounting for the `update`). It will return the perpetual id that
 // will be used for liquidating the perpetual position and the number of quantums to liquidate
 // from the perpetual position (positive if long, negative if short).
 // This function returns an error if the subaccount has no perpetual positions to liquidate.
@@ -478,7 +484,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 ) (
-	clobPair types.ClobPair,
+	perpetualId uint32,
 	quantums *big.Int,
 	err error,
 ) {
@@ -500,16 +506,16 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 
 	// Return an error if there are no perpetual positions to liquidate.
 	if perpetualPosition == nil {
-		return types.ClobPair{},
+		return 0,
 			nil,
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrNoPerpetualPositionsToLiquidate,
 				"Subaccount ID: %v",
 				subaccount.Id,
 			)
 	}
 
-	clobPair = k.mustGetClobPairForPerpetualId(ctx, perpetualPosition.PerpetualId)
+	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualPosition.PerpetualId)
 
 	// Get the maximum notional liquidatable for this position.
 	_, bigMaxPositionNotionalLiquidatable, err := k.GetMaxAndMinPositionNotionalLiquidatable(
@@ -550,7 +556,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 		perpetualPosition.GetBigQuantums().CmpAbs(
 			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		) <= 0 {
-		return clobPair, perpetualPosition.GetBigQuantums(), nil
+		return perpetualPosition.PerpetualId, perpetualPosition.GetBigQuantums(), nil
 	}
 
 	// Convert the max notional liquidatable to base quantums.
@@ -583,7 +589,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 		bigBaseQuantumsToLiquidate.Neg(bigBaseQuantumsToLiquidate)
 	}
 
-	return clobPair, bigBaseQuantumsToLiquidate, nil
+	return perpetualPosition.PerpetualId, bigBaseQuantumsToLiquidate, nil
 }
 
 // GetSubaccountMaxNotionalLiquidatable returns the maximum notional that the subaccount can liquidate
@@ -602,7 +608,7 @@ func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
 
 	// Make sure that this subaccount <> perpetual has not previously been liquidated in the same block.
 	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrSubaccountHasLiquidatedPerpetual,
 			"Subaccount %v and perpetual %v have already been liquidated within the last block",
 			subaccountId,
@@ -619,7 +625,7 @@ func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
 	)
 	if bigTotalNotionalLiquidated.Cmp(bigNotionalLiquidatedBlockLimit) > 0 {
 		panic(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
 				"Subaccount %+v notional liquidated exceeds block limit. Current notional liquidated: %v, block limit: %v",
 				subaccountId,
@@ -653,7 +659,7 @@ func (k Keeper) GetSubaccountMaxInsuranceLost(
 
 	// Make sure that the subaccount has not previously liquidated this perpetual in the same block.
 	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
-		return nil, sdkerrors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrSubaccountHasLiquidatedPerpetual,
 			"Subaccount %v and perpetual %v have already been liquidated within the last block",
 			subaccountId,
@@ -670,7 +676,7 @@ func (k Keeper) GetSubaccountMaxInsuranceLost(
 	)
 	if bigCurrentInsuranceFundLost.Cmp(bigInsuranceFundLostBlockLimit) > 0 {
 		panic(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 				"Subaccount %+v insurance lost exceeds block limit. Current insurance lost: %v, block limit: %v",
 				subaccountId,
@@ -803,4 +809,68 @@ func (k Keeper) ConvertFillablePriceToSubticks(
 	}
 
 	return types.Subticks(boundedSubticks)
+}
+
+// SortLiquidationOrders deterministically sorts the liquidation orders in place.
+// Orders are first ordered by their absolute percentage difference from the oracle price in descending order,
+// followed by the their size in quote quantums in descending order, and finally by order hashes.
+func (k Keeper) SortLiquidationOrders(
+	ctx sdk.Context,
+	liquidationOrders []types.LiquidationOrder,
+) {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.SortLiquidationOrders)
+
+	sort.Slice(liquidationOrders, func(i, j int) bool {
+		x, y := liquidationOrders[i], liquidationOrders[j]
+
+		// First, sort by abs percentage difference from oracle price in descending order.
+		xAbsPercentageDiffFromOraclePrice := k.getAbsPercentageDiffFromOraclePrice(ctx, x)
+		yAbsPercentageDiffFromOraclePrice := k.getAbsPercentageDiffFromOraclePrice(ctx, y)
+		if xAbsPercentageDiffFromOraclePrice.Cmp(yAbsPercentageDiffFromOraclePrice) != 0 {
+			return xAbsPercentageDiffFromOraclePrice.Cmp(yAbsPercentageDiffFromOraclePrice) == 1
+		}
+
+		// Then sort by order quote quantums in descending order.
+		xQuoteQuantums := k.getQuoteQuantumsForLiquidationOrder(ctx, x)
+		yQuoteQuantums := k.getQuoteQuantumsForLiquidationOrder(ctx, y)
+		if xQuoteQuantums.Cmp(yQuoteQuantums) != 0 {
+			return xQuoteQuantums.Cmp(yQuoteQuantums) == 1
+		}
+
+		// Sort by order hash by default.
+		xHash := x.GetOrderHash()
+		yHash := y.GetOrderHash()
+		return bytes.Compare(xHash[:], yHash[:]) == -1
+	})
+}
+
+func (k Keeper) getAbsPercentageDiffFromOraclePrice(
+	ctx sdk.Context,
+	liquidationOrder types.LiquidationOrder,
+) *big.Rat {
+	clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
+	oraclePriceRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+	fillablePriceRat := liquidationOrder.GetOrderSubticks().ToBigRat()
+
+	return new(big.Rat).Abs(
+		new(big.Rat).Quo(
+			new(big.Rat).Sub(fillablePriceRat, oraclePriceRat),
+			oraclePriceRat,
+		),
+	)
+}
+
+func (k Keeper) getQuoteQuantumsForLiquidationOrder(
+	ctx sdk.Context,
+	liquidationOrder types.LiquidationOrder,
+) *big.Int {
+	quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		liquidationOrder.MustGetLiquidatedPerpetualId(),
+		liquidationOrder.GetBaseQuantums().ToBigInt(),
+	)
+	if err != nil {
+		panic(err)
+	}
+	return quoteQuantums
 }

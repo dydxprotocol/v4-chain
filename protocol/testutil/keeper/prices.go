@@ -2,21 +2,26 @@ package keeper
 
 import (
 	"fmt"
+	"testing"
+
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/stretchr/testify/mock"
-	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
@@ -85,6 +90,10 @@ func createPricesKeeper(
 		marketToSmoothedPrices,
 		mockTimeProvider,
 		mockIndexerEventsManager,
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 
 	return k, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider
@@ -114,7 +123,7 @@ func CreateTestMarkets(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 // CreateNMarkets creates N MarketParam, MarketPrice pairs for testing.
 func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int) []types.MarketParamPrice {
 	items := make([]types.MarketParamPrice, n)
-	numExistingMarkets := keeper.GetNumMarkets(ctx)
+	numExistingMarkets := GetNumMarkets(t, ctx, keeper)
 	for i := range items {
 		items[i].Param.Id = uint32(i) + numExistingMarkets
 		items[i].Param.Pair = fmt.Sprintf("%v", i)
@@ -125,6 +134,7 @@ func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int)
 		items[i].Price.Id = uint32(i) + numExistingMarkets
 		items[i].Price.Exponent = int32(i)
 		items[i].Price.Price = uint64(1_000 + i)
+		items[i].Param.ExchangeConfigJson = "{}" // Use empty, valid JSON for testing.
 
 		_, err := keeper.CreateMarket(
 			ctx,
@@ -234,4 +244,31 @@ func AssertMarketPriceUpdateEventInIndexerBlock(
 		updatedMarketPrice.Price,
 	)
 	require.Contains(t, marketEvents, expectedEvent)
+}
+
+// CreateTestPriceMarkets is a test utility function that creates list of given
+// price markets in state.
+func CreateTestPriceMarkets(
+	t *testing.T,
+	ctx sdk.Context,
+	pricesKeeper *keeper.Keeper,
+	markets []types.MarketParamPrice,
+) {
+	// Create a new market param and price.
+	marketId := uint32(0)
+	for _, m := range markets {
+		_, err := pricesKeeper.CreateMarket(
+			ctx,
+			m.Param,
+			m.Price,
+		)
+		require.NoError(t, err)
+		marketId++
+	}
+}
+
+func GetNumMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper) uint32 {
+	allMarkets, err := keeper.GetAllMarketParamPrices(ctx)
+	require.NoError(t, err)
+	return lib.MustConvertIntegerToUint32(len(allMarkets))
 }

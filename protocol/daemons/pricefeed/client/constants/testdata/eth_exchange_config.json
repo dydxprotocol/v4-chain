@@ -2,12 +2,12 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"ETHUSDT\"",
+      "ticker": "ETHUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "BinanceUS",
-      "ticker": "\"ETHUSDT\"",
+      "ticker": "ETHUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {

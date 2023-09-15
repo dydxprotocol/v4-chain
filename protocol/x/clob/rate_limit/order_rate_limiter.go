@@ -9,18 +9,12 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-// Used as the key for per market short term order limits.
-type subaccountIdAndClobPairId struct {
-	subaccountId satypes.SubaccountId
-	clobPairId   types.ClobPairId
-}
-
 // A RateLimiter which rate limits types.MsgPlaceOrder.
 //
 // The rate limiting keeps track of short term and stateful orders placed during
 // CheckTx separately from when they are placed during DeliverTx modes.
 type placeOrderRateLimiter struct {
-	checkStateShortTermOrderRateLimiter  RateLimiter[subaccountIdAndClobPairId]
+	checkStateShortTermOrderRateLimiter  RateLimiter[satypes.SubaccountId]
 	checkStateStatefulOrderRateLimiter   RateLimiter[satypes.SubaccountId]
 	deliverStateStatefulOrderRateLimiter RateLimiter[satypes.SubaccountId]
 	// The set of rate limited subaccounts is only stored for telemetry purposes.
@@ -31,7 +25,7 @@ var _ RateLimiter[*types.MsgPlaceOrder] = (*placeOrderRateLimiter)(nil)
 
 // NewPlaceOrderRateLimiter returns a RateLimiter which rate limits types.MsgPlaceOrder based upon the provided
 // types.BlockRateLimitConfiguration. The rate limiter currently supports limiting based upon:
-//   - how many short term orders per market and subaccount (by using the union type subaccountIdAndClobPairId).
+//   - how many short term orders per subaccount (by using satypes.SubaccountId).
 //   - how many stateful order per subaccount (by using satypes.SubaccountId).
 //
 // The rate limiting keeps track of orders placed during CheckTx separately from when they
@@ -48,25 +42,25 @@ func NewPlaceOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimi
 	}
 
 	// Return the no-op rate limiter if the configuration is empty.
-	if len(config.MaxShortTermOrdersPerMarketPerNBlocks)+len(config.MaxStatefulOrdersPerNBlocks) == 0 {
+	if len(config.MaxShortTermOrdersPerNBlocks)+len(config.MaxStatefulOrdersPerNBlocks) == 0 {
 		return noOpRateLimiter[*types.MsgPlaceOrder]{}
 	}
 
 	r := placeOrderRateLimiter{
 		rateLimitedSubaccounts: make(map[satypes.SubaccountId]bool, 0),
 	}
-	if len(config.MaxShortTermOrdersPerMarketPerNBlocks) == 0 {
-		r.checkStateShortTermOrderRateLimiter = NewNoOpRateLimiter[subaccountIdAndClobPairId]()
-	} else if len(config.MaxShortTermOrdersPerMarketPerNBlocks) == 1 &&
-		config.MaxShortTermOrdersPerMarketPerNBlocks[0].NumBlocks == 1 {
-		r.checkStateShortTermOrderRateLimiter = NewSingleBlockRateLimiter[subaccountIdAndClobPairId](
-			"MaxShortTermOrdersPerMarketPerNBlocks",
-			config.MaxShortTermOrdersPerMarketPerNBlocks[0],
+	if len(config.MaxShortTermOrdersPerNBlocks) == 0 {
+		r.checkStateShortTermOrderRateLimiter = NewNoOpRateLimiter[satypes.SubaccountId]()
+	} else if len(config.MaxShortTermOrdersPerNBlocks) == 1 &&
+		config.MaxShortTermOrdersPerNBlocks[0].NumBlocks == 1 {
+		r.checkStateShortTermOrderRateLimiter = NewSingleBlockRateLimiter[satypes.SubaccountId](
+			"MaxShortTermOrdersPerNBlocks",
+			config.MaxShortTermOrdersPerNBlocks[0],
 		)
 	} else {
-		r.checkStateShortTermOrderRateLimiter = NewMultiBlockRateLimiter[subaccountIdAndClobPairId](
-			"MaxShortTermOrdersPerMarketPerNBlocks",
-			config.MaxShortTermOrdersPerMarketPerNBlocks,
+		r.checkStateShortTermOrderRateLimiter = NewMultiBlockRateLimiter[satypes.SubaccountId](
+			"MaxShortTermOrdersPerNBlocks",
+			config.MaxShortTermOrdersPerNBlocks,
 		)
 	}
 	if len(config.MaxStatefulOrdersPerNBlocks) == 0 {
@@ -117,10 +111,7 @@ func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOr
 		if msg.Order.IsShortTermOrder() {
 			err = r.checkStateShortTermOrderRateLimiter.RateLimit(
 				ctx,
-				subaccountIdAndClobPairId{
-					subaccountId: msg.Order.GetSubaccountId(),
-					clobPairId:   msg.Order.GetClobPairId(),
-				},
+				msg.Order.GetSubaccountId(),
 			)
 		} else {
 			msg.Order.MustBeStatefulOrder()
@@ -161,7 +152,7 @@ func (r *placeOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
 //
 // The rate limiting keeps track of short term order cancellations during CheckTx.
 type cancelOrderRateLimiter struct {
-	checkStateShortTermRateLimiter RateLimiter[subaccountIdAndClobPairId]
+	checkStateShortTermRateLimiter RateLimiter[satypes.SubaccountId]
 	// The set of rate limited subaccounts is only stored for telemetry purposes.
 	rateLimitedSubaccounts map[satypes.SubaccountId]bool
 }
@@ -170,8 +161,7 @@ var _ RateLimiter[*types.MsgCancelOrder] = (*cancelOrderRateLimiter)(nil)
 
 // NewCancelOrderRateLimiter returns a RateLimiter which rate limits types.MsgCancelOrder based upon the provided
 // types.BlockRateLimitConfiguration. The rate limiter currently supports limiting based upon:
-//   - how many short term order cancellations per market and subaccount (by using the union type
-//     subaccountIdAndClobPairId).
+//   - how many short term order cancellations per subaccount (by using satypes.SubaccountId).
 //
 // The rate limiting keeps track of order cancellations placed during CheckTx.
 //
@@ -186,23 +176,23 @@ func NewCancelOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLim
 	}
 
 	// Return the no-op rate limiter if the configuration is empty.
-	if len(config.MaxShortTermOrderCancellationsPerMarketPerNBlocks) == 0 {
+	if len(config.MaxShortTermOrderCancellationsPerNBlocks) == 0 {
 		return noOpRateLimiter[*types.MsgCancelOrder]{}
-	} else if len(config.MaxShortTermOrderCancellationsPerMarketPerNBlocks) == 1 &&
-		config.MaxShortTermOrderCancellationsPerMarketPerNBlocks[0].NumBlocks == 1 {
+	} else if len(config.MaxShortTermOrderCancellationsPerNBlocks) == 1 &&
+		config.MaxShortTermOrderCancellationsPerNBlocks[0].NumBlocks == 1 {
 		return &cancelOrderRateLimiter{
 			rateLimitedSubaccounts: make(map[satypes.SubaccountId]bool, 0),
-			checkStateShortTermRateLimiter: NewSingleBlockRateLimiter[subaccountIdAndClobPairId](
-				"MaxShortTermOrdersPerMarketPerNBlocks",
-				config.MaxShortTermOrderCancellationsPerMarketPerNBlocks[0],
+			checkStateShortTermRateLimiter: NewSingleBlockRateLimiter[satypes.SubaccountId](
+				"MaxShortTermOrdersPerNBlocks",
+				config.MaxShortTermOrderCancellationsPerNBlocks[0],
 			),
 		}
 	} else {
 		return &cancelOrderRateLimiter{
 			rateLimitedSubaccounts: make(map[satypes.SubaccountId]bool, 0),
-			checkStateShortTermRateLimiter: NewMultiBlockRateLimiter[subaccountIdAndClobPairId](
-				"MaxShortTermOrdersPerMarketPerNBlocks",
-				config.MaxShortTermOrderCancellationsPerMarketPerNBlocks,
+			checkStateShortTermRateLimiter: NewMultiBlockRateLimiter[satypes.SubaccountId](
+				"MaxShortTermOrdersPerNBlocks",
+				config.MaxShortTermOrderCancellationsPerNBlocks,
 			),
 		}
 	}
@@ -220,10 +210,7 @@ func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancel
 	if msg.OrderId.IsShortTermOrder() {
 		err = r.checkStateShortTermRateLimiter.RateLimit(
 			ctx,
-			subaccountIdAndClobPairId{
-				subaccountId: msg.OrderId.GetSubaccountId(),
-				clobPairId:   types.ClobPairId(msg.OrderId.ClobPairId),
-			},
+			msg.OrderId.GetSubaccountId(),
 		)
 	}
 	if err != nil {

@@ -1,15 +1,14 @@
-<p align="center"><img src="https://s3.amazonaws.com/dydx-assets/logo_large_white.png" width="256" /></p>
+<p align="center"><img src="https://dydx.exchange/icon.svg?" width="256" /></p>
+
+<h1 align="center">v4 Protocol</h1>
 
 <div align="center">
-  <a href="https://github.com/dydxprotocol/v4/actions/workflows/test.yml?query=branch%3Amain" style="text-decoration:none;">
-    <img src="https://github.com/dydxprotocol/v4/actions/workflows/test.yml/badge.svg?branch=main" />
-  </a>
-  <a href='https://coveralls.io/github/dydxprotocol/v4' style="text-decoration:none;">
-    <img src='https://coveralls.io/repos/github/dydxprotocol/v4/badge.svg?t=72Ru8Z' alt='Coverage Status' />
+  <a href="https://github.com/dydxprotocol/v4-chain/actions/workflows/protocol-test.yml?query=branch%3Amain" style="text-decoration:none;">
+    <img src="https://github.com/dydxprotocol/v4-chain/actions/workflows/protocol-test.yml/badge.svg?branch=main" />
   </a>
 </div>
 
-> Sovereign Blockchain built using Cosmos SDK & CometBFT for v4 of the dYdX Protocol.
+Sovereign Blockchain built using Cosmos SDK & CometBFT for v4 of the dYdX Protocol.
 
 TODO(CORE-512): add info/resources around V4. [Doc](https://www.notion.so/dydx/V4-36a9f30eee1d478cb88e0c50860fdbee)
 

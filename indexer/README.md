@@ -1,4 +1,12 @@
-# Indexer
+<p align="center"><img src="https://dydx.exchange/icon.svg?" width="256" /></p>
+
+<h1 align="center">v4 Indexer</h1>
+
+<div align="center">
+  <a href="https://github.com/dydxprotocol/v4-chain/actions/workflows/indexer-build-test-coverage.yml?query=branch%3Amain" style="text-decoration:none;">
+    <img src="https://github.com/dydxprotocol/v4-chain/actions/workflows/indexer-build-test-coverage.yml/badge.svg?branch=main" />
+  </a>
+</div>
 
 This monorepo holds a set of packages and services used to deploy the V4 Indexer.
 

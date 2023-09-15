@@ -3,23 +3,20 @@ package binance_test
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"testing"
-
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/binance"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/testutil"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/stretchr/testify/mock"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"github.com/stretchr/testify/require"
 )
 
 // Test tickers for Binance.
 const (
-	BTCUSDC_TICKER = `"BTCUSDT"`
-	ETHUSDC_TICKER = `"ETHUSDT"`
+	BTCUSDC_TICKER = "BTCUSDT"
+	ETHUSDC_TICKER = "ETHUSDT"
 )
 
 // Test exponent maps.
@@ -109,7 +106,7 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 			exponentMap:        BtcExponentMap,
 			expectedPriceMap:   make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: errors.New(`no listing found for ticker "BTCUSDT"`),
+				BTCUSDC_TICKER: errors.New("no listing found for ticker BTCUSDT"),
 			},
 		},
 		"Unavailable - empty list response": {
@@ -117,7 +114,7 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 			exponentMap:        BtcExponentMap,
 			expectedPriceMap:   make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: errors.New(`no listing found for ticker "BTCUSDT"`),
+				BTCUSDC_TICKER: errors.New("no listing found for ticker BTCUSDT"),
 			},
 		},
 		"Unavailable - incomplete response": {
@@ -155,7 +152,7 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 				ETHUSDC_TICKER: uint64(1_780_250_000),
 			},
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: errors.New(`no listing found for ticker "BTCUSDT"`),
+				BTCUSDC_TICKER: errors.New("no listing found for ticker BTCUSDT"),
 			},
 		},
 		"Success - integers": {
@@ -215,11 +212,9 @@ func TestBinancePriceFunction_Mixed(t *testing.T) {
 			var unavailable map[string]error
 			var err error
 			if tc.medianFunctionFails {
-				medianizer := &mocks.Medianizer{}
-				medianizer.On("MedianUint64", mock.Anything).Return(uint64(0), testutil.MedianizationError)
-				prices, unavailable, err = binance.BinancePriceFunction(response, tc.exponentMap, medianizer)
+				prices, unavailable, err = binance.BinancePriceFunction(response, tc.exponentMap, testutil.MedianErr)
 			} else {
-				prices, unavailable, err = binance.BinancePriceFunction(response, tc.exponentMap, &lib.MedianizerImpl{})
+				prices, unavailable, err = binance.BinancePriceFunction(response, tc.exponentMap, lib.Median[uint64])
 			}
 
 			if tc.expectedError != nil {

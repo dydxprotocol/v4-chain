@@ -271,10 +271,10 @@ func AssertMemclobHasShortTermTxBytes(
 		}
 	}
 
-	expectedShortTermOrdersWithTxBytes := lib.ConvertMapToSliceOfKeys(
+	expectedShortTermOrdersWithTxBytes := lib.GetSortedKeys[types.SortedOrderHashes](
 		expectedShortTermOrderHashes,
 	)
-	shortTermOrdersWithTxBytes := lib.ConvertMapToSliceOfKeys(
+	shortTermOrdersWithTxBytes := lib.GetSortedKeys[types.SortedOrderHashes](
 		memclob.operationsToPropose.ShortTermOrderHashToTxBytes,
 	)
 

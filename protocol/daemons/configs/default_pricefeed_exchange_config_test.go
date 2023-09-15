@@ -38,12 +38,12 @@ const (
 	# cannot be 0. For multi-market API exchanges, the behavior will default to 1.
 	[[exchanges]]
 	ExchangeId = "Binance"
-	IntervalMs = 4250
+	IntervalMs = 2500
 	TimeoutMs = 3000
 	MaxQueries = 1
 	[[exchanges]]
 	ExchangeId = "BinanceUS"
-	IntervalMs = 4250
+	IntervalMs = 2500
 	TimeoutMs = 3000
 	MaxQueries = 1
 	[[exchanges]]

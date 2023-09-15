@@ -28,7 +28,7 @@ jobs:
   format:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cosmos/proto-builder:0.13.3
+      image: ghcr.io/cosmos/proto-builder:0.14.0
       options: --user root
     timeout-minutes: 5
     steps:
@@ -41,7 +41,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cosmos/proto-builder:0.13.3
+      image: ghcr.io/cosmos/proto-builder:0.14.0
       options: --user root
     timeout-minutes: 5
     steps:
@@ -51,7 +51,7 @@ jobs:
   check-bc-breaking:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cosmos/proto-builder:0.13.3
+      image: ghcr.io/cosmos/proto-builder:0.14.0
       options: --user root
     timeout-minutes: 5
     steps:

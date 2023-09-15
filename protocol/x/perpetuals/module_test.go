@@ -108,7 +108,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 5)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 8)
 	mockRegistry.AssertExpectations(t)
 }
 
@@ -290,11 +290,12 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	if _, err := pricesKeeper.CreateMarket(
 		ctx,
 		pricetypes.MarketParam{
-			Id:                0,
-			Pair:              constants.EthUsdPair,
-			Exponent:          -2,
-			MinExchanges:      1,
-			MinPriceChangePpm: 1_000,
+			Id:                 0,
+			Pair:               constants.EthUsdPair,
+			Exponent:           -2,
+			MinExchanges:       1,
+			MinPriceChangePpm:  1_000,
+			ExchangeConfigJson: "{}",
 		},
 		pricetypes.MarketPrice{
 			Id:       0,

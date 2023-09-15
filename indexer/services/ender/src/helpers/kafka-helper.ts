@@ -251,6 +251,8 @@ export function generateTransferContents(
         transfer,
         SubaccountTable.uuid(subaccountId.owner, subaccountId.number),
       ),
+      createdAt: transfer.createdAt,
+      createdAtHeight: transfer.createdAtHeight,
       transactionHash: transfer.transactionHash,
     },
   };

@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
@@ -14,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -418,6 +419,32 @@ func (k Keeper) getSettledSubaccount(
 	return newSubaccount, fundingPayments, nil
 }
 
+func checkPositionUpdatable(
+	ctx sdk.Context,
+	pk types.ProductKeeper,
+	p types.PositionSize,
+) (
+	err error,
+) {
+	updatable, err := pk.IsPositionUpdatable(
+		ctx,
+		p.GetId(),
+	)
+	if err != nil {
+		return err
+	}
+
+	if !updatable {
+		return errorsmod.Wrapf(
+			types.ErrProductPositionNotUpdatable,
+			"type: %v, id: %d",
+			p.GetProductType(),
+			p.GetId(),
+		)
+	}
+	return nil
+}
+
 // internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts.
 // The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
 // Each update is considered in isolation. Thus if two updates are provided
@@ -442,6 +469,22 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
+		// Check all updated perps are updatable.
+		for _, perpUpdate := range u.PerpetualUpdates {
+			err := checkPositionUpdatable(ctx, k.perpetualsKeeper, perpUpdate)
+			if err != nil {
+				return false, nil, err
+			}
+		}
+
+		// Check all updated assets are updatable.
+		for _, assetUpdate := range u.AssetUpdates {
+			err := checkPositionUpdatable(ctx, k.assetsKeeper, assetUpdate)
+			if err != nil {
+				return false, nil, err
+			}
+		}
+
 		// Get the new collateralization and margin requirements with the update applied.
 		bigNewNetCollateral,
 			bigNewInitialMargin,
@@ -719,7 +762,7 @@ func applyUpdatesToPositions[
 		_, exists := updateMap[id]
 		if exists {
 			errMsg := fmt.Sprintf("Multiple updates exist for position %v", update.GetId())
-			return nil, sdkerrors.Wrap(types.ErrNonUniqueUpdatesPosition, errMsg)
+			return nil, errorsmod.Wrap(types.ErrNonUniqueUpdatesPosition, errMsg)
 		}
 
 		updateMap[id] = update

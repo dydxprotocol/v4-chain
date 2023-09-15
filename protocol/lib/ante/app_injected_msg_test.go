@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	appmsgs "github.com/dydxprotocol/v4-chain/protocol/app/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
@@ -78,7 +78,7 @@ func TestIsAppInjectedMsg_Empty(t *testing.T) {
 }
 
 func TestIsAppInjectedMsg_Invalid(t *testing.T) {
-	allMsgsMinusAppInjected := maps.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
+	allMsgsMinusAppInjected := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
 	for key := range appmsgs.AppInjectedMsgSamples {
 		delete(allMsgsMinusAppInjected, key)
 	}

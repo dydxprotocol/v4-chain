@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"cosmossdk.io/simapp/params"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
 	gometrics "github.com/armon/go-metrics"
@@ -39,7 +38,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
+	"github.com/dydxprotocol/v4-chain/protocol/app/params"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -58,7 +57,7 @@ const (
 // TODO(DEC-1097): improve `cmd/` by adding tests, custom app configs, custom init cmd, and etc.
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
 func NewRootCmd(option *RootCmdOption) *cobra.Command {
-	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
+	encodingConfig := dydxapp.GetEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).

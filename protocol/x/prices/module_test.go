@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,7 +34,7 @@ const (
 	// This genesis state is formatted to export back to itself. It explicitly defines all fields using valid defaults.
 	validGenesisState = `{` +
 		`"market_params":[{"id":0,"pair":"DENT-USD","exponent":0,"min_exchanges":1,"min_price_change_ppm":1,` +
-		`"exchange_config_json":""}],` +
+		`"exchange_config_json":"{}"}],` +
 		`"market_prices":[{"id":0,"exponent":0,"price":"1"}]` +
 		`}`
 )
@@ -50,7 +51,9 @@ func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.K
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, _, _, _, _ := keeper.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keeper.PricesKeepers(t)
+	// Mock the time provider response for market creation.
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	return prices.NewAppModule(
 		appCodec,
@@ -139,23 +142,24 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 		},
 		"Bad state: duplicate market param id": {
 			genesisJson: `{"market_params": [` +
-				`{"id":0,"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1},` +
-				`{"id":0,"pair": "LINK-USD","minExchanges":1,"minPriceChangePpm":1}` +
+				`{"id":0,"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1,"exchangeConfigJson":"{}"},` +
+				`{"id":0,"pair": "LINK-USD","minExchanges":1,"minPriceChangePpm":1,"exchangeConfigJson":"{}"}` +
 				`]}`,
 			expectedErr: "duplicated market param id",
 		},
 		"Bad state: Invalid param": {
 			genesisJson: `{"market_params": [{ "pair": "" }]}`,
-			expectedErr: sdkerrors.Wrap(pricestypes.ErrInvalidInput, "Pair cannot be empty").Error(),
+			expectedErr: errorsmod.Wrap(pricestypes.ErrInvalidInput, "Pair cannot be empty").Error(),
 		},
 		"Bad state: Mismatch between params and prices": {
-			genesisJson: `{"market_params": [{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1}]}`,
+			genesisJson: `{"market_params": [{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1,` +
+				`"exchangeConfigJson":"{}"}]}`,
 			expectedErr: "expected the same number of market prices and market params",
 		},
 		"Bad state: Invalid price": {
-			genesisJson: `{"market_params":[{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1}],` +
-				`"market_prices": [{"exponent":1,"price": "0"}]}`,
-			expectedErr: sdkerrors.Wrap(
+			genesisJson: `{"market_params":[{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1,` +
+				`"exchangeConfigJson":"{}"}],"market_prices": [{"exponent":1,"price": "0"}]}`,
+			expectedErr: errorsmod.Wrap(
 				pricestypes.ErrInvalidInput,
 				"market param 0 exponent 0 does not match market price 0 exponent 1",
 			).Error(),

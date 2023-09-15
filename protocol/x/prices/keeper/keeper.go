@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	sdklog "cosmossdk.io/log"
 
@@ -12,6 +13,7 @@ import (
 	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -21,8 +23,10 @@ type (
 		storeKey               storetypes.StoreKey
 		indexPriceCache        *pricefeedtypes.MarketToExchangePrices
 		marketToSmoothedPrices types.MarketToSmoothedPrices
-		timeProvider           lib.TimeProvider
+		timeProvider           libtime.TimeProvider
 		indexerEventManager    indexer_manager.IndexerEventManager
+		marketToCreatedAt      map[uint32]time.Time
+		authorities            map[string]struct{}
 	}
 )
 
@@ -33,8 +37,9 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	marketToSmoothedPrices types.MarketToSmoothedPrices,
-	timeProvider lib.TimeProvider,
+	timeProvider libtime.TimeProvider,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:                    cdc,
@@ -43,6 +48,8 @@ func NewKeeper(
 		marketToSmoothedPrices: marketToSmoothedPrices,
 		timeProvider:           timeProvider,
 		indexerEventManager:    indexerEventManager,
+		marketToCreatedAt:      map[uint32]time.Time{},
+		authorities:            lib.SliceToSet(authorities),
 	}
 }
 
@@ -55,4 +62,9 @@ func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }

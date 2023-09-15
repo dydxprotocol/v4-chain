@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/logging"
+)
+
+const (
+	SourceModuleKey = "source_module"
 )
 
 // LogErrorWithOptionalContext logs an error, optionally adding context to the logger iff the error implements
@@ -29,5 +32,5 @@ func LogErrorWithOptionalContext(
 // LogErrorWithOptionalContext) with metadata that can be used to identify the source of the error.
 func WrapErrorWithSourceModuleContext(err error, module string) error {
 	return NewErrorWithLogContext(err).
-		WithLogKeyValue(logging.SourceModuleKey, fmt.Sprintf("x/%v", module))
+		WithLogKeyValue(SourceModuleKey, fmt.Sprintf("x/%v", module))
 }

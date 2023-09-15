@@ -155,6 +155,8 @@ export interface TransferSubaccountMessageContents {
   size: string,
   type: TransferType,
   transactionHash: string,
+  createdAt: IsoString;
+  createdAtHeight: string;
 }
 
 /* ------- TradeMessageContents ------- */

@@ -3,13 +3,14 @@ package types_test
 import (
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (
@@ -168,30 +169,30 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 		},
 		"Invalid: invalid params (missing pair)": {
 			marketParams: []prices_types.MarketParam{{
-				Id:                1,
-				Exponent:          -2,
-				MinExchanges:      1,
-				MinPriceChangePpm: 1,
+				Id:                 1,
+				Exponent:           -2,
+				MinExchanges:       1,
+				MinPriceChangePpm:  1,
+				ExchangeConfigJson: "{}",
 			}},
 			expectedError: errors.New("invalid market param 0: Pair cannot be empty: Invalid input"),
 		},
-		"Invalid: invalid exchangeConfigJson (empty)": {
+		"Invalid: invalid exchangeConfigJson (empty, fails marketParams.Validate)": {
 			marketParams: []prices_types.MarketParam{{
-				Id:                1,
-				Exponent:          -2,
-				Pair:              "BTC-USD",
-				MinExchanges:      1,
-				MinPriceChangePpm: 1,
+				Id:                 1,
+				Exponent:           -2,
+				Pair:               "BTC-USD",
+				MinExchanges:       1,
+				MinPriceChangePpm:  1,
+				ExchangeConfigJson: "",
 			}},
-			expectedError: errors.New("invalid exchange config json for market param 0: unexpected end of JSON input"),
+			expectedError: errors.New("ExchangeConfigJson string is not valid"),
 		},
-		"Invalid: invalid exchangeConfigJson (not json)": {
+		"Invalid: invalid exchangeConfigJson (not json, fails marketParams.Validate)": {
 			marketParams: []prices_types.MarketParam{
 				validMarketParamWithExchangeConfig("invalid"),
 			},
-			expectedError: errors.New(
-				"invalid exchange config json for market param 0: invalid character 'i' looking for beginning " +
-					"of value"),
+			expectedError: errors.New("ExchangeConfigJson string is not valid"),
 		},
 		"Invalid: invalid exchangeConfigJson (does not conform to schema)": {
 			marketParams: []prices_types.MarketParam{

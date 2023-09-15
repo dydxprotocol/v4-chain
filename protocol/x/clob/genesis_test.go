@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"testing"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -34,7 +34,7 @@ func TestGenesis(t *testing.T) {
 		"Genesis state is valid": {
 			genesis: types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							Limit:     50,
 							NumBlocks: 1,
@@ -371,7 +371,7 @@ func TestGenesis(t *testing.T) {
 		"Genesis state is invalid when BlockRateLimitConfiguration is invalid": {
 			genesis: types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerMarketPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							Limit:     1,
 							NumBlocks: 0,
@@ -388,7 +388,7 @@ func TestGenesis(t *testing.T) {
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
-			expectedErr: "0 is not a valid NumBlocks for MaxShortTermOrdersPerMarketPerNBlocks rate limit " +
+			expectedErr: "0 is not a valid NumBlocks for MaxShortTermOrdersPerNBlocks rate limit " +
 				"{NumBlocks:0 Limit:1}",
 			expectedErrType: types.ErrInvalidBlockRateLimitConfig,
 		},
@@ -459,7 +459,7 @@ func TestGenesis(t *testing.T) {
 			if tc.expectedErr != "" {
 				require.PanicsWithError(
 					t,
-					sdkerrors.Wrap(
+					errorsmod.Wrap(
 						tc.expectedErrType,
 						tc.expectedErr,
 					).Error(),

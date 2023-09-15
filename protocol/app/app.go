@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
@@ -95,8 +96,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	// Lib
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/time"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -287,7 +287,7 @@ func New(
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
-	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
+	encodingConfig := GetEncodingConfig()
 
 	appCodec := encodingConfig.Codec
 	legacyAmino := encodingConfig.Amino
@@ -490,7 +490,7 @@ func New(
 		tkeys[indexer_manager.TransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
-	timeProvider := &lib.TimeProviderImpl{}
+	timeProvider := &time.TimeProviderImpl{}
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
 		appCodec,
@@ -591,6 +591,11 @@ func New(
 		pricesmoduletypes.NewMarketToSmoothedPrices(pricesmoduletypes.SmoothedPriceTrackingBlockHistoryLength),
 		timeProvider,
 		app.IndexerEventManager,
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 	pricesModule := pricesmodule.NewAppModule(appCodec, app.PricesKeeper, app.AccountKeeper, app.BankKeeper)
 
@@ -644,6 +649,11 @@ func New(
 		app.PricesKeeper,
 		app.EpochsKeeper,
 		app.IndexerEventManager,
+		// gov module and delayMsg module accounts are allowed to send messages to the bridge module.
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+		},
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper, app.AccountKeeper, app.BankKeeper)
 
@@ -749,7 +759,6 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.SubaccountsKeeper,
-		memClob,
 		liquidatableSubaccountIds,
 	)
 	app.PerpetualsKeeper.SetClobKeeper(app.ClobKeeper)
@@ -758,8 +767,14 @@ func New(
 		appCodec,
 		keys[sendingmoduletypes.StoreKey],
 		app.AccountKeeper,
+		app.BankKeeper,
 		app.SubaccountsKeeper,
 		app.IndexerEventManager,
+		// gov module and delayMsg module accounts are allowed to send messages to the sending module.
+		[]string{
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+		},
 	)
 	sendingModule := sendingmodule.NewAppModule(
 		appCodec,
@@ -1075,6 +1090,9 @@ func New(
 		// Hydrate the `memclob` with all ordersbooks from state,
 		// and hydrate the next `checkState` as well as the `memclob` with stateful orders.
 		app.hydrateMemclobWithOrderbooksAndStatefulOrders()
+
+		// Hydrate the keeper in-memory data structures.
+		app.hydrateKeeperInMemoryDataStructures()
 	}
 	app.initializeRateLimiters()
 
@@ -1115,6 +1133,19 @@ func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
 	// Initialize memclob with all existing stateful orders.
 	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
 	app.ClobKeeper.InitStatefulOrdersInMemClob(checkStateCtx)
+}
+
+// hydrateKeeperInMemoryDataStructures hydrates the keeper with ClobPairId and PerpetualId mapping
+// and untriggered conditional orders from state.
+func (app *App) hydrateKeeperInMemoryDataStructures() {
+	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
+	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
+	// directly.
+	checkStateCtx := app.BaseApp.NewContext(true, tmproto.Header{})
+
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	app.ClobKeeper.HydrateClobPairAndPerpetualMapping(checkStateCtx)
 	// Initialize the untriggered conditional orders data structure with untriggered
 	// conditional orders in state.
 	app.ClobKeeper.HydrateUntriggeredConditionalOrders(checkStateCtx)
@@ -1163,6 +1194,7 @@ func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Res
 	app.IndexerEventManager.SendOnchainData(block)
 	app.IndexerEventManager.ClearEvents(ctx)
 
+	app.Logger().Info("Initialized chain", "blockHeight", ctx.BlockHeight())
 	return initResponse
 }
 

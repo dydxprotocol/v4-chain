@@ -2,6 +2,7 @@ package flags
 
 import (
 	"fmt"
+	"math"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cobra"
@@ -9,7 +10,8 @@ import (
 
 // A struct containing the values of all flags.
 type ClobFlags struct {
-	MaxLiquidationOrdersPerBlock uint32
+	MaxLiquidationOrdersPerBlock    uint32
+	MaxDeleveragingAttemptsPerBlock uint32
 
 	MevTelemetryEnabled    bool
 	MevTelemetryHost       string
@@ -18,8 +20,9 @@ type ClobFlags struct {
 
 // List of CLI flags.
 const (
-	// Liquidations.
-	MaxLiquidationOrdersPerBlock = "max-liquidation-orders-per-block"
+	// Liquidations and deleveraging.
+	MaxLiquidationOrdersPerBlock    = "max-liquidation-orders-per-block"
+	MaxDeleveragingAttemptsPerBlock = "max-deleveraging-attempts-per-block"
 
 	// Mev.
 	MevTelemetryEnabled    = "mev-telemetry-enabled"
@@ -29,7 +32,8 @@ const (
 
 // Default values.
 const (
-	DefaultMaxLiquidationOrdersPerBlock = 35
+	DefaultMaxLiquidationOrdersPerBlock    = math.MaxUint32
+	DefaultMaxDeleveragingAttemptsPerBlock = 35
 
 	DefaultMevTelemetryEnabled    = false
 	DefaultMevTelemetryHost       = ""
@@ -46,6 +50,14 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 		fmt.Sprintf(
 			"Sets the maximum number of liquidation orders to process per block. Default = %d",
 			DefaultMaxLiquidationOrdersPerBlock,
+		),
+	)
+	cmd.Flags().Uint32(
+		MaxDeleveragingAttemptsPerBlock,
+		DefaultMaxDeleveragingAttemptsPerBlock,
+		fmt.Sprintf(
+			"Sets the maximum number of attempted deleveraging events per block. Default = %d",
+			DefaultMaxDeleveragingAttemptsPerBlock,
 		),
 	)
 	cmd.Flags().Bool(
@@ -67,10 +79,11 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 
 func GetDefaultClobFlags() ClobFlags {
 	return ClobFlags{
-		MaxLiquidationOrdersPerBlock: DefaultMaxLiquidationOrdersPerBlock,
-		MevTelemetryEnabled:          DefaultMevTelemetryEnabled,
-		MevTelemetryHost:             DefaultMevTelemetryHost,
-		MevTelemetryIdentifier:       DefaultMevTelemetryIdentifier,
+		MaxLiquidationOrdersPerBlock:    DefaultMaxLiquidationOrdersPerBlock,
+		MaxDeleveragingAttemptsPerBlock: DefaultMaxDeleveragingAttemptsPerBlock,
+		MevTelemetryEnabled:             DefaultMevTelemetryEnabled,
+		MevTelemetryHost:                DefaultMevTelemetryHost,
+		MevTelemetryIdentifier:          DefaultMevTelemetryIdentifier,
 	}
 }
 
@@ -97,6 +110,10 @@ func GetClobFlagValuesFromOptions(
 
 	if v, ok := appOpts.Get(MaxLiquidationOrdersPerBlock).(uint32); ok {
 		result.MaxLiquidationOrdersPerBlock = v
+	}
+
+	if v, ok := appOpts.Get(MaxDeleveragingAttemptsPerBlock).(uint32); ok {
+		result.MaxDeleveragingAttemptsPerBlock = v
 	}
 
 	return result

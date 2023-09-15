@@ -9,7 +9,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -193,22 +193,22 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		"Fails if there are multiple off-chain places": {
 			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_PlaceOrder},
 			useWithIsCheckTxContext: true,
-			expectedErr:             errors.ErrInvalidRequest,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
 		"Fails if there is a mix of long term and short term orders": {
 			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_PlaceOrder_LongTerm},
 			useWithIsCheckTxContext: true,
-			expectedErr:             errors.ErrInvalidRequest,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
 		"Fails if there is a mix of conditional and short term orders": {
 			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_PlaceOrder_Conditional},
 			useWithIsCheckTxContext: true,
-			expectedErr:             errors.ErrInvalidRequest,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
 		"Fails if there are a mix of off-chain and on-chain messages": {
 			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_Send},
 			useWithIsCheckTxContext: true,
-			expectedErr:             errors.ErrInvalidRequest,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
 	}
 
@@ -244,22 +244,22 @@ func TestIsClobTransaction(t *testing.T) {
 		"Returns false and error for multiple `PlaceOrder` message": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_PlaceOrder},
 			expectedResult: false,
-			expectedErr:    errors.ErrInvalidRequest,
+			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns false and error for multiple `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_CancelOrder, constants.Msg_CancelOrder},
 			expectedResult: false,
-			expectedErr:    errors.ErrInvalidRequest,
+			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns false and error for mix of `PlaceOrder` and `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_CancelOrder},
 			expectedResult: false,
-			expectedErr:    errors.ErrInvalidRequest,
+			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns false and error for mix of `MsgSend` and `PlaceOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_Send, constants.Msg_PlaceOrder},
 			expectedResult: false,
-			expectedErr:    errors.ErrInvalidRequest,
+			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns true for a `CancelOrder` message": {
 			msgs:           []sdk.Msg{constants.Msg_CancelOrder},
@@ -319,22 +319,22 @@ func TestIsShortTermClobTransaction(t *testing.T) {
 		"Returns false and error for multiple `PlaceOrder` message": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder},
 			expectedResult: false,
-			expectedErr:    errors.ErrInvalidRequest,
+			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns false and error for multiple `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_CancelOrder_LongTerm, constants.Msg_CancelOrder},
 			expectedResult: false,
-			expectedErr:    errors.ErrInvalidRequest,
+			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns false and error for mix of `PlaceOrder` and `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_CancelOrder},
 			expectedResult: false,
-			expectedErr:    errors.ErrInvalidRequest,
+			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns false and error for mix of `MsgSend` and `PlaceOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_Send, constants.Msg_PlaceOrder},
 			expectedResult: false,
-			expectedErr:    errors.ErrInvalidRequest,
+			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns true for a Short-Term `CancelOrder` message": {
 			msgs:           []sdk.Msg{constants.Msg_CancelOrder},
@@ -515,17 +515,17 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 		"Fails if there are multiple off-chain cancels": {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder, constants.Msg_CancelOrder},
 			useWithIsCheckTxContext: true,
-			expectedErr:             errors.ErrInvalidRequest,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
 		"Fails if there are multiple off-chain messages": {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder, constants.Msg_PlaceOrder},
 			useWithIsCheckTxContext: true,
-			expectedErr:             errors.ErrInvalidRequest,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
 		"Fails if there are a mix of off-chain and on-chain messages": {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder, constants.Msg_Send},
 			useWithIsCheckTxContext: true,
-			expectedErr:             errors.ErrInvalidRequest,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
 	}
 

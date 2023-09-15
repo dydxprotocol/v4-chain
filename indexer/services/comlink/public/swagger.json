@@ -270,6 +270,18 @@
         "type": "object",
         "additionalProperties": false
       },
+      "ComplianceResponse": {
+        "properties": {
+          "restricted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "restricted"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "OrderSide": {
         "enum": [
           "BUY",
@@ -1136,6 +1148,34 @@
         ]
       }
     },
+    "/screen": {
+      "get": {
+        "operationId": "Screen",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/fills": {
       "get": {
         "operationId": "GetFills",
@@ -1691,7 +1731,7 @@
         "parameters": []
       }
     },
-    "/trades/perpetualMarkets/{ticker}": {
+    "/trades/perpetualMarket/{ticker}": {
       "get": {
         "operationId": "GetTrades",
         "responses": {
@@ -1811,7 +1851,7 @@
   },
   "servers": [
     {
-      "url": "https://indexer.v4testnet2.dydx.exchange/v4",
+      "url": "https://indexer.v4testnet.dydx.exchange/v4",
       "description": "Public Testnet"
     }
   ]
