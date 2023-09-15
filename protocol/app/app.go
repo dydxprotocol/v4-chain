@@ -3,13 +3,14 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 
@@ -96,7 +97,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	// Lib
-	"github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -490,7 +491,7 @@ func New(
 		tkeys[indexer_manager.TransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
-	timeProvider := &time.TimeProviderImpl{}
+	timeProvider := &timelib.TimeProviderImpl{}
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
 		appCodec,
@@ -509,6 +510,7 @@ func New(
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
+		daemonFlags.Shared.GrpcServerAddress,
 	)
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
@@ -533,6 +535,9 @@ func New(
 
 	// Start liquidations client for sending potentially liquidatable subaccounts to the application.
 	if daemonFlags.Liquidation.Enabled {
+		app.Server.ExpectLiquidationsDaemon(
+			daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
+		)
 		go func() {
 			if err := liquidationclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
@@ -550,11 +555,11 @@ func New(
 	// Non-validating full-nodes have no need to run the price daemon.
 	if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
 		exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
-
+		app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
 		// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 		// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 		// periodically sent via gRPC to a shared socket with the server.
-		pricefeedclient.StartNewClient(
+		client := pricefeedclient.StartNewClient(
 			// The client will use `context.Background` so that it can have a different context from
 			// the main application.
 			context.Background(),
@@ -565,11 +570,15 @@ func New(
 			constants.StaticExchangeDetails,
 			&pricefeedclient.SubTaskRunnerImpl{},
 		)
+		stoppable.RegisterServiceForTestCleanup(daemonFlags.Shared.GrpcServerAddress, client)
 	}
 
 	// Start Bridge Daemon.
 	// Non-validating full-nodes have no need to run the bridge daemon.
 	if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
+		// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
+		// environments.
+		// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
 		go func() {
 			if err := bridgeclient.Start(
 				// The client will use `context.Background` so that it can have a different context from

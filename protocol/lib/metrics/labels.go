@@ -7,4 +7,6 @@ const (
 	StatusCode = "status_code"
 
 	Callback = "callback"
+
+	Daemon = "daemon"
 )

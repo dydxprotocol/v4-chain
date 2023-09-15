@@ -13,6 +13,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
+	servertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -264,7 +265,9 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		s.daemonFlags.Shared.SocketAddress,
+		"test",
 	)
+	s.daemonServer.ExpectPricefeedDaemon(servertypes.MaximumAcceptableUpdateDelay(s.daemonFlags.Price.LoopDelayMs))
 	s.exchangePriceCache = pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 	s.daemonServer.WithPriceFeedMarketToExchangePrices(s.exchangePriceCache)
 
