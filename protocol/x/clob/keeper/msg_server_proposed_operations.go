@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,13 +19,13 @@ func (k msgServer) ProposedOperations(
 		ctx,
 		msg.GetOperationsQueue(),
 	); err != nil {
-		panic(
-			errorsmod.Wrapf(
-				err,
-				"Block height: %d",
-				ctx.BlockHeight(),
-			),
+		err = errorsmod.Wrapf(
+			err,
+			"Block height: %d",
+			ctx.BlockHeight(),
 		)
+		ctx.Logger().Error(err.Error())
+		return nil, err
 	}
 
 	return &types.MsgProposedOperationsResponse{}, nil

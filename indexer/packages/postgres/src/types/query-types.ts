@@ -67,6 +67,9 @@ export enum QueryableField {
   LIQUIDITY_TIER_ID = 'liquidityTierId',
   FEE = 'fee',
   TRIGGER_PRICE = 'triggerPrice',
+  UPDATED_BEFORE_OR_AT = 'updatedBeforeOrAt',
+  PROVIDER = 'provider',
+  BLOCKED = 'blocked',
 }
 
 export interface QueryConfig {
@@ -249,4 +252,10 @@ export interface FundingIndexUpdatesQueryConfig extends QueryConfig {
 
 export interface LiquidityTiersQueryConfig extends QueryConfig {
   [QueryableField.ID]?: string[];
+}
+
+export interface ComplianceDataQueryConfig extends QueryConfig {
+  [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
+  [QueryableField.PROVIDER]?: string;
+  [QueryableField.BLOCKED]?: boolean;
 }

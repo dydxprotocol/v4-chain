@@ -156,6 +156,7 @@ const (
 	TotalOrdersClobPair                          = "total_orders_in_clob"
 	UnfilledLiquidationOrders                    = "unfilled_liquidation_orders"
 	UnknownPlaceOrders                           = "unknown_place_orders"
+	UnverifiedStatefulOrderRemoval               = "unverified_stateful_order_removal"
 	ValidateMatches                              = "validate_matches"
 	ValidateOrder                                = "validate_order"
 
@@ -264,6 +265,7 @@ const (
 
 	// Deleveraging.
 	CannotDeleverageSubaccount     = "cannot_deleverage_subaccount"
+	DeleverageSubaccount           = "deleverage_subaccount"
 	Deleveraging                   = "deleveraging"
 	DeltaQuoteQuantums             = "delta_quote_quantums"
 	NumSubaccountsIterated         = "num_subaccounts_iterated"

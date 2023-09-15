@@ -457,7 +457,7 @@ func AssertMemclobHasOrders(
 				require.Fail(t, fmt.Sprintf("Bid with order ID %s has 0 remaining quantums", orderId.String()))
 			}
 
-			remainingAmount, hasRemainingAmount := memclob.getOrderRemainingAmount(
+			remainingAmount, hasRemainingAmount := memclob.GetOrderRemainingAmount(
 				ctx,
 				order.Order,
 			)

@@ -60,6 +60,13 @@ type MemClob interface {
 		ctx sdk.Context,
 		orderId OrderId,
 	) satypes.BaseQuantums
+	GetOrderRemainingAmount(
+		ctx sdk.Context,
+		order Order,
+	) (
+		remainingAmount satypes.BaseQuantums,
+		hasRemainingAmount bool,
+	)
 	GetSubaccountOrders(
 		ctx sdk.Context,
 		clobPairId ClobPairId,

@@ -92,7 +92,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 			am.bankKeeper,
 			am.subaccountsKeeper,
 			*am.keeper,
-			am.memClob,
+			am.keeper.MemClob,
 			protoCdc,
 		),
 	))
