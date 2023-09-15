@@ -264,6 +264,7 @@ const (
 
 	// Deleveraging.
 	CannotDeleverageSubaccount     = "cannot_deleverage_subaccount"
+	DeleverageSubaccount           = "deleverage_subaccount"
 	Deleveraging                   = "deleveraging"
 	DeltaQuoteQuantums             = "delta_quote_quantums"
 	NumSubaccountsIterated         = "num_subaccounts_iterated"

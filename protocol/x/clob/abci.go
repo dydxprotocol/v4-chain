@@ -217,6 +217,7 @@ func PrepareCheckState(
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	numFilledLiquidations := uint32(0)
+	numAttemptedDeleveraging := uint32(0)
 	for i := 0; numFilledLiquidations < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
 		optimisticallyFilledQuantums, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrders[i])
 		if err != nil {
@@ -236,21 +237,24 @@ func PrepareCheckState(
 		} else {
 			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
 
-			// The liquidation order was unfilled. Try to deleverage the subaccount.
-			subaccountId := liquidationOrders[i].GetSubaccountId()
-			perpetualId := liquidationOrders[i].MustGetLiquidatedPerpetualId()
-			deltaQuantums := liquidationOrders[i].GetDeltaQuantums()
+			if numAttemptedDeleveraging < keeper.MaxDeleveragingAttemptsPerBlock {
+				// The liquidation order was unfilled. Try to deleverage the subaccount.
+				subaccountId := liquidationOrders[i].GetSubaccountId()
+				perpetualId := liquidationOrders[i].MustGetLiquidatedPerpetualId()
+				deltaQuantums := liquidationOrders[i].GetDeltaQuantums()
 
-			_, err := keeper.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
-			if err != nil {
-				keeper.Logger(ctx).Error(
-					"Failed to deleverage subaccount.",
-					"subaccount", liquidationOrders[i].GetSubaccountId(),
-					"perpetualId", liquidationOrders[i].MustGetLiquidatedPerpetualId(),
-					"baseQuantums", liquidationOrders[i].GetBaseQuantums().ToBigInt(),
-					"error", err,
-				)
-				panic(err)
+				_, err := keeper.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+				if err != nil {
+					keeper.Logger(ctx).Error(
+						"Failed to deleverage subaccount.",
+						"subaccount", liquidationOrders[i].GetSubaccountId(),
+						"perpetualId", liquidationOrders[i].MustGetLiquidatedPerpetualId(),
+						"baseQuantums", liquidationOrders[i].GetBaseQuantums().ToBigInt(),
+						"error", err,
+					)
+					panic(err)
+				}
+				numAttemptedDeleveraging++
 			}
 		}
 	}
