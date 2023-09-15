@@ -193,7 +193,7 @@ func (am AppModule) Commit(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyCommit)
 	PrepareCheckState(
 		ctx,
-		*am.keeper,
+		am.keeper,
 		am.liquidatableSubaccountIds,
 	)
 }

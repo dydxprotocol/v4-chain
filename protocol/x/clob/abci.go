@@ -109,7 +109,7 @@ func EndBlocker(
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
 func PrepareCheckState(
 	ctx sdk.Context,
-	keeper keeper.Keeper,
+	keeper *keeper.Keeper,
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) {
 	// Get the events generated from processing the matches in the latest block.

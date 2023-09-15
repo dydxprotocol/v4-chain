@@ -495,7 +495,7 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 	ks.ClobKeeper.InitMemClobOrderbooks(ks.Ctx)
 }
 
-func TestHydratClobPairAndPerpetualMapping(t *testing.T) {
+func TestHydrateClobPairAndPerpetualMapping(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	ks := keepertest.NewClobKeepersTestContext(
 		t,

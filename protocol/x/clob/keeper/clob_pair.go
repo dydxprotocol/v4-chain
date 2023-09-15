@@ -137,8 +137,7 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 	return nil
 }
 
-// createOrderbook creates a new orderbook in the memclob and stores the perpetualId to clobPairId mapping
-// in memory on the keeper.
+// createOrderbook creates a new orderbook in the memclob.
 func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	// Create the corresponding orderbook in the memclob.
 	k.MemClob.CreateOrderbook(ctx, clobPair)
