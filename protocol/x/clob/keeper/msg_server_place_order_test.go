@@ -127,6 +127,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 						perpetual.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -265,6 +266,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 						perpetual.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -288,6 +290,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 							tc.StatefulOrderPlacement,
 						),
 					),
+					indexerevents.StatefulOrderEventVersion,
 				).Return().Once()
 			} else {
 				indexerEventManager.On(
@@ -299,6 +302,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 							tc.StatefulOrderPlacement,
 						),
 					),
+					indexerevents.StatefulOrderEventVersion,
 				).Return().Once()
 			}
 

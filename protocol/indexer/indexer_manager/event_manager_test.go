@@ -24,6 +24,7 @@ var ExpectedEvent0 = indexer_manager.IndexerTendermintEvent{
 		TransactionIndex: 0,
 	},
 	EventIndex: 0,
+	Version:    indexerevents.OrderFillEventVersion,
 }
 
 var ExpectedEvent1 = indexer_manager.IndexerTendermintEvent{
@@ -35,6 +36,7 @@ var ExpectedEvent1 = indexer_manager.IndexerTendermintEvent{
 		TransactionIndex: 0,
 	},
 	EventIndex: 1,
+	Version:    indexerevents.SubaccountUpdateEventVersion,
 }
 
 var ExpectedEvent2 = indexer_manager.IndexerTendermintEvent{
@@ -46,6 +48,7 @@ var ExpectedEvent2 = indexer_manager.IndexerTendermintEvent{
 		TransactionIndex: 1,
 	},
 	EventIndex: 0,
+	Version:    indexerevents.TransferEventVersion,
 }
 
 var ExpectedEvent3 = indexer_manager.IndexerTendermintEvent{
@@ -57,6 +60,7 @@ var ExpectedEvent3 = indexer_manager.IndexerTendermintEvent{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	},
 	EventIndex: 0,
+	Version:    indexerevents.FundingValuesEventVersion,
 }
 
 var ExpectedEvent4 = indexer_manager.IndexerTendermintEvent{
@@ -68,6 +72,7 @@ var ExpectedEvent4 = indexer_manager.IndexerTendermintEvent{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	},
 	EventIndex: 1,
+	Version:    indexerevents.FundingValuesEventVersion,
 }
 
 var ExpectedEvent5 = indexer_manager.IndexerTendermintEvent{
@@ -79,6 +84,7 @@ var ExpectedEvent5 = indexer_manager.IndexerTendermintEvent{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
 	},
 	EventIndex: 0,
+	Version:    indexerevents.FundingValuesEventVersion,
 }
 
 var ExpectedEvent6 = indexer_manager.IndexerTendermintEvent{
@@ -90,6 +96,7 @@ var ExpectedEvent6 = indexer_manager.IndexerTendermintEvent{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
 	},
 	EventIndex: 1,
+	Version:    indexerevents.FundingValuesEventVersion,
 }
 
 var EventVersion uint32 = 1

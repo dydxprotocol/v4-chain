@@ -12,7 +12,13 @@ type IndexerEventManager interface {
 	SendOffchainData(message msgsender.Message)
 	SendOnchainData(block *IndexerTendermintBlock)
 	ProduceBlock(ctx sdk.Context) *IndexerTendermintBlock
-	AddBlockEvent(ctx sdk.Context, subType string, data string, blockEvent IndexerTendermintEvent_BlockEvent, version uint32)
+	AddBlockEvent(
+		ctx sdk.Context,
+		subType string,
+		data string,
+		blockEvent IndexerTendermintEvent_BlockEvent,
+		version uint32,
+	)
 	ClearEvents(ctx sdk.Context)
 }
 

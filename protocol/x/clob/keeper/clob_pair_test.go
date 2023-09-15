@@ -63,6 +63,7 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
 				),
 			),
+			indexerevents.PerpetualMarketEventVersion,
 		).Once().Return()
 		//nolint: errcheck
 		ks.ClobKeeper.CreatePerpetualClobPair(
@@ -91,7 +92,7 @@ func TestCreatePerpetualClobPair_FailsWithPerpetualAssociatedWithExistingClobPai
 	// Set up mock indexer event manager that accepts anything.
 	mockIndexerEventManager := &mocks.IndexerEventManager{}
 	mockIndexerEventManager.On("AddTxnEvent",
-		mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 	).Return()
 	ks := keepertest.NewClobKeepersTestContext(
 		t,
@@ -186,6 +187,7 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 			),
 		),
+		indexerevents.PerpetualMarketEventVersion,
 	).Once().Return()
 
 	_, err = ks.ClobKeeper.CreatePerpetualClobPair(
@@ -276,6 +278,7 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 							perpetual.Params.LiquidityTier,
 						),
 					),
+					indexerevents.PerpetualMarketEventVersion,
 				).Return()
 			}
 
@@ -427,6 +430,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 								perpetual.Params.LiquidityTier,
 							),
 						),
+						indexerevents.PerpetualMarketEventVersion,
 					).Return()
 				}
 
@@ -615,6 +619,7 @@ func TestUpdateClobPair(t *testing.T) {
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 						),
 					),
+					indexerevents.PerpetualMarketEventVersion,
 				).Once().Return()
 
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
@@ -651,6 +656,7 @@ func TestUpdateClobPair(t *testing.T) {
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 						),
 					),
+					indexerevents.PerpetualMarketEventVersion,
 				).Once().Return()
 
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
@@ -738,6 +744,7 @@ func TestGetAllClobPairs_Sorted(t *testing.T) {
 	mockIndexerEventManager.On("AddTxnEvent",
 		ks.Ctx,
 		indexerevents.SubtypePerpetualMarket,
+		mock.Anything,
 		mock.Anything,
 	).Return().Times(len(clobPairs))
 

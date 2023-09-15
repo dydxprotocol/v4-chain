@@ -1616,6 +1616,7 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
 		).Return().Maybe()
 	}
 
@@ -1673,6 +1674,7 @@ func setupProcessProposerOperationsTestCase(
 						tc.perpetuals[perpetualId].Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 		}
 
@@ -1839,6 +1841,7 @@ func setupNewMockEventManager(
 						match.TotalFilledTaker,
 					),
 				),
+				indexerevents.OrderFillEventVersion,
 			).Return()
 
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
@@ -1857,6 +1860,7 @@ func setupNewMockEventManager(
 						match.TotalFilledTaker,
 					),
 				),
+				indexerevents.OrderFillEventVersion,
 			).Return()
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
 			matchOrderCallMap[match.TakerOrder.MustGetOrder().OrderId] = call
@@ -1876,6 +1880,7 @@ func setupNewMockEventManager(
 						),
 					),
 				),
+				indexerevents.StatefulOrderEventVersion,
 			).Once().Return()
 		}
 	}
