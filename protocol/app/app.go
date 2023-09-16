@@ -285,6 +285,10 @@ func New(
 ) *App {
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
+	// Panic if gRPC is disabled.
+	if err := appFlags.Validate(); err != nil {
+		panic(err)
+	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 

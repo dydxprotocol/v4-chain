@@ -104,6 +104,13 @@ func TestAppIsFullyInitialized(t *testing.T) {
 	}
 }
 
+func TestAppPanicsWithGrpcDisabled(t *testing.T) {
+	customFlags := map[string]interface{}{
+		flags.GrpcEnable: false,
+	}
+	require.Panics(t, func() { testapp.DefaultTestApp(customFlags) })
+}
+
 func TestClobKeeperMemStoreHasBeenInitialized(t *testing.T) {
 	dydxApp := testapp.DefaultTestApp(nil)
 	ctx := dydxApp.NewUncachedContext(true, tmproto.Header{})
