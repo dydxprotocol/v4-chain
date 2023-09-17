@@ -102,6 +102,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTier",
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse",
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams",
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse",
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket",

@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgAddPremiumVotes, MsgAddPremiumVotesResponse, MsgCreatePerpetual, MsgCreatePerpetualResponse, MsgSetLiquidityTier, MsgSetLiquidityTierResponse } from "./tx";
+import { MsgAddPremiumVotes, MsgAddPremiumVotesResponse, MsgCreatePerpetual, MsgCreatePerpetualResponse, MsgSetLiquidityTier, MsgSetLiquidityTierResponse, MsgUpdatePerpetualParams, MsgUpdatePerpetualParamsResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -18,6 +18,9 @@ export interface Msg {
    */
 
   setLiquidityTier(request: MsgSetLiquidityTier): Promise<MsgSetLiquidityTierResponse>;
+  /** UpdatePerpetualParams updates the parameters of a perpetual market. */
+
+  updatePerpetualParams(request: MsgUpdatePerpetualParams): Promise<MsgUpdatePerpetualParamsResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -27,6 +30,7 @@ export class MsgClientImpl implements Msg {
     this.addPremiumVotes = this.addPremiumVotes.bind(this);
     this.createPerpetual = this.createPerpetual.bind(this);
     this.setLiquidityTier = this.setLiquidityTier.bind(this);
+    this.updatePerpetualParams = this.updatePerpetualParams.bind(this);
   }
 
   addPremiumVotes(request: MsgAddPremiumVotes): Promise<MsgAddPremiumVotesResponse> {
@@ -45,6 +49,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgSetLiquidityTier.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.perpetuals.Msg", "SetLiquidityTier", data);
     return promise.then(data => MsgSetLiquidityTierResponse.decode(new _m0.Reader(data)));
+  }
+
+  updatePerpetualParams(request: MsgUpdatePerpetualParams): Promise<MsgUpdatePerpetualParamsResponse> {
+    const data = MsgUpdatePerpetualParams.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.perpetuals.Msg", "UpdatePerpetualParams", data);
+    return promise.then(data => MsgUpdatePerpetualParamsResponse.decode(new _m0.Reader(data)));
   }
 
 }
