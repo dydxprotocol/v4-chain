@@ -71,6 +71,8 @@ var (
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": nil,
+		"/dydxprotocol.prices.MsgUpdateMarketParam":          &prices.MsgUpdateMarketParam{},
+		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  nil,
 
 		// bank
 		"/cosmos.bank.v1beta1.MsgSetSendEnabled":         &bank.MsgSetSendEnabled{},

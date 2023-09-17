@@ -106,6 +106,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket",
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse",
+		"/dydxprotocol.prices.MsgUpdateMarketParam",
+		"/dydxprotocol.prices.MsgUpdateMarketParamResponse",
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams",
