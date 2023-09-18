@@ -119,7 +119,7 @@ export function setBulkRowsForUpdate<T extends string>({
       return castValue(object[col] as number | undefined | null, 'bigint');
     }
     if (timestampColumns && timestampColumns.includes(col)) {
-      return castValue(object[col] as string | undefined | null, 'timestamp');
+      return castValue(object[col] as string | undefined | null, 'timestamptz');
     }
     if (uuidColumns && uuidColumns.includes(col)) {
       return castValue(object[col] as string | undefined | null, 'uuid');
@@ -163,17 +163,20 @@ export function generateBulkUpdateString({
   objectRows,
   columns,
   isUuid,
-  uniqueIdentifier = 'id',
+  uniqueIdentifiers = ['id'],
   setFieldsToAppend,
 }: {
   table: string,
   objectRows: string[],
   columns: string[],
   isUuid: boolean,
-  uniqueIdentifier?: string,
+  uniqueIdentifiers?: string[],
   setFieldsToAppend?: string[],
 }): string {
-  const columnsToUpdate: string[] = _.without(columns, uniqueIdentifier);
+  const columnsToUpdate: string[] = _.without(columns, ...uniqueIdentifiers);
+  const whereString: string = `WHERE ${uniqueIdentifiers.map((id: string): string => {
+    return `c."${id}"${isUuid ? '::uuid' : ''} = "${table}"."${id}"`
+  }).join('AND')}`;
 
   const setFields: string[] = columnsToUpdate.map((col) => {
     return `"${col}" = c."${col}"`;
@@ -184,6 +187,36 @@ export function generateBulkUpdateString({
   FROM (VALUES
     ${objectRows.map((object) => `(${object})`).join(', ')}
   ) AS c(${columns.map((c) => `"${c}"`).join(', ')})
-  WHERE c."${uniqueIdentifier}"${isUuid ? '::uuid' : ''} = "${table}"."${uniqueIdentifier}";
+  ${whereString};
 `;
+}
+
+export function generateBulkUpsertString({
+  table,
+  objectRows,
+  columns,
+  uniqueIdentifiers = ['id'],
+}: {
+  table: string,
+  objectRows: string[],
+  columns: string[],
+  uniqueIdentifiers?: string[],
+}): string {
+  const columnsToUpdate: string[] = _.without(columns, ...uniqueIdentifiers);
+
+  const idFields: string = uniqueIdentifiers.map(
+    (id: string): string => { return `"${id}"`;}
+  ).join(',');  
+  const insertFields: string = columns.map(
+    (column: string):string => { return `"${column}"`}
+  ).join(',');
+  const setFields: string[] = columnsToUpdate.map((col) => {
+    return `"${col}" = excluded."${col}"`;
+  });
+
+  return `
+  INSERT INTO "${table}" (${insertFields}) VALUES
+    ${objectRows.map((object) => `(${object})`).join(',')}
+  ON CONFLICT (${idFields}) DO UPDATE SET ${setFields.join(',')};
+  `;
 }

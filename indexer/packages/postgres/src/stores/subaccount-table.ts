@@ -35,6 +35,7 @@ export async function findAll(
     id,
     address,
     subaccountNumber,
+    updatedBeforeOrAt,
     limit,
   }: SubaccountQueryConfig,
   requiredFields: QueryableField[],
@@ -45,6 +46,7 @@ export async function findAll(
       id,
       address,
       subaccountNumber,
+      updatedBeforeOrAt,
       limit,
     } as QueryConfig,
     requiredFields,
@@ -65,6 +67,10 @@ export async function findAll(
 
   if (subaccountNumber) {
     baseQuery = baseQuery.where(SubaccountColumns.subaccountNumber, subaccountNumber);
+  }
+
+  if (updatedBeforeOrAt) {
+    baseQuery = baseQuery.where(SubaccountColumns.updatedAt, '<=', updatedBeforeOrAt);
   }
 
   if (options.orderBy !== undefined) {

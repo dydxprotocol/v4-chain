@@ -251,7 +251,7 @@ export async function updateMarketCheckerFields(
     objectRows: marketRows,
     columns,
     isUuid: false,
-    uniqueIdentifier: PerpetualMarketColumns.id,
+    uniqueIdentifiers: [PerpetualMarketColumns.id],
   });
 
   if (transaction) {

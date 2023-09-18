@@ -12,7 +12,7 @@ export interface ComplianceDataCreateObject {
   chain?: string;
   blocked: boolean;
   riskScore?: string;
-  updatedAt: IsoString;
+  updatedAt?: IsoString;
 }
 
 export interface ComplianceDataUpdateObject {
