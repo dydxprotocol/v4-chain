@@ -15,6 +15,9 @@ const (
 
 	// VestEntryKeyPrefix is the prefix used when storing a VestEntry in the state.
 	VestEntryKeyPrefix = "vest_entry"
+
+	// CommunityTreasury defines the root string for community treasury module account.
+	CommunityTreasury = "community_treasury"
 )
 
 func KeyPrefix(p string) []byte {

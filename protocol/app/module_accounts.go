@@ -12,6 +12,7 @@ import (
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 
 	"golang.org/x/exp/maps"
 )
@@ -42,6 +43,8 @@ var (
 		rewardsmoduletypes.TreasuryAccountName: nil,
 		// rewards vester account vest rewards tokens into the rewards treasury.
 		rewardsmoduletypes.VesterAccountName: nil,
+		// community treasury account holds funds for community use.
+		vestmoduletypes.CommunityTreasury: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all native SDK module accounts are blocked. This prevents
