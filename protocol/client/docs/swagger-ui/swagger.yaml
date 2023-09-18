@@ -34521,7 +34521,7 @@ paths:
           description: >-
             events is the list of transaction event type.
 
-            Deprecated post v0.47.x: use query instead, which should contain a
+            Deprecated: post v0.47.x use query instead, which should contain a
             valid
 
             events query.
@@ -35183,7 +35183,7 @@ paths:
                   method.
 
                    - BROADCAST_MODE_UNSPECIFIED: zero-value for mode ordering
-                   - BROADCAST_MODE_BLOCK: DEPRECATED: use BROADCAST_MODE_SYNC instead,
+                   - BROADCAST_MODE_BLOCK: Deprecated: use BROADCAST_MODE_SYNC instead,
                   BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x
                   onwards.
                    - BROADCAST_MODE_SYNC: BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
@@ -60558,7 +60558,7 @@ definitions:
       method.
 
        - BROADCAST_MODE_UNSPECIFIED: zero-value for mode ordering
-       - BROADCAST_MODE_BLOCK: DEPRECATED: use BROADCAST_MODE_SYNC instead,
+       - BROADCAST_MODE_BLOCK: Deprecated: use BROADCAST_MODE_SYNC instead,
       BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
        - BROADCAST_MODE_SYNC: BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
       for a CheckTx execution response only.
@@ -60586,7 +60586,7 @@ definitions:
           method.
 
            - BROADCAST_MODE_UNSPECIFIED: zero-value for mode ordering
-           - BROADCAST_MODE_BLOCK: DEPRECATED: use BROADCAST_MODE_SYNC instead,
+           - BROADCAST_MODE_BLOCK: Deprecated: use BROADCAST_MODE_SYNC instead,
           BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
            - BROADCAST_MODE_SYNC: BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
           for a CheckTx execution response only.
@@ -62227,7 +62227,7 @@ definitions:
       pagination:
         description: |-
           pagination defines a pagination for the response.
-          Deprecated post v0.46.x: use total instead.
+          Deprecated: post v0.46.x use total instead.
         type: object
         properties:
           next_key:
