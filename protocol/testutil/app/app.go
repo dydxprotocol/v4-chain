@@ -27,6 +27,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	sdkproto "github.com/cosmos/gogoproto/proto"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -58,6 +60,8 @@ type MustMakeCheckTxOptions struct {
 	AccSequenceNumberForSigning uint64
 	// Amount of Gas for the transaction.
 	Gas uint64
+	// Gas fees offered for the transaction.
+	FeeAmt sdk.Coins
 }
 
 // ValidateResponsePrepareProposal is a function that validates the response from the PrepareProposalHandler.
@@ -152,7 +156,8 @@ type GenesisStates interface {
 		epochstypes.GenesisState |
 		sendingtypes.GenesisState |
 		delaymsgtypes.GenesisState |
-		bridgetypes.GenesisState
+		bridgetypes.GenesisState |
+		govtypesv1.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function
@@ -200,6 +205,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = epochstypes.ModuleName
 	case sendingtypes.GenesisState:
 		moduleName = sendingtypes.ModuleName
+	case govtypesv1.GenesisState:
+		moduleName = govtypes.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}
@@ -703,7 +710,7 @@ func MustMakeCheckTxWithPrivKeySupplier(
 		rand.New(rand.NewSource(42)),
 		app.TxConfig(),
 		messages,
-		sdk.Coins{},
+		options.FeeAmt,
 		options.Gas,
 		ctx.ChainID(),
 		[]uint64{account.GetAccountNumber()},
