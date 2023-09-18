@@ -91,14 +91,14 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*prices.MsgCreateOracleMarket,
 		*prices.MsgUpdateMarketParam,
 
+		// rewards
+		*rewards.MsgUpdateParams,
+
 		// sending
 		*sending.MsgSendFromModuleToAccount,
 
 		// stats
 		*stats.MsgUpdateParams,
-
-		// rewards
-		*rewards.MsgUpdateParams,
 
 		// vest
 		*vest.MsgDeleteVestEntry,
