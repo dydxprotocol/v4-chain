@@ -185,7 +185,7 @@ describe('Compliance data store', () => {
     });
   });
 
-  it('Successfully bulk upserts compliance data', async() => {
+  it('Successfully bulk upserts compliance data', async () => {
     await ComplianceDataTable.create(nonBlockedComplianceData);
 
     let complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
@@ -206,9 +206,9 @@ describe('Compliance data store', () => {
           ...nonBlockedComplianceData,
           riskScore: '30.00',
           blocked: true,
-          updatedAt: updatedTime
+          updatedAt: updatedTime,
         },
-      ]
+      ],
     );
 
     complianceData = await ComplianceDataTable.findAll(

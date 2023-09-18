@@ -202,10 +202,10 @@ export function generateBulkUpsertString({
   const columnsToUpdate: string[] = _.without(columns, ...uniqueIdentifiers);
 
   const idFields: string = uniqueIdentifiers.map(
-    (id: string): string => { return `"${id}"`;}
-  ).join(',');  
+    (id: string): string => { return `"${id}"`; },
+  ).join(',');
   const insertFields: string = columns.map(
-    (column: string):string => { return `"${column}"`}
+    (column: string):string => { return `"${column}"`; },
   ).join(',');
   const setFields: string[] = columnsToUpdate.map((col) => {
     return `"${col}" = excluded."${col}"`;

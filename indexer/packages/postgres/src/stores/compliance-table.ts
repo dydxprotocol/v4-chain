@@ -1,6 +1,15 @@
+import Knex from 'knex';
+import _ from 'lodash';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
-import { generateBulkUpdateString, generateBulkUpsertString, setBulkRowsForUpdate, setupBaseQuery, verifyAllInjectableVariables, verifyAllRequiredFields } from '../helpers/stores-helpers';
+import { knexPrimary } from '../helpers/knex';
+import {
+  generateBulkUpsertString,
+  setBulkRowsForUpdate,
+  setupBaseQuery,
+  verifyAllInjectableVariables,
+  verifyAllRequiredFields,
+} from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import ComplianceDataModel from '../models/compliance-data-model';
 import {
@@ -11,10 +20,11 @@ import {
   QueryableField,
   QueryConfig,
 } from '../types';
-import { ComplianceDataColumns, ComplianceDataCreateObject, ComplianceDataUpdateObject } from '../types/compliance-data-types';
-import _ from 'lodash';
-import Knex from 'knex';
-import { knexPrimary } from '../helpers/knex';
+import {
+  ComplianceDataColumns,
+  ComplianceDataCreateObject,
+  ComplianceDataUpdateObject,
+} from '../types/compliance-data-types';
 
 export async function findAll(
   {
@@ -130,9 +140,11 @@ export async function bulkUpsert(
     return;
   }
 
-  complianceObjects.forEach((update: ComplianceDataCreateObject) => verifyAllInjectableVariables(
-    Object.values(update)
-  ));
+  complianceObjects.forEach(
+    (complianceObject: ComplianceDataCreateObject) => verifyAllInjectableVariables(
+      Object.values(complianceObject),
+    ),
+  );
 
   const columns: ComplianceDataColumns[] = _.keys(complianceObjects[0]) as ComplianceDataColumns[];
   const rows: string[] = setBulkRowsForUpdate<ComplianceDataColumns>({
@@ -151,7 +163,7 @@ export async function bulkUpsert(
     ],
     timestampColumns: [
       ComplianceDataColumns.updatedAt,
-    ]
+    ],
   });
 
   const query: string = generateBulkUpsertString({
