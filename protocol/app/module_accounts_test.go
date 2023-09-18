@@ -31,6 +31,7 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 		rewardsmoduletypes.TreasuryAccountName: "dydx16wrau2x4tsg033xfrrdpae6kxfn9kyuerr5jjp",
 		rewardsmoduletypes.VesterAccountName:   "dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp",
 		vestmoduletypes.CommunityTreasury:      "dydx15ztc7xy42tn2ukkc0qjthkucw9ac63pgp70urn",
+		vestmoduletypes.CommunityVester:        "dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk",
 	}
 
 	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()))
@@ -66,6 +67,7 @@ func TestMaccPerms(t *testing.T) {
 		"rewards_treasury":       nil,
 		"rewards_vester":         nil,
 		"community_treasury":     nil,
+		"community_vester":       nil,
 	}
 	require.Equal(t, expectedMaccPerms, maccPerms, "default macc perms list does not match expected")
 }

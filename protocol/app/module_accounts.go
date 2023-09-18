@@ -45,6 +45,8 @@ var (
 		rewardsmoduletypes.VesterAccountName: nil,
 		// community treasury account holds funds for community use.
 		vestmoduletypes.CommunityTreasury: nil,
+		// community vester account vests funds into the community treasury.
+		vestmoduletypes.CommunityVester: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all native SDK module accounts are blocked. This prevents

@@ -18,6 +18,9 @@ const (
 
 	// CommunityTreasury defines the root string for community treasury module account.
 	CommunityTreasury = "community_treasury"
+
+	// CommunityVester defines the root string for community vester module account.
+	CommunityVester = "community_vester"
 )
 
 func KeyPrefix(p string) []byte {
