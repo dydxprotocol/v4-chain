@@ -247,6 +247,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 				require.True(t, exists)
 				// Check that clob pair is updated.
 				require.Equal(t, msgUpdateClobPair1001ToActive.ClobPair, clobPair)
+				// TODO(CORE-585): Check that orders cannot be placed if no valid oracle price update has occurred.
 			default:
 				t.Errorf("unexpected proposal status: %s", tc.expectedProposalStatus)
 			}
