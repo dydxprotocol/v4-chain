@@ -24,7 +24,12 @@ var (
 	TestVotingPeriod = 1 * time.Minute
 )
 
-func SubmitAndPassProposal(
+// SubmitAndTallyProposal simulates the following:
+//   - A proposal with the given messages is submitted. Check proposal submission succeeds or fails as expected.
+//   - If proposal successfully submitted:
+//     -- All validators vote for the proposal.
+//     --The proposal is tallied after voting period ends.
+func SubmitAndTallyProposal(
 	t *testing.T,
 	ctx sdk.Context,
 	tApp *TestApp,

@@ -154,7 +154,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 			updateClobDelayBlocks:    10,
 			expectedProposalStatus:   govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
 		},
-		// TODO(): Uncomment this case. Currently gov EndBlocker doesn't recover from panic in
+		// TODO(CORE-584): Uncomment this case. Currently gov EndBlocker doesn't recover from panic in
 		// message handler, and invalid message signer results in panic. We should fix this behavior,
 		// and verifies that the proposal just fails instead.
 		// "Invalid signer on `MsgDelayMessage`": {
@@ -200,7 +200,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 			initPerpetuals := tApp.App.PerpetualsKeeper.GetAllPerpetuals(ctx)
 			initClobPairs := tApp.App.ClobKeeper.GetAllClobPairs(ctx)
 
-			ctx = testapp.SubmitAndPassProposal(
+			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
 				&tApp,
