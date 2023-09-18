@@ -83,6 +83,7 @@ func TestIsAppInjectedMsg_Invalid(t *testing.T) {
 		delete(allMsgsMinusAppInjected, key)
 	}
 	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusAppInjected)
+	require.Len(t, allNonNilSampleMsgs, 81)
 
 	for _, sampleMsg := range allNonNilSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
@@ -93,6 +94,7 @@ func TestIsAppInjectedMsg_Invalid(t *testing.T) {
 
 func TestIsAppInjectedMsg_Valid(t *testing.T) {
 	appInjectedSampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.AppInjectedMsgSamples)
+	require.Len(t, appInjectedSampleMsgs, len(appmsgs.AppInjectedMsgSamples)/2)
 	for _, sampleMsg := range appInjectedSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
 			require.True(t, ante.IsAppInjectedMsg(sampleMsg.Msg))
