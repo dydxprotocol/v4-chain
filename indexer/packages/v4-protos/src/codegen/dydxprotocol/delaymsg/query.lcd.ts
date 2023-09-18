@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryNumMessagesRequest, QueryNumMessagesResponseSDKType, QueryMessageRequest, QueryMessageResponseSDKType, QueryBlockMessageIdsRequest, QueryBlockMessageIdsResponseSDKType } from "./query";
+import { QueryNumMessagesRequest, QueryNumMessagesResponseSDKType, QueryMessageRequest, QueryMessageResponseSDKType, QueryBlockMessageIdsRequest, QueryBlockMessageIdsResponseSDKType, QueryAllMessagesRequest, QueryAllMessagesResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -12,6 +12,7 @@ export class LCDQueryClient {
     this.numMessages = this.numMessages.bind(this);
     this.message = this.message.bind(this);
     this.blockMessageIds = this.blockMessageIds.bind(this);
+    this.allMessages = this.allMessages.bind(this);
   }
   /* Queries the number of DelayedMessages. */
 
@@ -33,6 +34,13 @@ export class LCDQueryClient {
   async blockMessageIds(params: QueryBlockMessageIdsRequest): Promise<QueryBlockMessageIdsResponseSDKType> {
     const endpoint = `dydxprotocol/v4/delaymsg/block/message_ids/${params.blockHeight}`;
     return await this.req.get<QueryBlockMessageIdsResponseSDKType>(endpoint);
+  }
+  /* Queries all DelayedMessages. */
+
+
+  async allMessages(_params: QueryAllMessagesRequest = {}): Promise<QueryAllMessagesResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/delaymsg/messages/all`;
+    return await this.req.get<QueryAllMessagesResponseSDKType>(endpoint);
   }
 
 }

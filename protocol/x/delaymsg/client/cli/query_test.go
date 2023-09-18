@@ -3,6 +3,9 @@
 package cli_test
 
 import (
+	"strconv"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,8 +17,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
-	"strconv"
-	"testing"
 )
 
 const (

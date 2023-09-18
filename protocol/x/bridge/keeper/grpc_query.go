@@ -118,3 +118,21 @@ func (k Keeper) RecognizedEventInfo(
 		Info: recognizedEventInfo,
 	}, nil
 }
+
+func (k Keeper) InFlightCompleteBridgeMessages(
+	c context.Context,
+	req *types.QueryInFlightCompleteBridgeMessagesRequest,
+) (
+	*types.QueryInFlightCompleteBridgeMessagesResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	inFlightCompleteBridgeMessages := k.GetInFlightCompleteBridgeMessages(ctx)
+	return &types.QueryInFlightCompleteBridgeMessagesResponse{
+		Messages: inFlightCompleteBridgeMessages,
+	}, nil
+}

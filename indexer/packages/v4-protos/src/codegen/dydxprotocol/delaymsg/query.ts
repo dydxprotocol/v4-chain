@@ -109,6 +109,24 @@ export interface QueryBlockMessageIdsResponseSDKType {
    */
   message_ids: number[];
 }
+/** QueryAllMessagesRequest is the request type for the AllMessages RPC method. */
+
+export interface QueryAllMessagesRequest {}
+/** QueryAllMessagesRequest is the request type for the AllMessages RPC method. */
+
+export interface QueryAllMessagesRequestSDKType {}
+/** QueryAllMessagesResponse is the response type for the AllMessages RPC method. */
+
+export interface QueryAllMessagesResponse {
+  /** QueryAllMessagesResponse is the response type for the AllMessages RPC method. */
+  messages: DelayedMessage[];
+}
+/** QueryAllMessagesResponse is the response type for the AllMessages RPC method. */
+
+export interface QueryAllMessagesResponseSDKType {
+  /** QueryAllMessagesResponse is the response type for the AllMessages RPC method. */
+  messages: DelayedMessageSDKType[];
+}
 
 function createBaseQueryNumMessagesRequest(): QueryNumMessagesRequest {
   return {};
@@ -376,6 +394,85 @@ export const QueryBlockMessageIdsResponse = {
   fromPartial(object: DeepPartial<QueryBlockMessageIdsResponse>): QueryBlockMessageIdsResponse {
     const message = createBaseQueryBlockMessageIdsResponse();
     message.messageIds = object.messageIds?.map(e => e) || [];
+    return message;
+  }
+
+};
+
+function createBaseQueryAllMessagesRequest(): QueryAllMessagesRequest {
+  return {};
+}
+
+export const QueryAllMessagesRequest = {
+  encode(_: QueryAllMessagesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllMessagesRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryAllMessagesRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryAllMessagesRequest>): QueryAllMessagesRequest {
+    const message = createBaseQueryAllMessagesRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryAllMessagesResponse(): QueryAllMessagesResponse {
+  return {
+    messages: []
+  };
+}
+
+export const QueryAllMessagesResponse = {
+  encode(message: QueryAllMessagesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.messages) {
+      DelayedMessage.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllMessagesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryAllMessagesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.messages.push(DelayedMessage.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryAllMessagesResponse>): QueryAllMessagesResponse {
+    const message = createBaseQueryAllMessagesResponse();
+    message.messages = object.messages?.map(e => DelayedMessage.fromPartial(e)) || [];
     return message;
   }
 

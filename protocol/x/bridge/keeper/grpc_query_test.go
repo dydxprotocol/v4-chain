@@ -3,12 +3,15 @@ package keeper_test
 import (
 	"testing"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
 func TestEventParams(t *testing.T) {
@@ -185,6 +188,64 @@ func TestRecognizedEventInfo(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.res, res)
 			}
+		})
+	}
+}
+
+func TestInFlightCompleteBridgeMessages(t *testing.T) {
+	for name, tc := range map[string]struct {
+		events []types.BridgeEvent
+		res    []types.MsgCompleteBridge
+	}{
+		"Success - two bridge events": {
+			events: []types.BridgeEvent{
+				constants.BridgeEvent_Id0_Height0,
+				constants.BridgeEvent_Id1_Height0,
+			},
+		},
+		"Success - no bridge event": {
+			events: []types.BridgeEvent{},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			// Initialize test app.
+			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.BridgeKeeper
+			delayMsgKeeper := tApp.App.DelayMsgKeeper
+
+			// Acknowledge bridge events, for each of which there should be a delayed `MsgCompleteBridge`.
+			k.AcknowledgeBridges(ctx, tc.events)
+			// Also delay some other types of messages, which should not show up in the result.
+			delayMsgKeeper.DelayMessageByBlocks(
+				ctx,
+				&constants.MsgDepositToSubaccount_Alice_To_Alice_Num0_500,
+				1,
+			)
+			delayMsgKeeper.DelayMessageByBlocks(
+				ctx,
+				&constants.MsgWithdrawFromSubaccount_Carl_Num0_To_Alice_750,
+				1,
+			)
+			delayMsgKeeper.DelayMessageByBlocks(
+				ctx,
+				constants.ValidMsgUpdateMarketPrices,
+				1,
+			)
+
+			// Get in flight complete bridge messages.
+			got := k.GetInFlightCompleteBridgeMessages(ctx)
+
+			// Verify response contains and only contains expected delayed `MsgCompleteBridge`s.
+			delayMsgAuthority := authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String()
+			expectedCompleteBridgeMsgs := make([]types.MsgCompleteBridge, len(tc.events))
+			for i, event := range tc.events {
+				expectedCompleteBridgeMsgs[i] = types.MsgCompleteBridge{
+					Authority: delayMsgAuthority,
+					Event:     event,
+				}
+			}
+			require.Equal(t, expectedCompleteBridgeMsgs, got)
 		})
 	}
 }

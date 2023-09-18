@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"bytes"
+	"sort"
+
 	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -9,7 +11,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	"sort"
 )
 
 // newDelayedMessageStore returns a prefix store for delayed messages.

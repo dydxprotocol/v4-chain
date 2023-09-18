@@ -48,3 +48,25 @@ func (k Keeper) CompleteBridge(
 
 	return nil
 }
+
+func (k Keeper) GetInFlightCompleteBridgeMessages(
+	ctx sdk.Context,
+) (messages []types.MsgCompleteBridge) {
+	// Get all delayed messages from `x/delaymsg`.
+	allDelayedMessages := k.delayMsgKeeper.GetAllDelayedMessages(ctx)
+	// Iterate through all delayed messages and find `MsgCompleteBridge`s.
+	messages = make([]types.MsgCompleteBridge, 0)
+	for _, delayedMsg := range allDelayedMessages {
+		sdkMsg, err := delayedMsg.GetMessage()
+		if err != nil {
+			continue
+		}
+
+		// Append to `messages` if it is a complete bridge message.
+		if completeBridgeMsg, ok := sdkMsg.(*types.MsgCompleteBridge); ok {
+			messages = append(messages, *completeBridgeMsg)
+		}
+	}
+
+	return messages
+}

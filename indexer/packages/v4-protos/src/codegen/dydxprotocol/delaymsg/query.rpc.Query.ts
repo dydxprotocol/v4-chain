@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryNumMessagesRequest, QueryNumMessagesResponse, QueryMessageRequest, QueryMessageResponse, QueryBlockMessageIdsRequest, QueryBlockMessageIdsResponse } from "./query";
+import { QueryNumMessagesRequest, QueryNumMessagesResponse, QueryMessageRequest, QueryMessageResponse, QueryBlockMessageIdsRequest, QueryBlockMessageIdsResponse, QueryAllMessagesRequest, QueryAllMessagesResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -13,6 +13,9 @@ export interface Query {
   /** Queries the DelayedMessages at a given block height. */
 
   blockMessageIds(request: QueryBlockMessageIdsRequest): Promise<QueryBlockMessageIdsResponse>;
+  /** Queries all DelayedMessages. */
+
+  allMessages(request?: QueryAllMessagesRequest): Promise<QueryAllMessagesResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -22,6 +25,7 @@ export class QueryClientImpl implements Query {
     this.numMessages = this.numMessages.bind(this);
     this.message = this.message.bind(this);
     this.blockMessageIds = this.blockMessageIds.bind(this);
+    this.allMessages = this.allMessages.bind(this);
   }
 
   numMessages(request: QueryNumMessagesRequest = {}): Promise<QueryNumMessagesResponse> {
@@ -42,6 +46,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryBlockMessageIdsResponse.decode(new _m0.Reader(data)));
   }
 
+  allMessages(request: QueryAllMessagesRequest = {}): Promise<QueryAllMessagesResponse> {
+    const data = QueryAllMessagesRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.delaymsg.Query", "AllMessages", data);
+    return promise.then(data => QueryAllMessagesResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -57,6 +67,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     blockMessageIds(request: QueryBlockMessageIdsRequest): Promise<QueryBlockMessageIdsResponse> {
       return queryService.blockMessageIds(request);
+    },
+
+    allMessages(request?: QueryAllMessagesRequest): Promise<QueryAllMessagesResponse> {
+      return queryService.allMessages(request);
     }
 
   };

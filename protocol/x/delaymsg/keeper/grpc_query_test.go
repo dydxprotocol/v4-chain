@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -8,7 +10,6 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestNumMessages(t *testing.T) {
