@@ -81,6 +81,21 @@ func TestValidateBasic(t *testing.T) {
 			},
 			expectedError: errors.New("order removal reason must be specified"),
 		},
+		"reduce-only removal reason returns error": {
+			msg: types.MsgProposedOperations{
+				OperationsQueue: []types.OperationRaw{
+					{
+						Operation: &types.OperationRaw_OrderRemoval{
+							OrderRemoval: &types.OrderRemoval{
+								OrderId:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+								RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+							},
+						},
+					},
+				},
+			},
+			expectedError: errors.New("order removals for invalid reduce-only orders are not allowed"),
+		},
 	}
 
 	for name, tc := range tests {

@@ -85,6 +85,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
+			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
 			// Create test markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
@@ -213,6 +214,8 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
+
+			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
 
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))

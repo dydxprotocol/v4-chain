@@ -4,17 +4,18 @@ package cli_test
 
 import (
 	"fmt"
+	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"math/big"
 	"testing"
 
-	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
-	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -58,15 +59,26 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 	// Generated from the above Mnemonic.
 	s.validatorAddress = constants.AliceAccAddress
 
-	appOptions := appoptions.NewFakeAppOptions()
-
 	// Configure test network.
+	appOptions := appoptions.NewFakeAppOptions()
 	s.cfg = network.DefaultConfig(&network.NetworkConfigOptions{
 		AppOptions: appOptions,
 		OnNewApp: func(val networktestutil.ValidatorI) {
+			testval, ok := val.(networktestutil.Validator)
+			if !ok {
+				panic("incorrect validator type")
+			}
+
 			// Disable the Bridge and Price daemons in the integration tests.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
 			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
+
+			// Enable the liquidations daemon in the integration tests.
+			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
+			// Make sure all daemon-related services are properly stopped.
+			s.T().Cleanup(func() {
+				stoppable.StopServices(s.T(), testval.AppConfig.GRPC.Address)
+			})
 		},
 	})
 

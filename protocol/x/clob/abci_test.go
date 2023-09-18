@@ -1083,8 +1083,7 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 	require.Panics(t, func() {
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
-			*ks.ClobKeeper,
-			memClob,
+			ks.ClobKeeper,
 			liquidationtypes.NewLiquidatableSubaccountIds(),
 		)
 	})
@@ -1111,8 +1110,7 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 	require.Panics(t, func() {
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
-			*ks.ClobKeeper,
-			memClob,
+			ks.ClobKeeper,
 			liquidationtypes.NewLiquidatableSubaccountIds(),
 		)
 	})
@@ -1468,8 +1466,7 @@ func TestPrepareCheckState(t *testing.T) {
 			// Run the test.
 			clob.PrepareCheckState(
 				ctx,
-				*ks.ClobKeeper,
-				memClob,
+				ks.ClobKeeper,
 				liquidatableSubaccountIds,
 			)
 

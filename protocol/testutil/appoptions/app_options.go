@@ -37,8 +37,8 @@ func (fao *FakeAppOptions) Get(o string) interface{} {
 	return value
 }
 
-// GetDefaultTestAppOptions returns a default set of AppOptions with the
-// price daemon disabled for end-to-end and simulator testing.
+// GetDefaultTestAppOptions returns a default set of AppOptions with the daemons disabled for end-to-end
+// and simulator testing.
 func GetDefaultTestAppOptions(homePath string, customFlags map[string]interface{}) servertypes.AppOptions {
 	fao := NewFakeAppOptions()
 
@@ -49,6 +49,9 @@ func GetDefaultTestAppOptions(homePath string, customFlags map[string]interface{
 
 	// Disable the Bridge Daemon for all end-to-end and integration tests by default.
 	fao.Set(daemonflags.FlagBridgeDaemonEnabled, false)
+
+	// Disable the Liquidation Daemon for all end-to-end and integration tests by default.
+	fao.Set(daemonflags.FlagLiquidationDaemonEnabled, false)
 
 	for flag, value := range customFlags {
 		fao.Set(flag, value)

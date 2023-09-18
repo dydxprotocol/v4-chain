@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"testing"
 
@@ -20,7 +19,6 @@ func TestProposedOperations(t *testing.T) {
 
 	tests := map[string]struct {
 		setupMocks  func(ctx sdk.Context, mck *mocks.ClobKeeper)
-		shouldPanic bool
 		expectedErr error
 	}{
 		"Success": {
@@ -32,7 +30,6 @@ func TestProposedOperations(t *testing.T) {
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
 				mck.On("ProcessProposerOperations", ctx, operationsQueue).Return(testError)
 			},
-			shouldPanic: true,
 			expectedErr: testError,
 		},
 	}
@@ -59,25 +56,14 @@ func TestProposedOperations(t *testing.T) {
 			}
 			goCtx := sdk.WrapSDKContext(ctx)
 
-			// Call ProposedOperations.
-			if tc.shouldPanic {
-				require.PanicsWithError(
-					t,
-					errorsmod.Wrapf(
-						tc.expectedErr,
-						"Block height: %d",
-						blockHeight,
-					).Error(),
-					func() {
-						msgServer.ProposedOperations(goCtx, msg) //nolint:errcheck
-					},
-				)
-				return
-			}
-
 			resp, err := msgServer.ProposedOperations(goCtx, msg)
-			require.NoError(t, err)
-			require.NotNil(t, resp)
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+				require.Nil(t, resp)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, resp)
+			}
 
 			// Assert mock expectations.
 			result := mockKeeper.AssertExpectations(t)

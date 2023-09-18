@@ -69,7 +69,7 @@ func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) []
 
 		// If tx contains disallowed msg, skip it.
 		if containsDisllowMsg {
-			ctx.Logger().Info(
+			ctx.Logger().Error(
 				fmt.Sprintf("RemoveDisallowMsgs: skipping tx with disallowed msg. Size: %d", len(txBytes)))
 			continue // continue to next tx.
 		}

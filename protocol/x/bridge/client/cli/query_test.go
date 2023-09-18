@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"strconv"
 	"testing"
 
@@ -38,6 +39,11 @@ func setupNetwork(
 	cfg.GenesisState[types.ModuleName] = buf
 	net := network.New(t, cfg)
 	ctx := net.Validators[0].ClientCtx
+
+	t.Cleanup(func() {
+		stoppable.StopServices(t, cfg.GRPCAddress)
+	})
+
 	return net, ctx
 }
 

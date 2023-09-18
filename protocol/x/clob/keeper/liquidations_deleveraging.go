@@ -48,6 +48,13 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		return new(big.Int), nil
 	}
 
+	telemetry.IncrCounter(
+		1,
+		types.ModuleName,
+		metrics.PrepareCheckState,
+		metrics.DeleverageSubaccount,
+	)
+
 	return k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 }
 

@@ -237,8 +237,9 @@ type ExecuteCheckTxs func(ctx sdk.Context, app *app.App) (stop bool)
 //   - an ExecuteCheckTxs function that will stop on after the first block
 func NewTestAppBuilder() TestAppBuilder {
 	return TestAppBuilder{
-		genesisDocFn: DefaultGenesis,
-		appCreatorFn: DefaultTestAppCreatorFn(nil),
+		genesisDocFn:         DefaultGenesis,
+		appCreatorFn:         DefaultTestAppCreatorFn(nil),
+		usesDefaultAppConfig: true,
 		executeCheckTxs: func(ctx sdk.Context, app *app.App) (stop bool) {
 			return true
 		},
@@ -250,10 +251,11 @@ func NewTestAppBuilder() TestAppBuilder {
 // Note that we specifically use value receivers for the With... methods because we want to make the builder instances
 // immutable.
 type TestAppBuilder struct {
-	genesisDocFn    GenesisDocCreatorFn
-	appCreatorFn    func() *app.App
-	executeCheckTxs ExecuteCheckTxs
-	t               *testing.T
+	genesisDocFn         GenesisDocCreatorFn
+	appCreatorFn         func() *app.App
+	usesDefaultAppConfig bool
+	executeCheckTxs      ExecuteCheckTxs
+	t                    *testing.T
 }
 
 // WithGenesisDocFn returns a builder like this one with specified function that will be used to create
@@ -267,6 +269,7 @@ func (tApp TestAppBuilder) WithGenesisDocFn(fn GenesisDocCreatorFn) TestAppBuild
 // the application.
 func (tApp TestAppBuilder) WithAppCreatorFn(fn AppCreatorFn) TestAppBuilder {
 	tApp.appCreatorFn = fn
+	tApp.usesDefaultAppConfig = false
 	return tApp
 }
 
@@ -323,6 +326,10 @@ func (tApp *TestApp) initChainIfNeeded() {
 	// Get the initial genesis state and initialize the chain and commit the results of the initialization.
 	tApp.genesis = tApp.builder.genesisDocFn()
 	tApp.App = tApp.builder.appCreatorFn()
+	if tApp.builder.usesDefaultAppConfig {
+		tApp.App.Server.DisableUpdateMonitoringForTesting()
+	}
+
 	baseapp.SetChainID(tApp.genesis.ChainID)(tApp.App.GetBaseApp())
 	if tApp.genesis.GenesisTime.UnixNano() <= time.UnixMilli(0).UnixNano() {
 		panic(fmt.Errorf(

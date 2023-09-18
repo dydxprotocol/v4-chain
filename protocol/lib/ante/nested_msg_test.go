@@ -47,6 +47,7 @@ func TestIsNestedMsg_Invalid(t *testing.T) {
 		delete(allMsgsMinusNested, key)
 	}
 	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusNested)
+	require.Len(t, allNonNilSampleMsgs, 85)
 
 	for _, sampleMsg := range allNonNilSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
@@ -57,6 +58,7 @@ func TestIsNestedMsg_Invalid(t *testing.T) {
 
 func TestIsNestedMsg_Valid(t *testing.T) {
 	sampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.NestedMsgSamples)
+	require.Len(t, sampleMsgs, len(appmsgs.NestedMsgSamples)/2)
 	for _, sampleMsg := range sampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
 			require.True(t, ante.IsNestedMsg(sampleMsg.Msg))

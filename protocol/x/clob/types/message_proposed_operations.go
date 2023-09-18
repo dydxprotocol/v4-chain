@@ -1,9 +1,10 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	fmt "fmt"
 	"math/big"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -36,13 +37,22 @@ func (msg *MsgProposedOperations) ValidateBasic() error {
 				)
 			}
 
-			if operation.OrderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
+			switch operation.OrderRemoval.RemovalReason {
+			case OrderRemoval_REMOVAL_REASON_UNSPECIFIED:
 				return errorsmod.Wrapf(
 					ErrInvalidMsgProposedOperations,
 					"order removal reason must be specified: %v",
 					orderId,
 				)
+			case OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
+				// TODO: remove this case when reduce-only orders are enabled.
+				return errorsmod.Wrapf(
+					ErrInvalidMsgProposedOperations,
+					"order removals for invalid reduce-only orders are not allowed. Reduce-only orders"+
+						" are not currently supported.",
+				)
 			}
+
 		default:
 			return errorsmod.Wrapf(
 				ErrInvalidMsgProposedOperations,
@@ -100,6 +110,17 @@ func ValidateAndTransformRawOperations(
 				return nil, err
 			}
 		case *OperationRaw_OrderRemoval:
+			orderRemoval := rawOperation.GetOrderRemoval()
+			if err := orderRemoval.OrderId.Validate(); err != nil {
+				return nil, err
+			}
+			if orderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
+				return nil, errorsmod.Wrapf(
+					ErrInvalidOrderRemoval,
+					"Invalid order removal reason: %+v",
+					orderRemoval.RemovalReason,
+				)
+			}
 			operation.Operation = &InternalOperation_OrderRemoval{
 				OrderRemoval: rawOperation.GetOrderRemoval(),
 			}
