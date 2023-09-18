@@ -58,7 +58,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store.Set(types.ClobPairKey(
 					types.ClobPairId(constants.ClobPair_Btc.Id),
 				), b)
-				// check Indexer events are emitted
+
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeUpdateClobPair,
