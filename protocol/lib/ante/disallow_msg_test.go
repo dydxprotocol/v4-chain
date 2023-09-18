@@ -13,7 +13,10 @@ import (
 
 func TestIsDisallowExternalSubmitMsg(t *testing.T) {
 	// All disallow msgs should return true.
-	for _, sampleMsg := range testmsgs.GetNonNilSampleMsgs(appmsgs.DisallowMsgs) {
+	disallowSampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.DisallowMsgs)
+	// +1 for "/cosmos.auth.v1beta1.MsgUpdateParams" not having a corresponding Repsonse msg type.
+	require.Len(t, disallowSampleMsgs, len(appmsgs.DisallowMsgs)/2+1)
+	for _, sampleMsg := range disallowSampleMsgs {
 		result := ante.IsDisallowExternalSubmitMsg(sampleMsg.Msg)
 		if ante.IsNestedMsg(sampleMsg.Msg) {
 			// nested msgs are allowed as long as the inner msgs are allowed.
@@ -24,7 +27,9 @@ func TestIsDisallowExternalSubmitMsg(t *testing.T) {
 	}
 
 	// All allow msgs should return false.
-	for _, sampleMsg := range testmsgs.GetNonNilSampleMsgs(appmsgs.AllowMsgs) {
+	allowSampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.AllowMsgs)
+	require.NotZero(t, len(allowSampleMsgs)) // checking just not zero is sufficient.
+	for _, sampleMsg := range allowSampleMsgs {
 		require.False(t, ante.IsDisallowExternalSubmitMsg(sampleMsg.Msg), sampleMsg.Name)
 	}
 }

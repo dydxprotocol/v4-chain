@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -383,29 +383,43 @@ func TestOrderToIndexerOrder_Panic(t *testing.T) {
 }
 
 func TestConvertToClobPairStatus(t *testing.T) {
-	tests := map[string]struct {
+	type convertToClobPairStatusTestCase struct {
 		status         clobtypes.ClobPair_Status
 		expectedStatus v1.ClobPairStatus
-	}{}
+		expectedPanic  string
+	}
+
+	tests := make(map[string]convertToClobPairStatusTestCase)
 	// Iterate through all the values for ClobPair_Status to create test cases.
 	for name, value := range clobtypes.ClobPair_Status_value {
 		testName := fmt.Sprintf("Converts ClobPair_Status %s to v1.ClobPairStatus", name)
-		tests[testName] = struct {
-			status         clobtypes.ClobPair_Status
-			expectedStatus v1.ClobPairStatus
-		}{
+		testCase := convertToClobPairStatusTestCase{
 			status:         clobtypes.ClobPair_Status(value),
 			expectedStatus: v1.ClobPairStatus(clobtypes.ClobPair_Status_value[name]),
 		}
+		if value == int32(clobtypes.ClobPair_STATUS_UNSPECIFIED) {
+			testCase.expectedPanic = "invalid clob pair status"
+		}
+		tests[testName] = testCase
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(
-				t,
-				tc.expectedStatus,
-				v1.ConvertToClobPairStatus(tc.status),
-			)
+			if tc.expectedPanic != "" {
+				require.PanicsWithValue(
+					t,
+					tc.expectedPanic,
+					func() {
+						v1.ConvertToClobPairStatus(tc.status)
+					},
+				)
+			} else {
+				require.Equal(
+					t,
+					tc.expectedStatus,
+					v1.ConvertToClobPairStatus(tc.status),
+				)
+			}
 		})
 	}
 }

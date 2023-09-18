@@ -156,6 +156,7 @@ const (
 	TotalOrdersClobPair                          = "total_orders_in_clob"
 	UnfilledLiquidationOrders                    = "unfilled_liquidation_orders"
 	UnknownPlaceOrders                           = "unknown_place_orders"
+	UnverifiedStatefulOrderRemoval               = "unverified_stateful_order_removal"
 	ValidateMatches                              = "validate_matches"
 	ValidateOrder                                = "validate_order"
 
@@ -164,6 +165,11 @@ const (
 	AddToOrderbookCollateralizationCheck = "add_to_orderbook_collateralization_check"
 	Memclob                              = "memclob"
 	RemovedFromOrderBook                 = "removed_from_orderbook"
+
+	// Daemon
+	DaemonServer    = "daemon_server"
+	ValidResponse   = "valid_response"
+	MissingResponse = "missing_response"
 
 	// Epochs.
 	EpochInfoName = "epoch_name"
@@ -264,6 +270,7 @@ const (
 
 	// Deleveraging.
 	CannotDeleverageSubaccount     = "cannot_deleverage_subaccount"
+	DeleverageSubaccount           = "deleverage_subaccount"
 	Deleveraging                   = "deleveraging"
 	DeltaQuoteQuantums             = "delta_quote_quantums"
 	NumSubaccountsIterated         = "num_subaccounts_iterated"

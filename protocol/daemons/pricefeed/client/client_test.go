@@ -295,6 +295,7 @@ func TestStop(t *testing.T) {
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
+		"test",
 	)
 	daemonServer.WithPriceFeedMarketToExchangePrices(
 		pricefeed_types.NewMarketToExchangePrices(5 * time.Second),

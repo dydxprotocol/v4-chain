@@ -6,12 +6,11 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInternalMsgSamples_All_Key(t *testing.T) {
-	expectedAllInternalMsgs := maps.MergeAllMapsMustHaveDistinctKeys(msgs.InternalMsgSamplesGovAuth)
+	expectedAllInternalMsgs := lib.MergeAllMapsMustHaveDistinctKeys(msgs.InternalMsgSamplesGovAuth)
 	require.Equal(t, expectedAllInternalMsgs, msgs.InternalMsgSamplesAll)
 }
 
@@ -103,6 +102,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTier",
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse",
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams",
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse",
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket",

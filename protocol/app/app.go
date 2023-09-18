@@ -9,10 +9,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	gometrics "github.com/armon/go-metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
+
+	gometrics "github.com/armon/go-metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 
@@ -100,7 +103,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	// Lib
-	"github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -494,7 +497,7 @@ func New(
 		tkeys[indexer_manager.TransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
-	timeProvider := &time.TimeProviderImpl{}
+	timeProvider := &timelib.TimeProviderImpl{}
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
 		appCodec,
@@ -513,6 +516,7 @@ func New(
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
+		daemonFlags.Shared.GrpcServerAddress,
 	)
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
@@ -537,6 +541,9 @@ func New(
 
 	// Start liquidations client for sending potentially liquidatable subaccounts to the application.
 	if daemonFlags.Liquidation.Enabled {
+		app.Server.ExpectLiquidationsDaemon(
+			daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
+		)
 		go func() {
 			if err := liquidationclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
@@ -554,11 +561,11 @@ func New(
 	// Non-validating full-nodes have no need to run the price daemon.
 	if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
 		exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
-
+		app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
 		// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 		// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 		// periodically sent via gRPC to a shared socket with the server.
-		pricefeedclient.StartNewClient(
+		client := pricefeedclient.StartNewClient(
 			// The client will use `context.Background` so that it can have a different context from
 			// the main application.
 			context.Background(),
@@ -569,11 +576,15 @@ func New(
 			constants.StaticExchangeDetails,
 			&pricefeedclient.SubTaskRunnerImpl{},
 		)
+		stoppable.RegisterServiceForTestCleanup(daemonFlags.Shared.GrpcServerAddress, client)
 	}
 
 	// Start Bridge Daemon.
 	// Non-validating full-nodes have no need to run the bridge daemon.
 	if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
+		// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
+		// environments.
+		// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
 		go func() {
 			if err := bridgeclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
@@ -763,7 +774,6 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.SubaccountsKeeper,
-		memClob,
 		liquidatableSubaccountIds,
 	)
 	app.PerpetualsKeeper.SetClobKeeper(app.ClobKeeper)
@@ -1095,6 +1105,9 @@ func New(
 		// Hydrate the `memclob` with all ordersbooks from state,
 		// and hydrate the next `checkState` as well as the `memclob` with stateful orders.
 		app.hydrateMemclobWithOrderbooksAndStatefulOrders()
+
+		// Hydrate the keeper in-memory data structures.
+		app.hydrateKeeperInMemoryDataStructures()
 	}
 	app.initializeRateLimiters()
 
@@ -1135,6 +1148,19 @@ func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
 	// Initialize memclob with all existing stateful orders.
 	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
 	app.ClobKeeper.InitStatefulOrdersInMemClob(checkStateCtx)
+}
+
+// hydrateKeeperInMemoryDataStructures hydrates the keeper with ClobPairId and PerpetualId mapping
+// and untriggered conditional orders from state.
+func (app *App) hydrateKeeperInMemoryDataStructures() {
+	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
+	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
+	// directly.
+	checkStateCtx := app.BaseApp.NewContext(true, tmproto.Header{})
+
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	app.ClobKeeper.HydrateClobPairAndPerpetualMapping(checkStateCtx)
 	// Initialize the untriggered conditional orders data structure with untriggered
 	// conditional orders in state.
 	app.ClobKeeper.HydrateUntriggeredConditionalOrders(checkStateCtx)

@@ -7,7 +7,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/stretchr/testify/require"
 )
@@ -34,11 +33,12 @@ func TestAllTypeMessages(t *testing.T) {
 
 	// Assert.
 	require.Equal(t, allTypes, lib.GetSortedKeys[sort.StringSlice](msgs.AllTypeMessages))
+	require.Len(t, msgs.AllTypeMessages, 212)
 }
 
 func TestAllTypeMessages_SumOfDistinctLists(t *testing.T) {
 	// The following should fail if there's a duplicate message in any of the lists.
-	expectedAllTypeMsgs := maps.MergeAllMapsMustHaveDistinctKeys(
+	expectedAllTypeMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
 		msgs.AppInjectedMsgSamples,
 		msgs.InternalMsgSamplesAll,
 		msgs.NestedMsgSamples,
@@ -89,7 +89,7 @@ func TestAllTypeMessages_NoUnregisteredMsg(t *testing.T) {
 }
 
 func TestDisallowMsgs(t *testing.T) {
-	expectedDisallowMsgs := maps.MergeAllMapsMustHaveDistinctKeys(
+	expectedDisallowMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
 		msgs.AppInjectedMsgSamples,
 		msgs.InternalMsgSamplesAll,
 		msgs.NestedMsgSamples,
@@ -103,7 +103,7 @@ func TestAllowMsgs(t *testing.T) {
 }
 
 func TestAllTypeMessages_SumOfAllowDisallow_MinusUnregistered(t *testing.T) {
-	expectedAllTypeMsgs := maps.MergeAllMapsMustHaveDistinctKeys(
+	expectedAllTypeMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
 		msgs.DisallowMsgs,
 		msgs.AllowMsgs,
 	)

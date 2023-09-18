@@ -1,7 +1,7 @@
 package msgs
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 var (
@@ -173,12 +173,14 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":          {},
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":  {},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          {},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  {},
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         {},
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": {},
+		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
+		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":       {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":       {},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":              {},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse":      {},
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams":         {},
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse": {},
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         {},
@@ -280,7 +282,7 @@ var (
 	}
 
 	// DisallowMsgs are messages that cannot be externally submitted.
-	DisallowMsgs = maps.MergeAllMapsMustHaveDistinctKeys(
+	DisallowMsgs = lib.MergeAllMapsMustHaveDistinctKeys(
 		AppInjectedMsgSamples,
 		InternalMsgSamplesAll,
 		NestedMsgSamples,
