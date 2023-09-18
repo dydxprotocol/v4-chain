@@ -3,14 +3,19 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
-	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
+
+	gometrics "github.com/armon/go-metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 
@@ -37,6 +42,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -1168,6 +1174,20 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
+
+	// Report app version and git commit if not in dev. Delay by 100 blocks to get a metric on initial startup.
+	// TODO(DEC-2107): Doing this based on chain id seems brittle.
+	if !strings.Contains(req.Header.ChainID, "dev") && ctx.BlockHeight()%10_100 == 0 {
+		version := version.NewInfo()
+		telemetry.SetGaugeWithLabels(
+			[]string{metrics.AppInfo},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
+				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
+			},
+		)
+	}
 
 	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx, req)
