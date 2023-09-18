@@ -166,8 +166,6 @@ func orderToIndexerOrder_GoodTilBlockTime(
 
 func ConvertToClobPairStatus(status clobtypes.ClobPair_Status) ClobPairStatus {
 	switch status {
-	case clobtypes.ClobPair_STATUS_UNSPECIFIED:
-		return ClobPairStatus_CLOB_PAIR_STATUS_UNSPECIFIED
 	case clobtypes.ClobPair_STATUS_ACTIVE:
 		return ClobPairStatus_CLOB_PAIR_STATUS_ACTIVE
 	case clobtypes.ClobPair_STATUS_PAUSED:

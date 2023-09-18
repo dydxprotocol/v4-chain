@@ -1,10 +1,17 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+)
+
+const (
+	AssetProductType     = "asset"
+	PerpetualProductType = "perpetual"
+	UnknownProductTYpe   = "unknown"
 )
 
 // PositionSize is an interface for expressing the size of a position
@@ -14,6 +21,7 @@ type PositionSize interface {
 	// Returns the signed position size in big.Int.
 	GetBigQuantums() *big.Int
 	GetId() uint32
+	GetProductType() string
 }
 
 type PositionUpdate struct {
@@ -66,6 +74,10 @@ func (m *AssetPosition) GetIsLong() bool {
 	return m.GetBigQuantums().Sign() > 0
 }
 
+func (m *AssetPosition) GetProductType() string {
+	return AssetProductType
+}
+
 func (m *PerpetualPosition) GetId() uint32 {
 	return m.GetPerpetualId()
 }
@@ -98,6 +110,10 @@ func (m *PerpetualPosition) GetIsLong() bool {
 	return m.GetBigQuantums().Sign() > 0
 }
 
+func (m *PerpetualPosition) GetProductType() string {
+	return PerpetualProductType
+}
+
 func (au AssetUpdate) GetIsLong() bool {
 	return au.GetBigQuantums().Sign() > 0
 }
@@ -110,6 +126,10 @@ func (au AssetUpdate) GetId() uint32 {
 	return au.AssetId
 }
 
+func (au AssetUpdate) GetProductType() string {
+	return AssetProductType
+}
+
 func (pu PerpetualUpdate) GetBigQuantums() *big.Int {
 	return pu.BigQuantumsDelta
 }
@@ -120,6 +140,10 @@ func (pu PerpetualUpdate) GetId() uint32 {
 
 func (pu PerpetualUpdate) GetIsLong() bool {
 	return pu.GetBigQuantums().Sign() > 0
+}
+
+func (pu PerpetualUpdate) GetProductType() string {
+	return PerpetualProductType
 }
 
 func (pu PositionUpdate) GetId() uint32 {
@@ -136,4 +160,8 @@ func (pu PositionUpdate) SetBigQuantums(bigQuantums *big.Int) {
 
 func (pu PositionUpdate) GetBigQuantums() *big.Int {
 	return pu.BigQuantums
+}
+func (pu PositionUpdate) GetProductType() string {
+	// PositionUpdate is generic and doesn't have a product type.
+	return UnknownProductTYpe
 }

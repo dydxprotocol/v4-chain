@@ -73,7 +73,13 @@ func TestCancelOrder_Error(t *testing.T) {
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
 			indexerEventManager := &mocks.IndexerEventManager{}
-			indexerEventManager.On("AddTxnEvent", mock.Anything, mock.Anything, mock.Anything).Return().Once()
+			indexerEventManager.On(
+				"AddTxnEvent",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return().Once()
 
 			ks := keepertest.NewClobKeepersTestContext(
 				t, memClob, &mocks.BankKeeper{}, indexerEventManager)
@@ -138,6 +144,7 @@ func TestCancelOrder_Success(t *testing.T) {
 						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 					),
 				),
+				indexerevents.StatefulOrderEventVersion,
 			).Return().Once()
 
 			// Add stateful order placement to state

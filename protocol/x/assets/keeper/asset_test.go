@@ -619,3 +619,18 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 		types.ErrInvalidAssetAtomicResolution,
 	)
 }
+
+func TestIsPositionUpdatable(t *testing.T) {
+	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
+	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 1)
+	require.NoError(t, err)
+
+	// Check Usdc asset is updatable.
+	updatable, err := keeper.IsPositionUpdatable(ctx, lib.UsdcAssetId)
+	require.NoError(t, err)
+	require.True(t, updatable)
+
+	// Return error for non-existent asset
+	_, err = keeper.IsPositionUpdatable(ctx, 100)
+	require.ErrorContains(t, err, "Asset does not exist")
+}

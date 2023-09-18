@@ -62,6 +62,40 @@ export interface MsgSetLiquidityTierResponse {}
 
 export interface MsgSetLiquidityTierResponseSDKType {}
 /**
+ * MsgUpdatePerpetualParams is a message used by x/gov to update the parameters
+ * of a perpetual.
+ */
+
+export interface MsgUpdatePerpetualParams {
+  authority: string;
+  /** The perpetual to update. Each field must be set. */
+
+  perpetualParams?: PerpetualParams;
+}
+/**
+ * MsgUpdatePerpetualParams is a message used by x/gov to update the parameters
+ * of a perpetual.
+ */
+
+export interface MsgUpdatePerpetualParamsSDKType {
+  authority: string;
+  /** The perpetual to update. Each field must be set. */
+
+  perpetual_params?: PerpetualParamsSDKType;
+}
+/**
+ * MsgUpdatePerpetualParamsResponse defines the UpdatePerpetualParams
+ * response type.
+ */
+
+export interface MsgUpdatePerpetualParamsResponse {}
+/**
+ * MsgUpdatePerpetualParamsResponse defines the UpdatePerpetualParams
+ * response type.
+ */
+
+export interface MsgUpdatePerpetualParamsResponseSDKType {}
+/**
  * FundingPremium represents a funding premium value for a perpetual
  * market. Can be used to represent a premium vote or a premium sample.
  */
@@ -281,6 +315,95 @@ export const MsgSetLiquidityTierResponse = {
 
   fromPartial(_: DeepPartial<MsgSetLiquidityTierResponse>): MsgSetLiquidityTierResponse {
     const message = createBaseMsgSetLiquidityTierResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdatePerpetualParams(): MsgUpdatePerpetualParams {
+  return {
+    authority: "",
+    perpetualParams: undefined
+  };
+}
+
+export const MsgUpdatePerpetualParams = {
+  encode(message: MsgUpdatePerpetualParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.perpetualParams !== undefined) {
+      PerpetualParams.encode(message.perpetualParams, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdatePerpetualParams {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdatePerpetualParams();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.perpetualParams = PerpetualParams.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdatePerpetualParams>): MsgUpdatePerpetualParams {
+    const message = createBaseMsgUpdatePerpetualParams();
+    message.authority = object.authority ?? "";
+    message.perpetualParams = object.perpetualParams !== undefined && object.perpetualParams !== null ? PerpetualParams.fromPartial(object.perpetualParams) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdatePerpetualParamsResponse(): MsgUpdatePerpetualParamsResponse {
+  return {};
+}
+
+export const MsgUpdatePerpetualParamsResponse = {
+  encode(_: MsgUpdatePerpetualParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdatePerpetualParamsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdatePerpetualParamsResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdatePerpetualParamsResponse>): MsgUpdatePerpetualParamsResponse {
+    const message = createBaseMsgUpdatePerpetualParamsResponse();
     return message;
   }
 

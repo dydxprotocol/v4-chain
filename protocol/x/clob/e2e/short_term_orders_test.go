@@ -173,6 +173,7 @@ func TestPlaceOrder(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
 						},
 						{
 							Subtype: indexerevents.SubtypeSubaccountUpdate,
@@ -199,6 +200,7 @@ func TestPlaceOrder(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
 						},
 						{
 							Subtype: indexerevents.SubtypeOrderFill,
@@ -215,6 +217,7 @@ func TestPlaceOrder(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          2,
+							Version:             indexerevents.OrderFillEventVersion,
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -329,6 +332,7 @@ func TestPlaceOrder(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
 						},
 						{
 							Subtype: indexerevents.SubtypeSubaccountUpdate,
@@ -355,6 +359,7 @@ func TestPlaceOrder(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
 						},
 						{
 							Subtype: indexerevents.SubtypeOrderFill,
@@ -371,6 +376,7 @@ func TestPlaceOrder(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          2,
+							Version:             indexerevents.OrderFillEventVersion,
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -485,6 +491,7 @@ func TestPlaceOrder(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
 						},
 						{
 							Subtype: indexerevents.SubtypeSubaccountUpdate,
@@ -511,6 +518,7 @@ func TestPlaceOrder(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
 						},
 						{
 							Subtype: indexerevents.SubtypeOrderFill,
@@ -527,6 +535,7 @@ func TestPlaceOrder(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          2,
+							Version:             indexerevents.OrderFillEventVersion,
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{

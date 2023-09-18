@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -17,13 +19,14 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMsgServerUpdateClobPair(t *testing.T) {
 	tests := map[string]struct {
 		msg           *types.MsgUpdateClobPair
-		setup         func(ks keepertest.ClobKeepersTestContext)
+		setup         func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager)
 		expectedResp  *types.MsgUpdateClobPairResponse
 		expectedErr   error
 		expectedPanic string
@@ -44,7 +47,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 				},
 			},
-			setup: func(ks keepertest.ClobKeepersTestContext) {
+			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
@@ -55,6 +58,21 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store.Set(types.ClobPairKey(
 					types.ClobPairId(constants.ClobPair_Btc.Id),
 				), b)
+
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypeUpdateClobPair,
+					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewUpdateClobPairEvent(
+							clobPair.GetClobPairId(),
+							types.ClobPair_STATUS_ACTIVE,
+							clobPair.QuantumConversionExponent,
+							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+						),
+					),
+					indexerevents.UpdateClobPairEventVersion,
+				).Once().Return()
 			},
 			expectedResp: &types.MsgUpdateClobPairResponse{},
 		},
@@ -74,7 +92,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_INITIALIZING,
 				},
 			},
-			setup: func(ks keepertest.ClobKeepersTestContext) {
+			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
@@ -122,7 +140,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 				},
 			},
-			setup: func(ks keepertest.ClobKeepersTestContext) {
+			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
@@ -151,7 +169,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 				},
 			},
-			setup: func(ks keepertest.ClobKeepersTestContext) {
+			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
@@ -180,7 +198,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 				},
 			},
-			setup: func(ks keepertest.ClobKeepersTestContext) {
+			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
@@ -209,7 +227,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 				},
 			},
-			setup: func(ks keepertest.ClobKeepersTestContext) {
+			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
@@ -238,7 +256,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 				},
 			},
-			setup: func(ks keepertest.ClobKeepersTestContext) {
+			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
@@ -256,12 +274,13 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			if tc.setup != nil {
-				tc.setup(ks)
+				tc.setup(ks, mockIndexerEventManager)
 			}
 
 			k := ks.ClobKeeper
@@ -276,6 +295,8 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			} else {
 				resp, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
 				require.Equal(t, tc.expectedResp, resp)
+
+				mockIndexerEventManager.AssertExpectations(t)
 
 				if tc.expectedErr != nil {
 					require.ErrorIs(t, err, tc.expectedErr)

@@ -65,6 +65,7 @@ func TestCreateClobPair(t *testing.T) {
 							testPerp1.Params.LiquidityTier,
 						),
 					),
+					indexerevents.PerpetualMarketEventVersion,
 				).Return()
 			},
 			msg: &types.MsgCreateClobPair{
@@ -86,6 +87,7 @@ func TestCreateClobPair(t *testing.T) {
 				// set up mock indexer event manager to accept anything.
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
+					mock.Anything,
 					mock.Anything,
 					mock.Anything,
 				).Return()
@@ -111,6 +113,7 @@ func TestCreateClobPair(t *testing.T) {
 				// set up mock indexer event manager to accept anything.
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
+					mock.Anything,
 					mock.Anything,
 					mock.Anything,
 				).Return()

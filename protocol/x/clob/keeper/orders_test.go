@@ -1035,6 +1035,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 			),
 		),
+		indexerevents.PerpetualMarketEventVersion,
 	).Once().Return()
 	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ctx,
@@ -1088,6 +1089,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 			),
 		),
+		indexerevents.PerpetualMarketEventVersion,
 	).Once().Return()
 	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ks.Ctx,
@@ -1817,6 +1819,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
 						),
 					),
+					indexerevents.PerpetualMarketEventVersion,
 				).Once().Return()
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
@@ -2029,6 +2032,7 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -2157,6 +2161,7 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,

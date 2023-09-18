@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"strconv"
 	"testing"
 
@@ -79,6 +80,10 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
+
+	t.Cleanup(func() {
+		stoppable.StopServices(t, cfg.GRPCAddress)
+	})
 
 	return network.New(t, cfg), state.ClobPairs
 }

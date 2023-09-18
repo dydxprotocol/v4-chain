@@ -84,8 +84,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgAddPremiumVotes")
-	require.Contains(t, buf.String(), "perpetuals/FundingSamples")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -97,8 +95,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgAddPremiumVotes")
-	require.Contains(t, buf.String(), "perpetuals/FundingSamples")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {

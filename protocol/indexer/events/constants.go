@@ -29,6 +29,21 @@ const (
 	UpdateClobPairEventVersion   uint32 = 1
 )
 
+const (
+	// Indexer event versions.
+	OrderFillEventVersion        uint32 = 1
+	SubaccountUpdateEventVersion uint32 = 1
+	TransferEventVersion         uint32 = 1
+	MarketEventVersion           uint32 = 1
+	FundingValuesEventVersion    uint32 = 1
+	StatefulOrderEventVersion    uint32 = 1
+	AssetEventVersion            uint32 = 1
+	PerpetualMarketEventVersion  uint32 = 1
+	LiquidityTierEventVersion    uint32 = 1
+	UpdatePerpetualEventVersion  uint32 = 1
+	UpdateClobPairEventVersion   uint32 = 1
+)
+
 var OnChainEventSubtypes = []string{
 	SubtypeOrderFill,
 	SubtypeSubaccountUpdate,

@@ -284,6 +284,7 @@ func CreateNClobPair(
 					perps[i].Params.LiquidityTier,
 				),
 			),
+			indexerevents.PerpetualMarketEventVersion,
 		).Return()
 
 		_, err := keeper.CreatePerpetualClobPair(

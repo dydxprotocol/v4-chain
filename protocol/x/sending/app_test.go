@@ -176,6 +176,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
 						},
 						{
 							Subtype: indexerevents.SubtypeTransfer,
@@ -189,6 +190,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
+							Version:             indexerevents.TransferEventVersion,
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(CheckTx_MsgDepositToSubaccount.GetTx()))},
@@ -363,6 +365,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
 						},
 						{
 							Subtype: indexerevents.SubtypeTransfer,
@@ -376,6 +379,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 							),
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
+							Version:             indexerevents.TransferEventVersion,
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(CheckTx_MsgWithdrawFromSubaccount.GetTx()))},
