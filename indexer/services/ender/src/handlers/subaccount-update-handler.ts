@@ -29,11 +29,7 @@ import {
   UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import { bytesToBigInt, getPositionIsLong } from '@dydxprotocol-indexer/v4-proto-parser';
-import {
-  IndexerAssetPosition,
-  IndexerPerpetualPosition,
-  SubaccountUpdateEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+import { IndexerAssetPosition, IndexerPerpetualPosition } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -43,10 +39,11 @@ import config from '../config';
 import { QUOTE_CURRENCY_ATOMIC_RESOLUTION, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../constants';
 import { addPositionsToContents, annotateWithPnl, convertPerpetualPosition } from '../helpers/kafka-helper';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
+import { SubaccountUpdate } from '../lib/translated-types';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
 
-export class SubaccountUpdateHandler extends Handler<SubaccountUpdateEventV1> {
+export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
   eventType: string = 'SubaccountUpdateEvent';
 
   public getParallelizationIds(): string[] {
