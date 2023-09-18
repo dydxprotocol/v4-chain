@@ -67,6 +67,8 @@ func validateInnerMsg(innerMsgs []sdk.Msg) error {
 		if IsNestedMsg(msg) {
 			return fmt.Errorf("Invalid nested msg: double-nested msg type")
 		}
+
+		// For "internal msgs", we allow them, because they are designed to be nested.
 	}
 	return nil
 }
