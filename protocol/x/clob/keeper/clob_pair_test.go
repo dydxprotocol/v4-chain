@@ -633,6 +633,7 @@ func TestUpdateClobPair(t *testing.T) {
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 						),
 					),
+					indexerevents.PerpetualMarketEventVersion,
 				).Once().Return()
 
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
@@ -658,6 +659,7 @@ func TestUpdateClobPair(t *testing.T) {
 							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
 						),
 					),
+					indexerevents.UpdateClobPairEventVersion,
 				).Once().Return()
 			},
 			status: types.ClobPair_STATUS_ACTIVE,

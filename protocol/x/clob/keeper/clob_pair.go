@@ -468,6 +468,7 @@ func (k Keeper) UpdateClobPair(
 				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
 			),
 		),
+		indexerevents.UpdateClobPairEventVersion,
 	)
 
 	return nil

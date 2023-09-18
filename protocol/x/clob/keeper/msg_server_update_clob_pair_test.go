@@ -71,6 +71,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
 						),
 					),
+					indexerevents.UpdateClobPairEventVersion,
 				).Once().Return()
 			},
 			expectedResp: &types.MsgUpdateClobPairResponse{},
