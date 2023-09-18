@@ -183,6 +183,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 						perpetual.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,

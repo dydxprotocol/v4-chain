@@ -208,6 +208,51 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
+  it('successfully processes block with transaction event with unset version', async () => {
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        defaultSubaccountUpdateEventData,
+        transactionIndex,
+        eventIndex,
+        0,
+      ),
+    ];
+
+    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+      defaultHeight,
+      defaultTime,
+      events,
+      [defaultTxHash],
+    );
+    const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
+    const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
+
+    await onMessage(kafkaMessage);
+    await Promise.all([
+      expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
+      expectTransactionWithHash([defaultTxHash]),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+    ]);
+
+    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenCalledTimes(1);
+    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenNthCalledWith(
+      1,
+      block,
+      events[0],
+      expect.any(Number),
+      defaultSubaccountUpdateEvent,
+    );
+    expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
+    expect(stats.timing).toHaveBeenCalledWith(
+      'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
+    expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
+      expect.any(Number), 1, { success: 'true' });
+  });
+
   it('successfully processes block with transfer event', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;

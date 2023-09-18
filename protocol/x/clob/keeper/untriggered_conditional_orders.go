@@ -312,6 +312,7 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 					triggeredConditionalOrderId,
 				),
 			),
+			indexerevents.StatefulOrderEventVersion,
 		)
 	}
 	return triggeredConditionalOrderIds

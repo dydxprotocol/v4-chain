@@ -56,6 +56,7 @@ func (k Keeper) CreateMarket(
 				marketParam.Exponent,
 			),
 		),
+		indexerevents.MarketEventVersion,
 	)
 
 	k.marketToCreatedAt[marketParam.Id] = k.timeProvider.Now()

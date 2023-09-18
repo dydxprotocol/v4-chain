@@ -56,6 +56,7 @@ func (k Keeper) ProcessTransfer(
 		indexer_manager.GetB64EncodedEventMessage(
 			k.GenerateTransferEvent(pendingTransfer),
 		),
+		indexerevents.TransferEventVersion,
 	)
 
 	return nil
@@ -124,6 +125,7 @@ func (k Keeper) ProcessDepositToSubaccount(
 			indexer_manager.GetB64EncodedEventMessage(
 				k.GenerateDepositEvent(msgDepositToSubaccount),
 			),
+			indexerevents.TransferEventVersion,
 		)
 	}
 
@@ -190,6 +192,7 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 			indexer_manager.GetB64EncodedEventMessage(
 				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
 			),
+			indexerevents.TransferEventVersion,
 		)
 	}
 

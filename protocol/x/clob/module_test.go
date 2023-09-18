@@ -317,6 +317,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 			),
 		),
+		indexerevents.PerpetualMarketEventVersion,
 	).Once().Return()
 
 	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)

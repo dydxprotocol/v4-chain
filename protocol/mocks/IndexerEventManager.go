@@ -16,14 +16,14 @@ type IndexerEventManager struct {
 	mock.Mock
 }
 
-// AddBlockEvent provides a mock function with given fields: ctx, subType, data, blockEvent
-func (_m *IndexerEventManager) AddBlockEvent(ctx types.Context, subType string, data string, blockEvent indexer_manager.IndexerTendermintEvent_BlockEvent) {
-	_m.Called(ctx, subType, data, blockEvent)
+// AddBlockEvent provides a mock function with given fields: ctx, subType, data, blockEvent, version
+func (_m *IndexerEventManager) AddBlockEvent(ctx types.Context, subType string, data string, blockEvent indexer_manager.IndexerTendermintEvent_BlockEvent, version uint32) {
+	_m.Called(ctx, subType, data, blockEvent, version)
 }
 
-// AddTxnEvent provides a mock function with given fields: ctx, subType, data
-func (_m *IndexerEventManager) AddTxnEvent(ctx types.Context, subType string, data string) {
-	_m.Called(ctx, subType, data)
+// AddTxnEvent provides a mock function with given fields: ctx, subType, data, version
+func (_m *IndexerEventManager) AddTxnEvent(ctx types.Context, subType string, data string, version uint32) {
+	_m.Called(ctx, subType, data, version)
 }
 
 // ClearEvents provides a mock function with given fields: ctx
