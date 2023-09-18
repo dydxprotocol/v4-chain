@@ -3,12 +3,12 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (k msgServer) CreateTransfer(
@@ -102,6 +102,19 @@ func (k msgServer) SendFromModuleToAccount(
 	goCtx context.Context,
 	msg *types.MsgSendFromModuleToAccount,
 ) (*types.MsgSendFromModuleToAccountResponse, error) {
-	// TODO(CORE-559): Implement this method.
-	return nil, status.Errorf(codes.Unimplemented, "SendFromModuleToAccount not implemented")
+	if !k.Keeper.HasAuthority(msg.Authority) {
+		return nil, errors.Wrapf(
+			govtypes.ErrInvalidSigner,
+			"invalid authority %s",
+			msg.Authority,
+		)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.Keeper.SendFromModuleToAccount(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSendFromModuleToAccountResponse{}, nil
 }
