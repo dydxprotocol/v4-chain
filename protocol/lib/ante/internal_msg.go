@@ -90,6 +90,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// prices
 		*prices.MsgCreateOracleMarket,
+		*prices.MsgUpdateMarketParam,
 
 		// rewards
 		*rewards.MsgUpdateParams,

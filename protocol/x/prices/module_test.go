@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -108,7 +109,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 4)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 6)
 	mockRegistry.AssertExpectations(t)
 }
 

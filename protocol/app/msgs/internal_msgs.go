@@ -123,6 +123,8 @@ var (
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": nil,
+		"/dydxprotocol.prices.MsgUpdateMarketParam":          &prices.MsgUpdateMarketParam{},
+		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  nil,
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},
