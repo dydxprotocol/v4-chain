@@ -11,6 +11,9 @@ import (
 )
 
 type ClobKeeper interface {
+	LiquidationsKeeper
+	LiquidationsConfigKeeper
+
 	AddOrderToOrderbookCollatCheck(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
@@ -51,8 +54,6 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		operations []OperationRaw,
 	) error
-	LiquidationsKeeper
-	LiquidationsConfigKeeper
 	GetStatePosition(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,

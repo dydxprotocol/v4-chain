@@ -113,10 +113,12 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": nil,
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          &perpetuals.MsgCreatePerpetual{},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  nil,
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         &perpetuals.MsgSetLiquidityTier{},
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": nil,
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               &perpetuals.MsgCreatePerpetual{},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":       nil,
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":              &perpetuals.MsgSetLiquidityTier{},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse":      nil,
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams":         &perpetuals.MsgUpdatePerpetualParams{},
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse": nil,
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},

@@ -90,6 +90,14 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		BasePositionNotional:   100_000_000_000,
 		ImpactNotional:         50_454_000_000,
 	},
+	{
+		Id:                     101,
+		Name:                   "101",
+		InitialMarginPpm:       200_000,
+		MaintenanceFractionPpm: 500_000,
+		BasePositionNotional:   1_000_000,
+		ImpactNotional:         2_500_000_000,
+	},
 }
 
 // Perpetual genesis parameters.

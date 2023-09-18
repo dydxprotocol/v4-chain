@@ -19,6 +19,9 @@ service Msg {
   // updates the existing liquidity tier otherwise.
   rpc SetLiquidityTier(MsgSetLiquidityTier)
       returns (MsgSetLiquidityTierResponse);
+  // UpdatePerpetualParams updates the parameters of a perpetual market.
+  rpc UpdatePerpetualParams(MsgUpdatePerpetualParams)
+      returns (MsgUpdatePerpetualParamsResponse);
 }
 
 // MsgCreatePerpetual is a message used by x/gov to create a new perpetual.
@@ -50,6 +53,21 @@ message MsgSetLiquidityTier {
 
 // MsgSetLiquidityTierResponse defines the SetLiquidityTier response type.
 message MsgSetLiquidityTierResponse {}
+
+// MsgUpdatePerpetualParams is a message used by x/gov to update the parameters
+// of a perpetual.
+message MsgUpdatePerpetualParams {
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The perpetual to update. Each field must be set.
+  PerpetualParams perpetual_params = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdatePerpetualParamsResponse defines the UpdatePerpetualParams
+// response type.
+message MsgUpdatePerpetualParamsResponse {}
 
 // FundingPremium represents a funding premium value for a perpetual
 // market. Can be used to represent a premium vote or a premium sample.

@@ -29,6 +29,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.LiquidityTiers {
 		_, err := k.CreateLiquidityTier(
 			ctx,
+			elem.Id,
 			elem.Name,
 			elem.InitialMarginPpm,
 			elem.MaintenanceFractionPpm,
