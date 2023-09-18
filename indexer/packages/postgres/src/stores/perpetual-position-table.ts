@@ -405,7 +405,7 @@ export async function bulkUpdateSubaccountFields(
     objectRows: positionRows,
     columns,
     isUuid: true,
-    uniqueIdentifiers: [PerpetualPositionColumns.id],
+    uniqueIdentifier: PerpetualPositionColumns.id,
     setFieldsToAppend: [
       `"${PerpetualPositionColumns.maxSize}" = GREATEST("${PerpetualPositionColumns.maxSize}", c."${PerpetualPositionColumns.size}")`,
     ],

@@ -163,20 +163,17 @@ export function generateBulkUpdateString({
   objectRows,
   columns,
   isUuid,
-  uniqueIdentifiers = ['id'],
+  uniqueIdentifier = 'id',
   setFieldsToAppend,
 }: {
   table: string,
   objectRows: string[],
   columns: string[],
   isUuid: boolean,
-  uniqueIdentifiers?: string[],
+  uniqueIdentifier?: string,
   setFieldsToAppend?: string[],
 }): string {
-  const columnsToUpdate: string[] = _.without(columns, ...uniqueIdentifiers);
-  const whereString: string = `WHERE ${uniqueIdentifiers.map((id: string): string => {
-    return `c."${id}"${isUuid ? '::uuid' : ''} = "${table}"."${id}"`
-  }).join('AND')}`;
+  const columnsToUpdate: string[] = _.without(columns, uniqueIdentifier);
 
   const setFields: string[] = columnsToUpdate.map((col) => {
     return `"${col}" = c."${col}"`;
@@ -187,7 +184,7 @@ export function generateBulkUpdateString({
   FROM (VALUES
     ${objectRows.map((object) => `(${object})`).join(', ')}
   ) AS c(${columns.map((c) => `"${c}"`).join(', ')})
-  ${whereString};
+  WHERE c."${uniqueIdentifier}"${isUuid ? '::uuid' : ''} = "${table}"."${uniqueIdentifier}";
 `;
 }
 
