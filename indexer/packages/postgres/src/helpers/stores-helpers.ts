@@ -119,7 +119,7 @@ export function setBulkRowsForUpdate<T extends string>({
       return castValue(object[col] as number | undefined | null, 'bigint');
     }
     if (timestampColumns && timestampColumns.includes(col)) {
-      return castValue(object[col] as string | undefined | null, 'timestamptz');
+      return castValue(object[col] as string | undefined | null, 'timestamp');
     }
     if (uuidColumns && uuidColumns.includes(col)) {
       return castValue(object[col] as string | undefined | null, 'uuid');
