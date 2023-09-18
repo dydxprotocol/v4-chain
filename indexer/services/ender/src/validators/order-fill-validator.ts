@@ -10,11 +10,13 @@ import _ from 'lodash';
 import { Handler, HandlerInitializer } from '../handlers/handler';
 import { LiquidationHandler } from '../handlers/order-fills/liquidation-handler';
 import { OrderHandler } from '../handlers/order-fills/order-handler';
+import { orderFillEventV1ToOrderFill } from '../helpers/translation-helper';
+import { OrderFillWithLiquidity } from '../lib/translated-types';
 import { OrderFillEventWithLiquidity } from '../lib/types';
 import { validateOrderAndReturnErrorMessage } from './helpers';
 import { Validator } from './validator';
 
-export class OrderFillValidator extends Validator<OrderFillEventV1> {
+export class OrderFillValidator extends Validator<OrderFillWithLiquidity> {
   public validate(): void {
     if (this.event.makerOrder === undefined) {
       return this.logAndThrowParseMessageError(
@@ -83,7 +85,7 @@ export class OrderFillValidator extends Validator<OrderFillEventV1> {
           this.block,
           indexerTendermintEvent,
           txId,
-          orderFillEventWithLiquidity,
+          orderFillEventV1ToOrderFill(orderFillEventWithLiquidity),
         );
       },
     );
