@@ -1069,6 +1069,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -1097,6 +1098,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -1967,6 +1969,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							perpetuals[i].Params.LiquidityTier,
 						),
 					),
+					indexerevents.PerpetualMarketEventVersion,
 				).Once().Return()
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
@@ -2079,6 +2082,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 			),
 		),
+		indexerevents.PerpetualMarketEventVersion,
 	).Once().Return()
 	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ctx,
@@ -3598,6 +3602,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 						tc.perpetuals[0].Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -4348,6 +4353,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 							tc.perpetuals[perpetualId].Params.LiquidityTier,
 						),
 					),
+					indexerevents.PerpetualMarketEventVersion,
 				).Once().Return()
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
@@ -4965,6 +4971,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -5117,6 +5124,7 @@ func TestSortLiquidationOrders(t *testing.T) {
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,

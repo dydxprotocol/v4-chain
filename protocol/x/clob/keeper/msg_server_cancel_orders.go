@@ -49,6 +49,7 @@ func (m msgServer) CancelOrder(
 				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 			),
 		),
+		indexerevents.StatefulOrderEventVersion,
 	)
 
 	telemetry.IncrCounterWithLabels(

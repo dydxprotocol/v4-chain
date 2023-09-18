@@ -61,60 +61,72 @@ export enum DydxIndexerSubtypes {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type EventMessage = any;
 
-export type EventProtoWithType = {
+export type EventProtoWithTypeAndVersion = {
   type: string,
   eventProto: EventMessage,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } & ({
   type: DydxIndexerSubtypes.ORDER_FILL,
   eventProto: OrderFillEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
   eventProto: SubaccountUpdateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.TRANSFER,
   eventProto: TransferEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.MARKET,
   eventProto: MarketEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.STATEFUL_ORDER,
   eventProto: StatefulOrderEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.FUNDING,
   eventProto: FundingEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.ASSET,
   eventProto: AssetCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.PERPETUAL_MARKET,
   eventProto: PerpetualMarketCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.LIQUIDITY_TIER,
   eventProto: LiquidityTierUpsertEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
   eventProto: UpdatePerpetualEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
   eventProto: UpdateClobPairEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 });
 
 // Events grouped into events block events and events for each transactionIndex
 export interface GroupedEvents {
-  transactionEvents: EventProtoWithType[][],
-  blockEvents: EventProtoWithType[],
+  transactionEvents: EventProtoWithTypeAndVersion[][],
+  blockEvents: EventProtoWithTypeAndVersion[],
 }
 
 export type MarketPriceUpdateEventMessage = {

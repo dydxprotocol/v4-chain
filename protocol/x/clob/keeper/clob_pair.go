@@ -90,6 +90,7 @@ func (k Keeper) CreatePerpetualClobPair(
 				perpetual.Params.LiquidityTier,
 			),
 		),
+		indexerevents.PerpetualMarketEventVersion,
 	)
 
 	return clobPair, nil
@@ -467,6 +468,7 @@ func (k Keeper) UpdateClobPair(
 				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
 			),
 		),
+		indexerevents.UpdateClobPairEventVersion,
 	)
 
 	return nil

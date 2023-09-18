@@ -303,6 +303,7 @@ func (k Keeper) UpdateSubaccounts(
 					fundingPayments,
 				),
 			),
+			indexerevents.SubaccountUpdateEventVersion,
 		)
 
 		// Emit an event indicating a funding payment was paid / received for each settled funding

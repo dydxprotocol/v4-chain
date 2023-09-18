@@ -32,7 +32,7 @@ import {
 import { base64StringToBinary } from '../helpers/encoding-helper';
 import {
   DydxIndexerSubtypes,
-  EventProtoWithType,
+  EventProtoWithTypeAndVersion,
 } from './types';
 
 export function indexerTendermintEventToTransactionIndex(
@@ -79,14 +79,17 @@ export function dateToDateTime(
  */
 export function indexerTendermintEventToEventProtoWithType(
   event: IndexerTendermintEvent,
-): EventProtoWithType | undefined {
+): EventProtoWithTypeAndVersion | undefined {
   const eventDataBinary: Uint8Array = base64StringToBinary(event.data);
+  // set the default version to 1
+  const version: number = event.version === 0 ? 1 : event.version;
   switch (event.subtype) {
     case (DydxIndexerSubtypes.ORDER_FILL.toString()): {
       return {
         type: DydxIndexerSubtypes.ORDER_FILL,
         eventProto: OrderFillEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.SUBACCOUNT_UPDATE.toString()): {
@@ -94,6 +97,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
         eventProto: SubaccountUpdateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.TRANSFER.toString()): {
@@ -101,6 +105,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.TRANSFER,
         eventProto: TransferEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.MARKET.toString()): {
@@ -108,6 +113,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.MARKET,
         eventProto: MarketEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.STATEFUL_ORDER.toString()): {
@@ -115,6 +121,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.STATEFUL_ORDER,
         eventProto: StatefulOrderEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.FUNDING.toString()): {
@@ -122,6 +129,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.FUNDING,
         eventProto: FundingEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.ASSET.toString()): {
@@ -129,6 +137,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.ASSET,
         eventProto: AssetCreateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.PERPETUAL_MARKET.toString()): {
@@ -136,6 +145,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.PERPETUAL_MARKET,
         eventProto: PerpetualMarketCreateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.LIQUIDITY_TIER.toString()): {
@@ -143,6 +153,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.LIQUIDITY_TIER,
         eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()): {
@@ -150,6 +161,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
         eventProto: UpdatePerpetualEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()): {
@@ -157,6 +169,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
         eventProto: UpdateClobPairEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     default: {

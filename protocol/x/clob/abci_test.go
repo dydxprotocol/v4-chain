@@ -151,6 +151,7 @@ func TestEndBlocker_Failure(t *testing.T) {
 							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 						),
 					),
+					indexerevents.StatefulOrderEventVersion,
 				).Once().Return()
 			}
 
@@ -698,6 +699,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -729,6 +731,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -756,6 +759,7 @@ func TestEndBlocker_Success(t *testing.T) {
 							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 						),
 					),
+					indexerevents.StatefulOrderEventVersion,
 				).Once().Return()
 			}
 
@@ -769,6 +773,7 @@ func TestEndBlocker_Success(t *testing.T) {
 							orderId,
 						),
 					),
+					indexerevents.StatefulOrderEventVersion,
 				).Once().Return()
 			}
 
