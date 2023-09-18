@@ -62,5 +62,4 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-	k.setNumLiquidityTiers(ctx, uint32(0))
 }

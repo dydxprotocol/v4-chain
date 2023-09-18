@@ -164,6 +164,7 @@ func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	for _, l := range constants.LiquidityTiers {
 		_, err := k.CreateLiquidityTier(
 			ctx,
+			l.Id,
 			l.Name,
 			l.InitialMarginPpm,
 			l.MaintenanceFractionPpm,
@@ -211,8 +212,8 @@ func CreateNPerpetuals(
 	n int,
 ) ([]types.Perpetual, error) {
 	items := make([]types.Perpetual, n)
-	numLiquidityTiers := keeper.GetNumLiquidityTiers(ctx)
-	require.Greater(t, numLiquidityTiers, uint32(0))
+	allLiquidityTiers := keeper.GetAllLiquidityTiers(ctx)
+	require.Greater(t, len(allLiquidityTiers), 0)
 
 	for i := range items {
 		CreateNMarkets(t, ctx, pricesKeeper, n)
@@ -228,12 +229,12 @@ func CreateNPerpetuals(
 
 		perpetual, err := keeper.CreatePerpetual(
 			ctx,
-			uint32(i),                        // Id
-			fmt.Sprintf("%v", i),             // Ticker
-			uint32(i),                        // MarketId
-			int32(i),                         // AtomicResolution
-			defaultFundingPpm,                // DefaultFundingPpm
-			uint32(i%int(numLiquidityTiers)), // LiquidityTier
+			uint32(i),            // Id
+			fmt.Sprintf("%v", i), // Ticker
+			uint32(i),            // MarketId
+			int32(i),             // AtomicResolution
+			defaultFundingPpm,    // DefaultFundingPpm
+			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
 		)
 		if err != nil {
 			return items, err
