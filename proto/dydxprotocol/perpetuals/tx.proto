@@ -4,6 +4,7 @@ package dydxprotocol.perpetuals;
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
+import "dydxprotocol/perpetuals/params.proto";
 import "dydxprotocol/perpetuals/perpetual.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types";
@@ -22,6 +23,8 @@ service Msg {
   // UpdatePerpetualParams updates the parameters of a perpetual market.
   rpc UpdatePerpetualParams(MsgUpdatePerpetualParams)
       returns (MsgUpdatePerpetualParamsResponse);
+  // UpdateParams updates the parameters of perpetuals module.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgCreatePerpetual is a message used by x/gov to create a new perpetual.
@@ -86,3 +89,17 @@ message MsgAddPremiumVotes {
 // MsgAddPremiumVotesResponse defines the AddPremiumVotes
 // response type.
 message MsgAddPremiumVotesResponse {}
+
+// MsgUpdateParams is a message used by x/gov to update the parameters of the
+// perpetuals module.
+message MsgUpdateParams {
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The parameters to update. Each field must be set.
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateParamsResponse defines the UpdateParams response type.
+message MsgUpdateParamsResponse {}

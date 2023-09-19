@@ -33,7 +33,7 @@ func TestAllTypeMessages(t *testing.T) {
 
 	// Assert.
 	require.Equal(t, allTypes, lib.GetSortedKeys[sort.StringSlice](msgs.AllTypeMessages))
-	require.Len(t, msgs.AllTypeMessages, 214)
+	require.Len(t, msgs.AllTypeMessages, 216)
 }
 
 func TestAllTypeMessages_SumOfDistinctLists(t *testing.T) {

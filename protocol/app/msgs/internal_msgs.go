@@ -117,6 +117,8 @@ var (
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":       nil,
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":              &perpetuals.MsgSetLiquidityTier{},
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse":      nil,
+		"/dydxprotocol.perpetuals.MsgUpdateParams":                  &perpetuals.MsgUpdateParams{},
+		"/dydxprotocol.perpetuals.MsgUpdateParamsResponse":          nil,
 		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams":         &perpetuals.MsgUpdatePerpetualParams{},
 		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse": nil,
 
