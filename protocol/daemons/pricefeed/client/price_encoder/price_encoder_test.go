@@ -106,6 +106,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		mutableExchangeConfig               *types.MutableExchangeMarketConfig
 		mutableMarketConfigs                []*types.MutableMarketConfig
+		rawPrice                            uint64
 		adjustmentMarketIndexPrice          uint64
 		adjustmentMarketNumPricesMedianized int
 		expectedPrice                       uint64
@@ -128,6 +129,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 					MinExchanges: 1,
 				},
 			},
+			rawPrice:      constants.FiveBillion,
 			expectedPrice: constants.FiveBillion,
 		},
 		"Success - inverted price": {
@@ -148,7 +150,29 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 					MinExchanges: 1,
 				},
 			},
+			rawPrice:      constants.FiveBillion,
 			expectedPrice: uint64(20_000_000_000),
+		},
+		"Failure - invalid invert price": {
+			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
+				Id: constants.ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker: "PAIR-USD",
+						Invert: true,
+					},
+				},
+			},
+			mutableMarketConfigs: []*types.MutableMarketConfig{
+				{
+					Id:           1,
+					Pair:         "PAIR-USD",
+					Exponent:     -10,
+					MinExchanges: 1,
+				},
+			},
+			rawPrice:    50_000_000, // .005$ - too small to invert.
+			expectedErr: fmt.Errorf("price_encoder: Failed to invert price"),
 		},
 		"Success - division with adjust-by market": {
 			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
@@ -177,7 +201,68 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 			},
 			adjustmentMarketIndexPrice:          constants.FiveBillion * 15_000, // 1.5x price.
 			adjustmentMarketNumPricesMedianized: 1,
-			expectedPrice:                       uint64(1_500_000), // Expect 1.5e6.
+			rawPrice:                            constants.FiveBillion,
+			expectedPrice:                       uint64(1_500_000), // Expect $1.56
+		},
+		"Failure - adjust-by market division with 0 price": {
+			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
+				Id: constants.ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "PAIR-USD",
+						AdjustByMarket: newMarketIdWithValue(2),
+						Invert:         true,
+					},
+				},
+			},
+			mutableMarketConfigs: []*types.MutableMarketConfig{
+				{
+					Id:           1,
+					Pair:         "PAIR-USD",
+					Exponent:     -6,
+					MinExchanges: 1,
+				},
+				{
+					Id:           2,
+					Pair:         "ADJ-USD",
+					Exponent:     -10,
+					MinExchanges: 1,
+				},
+			},
+			adjustmentMarketIndexPrice:          constants.FiveBillion,
+			adjustmentMarketNumPricesMedianized: 1,
+			rawPrice:                            0, // invalid - causes division by 0.
+			expectedErr:                         fmt.Errorf("price_encoder: Failed to divide price"),
+		},
+		"Failure - adjust-by market division with prices too many orders of magnitude apart": {
+			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
+				Id: constants.ExchangeId1,
+				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+					1: {
+						Ticker:         "PAIR-USD",
+						AdjustByMarket: newMarketIdWithValue(2),
+						Invert:         true,
+					},
+				},
+			},
+			mutableMarketConfigs: []*types.MutableMarketConfig{
+				{
+					Id:           1,
+					Pair:         "PAIR-USD",
+					Exponent:     -6,
+					MinExchanges: 1,
+				},
+				{
+					Id:           2,
+					Pair:         "ADJ-USD",
+					Exponent:     -10,
+					MinExchanges: 1,
+				},
+			},
+			adjustmentMarketIndexPrice:          constants.FiveBillion,
+			adjustmentMarketNumPricesMedianized: 1,
+			rawPrice:                            constants.FiveBillion, // invalid price - too small due to exponent.
+			expectedErr:                         fmt.Errorf("price_encoder: Failed to divide price"),
 		},
 		"Success - multiplication with adjust-by market": {
 			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
@@ -205,6 +290,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 			},
 			adjustmentMarketIndexPrice:          uint64(990_000_000), // 0.99.
 			adjustmentMarketNumPricesMedianized: 1,
+			rawPrice:                            constants.FiveBillion,
 			expectedPrice:                       uint64(4_950_000_000), // 5 billion * 99%.
 		},
 		"Failure - invalid index price": {
@@ -233,6 +319,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 			},
 			adjustmentMarketIndexPrice:          uint64(990_000_000),
 			adjustmentMarketNumPricesMedianized: 1, // Should be at least 2.
+			rawPrice:                            constants.FiveBillion,
 			expectedErr: fmt.Errorf(
 				"Could not retrieve index price for market 2: expected median price from 2 exchanges, but got " +
 					"1 exchanges)",
@@ -256,7 +343,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 			convertedPriceTimestamp, err := pe.convertPriceUpdate(
 				&types.MarketPriceTimestamp{
 					MarketId:      constants.MarketId1,
-					Price:         constants.FiveBillion,
+					Price:         tc.rawPrice,
 					LastUpdatedAt: constants.TimeT,
 				},
 			)

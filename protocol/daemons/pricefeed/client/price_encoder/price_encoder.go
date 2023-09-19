@@ -121,7 +121,7 @@ func (p *PriceEncoderImpl) GetExchangeId() types.ExchangeId {
 
 // convertPriceUpdate converts a price update from the raw ticker price into a price for the market in the correct
 // quote currency, drawing on the exchange config and market config to determine the correct conversion.
-func (p PriceEncoderImpl) convertPriceUpdate(marketPriceTimestamp *types.MarketPriceTimestamp) (
+func (p *PriceEncoderImpl) convertPriceUpdate(marketPriceTimestamp *types.MarketPriceTimestamp) (
 	convertedPrice *types.MarketPriceTimestamp,
 	err error,
 ) {
@@ -144,7 +144,11 @@ func (p PriceEncoderImpl) convertPriceUpdate(marketPriceTimestamp *types.MarketP
 	if conversionDetails.AdjustByMarketDetails == nil {
 		if conversionDetails.Invert {
 			// price = 1 / marketPriceTimestamp.Price
-			price = prices.Invert(marketPriceTimestamp.Price, conversionDetails.Exponent)
+			price, err = prices.Invert(marketPriceTimestamp.Price, conversionDetails.Exponent)
+			if err != nil {
+				logger.Error("price_encoder: Failed to invert price", constants.PriceLogKey, price, "error", err)
+				return nil, err
+			}
 			logger.Debug("price_encoder: Inverting price without adjustment", constants.PriceLogKey, price)
 		} else {
 			// No adjustment or inversion required.
@@ -179,12 +183,16 @@ func (p PriceEncoderImpl) convertPriceUpdate(marketPriceTimestamp *types.MarketP
 
 		if conversionDetails.Invert {
 			// price = adjustByIndexPrice / marketPriceTimestamp.Price
-			price = prices.Divide(
+			price, err = prices.Divide(
 				adjustByIndexPrice,
 				conversionDetails.AdjustByMarketDetails.Exponent,
 				marketPriceTimestamp.Price,
 				conversionDetails.Exponent,
 			)
+			if err != nil {
+				logger.Error("price_encoder: Failed to divide price", constants.PriceLogKey, price, "error", err)
+				return nil, err
+			}
 			logger.Debug("price_encoder: Inverting price with adjustment", constants.PriceLogKey, price)
 		} else {
 			// marketPriceTimestamp.Price * adjustByIndexPrice

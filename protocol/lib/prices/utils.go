@@ -8,16 +8,17 @@ import (
 )
 
 const (
-	// maxPriceInversionLog10 describes the maximum deviation of an invertable price in units of log10.
-	// A maxPriceInversionLog10 of 2 means that the range of invertible prices have an absolute value of .01 to 100.
-	// We set this limit to prevent accidental loss of precision when inverting prices that could result in
+	// maxDivisionOOMChange describes the maximum orders-of-magnitude change permitted when dividing a price. We set
+	// a limit here to prevent unwanted loss of precision when inverting or dividing prices, which could lead to
 	// inaccurate index prices in the protocol.
-	maxPriceInversionLog10 = 2
+	// A maxDivisionOOMChange of 2 means that the range of invertible prices have an absolute value of .01 to 100.
+	// For price division, the difference in log10 between the two prices must be <= 2.
+	maxDivisionOOMChange = 2
 )
 
 var (
-	maxInversionPrice = decimal.NewFromBigInt(new(big.Int).SetUint64(1), maxPriceInversionLog10)
-	minInversionPrice = decimal.NewFromBigInt(new(big.Int).SetUint64(1), -maxPriceInversionLog10)
+	maxDivisionPrice = decimal.NewFromBigInt(new(big.Int).SetUint64(1), maxDivisionOOMChange)
+	minDivisionPrice = decimal.NewFromBigInt(new(big.Int).SetUint64(1), -maxDivisionOOMChange)
 )
 
 /*
@@ -39,18 +40,18 @@ var (
  */
 
 // Invert inverts a price, returning the inverted price multiplied by 10^-exponent.
+//
 // This method is meant to be used for inverting stablecoin ticker prices. For the sake of precision, price inversion
 // is only intended to be used for pricing markets that are close to 1:1 price-wise, e.g. USD-USDT. Inverting a price
-// that is <<>> 1 could result in a loss of precision, and the method will return and error if the price to invert
-// deviates by 1 from more than 2 orders of magnitude.
-func Invert(price uint64, exponent types.Exponent) (uint64, error) {
-	if price == 0 {
-		return 0, fmt.Errorf("cannot invert price of 0")
-	}
-
+// that is <<>> 1 could result in a loss of precision, and this method will return and error if the price to invert
+// deviates by 1 from more than 2 orders of magnitude, including 0 prices.
+func Invert(price uint64, exponent types.Exponent) (
+	invertedPrice uint64,
+	err error,
+) {
 	decimalPrice := decimal.NewFromBigInt(new(big.Int).SetUint64(price), exponent)
 
-	if decimalPrice.LessThan(minInversionPrice) || decimalPrice.GreaterThan(maxInversionPrice) {
+	if decimalPrice.LessThan(minDivisionPrice) || decimalPrice.GreaterThan(maxDivisionPrice) {
 		return 0, fmt.Errorf("price %s is outside of invertible range", decimalPrice.String())
 	}
 
@@ -65,7 +66,8 @@ func Invert(price uint64, exponent types.Exponent) (uint64, error) {
 	return invertedPriceBigInt.Uint64(), nil
 }
 
-// Multiply multiplies two prices, returning the resulting price as a uint64 multiplied by the first exponent.
+// Multiply multiplies two prices, returning the resulting price as a uint64 multiplied by the first exponent, rounded
+// to the nearest integer.
 //
 // Formula: rawPrice = price * 10 ^ exponent
 //
@@ -80,7 +82,7 @@ func Multiply(price uint64, exponent int32, adjustByPrice uint64, adjustByExpone
 	decimalAdjustByPrice := decimal.NewFromBigInt(new(big.Int).SetUint64(adjustByPrice), adjustByExponent)
 	adjustedPrice = decimalPrice.Mul(decimalAdjustByPrice).Mul(
 		decimal.NewFromBigInt(new(big.Int).SetUint64(1), -exponent),
-	).BigInt().Uint64()
+	).Round(0).BigInt().Uint64()
 	return adjustedPrice
 }
 
@@ -93,19 +95,37 @@ func Multiply(price uint64, exponent int32, adjustByPrice uint64, adjustByExpone
 //	adjustedPrice = rawAdjustedPrice * 10 ^ -exponent
 //
 // This price conversion method is typically used in practice to derive stablecoin prices by dividing crypto asset
-// prices in two different stablecoin quote currencies: for example, USDT-USD = BTC-USD / BTC-USDT.
+// prices in two different stablecoin quote currencies: for example, USDT-USD = BTC-USD / BTC-USDT. Thus, although the
+// prices may be expressed with different exponents, their decimal values should be very similar, almost 1:1. Dividing
+// prices that differ by more than 2 orders of magnitude could result in an unintended loss of precision, which may
+// ultimately lead to inaccurate index prices in the protocol. For this reason, we require that the prices not differ
+// by more than 2 orders of magnitude, and return an error if they do.
 func Divide(
 	adjustByPrice uint64,
 	adjustByExponent types.Exponent,
 	price uint64,
 	exponent types.Exponent,
-) (adjustedPrice uint64) {
+) (adjustedPrice uint64, err error) {
+	if price == 0 {
+		return 0, fmt.Errorf("cannot divide by 0")
+	}
 	decimalPrice := decimal.NewFromBigInt(new(big.Int).SetUint64(price), exponent)
 	decimalAdjustByPrice := decimal.NewFromBigInt(new(big.Int).SetUint64(adjustByPrice), adjustByExponent)
-	adjustedPrice = decimalAdjustByPrice.Div(decimalPrice).Mul(
+	adjustedPriceDecimal := decimalAdjustByPrice.Div(decimalPrice)
+
+	if adjustedPriceDecimal.LessThan(minDivisionPrice) || adjustedPriceDecimal.GreaterThan(maxDivisionPrice) {
+		return 0, fmt.Errorf(
+			"prices %s and %s are too many orders of magnitude apart for accurate division",
+			decimalPrice,
+			decimalAdjustByPrice,
+		)
+	}
+
+	adjustedPrice = adjustedPriceDecimal.Mul(
 		decimal.NewFromBigInt(new(big.Int).SetUint64(1), -exponent),
 	).BigInt().Uint64()
-	return adjustedPrice
+
+	return adjustedPrice, nil
 }
 
 // PriceToFloat32ForLogging converts a price, exponent to a float32 for logging purposes. This is not meant to be used

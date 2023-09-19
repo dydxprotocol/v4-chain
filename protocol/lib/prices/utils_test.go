@@ -45,11 +45,6 @@ func TestInvert(t *testing.T) {
 			exponent: -9,
 			expected: 2_000_000_000,
 		},
-		"Error: Invert 0 value": {
-			price:       0,
-			exponent:    -10,
-			expectedErr: fmt.Errorf("cannot invert price of 0"),
-		},
 		"Error: Invert value < .001": {
 			price:       1,
 			exponent:    -3,
@@ -64,11 +59,6 @@ func TestInvert(t *testing.T) {
 			price:       10000000000000000000,
 			exponent:    -21,
 			expectedErr: fmt.Errorf("inverted price overflows uint64"),
-		},
-		"Precision loss": {
-			price:    1_234_567_890_123_456,
-			exponent: 0,
-			expected: 0,
 		},
 	}
 	for name, test := range tests {
@@ -121,7 +111,7 @@ func TestMultiply(t *testing.T) {
 			adjustByPrice:    999_765_000,
 			adjustByExponent: -9,
 			// 1 ETH = $1,861.972333
-			expectedPrice: 1_861_972_333,
+			expectedPrice: 1_861_972_334,
 		},
 		"Small currency example: 1INCH-USDT = 1INCH-USD * USD-USDT (two large exponents)": {
 			// 1 1INCH = .3138 USDT
@@ -143,6 +133,20 @@ func TestMultiply(t *testing.T) {
 			// 1 XLM = $0.159562494
 			expectedPrice: 15_956_249_400,
 		},
+		"Multiply rounds to nearest (round up)": {
+			price:            1_000_000_000,
+			exponent:         -9,
+			adjustByPrice:    10_000_000_009, // this last digit will cause a round up
+			adjustByExponent: -10,
+			expectedPrice:    1_000_000_001,
+		},
+		"Multiply rounds to nearest (round down)": {
+			price:            1_000_000_000,
+			exponent:         -9,
+			adjustByPrice:    10_000_000_001, // this last digit will cause a round down
+			adjustByExponent: -10,
+			expectedPrice:    1_000_000_000,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -159,6 +163,7 @@ func TestDivide(t *testing.T) {
 		price            uint64
 		exponent         types.Exponent
 		expectedPrice    uint64
+		expectedErr      error
 	}{
 		"Real example: USDT-USD = BTC-USD / BTC-USDT": {
 			// 1 BTC-USD = $29,172.85
@@ -189,11 +194,42 @@ func TestDivide(t *testing.T) {
 			exponent:      -9,
 			expectedPrice: 995_827_729,
 		},
+		"Failure: price < .01": {
+			adjustByPrice:    2_917_285_000, // 1 BTC-USD = $29,172.85
+			adjustByExponent: -5,
+			price:            290_031_000_000, // 1 BTC-USDT = 290.03 USDT -- too small
+			exponent:         -9,
+			expectedErr: fmt.Errorf(
+				"prices 290.031 and 29172.85 are too many orders of magnitude apart for accurate division",
+			),
+		},
+		"Failure: price > 100": {
+			price:            2_917_285_000, // 1 BTC-USD = $29,172.85
+			exponent:         -5,
+			adjustByPrice:    290_031_000_000, // 1 BTC-USDT = 290.03 USDT -- too small
+			adjustByExponent: -9,
+			expectedErr: fmt.Errorf(
+				"prices 29172.85 and 290.031 are too many orders of magnitude apart for accurate division",
+			),
+		},
+		"Failure: Divide by 0": {
+			adjustByPrice:    1,
+			adjustByExponent: 0,
+			price:            0,
+			exponent:         0,
+			expectedErr:      fmt.Errorf("cannot divide by 0"),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := prices.Divide(tc.adjustByPrice, tc.adjustByExponent, tc.price, tc.exponent)
-			require.Equal(t, tc.expectedPrice, actual)
+			actual, err := prices.Divide(tc.adjustByPrice, tc.adjustByExponent, tc.price, tc.exponent)
+			if tc.expectedErr != nil {
+				require.EqualError(t, err, tc.expectedErr.Error())
+				require.Equal(t, uint64(0), actual)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedPrice, actual)
+			}
 		})
 	}
 }
