@@ -5,10 +5,12 @@ import {
 } from '@dydxprotocol-indexer/base';
 import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
 import {
+  ComplianceDataColumns,
   ComplianceDataCreateObject,
   ComplianceDataFromDatabase,
   ComplianceTable,
   IsoString,
+  SubaccountColumns,
   SubaccountFromDatabase,
   SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
@@ -59,7 +61,10 @@ export default async function runTask(
       [],
       { readReplica: true },
     );
-    const activeAddresses: string[] = _.chain(activeSubaccounts).map('address').uniq().value();
+    const activeAddresses: string[] = _.chain(activeSubaccounts)
+      .map(SubaccountColumns.address)
+      .uniq()
+      .value();
 
     // Get corresponding compliance data for all active addresses
     const activeAddressCompliance: ComplianceDataFromDatabase[] = await ComplianceTable.findAll(
@@ -69,13 +74,14 @@ export default async function runTask(
       { readReplica: true },
     );
     const addressesWithCompliance: string[] = _.chain(activeAddressCompliance)
-      .map('address')
+      .map(ComplianceDataColumns.address)
       .uniq()
       .value();
 
     // Add any address that does not have compliance data to the list of addresses to query
-    // Note: The query for compliance data can't filter out blocked or new compliance data so that
-    // this logic can compute which addresses are new
+    // Note: The query for compliance data can't filter out blocked or new compliance data. If it
+    // did, the below logic wouldn't be able to correctly get the list of active addresses that are
+    // new (have no compliane data stored).
     const addressesWithoutCompliance: string[] = _.without(
       activeAddresses,
       ...addressesWithCompliance,
@@ -140,7 +146,9 @@ export default async function runTask(
       [],
       { readReplica: true },
     );
-    addressesToQuery.push(...(_.chain(oldAddressCompliance).map('address').uniq().value()));
+    addressesToQuery.push(...(
+      _.chain(oldAddressCompliance).map(ComplianceDataColumns.address).uniq().value()
+    ));
     // Ensure all addresses to query are unique
     addressesToQuery = _.sortedUniq(addressesToQuery);
 
