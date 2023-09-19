@@ -192,6 +192,27 @@ func (_m *PerpetualsKeeper) MaybeProcessNewFundingTickEpoch(ctx types.Context) {
 	_m.Called(ctx)
 }
 
+// ModifyPerpetual provides a mock function with given fields: ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier
+func (_m *PerpetualsKeeper) ModifyPerpetual(ctx types.Context, id uint32, ticker string, marketId uint32, defaultFundingPpm int32, liquidityTier uint32) (perpetualstypes.Perpetual, error) {
+	ret := _m.Called(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+
+	var r0 perpetualstypes.Perpetual
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, uint32) perpetualstypes.Perpetual); ok {
+		r0 = rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+	} else {
+		r0 = ret.Get(0).(perpetualstypes.Perpetual)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, int32, uint32) error); ok {
+		r1 = rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // PerformStatefulPremiumVotesValidation provides a mock function with given fields: ctx, msg
 func (_m *PerpetualsKeeper) PerformStatefulPremiumVotesValidation(ctx types.Context, msg *perpetualstypes.MsgAddPremiumVotes) error {
 	ret := _m.Called(ctx, msg)
