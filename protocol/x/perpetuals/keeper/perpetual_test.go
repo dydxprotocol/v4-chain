@@ -651,7 +651,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create `LiquidityTier` struct.
-			_, err = keeper.CreateLiquidityTier(
+			_, err = keeper.SetLiquidityTier(
 				ctx,
 				0,
 				"name",
@@ -2815,7 +2815,7 @@ func TestGetAllLiquidityTiers_Sorted(t *testing.T) {
 	}
 
 	for _, lt := range lts {
-		_, err := keeper.CreateLiquidityTier(
+		_, err := keeper.SetLiquidityTier(
 			ctx,
 			lt.Id,
 			lt.Name,
@@ -2854,7 +2854,7 @@ func TestHasLiquidityTier(t *testing.T) {
 	}
 
 	for _, lt := range lts {
-		_, err := keeper.CreateLiquidityTier(
+		_, err := keeper.SetLiquidityTier(
 			ctx,
 			lt.Id,
 			lt.Name,
@@ -2875,11 +2875,11 @@ func TestHasLiquidityTier(t *testing.T) {
 	require.False(t, found, "Expected not to find liquidity tier with id 9999, but it was found")
 }
 
-func TestCreateLiquidityTier_Success(t *testing.T) {
+func TestSetLiquidityTier_New_Success(t *testing.T) {
 	ctx, keeper, _, _, _ := keepertest.PerpetualsKeepers(t)
 	for _, lt := range constants.LiquidityTiers {
 		// Create LiquidityTier without error.
-		_, err := keeper.CreateLiquidityTier(
+		_, err := keeper.SetLiquidityTier(
 			ctx,
 			lt.Id,
 			lt.Name,
@@ -2905,7 +2905,7 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 	}
 }
 
-func TestCreateLiquidityTier_Failure(t *testing.T) {
+func TestSetLiquidityTier_New_Failure(t *testing.T) {
 	tests := map[string]struct {
 		id                     uint32
 		name                   string
@@ -2959,7 +2959,7 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, err := keeper.CreateLiquidityTier(
+			_, err := keeper.SetLiquidityTier(
 				ctx,
 				tc.id,
 				tc.name,
@@ -2975,10 +2975,10 @@ func TestCreateLiquidityTier_Failure(t *testing.T) {
 	}
 }
 
-func TestModifyLiquidityTier_Success(t *testing.T) {
+func TestSetLiquidityTier_Existing_Success(t *testing.T) {
 	ctx, keeper, _, _, _ := keepertest.PerpetualsKeepers(t)
 	for _, lt := range constants.LiquidityTiers {
-		_, err := keeper.CreateLiquidityTier(
+		_, err := keeper.SetLiquidityTier(
 			ctx,
 			lt.Id,
 			lt.Name,
@@ -2998,7 +2998,7 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 		maintenanceFractionPpm := uint32(i * 2)
 		basePositionNotional := uint64((i + 1) * 1_000_000)
 		impactNotional := uint64((i + 1) * 500_000_000)
-		modifiedLt, err := keeper.ModifyLiquidityTier(
+		modifiedLt, err := keeper.SetLiquidityTier(
 			ctx,
 			lt.Id,
 			name,
@@ -3045,7 +3045,7 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 	require.Len(t, liquidityTierUpsertEvents, len(constants.LiquidityTiers)*2)
 }
 
-func TestModifyLiquidityTier_Failure(t *testing.T) {
+func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 	tests := map[string]struct {
 		id                     uint32
 		name                   string
@@ -3101,7 +3101,7 @@ func TestModifyLiquidityTier_Failure(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, err := keeper.ModifyLiquidityTier(
+			_, err := keeper.SetLiquidityTier(
 				ctx,
 				tc.id,
 				tc.name,

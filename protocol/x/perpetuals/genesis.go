@@ -27,7 +27,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Create all liquidity tiers.
 	for _, elem := range genState.LiquidityTiers {
-		_, err := k.CreateLiquidityTier(
+		_, err := k.SetLiquidityTier(
 			ctx,
 			elem.Id,
 			elem.Name,
