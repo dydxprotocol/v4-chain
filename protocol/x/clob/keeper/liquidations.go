@@ -69,7 +69,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			// Subaccount might not always be liquidatable if previous liquidation orders
 			// improves the net collateral of this subaccount.
 			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
-				telemetry.IncrCounter(1, metrics.MaybeGetLiquidationOrder, metrics.SubaccountsNotLiquidatable, metrics.Count)
 				continue
 			}
 
