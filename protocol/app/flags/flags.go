@@ -61,8 +61,9 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 
 // Validate checks that the flags are valid.
 func (f *Flags) Validate() error {
-	if !f.GrpcEnable {
-		return fmt.Errorf("grpc.enable must be set to true - application requires gRPC server")
+	// Validtors must have cosmos grpc services enabled.
+	if !f.NonValidatingFullNode && !f.GrpcEnable {
+		return fmt.Errorf("grpc.enable must be set to true - validating requires gRPC server")
 	}
 	return nil
 }

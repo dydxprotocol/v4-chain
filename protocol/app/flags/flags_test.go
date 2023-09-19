@@ -50,11 +50,17 @@ func TestValidate(t *testing.T) {
 				GrpcEnable:            true,
 			},
 		},
+		"success - full node & gRPC disabled": {
+			flags: flags.Flags{
+				GrpcEnable:            false,
+				NonValidatingFullNode: true,
+			},
+		},
 		"failure - gRPC disabled": {
 			flags: flags.Flags{
 				GrpcEnable: false,
 			},
-			expectedErr: fmt.Errorf("grpc.enable must be set to true - application requires gRPC server"),
+			expectedErr: fmt.Errorf("grpc.enable must be set to true - validating requires gRPC server"),
 		},
 	}
 	for name, tc := range tests {

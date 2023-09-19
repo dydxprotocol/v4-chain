@@ -285,7 +285,7 @@ func New(
 ) *App {
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
-	// Panic if gRPC is disabled.
+	// Panic if this is not a full node and gRPC is disabled.
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
