@@ -32,6 +32,6 @@ export interface OrderFillWithLiquidity {
   totalFilledMaker: Long;
   /** Total filled of the taker order in base quantums. */
   totalFilledTaker: Long;
-  // liquidity of the order in the match to process in the handler
+  /** Liquidity of the order in the match to process in the handler. */
   liquidity: Liquidity;
 }
