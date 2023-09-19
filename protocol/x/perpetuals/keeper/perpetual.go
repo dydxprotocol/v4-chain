@@ -473,7 +473,6 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		if !exists {
 			panic(types.ErrLiquidityTierDoesNotExist)
 		}
-		fmt.Printf("!! k.clobKeeper = %v\n", k.clobKeeper)
 		premiumPpm, err := k.clobKeeper.GetPricePremiumForPerpetual(
 			ctx,
 			perp.Params.Id,
