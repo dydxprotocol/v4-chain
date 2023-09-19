@@ -574,6 +574,7 @@ importers:
   services/roundtable:
     specifiers:
       '@dydxprotocol-indexer/base': workspace:^0.0.1
+      '@dydxprotocol-indexer/compliance': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
       '@dydxprotocol-indexer/kafka': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
@@ -602,6 +603,7 @@ importers:
       uuid: ^8.3.2
     dependencies:
       '@dydxprotocol-indexer/base': link:../../packages/base
+      '@dydxprotocol-indexer/compliance': link:../../packages/compliance
       '@dydxprotocol-indexer/kafka': link:../../packages/kafka
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/redis': link:../../packages/redis
