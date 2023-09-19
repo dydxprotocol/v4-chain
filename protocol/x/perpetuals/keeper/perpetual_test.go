@@ -2210,7 +2210,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 				mock.Anything,
 			).Return(tc.samplePremiumPpm, nil)
 
-			pc := keepertest.PerpetualsKeepers(t)
+			pc := keepertest.PerpetualsKeepersWithClobHelpers(t, &mockPricePremiumGetter)
 
 			// Create liquidity tiers and perpetuals,
 			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, tc.numPerpetuals)
