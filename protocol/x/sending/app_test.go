@@ -131,10 +131,10 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			}
 			// Check that CheckTx succeeds or errors out as expected.
 			if tc.checkTxIsError {
-				require.True(t, checkTxResp.IsErr())
+				require.Conditionf(t, checkTxResp.IsErr, "Expected CheckTx to error. Response: %+v", checkTxResp)
 				return
 			}
-			require.True(t, checkTxResp.IsOK())
+			require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 
 			// Check that no indexer events are emitted so far.
 			require.Empty(t, msgSender.GetOnchainMessages())
@@ -320,10 +320,10 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			}
 			// Check that CheckTx succeeds or errors out as expected.
 			if tc.checkTxIsError {
-				require.True(t, checkTxResp.IsErr())
+				require.Conditionf(t, checkTxResp.IsErr, "Expected CheckTx to error. Response: %+v", checkTxResp)
 				return
 			}
-			require.True(t, checkTxResp.IsOK())
+			require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 
 			// Check that no indexer events are emitted so far.
 			require.Empty(t, msgSender.GetOnchainMessages())
@@ -444,7 +444,7 @@ func testNonExistentSender(
 	)
 
 	// Check that CheckTx failed due to unknown address.
-	require.True(t, checkTxResp.IsErr())
+	require.Conditionf(t, checkTxResp.IsErr, "Expected CheckTx to error. Response: %+v", checkTxResp)
 	require.Contains(t, checkTxResp.Log, "unknown address")
 }
 

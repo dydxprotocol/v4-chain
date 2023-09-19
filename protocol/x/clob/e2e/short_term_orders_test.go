@@ -1,7 +1,6 @@
 package clob_test
 
 import (
-	"fmt"
 	"testing"
 
 	"golang.org/x/exp/slices"
@@ -577,8 +576,8 @@ func TestPlaceOrder(t *testing.T) {
 			msgSender.Clear()
 			for _, order := range tc.orders {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, order) {
-					checkTxResp := tApp.CheckTx(checkTx)
-					require.True(t, checkTxResp.IsOK(), fmt.Sprintf("CheckTx failed: %v\n", checkTxResp))
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
 			require.ElementsMatch(

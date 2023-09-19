@@ -311,7 +311,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 			wgStart.Wait()
 			for _, checkTx := range checkTxs {
 				resp := tApp.CheckTx(checkTx)
-				require.True(t, resp.IsOK())
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 		}()
 	}
@@ -539,7 +539,8 @@ func TestStats(t *testing.T) {
 	}
 	for _, order := range orderMsgs {
 		for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *order) {
-			require.True(t, tApp.CheckTx(checkTx).IsOK())
+			resp := tApp.CheckTx(checkTx)
+			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 		}
 	}
 	currTime := startTime
@@ -555,7 +556,8 @@ func TestStats(t *testing.T) {
 	}
 	for _, order := range orderMsgs {
 		for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *order) {
-			require.True(t, tApp.CheckTx(checkTx).IsOK())
+			resp := tApp.CheckTx(checkTx)
+			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 		}
 	}
 	// Don't advance the epoch, so these stats are on the same epoch as the previous block
@@ -579,7 +581,8 @@ func TestStats(t *testing.T) {
 	}
 	for _, order := range orderMsgs {
 		for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *order) {
-			require.True(t, tApp.CheckTx(checkTx).IsOK())
+			resp := tApp.CheckTx(checkTx)
+			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 		}
 	}
 	currTime = currTime.Add(time.Duration(epochtypes.StatsEpochDuration) * time.Second)

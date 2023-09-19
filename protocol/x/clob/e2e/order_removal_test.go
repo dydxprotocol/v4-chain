@@ -293,7 +293,8 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					tApp.App,
 					*clobtypes.NewMsgPlaceOrder(order),
 				) {
-					require.True(t, tApp.CheckTx(checkTx).IsOK())
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 					if order.IsStatefulOrder() {
 						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
 					}
@@ -335,7 +336,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					tc.withdrawal,
 				)
 				checkTxResp := tApp.CheckTx(CheckTx_MsgWithdrawFromSubaccount)
-				require.True(t, checkTxResp.IsOK())
+				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 			}
 			// Advance to the next block, persisting removals in operations queue to state.
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
@@ -694,7 +695,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					*clobtypes.NewMsgPlaceOrder(order),
 				) {
 					resp := tApp.CheckTx(checkTx)
-					require.True(t, resp.IsOK())
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 					deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
 				}
 			}
@@ -900,14 +901,16 @@ func TestOrderRemoval(t *testing.T) {
 				tApp.App,
 				*clobtypes.NewMsgPlaceOrder(tc.firstOrder),
 			) {
-				require.True(t, tApp.CheckTx(checkTx).IsOK())
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 				ctx,
 				tApp.App,
 				*clobtypes.NewMsgPlaceOrder(tc.secondOrder),
 			) {
-				require.True(t, tApp.CheckTx(checkTx).IsOK())
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			// Do the optional withdraw.
@@ -922,7 +925,7 @@ func TestOrderRemoval(t *testing.T) {
 					tc.withdrawal,
 				)
 				checkTxResp := tApp.CheckTx(CheckTx_MsgWithdrawFromSubaccount)
-				require.True(t, checkTxResp.IsOK())
+				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 			}
 
 			// First block only persists stateful orders to state without matching them.
@@ -993,7 +996,8 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	// Partially match alice's order so that it's in the operations queue.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -1003,7 +1007,8 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 			constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell5_Price10_GTBT10,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	// Now remove alice's order somehow. Self-trade in this case.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -1013,7 +1018,8 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 			constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	// Place another order to invalidate Alice's post only order.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -1023,7 +1029,8 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 			constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell5_Price5_GTBT10,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 
 	_ = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
