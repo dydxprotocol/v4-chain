@@ -1,4 +1,4 @@
-import * as Knex from "knex";
+import * as Knex from 'knex';
 
 // Use raw SQL to ensure index creation / deletion does not lock the table
 export async function up(knex: Knex): Promise<void> {
@@ -6,7 +6,6 @@ export async function up(knex: Knex): Promise<void> {
     CREATE INDEX CONCURRENTLY IF NOT EXISTS "subaccounts_updatedat_index" on "subaccounts" ("updatedAt");
   `);
 }
-
 
 export async function down(knex: Knex): Promise<void> {
   await knex.raw(`
