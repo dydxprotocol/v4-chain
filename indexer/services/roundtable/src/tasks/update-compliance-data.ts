@@ -231,7 +231,7 @@ async function getComplianceData(
     const startBatch: number = Date.now();
     complianceResponses.push(...await Promise.all(
       // TODO(IND-369): Add error-handling once Elliptic client is fully implemented
-      complianceBatch.map(async (address: string): Promise<ComplianceClientResponse> => {
+      complianceBatch.map((address: string): Promise<ComplianceClientResponse> => {
         return complianceProvider.client.getComplianceResponse(address);
       }),
     ));
