@@ -106,6 +106,28 @@ describe('Subaccount store', () => {
     expect(subaccounts[0]).toEqual(expect.objectContaining(defaultSubaccount));
   });
 
+  it('Successfully finds Subaccount with updatedOnOrAfter', async () => {
+    await Promise.all([
+      SubaccountTable.create(defaultSubaccount),
+      SubaccountTable.create({
+        ...defaultSubaccount,
+        address: 'fake_address',
+        updatedAt: DateTime.fromISO(defaultSubaccount.updatedAt).minus(10).toISO(),
+      }),
+    ]);
+
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
+      {
+        updatedOnOrAfter: defaultSubaccount.updatedAt,
+      },
+      [],
+      { readReplica: true },
+    );
+
+    expect(subaccounts.length).toEqual(1);
+    expect(subaccounts[0]).toEqual(expect.objectContaining(defaultSubaccount));
+  });
+
   it('Successfully finds a Subaccount', async () => {
     await SubaccountTable.create(defaultSubaccount);
 
