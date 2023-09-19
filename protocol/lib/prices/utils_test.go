@@ -1,6 +1,7 @@
 package prices_test
 
 import (
+	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/prices"
 	"github.com/stretchr/testify/require"
@@ -9,35 +10,77 @@ import (
 
 func TestInvert(t *testing.T) {
 	tests := map[string]struct {
-		price    uint64
-		exponent int32
-		expected uint64
+		price       uint64
+		exponent    int32
+		expected    uint64
+		expectedErr error
 	}{
 		"Invert 1 = 1 (expected for USD-USDT)": {
 			price:    10_000_000_000,
 			exponent: -10,
 			expected: 10_000_000_000,
 		},
+		"Invert 1 = 1 (small exponent)": {
+			price:    1,
+			exponent: 0,
+			expected: 1,
+		},
+		"Invert 1 = 1 (large exponent)": {
+			price:    10_000_000_000_000_000_000,
+			exponent: -19,
+			expected: 10_000_000_000_000_000_000,
+		},
 		"Invert 1.5 = 0.666666666": {
 			price:    1_500_000_000,
 			exponent: -9,
 			expected: 666_666_666,
 		},
-		"Invert .0015 = 666.666666": {
-			price:    1_500_000_000,
+		"Invert .015 = 66.666666": {
+			price:    15_000_000_000,
 			exponent: -12,
-			expected: 666_666_666_666_666,
+			expected: 66666666666666,
 		},
 		"Invert .5 = 2": {
 			price:    500_000_000,
 			exponent: -9,
 			expected: 2_000_000_000,
 		},
+		"Error: Invert 0 value": {
+			price:       0,
+			exponent:    -10,
+			expectedErr: fmt.Errorf("cannot invert price of 0"),
+		},
+		"Error: Invert value < .001": {
+			price:       1,
+			exponent:    -3,
+			expectedErr: fmt.Errorf("price 0.001 is outside of invertible range"),
+		},
+		"Error: Invert value > 100": {
+			price:       1000,
+			exponent:    0,
+			expectedErr: fmt.Errorf("price 1000 is outside of invertible range"),
+		},
+		"Error: Invert overflows uint64 (due to >> exponent)": {
+			price:       10000000000000000000,
+			exponent:    -21,
+			expectedErr: fmt.Errorf("inverted price overflows uint64"),
+		},
+		"Precision loss": {
+			price:    1_234_567_890_123_456,
+			exponent: 0,
+			expected: 0,
+		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := prices.Invert(test.price, test.exponent)
-			require.Equal(t, test.expected, actual)
+			actual, err := prices.Invert(test.price, test.exponent)
+			if test.expectedErr != nil {
+				require.Equal(t, uint64(0), actual)
+				require.EqualError(t, err, test.expectedErr.Error())
+			} else {
+				require.Equal(t, test.expected, actual)
+				require.NoError(t, err)
+			}
 		})
 	}
 }
