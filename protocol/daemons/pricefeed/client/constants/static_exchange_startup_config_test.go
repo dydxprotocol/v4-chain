@@ -164,5 +164,5 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 }
 
 func TestStaticExchangeStartupConfigCacheLength(t *testing.T) {
-	require.Len(t, constants.StaticExchangeStartupConfig, 14)
+	require.Len(t, constants.StaticExchangeStartupConfig, 13)
 }
