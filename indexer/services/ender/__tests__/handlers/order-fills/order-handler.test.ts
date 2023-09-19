@@ -65,7 +65,9 @@ import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
 import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
-import { defaultOrderEvent, defaultPreviousHeight, defaultTakerOrder } from '../../helpers/constants';
+import {
+  defaultOrder, defaultOrderEvent, defaultPreviousHeight, defaultTakerOrder,
+} from '../../helpers/constants';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import { OrderHandler } from '../../../src/handlers/order-fills/order-handler';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
@@ -186,7 +188,7 @@ describe('OrderHandler', () => {
         indexerTendermintEvent,
         0,
         {
-          event: defaultOrderEvent,
+          ...defaultOrder,
           liquidity,
         },
       );

@@ -20,6 +20,8 @@ import {
 } from '../helpers/constants';
 import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
+import { OrderFillWithLiquidity } from '../../src/lib/translated-types';
+import { Liquidity } from '@dydxprotocol-indexer/postgres';
 
 describe('order-fill-validator', () => {
   beforeEach(() => {
@@ -32,9 +34,15 @@ describe('order-fill-validator', () => {
 
   describe('validate', () => {
     it.each([
-      ['order event', defaultOrderEvent],
-      ['liquidation event', defaultLiquidationEvent],
-    ])('does not throw error on valid %s', (_message: string, event: OrderFillEventV1) => {
+      ['order event', {
+        ...defaultOrderEvent,
+        liquidity: Liquidity.MAKER,
+      }],
+      ['liquidation event', {
+        ...defaultLiquidationEvent,
+        liquidity: Liquidity.TAKER,
+      }],
+    ])('does not throw error on valid %s', (_message: string, event: OrderFillWithLiquidity) => {
       const validator: OrderFillValidator = new OrderFillValidator(
         event,
         createBlock(event),
@@ -51,6 +59,7 @@ describe('order-fill-validator', () => {
         {
           ...defaultOrderEvent,
           makerOrder: undefined,
+          liquidity: Liquidity.TAKER,
         },
         'OrderFillEvent must contain a maker order',
       ],
@@ -61,6 +70,7 @@ describe('order-fill-validator', () => {
         {
           ...defaultOrderEvent,
           makerOrder: { ...defaultMakerOrder, orderId: undefined },
+          liquidity: Liquidity.MAKER,
         },
         'OrderFillEvent must contain a makerOrder: Order must contain an orderId',
       ],
@@ -75,6 +85,7 @@ describe('order-fill-validator', () => {
               subaccountId: undefined,
             },
           },
+          liquidity: Liquidity.MAKER,
         },
         'OrderFillEvent must contain a makerOrder: OrderId must contain a subaccountId',
       ],
@@ -83,6 +94,7 @@ describe('order-fill-validator', () => {
         {
           ...defaultOrderEvent,
           makerOrder: { ...defaultMakerOrder, side: IndexerOrder_Side.SIDE_UNSPECIFIED },
+          liquidity: Liquidity.MAKER,
         },
         'OrderFillEvent must contain a makerOrder:  Order must specify an order side',
       ],
@@ -95,6 +107,7 @@ describe('order-fill-validator', () => {
             goodTilBlock: undefined,
             goodTilBlockTime: undefined,
           },
+          liquidity: Liquidity.MAKER,
         },
         'OrderFillEvent must contain a makerOrder: Order must contain a defined goodTilOneof',
       ],
@@ -105,7 +118,8 @@ describe('order-fill-validator', () => {
         {
           ...defaultOrderEvent,
           order: { ...defaultTakerOrder, orderId: undefined },
-        } as OrderFillEventV1,
+          liquidity: Liquidity.TAKER,
+        },
         'OrderFillEvent must contain a takerOrder: Order must contain an orderId',
       ],
       [
@@ -119,7 +133,8 @@ describe('order-fill-validator', () => {
               subaccountId: undefined,
             },
           },
-        } as OrderFillEventV1,
+          liquidity: Liquidity.TAKER,
+        },
         'OrderFillEvent must contain a takerOrder: OrderId must contain a subaccountId',
       ],
       [
@@ -127,7 +142,8 @@ describe('order-fill-validator', () => {
         {
           ...defaultOrderEvent,
           order: { ...defaultTakerOrder, side: IndexerOrder_Side.SIDE_UNSPECIFIED },
-        } as OrderFillEventV1,
+          liquidity: Liquidity.TAKER,
+        },
         'OrderFillEvent must contain a takerOrder:  Order must specify an order side',
       ],
       [
@@ -135,7 +151,8 @@ describe('order-fill-validator', () => {
         {
           ...defaultOrderEvent,
           order: { ...defaultTakerOrder, goodTilBlock: undefined, goodTilBlockTime: undefined },
-        } as OrderFillEventV1,
+          liquidity: Liquidity.TAKER,
+        },
         'OrderFillEvent must contain a takerOrder: Order must contain a defined goodTilOneof',
       ],
 
@@ -148,10 +165,11 @@ describe('order-fill-validator', () => {
             ...defaultLiquidationOrder,
             liquidated: undefined,
           },
-        } as OrderFillEventV1,
+          liquidity: Liquidity.TAKER,
+        },
         'LiquidationOrder must contain a liquidated subaccountId',
       ],
-    ])('throws error if event %s', (_message: string, event: OrderFillEventV1, message: string) => {
+    ])('throws error if event %s', (_message: string, event: OrderFillWithLiquidity, message: string) => {
       const validator: OrderFillValidator = new OrderFillValidator(
         event,
         createBlock(event),
