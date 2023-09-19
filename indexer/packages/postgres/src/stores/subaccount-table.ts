@@ -36,10 +36,7 @@ export async function findAll(
     address,
     subaccountNumber,
     updatedBeforeOrAt,
-<<<<<<< HEAD
     updatedOnOrAfter,
-=======
->>>>>>> main
     limit,
   }: SubaccountQueryConfig,
   requiredFields: QueryableField[],
