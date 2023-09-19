@@ -170,6 +170,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		basePositionNotional := genBasePositionNotional(r, isReasonableGenesis)
 		impactNotional := calculateImpactNotional(initialMarginPpm)
 		liquidityTiers[i] = types.LiquidityTier{
+			Id:                     uint32(i),
 			Name:                   fmt.Sprintf("%d", i),
 			InitialMarginPpm:       initialMarginPpm,
 			MaintenanceFractionPpm: maintenanceFractionPpm,
