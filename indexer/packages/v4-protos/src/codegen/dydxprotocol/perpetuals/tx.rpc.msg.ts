@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgAddPremiumVotes, MsgAddPremiumVotesResponse, MsgCreatePerpetual, MsgCreatePerpetualResponse, MsgSetLiquidityTier, MsgSetLiquidityTierResponse, MsgUpdatePerpetualParams, MsgUpdatePerpetualParamsResponse } from "./tx";
+import { MsgAddPremiumVotes, MsgAddPremiumVotesResponse, MsgCreatePerpetual, MsgCreatePerpetualResponse, MsgSetLiquidityTier, MsgSetLiquidityTierResponse, MsgUpdatePerpetualParams, MsgUpdatePerpetualParamsResponse, MsgUpdateParams, MsgUpdateParamsResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -21,6 +21,9 @@ export interface Msg {
   /** UpdatePerpetualParams updates the parameters of a perpetual market. */
 
   updatePerpetualParams(request: MsgUpdatePerpetualParams): Promise<MsgUpdatePerpetualParamsResponse>;
+  /** UpdateParams updates the parameters of perpetuals module. */
+
+  updateParams(request: MsgUpdateParams): Promise<MsgUpdateParamsResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -31,6 +34,7 @@ export class MsgClientImpl implements Msg {
     this.createPerpetual = this.createPerpetual.bind(this);
     this.setLiquidityTier = this.setLiquidityTier.bind(this);
     this.updatePerpetualParams = this.updatePerpetualParams.bind(this);
+    this.updateParams = this.updateParams.bind(this);
   }
 
   addPremiumVotes(request: MsgAddPremiumVotes): Promise<MsgAddPremiumVotesResponse> {
@@ -55,6 +59,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgUpdatePerpetualParams.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.perpetuals.Msg", "UpdatePerpetualParams", data);
     return promise.then(data => MsgUpdatePerpetualParamsResponse.decode(new _m0.Reader(data)));
+  }
+
+  updateParams(request: MsgUpdateParams): Promise<MsgUpdateParamsResponse> {
+    const data = MsgUpdateParams.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.perpetuals.Msg", "UpdateParams", data);
+    return promise.then(data => MsgUpdateParamsResponse.decode(new _m0.Reader(data)));
   }
 
 }

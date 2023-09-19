@@ -7,6 +7,8 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
@@ -1427,6 +1429,12 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		PremiumVoteClampFactorPpm: k.GetPremiumVoteClampFactorPpm(ctx),
 		MinNumVotesPerSample:      k.GetMinNumVotesPerSample(ctx),
 	}
+}
+
+// `SetParams` sets all perpetuals module parameters in store.
+func (k Keeper) SetParams(ctx sdk.Context) error {
+	// TODO(CORE-560): implement this method
+	return status.Errorf(codes.Unimplemented, "SetParams not implemented")
 }
 
 // `GetFundingRateClampFactorPpm` returns funding rate clamp factor (in parts-per-million).

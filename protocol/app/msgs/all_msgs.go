@@ -179,6 +179,8 @@ var (
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":       {},
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":              {},
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse":      {},
+		"/dydxprotocol.perpetuals.MsgUpdateParams":                  {},
+		"/dydxprotocol.perpetuals.MsgUpdateParamsResponse":          {},
 		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams":         {},
 		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse": {},
 

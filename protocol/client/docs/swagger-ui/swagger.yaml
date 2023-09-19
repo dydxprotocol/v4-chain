@@ -29889,6 +29889,29 @@ paths:
                         bonded shares
 
                         multiplied by exchange rate.
+              historical_record:
+                type: object
+                properties:
+                  apphash:
+                    type: string
+                    format: byte
+                  time:
+                    type: string
+                    format: date-time
+                  validators_hash:
+                    type: string
+                    format: byte
+                description: >-
+                  Historical contains a set of minimum values needed for
+                  evaluating historical validator sets and blocks.
+
+                  It is stored as part of staking module's state, which persists
+                  the `n` most
+
+                  recent HistoricalInfo
+
+                  (`n` is set by the staking module's `historical_entries`
+                  parameter).
             description: >-
               QueryHistoricalInfoResponse is response type for the
               Query/HistoricalInfo RPC
@@ -56653,6 +56676,28 @@ definitions:
       recent HistoricalInfo
 
       (`n` is set by the staking module's `historical_entries` parameter).
+  cosmos.staking.v1beta1.HistoricalRecord:
+    type: object
+    properties:
+      apphash:
+        type: string
+        format: byte
+      time:
+        type: string
+        format: date-time
+      validators_hash:
+        type: string
+        format: byte
+    description: >-
+      Historical contains a set of minimum values needed for evaluating
+      historical validator sets and blocks.
+
+      It is stored as part of staking module's state, which persists the `n`
+      most
+
+      recent HistoricalInfo
+
+      (`n` is set by the staking module's `historical_entries` parameter).
   cosmos.staking.v1beta1.Params:
     type: object
     properties:
@@ -57944,6 +57989,28 @@ definitions:
                 shares
 
                 multiplied by exchange rate.
+      historical_record:
+        type: object
+        properties:
+          apphash:
+            type: string
+            format: byte
+          time:
+            type: string
+            format: date-time
+          validators_hash:
+            type: string
+            format: byte
+        description: >-
+          Historical contains a set of minimum values needed for evaluating
+          historical validator sets and blocks.
+
+          It is stored as part of staking module's state, which persists the `n`
+          most
+
+          recent HistoricalInfo
+
+          (`n` is set by the staking module's `historical_entries` parameter).
     description: >-
       QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo
       RPC
