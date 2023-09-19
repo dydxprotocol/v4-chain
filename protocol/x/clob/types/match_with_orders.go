@@ -76,5 +76,10 @@ func (match MatchWithOrders) Validate() error {
 	if makerOrder.MustGetOrder().TimeInForce == Order_TIME_IN_FORCE_IOC {
 		return errors.New("IOC order cannot be matched as a maker order")
 	}
+
+	// Make sure the maker order is not a FOK order.
+	if makerOrder.MustGetOrder().TimeInForce == Order_TIME_IN_FORCE_FILL_OR_KILL {
+		return errors.New("FOK order cannot be matched as a maker order")
+	}
 	return nil
 }
