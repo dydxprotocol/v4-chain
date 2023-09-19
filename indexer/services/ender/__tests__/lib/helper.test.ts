@@ -48,6 +48,7 @@ describe('helper', () => {
       subtype: 'order_fill',
       data: 'data',
       eventIndex: 0,
+      version: 1,
     };
     if (throwError) {
       expect(() => indexerTendermintEventToTransactionIndex(event))

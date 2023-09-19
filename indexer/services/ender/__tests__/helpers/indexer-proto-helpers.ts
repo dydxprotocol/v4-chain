@@ -74,6 +74,7 @@ const defaultPerpetualMarketTicker: string = testConstants.defaultPerpetualMarke
  * @param data
  * @param transactionIndex
  * @param eventIndex
+ * @param version
  * @returns
  */
 export function createIndexerTendermintEvent(
@@ -81,6 +82,7 @@ export function createIndexerTendermintEvent(
   data: string,
   transactionIndex: number,
   eventIndex: number,
+  version: number = 1,
 ): IndexerTendermintEvent {
   if (transactionIndex < 0) {
     // blockEvent
@@ -89,6 +91,7 @@ export function createIndexerTendermintEvent(
       data,
       blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_END_BLOCK,
       eventIndex,
+      version,
     };
   }
   // transactionIndex
@@ -97,6 +100,7 @@ export function createIndexerTendermintEvent(
     data,
     transactionIndex,
     eventIndex,
+    version,
   };
 }
 

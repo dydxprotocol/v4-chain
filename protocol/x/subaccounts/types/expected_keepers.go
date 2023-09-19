@@ -28,6 +28,13 @@ type ProductKeeper interface {
 		bigMaintenanceMarginQuoteQuantums *big.Int,
 		err error,
 	)
+	IsPositionUpdatable(
+		ctx sdk.Context,
+		id uint32,
+	) (
+		updatable bool,
+		err error,
+	)
 }
 
 type AssetsKeeper interface {

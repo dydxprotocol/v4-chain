@@ -1,11 +1,13 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // FetchOrderFromOrderId is a helper function that fetches a order from an order id.
@@ -119,4 +121,54 @@ func (k Keeper) StatefulValidateMakerFill(
 		)
 	}
 	return makerOrder, nil
+}
+
+// ValidateLiquidationOrderAgainstProposedLiquidation performs stateless validation of a liquidation order
+// against a proposed liquidation.
+// An error is returned when
+//   - The CLOB pair IDs of the order and proposed liquidation do not match.
+//   - The perpetual IDs of the order and proposed liquidation do not match.
+//   - The total size of the order and proposed liquidation do not match.
+//   - The side of the order and proposed liquidation do not match.
+func (k Keeper) ValidateLiquidationOrderAgainstProposedLiquidation(
+	ctx sdk.Context,
+	order *types.LiquidationOrder,
+	proposedMatch *types.MatchPerpetualLiquidation,
+) error {
+	if order.GetClobPairId() != types.ClobPairId(proposedMatch.GetClobPairId()) {
+		return errorsmod.Wrapf(
+			types.ErrClobPairAndPerpetualDoNotMatch,
+			"Order CLOB Pair ID: %v, Match CLOB Pair ID: %v",
+			order.GetClobPairId(),
+			proposedMatch.GetClobPairId(),
+		)
+	}
+
+	if order.MustGetLiquidatedPerpetualId() != proposedMatch.GetPerpetualId() {
+		return errorsmod.Wrapf(
+			types.ErrClobPairAndPerpetualDoNotMatch,
+			"Order Perpetual ID: %v, Match Perpetual ID: %v",
+			order.MustGetLiquidatedPerpetualId(),
+			proposedMatch.GetPerpetualId(),
+		)
+	}
+
+	if order.GetBaseQuantums() != satypes.BaseQuantums(proposedMatch.TotalSize) {
+		return errorsmod.Wrapf(
+			types.ErrInvalidLiquidationOrderTotalSize,
+			"Order Size: %v, Match Size: %v",
+			order.GetBaseQuantums(),
+			proposedMatch.TotalSize,
+		)
+	}
+
+	if order.IsBuy() != proposedMatch.GetIsBuy() {
+		return errorsmod.Wrapf(
+			types.ErrInvalidLiquidationOrderSide,
+			"Order Side: %v, Match Side: %v",
+			order.IsBuy(),
+			proposedMatch.GetIsBuy(),
+		)
+	}
+	return nil
 }

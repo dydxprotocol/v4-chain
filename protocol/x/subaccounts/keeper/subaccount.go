@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -302,6 +303,7 @@ func (k Keeper) UpdateSubaccounts(
 					fundingPayments,
 				),
 			),
+			indexerevents.SubaccountUpdateEventVersion,
 		)
 
 		// Emit an event indicating a funding payment was paid / received for each settled funding
@@ -418,6 +420,32 @@ func (k Keeper) getSettledSubaccount(
 	return newSubaccount, fundingPayments, nil
 }
 
+func checkPositionUpdatable(
+	ctx sdk.Context,
+	pk types.ProductKeeper,
+	p types.PositionSize,
+) (
+	err error,
+) {
+	updatable, err := pk.IsPositionUpdatable(
+		ctx,
+		p.GetId(),
+	)
+	if err != nil {
+		return err
+	}
+
+	if !updatable {
+		return errorsmod.Wrapf(
+			types.ErrProductPositionNotUpdatable,
+			"type: %v, id: %d",
+			p.GetProductType(),
+			p.GetId(),
+		)
+	}
+	return nil
+}
+
 // internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts.
 // The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
 // Each update is considered in isolation. Thus if two updates are provided
@@ -442,6 +470,22 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
+		// Check all updated perps are updatable.
+		for _, perpUpdate := range u.PerpetualUpdates {
+			err := checkPositionUpdatable(ctx, k.perpetualsKeeper, perpUpdate)
+			if err != nil {
+				return false, nil, err
+			}
+		}
+
+		// Check all updated assets are updatable.
+		for _, assetUpdate := range u.AssetUpdates {
+			err := checkPositionUpdatable(ctx, k.assetsKeeper, assetUpdate)
+			if err != nil {
+				return false, nil, err
+			}
+		}
+
 		// Get the new collateralization and margin requirements with the update applied.
 		bigNewNetCollateral,
 			bigNewInitialMargin,

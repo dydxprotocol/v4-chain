@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"testing"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -931,7 +932,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			preExistingStatefulOrders: []types.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO,
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewOrderRemovalOperationRaw(
@@ -939,7 +940,7 @@ func TestProcessProposerOperations(t *testing.T) {
 					types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
 				),
 				clobtest.NewOrderRemovalOperationRaw(
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO.OrderId,
 					types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
 				),
 			},
@@ -947,7 +948,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				BlockHeight: blockHeight,
 				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO.OrderId,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 				},
 			},
@@ -1616,6 +1617,7 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
 		).Return().Maybe()
 	}
 
@@ -1673,6 +1675,7 @@ func setupProcessProposerOperationsTestCase(
 						tc.perpetuals[perpetualId].Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
 			).Once().Return()
 		}
 
@@ -1839,6 +1842,7 @@ func setupNewMockEventManager(
 						match.TotalFilledTaker,
 					),
 				),
+				indexerevents.OrderFillEventVersion,
 			).Return()
 
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
@@ -1857,6 +1861,7 @@ func setupNewMockEventManager(
 						match.TotalFilledTaker,
 					),
 				),
+				indexerevents.OrderFillEventVersion,
 			).Return()
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
 			matchOrderCallMap[match.TakerOrder.MustGetOrder().OrderId] = call
@@ -1876,6 +1881,7 @@ func setupNewMockEventManager(
 						),
 					),
 				),
+				indexerevents.StatefulOrderEventVersion,
 			).Once().Return()
 		}
 	}

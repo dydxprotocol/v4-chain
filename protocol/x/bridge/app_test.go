@@ -146,8 +146,8 @@ func TestBridge_Success(t *testing.T) {
 			res, error := tApp.App.Server.AddBridgeEvents(ctx, &api.AddBridgeEventsRequest{
 				BridgeEvents: tc.bridgeEvents,
 			})
-			require.Equal(t, &api.AddBridgeEventsResponse{}, res)
 			require.NoError(t, error)
+			require.Equal(t, &api.AddBridgeEventsResponse{}, res)
 
 			// Verify that balances have not changed at the block right before the one where complete
 			// bridge messages should be executed, which is `DelayBlocks+2` because

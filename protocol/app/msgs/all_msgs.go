@@ -173,18 +173,22 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":          {},
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":  {},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          {},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  {},
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         {},
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": {},
+		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
+		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":       {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":       {},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":              {},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse":      {},
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams":         {},
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse": {},
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         {},
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": {},
 		"/dydxprotocol.prices.MsgUpdateMarketPrices":         {},
 		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse": {},
+		"/dydxprotocol.prices.MsgUpdateMarketParam":          {},
+		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  {},
 
 		// sending
 		"/dydxprotocol.sending.MsgCreateTransfer":                  {},

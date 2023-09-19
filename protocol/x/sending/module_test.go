@@ -36,15 +36,15 @@ func createAppModuleWithKeeper(t *testing.T) (sending.AppModule, *sending_keeper
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, _, _, _, _, subaccountsKeeper, _ := keeper.SendingKeepers(t)
+	ks := keeper.SendingKeepers(t)
 
 	return sending.NewAppModule(
 		appCodec,
-		*keeper,
+		*ks.SendingKeeper,
 		nil,
 		nil,
-		subaccountsKeeper,
-	), keeper, ctx
+		ks.SubaccountsKeeper,
+	), ks.SendingKeeper, ks.Ctx
 }
 
 func createAppModuleBasic(t *testing.T) sending.AppModuleBasic {
@@ -72,14 +72,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgCreateTransfer")
-	require.Contains(t, buf.String(), "sending/CreateTransfer")
-	require.Contains(t, buf.String(), "MsgDepositToSubaccount")
-	require.Contains(t, buf.String(), "sending/DepositToSubaccount")
-	require.Contains(t, buf.String(), "MsgWithdrawFromSubaccount")
-	require.Contains(t, buf.String(), "sending/WithdrawFromSubaccount")
-	require.Contains(t, buf.String(), "MsgSendFromModuleToAccount")
-	require.Contains(t, buf.String(), "sending/SendFromModuleToAccount")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -91,14 +83,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgCreateTransfer")
-	require.Contains(t, buf.String(), "sending/CreateTransfer")
-	require.Contains(t, buf.String(), "MsgDepositToSubaccount")
-	require.Contains(t, buf.String(), "sending/DepositToSubaccount")
-	require.Contains(t, buf.String(), "MsgWithdrawFromSubaccount")
-	require.Contains(t, buf.String(), "sending/WithdrawFromSubaccount")
-	require.Contains(t, buf.String(), "MsgSendFromModuleToAccount")
-	require.Contains(t, buf.String(), "sending/SendFromModuleToAccount")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -108,7 +92,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 12)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 8)
 	mockRegistry.AssertExpectations(t)
 }
 

@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -88,8 +89,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgUpdateMarketPrices")
-	require.Contains(t, buf.String(), "prices/UpdateMarketPrices")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -101,8 +100,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgUpdateMarketPrices")
-	require.Contains(t, buf.String(), "prices/UpdateMarketPrices")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -112,7 +109,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 5)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 6)
 	mockRegistry.AssertExpectations(t)
 }
 

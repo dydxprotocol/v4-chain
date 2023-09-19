@@ -102,6 +102,7 @@ func (k Keeper) UpdateMarketPrices(
 			indexer_manager.GetB64EncodedEventMessage(
 				update,
 			),
+			indexerevents.MarketEventVersion,
 		)
 	}
 

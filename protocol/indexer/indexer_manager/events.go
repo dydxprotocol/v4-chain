@@ -73,12 +73,14 @@ func addTxnEvent(
 	ctx sdk.Context,
 	subType string,
 	data string,
+	version uint32,
 	storeKey storetypes.StoreKey,
 ) {
 	event := IndexerTendermintEventWrapper{
 		Event: &IndexerTendermintEvent{
 			Subtype:             subType,
 			Data:                data,
+			Version:             version,
 			OrderingWithinBlock: &IndexerTendermintEvent_TransactionIndex{},
 		},
 		TxnHash: string(lib.GetTxHash(ctx.TxBytes())),
@@ -93,11 +95,13 @@ func addBlockEvent(
 	data string,
 	storeKey storetypes.StoreKey,
 	blockEvent IndexerTendermintEvent_BlockEvent,
+	version uint32,
 ) {
 	event := IndexerTendermintEventWrapper{
 		Event: &IndexerTendermintEvent{
 			Subtype: subType,
 			Data:    data,
+			Version: version,
 			OrderingWithinBlock: &IndexerTendermintEvent_BlockEvent_{
 				BlockEvent: blockEvent,
 			},

@@ -32,6 +32,7 @@ import Long from 'long';
 import { DateTime } from 'luxon';
 
 import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS } from '../../src/constants';
+import { SubaccountUpdate } from '../../src/lib/translated-types';
 import { ConsolidatedKafkaEvent, FundingEventMessage, SingleTradeMessage } from '../../src/lib/types';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 
@@ -219,6 +220,12 @@ export const defaultLiquidationEvent: OrderFillEventV1 = {
   fillAmount: Long.fromValue(10_000, true),
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
+};
+
+export const defaultEmptySubaccountUpdate: SubaccountUpdate = {
+  subaccountId: defaultSubaccountId,
+  updatedPerpetualPositions: [],
+  updatedAssetPositions: [],
 };
 
 export const defaultEmptySubaccountUpdateEvent: SubaccountUpdateEventV1 = {

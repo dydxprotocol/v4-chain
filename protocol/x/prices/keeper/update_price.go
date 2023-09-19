@@ -63,7 +63,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 		// Skip proposal logic in the event of invalid inputs, which is only likely to occur around network genesis.
 		if !indexPriceExists {
 			metrics.IncrCountMetricWithLabels(types.ModuleName, metrics.IndexPriceDoesNotExist, marketMetricsLabel)
-			// Conditionally escalate log level to error 10s after genesis/restart. We expect that it may take a few
+			// Conditionally escalate log level to error 20s after genesis/restart. We expect that it may take a few
 			// seconds for the index price to populate after network genesis or a network restart.
 			logMethod := k.Logger(ctx).Error
 			if k.IsRecentlyAdded(marketId) {
@@ -85,7 +85,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 		// We generally expect to have a smoothed price history for each market, except during the first few blocks
 		// after network genesis or a network restart. In this scenario, we use the index price as the smoothed price.
 		if len(historicalSmoothedPrices) == 0 {
-			// Conditionally escalate log level to error 10s after genesis/restart. We expect that there will be a delay
+			// Conditionally escalate log level to error 20s after genesis/restart. We expect that there will be a delay
 			// in populating historical smoothed prices after network genesis or a network restart, because they
 			// depend on present index prices.
 			logMethod := k.Logger(ctx).Error

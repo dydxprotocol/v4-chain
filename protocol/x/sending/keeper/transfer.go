@@ -6,8 +6,6 @@ import (
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -58,6 +56,7 @@ func (k Keeper) ProcessTransfer(
 		indexer_manager.GetB64EncodedEventMessage(
 			k.GenerateTransferEvent(pendingTransfer),
 		),
+		indexerevents.TransferEventVersion,
 	)
 
 	return nil
@@ -126,6 +125,7 @@ func (k Keeper) ProcessDepositToSubaccount(
 			indexer_manager.GetB64EncodedEventMessage(
 				k.GenerateDepositEvent(msgDepositToSubaccount),
 			),
+			indexerevents.TransferEventVersion,
 		)
 	}
 
@@ -192,6 +192,7 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 			indexer_manager.GetB64EncodedEventMessage(
 				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
 			),
+			indexerevents.TransferEventVersion,
 		)
 	}
 
@@ -215,6 +216,14 @@ func (k Keeper) SendFromModuleToAccount(
 	ctx sdk.Context,
 	msg *types.MsgSendFromModuleToAccount,
 ) (err error) {
-	// TODO(CORE-559): Implement this method.
-	return status.Errorf(codes.Unimplemented, "SendFromModuleToAccount not implemented")
+	if err = msg.ValidateBasic(); err != nil {
+		return err
+	}
+
+	return k.bankKeeper.SendCoinsFromModuleToAccount(
+		ctx,
+		msg.GetSenderModuleName(),
+		sdk.MustAccAddressFromBech32(msg.GetRecipient()),
+		sdk.NewCoins(msg.Coin),
+	)
 }

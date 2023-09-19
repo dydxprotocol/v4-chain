@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 
 	"math/big"
 	"testing"
@@ -75,6 +76,10 @@ func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
 			// Enable the liquidations daemon in the integration tests.
 			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
 			appOptions.Set(daemonflags.FlagUnixSocketAddress, liqTestUnixSocketAddress)
+			// Make sure all daemon-related services are properly stopped.
+			t.Cleanup(func() {
+				stoppable.StopServices(t, testval.AppConfig.GRPC.Address)
+			})
 		},
 	})
 

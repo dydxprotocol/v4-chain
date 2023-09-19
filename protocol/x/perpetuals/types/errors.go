@@ -97,6 +97,11 @@ var (
 		19,
 		"Authority is invalid",
 	)
+	ErrLiquidityTierAlreadyExists = errorsmod.Register(
+		ModuleName,
+		20,
+		"Liquidity tier already exists",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding      = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

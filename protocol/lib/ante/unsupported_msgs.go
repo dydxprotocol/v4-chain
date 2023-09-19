@@ -9,6 +9,7 @@ import (
 func IsUnsupportedMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
+		// ------- CosmosSDK default modules
 		// gov
 		*govbeta.MsgSubmitProposal:
 		return true
