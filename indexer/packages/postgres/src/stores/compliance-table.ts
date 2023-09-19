@@ -1,6 +1,15 @@
+import Knex from 'knex';
+import _ from 'lodash';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
-import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
+import { knexPrimary } from '../helpers/knex';
+import {
+  generateBulkUpsertString,
+  setBulkRowsForUpdate,
+  setupBaseQuery,
+  verifyAllInjectableVariables,
+  verifyAllRequiredFields,
+} from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import ComplianceDataModel from '../models/compliance-data-model';
 import {
@@ -11,10 +20,15 @@ import {
   QueryableField,
   QueryConfig,
 } from '../types';
-import { ComplianceDataColumns, ComplianceDataCreateObject, ComplianceDataUpdateObject } from '../types/compliance-data-types';
+import {
+  ComplianceDataColumns,
+  ComplianceDataCreateObject,
+  ComplianceDataUpdateObject,
+} from '../types/compliance-data-types';
 
 export async function findAll(
   {
+    address,
     updatedBeforeOrAt,
     provider,
     blocked,
@@ -25,6 +39,7 @@ export async function findAll(
 ): Promise<ComplianceDataFromDatabase[]> {
   verifyAllRequiredFields(
     {
+      address,
       updatedBeforeOrAt,
       provider,
       blocked,
@@ -37,6 +52,10 @@ export async function findAll(
     ComplianceDataModel,
     options,
   );
+
+  if (address !== undefined) {
+    baseQuery = baseQuery.whereIn(ComplianceDataColumns.address, address);
+  }
 
   if (updatedBeforeOrAt !== undefined) {
     baseQuery = baseQuery.where(ComplianceDataColumns.updatedAt, '<=', updatedBeforeOrAt);
@@ -111,4 +130,51 @@ export async function findByAddressAndProvider(
   return baseQuery
     .findById([address, provider])
     .returning('*');
+}
+
+export async function bulkUpsert(
+  complianceObjects: ComplianceDataCreateObject[],
+  options: Options = { txId: undefined },
+): Promise<void> {
+  if (complianceObjects.length === 0) {
+    return;
+  }
+
+  complianceObjects.forEach(
+    (complianceObject: ComplianceDataCreateObject) => verifyAllInjectableVariables(
+      Object.values(complianceObject),
+    ),
+  );
+
+  const columns: ComplianceDataColumns[] = _.keys(complianceObjects[0]) as ComplianceDataColumns[];
+  const rows: string[] = setBulkRowsForUpdate<ComplianceDataColumns>({
+    objectArray: complianceObjects,
+    columns,
+    booleanColumns: [
+      ComplianceDataColumns.blocked,
+    ],
+    numericColumns: [
+      ComplianceDataColumns.riskScore,
+    ],
+    stringColumns: [
+      ComplianceDataColumns.address,
+      ComplianceDataColumns.chain,
+      ComplianceDataColumns.provider,
+    ],
+    timestampColumns: [
+      ComplianceDataColumns.updatedAt,
+    ],
+  });
+
+  const query: string = generateBulkUpsertString({
+    table: ComplianceDataModel.tableName,
+    objectRows: rows,
+    columns,
+    uniqueIdentifiers: [ComplianceDataColumns.address, ComplianceDataColumns.provider],
+  });
+
+  const transaction: Knex.Transaction | undefined = Transaction.get(options.txId);
+  return transaction
+    ? knexPrimary.raw(query).transacting(transaction)
+    : knexPrimary.raw(query);
 }

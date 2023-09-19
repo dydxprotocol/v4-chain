@@ -21,6 +21,7 @@ import * as BlockTable from '../../src/stores/block-table';
 import * as TendermintEventTable from '../../src/stores/tendermint-event-table';
 import Transaction from '../../src/helpers/transaction';
 import _ from 'lodash';
+import { DateTime } from 'luxon';
 
 describe('Subaccount store', () => {
   beforeAll(async () => {
@@ -74,6 +75,28 @@ describe('Subaccount store', () => {
     const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
       {
         address: defaultSubaccount.address,
+      },
+      [],
+      { readReplica: true },
+    );
+
+    expect(subaccounts.length).toEqual(1);
+    expect(subaccounts[0]).toEqual(expect.objectContaining(defaultSubaccount));
+  });
+
+  it('Successfully finds Subaccount with updatedBeforeOrAt', async () => {
+    await Promise.all([
+      SubaccountTable.create(defaultSubaccount),
+      SubaccountTable.create({
+        ...defaultSubaccount,
+        address: 'fake_address',
+        updatedAt: DateTime.fromISO(defaultSubaccount.updatedAt).plus(1).toISO(),
+      }),
+    ]);
+
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
+      {
+        updatedBeforeOrAt: defaultSubaccount.updatedAt,
       },
       [],
       { readReplica: true },
