@@ -2,8 +2,7 @@ import { Liquidity } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintEvent,
   LiquidationOrderV1,
-  IndexerOrder,
-  OrderFillEventV1,
+  IndexerOrder, OrderFillEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
 
@@ -16,7 +15,7 @@ import { OrderFillEventWithLiquidity } from '../lib/types';
 import { validateOrderAndReturnErrorMessage } from './helpers';
 import { Validator } from './validator';
 
-export class OrderFillValidator extends Validator<OrderFillWithLiquidity> {
+export class OrderFillValidator extends Validator<OrderFillEventV1> {
   public validate(): void {
     if (this.event.makerOrder === undefined) {
       return this.logAndThrowParseMessageError(
@@ -62,7 +61,7 @@ export class OrderFillValidator extends Validator<OrderFillWithLiquidity> {
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
-  ): Handler<OrderFillEventV1>[] {
+  ): Handler<OrderFillWithLiquidity>[] {
     const orderFillEventsWithLiquidity: OrderFillEventWithLiquidity[] = [
       {
         event: this.event,

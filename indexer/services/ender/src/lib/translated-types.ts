@@ -7,6 +7,8 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { Long } from '@dydxprotocol-indexer/v4-protos/build/codegen/helpers';
 
+/* Canonical object types for handling onchain messages from the protocol. */
+
 export interface SubaccountUpdate {
   subaccountId?: IndexerSubaccountId;
   updatedPerpetualPositions: IndexerPerpetualPosition[];
@@ -30,5 +32,6 @@ export interface OrderFillWithLiquidity {
   totalFilledMaker: Long;
   /** Total filled of the taker order in base quantums. */
   totalFilledTaker: Long;
+  // liquidity of the order in the match to process in the handler
   liquidity: Liquidity;
 }
