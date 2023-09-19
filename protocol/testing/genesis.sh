@@ -31,8 +31,9 @@ BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0 # TODO(CORE-329)
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=0 # TODO(CORE-329)
 
 function edit_genesis() {
-	GENESIS=$1/genesis.json
-
+	local GENESIS=$1/genesis.json
+  local INPUT_TEST_ACCOUNTS
+  local INPUT_FAUCET_ACCOUNTS
 	# IFS stands for "Internal Field Separator" and it's a special var that determines how bash splits strings.
 	# So IFS=' ' specifies that we want to split on spaces.
 	# "read" is a built in bash command that reads from stdin.
@@ -41,13 +42,13 @@ function edit_genesis() {
 	IFS=' ' read -ra INPUT_TEST_ACCOUNTS <<<"${2}"
 	IFS=' ' read -ra INPUT_FAUCET_ACCOUNTS <<<"${3}"
 
-	EXCHANGE_CONFIG_JSON_DIR="$4"
+	local EXCHANGE_CONFIG_JSON_DIR="$4"
 	if [ -z "$EXCHANGE_CONFIG_JSON_DIR" ]; then
 		# Default to using exchange_config folder within the current directory.
 		EXCHANGE_CONFIG_JSON_DIR="exchange_config"
 	fi
 
-	DELAY_MSG_JSON_DIR="$5"
+	local DELAY_MSG_JSON_DIR="$5"
 	if [ -z "$DELAY_MSG_JSON_DIR" ]; then
 		# Default to using exchange_config folder within the current directory.
 		DELAY_MSG_JSON_DIR="delaymsg_config"
@@ -432,7 +433,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[0].exponent' -v '-5'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[0].price' -v '2868819524'          # $28,688 = 1 BTC.
 	# BTC Exchange Config
-	btc_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/btc_exchange_config.json" | jq -c '.')
+	local btc_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/btc_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[0].exchange_config_json' -v "$btc_exchange_config_json"
 
 	# Market: ETH-USD
@@ -447,7 +448,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[1].exponent' -v '-6'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[1].price' -v '1811985252'          # $1,812 = 1 ETH.
 	# ETH Exchange Config
-	eth_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/eth_exchange_config.json" | jq -c '.')
+	local eth_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/eth_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[1].exchange_config_json' -v "$eth_exchange_config_json"
 
 	# Market: LINK-USD
@@ -462,7 +463,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[2].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[2].price' -v '7204646989'          # $7.205 = 1 LINK.
 	# LINK Exchange Config
-	link_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/link_exchange_config.json" | jq -c '.')
+	local link_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/link_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[2].exchange_config_json' -v "$link_exchange_config_json"
 
 	# Market: MATIC-USD
@@ -477,7 +478,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[3].exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[3].price' -v '6665746387'          # $0.6666 = 1 MATIC.
 	# MATIC Exchange Config
-	matic_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/matic_exchange_config.json" | jq -c '.')
+	local matic_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/matic_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[3].exchange_config_json' -v "$matic_exchange_config_json"
 
 	# Market: CRV-USD
@@ -492,7 +493,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[4].exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[4].price' -v '6029316660'          # $0.6029 = 1 CRV.
 	# CRV Exchange Config
-	crv_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/crv_exchange_config.json" | jq -c '.')
+	local crv_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/crv_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[4].exchange_config_json' -v "$crv_exchange_config_json"
 
 	# Market: SOL-USD
@@ -507,7 +508,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[5].exponent' -v '-8'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[5].price' -v '2350695125'          # $23.51 = 1 SOL.
 	# SOL Exchange Config
-	sol_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/sol_exchange_config.json" | jq -c '.')
+	local sol_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/sol_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[5].exchange_config_json' -v "$sol_exchange_config_json"
 
 	# Market: ADA-USD
@@ -522,7 +523,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[6].exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[6].price' -v '2918831290'          # $0.2919 = 1 ADA.
 	# ADA Exchange Config
-	ada_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/ada_exchange_config.json" | jq -c '.')
+	local ada_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/ada_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[6].exchange_config_json' -v "$ada_exchange_config_json"
 
 	# Market: AVAX-USD
@@ -537,7 +538,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[7].exponent' -v '-8'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[7].price' -v '1223293720'          # $12.23 = 1 AVAX.
 	# AVAX Exchange Config
-	avax_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/avax_exchange_config.json" | jq -c '.')
+	local avax_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/avax_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[7].exchange_config_json' -v "$avax_exchange_config_json"
 
 	# Market: FIL-USD
@@ -552,7 +553,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[8].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[8].price' -v '4050336602'          # $4.050 = 1 FIL.
 	# FIL Exchange Config
-	fil_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/fil_exchange_config.json" | jq -c '.')
+	local fil_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/fil_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[8].exchange_config_json' -v "$fil_exchange_config_json"
 
 	# Market: LTC-USD
@@ -567,7 +568,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[9].exponent' -v '-8'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[9].price' -v '8193604950'          # $81.93 = 1 LTC.
 	# LTC Exchange Config
-	ltc_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/ltc_exchange_config.json" | jq -c '.')
+	local ltc_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/ltc_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[9].exchange_config_json' -v "$ltc_exchange_config_json"
 
 	# Market: DOGE-USD
@@ -582,7 +583,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[10].exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[10].price' -v '7320836895'          # $0.07321 = 1 DOGE.
 	# DOGE Exchange Config
-	doge_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/doge_exchange_config.json" | jq -c '.')
+	local doge_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/doge_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[10].exchange_config_json' -v "$doge_exchange_config_json"
 
 	# Market: ATOM-USD
@@ -597,7 +598,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[11].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[11].price' -v '8433494428'          # $8.433 = 1 ATOM.
 	# ATOM Exchange Config
-	atom_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/atom_exchange_config.json" | jq -c '.')
+	local atom_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/atom_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[11].exchange_config_json' -v "$atom_exchange_config_json"
 
 	# Market: DOT-USD
@@ -612,7 +613,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[12].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[12].price' -v '4937186533'          # $4.937 = 1 DOT.
 	# DOT Exchange Config
-	dot_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/dot_exchange_config.json" | jq -c '.')
+	local dot_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/dot_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[12].exchange_config_json' -v "$dot_exchange_config_json"
 
 	# Market: UNI-USD
@@ -627,7 +628,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].price' -v '5852293356'          # $5.852 = 1 UNI.
 	# UNI Exchange Config
-	uni_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/uni_exchange_config.json" | jq -c '.')
+	local uni_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/uni_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[13].exchange_config_json' -v "$uni_exchange_config_json"
 
 	# Market: BCH-USD
@@ -642,7 +643,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[14].exponent' -v '-7'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[14].price' -v '2255676327'          # $225.6 = 1 BCH.
 	# BCH Exchange Config
-	bch_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/bch_exchange_config.json" | jq -c '.')
+	local bch_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/bch_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[14].exchange_config_json' -v "$bch_exchange_config_json"
 
 	# Market: TRX-USD
@@ -657,7 +658,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[15].exponent' -v '-11'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[15].price' -v '7795369902'          # $0.07795 = 1 TRX.
 	# TRX Exchange Config
-	trx_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/trx_exchange_config.json" | jq -c '.')
+	local trx_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/trx_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[15].exchange_config_json' -v "$trx_exchange_config_json"
 
 	# Market: NEAR-USD
@@ -672,7 +673,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[16].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[16].price' -v '1312325536'          # $1.312 = 1 NEAR.
 	# NEAR Exchange Config
-	near_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/near_exchange_config.json" | jq -c '.')
+	local near_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/near_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[16].exchange_config_json' -v "$near_exchange_config_json"
 
 	# Market: MKR-USD
@@ -687,7 +688,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[17].exponent' -v '-6'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[17].price' -v '1199517382'          # $1,200 = 1 MKR.
 	# MKR Exchange Config
-	mkr_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/mkr_exchange_config.json" | jq -c '.')
+	local mkr_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/mkr_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[17].exchange_config_json' -v "$mkr_exchange_config_json"
 
 	# Market: XLM-USD
@@ -702,7 +703,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[18].exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[18].price' -v '1398578933'          # $0.1399 = 1 XLM.
 	# XLM Exchange Config
-	xlm_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/xlm_exchange_config.json" | jq -c '.')
+	local xlm_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/xlm_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[18].exchange_config_json' -v "$xlm_exchange_config_json"
 
 	# Market: ETC-USD
@@ -717,7 +718,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[19].exponent' -v '-8'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[19].price' -v '1741060746'          # $17.41 = 1 ETC.
 	# ETC Exchange Config
-	etc_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/etc_exchange_config.json" | jq -c '.')
+	local etc_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/etc_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[19].exchange_config_json' -v "$etc_exchange_config_json"
 
 	# Market: COMP-USD
@@ -732,7 +733,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[20].exponent' -v '-8'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[20].price' -v '5717635307'          # $57.18 = 1 COMP.
 	# COMP Exchange Config
-	comp_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/comp_exchange_config.json" | jq -c '.')
+	local comp_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/comp_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[20].exchange_config_json' -v "$comp_exchange_config_json"
 
 	# Market: WLD-USD
@@ -747,7 +748,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[21].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[21].price' -v '1943019371'          # $1.943 = 1 WLD.
 	# WLD Exchange Config
-	wld_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/wld_exchange_config.json" | jq -c '.')
+	local wld_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/wld_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[21].exchange_config_json' -v "$wld_exchange_config_json"
 
 	# Market: APE-USD
@@ -762,7 +763,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[22].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[22].price' -v '1842365656'          # $1.842 = 1 APE.
 	# APE Exchange Config
-	ape_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/ape_exchange_config.json" | jq -c '.')
+	local ape_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/ape_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[22].exchange_config_json' -v "$ape_exchange_config_json"
 
 	# Market: APT-USD
@@ -777,7 +778,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[23].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[23].price' -v '6787621897'          # $6.788 = 1 APT.
 	# APT Exchange Config
-	apt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/apt_exchange_config.json" | jq -c '.')
+	local apt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/apt_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[23].exchange_config_json' -v "$apt_exchange_config_json"
 
 	# Market: ARB-USD
@@ -792,7 +793,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[24].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[24].price' -v '1127629325'          # $1.128 = 1 ARB.
 	# ARB Exchange Config
-	arb_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/arb_exchange_config.json" | jq -c '.')
+	local arb_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/arb_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[24].exchange_config_json' -v "$arb_exchange_config_json"
 
 	# Market: BLUR-USD
@@ -807,7 +808,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[25].exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[25].price' -v '2779565892'          # $.2780 = 1 BLUR.
 	# BLUR Exchange Config
-	blur_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/blur_exchange_config.json" | jq -c '.')
+	local blur_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/blur_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[25].exchange_config_json' -v "$blur_exchange_config_json"
 
 	# Market: LDO-USD
@@ -822,7 +823,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[26].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[26].price' -v '1855061997'          # $1.855 = 1 LDO.
 	# LDO Exchange Config
-	ldo_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/ldo_exchange_config.json" | jq -c '.')
+	local ldo_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/ldo_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[26].exchange_config_json' -v "$ldo_exchange_config_json"
 
 	# Market: OP-USD
@@ -837,7 +838,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[27].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[27].price' -v '1562218603'          # $1.562 = 1 OP.
 	# OP Exchange Config
-	op_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/op_exchange_config.json" | jq -c '.')
+	local op_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/op_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[27].exchange_config_json' -v "$op_exchange_config_json"
 
 	# Market: PEPE-USD
@@ -852,7 +853,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[28].exponent' -v '-13'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[28].price' -v '2481900353'          # $.0002482 = 1 PEPE.
 	# PEPE Exchange Config
-	pepe_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/pepe_exchange_config.json" | jq -c '.')
+	local pepe_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/pepe_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[28].exchange_config_json' -v "$pepe_exchange_config_json"
 
 	# Market: SEI-USD
@@ -867,7 +868,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[29].exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[29].price' -v '1686998025'          # $.1687 = 1 SEI.
 	# SEI Exchange Config
-	sei_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/sei_exchange_config.json" | jq -c '.')
+	local sei_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/sei_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[29].exchange_config_json' -v "$sei_exchange_config_json"
 
 	# Market: SHIB-USD
@@ -882,7 +883,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[30].exponent' -v '-15'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[30].price' -v '8895882688'          # $.000008896 = 1 SHIB.
 	# SHIB Exchange Config
-	shib_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/shib_exchange_config.json" | jq -c '.')
+	local shib_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/shib_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[30].exchange_config_json' -v "$shib_exchange_config_json"
 
 	# Market: SUI-USD
@@ -897,7 +898,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[31].exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[31].price' -v '5896318772'          # $.5896 = 1 SUI.
 	# SUI Exchange Config
-	sui_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/sui_exchange_config.json" | jq -c '.')
+	local sui_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/sui_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[31].exchange_config_json' -v "$sui_exchange_config_json"
 
 	# Market: XRP-USD
@@ -912,7 +913,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[32].exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[32].price' -v '6327613800'          # $.6328 = 1 XRP.
 	# XRP Exchange Config
-	xrp_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/xrp_exchange_config.json" | jq -c '.')
+	local xrp_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/xrp_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[32].exchange_config_json' -v "$xrp_exchange_config_json"
 
 	# Market: USDT-USD
@@ -927,11 +928,12 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[33].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[33].price' -v '1000000000'          # $1 = 1 USDT.
 	# USDT Exchange Config
-	usdt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/usdt_exchange_config.json" | jq -c '.')
+	local usdt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/usdt_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].exchange_config_json' -v "$usdt_exchange_config_json"
 
-	total_accounts_quote_balance=0
-	acct_idx=0
+	local total_accounts_quote_balance=0
+	local acct_idx=0
+	local acct
 	# Update subaccounts module for load testing accounts.
 	for acct in "${INPUT_TEST_ACCOUNTS[@]}"; do
 		add_subaccount "$GENESIS" "$acct_idx" "$acct" "$DEFAULT_SUBACCOUNT_QUOTE_BALANCE"
@@ -945,7 +947,7 @@ function edit_genesis() {
 		acct_idx=$(($acct_idx + 1))
 	done
 
-	next_bank_idx=0
+	local next_bank_idx=0
 	if (( total_accounts_quote_balance > 0 )); then
 		# Initialize subaccounts module account balance within bank module.
 		dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
@@ -1358,7 +1360,7 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
 
-	delaymsg=$(cat "$DELAY_MSG_JSON_DIR/perpetual_fee_params_msg.json" | jq -c '.')
+	local delaymsg=$(cat "$DELAY_MSG_JSON_DIR/perpetual_fee_params_msg.json" | jq -c '.')
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].msg' -v "$delaymsg"
 	# Schedule the message to execute in ~7 days (at 1.6s per block.)
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '378000'
@@ -1367,10 +1369,10 @@ function edit_genesis() {
 }
 
 function add_subaccount() {
-	GEN_FILE=$1
-	IDX=$2
-	ACCOUNT=$3
-	QUOTE_BALANCE=$4
+	local GEN_FILE=$1
+	local IDX=$2
+	local ACCOUNT=$3
+	local QUOTE_BALANCE=$4
 
 	dasel put -t json -f "$GEN_FILE" ".app_state.subaccounts.subaccounts.[]" -v "{}"
 	dasel put -t json -f "$GEN_FILE" ".app_state.subaccounts.subaccounts.[$IDX].id" -v "{}"
@@ -1387,10 +1389,10 @@ function add_subaccount() {
 # Modify the genesis file to use only the test exchange for computing index prices. The test exchange is configured
 # to serve prices for BTC, ETH and LINK. This must be called after edit_genesis to ensure all markets exist.
 function update_genesis_use_test_exchange() {
-	GENESIS=$1/genesis.json
+	local GENESIS=$1/genesis.json
 
 	# For BTC, ETH and LINK, remove all exchanges except the test exchange.
-	btc_exchange_config_json=$(cat <<-EOF
+	local btc_exchange_config_json=$(cat <<-EOF
 	{
 		"exchanges": [
 			{
@@ -1404,7 +1406,7 @@ function update_genesis_use_test_exchange() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[0].exchange_config_json' -v "$btc_exchange_config_json"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[0].min_exchanges' -v '1'
 
-	eth_exchange_config_json=$(cat <<-EOF
+	local eth_exchange_config_json=$(cat <<-EOF
 	{
 		"exchanges": [
 			{
@@ -1418,7 +1420,7 @@ function update_genesis_use_test_exchange() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[1].exchange_config_json' -v "$eth_exchange_config_json"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[1].min_exchanges' -v '1'
 
-	link_exchange_config_json=$(cat <<-EOF
+	local link_exchange_config_json=$(cat <<-EOF
 	{
 		"exchanges": [
 			{
@@ -1435,6 +1437,7 @@ function update_genesis_use_test_exchange() {
 	# All remaining markets can just use the LINK ticker so the daemon will start. All markets must have at least 1
 	# exchange. With only one exchange configured, there should not be enough prices to meet the minimum exchange
 	# count, and these markets will not have index prices.
+	local market_idx
 	for market_idx in {3..33}
 	do
 		dasel put -t string -f "$GENESIS" ".app_state.prices.market_params.[$market_idx].exchange_config_json" -v "$link_exchange_config_json"
@@ -1443,7 +1446,7 @@ function update_genesis_use_test_exchange() {
 
 # Modify the genesis file to add test volatile market. Market TEST-USD will be added as market 33.
 function update_genesis_use_test_volatile_market() {
-	GENESIS=$1/genesis.json
+	local GENESIS=$1/genesis.json
 
 	# Market: TEST-USD
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
@@ -1457,12 +1460,12 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().exponent' -v '-5'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().price' -v '10000000'          # $100 = 1 TEST.
 	# TEST Exchange Config
-	test_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/test_exchange_config.json" | jq -c '.')
+	local test_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/test_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.last().exchange_config_json' -v "$test_exchange_config_json"
 
 
 	# Perpetual: TEST-USD
-	NUM_PERPETUALS=$(jq -c '.app_state.perpetuals.perpetuals | length' < ${GENESIS})
+	local NUM_PERPETUALS=$(jq -c '.app_state.perpetuals.perpetuals | length' < ${GENESIS})
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.perpetuals.[]' -v "{}"
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.ticker' -v 'TEST-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.id' -v "${NUM_PERPETUALS}"
@@ -1472,7 +1475,7 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.liquidity_tier' -v '0'
 
 	# Clob: TEST-USD
-	NUM_CLOB_PAIRS=$(jq -c '.app_state.clob.clob_pairs | length' < ${GENESIS})
+	local NUM_CLOB_PAIRS=$(jq -c '.app_state.clob.clob_pairs | length' < ${GENESIS})
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().id' -v "${NUM_CLOB_PAIRS}"
 	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.last().status' -v 'STATUS_ACTIVE'
@@ -1484,7 +1487,7 @@ function update_genesis_use_test_volatile_market() {
 
 # Modify the genesis file with reduced complete bridge delay (for testing in non-prod envs).
 update_genesis_complete_bridge_delay() {
-	GENESIS=$1/genesis.json
+	local GENESIS=$1/genesis.json
 
 	# Reduce complete bridge delay to 600 blocks.
 	dasel put -t int -f "$GENESIS" '.app_state.bridge.safety_params.delay_blocks' -v "$2"

@@ -4,6 +4,7 @@ set -eo pipefail
 # This file initializes muliple validators and a full-node for remote testnet purposes.
 
 source "./genesis.sh"
+source "./testnet.sh"
 
 CHAIN_ID="dydxprotocol-testnet"
 
@@ -24,6 +25,30 @@ MNEMONICS=(
 	# dave
 	# Consensus Address: dydxvalcons1stjspktkshgcsv8sneqk2vs2ws0nw2wr272vtt
 	"switch boring kiss cash lizard coconut romance hurry sniff bus accident zone chest height merit elevator furnace eagle fetch quit toward steak mystery nest"
+
+#	# emily
+#	# Consensus Address: dydxvalcons1zpt0ck6ttuhjm97apawa54ffgthst34u3peqc0
+#	"brave way sting spin fog process matrix glimpse volcano recall day lab raccoon hand path pig rent mixture just way blouse alone upon prefer"
+#
+#	# fiona
+#	# Consensus Address: dydxvalcons14wwueldgtrdjrmx23wcuwk83keywe5w0pfn94t
+#	"suffer claw truly wife simple mean still mammal bind cake truly runway attack burden lazy peanut unusual such shock twice appear gloom priority kind"
+#
+#	# greg
+#	# Consensus Address: dydxvalcons15yzv3qacs0z2jgm5ecn4ywjkvwc6dl63a2za0p
+#	"step vital slight present group gallery flower gap copy sweet travel bitter arena reject evidence deal ankle motion dismiss trim armed slab life future"
+#
+#	# henry
+#	# Consensus Address: dydxvalcons1pggt0hc2drw0j9456vwpu9wmav67h90h03p3h9
+#	"piece choice region bike tragic error drive defense air venture bean solve income upset physical sun link actor task runway match gauge brand march"
+#
+#	# ian
+#	# Consensus Address: dydxvalcons167ajkznjs3wfa565n9emqmey0c2h69ympf0tmk
+#	"burst section toss rotate law thumb shoe wire only decide meadow aunt flight humble story mammal radar scene wrist essay taxi leisure excess milk"
+#
+#	# jeff
+#	# Consensus Address: dydxvalcons1ehwtcwwh25ftac3khhz0jn7wd9053xfeqdwes4
+#	"fashion charge estate devote jaguar fun swift always road lend scrap panic matter core defense high gas athlete permit crane assume pact fitness matrix"
 )
 
 # Define node keys for all full nodes.
@@ -54,6 +79,24 @@ NODE_KEYS=(
 
 	# Node ID: 5882428984d83b03d0c907c1f0af343534987052
 	"++C3kWgFAs7rUfwAHB7Ffrv43muPg0wTD2/UtSPFFkhtobooIqc78UiotmrT8onuT1jg8/wFPbSjhnKRThTRZg=="
+#
+#	# Node ID: 6c0745b95432ceba57505f7d02f36c750ef18736
+#	"Xw4SsROea66n4EshBd4mnMAIO0qxnSrtR8B+ehUyav6gacBWq3kcT/w+SjRKuxhRW/AbnI1rkHlDwpT1aqUCgw=="
+#
+#	# Node ID: 59af8504630944fbc705828e78cd0849e2b952e0
+#	"IyeYTocVczq4klGBe1l+3TXvKxdu/Hgsz4om0HzQl7cYGBWyoFnoDAs+/MnOtrS/L1zq0SqH2iIOuxl0ltbh0w=="
+#
+#	# Node ID: 1a4673f1cbc27412632359488c7e3c7d1eb52a56
+#	"a275Dhs6Pmy1/3TpXDc9/KQvbqLzCBbY92E0maUqtoufO3AN72DqZ+SsRVXEJaFVz49ql1/Nwaoajnekbe/Plg=="
+#
+#	# Node ID: df6cb9eaf88dd8d981f2f590bcf35a24c56c1b1d
+#	"PBZscluMMvd6lNZtZO/wuRDuiEEPqrDSYofSZQBPRh+geV0bhL+2ft1W205aMWOyzWEqltUfavdUsU0gssLl+g=="
+#
+#	# Node ID: e1a73913517dfb41ef817db8e86a05e9260a43e9
+#	"xq70EO+vOaMTiUjOkBMKB4t5kwPGfA4nU2w6wFUOwMvOAfOzZoN9OBXnbuREJSxhsyW1vjy2k2+PpmvnK1YnQA=="
+#
+#	# Node ID: b5aed81f57ec4e2c1556355ff54f28983acd4a53
+#	"cHZoQ+2o+ZTaGfbJPJ66z70GjbkPezomHkC7WRNLW9V3n7We/0du9couCffD/vNvvOvFD1H9uwztl+f2UjcKzA=="
 )
 
 # Define monikers for each validator. These are made up strings and can be anything.
@@ -63,6 +106,12 @@ MONIKERS=(
 	"bob"
 	"carl"
 	"dave"
+#	"emily"
+#	"fiona"
+#	"greg"
+#	"henry"
+#	"ian"
+#	"jeff"
 )
 
 # Define all test accounts for the chain.
@@ -71,6 +120,12 @@ TEST_ACCOUNTS=(
 	"dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs" # bob
 	"dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70" # carl
 	"dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn" # dave
+#	"dydx1966p9acs4mpgj40g3awctfvgrz0mnx8w5vc4sz" # emily
+#	"dydx18swhz9sgh8ecjaz3cm0v53llw0qzm5se026rsn" # fiona
+#	"dydx1df84hz7y0dd3mrqcv3vrhw9wdttelul8edqmvp" # greg
+#	"dydx16h7p7f4dysrgtzptxx2gtpt5d8t834g9dj830z" # henry
+#	"dydx15u9tppy5e2pdndvlrvafxqhuurj9mnpdstzj6z" # ian
+#	"dydx168pjt8rkru35239fsqvz7rzgeclakp49zx3aum" # jeff
 )
 
 FAUCET_ACCOUNTS=(
@@ -85,26 +140,10 @@ install_prerequisites() {
 	apk add dasel jq
 }
 
+
 # Create all validators for the chain including a full-node.
 # Initialize their genesis files and home directories.
 create_validators() {
-	# Create directories for full-nodes to use.
-	for i in "${!FULL_NODE_KEYS[@]}"; do
-		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
-		FULL_NODE_CONFIG_DIR="$FULL_NODE_HOME_DIR/config"
-		dydxprotocold init "full-node" -o --chain-id=$CHAIN_ID --home "$FULL_NODE_HOME_DIR"
-
-		# Note: `dydxprotocold init` non-deterministically creates `node_id.json` for each validator.
-		# This is inconvenient for persistent peering during testing in Terraform configuration as the `node_id`
-		# would change with every build of this container.
-		#
-		# For that reason we overwrite the non-deterministically generated one with a deterministic key defined in this file here.
-		new_file=$(jq ".priv_key.value = \"${FULL_NODE_KEYS[$i]}\"" "$FULL_NODE_CONFIG_DIR"/node_key.json)
-		cat <<<"$new_file" >"$FULL_NODE_CONFIG_DIR"/node_key.json
-
-		edit_config "$FULL_NODE_CONFIG_DIR"
-	done
-
 	# Create temporary directory for all gentx files.
 	mkdir /tmp/gentx
 
@@ -136,7 +175,8 @@ create_validators() {
 		# Note: `edit_genesis` must be called before `add-genesis-account`.
 		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" "" ""
 		update_genesis_use_test_volatile_market "$VAL_CONFIG_DIR"
-		update_genesis_complete_bridge_delay "$VAL_CONFIG_DIR" "600"
+		update_genesis_complete_bridge_delay "$VAL_CONFIG_DIR" "30"
+
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
 			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,100000000000$NATIVE_TOKEN --home "$VAL_HOME_DIR"
@@ -174,21 +214,13 @@ create_validators() {
 		rm -rf "$VAL_CONFIG_DIR/genesis.json"
 		cp "$FIRST_VAL_CONFIG_DIR/genesis.json" "$VAL_CONFIG_DIR/genesis.json"
 	done
-
-	# Copy the genesis file to the full-node directories.
-	for i in "${!FULL_NODE_KEYS[@]}"; do
-		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
-		FULL_NODE_CONFIG_DIR="$FULL_NODE_HOME_DIR/config"
-
-		cp "$FIRST_VAL_CONFIG_DIR/genesis.json" "$FULL_NODE_CONFIG_DIR/genesis.json"
-	done
 }
 
 # TODO(DEC-1894): remove this function once we migrate off of persistent peers.
 # Note: DO NOT add more config modifications in this method. Use `cmd/config.go` to configure
 # the default config values.
 edit_config() {
-	CONFIG_FOLDER=$1
+	local CONFIG_FOLDER=$1
 
 	# Disable pex
 	dasel put -t bool -f "$CONFIG_FOLDER"/config.toml '.p2p.pex' -v 'false'
