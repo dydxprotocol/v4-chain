@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 
 	"math/big"
@@ -72,6 +73,9 @@ func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
 			// Disable the Bridge and Price daemons in the integration tests.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, false)
 			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
+
+			// Make sure the daemon is using the correct GRPC address.
+			appOptions.Set(appflags.GrpcAddress, testval.AppConfig.GRPC.Address)
 
 			// Enable the liquidations daemon in the integration tests.
 			appOptions.Set(daemonflags.FlagUnixSocketAddress, liqTestUnixSocketAddress)
