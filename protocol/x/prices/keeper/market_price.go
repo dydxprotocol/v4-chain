@@ -147,3 +147,20 @@ func (k Keeper) GetAllMarketPrices(ctx sdk.Context) []types.MarketPrice {
 
 	return marketPrices
 }
+
+// GetMarketIdToValidIndexPrice returns a map of market id to valid index price.
+// An index price is valid iff:
+// 1) the last update time is within a predefined threshold away from the given
+// read time.
+// 2) the number of prices that meet 1) are greater than the minimum number of
+// exchanges specified in the given input.
+// If a market does not have a valid index price, its `marketId` is not included
+// in returned map.
+func (k Keeper) GetMarketIdToValidIndexPrice(
+	ctx sdk.Context,
+) map[uint32]types.MarketPrice {
+	return k.indexPriceCache.GetValidMedianPrices(
+		k.GetAllMarketParams(ctx),
+		k.timeProvider.Now(),
+	)
+}

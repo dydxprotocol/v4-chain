@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"

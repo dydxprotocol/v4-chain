@@ -2130,7 +2130,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 
 	// Get index price represented in subticks.
 	indexPriceSubticks := types.PriceToSubticks(
-		params.MarketPrice,
+		params.IndexPrice,
 		clobPair,
 		params.BaseAtomicResolution,
 		params.QuoteAtomicResolution,
@@ -2141,7 +2141,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 		return 0, errorsmod.Wrapf(
 			types.ErrZeroIndexPriceForPremiumCalculation,
 			"market = %+v, clobPair = %+v, baseAtomicResolution = %d, quoteAtomicResolution = %d",
-			params.MarketPrice,
+			params,
 			clobPair,
 			params.BaseAtomicResolution,
 			params.QuoteAtomicResolution,

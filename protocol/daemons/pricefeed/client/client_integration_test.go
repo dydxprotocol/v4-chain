@@ -1,9 +1,11 @@
-//go:build all || integration_test
-
 package client_test
 
 import (
 	"fmt"
+	"net"
+	"sync"
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
@@ -23,9 +25,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
-	"net"
-	"sync"
-	"time"
 
 	"testing"
 )
@@ -350,7 +349,7 @@ func (s *PriceDaemonIntegrationTestSuite) expectPricesWithTimeout(
 				continue
 			}
 
-			if actualPrice != expectedPrice {
+			if actualPrice.Price != expectedPrice {
 				continue
 			}
 		}

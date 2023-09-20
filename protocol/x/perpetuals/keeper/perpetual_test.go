@@ -30,6 +30,7 @@ import (
 	lttest "github.com/dydxprotocol/v4-chain/protocol/testutil/liquidity_tier"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
+	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
@@ -2211,6 +2212,11 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			).Return(tc.samplePremiumPpm, nil)
 
 			pc := keepertest.PerpetualsKeepersWithClobHelpers(t, &mockPricePremiumGetter)
+
+			// MockTimeProvider needed for to use `constants.TimeT` as cutoff time of index price cache query.
+			pc.MockTimeProvider.On("Now").Return(constants.TimeT)
+
+			pc.IndexPriceCache.UpdatePrices(pricefeed_testutil.GetTestMarketPriceUpdates(10))
 
 			// Create liquidity tiers and perpetuals,
 			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, tc.numPerpetuals)

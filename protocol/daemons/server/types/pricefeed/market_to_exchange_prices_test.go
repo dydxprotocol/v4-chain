@@ -1,9 +1,10 @@
 package types
 
 import (
-	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	"testing"
 	"time"
+
+	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -188,8 +189,23 @@ func TestGetValidMedianPrices_MultiMarketSuccess(t *testing.T) {
 	r := mte.GetValidMedianPrices(constants.AllMarketParamsMinExchanges2, constants.TimeT)
 
 	require.Len(t, r, 2)
-	require.Equal(t, uint64(2002), r[constants.MarketId9]) // Median of 1001, 2002, 3003
-	require.Equal(t, uint64(2503), r[constants.MarketId8]) // Median of 2002, 3003
+	require.Equal(t,
+		types.MarketPrice{
+			Id:       constants.MarketId9,
+			Price:    uint64(2002),
+			Exponent: constants.Exponent9,
+		},
+		r[constants.MarketId9],
+	) // Median of 1001, 2002, 3003
+	require.Equal(t,
+		types.MarketPrice{
+			Id:       constants.MarketId8,
+			Price:    uint64(2503),
+			Exponent: constants.Exponent8,
+		},
+		r[constants.MarketId8],
+	) // Median of 2002, 3003
 	// Market7 only has 1 valid price due to update time constraint,
 	// but the min exchanges required is 2. Therefore, no median price.
+	require.True(t, false)
 }

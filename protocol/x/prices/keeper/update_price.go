@@ -75,7 +75,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 
 		// Index prices of 0 are unexpected. In this scenario, we skip the proposal logic for the market and report an
 		// error.
-		if indexPrice == 0 {
+		if indexPrice.Price == 0 {
 			metrics.IncrCountMetricWithLabels(types.ModuleName, metrics.IndexPriceIsZero, marketMetricsLabel)
 			k.Logger(ctx).Error(fmt.Sprintf("Unexpected error: index price for market (%v) is zero", marketId))
 			continue
@@ -93,27 +93,27 @@ func (k Keeper) GetValidMarketPriceUpdates(
 				logMethod = k.Logger(ctx).Info
 			}
 			logMethod(fmt.Sprintf("Smoothed price for market (%v) does not exist", marketId))
-			historicalSmoothedPrices = []uint64{indexPrice}
+			historicalSmoothedPrices = []uint64{indexPrice.Price}
 		}
 		smoothedPrice := historicalSmoothedPrices[0]
 
-		proposalPrice := getProposalPrice(smoothedPrice, indexPrice, marketParamPrice.Price.Price)
+		proposalPrice := getProposalPrice(smoothedPrice, indexPrice.Price, marketParamPrice.Price.Price)
 
 		shouldPropose, reasons := shouldProposePrice(
 			proposalPrice,
 			marketParamPrice,
-			indexPrice,
+			indexPrice.Price,
 			historicalSmoothedPrices,
 		)
 
 		// If the index price would have updated, track how the proposal price changes the update
 		// decision / amount.
-		if isAboveRequiredMinPriceChange(marketParamPrice, indexPrice) {
+		if isAboveRequiredMinPriceChange(marketParamPrice, indexPrice.Price) {
 			logPriceUpdateBehavior(
 				k.Logger(ctx),
 				marketParamPrice,
 				proposalPrice,
-				indexPrice,
+				indexPrice.Price,
 				marketMetricsLabel,
 				shouldPropose,
 				reasons,

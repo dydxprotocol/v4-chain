@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -62,9 +63,9 @@ func (mte *MarketToExchangePrices) UpdatePrices(
 func (mte *MarketToExchangePrices) GetValidMedianPrices(
 	marketParams []types.MarketParam,
 	readTime time.Time,
-) map[uint32]uint64 {
+) map[uint32]types.MarketPrice {
 	cutoffTime := readTime.Add(-mte.maxPriceAge)
-	marketIdToMedianPrice := make(map[uint32]uint64)
+	marketIdToMedianPrice := make(map[uint32]types.MarketPrice)
 
 	mte.RLock()
 	defer mte.RUnlock()
@@ -89,6 +90,7 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 
 		// GetValidPriceForMarket filters prices based on cutoff time.
 		validPrices := exchangeToPrice.GetValidPrices(cutoffTime)
+		fmt.Printf("marketId = %v, Valid prices =%v, cutoff time =%v\n", marketId, validPrices, cutoffTime)
 		telemetry.SetGaugeWithLabels(
 			[]string{
 				metrics.PricefeedServer,
@@ -119,7 +121,11 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 				)
 				continue
 			}
-			marketIdToMedianPrice[marketId] = median
+			marketIdToMedianPrice[marketId] = types.MarketPrice{
+				Id:       marketId,
+				Price:    median,
+				Exponent: marketParam.Exponent,
+			}
 		}
 	}
 

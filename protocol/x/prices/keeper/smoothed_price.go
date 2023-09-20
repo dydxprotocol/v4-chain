@@ -17,11 +17,11 @@ func (k Keeper) UpdateSmoothedPrices(ctx sdk.Context) error {
 	for market, indexPrice := range indexPrices {
 		smoothed, ok := k.marketToSmoothedPrices.GetSmoothedPrice(market)
 		if !ok {
-			smoothed = indexPrice
+			smoothed = indexPrice.Price
 		}
 		update, err := lib.Uint64LinearInterpolate(
 			smoothed,
-			indexPrice,
+			indexPrice.Price,
 			types.PriceSmoothingPpm,
 		)
 		if err != nil {

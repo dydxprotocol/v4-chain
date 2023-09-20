@@ -1,11 +1,12 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"math/big"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -129,7 +130,7 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 		}
 
 		// Check price is "accurate".
-		if err := k.validatePriceAccuracy(marketParamPrice, priceUpdate, indexPrice); err != nil {
+		if err := k.validatePriceAccuracy(marketParamPrice, priceUpdate, indexPrice.Price); err != nil {
 			telemetry.IncrCounterWithLabels(
 				[]string{types.ModuleName, metrics.IndexPriceNotAccurate, metrics.Count},
 				1,

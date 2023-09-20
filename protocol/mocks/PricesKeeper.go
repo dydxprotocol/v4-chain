@@ -92,6 +92,22 @@ func (_m *PricesKeeper) GetAllMarketPrices(ctx types.Context) []pricestypes.Mark
 	return r0
 }
 
+// GetMarketIdToValidIndexPrice provides a mock function with given fields: ctx
+func (_m *PricesKeeper) GetMarketIdToValidIndexPrice(ctx types.Context) map[uint32]pricestypes.MarketPrice {
+	ret := _m.Called(ctx)
+
+	var r0 map[uint32]pricestypes.MarketPrice
+	if rf, ok := ret.Get(0).(func(types.Context) map[uint32]pricestypes.MarketPrice); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[uint32]pricestypes.MarketPrice)
+		}
+	}
+
+	return r0
+}
+
 // GetMarketParam provides a mock function with given fields: ctx, id
 func (_m *PricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestypes.MarketParam, bool) {
 	ret := _m.Called(ctx, id)
