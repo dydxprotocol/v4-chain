@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -93,7 +94,6 @@ func (k Keeper) MaybeStartNextEpoch(ctx sdk.Context, id types.EpochInfoName) (ne
 		float32(epoch.CurrentEpoch),
 		[]gometrics.Label{
 			metrics.GetLabelForStringValue(types.AttributeKeyEpochInfoName, epoch.Name),
-			metrics.GetLabelForIntValue(metrics.BlockHeight, int(epoch.CurrentEpochStartBlock)),
 		},
 	)
 

@@ -203,10 +203,6 @@ func (k Keeper) processStoredPremiums(
 		},
 		float32(premiumStore.NumPremiums),
 		[]gometrics.Label{
-			metrics.GetLabelForIntValue(
-				metrics.BlockHeight,
-				int(ctx.BlockHeight()),
-			),
 			metrics.GetLabelForStringValue(
 				metrics.PremiumType,
 				premiumKey,
@@ -215,9 +211,9 @@ func (k Keeper) processStoredPremiums(
 				metrics.EpochInfoName,
 				newEpochInfo.Name,
 			),
-			metrics.GetLabelForIntValue(
-				metrics.EpochNumber,
-				int(newEpochInfo.CurrentEpoch),
+			metrics.GetLabelForBoolValue(
+				metrics.IndexPriceIsZero,
+				newEpochInfo.CurrentEpoch == 0,
 			),
 		},
 	)
@@ -289,10 +285,6 @@ func (k Keeper) processPremiumVotesIntoSamples(
 			},
 			float32(summarizedPremium),
 			[]gometrics.Label{
-				metrics.GetLabelForIntValue(
-					metrics.BlockHeight,
-					int(ctx.BlockHeight()),
-				),
 				metrics.GetLabelForIntValue(
 					metrics.PerpetualId,
 					int(perp.GetId()),
@@ -415,21 +407,12 @@ func (k Keeper) GetAddPremiumVotes(
 		))
 	}
 
-	telemetry.SetGaugeWithLabels(
-		[]string{
-			types.ModuleName,
-			metrics.NewPremiumVotes,
-			metrics.Count,
-			metrics.Proposer,
-		},
+	telemetry.SetGauge(
 		float32(len(newPremiumVotes)),
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(
-				metrics.BlockHeight,
-				int(ctx.BlockHeight()),
-			),
-			// TODO(DEC-1071): Add epoch number as label.
-		},
+		types.ModuleName,
+		metrics.NewPremiumVotes,
+		metrics.Count,
+		metrics.Proposer,
 	)
 
 	return types.NewMsgAddPremiumVotes(newPremiumVotes)
