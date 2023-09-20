@@ -97,7 +97,7 @@ async function trackLag(): Promise<void> {
 }
 
 async function getValidatorBlockData(url: string): Promise<BlockData> {
-  const response = safeAxiosRequest({
+  const response = await safeAxiosRequest({
     url: `${url}${VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX}`,
     method: 'GET',
     transformResponse: (res) => res,
