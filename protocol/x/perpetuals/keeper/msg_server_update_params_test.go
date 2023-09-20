@@ -82,12 +82,13 @@ func TestUpdateParams(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			pc := keepertest.PerpetualsKeepers(t)
-			pc.PerpetualsKeeper.SetParams(pc.Ctx, initialParams)
+			err := pc.PerpetualsKeeper.SetParams(pc.Ctx, initialParams)
+			require.NoError(t, err)
 
 			msgServer := perpkeeper.NewMsgServerImpl(pc.PerpetualsKeeper)
 			wrappedCtx := sdk.WrapSDKContext(pc.Ctx)
 
-			_, err := msgServer.UpdateParams(wrappedCtx, tc.msg)
+			_, err = msgServer.UpdateParams(wrappedCtx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 				// Verify that params in state are unchanged.
