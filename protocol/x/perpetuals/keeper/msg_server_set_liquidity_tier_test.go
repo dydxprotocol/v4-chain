@@ -127,9 +127,9 @@ func TestSetLiquidityTier(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, perpKeeper, _, _, _ := keepertest.PerpetualsKeepers(t)
-			initialLt, err := perpKeeper.SetLiquidityTier(
-				ctx,
+			pc := keepertest.PerpetualsKeepers(t)
+			initialLt, err := pc.PerpetualsKeeper.SetLiquidityTier(
+				pc.Ctx,
 				testLt.Id,
 				testLt.Name,
 				testLt.InitialMarginPpm,
@@ -139,21 +139,21 @@ func TestSetLiquidityTier(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			msgServer := perpkeeper.NewMsgServerImpl(perpKeeper)
-			wrappedCtx := sdk.WrapSDKContext(ctx)
+			msgServer := perpkeeper.NewMsgServerImpl(pc.PerpetualsKeeper)
+			wrappedCtx := sdk.WrapSDKContext(pc.Ctx)
 
 			_, err = msgServer.SetLiquidityTier(wrappedCtx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 				// Verify that liquidity tier is same as before.
-				lt, err := perpKeeper.GetLiquidityTier(ctx, tc.msg.LiquidityTier.Id)
+				lt, err := pc.PerpetualsKeeper.GetLiquidityTier(pc.Ctx, tc.msg.LiquidityTier.Id)
 				require.NoError(t, err)
 				require.Equal(t, initialLt, lt)
 			} else {
 				require.NoError(t, err)
 
 				// Verify that liquidity tier is updated.
-				lt, err := perpKeeper.GetLiquidityTier(ctx, tc.msg.LiquidityTier.Id)
+				lt, err := pc.PerpetualsKeeper.GetLiquidityTier(pc.Ctx, tc.msg.LiquidityTier.Id)
 				require.NoError(t, err)
 				require.Equal(t, tc.msg.LiquidityTier, lt)
 			}
