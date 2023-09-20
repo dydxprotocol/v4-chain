@@ -162,7 +162,7 @@ func PopulateTestPremiumStore(
 
 func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	for _, l := range constants.LiquidityTiers {
-		_, err := k.CreateLiquidityTier(
+		_, err := k.SetLiquidityTier(
 			ctx,
 			l.Id,
 			l.Name,

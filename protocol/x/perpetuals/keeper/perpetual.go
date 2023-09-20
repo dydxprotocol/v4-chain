@@ -1265,9 +1265,9 @@ func (k Keeper) HasLiquidityTier(
 	return ltStore.Has(types.LiquidityTierKey(id))
 }
 
-// `CreateLiquidityTier` creates a new liquidity tier in the store.
+// `SetLiquidityTier` sets a liquidity tier in the store (i.e. updates if `id` exists and creates otherwise).
 // Returns an error if any of its fields fails validation.
-func (k Keeper) CreateLiquidityTier(
+func (k Keeper) SetLiquidityTier(
 	ctx sdk.Context,
 	id uint32,
 	name string,
@@ -1279,14 +1279,7 @@ func (k Keeper) CreateLiquidityTier(
 	liquidityTier types.LiquidityTier,
 	err error,
 ) {
-	// Check if liquidity tier exists.
-	if k.HasLiquidityTier(ctx, id) {
-		return types.LiquidityTier{}, errorsmod.Wrap(
-			types.ErrLiquidityTierAlreadyExists,
-			lib.Uint32ToString(id),
-		)
-	}
-
+	// Construct liquidity tier.
 	liquidityTier = types.LiquidityTier{
 		Id:                     id,
 		Name:                   name,
@@ -1304,59 +1297,7 @@ func (k Keeper) CreateLiquidityTier(
 	// Set liquidity tier in store.
 	k.setLiquidityTier(ctx, liquidityTier)
 
-	k.GetIndexerEventManager().AddTxnEvent(
-		ctx,
-		indexerevents.SubtypeLiquidityTier,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewLiquidityTierUpsertEvent(
-				id,
-				name,
-				initialMarginPpm,
-				maintenanceFractionPpm,
-				basePositionNotional,
-			),
-		),
-		indexerevents.LiquidityTierEventVersion,
-	)
-
-	return liquidityTier, nil
-}
-
-// `ModifyLiquidityTier` modifies a liquidity tier in the store.
-func (k Keeper) ModifyLiquidityTier(
-	ctx sdk.Context,
-	id uint32,
-	name string,
-	initialMarginPpm uint32,
-	maintenanceFractionPpm uint32,
-	basePositionNotional uint64,
-	impactNotional uint64,
-) (
-	liquidityTier types.LiquidityTier,
-	err error,
-) {
-	// Retrieve LiquidityTier.
-	liquidityTier, err = k.GetLiquidityTier(ctx, id)
-	if err != nil {
-		return liquidityTier, err
-	}
-
-	// Modify LiquidityTier.
-	liquidityTier.Name = name
-	liquidityTier.InitialMarginPpm = initialMarginPpm
-	liquidityTier.MaintenanceFractionPpm = maintenanceFractionPpm
-	liquidityTier.BasePositionNotional = basePositionNotional
-	liquidityTier.ImpactNotional = impactNotional
-
-	// Validate modified fields.
-	if err = liquidityTier.Validate(); err != nil {
-		return liquidityTier, err
-	}
-
-	// Store LiquidityTier.
-	k.setLiquidityTier(ctx, liquidityTier)
-
-	// TODO(IND-364): Change this to a block event.
+	// Emit indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeLiquidityTier,
