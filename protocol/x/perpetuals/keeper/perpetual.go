@@ -212,7 +212,7 @@ func (k Keeper) processStoredPremiums(
 				newEpochInfo.Name,
 			),
 			metrics.GetLabelForBoolValue(
-				metrics.IndexPriceIsZero,
+				metrics.IsEpochZero,
 				newEpochInfo.CurrentEpoch == 0,
 			),
 		},
