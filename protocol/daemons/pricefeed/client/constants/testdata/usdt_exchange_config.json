@@ -7,10 +7,6 @@
       "invert": true
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "USDTUSD"
-    },
-    {
       "exchangeName": "Bitfinex",
       "ticker": "tUSTUSD",
       "adjustByMarket": "USDT-USD"
