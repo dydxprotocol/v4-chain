@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 
@@ -18,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	epochskeeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
@@ -28,15 +30,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type PerpKeepersTestContext struct {
+	Ctx              sdk.Context
+	PricesKeeper     *priceskeeper.Keeper
+	IndexPriceCache  *pricefeedserver_types.MarketToExchangePrices
+	AssetsKeeper     *assetskeeper.Keeper
+	EpochsKeeper     *epochskeeper.Keeper
+	PerpetualsKeeper *keeper.Keeper
+	StoreKey         storetypes.StoreKey
+	MemKey           storetypes.StoreKey
+	Cdc              *codec.ProtoCodec
+	MockTimeProvider *mocks.TimeProvider
+}
+
 func PerpetualsKeepers(
 	t testing.TB,
-) (
-	ctx sdk.Context,
-	keeper *keeper.Keeper,
-	pricesKeeper *priceskeeper.Keeper,
-	epochsKeeper *epochskeeper.Keeper,
-	storeKey storetypes.StoreKey,
-) {
+) (pc PerpKeepersTestContext) {
 	return PerpetualsKeepersWithClobHelpers(
 		t,
 		nil,
@@ -46,15 +55,8 @@ func PerpetualsKeepers(
 func PerpetualsKeepersWithClobHelpers(
 	t testing.TB,
 	clobKeeper types.PerpetualsClobKeeper,
-) (
-	ctx sdk.Context,
-	keeper *keeper.Keeper,
-	pricesKeeper *priceskeeper.Keeper,
-	epochsKeeper *epochskeeper.Keeper,
-	storeKey storetypes.StoreKey,
-) {
-	var mockTimeProvider *mocks.TimeProvider
-	ctx = initKeepers(t, func(
+) (pc PerpKeepersTestContext) {
+	pc.Ctx = initKeepers(t, func(
 		db *tmdb.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
@@ -62,28 +64,28 @@ func PerpetualsKeepersWithClobHelpers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, _, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
-		epochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
-		keeper, storeKey = createPerpetualsKeeperWithClobHelpers(
+		pc.PricesKeeper, _, _, _, pc.MockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		pc.EpochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
+		pc.PerpetualsKeeper, pc.StoreKey = createPerpetualsKeeperWithClobHelpers(
 			stateStore,
 			db,
 			cdc,
-			pricesKeeper,
-			epochsKeeper,
+			pc.PricesKeeper,
+			pc.EpochsKeeper,
 			clobKeeper,
 			transientStoreKey,
 		)
 
-		return []GenesisInitializer{pricesKeeper, keeper}
+		return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper}
 	})
 
 	// Mock time provider response for market creation.
-	mockTimeProvider.On("Now").Return(constants.TimeT)
+	pc.MockTimeProvider.On("Now").Return(constants.TimeT)
 
 	// Initialize perpetuals module parameters to default genesis values.
-	perpetuals.InitGenesis(ctx, *keeper, constants.Perpetuals_GenesisState_ParamsOnly)
+	perpetuals.InitGenesis(pc.Ctx, *pc.PerpetualsKeeper, constants.Perpetuals_GenesisState_ParamsOnly)
 
-	return ctx, keeper, pricesKeeper, epochsKeeper, storeKey
+	return pc
 }
 
 func createPerpetualsKeeperWithClobHelpers(

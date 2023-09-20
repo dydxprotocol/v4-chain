@@ -1636,7 +1636,7 @@ func setupProcessProposerOperationsTestCase(
 	// Create all perpetuals.
 	for _, p := range tc.perpetuals {
 		_, err := ks.PerpetualsKeeper.CreatePerpetual(
-			ctx,
+			ks.Ctx,
 			p.Params.Id,
 			p.Params.Ticker,
 			p.Params.MarketId,

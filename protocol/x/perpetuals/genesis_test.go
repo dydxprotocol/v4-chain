@@ -1,8 +1,9 @@
 package perpetuals_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -20,11 +21,11 @@ func TestGenesis(t *testing.T) {
 	pricesGenesisState := constants.Prices_DefaultGenesisState
 	genesisState := constants.Perpetuals_DefaultGenesisState
 
-	ctx, k, priceKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-	prices.InitGenesis(ctx, *priceKeeper, pricesGenesisState)
-	perpetuals.InitGenesis(ctx, *k, genesisState)
-	assertLiquidityTierUpsertEventsInIndexerBlock(t, k, ctx, genesisState.LiquidityTiers)
-	got := perpetuals.ExportGenesis(ctx, *k)
+	pc := keepertest.PerpetualsKeepers(t)
+	prices.InitGenesis(pc.Ctx, *pc.PricesKeeper, pricesGenesisState)
+	perpetuals.InitGenesis(pc.Ctx, *pc.PerpetualsKeeper, genesisState)
+	assertLiquidityTierUpsertEventsInIndexerBlock(t, pc.PerpetualsKeeper, pc.Ctx, genesisState.LiquidityTiers)
+	got := perpetuals.ExportGenesis(pc.Ctx, *pc.PerpetualsKeeper)
 	require.NotNil(t, got)
 
 	nullify.Fill(&genesisState) //nolint:staticcheck
@@ -136,10 +137,10 @@ func TestGenesis_Failure(t *testing.T) {
 	}
 
 	// Test setup.
-	ctx, k, priceKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+	pc := keepertest.PerpetualsKeepers(t)
 
 	pricesGenesisState := constants.Prices_DefaultGenesisState
-	prices.InitGenesis(ctx, *priceKeeper, pricesGenesisState)
+	prices.InitGenesis(pc.Ctx, *pc.PricesKeeper, pricesGenesisState)
 
 	// Run tests.
 	for name, tc := range tests {
@@ -171,7 +172,7 @@ func TestGenesis_Failure(t *testing.T) {
 			}
 
 			require.Panics(t, func() {
-				perpetuals.InitGenesis(ctx, *k, genesisState)
+				perpetuals.InitGenesis(pc.Ctx, *pc.PerpetualsKeeper, genesisState)
 			})
 		})
 	}
