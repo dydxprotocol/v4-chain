@@ -459,7 +459,6 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 
 	for _, perp := range allPerpetuals {
 		indexPrice, exists := marketIdToIndexPrice[perp.Params.MarketId]
-		fmt.Printf("!!!perp = %v, indexPrixe = %v, exists = %v\n", perp, indexPrice, exists)
 		// If a valid index price is missing, skip this market, effectively emitting a zero premium.
 		if !exists {
 			k.Logger(ctx).Error(

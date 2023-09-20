@@ -207,5 +207,4 @@ func TestGetValidMedianPrices_MultiMarketSuccess(t *testing.T) {
 	) // Median of 2002, 3003
 	// Market7 only has 1 valid price due to update time constraint,
 	// but the min exchanges required is 2. Therefore, no median price.
-	require.True(t, false)
 }

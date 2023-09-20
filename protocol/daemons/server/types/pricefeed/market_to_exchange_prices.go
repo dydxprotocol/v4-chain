@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -90,7 +89,6 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 
 		// GetValidPriceForMarket filters prices based on cutoff time.
 		validPrices := exchangeToPrice.GetValidPrices(cutoffTime)
-		fmt.Printf("marketId = %v, Valid prices =%v, cutoff time =%v\n", marketId, validPrices, cutoffTime)
 		telemetry.SetGaugeWithLabels(
 			[]string{
 				metrics.PricefeedServer,
