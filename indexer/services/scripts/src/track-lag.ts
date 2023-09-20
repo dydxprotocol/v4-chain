@@ -35,6 +35,7 @@ export function startLoop(
   loopTask: () => Promise<unknown>,
   loopIntervalMs: number,
 ): void {
+  console.log('Start of loop');
   wrapBackgroundTask(
     startLoopAsync(
       loopTask,
@@ -62,6 +63,7 @@ async function startLoopAsync(
 }
 
 async function trackLag(): Promise<void> {
+  console.log('Start of trackLag');
   const [
     indexerBlock,
     indexerFullNodeBlock,
