@@ -9,6 +9,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { placeHolderProvider } from '../../../helpers/compliance/compliance-clients';
+import { complianceCheck } from '../../../lib/compliance-check';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -48,6 +49,7 @@ router.get(
     },
   }),
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

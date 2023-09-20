@@ -36,6 +36,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
   adjustUSDCAssetPosition,
@@ -283,6 +284,7 @@ router.get(
     },
   }),
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const {
@@ -316,6 +318,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
