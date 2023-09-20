@@ -15,7 +15,7 @@ func TestInternalMsgSamples_All_Key(t *testing.T) {
 }
 
 func TestInternalMsgSamples_All_Value(t *testing.T) {
-	validateSampleMsgValue(t, msgs.InternalMsgSamplesAll)
+	validateMsgValue(t, msgs.InternalMsgSamplesAll)
 }
 
 func TestInternalMsgSamples_Gov_Key(t *testing.T) {
@@ -133,4 +133,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.InternalMsgSamplesGovAuth))
+}
+
+func TestInternalMsgSamples_Gov_Value(t *testing.T) {
+	validateMsgValue(t, msgs.InternalMsgSamplesGovAuth)
 }
