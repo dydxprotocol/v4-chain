@@ -90,15 +90,21 @@ async function trackLag(): Promise<void> {
   const indexerBlockLag: string = Big(indexerFullNodeBlock.block).minus(indexerBlock.blockHeight).toString();
   const indexerTimeLag: Duration = DateTime.fromISO(indexerFullNodeBlock.timestamp).diff(DateTime.fromISO(indexerBlock.time))
   const validatorBlockLag: string = Big(validatorBlock.block).minus(indexerBlock.blockHeight).toString();
-  const validatorTimeLag: Duration = DateTime.fromISO(validatorBlock.timestamp).diff(DateTime.fromISO(indexerFullNodeBlock.timestamp))
+  const validatorTimeLag: Duration = DateTime.fromISO(validatorBlock.timestamp).diff(DateTime.fromISO(indexerBlock.time))
+  const validatorFullNodeBlockLag: string = Big(validatorBlock.block).minus(indexerFullNodeBlock.block).toString();
+  const validatorFullNodeTimeLag: Duration = DateTime.fromISO(validatorBlock.timestamp).diff(DateTime.fromISO(indexerFullNodeBlock.timestamp))
   console.log(`indexerBlockLag: ${indexerBlockLag}`);
   console.log(`indexerTimeLag: ${indexerTimeLag.milliseconds}`);
   console.log(`validatorBlockLag: ${validatorBlockLag}`);
   console.log(`validatorTimeLag: ${validatorTimeLag.milliseconds}`);
+  console.log(`validatorFullNodeBlockLag: ${validatorFullNodeBlockLag}`);
+  console.log(`validatorFullNodeTimeLag: ${validatorFullNodeTimeLag.milliseconds}`);
   metrics.gauge('scripts.chris.indexer_block_lag', Number(indexerBlockLag));
   metrics.gauge('scripts.chris.indexer_time_lag', Number(indexerTimeLag.milliseconds));
   metrics.gauge('scripts.chris.validator_block_lag', Number(validatorBlockLag));
   metrics.gauge('scripts.chris.validator_time_lag', Number(validatorTimeLag.milliseconds));
+  metrics.gauge('scripts.chris.validator_full_node_block_lag', Number(validatorFullNodeBlockLag));
+  metrics.gauge('scripts.chris.validator_full_node_time_lag', Number(validatorFullNodeTimeLag.milliseconds));
 }
 
 async function getValidatorBlockData(url_prefix: string): Promise<BlockData> {
