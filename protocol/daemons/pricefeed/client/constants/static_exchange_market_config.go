@@ -189,8 +189,7 @@ var (
 					Ticker: "tXRPUSD",
 				},
 				exchange_common.MARKET_USDT_USD: {
-					Ticker:         "tUSTUSD",
-					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+					Ticker: "tUSTUSD",
 				},
 			},
 		},
@@ -376,9 +375,6 @@ var (
 				exchange_common.MARKET_COMP_USD: {
 					Ticker:         "COMP_USDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
-				},
-				exchange_common.MARKET_USDT_USD: {
-					Ticker: "USDT_USD",
 				},
 			},
 		},
