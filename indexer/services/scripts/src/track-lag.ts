@@ -5,8 +5,6 @@ import { BlockFromDatabase, BlockTable, IsoString } from '@dydxprotocol-indexer/
 import { DateTime, Duration } from 'luxon';
 import Big from 'big.js';
 import { axiosRequest, delay, wrapBackgroundTask } from '../../../packages/base/build';
-import * as http from 'http';
-import * as axios from 'axios';
 
 const VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX = ':26657/block';
 
