@@ -86,6 +86,10 @@ async function trackLag(): Promise<void> {
   const indexerTimeLag: Duration = DateTime.fromISO(indexerFullNodeBlock.timestamp).diff(DateTime.fromISO(indexerBlock.time))
   const validatorBlockLag: string = Big(validatorBlock.block).minus(indexerBlock.blockHeight).toString();
   const validatorTimeLag: Duration = DateTime.fromISO(validatorBlock.timestamp).diff(DateTime.fromISO(indexerFullNodeBlock.timestamp))
+  console.log(`indexerBlockLag: ${indexerBlockLag}`);
+  console.log(`indexerTimeLag: ${indexerTimeLag}`);
+  console.log(`validatorBlockLag: ${validatorBlockLag}`);
+  console.log(`validatorTimeLag: ${validatorTimeLag}`);
   /*
   logger.info({
     at: 'track-lag#runTask',
