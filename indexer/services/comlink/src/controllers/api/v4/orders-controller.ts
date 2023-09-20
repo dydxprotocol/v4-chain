@@ -27,6 +27,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { redisClient } from '../../../helpers/redis/redis-controller';
+import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
   handleControllerError,
@@ -219,6 +220,7 @@ router.get(
   query('goodTilBlock').if(query('goodTilBlockTime').exists()).isEmpty()
     .withMessage('Cannot provide both goodTilBlock and goodTilBlockTime'),
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
