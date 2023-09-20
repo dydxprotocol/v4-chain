@@ -2447,7 +2447,7 @@ func TestAddPremiums_NonExistingPerpetuals(t *testing.T) {
 				ctx sdk.Context,
 				samples []types.FundingPremium,
 			) error {
-				return keeper.AddPremiumSamples(ctx, samples)
+				return keeper.AddPremiumSamples(sdk.Context{}, samples)
 			},
 		},
 		"AddPremiumVotes": {
