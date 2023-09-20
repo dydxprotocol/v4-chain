@@ -19,12 +19,12 @@ import (
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak              AccountKeeper
+	ak              sdkante.AccountKeeper
 	signModeHandler authsigning.SignModeHandler
 }
 
 func NewSigVerificationDecorator(
-	ak AccountKeeper,
+	ak sdkante.AccountKeeper,
 	signModeHandler authsigning.SignModeHandler,
 ) SigVerificationDecorator {
 	return SigVerificationDecorator{
