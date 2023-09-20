@@ -1043,7 +1043,8 @@ func TestLiquidateSubaccounts(t *testing.T) {
 				existingOrderMsgs[i] = types.MsgPlaceOrder{Order: order}
 			}
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, existingOrderMsgs...) {
-				require.True(t, tApp.CheckTx(checkTx).IsOK())
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			// Update the liquidatable subaccount IDs.

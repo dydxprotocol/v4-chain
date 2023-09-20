@@ -21,7 +21,8 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 		tApp.App,
 		LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
@@ -34,7 +35,8 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 			30,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	// We should reject this order since there is already an uncommitted cancellation which
 	// we would reject during `DeliverTx`.
@@ -43,9 +45,9 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 		tApp.App,
 		LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 	) {
-		result := tApp.CheckTx(checkTx)
-		require.False(t, result.IsOK())
-		require.Contains(t, result.Log, "An uncommitted stateful order cancellation with this OrderId already exists")
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+		require.Contains(t, resp.Log, "An uncommitted stateful order cancellation with this OrderId already exists")
 	}
 
 	// Advancing to the next block should succeed and have the order be cancelled and a new one not being placed.
@@ -169,11 +171,9 @@ func TestCancelStatefulOrder(t *testing.T) {
 						},
 						testSdkMsg.Msg,
 					))
-					require.Equal(
-						t,
-						testSdkMsg.ExpectedIsOk,
-						result.IsOK(),
-					)
+					require.Conditionf(t, func() bool {
+						return result.IsOK() == testSdkMsg.ExpectedIsOk
+					}, "Expected CheckTx to succeed. Response: %+v", result)
 				}
 			}
 

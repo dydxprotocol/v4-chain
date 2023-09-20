@@ -224,10 +224,10 @@ func TestDisallowMsgs_CheckTx_Fail(t *testing.T) {
 			}
 
 			// Run & Validate.
-			result := tApp.CheckTx(reqCheckTx)
-			require.False(t, result.IsOK(), "expected CheckTx to fail")
-			require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), result.Code)
-			require.Equal(t, tc.expectedErrorLog, result.Log)
+			resp := tApp.CheckTx(reqCheckTx)
+			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+			require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), resp.Code)
+			require.Equal(t, tc.expectedErrorLog, resp.Log)
 		})
 	}
 }
