@@ -100,6 +100,14 @@ export const configSchema = {
   ATHENA_DATABASE_NAME: parseString({ default: 'default' }),
   ATHENA_WORKING_GROUP: parseString({ default: 'primary' }),
   SKIP_TO_ATHENA_TABLE_WRITING: parseBoolean({ default: false }),
+
+  // Update compliance data
+  ACTIVE_ADDRESS_THRESHOLD_SECONDS: parseInteger({ default: 86_400 }),
+  MAX_COMPLIANCE_DATA_AGE_SECONDS: parseInteger({ default: 2_630_000 }), // 1 month
+  MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS: parseInteger({ default: 86_400 }), // 1 day
+  MAX_COMPLIANCE_DATA_QUERY_PER_LOOP: parseInteger({ default: 100 }),
+  COMPLIANCE_PROVIDER_QUERY_BATCH_SIZE: parseInteger({ default: 100 }),
+  COMPLIANCE_PROVIDER_QUERY_DELAY_MS: parseInteger({ default: 1000 }), // 1 second
 };
 
 export default parseSchema(configSchema);
