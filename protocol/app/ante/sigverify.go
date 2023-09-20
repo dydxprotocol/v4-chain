@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	sdkante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -31,27 +30,6 @@ func NewSigVerificationDecorator(
 	return SigVerificationDecorator{
 		ak:              ak,
 		signModeHandler: signModeHandler,
-	}
-}
-
-// OnlyLegacyAminoSigners checks SignatureData to see if all
-// signers are using SIGN_MODE_LEGACY_AMINO_JSON. If this is the case
-// then the corresponding SignatureV2 struct will not have account sequence
-// explicitly set, and we should skip the explicit verification of sig.Sequence
-// in the SigVerificationDecorator's AnteHandler function.
-func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
-	switch v := sigData.(type) {
-	case *signing.SingleSignatureData:
-		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	case *signing.MultiSignatureData:
-		for _, s := range v.Signatures {
-			if !OnlyLegacyAminoSigners(s) {
-				return false
-			}
-		}
-		return true
-	default:
-		return false
 	}
 }
 
@@ -144,7 +122,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			if err != nil {
 				var errMsg string
-				if OnlyLegacyAminoSigners(sig.Data) {
+				if sdkante.OnlyLegacyAminoSigners(sig.Data) {
 					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to
 					// check account sequence number, and therefore communicate sequence number as a
 					// potential cause of error.
