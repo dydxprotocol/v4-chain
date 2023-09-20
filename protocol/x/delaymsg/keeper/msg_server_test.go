@@ -67,17 +67,17 @@ func TestDelayMessage(t *testing.T) {
 			setupMocks: setupMockWithValidReturnValues,
 			msg:        validDelayMsg,
 		},
-		"Panics when signed by invalid authority": {
+		"Fails if signed by invalid authority": {
 			setupMocks: setupMockWithValidReturnValues,
 			msg: &types.MsgDelayMessage{
 				Authority: InvalidAuthority,
 			},
 			expectedErr: fmt.Errorf(
-				"%v is not recognized as a valid authority for sending delayed messages",
+				"%v is not recognized as a valid authority for sending messages: Invalid input",
 				InvalidAuthority,
 			),
 		},
-		"Panics if DelayMessageByBlocks returns an error": {
+		"Fails if DelayMessageByBlocks returns an error": {
 			setupMocks:  setupMockWithDelayMessageFailure,
 			msg:         validDelayMsg,
 			expectedErr: fmt.Errorf("DelayMessageByBlocks failed, err  = %w", TestError),
@@ -91,16 +91,19 @@ func TestDelayMessage(t *testing.T) {
 			tc.setupMocks(ctx, mockKeeper)
 			goCtx := sdk.WrapSDKContext(ctx)
 
+			// Set up error logging for expected errors.
 			if tc.expectedErr != nil {
-				require.PanicsWithError(
-					t,
-					tc.expectedErr.Error(),
-					func() {
-						_, _ = msgServer.DelayMessage(goCtx, tc.msg)
-					},
-				)
+				logger := &mocks.Logger{}
+				logger.On("Error", mock.Anything, mock.Anything, mock.Anything).Return().Return()
+				mockKeeper.On("Logger", ctx).Return(logger)
+			}
+
+			resp, err := msgServer.DelayMessage(goCtx, tc.msg)
+
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+				require.Nil(t, resp)
 			} else {
-				resp, err := msgServer.DelayMessage(goCtx, tc.msg)
 				require.NoError(t, err)
 				require.Equal(t, DelayMsgResponse, resp)
 			}

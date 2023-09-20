@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -23,21 +25,41 @@ func (k msgServer) DelayMessage(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.HasAuthority(msg.GetAuthority()) {
-		panic(fmt.Errorf(
-			"%v is not recognized as a valid authority for sending delayed messages",
+		k.Logger(ctx).Error(
+			"DelayMessage failed because msg.Authority is not recognized as a valid authority for sending messages",
+			"authority",
 			msg.GetAuthority(),
-		))
+		)
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"%v is not recognized as a valid authority for sending messages",
+			msg.GetAuthority(),
+		)
 	}
 
 	sdkMsg, err := msg.GetMessage()
 	if err != nil {
-		panic(fmt.Errorf("GetMessage for MsgDelayedMessage failed, err = %w", err))
+		k.Logger(ctx).Error(
+			"GetMessage for MsgDelayMessage failed",
+			constants.ErrorLogKey,
+			err,
+		)
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"GetMessage for MsgDelayedMessage failed, err = %v",
+			err,
+		)
 	}
 
 	id, err := k.DelayMessageByBlocks(ctx, sdkMsg, msg.DelayBlocks)
 
 	if err != nil {
-		panic(fmt.Errorf("DelayMessageByBlocks failed, err  = %w", err))
+		k.Logger(ctx).Error(
+			"DelayMessageByBlocks failed",
+			constants.ErrorLogKey,
+			err,
+		)
+		return nil, fmt.Errorf("DelayMessageByBlocks failed, err  = %w", err)
 	}
 
 	return &types.MsgDelayMessageResponse{
