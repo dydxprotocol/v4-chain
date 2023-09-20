@@ -536,9 +536,9 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// marginAdjustmentPpm = sqrt(quoteQuantums * (OneMillion * OneMillion) / basePositionNotional)
 			// = sqrt(38_885_000 * 1_000_000) ~= 6235783
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums * marginAdjustmentPpm / 1_000_000 / 1_000_000
-			// = 10_000 * 38_885_000 * 6235783 / 1_000_000 / 1_000_000 ~= 2_424_784
-			bigExpectedInitialMarginPpm:     big.NewInt(2_424_784),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(1_212_392),
+			// = 10_000 * 38_885_000 * 6235783 / 1_000_000 / 1_000_000 ~= 2_424_785 (rounded up).
+			bigExpectedInitialMarginPpm:     big.NewInt(2_424_785),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(1_212_393),
 		},
 		"InitialMargin 20%, MaintenanceMargin 10%, atomic resolution 6, margin adjusted": {
 			price:                        36_750,
@@ -568,9 +568,9 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			// marginAdjustmentPpm = sqrt(quoteQuantums * (OneMillion * OneMillion) / basePositionNotional)
 			// = sqrt(9_200_311_488 * (OneMillion * OneMillion) / 100_000_000) ~= 9_591_825
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums * marginAdjustmentPpm / 1_000_000 / 1_000_000
-			// = 50_000 * 9_200_311_488 * 9_591_825 / 1_000_000 / 1_000_000 ~= 4_412_388_886
-			bigExpectedInitialMarginPpm:     big.NewInt(4_412_388_886),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(2_647_433_332),
+			// = 50_000 * 9_200_311_488 * 9_591_825 / 1_000_000 / 1_000_000 ~= 4_412_388_887 (rounded up)
+			bigExpectedInitialMarginPpm:     big.NewInt(4_412_388_887),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(2_647_433_333),
 		},
 		"InitialMargin 25%, MaintenanceMargin 15%, atomic resolution 6, margin adjusted and IM capped at 100% of notional": {
 			price:                        123_456,
