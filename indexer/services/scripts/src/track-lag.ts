@@ -4,7 +4,9 @@ import { runAsyncScript } from './helpers/util';
 import { BlockFromDatabase, BlockTable, IsoString } from '@dydxprotocol-indexer/postgres';
 import { DateTime, Duration } from 'luxon';
 import Big from 'big.js';
-import { delay, safeAxiosRequest, wrapBackgroundTask } from '../../../packages/base/build';
+import { axiosRequest, delay, wrapBackgroundTask } from '../../../packages/base/build';
+import * as http from 'http';
+import * as axios from 'axios';
 
 const VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX = ':26657/block';
 
@@ -29,6 +31,7 @@ runAsyncScript(async () => {
     trackLag,
     5_000, // 5 seconds
   );
+  await delay(3_600_000) // 1 hour
 });
 
 export function startLoop(
@@ -77,6 +80,7 @@ async function trackLag(): Promise<void> {
     getValidatorBlockData(args.full_node_url!),
     getValidatorBlockData(args.validator_url!),
   ]);
+  console.log(`block: ${JSON.stringify(indexerBlock)}`);
 
   if (indexerBlock === undefined) {
     return;
@@ -102,16 +106,17 @@ async function trackLag(): Promise<void> {
   */
 }
 
-async function getValidatorBlockData(url: string): Promise<BlockData> {
-  const response = await safeAxiosRequest({
-    url: `${url}${VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX}`,
+async function getValidatorBlockData(url_prefix: string): Promise<BlockData> {
+  const url: string = `${url_prefix}${VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX}`
+  const response: any = JSON.parse(await axiosRequest({
+    url,
     method: 'GET',
     transformResponse: (res) => res,
-  });
-  console.log(`url: ${url}\nresponse: ${response}`);
+  }) as any);
+  const header = response.result.block.header;
 
   return {
-    block: '0',
-    timestamp: '2021-01-01T00:00:00.000Z',
+    block: header.height,
+    timestamp: header.time,
   };
 }
