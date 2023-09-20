@@ -849,7 +849,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[28].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[28].id' -v '28'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[28].exponent' -v '-13'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[28].exponent' -v '-16'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[28].price' -v '2481900353'          # $.0002482 = 1 PEPE.
 	# PEPE Exchange Config
 	pepe_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/pepe_exchange_config.json" | jq -c '.')
