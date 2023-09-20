@@ -7,8 +7,6 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
@@ -1372,10 +1370,26 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	}
 }
 
-// `SetParams` sets all perpetuals module parameters in store.
-func (k Keeper) SetParams(ctx sdk.Context) error {
-	// TODO(CORE-560): implement this method
-	return status.Errorf(codes.Unimplemented, "SetParams not implemented")
+// `SetParams` atomically sets all perpetuals module parameters in store.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+	// Validate params.
+	if err := params.Validate(); err != nil {
+		return err
+	}
+	// Try to set params in cached store.
+	cacheCtx, writeCache := ctx.CacheContext()
+	if err := k.SetFundingRateClampFactorPpm(cacheCtx, params.FundingRateClampFactorPpm); err != nil {
+		return err
+	}
+	if err := k.SetPremiumVoteClampFactorPpm(cacheCtx, params.PremiumVoteClampFactorPpm); err != nil {
+		return err
+	}
+	if err := k.SetMinNumVotesPerSample(cacheCtx, params.MinNumVotesPerSample); err != nil {
+		return err
+	}
+	// Write cached store to main store.
+	writeCache()
+	return nil
 }
 
 // `GetFundingRateClampFactorPpm` returns funding rate clamp factor (in parts-per-million).

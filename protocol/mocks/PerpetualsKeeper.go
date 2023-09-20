@@ -248,6 +248,20 @@ func (_m *PerpetualsKeeper) SetLiquidityTier(ctx types.Context, id uint32, name 
 	return r0, r1
 }
 
+// SetParams provides a mock function with given fields: ctx, params
+func (_m *PerpetualsKeeper) SetParams(ctx types.Context, params perpetualstypes.Params) error {
+	ret := _m.Called(ctx, params)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, perpetualstypes.Params) error); ok {
+		r0 = rf(ctx, params)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewPerpetualsKeeper interface {
 	mock.TestingT
 	Cleanup(func())
