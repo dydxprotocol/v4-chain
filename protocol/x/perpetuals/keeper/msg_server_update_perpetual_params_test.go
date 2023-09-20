@@ -179,11 +179,11 @@ func TestUpdatePerpetualParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			kc := keepertest.PerpetualsKeepers(t)
-			tc.setup(t, kc.Ctx, kc.PerpetualsKeeper, kc.PricesKeeper)
+			pc := keepertest.PerpetualsKeepers(t)
+			tc.setup(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper)
 
-			msgServer := perpkeeper.NewMsgServerImpl(kc.PerpetualsKeeper)
-			wrappedCtx := sdk.WrapSDKContext(kc.Ctx)
+			msgServer := perpkeeper.NewMsgServerImpl(pc.PerpetualsKeeper)
+			wrappedCtx := sdk.WrapSDKContext(pc.Ctx)
 
 			_, err := msgServer.UpdatePerpetualParams(wrappedCtx, tc.msg)
 			if tc.expectedErr != "" {
@@ -192,7 +192,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				require.NoError(t, err)
 
 				// Verify updated perpetual params in state.
-				updatedPerpetualInState, err := kc.PerpetualsKeeper.GetPerpetual(kc.Ctx, tc.msg.PerpetualParams.Id)
+				updatedPerpetualInState, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, tc.msg.PerpetualParams.Id)
 				require.NoError(t, err)
 				require.Equal(t, tc.msg.PerpetualParams, updatedPerpetualInState.Params)
 			}
