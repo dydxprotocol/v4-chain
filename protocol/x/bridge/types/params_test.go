@@ -12,24 +12,35 @@ import (
 func TestEventParams_Validate(t *testing.T) {
 	tests := map[string]struct {
 		params *types.EventParams
-		err    error
+		err    string
 	}{
-		"default is valid": {
+		"Valid: default": {
 			params: &types.DefaultGenesis().EventParams,
-			err:    nil,
 		},
-		"empty is valid": {
-			params: &types.EventParams{},
-			err:    nil,
+		"Invalid: Eth Address": {
+			params: &types.EventParams{
+				Denom:      "denom",
+				EthChainId: 1,
+				EthAddress: "",
+			},
+			err: types.ErrInvalidEthAddress.Error(),
+		},
+		"Invalid: denom": {
+			params: &types.EventParams{
+				Denom:      "7coin",
+				EthChainId: 1,
+				EthAddress: "test",
+			},
+			err: "invalid denom",
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := tc.params.Validate()
-			if tc.err == nil {
+			if tc.err == "" {
 				require.NoError(t, err)
 			} else {
-				require.Error(t, tc.err, err)
+				require.ErrorContains(t, err, tc.err)
 			}
 		})
 	}
