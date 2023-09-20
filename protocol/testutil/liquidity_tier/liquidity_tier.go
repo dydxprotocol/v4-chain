@@ -24,9 +24,9 @@ func WithInitialMarginPpm(initialMarginPpm uint32) LtModifierOption {
 	}
 }
 
-func WithMaitenanceMarginFraction(maitenanceMarginFraction uint32) LtModifierOption {
+func WithMaintenanceFractionPpm(maintenanceFractionPpm uint32) LtModifierOption {
 	return func(lt *perptypes.LiquidityTier) {
-		lt.MaintenanceFractionPpm = maitenanceMarginFraction
+		lt.MaintenanceFractionPpm = maintenanceFractionPpm
 	}
 }
 
