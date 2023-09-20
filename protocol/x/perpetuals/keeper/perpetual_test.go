@@ -2165,8 +2165,9 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 		blockHeight                         int64
 		samplePremiumPpm                    int32
 		numPerpetuals                       int
-		numPerpetualsWithValidIndexPrice    int
-		expectedNumSamples                  int
+		// Should be <= `numPerpetuals`.
+		numPerpetualsWithValidIndexPrice int
+		expectedNumSamples               int
 	}{
 		"Positive premium": {
 			currentFundingSampleEpochStartBlock: 23,
@@ -2258,7 +2259,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			mockPricePremiumGetter.AssertNumberOfCalls(
 				t,
 				"GetPricePremiumForPerpetual",
-				lib.Min[int](tc.numPerpetualsWithValidIndexPrice, tc.numPerpetuals),
+				tc.numPerpetualsWithValidIndexPrice,
 			)
 
 			// Check that new premium votes are returned.
