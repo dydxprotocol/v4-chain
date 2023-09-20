@@ -174,6 +174,7 @@ const (
 	// Epochs.
 	EpochInfoName = "epoch_name"
 	EpochNumber   = "epoch_number"
+	IsEpochZero   = "is_epoch_zero"
 
 	// Perpetuals.
 	AddPremiumSamples            = "add_premium_samples"

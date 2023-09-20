@@ -112,9 +112,6 @@ func (k Keeper) ProcessDepositToSubaccount(
 			float32(msgDepositToSubaccount.Quantums),
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(metrics.AssetId, int(msgDepositToSubaccount.AssetId)),
-				metrics.GetLabelForStringValue(metrics.SenderAddress, msgDepositToSubaccount.Sender),
-				metrics.GetLabelForStringValue(metrics.RecipientAddress, msgDepositToSubaccount.Recipient.Owner),
-				metrics.GetLabelForIntValue(metrics.RecipientSubaccount, int(msgDepositToSubaccount.Recipient.Number)),
 			},
 		)
 
@@ -179,9 +176,6 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 			float32(msgWithdrawFromSubaccount.Quantums),
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(metrics.AssetId, int(msgWithdrawFromSubaccount.AssetId)),
-				metrics.GetLabelForStringValue(metrics.SenderAddress, msgWithdrawFromSubaccount.Sender.Owner),
-				metrics.GetLabelForIntValue(metrics.SenderSubaccount, int(msgWithdrawFromSubaccount.Sender.Number)),
-				metrics.GetLabelForStringValue(metrics.RecipientAddress, msgWithdrawFromSubaccount.Recipient),
 			},
 		)
 
