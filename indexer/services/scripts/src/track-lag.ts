@@ -4,7 +4,7 @@ import { runAsyncScript } from './helpers/util';
 import { BlockFromDatabase, BlockTable, IsoString } from '@dydxprotocol-indexer/postgres';
 import { DateTime, Duration } from 'luxon';
 import Big from 'big.js';
-import { axiosRequest, delay, wrapBackgroundTask } from '../../../packages/base/build';
+import { axiosRequest, delay, stats, wrapBackgroundTask } from '../../../packages/base/build';
 
 const VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX = ':26657/block';
 
@@ -89,19 +89,13 @@ async function trackLag(): Promise<void> {
   const validatorBlockLag: string = Big(validatorBlock.block).minus(indexerBlock.blockHeight).toString();
   const validatorTimeLag: Duration = DateTime.fromISO(validatorBlock.timestamp).diff(DateTime.fromISO(indexerFullNodeBlock.timestamp))
   console.log(`indexerBlockLag: ${indexerBlockLag}`);
-  console.log(`indexerTimeLag: ${indexerTimeLag}`);
+  console.log(`indexerTimeLag: ${indexerTimeLag.milliseconds}`);
   console.log(`validatorBlockLag: ${validatorBlockLag}`);
-  console.log(`validatorTimeLag: ${validatorTimeLag}`);
-  /*
-  logger.info({
-    at: 'track-lag#runTask',
-    message: 'Got block lag',
-    indexerBlockLag,
-    indexerTimeLagInMilliseconds: indexerTimeLag.milliseconds,
-    validatorBlockLag,
-    validatorTimeLagInMilliseconds: validatorTimeLag.milliseconds,
-  });
-  */
+  console.log(`validatorTimeLag: ${validatorTimeLag.milliseconds}`);
+  stats.gauge('scripts.chris.indexer_block_lag', Number(indexerBlockLag));
+  stats.gauge('scripts.chris.indexer_time_lag', Number(indexerTimeLag.milliseconds));
+  stats.gauge('scripts.chris.validator_block_lag', Number(validatorBlockLag));
+  stats.gauge('scripts.chris.validator_time_lag', Number(validatorTimeLag.milliseconds));
 }
 
 async function getValidatorBlockData(url_prefix: string): Promise<BlockData> {
