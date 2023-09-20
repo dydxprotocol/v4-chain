@@ -455,10 +455,32 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		metrics.Latency,
 	)
 
+	marketIdToIndexPrice := k.pricesKeeper.GetMarketIdToValidIndexPrice(ctx)
+
 	for _, perp := range allPerpetuals {
-		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
-		if err != nil {
-			panic(err)
+		indexPrice, exists := marketIdToIndexPrice[perp.Params.MarketId]
+		// If a valid index price is missing, skip this market, effectively emitting a zero premium.
+		if !exists {
+			k.Logger(ctx).Error(
+				fmt.Sprintf(
+					"Perpetual (%d) does not have valid index price yet. Not including in AddPremiumVotes message",
+					perp.Params.Id,
+				))
+			telemetry.IncrCounterWithLabels(
+				[]string{
+					types.ModuleName,
+					metrics.MissingIndexPriceForFunding,
+					metrics.Count,
+				},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForIntValue(
+						metrics.MarketId,
+						int(perp.Params.MarketId),
+					),
+				},
+			)
+			continue
 		}
 
 		// Get impact notional corresponding to this perpetual market (panic if its liquidity tier doesn't exist).
@@ -477,7 +499,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			ctx,
 			perp.Params.Id,
 			types.GetPricePremiumParams{
-				MarketPrice:                 marketPrice,
+				IndexPrice:                  indexPrice,
 				BaseAtomicResolution:        perp.Params.AtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: bigImpactNotionalQuoteQuantums,

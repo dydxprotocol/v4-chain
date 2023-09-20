@@ -20,6 +20,11 @@ var (
 	MarketId10 = uint32(10)
 	MarketId11 = uint32(11)
 
+	// Exponents
+	Exponent9 = int32(-9)
+	Exponent8 = int32(-8)
+	Exponent7 = int32(-7)
+
 	// Exchanges
 	ExchangeId0 = "Exchange0"
 	ExchangeId1 = "Exchange1"
@@ -314,14 +319,17 @@ var (
 	AllMarketParamsMinExchanges2 = []types.MarketParam{
 		{
 			Id:           MarketId9,
+			Exponent:     Exponent9,
 			MinExchanges: 2,
 		},
 		{
 			Id:           MarketId8,
+			Exponent:     Exponent8,
 			MinExchanges: 2,
 		},
 		{
 			Id:           MarketId7,
+			Exponent:     Exponent7,
 			MinExchanges: 2,
 		},
 	}
