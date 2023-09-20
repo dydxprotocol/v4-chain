@@ -385,5 +385,6 @@ func defaultAppOptionsForSimulation() simtestutil.AppOptionsMap {
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 	appOptions[daemonflags.FlagPriceDaemonEnabled] = false
 	appOptions[daemonflags.FlagBridgeDaemonEnabled] = false
+	appOptions[daemonflags.FlagLiquidationDaemonEnabled] = false
 	return appOptions
 }
