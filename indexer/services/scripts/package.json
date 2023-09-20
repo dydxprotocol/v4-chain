@@ -21,6 +21,7 @@
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
     "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
     "big.js": "^6.0.2",
+    "datadog-metrics": "^0.11.0",
     "dotenv-flow": "^3.2.0",
     "lodash": "^4.17.21",
     "long": "^5.2.1",

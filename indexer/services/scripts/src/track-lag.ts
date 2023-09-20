@@ -1,12 +1,15 @@
 import yargs from 'yargs';
+import * as metrics from 'datadog-metrics';
 
 import { runAsyncScript } from './helpers/util';
 import { BlockFromDatabase, BlockTable, IsoString } from '@dydxprotocol-indexer/postgres';
 import { DateTime, Duration } from 'luxon';
 import Big from 'big.js';
-import { axiosRequest, delay, stats, wrapBackgroundTask } from '../../../packages/base/build';
+import { axiosRequest, delay, wrapBackgroundTask } from '../../../packages/base/build';
 
 const VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX = ':26657/block';
+
+metrics.init({});
 
 type BlockData = {
   block: string;
@@ -29,7 +32,7 @@ runAsyncScript(async () => {
     trackLag,
     5_000, // 5 seconds
   );
-  await delay(3_600_000) // 1 hour
+  await delay(3_600_000 * 24) // 1 day
 });
 
 export function startLoop(
@@ -92,10 +95,10 @@ async function trackLag(): Promise<void> {
   console.log(`indexerTimeLag: ${indexerTimeLag.milliseconds}`);
   console.log(`validatorBlockLag: ${validatorBlockLag}`);
   console.log(`validatorTimeLag: ${validatorTimeLag.milliseconds}`);
-  stats.gauge('scripts.chris.indexer_block_lag', Number(indexerBlockLag));
-  stats.gauge('scripts.chris.indexer_time_lag', Number(indexerTimeLag.milliseconds));
-  stats.gauge('scripts.chris.validator_block_lag', Number(validatorBlockLag));
-  stats.gauge('scripts.chris.validator_time_lag', Number(validatorTimeLag.milliseconds));
+  metrics.gauge('scripts.chris.indexer_block_lag', Number(indexerBlockLag));
+  metrics.gauge('scripts.chris.indexer_time_lag', Number(indexerTimeLag.milliseconds));
+  metrics.gauge('scripts.chris.validator_block_lag', Number(validatorBlockLag));
+  metrics.gauge('scripts.chris.validator_time_lag', Number(validatorTimeLag.milliseconds));
 }
 
 async function getValidatorBlockData(url_prefix: string): Promise<BlockData> {
