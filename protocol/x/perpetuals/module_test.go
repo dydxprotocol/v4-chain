@@ -49,14 +49,14 @@ func createAppModuleWithKeeper(t *testing.T) (
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, pricesKeeper, epochsKeeper, _ := keeper.PerpetualsKeepers(t)
+	pc := keeper.PerpetualsKeepers(t)
 
 	return perpetuals.NewAppModule(
 		appCodec,
-		keeper,
+		pc.PerpetualsKeeper,
 		nil,
 		nil,
-	), keeper, pricesKeeper, epochsKeeper, ctx
+	), pc.PerpetualsKeeper, pc.PricesKeeper, pc.EpochsKeeper, pc.Ctx
 }
 
 func createAppModuleBasic(t *testing.T) perpetuals.AppModuleBasic {

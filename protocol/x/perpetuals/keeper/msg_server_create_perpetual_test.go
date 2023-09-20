@@ -116,11 +116,11 @@ func TestCreatePerpetual(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			ctx, perpKeeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-			tc.setup(t, ctx, perpKeeper, pricesKeeper)
+			pc := keepertest.PerpetualsKeepers(t)
+			tc.setup(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper)
 
-			msgServer := perpkeeper.NewMsgServerImpl(perpKeeper)
-			wrappedCtx := sdk.WrapSDKContext(ctx)
+			msgServer := perpkeeper.NewMsgServerImpl(pc.PerpetualsKeeper)
+			wrappedCtx := sdk.WrapSDKContext(pc.Ctx)
 
 			_, err := msgServer.CreatePerpetual(wrappedCtx, tc.msg)
 			if tc.expectedErr != "" {
@@ -128,7 +128,7 @@ func TestCreatePerpetual(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-			require.Equal(t, tc.expectedPerpetuals, perpKeeper.GetAllPerpetuals(ctx))
+			require.Equal(t, tc.expectedPerpetuals, pc.PerpetualsKeeper.GetAllPerpetuals(pc.Ctx))
 		})
 	}
 }
