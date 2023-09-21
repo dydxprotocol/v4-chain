@@ -368,14 +368,14 @@ func (k Keeper) getSettledSubaccount(
 	fundingPayments map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
-	totalNetSettlement := big.NewInt(0)
+	totalNetSettlementPpm := big.NewInt(0)
 
 	newPerpetualPositions := []*types.PerpetualPosition{}
 	fundingPayments = make(map[uint32]dtypes.SerializableInt)
 
 	// Iterate through and settle all perpetual positions.
 	for _, p := range subaccount.PerpetualPositions {
-		bigNetSettlement, newFundingIndex, err := k.perpetualsKeeper.GetSettlement(
+		bigNetSettlementPpm, newFundingIndex, err := k.perpetualsKeeper.GetSettlement(
 			ctx,
 			p.PerpetualId,
 			p.GetBigQuantums(),
@@ -387,16 +387,18 @@ func (k Keeper) getSettledSubaccount(
 		// Record non-zero funding payment (to be later emitted in SubaccountUpdateEvent to indexer).
 		// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
 		// to a negative funding payment (position received funding payment) and vice versa.
-		if bigNetSettlement.Cmp(lib.BigInt0()) != 0 {
+		if bigNetSettlementPpm.Cmp(lib.BigInt0()) != 0 {
 			fundingPayments[p.PerpetualId] = dtypes.NewIntFromBigInt(
-				new(big.Int).Neg(bigNetSettlement),
+				new(big.Int).Neg(
+					new(big.Int).Div(bigNetSettlementPpm, lib.BigIntOneMillion()),
+				),
 			)
 		}
 
 		// Aggregate all net settlements.
 		// TODO(DEC-657): For less rounding error, divide net settlement by
 		// SomeLargeNumber only after summing all net settlements.
-		totalNetSettlement.Add(totalNetSettlement, bigNetSettlement)
+		totalNetSettlementPpm.Add(totalNetSettlementPpm, bigNetSettlementPpm)
 
 		// Update cached funding index of the perpetual position.
 		newPerpetualPositions = append(newPerpetualPositions, &types.PerpetualPosition{
@@ -412,7 +414,12 @@ func (k Keeper) getSettledSubaccount(
 		PerpetualPositions: newPerpetualPositions,
 		MarginEnabled:      subaccount.MarginEnabled,
 	}
-	newUsdcPosition := new(big.Int).Add(subaccount.GetUsdcPosition(), totalNetSettlement)
+	newUsdcPosition := new(big.Int).Add(
+		subaccount.GetUsdcPosition(),
+		// `Div` implements Euclidean division (unlike Go). When the diviser is positive,
+		// division result always rounds towards negative infinity.
+		totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion()),
+	)
 	err = newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
 	if err != nil {
 		return types.Subaccount{}, nil, err

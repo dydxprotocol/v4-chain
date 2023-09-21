@@ -759,7 +759,7 @@ func (k Keeper) AddSettlementForPositionDelta(
 			}
 
 			// Get the funding payment for this position delta.
-			bigNetSettlement, _, err := perpetualKeeper.GetSettlement(
+			bigNetSettlementPpm, _, err := perpetualKeeper.GetSettlement(
 				ctx,
 				perpetualId,
 				deltaQuantums,
@@ -773,7 +773,10 @@ func (k Keeper) AddSettlementForPositionDelta(
 			// Add the settlement to the subaccount.
 			// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
 			// to a negative funding payment (position received funding payment) and vice versa.
-			cumulativePnL.AddDeltaToSubaccount(subaccountId, bigNetSettlement)
+			cumulativePnL.AddDeltaToSubaccount(
+				subaccountId,
+				bigNetSettlementPpm.Div(bigNetSettlementPpm, lib.BigIntOneMillion()),
+			)
 		}
 	}
 	return nil

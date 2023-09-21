@@ -870,8 +870,8 @@ func (k Keeper) GetMarginRequirements(
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
 }
 
-// GetSettlement returns the net settlement amount (in quote quantums) given the
-// perpetual Id and position size (in base quantums).
+// GetSettlement returns the net settlement amount ppm (in quote quantums) given
+// the perpetual Id and position size (in base quantums).
 // When handling rounding, always round positive settlement amount to zero, and
 // negative amount to negative infinity. This ensures total amount of value does
 // not increase after settlement.
@@ -886,7 +886,7 @@ func (k Keeper) GetSettlement(
 	quantums *big.Int,
 	index *big.Int,
 ) (
-	bigNetSettlement *big.Int,
+	bigNetSettlementPpm *big.Int,
 	newFundingIndex *big.Int,
 	err error,
 ) {
@@ -903,19 +903,14 @@ func (k Keeper) GetSettlement(
 		return big.NewInt(0), perpetual.FundingIndex.BigInt(), nil
 	}
 
-	bigNetSettlement = new(big.Int).Mul(indexDelta, quantums)
+	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
 
-	// `bigNetSettlement`` carries sign. `indexDelta`` is the increase in `fundingIndex`, so if
+	// `bigNetSettlementPpm`` carries sign. `indexDelta`` is the increase in `fundingIndex`, so if
 	// the position is long (positive), the net settlement should be short (negative), and vice versa.
-	// Thus, always negate `bigNetSettlement` here.
-	bigNetSettlement = bigNetSettlement.Neg(bigNetSettlement)
+	// Thus, always negate `bigNetSettlementPpm` here.
+	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
 
-	// `Div` implements Euclidean division (unlike Go). When the diviser is positive,
-	// division result always rounds towards negative infinity.
-	return bigNetSettlement.Div(
-		bigNetSettlement,
-		big.NewInt(int64(lib.OneMillion)),
-	), perpetual.FundingIndex.BigInt(), nil
+	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt(), nil
 }
 
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,

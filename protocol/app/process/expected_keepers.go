@@ -49,7 +49,7 @@ type ProcessPerpetualKeeper interface {
 		quantums *big.Int,
 		index *big.Int,
 	) (
-		bigNetSettlement *big.Int,
+		bigNetSettlementPpm *big.Int,
 		newFundingIndex *big.Int,
 		err error,
 	)

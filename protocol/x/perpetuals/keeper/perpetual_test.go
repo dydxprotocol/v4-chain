@@ -1370,7 +1370,7 @@ func TestGetSettlement_Success(t *testing.T) {
 			err = pc.PerpetualsKeeper.ModifyFundingIndex(pc.Ctx, perpetualId, tc.perpetualFundingIndex)
 			require.NoError(t, err)
 
-			bigNetSettlement, newFundingIndex, err := pc.PerpetualsKeeper.GetSettlement(
+			bigNetSettlementPpm, newFundingIndex, err := pc.PerpetualsKeeper.GetSettlement(
 				pc.Ctx,
 				perpetualId,
 				tc.quantums,
@@ -1383,6 +1383,7 @@ func TestGetSettlement_Success(t *testing.T) {
 				newFundingIndex,
 			)
 
+			bigNetSettlement := bigNetSettlementPpm.Div(bigNetSettlementPpm, lib.BigIntOneMillion())
 			require.Equal(t,
 				0,
 				tc.expectedSettlement.Cmp(bigNetSettlement),
