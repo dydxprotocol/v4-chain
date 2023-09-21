@@ -14,6 +14,8 @@ import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
+import updateComplianceDataTask from './tasks/update-compliance-data';
+import { placeHolderProvider } from './helpers/compliance-clients';
 
 process.on('SIGTERM', () => {
   logger.info({
@@ -94,6 +96,12 @@ async function start(): Promise<void> {
       config.LOOPS_INTERVAL_MS_UPDATE_RESEARCH_ENVIRONMENT,
     );
   }
+
+  startLoop(
+    () => updateComplianceDataTask(placeHolderProvider),
+    'update_compliance_data',
+    config.LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA,
+  );
 
   logger.info({
     at: 'index',
