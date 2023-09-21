@@ -375,7 +375,7 @@ func (k Keeper) getSettledSubaccount(
 
 	// Iterate through and settle all perpetual positions.
 	for _, p := range subaccount.PerpetualPositions {
-		bigNetSettlementPpm, newFundingIndex, err := k.perpetualsKeeper.GetSettlement(
+		bigNetSettlementPpm, newFundingIndex, err := k.perpetualsKeeper.GetSettlementPpm(
 			ctx,
 			p.PerpetualId,
 			p.GetBigQuantums(),
@@ -396,8 +396,6 @@ func (k Keeper) getSettledSubaccount(
 		}
 
 		// Aggregate all net settlements.
-		// TODO(DEC-657): For less rounding error, divide net settlement by
-		// SomeLargeNumber only after summing all net settlements.
 		totalNetSettlementPpm.Add(totalNetSettlementPpm, bigNetSettlementPpm)
 
 		// Update cached funding index of the perpetual position.

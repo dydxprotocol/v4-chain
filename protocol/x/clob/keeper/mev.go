@@ -759,7 +759,7 @@ func (k Keeper) AddSettlementForPositionDelta(
 			}
 
 			// Get the funding payment for this position delta.
-			bigNetSettlementPpm, _, err := perpetualKeeper.GetSettlement(
+			bigNetSettlementPpm, _, err := perpetualKeeper.GetSettlementPpm(
 				ctx,
 				perpetualId,
 				deltaQuantums,

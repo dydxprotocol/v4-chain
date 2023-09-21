@@ -1272,84 +1272,60 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
 }
 
-func TestGetSettlement_Success(t *testing.T) {
+func TestGetSettlementPpm_Success(t *testing.T) {
 	tests := map[string]struct {
 		quantums              *big.Int
 		perpetualFundingIndex *big.Int
 		prevIndex             *big.Int
-		expectedSettlement    *big.Int
+		expectedSettlementPpm *big.Int
 	}{
 		"is long, index went from negative to positive": {
 			quantums:              big.NewInt(30_000),
 			prevIndex:             big.NewInt(-100),
 			perpetualFundingIndex: big.NewInt(100),
-			expectedSettlement:    big.NewInt(-6),
+			expectedSettlementPpm: big.NewInt(-6_000_000),
 		},
 		"is long, index unchanged": {
 			quantums:              big.NewInt(1_000_000),
 			prevIndex:             big.NewInt(100),
 			perpetualFundingIndex: big.NewInt(100),
-			expectedSettlement:    big.NewInt(0),
+			expectedSettlementPpm: big.NewInt(0),
 		},
 		"is long, index went from positive to zero": {
 			quantums:              big.NewInt(10_000_000),
 			prevIndex:             big.NewInt(100),
 			perpetualFundingIndex: big.NewInt(0),
-			expectedSettlement:    big.NewInt(1_000),
+			expectedSettlementPpm: big.NewInt(1_000_000_000),
 		},
 		"is long, index went from positive to negative": {
 			quantums:              big.NewInt(10_000_000),
 			prevIndex:             big.NewInt(100),
 			perpetualFundingIndex: big.NewInt(-200),
-			expectedSettlement:    big.NewInt(3_000),
+			expectedSettlementPpm: big.NewInt(3_000_000_000),
 		},
 		"is short, index went from negative to positive": {
 			quantums:              big.NewInt(-30_000),
 			prevIndex:             big.NewInt(-100),
 			perpetualFundingIndex: big.NewInt(100),
-			expectedSettlement:    big.NewInt(6),
+			expectedSettlementPpm: big.NewInt(6_000_000),
 		},
 		"is short, index unchanged": {
 			quantums:              big.NewInt(-1_000),
 			prevIndex:             big.NewInt(100),
 			perpetualFundingIndex: big.NewInt(100),
-			expectedSettlement:    big.NewInt(0),
+			expectedSettlementPpm: big.NewInt(0),
 		},
 		"is short, index went from positive to zero": {
 			quantums:              big.NewInt(-5_000_000),
 			prevIndex:             big.NewInt(100),
 			perpetualFundingIndex: big.NewInt(0),
-			expectedSettlement:    big.NewInt(-500),
+			expectedSettlementPpm: big.NewInt(-500_000_000),
 		},
 		"is short, index went from positive to negative": {
 			quantums:              big.NewInt(-5_000_000),
 			prevIndex:             big.NewInt(100),
 			perpetualFundingIndex: big.NewInt(-50),
-			expectedSettlement:    big.NewInt(-750),
-		},
-		"rounding - negative settlement should round toward negative infinity (is short)": {
-			quantums:              big.NewInt(-5_500_000),
-			prevIndex:             big.NewInt(1),
-			perpetualFundingIndex: big.NewInt(0),
-			expectedSettlement:    big.NewInt(-6),
-		},
-		"rounding - negative settlement should round toward negative infinity (is long)": {
-			quantums:              big.NewInt(5_500_000),
-			prevIndex:             big.NewInt(0),
-			perpetualFundingIndex: big.NewInt(1),
-			expectedSettlement:    big.NewInt(-6),
-		},
-		"rounding - positive settlement should round toward zero (is short)": {
-			quantums:              big.NewInt(-5_500_000),
-			prevIndex:             big.NewInt(0),
-			perpetualFundingIndex: big.NewInt(1),
-			expectedSettlement:    big.NewInt(5),
-		},
-		"rounding - positive settlement should round toward zero (is long)": {
-			quantums:              big.NewInt(5_500_000),
-			prevIndex:             big.NewInt(1),
-			perpetualFundingIndex: big.NewInt(0),
-			expectedSettlement:    big.NewInt(5),
+			expectedSettlementPpm: big.NewInt(-750_000_000),
 		},
 	}
 
@@ -1370,7 +1346,7 @@ func TestGetSettlement_Success(t *testing.T) {
 			err = pc.PerpetualsKeeper.ModifyFundingIndex(pc.Ctx, perpetualId, tc.perpetualFundingIndex)
 			require.NoError(t, err)
 
-			bigNetSettlementPpm, newFundingIndex, err := pc.PerpetualsKeeper.GetSettlement(
+			bigNetSettlementPpm, newFundingIndex, err := pc.PerpetualsKeeper.GetSettlementPpm(
 				pc.Ctx,
 				perpetualId,
 				tc.quantums,
@@ -1383,19 +1359,18 @@ func TestGetSettlement_Success(t *testing.T) {
 				newFundingIndex,
 			)
 
-			bigNetSettlement := bigNetSettlementPpm.Div(bigNetSettlementPpm, lib.BigIntOneMillion())
 			require.Equal(t,
 				0,
-				tc.expectedSettlement.Cmp(bigNetSettlement),
+				tc.expectedSettlementPpm.Cmp(bigNetSettlementPpm),
 			)
 		})
 	}
 }
 
-func TestGetSettlement_PerpetualNotFound(t *testing.T) {
+func TestGetSettlementPpm_PerpetualNotFound(t *testing.T) {
 	pc := keepertest.PerpetualsKeepers(t)
 	nonExistentPerpetualId := uint32(0)
-	_, _, err := pc.PerpetualsKeeper.GetSettlement(
+	_, _, err := pc.PerpetualsKeeper.GetSettlementPpm(
 		pc.Ctx,
 		nonExistentPerpetualId, // perpetualId
 		big.NewInt(-100),       // quantum

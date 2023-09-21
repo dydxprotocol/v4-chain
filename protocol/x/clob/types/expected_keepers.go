@@ -127,7 +127,7 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (perpetualsmoduletypes.Perpetual, pricestypes.MarketPrice, error)
-	GetSettlement(
+	GetSettlementPpm(
 		ctx sdk.Context,
 		perpetualId uint32,
 		quantums *big.Int,

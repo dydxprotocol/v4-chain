@@ -43,7 +43,7 @@ type ProcessStakingKeeper interface {
 // ProcessPerpetualKeeper defines the expected perpetual keeper used for `ProcessProposal`.
 type ProcessPerpetualKeeper interface {
 	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)
-	GetSettlement(
+	GetSettlementPpm(
 		ctx sdk.Context,
 		perpetualId uint32,
 		quantums *big.Int,

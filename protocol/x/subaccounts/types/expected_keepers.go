@@ -59,7 +59,7 @@ type AssetsKeeper interface {
 
 type PerpetualsKeeper interface {
 	ProductKeeper
-	GetSettlement(
+	GetSettlementPpm(
 		ctx sdk.Context,
 		perpetualId uint32,
 		quantums *big.Int,
