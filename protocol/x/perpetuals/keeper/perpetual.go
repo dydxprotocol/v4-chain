@@ -1370,25 +1370,22 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	}
 }
 
-// `SetParams` atomically sets all perpetuals module parameters in store.
+// `SetParams` sets all perpetuals module parameters in store.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	// Validate params.
 	if err := params.Validate(); err != nil {
 		return err
 	}
-	// Try to set params in cached store.
-	cacheCtx, writeCache := ctx.CacheContext()
-	if err := k.SetFundingRateClampFactorPpm(cacheCtx, params.FundingRateClampFactorPpm); err != nil {
+	// Set each parameter. (TODO: CORE-237 - store all params under one key).
+	if err := k.SetFundingRateClampFactorPpm(ctx, params.FundingRateClampFactorPpm); err != nil {
 		return err
 	}
-	if err := k.SetPremiumVoteClampFactorPpm(cacheCtx, params.PremiumVoteClampFactorPpm); err != nil {
+	if err := k.SetPremiumVoteClampFactorPpm(ctx, params.PremiumVoteClampFactorPpm); err != nil {
 		return err
 	}
-	if err := k.SetMinNumVotesPerSample(cacheCtx, params.MinNumVotesPerSample); err != nil {
+	if err := k.SetMinNumVotesPerSample(ctx, params.MinNumVotesPerSample); err != nil {
 		return err
 	}
-	// Write cached store to main store.
-	writeCache()
 	return nil
 }
 
