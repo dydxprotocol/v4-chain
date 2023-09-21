@@ -7,6 +7,7 @@ import (
 )
 
 func (m *EventParams) Validate() error {
+	// TODO(CORE-601): More properly validate Ethereum address.
 	if m.EthAddress == "" {
 		return errorsmod.Wrap(ErrInvalidEthAddress, "Ethereum contract address cannot be empty")
 	}
