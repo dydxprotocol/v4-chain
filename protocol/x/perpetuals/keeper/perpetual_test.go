@@ -3234,6 +3234,62 @@ func TestSetMinNumVotesPerSample(t *testing.T) {
 	}
 }
 
+func TestSetParams(t *testing.T) {
+	tests := map[string]struct {
+		params      types.Params
+		expectedErr string
+	}{
+		"Success": {
+			params: types.Params{
+				FundingRateClampFactorPpm: 6_000_000,
+				PremiumVoteClampFactorPpm: 60_000_000,
+				MinNumVotesPerSample:      15,
+			},
+		},
+		"Failure: Funding Rate Clamp is 0": {
+			params: types.Params{
+				FundingRateClampFactorPpm: 0,
+				PremiumVoteClampFactorPpm: 60_000_000,
+				MinNumVotesPerSample:      15,
+			},
+			expectedErr: types.ErrFundingRateClampFactorPpmIsZero.Error(),
+		},
+		"Failure: Premium Vote Clamp is 0": {
+			params: types.Params{
+				FundingRateClampFactorPpm: 6_000_000,
+				PremiumVoteClampFactorPpm: 0,
+				MinNumVotesPerSample:      15,
+			},
+			expectedErr: types.ErrPremiumVoteClampFactorPpmIsZero.Error(),
+		},
+	}
+
+	// Test setup.
+	pc := keepertest.PerpetualsKeepers(t)
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			initialParams := pc.PerpetualsKeeper.GetParams(pc.Ctx)
+
+			// Set Params.
+			err := pc.PerpetualsKeeper.SetParams(pc.Ctx, tc.params)
+
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				// Check that params in store are updated.
+				got := pc.PerpetualsKeeper.GetParams(pc.Ctx)
+				require.Equal(t, tc.params, got)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr)
+				// Check that params in store are unchanged.
+				got := pc.PerpetualsKeeper.GetParams(pc.Ctx)
+				require.Equal(t, initialParams, got)
+			}
+		})
+	}
+}
+
 func TestIsPositionUpdatable(t *testing.T) {
 	testCases := map[string]struct {
 		perp              types.Perpetual

@@ -97,4 +97,8 @@ type PerpetualsKeeper interface {
 		liquidityTier LiquidityTier,
 		err error,
 	)
+	SetParams(
+		ctx sdk.Context,
+		params Params,
+	) error
 }
