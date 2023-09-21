@@ -44,7 +44,7 @@ func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Restore the old logger after the test runs
+			// Restore the old logger after the test runs since middleware.Logger is a global variable.
 			oldLogger := middleware.Logger
 			defer func() { middleware.Logger = oldLogger }()
 
@@ -63,7 +63,7 @@ func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 			}()
 
 			if tc.expectedLogs == nil {
-				require.Equal(t, "", buf.String())
+				require.Empty(t, buf.String())
 			}
 			for _, expectedLog := range tc.expectedLogs {
 				require.Contains(t, buf.String(), expectedLog)
