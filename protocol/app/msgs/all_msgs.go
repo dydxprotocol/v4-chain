@@ -59,6 +59,11 @@ var (
 		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":         {},
 		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse": {},
 
+		// evidence
+		"/cosmos.evidence.v1beta1.Equivocation":              {},
+		"/cosmos.evidence.v1beta1.MsgSubmitEvidence":         {},
+		"/cosmos.evidence.v1beta1.MsgSubmitEvidenceResponse": {},
+
 		// feegrant
 		"/cosmos.feegrant.v1beta1.AllowedMsgAllowance":        {},
 		"/cosmos.feegrant.v1beta1.BasicAllowance":             {},

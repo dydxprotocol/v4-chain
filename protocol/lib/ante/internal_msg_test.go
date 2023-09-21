@@ -37,7 +37,7 @@ func TestIsInternalMsg_Invalid(t *testing.T) {
 		delete(allMsgsMinusInternal, key)
 	}
 	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusInternal)
-	require.Len(t, allNonNilSampleMsgs, 53)
+	require.Len(t, allNonNilSampleMsgs, 54)
 
 	for _, sampleMsg := range allNonNilSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
