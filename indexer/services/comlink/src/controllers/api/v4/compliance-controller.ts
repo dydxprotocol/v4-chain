@@ -1,46 +1,78 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
+import { DateTime } from 'luxon';
 import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import {
+  getReqRateLimiter,
+  screenProviderLimiter,
+  screenProviderGlobalLimiter,
+} from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { placeHolderProvider } from '../../../helpers/compliance/compliance-clients';
 import { complianceCheck } from '../../../lib/compliance-check';
-import { handleControllerError } from '../../../lib/helpers';
-import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { TooManyRequestsError } from '../../../lib/errors';
+import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
+import { getIpAddr, rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { ComplianceRequest, ComplianceResponse } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-controller';
+const uncachedQueryPoints: number = 1;
+const globalRateLimitKey: string = 'screenQueryProviderGlobal';
 
 @Route('screen')
 class ComplianceController extends Controller {
+  private ipAddress: string;
+
+  constructor(ipAddress: string) {
+    super();
+    this.ipAddress = ipAddress;
+  }
+
   @Get('/')
   async screen(
     @Query() address: string,
   ): Promise<ComplianceResponse> {
-    // TODO(IND-372): Add logic to either use cached data or query provider
-    // TODO(IND-369): Use Ellptic client
-    const response:
-    ComplianceClientResponse = await placeHolderProvider.client.getComplianceResponse(
+    const ageThreshold: DateTime = DateTime.utc().minus({
+      seconds: config.MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS,
+    });
+
+    let complianceData:
+    ComplianceDataFromDatabase | undefined = await ComplianceTable.findByAddressAndProvider(
       address,
+      placeHolderProvider.provider,
     );
 
+    if (complianceData === undefined || DateTime.fromISO(complianceData.updatedAt) < ageThreshold) {
+      await checkRateLimit(this.ipAddress);
+      // TODO(IND-369): Use Ellptic client
+      const response:
+      ComplianceClientResponse = await placeHolderProvider.client.getComplianceResponse(
+        address,
+      );
+      complianceData = await ComplianceTable.upsert({
+        ...response,
+        provider: placeHolderProvider.provider,
+        updatedAt: DateTime.utc().toISO(),
+      });
+    }
+
     return {
-      restricted: response.blocked,
+      restricted: complianceData.blocked,
     };
   }
 }
 
 router.get(
   '/',
-  // TODO(IND-372): Add custom rate-limiter around un-cached requests / global rate-limit
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     address: {
@@ -61,11 +93,22 @@ router.get(
     } = matchedData(req) as ComplianceRequest;
 
     try {
-      const controller: ComplianceController = new ComplianceController();
+      // Rate limiter middleware ensures the ip address can be found from the request
+      const ipAddress: string = getIpAddr(req)!;
+
+      const controller: ComplianceController = new ComplianceController(ipAddress);
       const response: ComplianceResponse = await controller.screen(address);
 
       return res.send(response);
     } catch (error) {
+      if (error instanceof TooManyRequestsError) {
+        return create4xxResponse(
+          res,
+          'Too many requests',
+          429,
+        );
+      }
+      console.log(error);
       return handleControllerError(
         'ComplianceController GET /',
         'Compliance error',
@@ -80,5 +123,24 @@ router.get(
     }
   },
 );
+
+async function checkRateLimit(ipAddress: string) {
+  try {
+    await Promise.all([
+      screenProviderLimiter.consume(ipAddress, uncachedQueryPoints),
+      screenProviderGlobalLimiter.consume(globalRateLimitKey, uncachedQueryPoints),
+    ]);
+  } catch (reject) {
+    if (reject instanceof Error) {
+      logger.error({
+        at: 'rate-limit',
+        message: 'redis error when checking rate limit',
+        reject,
+      });
+    } else {
+      throw new TooManyRequestsError('Too many requests');
+    }
+  }
+}
 
 export default router;

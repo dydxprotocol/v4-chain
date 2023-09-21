@@ -18,3 +18,10 @@ export class NotFoundError extends Error {
     this.name = 'NotFoundError';
   }
 }
+
+export class TooManyRequestsError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TooManyRequestsError';
+  }
+}

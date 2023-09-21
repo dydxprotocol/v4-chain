@@ -185,6 +185,54 @@ describe('Compliance data store', () => {
     });
   });
 
+  it('Successfully upserts a new compliance data', async () => {
+    await ComplianceDataTable.upsert(nonBlockedComplianceData);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(complianceData.length).toEqual(1);
+    expect(complianceData[0]).toEqual(nonBlockedComplianceData);
+  });
+
+  it('Successfully upserts an existing compliance data', async () => {
+    await ComplianceDataTable.upsert(nonBlockedComplianceData);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(complianceData.length).toEqual(1);
+
+    const updatedTime: string = DateTime.fromISO(
+      nonBlockedComplianceData.updatedAt!,
+    ).plus(10).toUTC().toISO();
+
+    await ComplianceDataTable.upsert({
+      address: nonBlockedComplianceData.address,
+      provider: nonBlockedComplianceData.provider,
+      riskScore: '30.00',
+      blocked: true,
+      updatedAt: updatedTime,
+    });
+    const updatedComplianceData:
+    ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddressAndProvider(
+      nonBlockedComplianceData.address,
+      nonBlockedComplianceData.provider,
+      { readReplica: true },
+    );
+
+    expect(updatedComplianceData).toEqual({
+      ...nonBlockedComplianceData,
+      riskScore: '30.00',
+      blocked: true,
+      updatedAt: updatedTime,
+    });
+  });
+
   it('Successfully bulk upserts compliance data', async () => {
     await ComplianceDataTable.create(nonBlockedComplianceData);
 

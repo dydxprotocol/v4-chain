@@ -17,3 +17,17 @@ export const getReqRateLimiter: RateLimiterRedis = new RateLimiterRedis({
   duration: config.RATE_LIMIT_GET_DURATION_SECONDS,
   keyPrefix: `${config.SERVICE_NAME}/get`,
 });
+
+export const screenProviderLimiter: RateLimiterRedis = new RateLimiterRedis({
+  storeClient: ratelimitRedis.client,
+  points: config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_POINTS,
+  duration: config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_DURATION_SECONDS,
+  keyPrefix: `${config.SERVICE_NAME}/screen_providers`,
+});
+
+export const screenProviderGlobalLimiter: RateLimiterRedis = new RateLimiterRedis({
+  storeClient: ratelimitRedis.client,
+  points: config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_POINTS,
+  duration: config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_DURATION_SECONDS,
+  keyPrefix: `${config.SERVICE_NAME}/screen_providers_global`,
+});
