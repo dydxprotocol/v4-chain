@@ -16,7 +16,6 @@ func TestAddDaemonFlagsToCmd(t *testing.T) {
 
 	flags.AddDaemonFlagsToCmd(&cmd)
 	tests := []string{
-		flags.FlagGrpcAddress,
 		flags.FlagUnixSocketAddress,
 
 		flags.FlagBridgeDaemonEnabled,
@@ -42,7 +41,6 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap := make(map[string]interface{})
 
 	optsMap[flags.FlagUnixSocketAddress] = "test-socket-address"
-	optsMap[flags.FlagGrpcAddress] = "test-grpc-server-address"
 
 	optsMap[flags.FlagBridgeDaemonEnabled] = true
 	optsMap[flags.FlagBridgeDaemonLoopDelayMs] = uint32(1111)
@@ -64,7 +62,6 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	r := flags.GetDaemonFlagValuesFromOptions(&mockOpts)
 
 	// Shared.
-	require.Equal(t, optsMap[flags.FlagGrpcAddress], r.Shared.GrpcServerAddress)
 	require.Equal(t, optsMap[flags.FlagUnixSocketAddress], r.Shared.SocketAddress)
 
 	// Bridge Daemon.

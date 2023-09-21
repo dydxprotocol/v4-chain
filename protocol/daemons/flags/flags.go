@@ -2,14 +2,12 @@ package flags
 
 import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/spf13/cobra"
 )
 
 // List of CLI flags for Server and Client.
 const (
 	// Flag names
-	FlagGrpcAddress       = "grpc-address"
 	FlagUnixSocketAddress = "unix-socket-address"
 
 	FlagPriceDaemonEnabled     = "price-daemon-enabled"
@@ -25,8 +23,7 @@ const (
 )
 
 type SharedFlags struct {
-	GrpcServerAddress string
-	SocketAddress     string
+	SocketAddress string
 }
 
 type BridgeFlags struct {
@@ -59,8 +56,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 	if defaultDaemonFlags == nil {
 		defaultDaemonFlags = &DaemonFlags{
 			Shared: SharedFlags{
-				SocketAddress:     "/tmp/daemons.sock",
-				GrpcServerAddress: constants.DefaultGrpcEndpoint,
+				SocketAddress: "/tmp/daemons.sock",
 			},
 			Bridge: BridgeFlags{
 				Enabled:        true,
@@ -91,11 +87,6 @@ func AddDaemonFlagsToCmd(
 	df := GetDefaultDaemonFlags()
 
 	// Shared Flags.
-	cmd.Flags().String(
-		FlagGrpcAddress,
-		df.Shared.GrpcServerAddress,
-		"Address for the gRPC server",
-	)
 	cmd.Flags().String(
 		FlagUnixSocketAddress,
 		df.Shared.SocketAddress,
@@ -158,9 +149,6 @@ func GetDaemonFlagValuesFromOptions(
 	result := GetDefaultDaemonFlags()
 
 	// Shared Flags
-	if v, ok := appOpts.Get(FlagGrpcAddress).(string); ok {
-		result.Shared.GrpcServerAddress = v
-	}
 	if v, ok := appOpts.Get(FlagUnixSocketAddress).(string); ok {
 		result.Shared.SocketAddress = v
 	}

@@ -5,6 +5,7 @@ package client_test
 import (
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
@@ -17,6 +18,7 @@ import (
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -205,6 +207,7 @@ var (
 type PriceDaemonIntegrationTestSuite struct {
 	suite.Suite
 	daemonFlags        flags.DaemonFlags
+	appFlags           appflags.Flags
 	exchangeServer     *pricefeed.ExchangeServer
 	daemonServer       *daemonserver.Server
 	exchangePriceCache *pricefeedserver_types.MarketToExchangePrices
@@ -258,6 +261,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 
 	// Save daemon flags to use for client startup.
 	s.daemonFlags = flags.GetDefaultDaemonFlags()
+	s.appFlags = appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil))
 
 	// Configure mock daemon server with prices cache.
 	s.daemonServer = daemonserver.NewServer(
@@ -287,7 +291,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 	s.activeServers.Add(1)
 	go func() {
 		defer s.activeServers.Done()
-		ls, err := net.Listen("tcp", s.daemonFlags.Shared.GrpcServerAddress)
+		ls, err := net.Listen("tcp", s.appFlags.GrpcAddress)
 		s.Require().NoError(err)
 		err = s.pricesGrpcServer.Serve(ls)
 		s.Require().NoError(err)
@@ -311,6 +315,7 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 	s.pricefeedDaemon = client.StartNewClient(
 		grpc_util.Ctx,
 		s.daemonFlags,
+		s.appFlags,
 		log.TestingLogger(),
 		&lib.GrpcClientImpl{},
 		testExchangeStartupConfigs,

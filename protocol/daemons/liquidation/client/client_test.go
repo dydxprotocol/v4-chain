@@ -3,6 +3,8 @@ package client_test
 import (
 	"context"
 	"errors"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -31,6 +33,7 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 		client.Start(
 			grpc.Ctx,
 			flags.GetDefaultDaemonFlags(),
+			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
 			log.NewNopLogger(),
 			mockGrpcClient,
 		),
@@ -54,6 +57,7 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 		client.Start(
 			grpc.Ctx,
 			flags.GetDefaultDaemonFlags(),
+			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
 			log.NewNopLogger(),
 			mockGrpcClient,
 		),

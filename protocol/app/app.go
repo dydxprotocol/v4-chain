@@ -291,6 +291,10 @@ func New(
 ) *App {
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
+	// Panic if this is not a full node and gRPC is disabled.
+	if err := appFlags.Validate(); err != nil {
+		panic(err)
+	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
@@ -516,7 +520,7 @@ func New(
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
-		daemonFlags.Shared.GrpcServerAddress,
+		appFlags.GrpcAddress,
 	)
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
@@ -550,6 +554,7 @@ func New(
 				// the main application.
 				context.Background(),
 				daemonFlags,
+				appFlags,
 				logger,
 				&lib.GrpcClientImpl{},
 			); err != nil {
@@ -570,13 +575,14 @@ func New(
 			// the main application.
 			context.Background(),
 			daemonFlags,
+			appFlags,
 			logger,
 			&lib.GrpcClientImpl{},
 			exchangeStartupConfig,
 			constants.StaticExchangeDetails,
 			&pricefeedclient.SubTaskRunnerImpl{},
 		)
-		stoppable.RegisterServiceForTestCleanup(daemonFlags.Shared.GrpcServerAddress, client)
+		stoppable.RegisterServiceForTestCleanup(appFlags.GrpcAddress, client)
 	}
 
 	// Start Bridge Daemon.
@@ -591,6 +597,7 @@ func New(
 				// the main application.
 				context.Background(),
 				daemonFlags,
+				appFlags,
 				logger,
 				&lib.GrpcClientImpl{},
 			); err != nil {
