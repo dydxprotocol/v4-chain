@@ -966,7 +966,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				tc.setupPerpetualKeeperMocks(mockPerpetualKeeper)
 			} else {
 				mockPerpetualKeeper.On("MaybeProcessNewFundingTickEpoch", mock.Anything).Return()
-				mockPerpetualKeeper.On("GetSettlement", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				mockPerpetualKeeper.On("GetSettlementPpm", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(new(big.Int), new(big.Int), nil)
 				for _, p := range tc.perpetuals {
 					mockPerpetualKeeper.On("GetPerpetual", mock.Anything, p.Params.Id).Return(p, nil)
