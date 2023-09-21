@@ -30,6 +30,7 @@ import (
 	lttest "github.com/dydxprotocol/v4-chain/protocol/testutil/liquidity_tier"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
+	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
@@ -2164,20 +2165,32 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 		blockHeight                         int64
 		samplePremiumPpm                    int32
 		numPerpetuals                       int
-		expectedNumSamples                  int
+		// Should be <= `numPerpetuals`.
+		numPerpetualsWithValidIndexPrice int
+		expectedNumSamples               int
 	}{
 		"Positive premium": {
 			currentFundingSampleEpochStartBlock: 23,
 			blockHeight:                         23,
 			samplePremiumPpm:                    100,
 			numPerpetuals:                       10,
+			numPerpetualsWithValidIndexPrice:    10,
 			expectedNumSamples:                  10,
+		},
+		"Positive premium, only 1 perpetual has valid index price": {
+			currentFundingSampleEpochStartBlock: 23,
+			blockHeight:                         23,
+			samplePremiumPpm:                    100,
+			numPerpetuals:                       10,
+			numPerpetualsWithValidIndexPrice:    1,
+			expectedNumSamples:                  1,
 		},
 		"Negative premium": {
 			currentFundingSampleEpochStartBlock: 24,
 			blockHeight:                         24,
 			samplePremiumPpm:                    -150,
 			numPerpetuals:                       10,
+			numPerpetualsWithValidIndexPrice:    10,
 			expectedNumSamples:                  10,
 		},
 		"Not start of new funding-sample epoch, still produce samples": {
@@ -2185,6 +2198,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			blockHeight:                         25,
 			samplePremiumPpm:                    100,
 			numPerpetuals:                       10,
+			numPerpetualsWithValidIndexPrice:    10,
 			expectedNumSamples:                  10,
 		},
 		"Zero premiums": {
@@ -2192,6 +2206,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			blockHeight:                         24,
 			samplePremiumPpm:                    0,
 			numPerpetuals:                       10,
+			numPerpetualsWithValidIndexPrice:    10,
 			expectedNumSamples:                  0,
 		},
 	}
@@ -2211,6 +2226,15 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			).Return(tc.samplePremiumPpm, nil)
 
 			pc := keepertest.PerpetualsKeepersWithClobHelpers(t, &mockPricePremiumGetter)
+
+			// MockTimeProvider needed for to use `constants.TimeT` as cutoff time of index price cache query.
+			pc.MockTimeProvider.On("Now").Return(constants.TimeT)
+
+			pc.IndexPriceCache.UpdatePrices(
+				pricefeed_testutil.GetTestMarketPriceUpdates(
+					tc.numPerpetualsWithValidIndexPrice,
+				),
+			)
 
 			// Create liquidity tiers and perpetuals,
 			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, tc.numPerpetuals)
@@ -2235,7 +2259,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			mockPricePremiumGetter.AssertNumberOfCalls(
 				t,
 				"GetPricePremiumForPerpetual",
-				tc.numPerpetuals,
+				tc.numPerpetualsWithValidIndexPrice,
 			)
 
 			// Check that new premium votes are returned.

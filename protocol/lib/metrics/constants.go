@@ -186,6 +186,7 @@ const (
 	GetAllPerpetualPricePremiums = "get_all_perpetual_price_premiums"
 	NewPremiumVotes              = "new_premium_votes"
 	NumPremiumsFromEpoch         = "num_premiums_from_epoch"
+	MissingIndexPriceForFunding  = "missing_index_price_for_funding"
 	NumPremiumVotes              = "num_premium_votes"
 	PerpetualTicker              = "perpetual_ticker"
 	PerpetualId                  = "perpetual_id"

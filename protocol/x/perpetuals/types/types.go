@@ -11,7 +11,7 @@ import (
 // `ClobKeeper.GetPricePremiumForPerpetual` and
 // `MemClob.GetPricePremium` to get the price premium.
 type GetPricePremiumParams struct {
-	MarketPrice                 pricestypes.MarketPrice
+	IndexPrice                  pricestypes.MarketPrice
 	BaseAtomicResolution        int32
 	QuoteAtomicResolution       int32
 	ImpactNotionalQuoteQuantums *big.Int
