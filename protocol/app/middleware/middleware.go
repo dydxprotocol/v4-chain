@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	Logger log.Logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	Logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 )
 
 func NewRunTxPanicLoggingMiddleware() baseapp.RecoveryHandler {
