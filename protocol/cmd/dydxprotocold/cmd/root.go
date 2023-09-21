@@ -34,7 +34,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/app/params"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -109,7 +108,7 @@ func NewRootCmd(option *RootCmdOption) *cobra.Command {
 }
 
 // initRootCmd initializes the app's root command with useful commands.
-func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig dydxapp.EncodingConfig) {
 	gentxModule := basic_manager.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basic_manager.ModuleBasics, dydxapp.DefaultNodeHome),
@@ -214,7 +213,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg params.EncodingConfig
+	encCfg dydxapp.EncodingConfig
 }
 
 // newApp initializes and returns a new app.

@@ -2,21 +2,48 @@ package app
 
 import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/app/params"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
-var encodingConfig params.EncodingConfig = MakeEncodingConfig()
+var encodingConfig EncodingConfig = initEncodingConfig()
+
+// EncodingConfig specifies the concrete encoding types to use for a given app.
+// This is provided for compatibility between protobuf and amino implementations.
+type EncodingConfig struct {
+	InterfaceRegistry types.InterfaceRegistry
+	Codec             codec.Codec
+	TxConfig          client.TxConfig
+	Amino             *codec.LegacyAmino
+}
 
 // GetEncodingConfig returns the EncodingConfig.
-func GetEncodingConfig() params.EncodingConfig {
+func GetEncodingConfig() EncodingConfig {
 	return encodingConfig
 }
 
-// MakeEncodingConfig creates an EncodingConfig.
-func MakeEncodingConfig() params.EncodingConfig {
-	encodingConfig := params.MakeEncodingConfig()
+// makeEncodingConfig creates an EncodingConfig for an amino based test configuration.
+func makeEncodingConfig() EncodingConfig {
+	amino := codec.NewLegacyAmino()
+	interfaceRegistry := types.NewInterfaceRegistry()
+	codec := codec.NewProtoCodec(interfaceRegistry)
+	txCfg := tx.NewTxConfig(codec, tx.DefaultSignModes)
+
+	return EncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Codec:             codec,
+		TxConfig:          txCfg,
+		Amino:             amino,
+	}
+}
+
+// initEncodingConfig initializes an EncodingConfig.
+func initEncodingConfig() EncodingConfig {
+	encodingConfig := makeEncodingConfig()
 
 	// This is currently required in order to support various CLI commands such as the `dydxprotocold status` command.
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
