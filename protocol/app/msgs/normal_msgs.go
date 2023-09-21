@@ -195,6 +195,7 @@ var (
 		"/ibc.core.connection.v1.Version":                          nil,
 
 		// ibc.lightclients
+		"/ibc.lightclients.localhost.v2.ClientState":     nil,
 		"/ibc.lightclients.tendermint.v1.ClientState":    nil,
 		"/ibc.lightclients.tendermint.v1.ConsensusState": nil,
 		"/ibc.lightclients.tendermint.v1.Header":         nil,

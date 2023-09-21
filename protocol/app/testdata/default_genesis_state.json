@@ -275,7 +275,8 @@
       "params": {
         "allowed_clients": [
           "06-solomachine",
-          "07-tendermint"
+          "07-tendermint",
+          "09-localhost"
         ]
       },
       "create_localhost": false,
@@ -394,7 +395,8 @@
     "params": {
       "send_enabled": true,
       "receive_enabled": true
-    }
+    },
+    "total_escrowed": []
   },
   "upgrade": {},
   "vest": {

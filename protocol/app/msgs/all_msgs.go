@@ -279,6 +279,7 @@ var (
 		"/ibc.core.connection.v1.Version":                          {},
 
 		// ibc.lightclients
+		"/ibc.lightclients.localhost.v2.ClientState":     {},
 		"/ibc.lightclients.tendermint.v1.ClientState":    {},
 		"/ibc.lightclients.tendermint.v1.ConsensusState": {},
 		"/ibc.lightclients.tendermint.v1.Header":         {},
