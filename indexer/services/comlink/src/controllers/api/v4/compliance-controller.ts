@@ -25,8 +25,8 @@ import { ComplianceRequest, ComplianceResponse } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-controller';
-const uncachedQueryPoints: number = 1;
-const globalRateLimitKey: string = 'screenQueryProviderGlobal';
+const UNCACHED_QUERY_POINTS: number = 1;
+const GLOBAL_RATE_LIMIT_KEY: string = 'screenQueryProviderGlobal';
 
 @Route('screen')
 class ComplianceController extends Controller {
@@ -127,8 +127,8 @@ router.get(
 async function checkRateLimit(ipAddress: string) {
   try {
     await Promise.all([
-      screenProviderLimiter.consume(ipAddress, uncachedQueryPoints),
-      screenProviderGlobalLimiter.consume(globalRateLimitKey, uncachedQueryPoints),
+      screenProviderLimiter.consume(ipAddress, UNCACHED_QUERY_POINTS),
+      screenProviderGlobalLimiter.consume(GLOBAL_RATE_LIMIT_KEY, UNCACHED_QUERY_POINTS),
     ]);
   } catch (reject) {
     if (reject instanceof Error) {
