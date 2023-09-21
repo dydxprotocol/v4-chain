@@ -266,69 +266,42 @@ func (k Keeper) PersistOrderRemovalToState(
 	// Statefully validate that the removal reason is valid.
 	switch removalReason := orderRemoval.RemovalReason; removalReason {
 	case types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED:
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
+		// TODO (CLOB-877) - These validations are commented out because margin requirements can be non-linear.
 		// For the collateralization check, use the remaining amount of the order that is resting on the book.
-		remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
-		if !hasRemainingAmount {
-			return types.ErrOrderFullyFilled
-		}
+		// remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		// if !hasRemainingAmount {
+		// 	return types.ErrOrderFullyFilled
+		// }
 
-		pendingOpenOrder := types.PendingOpenOrder{
-			RemainingQuantums: remainingAmount,
-			IsBuy:             orderToRemove.IsBuy(),
-			Subticks:          orderToRemove.GetOrderSubticks(),
-			ClobPairId:        orderToRemove.GetClobPairId(),
-		}
+		// pendingOpenOrder := types.PendingOpenOrder{
+		// 	RemainingQuantums: remainingAmount,
+		// 	IsBuy:             orderToRemove.IsBuy(),
+		// 	Subticks:          orderToRemove.GetOrderSubticks(),
+		// 	ClobPairId:        orderToRemove.GetClobPairId(),
+		// }
 
-		// Temporarily construct the subaccountOpenOrders with a single PendingOpenOrder.
-		subaccountOpenOrders := map[satypes.SubaccountId][]types.PendingOpenOrder{
-			orderIdToRemove.SubaccountId: {
-				pendingOpenOrder,
-			},
-		}
+		// // Temporarily construct the subaccountOpenOrders with a single PendingOpenOrder.
+		// subaccountOpenOrders := map[satypes.SubaccountId][]types.PendingOpenOrder{
+		// 	orderIdToRemove.SubaccountId: {
+		// 		pendingOpenOrder,
+		// 	},
+		// }
 
-		// TODO(DEC-1896): AddOrderToOrderbookCollatCheck should accept a single PendingOpenOrder as a
-		// parameter rather than the subaccountOpenOrders map.
-		_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
-			ctx,
-			orderToRemove.GetClobPairId(),
-			subaccountOpenOrders,
-		)
-		if successPerSubaccountUpdate[orderIdToRemove.SubaccountId].IsSuccess() {
-			return errorsmod.Wrapf(
-				types.ErrInvalidOrderRemoval,
-				"Order Removal (%+v) invalid. Order passes collateralization check.",
-				orderRemoval,
-			)
-		}
-	// TODO - uncomment when reduce only orders are enabled. Order Removals of this type will fail ValidateBasic.
-	// case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
-	// 	if !orderToRemove.IsReduceOnly() {
-	// 		return errorsmod.Wrapf(
-	// 			types.ErrInvalidOrderRemoval,
-	// 			"Order Removal (%+v) invalid. Order must be reduce only.",
-	// 			orderRemoval,
-	// 		)
-	// 	}
-
-	// 	// The reduce-only order must increase or change the side of the position to trigger removal.
-	// 	currentPositionSize := k.GetStatePosition(
-	// 		ctx,
-	// 		orderIdToRemove.SubaccountId,
-	// 		orderToRemove.GetClobPairId(),
-	// 	)
-	// 	orderQuantumsToFill := orderToRemove.GetBigQuantums()
-
-	// 	orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == currentPositionSize.Sign()
-
-	// 	newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
-	// 	orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
-	// 	if !orderFillWouldIncreasePositionSize && !orderChangedSide {
-	// 		return errorsmod.Wrapf(
-	// 			types.ErrInvalidOrderRemoval,
-	// 			"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
-	// 			orderRemoval,
-	// 		)
-	// 	}
+		// // TODO(DEC-1896): AddOrderToOrderbookCollatCheck should accept a single PendingOpenOrder as a
+		// // parameter rather than the subaccountOpenOrders map.
+		// _, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
+		// 	ctx,
+		// 	orderToRemove.GetClobPairId(),
+		// 	subaccountOpenOrders,
+		// )
+		// if successPerSubaccountUpdate[orderIdToRemove.SubaccountId].IsSuccess() {
+		// 	return errorsmod.Wrapf(
+		// 		types.ErrInvalidOrderRemoval,
+		// 		"Order Removal (%+v) invalid. Order passes collateralization check.",
+		// 		orderRemoval,
+		// 	)
+		// }
 	case types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
 		// TODO (CLOB-877)
 		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
@@ -394,6 +367,35 @@ func (k Keeper) PersistOrderRemovalToState(
 				orderToRemove.GetBaseQuantums(),
 			)
 		}
+	// TODO - uncomment when reduce only orders are enabled. Order Removals of this type will fail ValidateBasic.
+	// case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
+	// 	if !orderToRemove.IsReduceOnly() {
+	// 		return errorsmod.Wrapf(
+	// 			types.ErrInvalidOrderRemoval,
+	// 			"Order Removal (%+v) invalid. Order must be reduce only.",
+	// 			orderRemoval,
+	// 		)
+	// 	}
+
+	// 	// The reduce-only order must increase or change the side of the position to trigger removal.
+	// 	currentPositionSize := k.GetStatePosition(
+	// 		ctx,
+	// 		orderIdToRemove.SubaccountId,
+	// 		orderToRemove.GetClobPairId(),
+	// 	)
+	// 	orderQuantumsToFill := orderToRemove.GetBigQuantums()
+
+	// 	orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == currentPositionSize.Sign()
+
+	// 	newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
+	// 	orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
+	// 	if !orderFillWouldIncreasePositionSize && !orderChangedSide {
+	// 		return errorsmod.Wrapf(
+	// 			types.ErrInvalidOrderRemoval,
+	// 			"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
+	// 			orderRemoval,
+	// 		)
+	// 	}
 	default:
 		return errorsmod.Wrapf(
 			types.ErrInvalidOrderRemovalReason,

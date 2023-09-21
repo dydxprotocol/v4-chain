@@ -379,51 +379,52 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 
 		expectedErr string
 	}{
-		"invalid proposal: undercollateralized order removal invalid for fully-filled order": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_10_000USD,
-				constants.Bob_Num0_10_000USD,
-			},
-			orders: []clobtypes.Order{
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
-				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
-			},
-			msgProposedOperations: &clobtypes.MsgProposedOperations{
-				OperationsQueue: []clobtypes.OperationRaw{
-					clobtestutils.NewMatchOperationRaw(
-						&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
-						[]clobtypes.MakerFill{
-							{
-								FillAmount:   5,
-								MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.OrderId,
-							},
-						},
-					),
-					clobtestutils.NewOrderRemovalOperationRaw(
-						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.OrderId,
-						clobtypes.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
-					),
-				},
-			},
-			expectedErr: "Order is fully filled",
-		},
-		"invalid proposal: order for well collateralized account cannot be removed": {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_10000USD,
-			},
-			orders: []clobtypes.Order{
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-			},
-			msgProposedOperations: &clobtypes.MsgProposedOperations{
-				OperationsQueue: []clobtypes.OperationRaw{
-					clobtestutils.NewOrderRemovalOperationRaw(
-						constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
-						clobtypes.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
-					),
-				},
-			},
-			expectedErr: "Order passes collateralization check",
-		},
+		// TODO(CLOB-877): re-enable these tests.
+		// "invalid proposal: undercollateralized order removal invalid for fully-filled order": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Alice_Num0_10_000USD,
+		// 		constants.Bob_Num0_10_000USD,
+		// 	},
+		// 	orders: []clobtypes.Order{
+		// 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+		// 		constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+		// 	},
+		// 	msgProposedOperations: &clobtypes.MsgProposedOperations{
+		// 		OperationsQueue: []clobtypes.OperationRaw{
+		// 			clobtestutils.NewMatchOperationRaw(
+		// 				&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+		// 				[]clobtypes.MakerFill{
+		// 					{
+		// 						FillAmount:   5,
+		// 						MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.OrderId,
+		// 					},
+		// 				},
+		// 			),
+		// 			clobtestutils.NewOrderRemovalOperationRaw(
+		// 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.OrderId,
+		// 				clobtypes.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+		// 			),
+		// 		},
+		// 	},
+		// 	expectedErr: "Order is fully filled",
+		// },
+		// "invalid proposal: order for well collateralized account cannot be removed": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_10000USD,
+		// 	},
+		// 	orders: []clobtypes.Order{
+		// 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+		// 	},
+		// 	msgProposedOperations: &clobtypes.MsgProposedOperations{
+		// 		OperationsQueue: []clobtypes.OperationRaw{
+		// 			clobtestutils.NewOrderRemovalOperationRaw(
+		// 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+		// 				clobtypes.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+		// 			),
+		// 		},
+		// 	},
+		// 	expectedErr: "Order passes collateralization check",
+		// },
 		// Re-enable when reduce-only orders are re-enabled.
 		// "invalid proposal: valid reduce-only order cannot be removed": {
 		// 	subaccounts: []satypes.Subaccount{
