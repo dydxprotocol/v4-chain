@@ -193,5 +193,5 @@ func TestNormalMsgs_Key(t *testing.T) {
 }
 
 func TestNormalMsgs_Value(t *testing.T) {
-	validateSampleMsgValue(t, msgs.NormalMsgs)
+	validateMsgValue(t, msgs.NormalMsgs)
 }
