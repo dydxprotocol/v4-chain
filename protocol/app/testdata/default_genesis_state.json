@@ -22,29 +22,17 @@
         "sig_verify_cost_ed25519":"590",
         "sig_verify_cost_secp256k1":"1000"
      },
-     "accounts":[
-        
-     ]
+     "accounts":[]
   },
   "bank":{
      "params":{
-        "send_enabled":[
-           
-        ],
+        "send_enabled":[],
         "default_send_enabled":true
      },
-     "balances":[
-        
-     ],
-     "supply":[
-        
-     ],
-     "denom_metadata":[
-        
-     ],
-     "send_enabled":[
-        
-     ]
+     "balances":[],
+     "supply":[],
+     "denom_metadata":[],
+     "send_enabled":[]
   },
   "blocktime":{
      "params":{
@@ -78,14 +66,10 @@
   },
   "capability":{
      "index":"1",
-     "owners":[
-        
-     ]
+     "owners":[]
   },
   "clob":{
-     "clob_pairs":[
-        
-     ],
+     "clob_pairs":[],
      "liquidations_config":{
         "max_insurance_fund_quantums_for_deleveraging":"0",
         "max_liquidation_fee_ppm":5000,
@@ -103,23 +87,13 @@
         }
      },
      "block_rate_limit_config":{
-        "max_short_term_orders_per_n_blocks":[
-           
-        ],
-        "max_stateful_orders_per_n_blocks":[
-           
-        ],
-        "max_short_term_order_cancellations_per_n_blocks":[
-           
-        ]
+        "max_short_term_orders_per_n_blocks":[],
+        "max_stateful_orders_per_n_blocks":[],
+        "max_short_term_order_cancellations_per_n_blocks":[]
      },
      "equity_tier_limit_config":{
-        "short_term_order_equity_tiers":[
-           
-        ],
-        "stateful_order_equity_tiers":[
-           
-        ]
+        "short_term_order_equity_tiers":[],
+        "stateful_order_equity_tiers":[]
      }
   },
   "consensus":null,
@@ -130,9 +104,7 @@
      }
   },
   "delaymsg":{
-     "delayed_messages":[
-        
-     ],
+     "delayed_messages":[],
      "num_messages":0
   },
   "distribution":{
@@ -143,32 +115,16 @@
         "withdraw_addr_enabled":true
      },
      "fee_pool":{
-        "community_pool":[
-           
-        ]
+        "community_pool":[]
      },
-     "delegator_withdraw_infos":[
-        
-     ],
+     "delegator_withdraw_infos":[],
      "previous_proposer":"",
-     "outstanding_rewards":[
-        
-     ],
-     "validator_accumulated_commissions":[
-        
-     ],
-     "validator_historical_rewards":[
-        
-     ],
-     "validator_current_rewards":[
-        
-     ],
-     "delegator_starting_infos":[
-        
-     ],
-     "validator_slash_events":[
-        
-     ]
+     "outstanding_rewards":[],
+     "validator_accumulated_commissions":[],
+     "validator_historical_rewards":[],
+     "validator_current_rewards":[],
+     "delegator_starting_infos":[],
+     "validator_slash_events":[]
   },
   "epochs":{
      "epoch_info_list":[
@@ -202,14 +158,10 @@
      ]
   },
   "evidence":{
-     "evidence":[
-        
-     ]
+     "evidence":[]
   },
   "feegrant":{
-     "allowances":[
-        
-     ]
+     "allowances":[]
   },
   "feetiers":{
      "params":{
@@ -290,21 +242,13 @@
      }
   },
   "genutil":{
-     "gen_txs":[
-        
-     ]
+     "gen_txs":[]
   },
   "gov":{
      "starting_proposal_id":"1",
-     "deposits":[
-        
-     ],
-     "votes":[
-        
-     ],
-     "proposals":[
-        
-     ],
+     "deposits":[],
+     "votes":[],
+     "proposals":[],
      "deposit_params":null,
      "voting_params":null,
      "tally_params":null,
@@ -328,15 +272,9 @@
   },
   "ibc":{
      "client_genesis":{
-        "clients":[
-           
-        ],
-        "clients_consensus":[
-           
-        ],
-        "clients_metadata":[
-           
-        ],
+        "clients":[],
+        "clients_consensus":[],
+        "clients_metadata":[],
         "params":{
            "allowed_clients":[
               "06-solomachine",
@@ -347,50 +285,28 @@
         "next_client_sequence":"0"
      },
      "connection_genesis":{
-        "connections":[
-           
-        ],
-        "client_connection_paths":[
-           
-        ],
+        "connections":[],
+        "client_connection_paths":[],
         "next_connection_sequence":"0",
         "params":{
            "max_expected_time_per_block":"30000000000"
         }
      },
      "channel_genesis":{
-        "channels":[
-           
-        ],
-        "acknowledgements":[
-           
-        ],
-        "commitments":[
-           
-        ],
-        "receipts":[
-           
-        ],
-        "send_sequences":[
-           
-        ],
-        "recv_sequences":[
-           
-        ],
-        "ack_sequences":[
-           
-        ],
+        "channels":[],
+        "acknowledgements":[],
+        "commitments":[],
+        "receipts":[],
+        "send_sequences":[],
+        "recv_sequences":[],
+        "ack_sequences":[],
         "next_channel_sequence":"0"
      }
   },
   "params":null,
   "perpetuals":{
-     "perpetuals":[
-        
-     ],
-     "liquidity_tiers":[
-        
-     ],
+     "perpetuals":[],
+     "liquidity_tiers":[],
      "params":{
         "funding_rate_clamp_factor_ppm":6000000,
         "premium_vote_clamp_factor_ppm":60000000,
@@ -449,12 +365,8 @@
         "slash_fraction_double_sign":"0.000000000000000000",
         "slash_fraction_downtime":"0.000000000000000000"
      },
-     "signing_infos":[
-        
-     ],
-     "missed_blocks":[
-        
-     ]
+     "signing_infos":[],
+     "missed_blocks":[]
   },
   "staking":{
      "params":{
@@ -466,21 +378,11 @@
         "min_commission_rate":"0.000000000000000000"
      },
      "last_total_power":"0",
-     "last_validator_powers":[
-        
-     ],
-     "validators":[
-        
-     ],
-     "delegations":[
-        
-     ],
-     "unbonding_delegations":[
-        
-     ],
-     "redelegations":[
-        
-     ],
+     "last_validator_powers":[],
+     "validators":[],
+     "delegations":[],
+     "unbonding_delegations":[],
+     "redelegations":[],
      "exported":false
   },
   "stats":{
@@ -489,15 +391,11 @@
      }
   },
   "subaccounts":{
-     "subaccounts":[
-        
-     ]
+     "subaccounts":[]
   },
   "transfer":{
      "port_id":"transfer",
-     "denom_traces":[
-        
-     ],
+     "denom_traces":[],
      "params":{
         "send_enabled":true,
         "receive_enabled":true
