@@ -64,6 +64,10 @@ export const configSchema = {
     // 1 hour
     default: 3_600_000,
   }),
+  LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA: parseInteger({
+    // 5 minutes
+    default: 300_000,
+  }),
 
   // Start delay
   START_DELAY_ENABLED: parseBoolean({ default: true }),
