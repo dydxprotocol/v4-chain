@@ -8,8 +8,7 @@
     },
     {
       "exchangeName": "Bitfinex",
-      "ticker": "tUSTUSD",
-      "adjustByMarket": "USDT-USD"
+      "ticker": "tUSTUSD"
     },
     {
       "exchangeName": "Bitstamp",
@@ -26,10 +25,6 @@
     },
     {
       "exchangeName": "CryptoCom",
-      "ticker": "USDT_USD"
-    },
-    {
-      "exchangeName": "Gate",
       "ticker": "USDT_USD"
     },
     {
