@@ -15,6 +15,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -96,6 +97,7 @@ var genesisModuleOrder = []string{
 	slashingtypes.ModuleName,
 	paramstypes.ModuleName,
 	exportedtypes.ModuleName,
+	evidencetypes.ModuleName,
 	ibctransfertypes.ModuleName,
 	pricestypes.ModuleName,
 	assetstypes.ModuleName,
