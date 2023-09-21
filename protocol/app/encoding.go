@@ -7,15 +7,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 )
 
-var encodingConfig params.EncodingConfig = MakeEncodingConfig()
+var encodingConfig params.EncodingConfig = initEncodingConfig()
 
 // GetEncodingConfig returns the EncodingConfig.
 func GetEncodingConfig() params.EncodingConfig {
 	return encodingConfig
 }
 
-// MakeEncodingConfig creates an EncodingConfig.
-func MakeEncodingConfig() params.EncodingConfig {
+// initEncodingConfig initializes an EncodingConfig.
+func initEncodingConfig() params.EncodingConfig {
 	encodingConfig := params.MakeEncodingConfig()
 
 	// This is currently required in order to support various CLI commands such as the `dydxprotocold status` command.
