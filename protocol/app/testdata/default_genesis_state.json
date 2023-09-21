@@ -1,411 +1,520 @@
 {
-  "07-tendermint": null,
-  "assets": {
-    "assets": [
-      {
-        "id": 0,
-        "symbol": "USDC",
-        "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
-        "denom_exponent": -6,
-        "has_market": false,
-        "market_id": 0,
-        "atomic_resolution": -6,
-        "long_interest": "0"
-      }
-    ]
-  },
-  "auth": {
-    "params": {
-      "max_memo_characters": "256",
-      "tx_sig_limit": "7",
-      "tx_size_cost_per_byte": "10",
-      "sig_verify_cost_ed25519": "590",
-      "sig_verify_cost_secp256k1": "1000"
-    },
-    "accounts": []
-  },
-  "bank": {
-    "params": {
-      "send_enabled": [],
-      "default_send_enabled": true
-    },
-    "balances": [],
-    "supply": [],
-    "denom_metadata": [],
-    "send_enabled": []
-  },
-  "blocktime": {
-    "params": {
-      "durations": [
-        "300s",
-        "1800s"
-      ],
-      "clock_drift_grace_period_duration": "5s"
-    }
-  },
-  "bridge": {
-    "event_params": {
-      "denom": "bridge-token",
-      "eth_chain_id": "11155111",
-      "eth_address": "0xEf01c3A30eB57c91c40C52E996d29c202ae72193"
-    },
-    "propose_params": {
-      "max_bridges_per_block": 10,
-      "propose_delay_duration": "60s",
-      "skip_rate_ppm": 800000,
-      "skip_if_block_delayed_by_duration": "5s"
-    },
-    "safety_params": {
-      "is_disabled": false,
-      "delay_blocks": 86400
-    },
-    "acknowledged_event_info": {
-      "next_id": 0,
-      "eth_block_height": "0"
-    }
-  },
-  "capability": {
-    "index": "1",
-    "owners": []
-  },
-  "clob": {
-    "clob_pairs": [],
-    "liquidations_config": {
-      "max_insurance_fund_quantums_for_deleveraging": "0",
-      "max_liquidation_fee_ppm": 5000,
-      "position_block_limits": {
-        "min_position_notional_liquidated": "1000",
-        "max_position_portion_liquidated_ppm": 1000000
-      },
-      "subaccount_block_limits": {
-        "max_notional_liquidated": "100000000000000",
-        "max_quantums_insurance_lost": "100000000000000"
-      },
-      "fillable_price_config": {
-        "bankruptcy_adjustment_ppm": 1000000,
-        "spread_to_maintenance_margin_ratio_ppm": 100000
-      }
-    },
-    "block_rate_limit_config": {
-      "max_short_term_orders_per_n_blocks": [],
-      "max_stateful_orders_per_n_blocks": [],
-      "max_short_term_order_cancellations_per_n_blocks": []
-    },
-    "equity_tier_limit_config": {
-      "short_term_order_equity_tiers": [],
-      "stateful_order_equity_tiers": []
-    }
-  },
-  "consensus": null,
-  "crisis": {
-    "constant_fee": {
-      "denom": "stake",
-      "amount": "1000"
-    }
-  },
-  "delaymsg": {
-    "delayed_messages": [],
-    "num_messages": 0
-  },
-  "distribution": {
-    "params": {
-      "community_tax": "0.020000000000000000",
-      "base_proposer_reward": "0.000000000000000000",
-      "bonus_proposer_reward": "0.000000000000000000",
-      "withdraw_addr_enabled": true
-    },
-    "fee_pool": {
-      "community_pool": []
-    },
-    "delegator_withdraw_infos": [],
-    "previous_proposer": "",
-    "outstanding_rewards": [],
-    "validator_accumulated_commissions": [],
-    "validator_historical_rewards": [],
-    "validator_current_rewards": [],
-    "delegator_starting_infos": [],
-    "validator_slash_events": []
-  },
-  "epochs": {
-    "epoch_info_list": [
-      {
-        "name": "funding-sample",
-        "next_tick": 30,
-        "duration": 60,
-        "current_epoch": 0,
-        "current_epoch_start_block": 0,
-        "is_initialized": false,
-        "fast_forward_next_tick": true
-      },
-      {
-        "name": "funding-tick",
-        "next_tick": 0,
-        "duration": 3600,
-        "current_epoch": 0,
-        "current_epoch_start_block": 0,
-        "is_initialized": false,
-        "fast_forward_next_tick": true
-      },
-      {
-        "name": "stats-epoch",
-        "next_tick": 0,
-        "duration": 3600,
-        "current_epoch": 0,
-        "current_epoch_start_block": 0,
-        "is_initialized": false,
-        "fast_forward_next_tick": true
-      }
-    ]
-  },
-  "feegrant": {
-    "allowances": []
-  },
-  "feetiers": {
-    "params": {
-      "tiers": [
+  "07-tendermint":null,
+  "assets":{
+     "assets":[
         {
-          "name": "1",
-          "absolute_volume_requirement": "0",
-          "total_volume_share_requirement_ppm": 0,
-          "maker_volume_share_requirement_ppm": 0,
-          "maker_fee_ppm": -110,
-          "taker_fee_ppm": 500
-        },
-        {
-          "name": "2",
-          "absolute_volume_requirement": "1000000000000",
-          "total_volume_share_requirement_ppm": 0,
-          "maker_volume_share_requirement_ppm": 0,
-          "maker_fee_ppm": -110,
-          "taker_fee_ppm": 450
-        },
-        {
-          "name": "3",
-          "absolute_volume_requirement": "5000000000000",
-          "total_volume_share_requirement_ppm": 0,
-          "maker_volume_share_requirement_ppm": 0,
-          "maker_fee_ppm": -110,
-          "taker_fee_ppm": 400
-        },
-        {
-          "name": "4",
-          "absolute_volume_requirement": "25000000000000",
-          "total_volume_share_requirement_ppm": 0,
-          "maker_volume_share_requirement_ppm": 0,
-          "maker_fee_ppm": -110,
-          "taker_fee_ppm": 350
-        },
-        {
-          "name": "5",
-          "absolute_volume_requirement": "125000000000000",
-          "total_volume_share_requirement_ppm": 0,
-          "maker_volume_share_requirement_ppm": 0,
-          "maker_fee_ppm": -110,
-          "taker_fee_ppm": 300
-        },
-        {
-          "name": "6",
-          "absolute_volume_requirement": "125000000000000",
-          "total_volume_share_requirement_ppm": 5000,
-          "maker_volume_share_requirement_ppm": 0,
-          "maker_fee_ppm": -110,
-          "taker_fee_ppm": 250
-        },
-        {
-          "name": "7",
-          "absolute_volume_requirement": "125000000000000",
-          "total_volume_share_requirement_ppm": 5000,
-          "maker_volume_share_requirement_ppm": 10000,
-          "maker_fee_ppm": -110,
-          "taker_fee_ppm": 250
-        },
-        {
-          "name": "8",
-          "absolute_volume_requirement": "125000000000000",
-          "total_volume_share_requirement_ppm": 5000,
-          "maker_volume_share_requirement_ppm": 20000,
-          "maker_fee_ppm": -110,
-          "taker_fee_ppm": 250
-        },
-        {
-          "name": "9",
-          "absolute_volume_requirement": "125000000000000",
-          "total_volume_share_requirement_ppm": 5000,
-          "maker_volume_share_requirement_ppm": 40000,
-          "maker_fee_ppm": -110,
-          "taker_fee_ppm": 250
+           "id":0,
+           "symbol":"USDC",
+           "denom":"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+           "denom_exponent":-6,
+           "has_market":false,
+           "market_id":0,
+           "atomic_resolution":-6,
+           "long_interest":"0"
         }
-      ]
-    }
+     ]
   },
-  "genutil": {
-    "gen_txs": []
+  "auth":{
+     "params":{
+        "max_memo_characters":"256",
+        "tx_sig_limit":"7",
+        "tx_size_cost_per_byte":"10",
+        "sig_verify_cost_ed25519":"590",
+        "sig_verify_cost_secp256k1":"1000"
+     },
+     "accounts":[
+        
+     ]
   },
-  "gov": {
-    "starting_proposal_id": "1",
-    "deposits": [],
-    "votes": [],
-    "proposals": [],
-    "deposit_params": null,
-    "voting_params": null,
-    "tally_params": null,
-    "params": {
-      "min_deposit": [
-        {
-          "denom": "stake",
-          "amount": "10000000"
+  "bank":{
+     "params":{
+        "send_enabled":[
+           
+        ],
+        "default_send_enabled":true
+     },
+     "balances":[
+        
+     ],
+     "supply":[
+        
+     ],
+     "denom_metadata":[
+        
+     ],
+     "send_enabled":[
+        
+     ]
+  },
+  "blocktime":{
+     "params":{
+        "durations":[
+           "300s",
+           "1800s"
+        ],
+        "clock_drift_grace_period_duration":"5s"
+     }
+  },
+  "bridge":{
+     "event_params":{
+        "denom":"bridge-token",
+        "eth_chain_id":"11155111",
+        "eth_address":"0xEf01c3A30eB57c91c40C52E996d29c202ae72193"
+     },
+     "propose_params":{
+        "max_bridges_per_block":10,
+        "propose_delay_duration":"60s",
+        "skip_rate_ppm":800000,
+        "skip_if_block_delayed_by_duration":"5s"
+     },
+     "safety_params":{
+        "is_disabled":false,
+        "delay_blocks":86400
+     },
+     "acknowledged_event_info":{
+        "next_id":0,
+        "eth_block_height":"0"
+     }
+  },
+  "capability":{
+     "index":"1",
+     "owners":[
+        
+     ]
+  },
+  "clob":{
+     "clob_pairs":[
+        
+     ],
+     "liquidations_config":{
+        "max_insurance_fund_quantums_for_deleveraging":"0",
+        "max_liquidation_fee_ppm":5000,
+        "position_block_limits":{
+           "min_position_notional_liquidated":"1000",
+           "max_position_portion_liquidated_ppm":1000000
+        },
+        "subaccount_block_limits":{
+           "max_notional_liquidated":"100000000000000",
+           "max_quantums_insurance_lost":"100000000000000"
+        },
+        "fillable_price_config":{
+           "bankruptcy_adjustment_ppm":1000000,
+           "spread_to_maintenance_margin_ratio_ppm":100000
         }
-      ],
-      "max_deposit_period": "172800s",
-      "voting_period": "172800s",
-      "quorum": "0.334000000000000000",
-      "threshold": "0.500000000000000000",
-      "veto_threshold": "0.334000000000000000",
-      "min_initial_deposit_ratio": "0.000000000000000000",
-      "burn_vote_quorum": false,
-      "burn_proposal_deposit_prevote": false,
-      "burn_vote_veto": true
-    }
-  },
-  "ibc": {
-    "client_genesis": {
-      "clients": [],
-      "clients_consensus": [],
-      "clients_metadata": [],
-      "params": {
-        "allowed_clients": [
-          "06-solomachine",
-          "07-tendermint"
+     },
+     "block_rate_limit_config":{
+        "max_short_term_orders_per_n_blocks":[
+           
+        ],
+        "max_stateful_orders_per_n_blocks":[
+           
+        ],
+        "max_short_term_order_cancellations_per_n_blocks":[
+           
         ]
-      },
-      "create_localhost": false,
-      "next_client_sequence": "0"
-    },
-    "connection_genesis": {
-      "connections": [],
-      "client_connection_paths": [],
-      "next_connection_sequence": "0",
-      "params": {
-        "max_expected_time_per_block": "30000000000"
-      }
-    },
-    "channel_genesis": {
-      "channels": [],
-      "acknowledgements": [],
-      "commitments": [],
-      "receipts": [],
-      "send_sequences": [],
-      "recv_sequences": [],
-      "ack_sequences": [],
-      "next_channel_sequence": "0"
-    }
+     },
+     "equity_tier_limit_config":{
+        "short_term_order_equity_tiers":[
+           
+        ],
+        "stateful_order_equity_tiers":[
+           
+        ]
+     }
   },
-  "params": null,
-  "perpetuals": {
-    "perpetuals": [],
-    "liquidity_tiers": [],
-    "params": {
-      "funding_rate_clamp_factor_ppm": 6000000,
-      "premium_vote_clamp_factor_ppm": 60000000,
-      "min_num_votes_per_sample": 15
-    }
+  "consensus":null,
+  "crisis":{
+     "constant_fee":{
+        "denom":"stake",
+        "amount":"1000"
+     }
   },
-  "prices": {
-    "market_params": [
-      {
-        "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"BTCUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tBTCUSD\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"BTC/USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"BTCUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BTC-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"BTC_USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXBTZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BTC-USDT\"}]}",
-        "exponent": -5,
-        "id": 0,
-        "min_exchanges": 1,
-        "min_price_change_ppm": 1000,
-        "pair": "BTC-USD"
-      },
-      {
-        "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ETHUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ETHUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tETHUSD\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"ETH/USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ETHUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ETH-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"ETH_USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XETHZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ETH-USDT\"}]}",
-        "exponent": -6,
-        "id": 1,
-        "min_exchanges": 1,
-        "min_price_change_ppm": 1000,
-        "pair": "ETH-USD"
-      }
-    ],
-    "market_prices": [
-      {
-        "exponent": -5,
-        "id": 0,
-        "price": "2000000000"
-      },
-      {
-        "exponent": -6,
-        "id": 1,
-        "price": "1500000000"
-      }
-    ]
+  "delaymsg":{
+     "delayed_messages":[
+        
+     ],
+     "num_messages":0
   },
-  "rewards": {
-    "params": {
-      "treasury_account":"rewards_treasury",
-      "denom":"dv4tnt",
-      "denom_exponent":-6,
-      "market_id":1,
-      "fee_multiplier_ppm":990000
-    }
+  "distribution":{
+     "params":{
+        "community_tax":"0.020000000000000000",
+        "base_proposer_reward":"0.000000000000000000",
+        "bonus_proposer_reward":"0.000000000000000000",
+        "withdraw_addr_enabled":true
+     },
+     "fee_pool":{
+        "community_pool":[
+           
+        ]
+     },
+     "delegator_withdraw_infos":[
+        
+     ],
+     "previous_proposer":"",
+     "outstanding_rewards":[
+        
+     ],
+     "validator_accumulated_commissions":[
+        
+     ],
+     "validator_historical_rewards":[
+        
+     ],
+     "validator_current_rewards":[
+        
+     ],
+     "delegator_starting_infos":[
+        
+     ],
+     "validator_slash_events":[
+        
+     ]
   },
-  "sending": {},
-  "slashing": {
-    "params": {
-      "signed_blocks_window": "3000",
-      "min_signed_per_window": "0.050000000000000000",
-      "downtime_jail_duration": "60s",
-      "slash_fraction_double_sign": "0.000000000000000000",
-      "slash_fraction_downtime": "0.000000000000000000"
-    },
-    "signing_infos": [],
-    "missed_blocks": []
+  "epochs":{
+     "epoch_info_list":[
+        {
+           "name":"funding-sample",
+           "next_tick":30,
+           "duration":60,
+           "current_epoch":0,
+           "current_epoch_start_block":0,
+           "is_initialized":false,
+           "fast_forward_next_tick":true
+        },
+        {
+           "name":"funding-tick",
+           "next_tick":0,
+           "duration":3600,
+           "current_epoch":0,
+           "current_epoch_start_block":0,
+           "is_initialized":false,
+           "fast_forward_next_tick":true
+        },
+        {
+           "name":"stats-epoch",
+           "next_tick":0,
+           "duration":3600,
+           "current_epoch":0,
+           "current_epoch_start_block":0,
+           "is_initialized":false,
+           "fast_forward_next_tick":true
+        }
+     ]
   },
-  "staking": {
-    "params": {
-      "unbonding_time": "1814400s",
-      "max_validators": 100,
-      "max_entries": 7,
-      "historical_entries": 10000,
-      "bond_denom": "stake",
-      "min_commission_rate": "0.000000000000000000"
-    },
-    "last_total_power": "0",
-    "last_validator_powers": [],
-    "validators": [],
-    "delegations": [],
-    "unbonding_delegations": [],
-    "redelegations": [],
-    "exported": false
+  "evidence":{
+     "evidence":[
+        
+     ]
   },
-  "stats": {
-    "params": {
-      "window_duration": "2592000s"
-    }
+  "feegrant":{
+     "allowances":[
+        
+     ]
   },
-  "subaccounts": {
-    "subaccounts": []
+  "feetiers":{
+     "params":{
+        "tiers":[
+           {
+              "name":"1",
+              "absolute_volume_requirement":"0",
+              "total_volume_share_requirement_ppm":0,
+              "maker_volume_share_requirement_ppm":0,
+              "maker_fee_ppm":-110,
+              "taker_fee_ppm":500
+           },
+           {
+              "name":"2",
+              "absolute_volume_requirement":"1000000000000",
+              "total_volume_share_requirement_ppm":0,
+              "maker_volume_share_requirement_ppm":0,
+              "maker_fee_ppm":-110,
+              "taker_fee_ppm":450
+           },
+           {
+              "name":"3",
+              "absolute_volume_requirement":"5000000000000",
+              "total_volume_share_requirement_ppm":0,
+              "maker_volume_share_requirement_ppm":0,
+              "maker_fee_ppm":-110,
+              "taker_fee_ppm":400
+           },
+           {
+              "name":"4",
+              "absolute_volume_requirement":"25000000000000",
+              "total_volume_share_requirement_ppm":0,
+              "maker_volume_share_requirement_ppm":0,
+              "maker_fee_ppm":-110,
+              "taker_fee_ppm":350
+           },
+           {
+              "name":"5",
+              "absolute_volume_requirement":"125000000000000",
+              "total_volume_share_requirement_ppm":0,
+              "maker_volume_share_requirement_ppm":0,
+              "maker_fee_ppm":-110,
+              "taker_fee_ppm":300
+           },
+           {
+              "name":"6",
+              "absolute_volume_requirement":"125000000000000",
+              "total_volume_share_requirement_ppm":5000,
+              "maker_volume_share_requirement_ppm":0,
+              "maker_fee_ppm":-110,
+              "taker_fee_ppm":250
+           },
+           {
+              "name":"7",
+              "absolute_volume_requirement":"125000000000000",
+              "total_volume_share_requirement_ppm":5000,
+              "maker_volume_share_requirement_ppm":10000,
+              "maker_fee_ppm":-110,
+              "taker_fee_ppm":250
+           },
+           {
+              "name":"8",
+              "absolute_volume_requirement":"125000000000000",
+              "total_volume_share_requirement_ppm":5000,
+              "maker_volume_share_requirement_ppm":20000,
+              "maker_fee_ppm":-110,
+              "taker_fee_ppm":250
+           },
+           {
+              "name":"9",
+              "absolute_volume_requirement":"125000000000000",
+              "total_volume_share_requirement_ppm":5000,
+              "maker_volume_share_requirement_ppm":40000,
+              "maker_fee_ppm":-110,
+              "taker_fee_ppm":250
+           }
+        ]
+     }
   },
-  "transfer": {
-    "port_id": "transfer",
-    "denom_traces": [],
-    "params": {
-      "send_enabled": true,
-      "receive_enabled": true
-    }
+  "genutil":{
+     "gen_txs":[
+        
+     ]
   },
-  "upgrade": {},
-  "vest": {
-    "vest_entries": [
-      {
-        "denom": "dv4tnt",
-        "end_time": "2023-10-13T00:00:00Z",
-        "start_time": "2023-09-13T00:00:00Z",
-        "treasury_account": "rewards_treasury",
-        "vester_account": "rewards_vester"
-      }
-    ]
+  "gov":{
+     "starting_proposal_id":"1",
+     "deposits":[
+        
+     ],
+     "votes":[
+        
+     ],
+     "proposals":[
+        
+     ],
+     "deposit_params":null,
+     "voting_params":null,
+     "tally_params":null,
+     "params":{
+        "min_deposit":[
+           {
+              "denom":"stake",
+              "amount":"10000000"
+           }
+        ],
+        "max_deposit_period":"172800s",
+        "voting_period":"172800s",
+        "quorum":"0.334000000000000000",
+        "threshold":"0.500000000000000000",
+        "veto_threshold":"0.334000000000000000",
+        "min_initial_deposit_ratio":"0.000000000000000000",
+        "burn_vote_quorum":false,
+        "burn_proposal_deposit_prevote":false,
+        "burn_vote_veto":true
+     }
+  },
+  "ibc":{
+     "client_genesis":{
+        "clients":[
+           
+        ],
+        "clients_consensus":[
+           
+        ],
+        "clients_metadata":[
+           
+        ],
+        "params":{
+           "allowed_clients":[
+              "06-solomachine",
+              "07-tendermint"
+           ]
+        },
+        "create_localhost":false,
+        "next_client_sequence":"0"
+     },
+     "connection_genesis":{
+        "connections":[
+           
+        ],
+        "client_connection_paths":[
+           
+        ],
+        "next_connection_sequence":"0",
+        "params":{
+           "max_expected_time_per_block":"30000000000"
+        }
+     },
+     "channel_genesis":{
+        "channels":[
+           
+        ],
+        "acknowledgements":[
+           
+        ],
+        "commitments":[
+           
+        ],
+        "receipts":[
+           
+        ],
+        "send_sequences":[
+           
+        ],
+        "recv_sequences":[
+           
+        ],
+        "ack_sequences":[
+           
+        ],
+        "next_channel_sequence":"0"
+     }
+  },
+  "params":null,
+  "perpetuals":{
+     "perpetuals":[
+        
+     ],
+     "liquidity_tiers":[
+        
+     ],
+     "params":{
+        "funding_rate_clamp_factor_ppm":6000000,
+        "premium_vote_clamp_factor_ppm":60000000,
+        "min_num_votes_per_sample":15
+     }
+  },
+  "prices":{
+     "market_params":[
+        {
+           "id":0,
+           "pair":"BTC-USD",
+           "exponent":-5,
+           "min_exchanges":1,
+           "min_price_change_ppm":1000,
+           "exchange_config_json":"{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"BTCUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tBTCUSD\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"BTC/USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"BTCUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BTC-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"BTC_USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXBTZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BTC-USDT\"}]}"
+        },
+        {
+           "id":1,
+           "pair":"ETH-USD",
+           "exponent":-6,
+           "min_exchanges":1,
+           "min_price_change_ppm":1000,
+           "exchange_config_json":"{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ETHUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"ETHUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tETHUSD\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"ETH/USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ETHUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ETH-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"ETH_USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XETHZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ETH-USDT\"}]}"
+        }
+     ],
+     "market_prices":[
+        {
+           "id":0,
+           "exponent":-5,
+           "price":"2000000000"
+        },
+        {
+           "id":1,
+           "exponent":-6,
+           "price":"1500000000"
+        }
+     ]
+  },
+  "rewards":{
+     "params":{
+        "treasury_account":"rewards_treasury",
+        "denom":"dv4tnt",
+        "denom_exponent":-6,
+        "market_id":1,
+        "fee_multiplier_ppm":990000
+     }
+  },
+  "sending":{
+     
+  },
+  "slashing":{
+     "params":{
+        "signed_blocks_window":"3000",
+        "min_signed_per_window":"0.050000000000000000",
+        "downtime_jail_duration":"60s",
+        "slash_fraction_double_sign":"0.000000000000000000",
+        "slash_fraction_downtime":"0.000000000000000000"
+     },
+     "signing_infos":[
+        
+     ],
+     "missed_blocks":[
+        
+     ]
+  },
+  "staking":{
+     "params":{
+        "unbonding_time":"1814400s",
+        "max_validators":100,
+        "max_entries":7,
+        "historical_entries":10000,
+        "bond_denom":"stake",
+        "min_commission_rate":"0.000000000000000000"
+     },
+     "last_total_power":"0",
+     "last_validator_powers":[
+        
+     ],
+     "validators":[
+        
+     ],
+     "delegations":[
+        
+     ],
+     "unbonding_delegations":[
+        
+     ],
+     "redelegations":[
+        
+     ],
+     "exported":false
+  },
+  "stats":{
+     "params":{
+        "window_duration":"2592000s"
+     }
+  },
+  "subaccounts":{
+     "subaccounts":[
+        
+     ]
+  },
+  "transfer":{
+     "port_id":"transfer",
+     "denom_traces":[
+        
+     ],
+     "params":{
+        "send_enabled":true,
+        "receive_enabled":true
+     }
+  },
+  "upgrade":{
+     
+  },
+  "vest":{
+     "vest_entries":[
+        {
+           "vester_account":"rewards_vester",
+           "treasury_account":"rewards_treasury",
+           "denom":"dv4tnt",
+           "start_time":"2023-09-13T00:00:00Z",
+           "end_time":"2023-10-13T00:00:00Z"
+        }
+     ]
   }
 }
