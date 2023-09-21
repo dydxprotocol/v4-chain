@@ -7,7 +7,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/module"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/stringutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,6 +19,6 @@ func TestDefaultGenesis(t *testing.T) {
 
 	require.NoError(t, unmarshalErr)
 	require.NoError(t, fileReadErr)
-	require.Equal(t,
-		stringutils.StripSpaces(expectedDefaultGenesisState), string(humanReadableDefaultGenesisState))
+	require.JSONEq(t,
+		string(expectedDefaultGenesisState), string(humanReadableDefaultGenesisState))
 }
