@@ -110,7 +110,7 @@ export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
   clobPairId: 1,
   ticker: 'BTC-USD',
   marketId: 0,
-  status: ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING,
   quantumConversionExponent: -8,
   atomicResolution: -10,
   subticksPerTick: 100,
