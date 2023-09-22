@@ -1474,3 +1474,11 @@ func (k Keeper) IsPositionUpdatable(
 	}
 	return true, nil
 }
+
+// UnsafeSetPerpetual sets a specific `Perpetual` in the store from its index.
+func (k Keeper) UnsafeSetPerpetual(
+	ctx sdk.Context,
+	perpetual types.Perpetual,
+) {
+	k.setPerpetual(ctx, perpetual)
+}
