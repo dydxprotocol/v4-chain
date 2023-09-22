@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitfinex",
-      "ticker": "tDOTUSD"
-    },
-    {
       "exchangeName": "CoinbasePro",
       "ticker": "DOT-USD"
     },
