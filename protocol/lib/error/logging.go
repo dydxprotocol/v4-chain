@@ -29,9 +29,9 @@ func LogErrorWithOptionalContext(
 }
 
 // WrapErrorWithPricesSourceModuleContext wraps an error with a LogContextualizer that contains a key-value pair for
-// the specified source module. This is useful for logging the error within the process proposal handler (or from any
-// other location that uses LogErrorWithOptionalContext) with metadata that can be used to identify the source of the
-// error.
+// the specified source module. This can be used, for example, for wrapping validation failure errors that are logged
+// within the process proposal handler (or from any other location that uses LogErrorWithOptionalContext) with metadata
+// that helps to more easily identify the source of the error and correlate logs.
 func WrapErrorWithSourceModuleContext(err error, module string) error {
 	return NewErrorWithLogContext(err).
 		WithLogKeyValue(SourceModuleKey, fmt.Sprintf("x/%v", module))
