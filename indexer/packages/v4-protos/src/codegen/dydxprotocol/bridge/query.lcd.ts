@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryEventParamsRequest, QueryEventParamsResponseSDKType, QueryProposeParamsRequest, QueryProposeParamsResponseSDKType, QuerySafetyParamsRequest, QuerySafetyParamsResponseSDKType, QueryAcknowledgedEventInfoRequest, QueryAcknowledgedEventInfoResponseSDKType, QueryRecognizedEventInfoRequest, QueryRecognizedEventInfoResponseSDKType } from "./query";
+import { QueryEventParamsRequest, QueryEventParamsResponseSDKType, QueryProposeParamsRequest, QueryProposeParamsResponseSDKType, QuerySafetyParamsRequest, QuerySafetyParamsResponseSDKType, QueryAcknowledgedEventInfoRequest, QueryAcknowledgedEventInfoResponseSDKType, QueryRecognizedEventInfoRequest, QueryRecognizedEventInfoResponseSDKType, QueryInFlightCompleteBridgeMessagesRequest, QueryInFlightCompleteBridgeMessagesResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -14,6 +14,7 @@ export class LCDQueryClient {
     this.safetyParams = this.safetyParams.bind(this);
     this.acknowledgedEventInfo = this.acknowledgedEventInfo.bind(this);
     this.recognizedEventInfo = this.recognizedEventInfo.bind(this);
+    this.inFlightCompleteBridgeMessages = this.inFlightCompleteBridgeMessages.bind(this);
   }
   /* Queries the EventParams. */
 
@@ -53,6 +54,23 @@ export class LCDQueryClient {
   async recognizedEventInfo(_params: QueryRecognizedEventInfoRequest = {}): Promise<QueryRecognizedEventInfoResponseSDKType> {
     const endpoint = `dydxprotocol/v4/bridge/recognized_event_info`;
     return await this.req.get<QueryRecognizedEventInfoResponseSDKType>(endpoint);
+  }
+  /* Queries all `MsgCompleteBridge` messages that are in-flight (delayed
+   but not yet executed) and corresponding block heights at which they
+   will execute. */
+
+
+  async inFlightCompleteBridgeMessages(params: QueryInFlightCompleteBridgeMessagesRequest): Promise<QueryInFlightCompleteBridgeMessagesResponseSDKType> {
+    const options: any = {
+      params: {}
+    };
+
+    if (typeof params?.address !== "undefined") {
+      options.params.address = params.address;
+    }
+
+    const endpoint = `dydxprotocol/v4/bridge/in_flight_complete_bridge_messages`;
+    return await this.req.get<QueryInFlightCompleteBridgeMessagesResponseSDKType>(endpoint, options);
   }
 
 }

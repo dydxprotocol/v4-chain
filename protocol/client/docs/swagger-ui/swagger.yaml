@@ -506,6 +506,102 @@ paths:
                       format: byte
       tags:
         - Query
+  /dydxprotocol/v4/bridge/in_flight_complete_bridge_messages:
+    get:
+      summary: |-
+        Queries all `MsgCompleteBridge` messages that are in-flight (delayed
+        but not yet executed) and corresponding block heights at which they
+        will execute.
+      operationId: InFlightCompleteBridgeMessages
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              messages:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    message:
+                      type: object
+                      properties:
+                        authority:
+                          type: string
+                        event:
+                          description: The event to complete.
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: int64
+                              description: The unique id of the Ethereum event log.
+                            coin:
+                              description: The tokens bridged.
+                              type: object
+                              properties:
+                                denom:
+                                  type: string
+                                amount:
+                                  type: string
+                            address:
+                              type: string
+                              description: >-
+                                The account address or module address to bridge
+                                to.
+                            eth_block_height:
+                              type: string
+                              format: uint64
+                              description: The Ethereum block height of the event.
+                      description: >-
+                        MsgCompleteBridge is the Msg/CompleteBridgeResponse
+                        request type.
+                    block_height:
+                      type: string
+                      format: int64
+                  description: >-
+                    InFlightCompleteBridgeMessage is a message type for the
+                    response of
+
+                    InFlightCompleteBridgeMessages RPC method. It contains the
+                    message
+
+                    and the block height at which it will execute.
+            description: >-
+              QueryInFlightCompleteBridgeMessagesResponse is a response type for
+              the
+
+              InFlightCompleteBridgeMessages RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: address
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /dydxprotocol/v4/bridge/propose_params:
     get:
       summary: Queries the ProposeParams.
@@ -42396,6 +42492,41 @@ definitions:
     description: |-
       QueryPreviousBlockInfoResponse is a request type for the PreviousBlockInfo
       RPC method.
+  cosmos.base.v1beta1.Coin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      Coin defines a token with a denomination and an amount.
+
+      NOTE: The amount field is an Int which implements the custom method
+      signatures required by gogoproto.
+  dydxprotocol.bridge.BridgeEvent:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: The unique id of the Ethereum event log.
+      coin:
+        description: The tokens bridged.
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+      address:
+        type: string
+        description: The account address or module address to bridge to.
+      eth_block_height:
+        type: string
+        format: uint64
+        description: The Ethereum block height of the event.
+    description: BridgeEvent is a recognized event from the Ethereum blockchain.
   dydxprotocol.bridge.BridgeEventInfo:
     type: object
     properties:
@@ -42432,6 +42563,74 @@ definitions:
     description: |-
       EventParams stores parameters about which events to recognize and which
       tokens to mint.
+  dydxprotocol.bridge.InFlightCompleteBridgeMessage:
+    type: object
+    properties:
+      message:
+        type: object
+        properties:
+          authority:
+            type: string
+          event:
+            description: The event to complete.
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int64
+                description: The unique id of the Ethereum event log.
+              coin:
+                description: The tokens bridged.
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+              address:
+                type: string
+                description: The account address or module address to bridge to.
+              eth_block_height:
+                type: string
+                format: uint64
+                description: The Ethereum block height of the event.
+        description: MsgCompleteBridge is the Msg/CompleteBridgeResponse request type.
+      block_height:
+        type: string
+        format: int64
+    description: |-
+      InFlightCompleteBridgeMessage is a message type for the response of
+      InFlightCompleteBridgeMessages RPC method. It contains the message
+      and the block height at which it will execute.
+  dydxprotocol.bridge.MsgCompleteBridge:
+    type: object
+    properties:
+      authority:
+        type: string
+      event:
+        description: The event to complete.
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            description: The unique id of the Ethereum event log.
+          coin:
+            description: The tokens bridged.
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+          address:
+            type: string
+            description: The account address or module address to bridge to.
+          eth_block_height:
+            type: string
+            format: uint64
+            description: The Ethereum block height of the event.
+    description: MsgCompleteBridge is the Msg/CompleteBridgeResponse request type.
   dydxprotocol.bridge.ProposeParams:
     type: object
     properties:
@@ -42521,6 +42720,55 @@ definitions:
     description: >-
       QueryEventParamsResponse is a response type for the EventParams RPC
       method.
+  dydxprotocol.bridge.QueryInFlightCompleteBridgeMessagesResponse:
+    type: object
+    properties:
+      messages:
+        type: array
+        items:
+          type: object
+          properties:
+            message:
+              type: object
+              properties:
+                authority:
+                  type: string
+                event:
+                  description: The event to complete.
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                      description: The unique id of the Ethereum event log.
+                    coin:
+                      description: The tokens bridged.
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                    address:
+                      type: string
+                      description: The account address or module address to bridge to.
+                    eth_block_height:
+                      type: string
+                      format: uint64
+                      description: The Ethereum block height of the event.
+              description: >-
+                MsgCompleteBridge is the Msg/CompleteBridgeResponse request
+                type.
+            block_height:
+              type: string
+              format: int64
+          description: |-
+            InFlightCompleteBridgeMessage is a message type for the response of
+            InFlightCompleteBridgeMessages RPC method. It contains the message
+            and the block height at which it will execute.
+    description: |-
+      QueryInFlightCompleteBridgeMessagesResponse is a response type for the
+      InFlightCompleteBridgeMessages RPC method.
   dydxprotocol.bridge.QueryProposeParamsResponse:
     type: object
     properties:
@@ -45954,18 +46202,6 @@ definitions:
     description: |-
       VestEntry specifies a Vester Account and the rate at which tokens are
       dripped into the corresponding Treasury Account.
-  cosmos.base.v1beta1.Coin:
-    type: object
-    properties:
-      denom:
-        type: string
-      amount:
-        type: string
-    description: |-
-      Coin defines a token with a denomination and an amount.
-
-      NOTE: The amount field is an Int which implements the custom method
-      signatures required by gogoproto.
   ibc.applications.transfer.v1.DenomTrace:
     type: object
     properties:

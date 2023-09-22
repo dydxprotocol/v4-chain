@@ -1,7 +1,8 @@
 import { EventParams, EventParamsSDKType, ProposeParams, ProposeParamsSDKType, SafetyParams, SafetyParamsSDKType } from "./params";
 import { BridgeEventInfo, BridgeEventInfoSDKType } from "./bridge_event_info";
+import { MsgCompleteBridge, MsgCompleteBridgeSDKType } from "./tx";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial } from "../../helpers";
+import { DeepPartial, Long } from "../../helpers";
 /** QueryEventParamsRequest is a request type for the EventParams RPC method. */
 
 export interface QueryEventParamsRequest {}
@@ -111,6 +112,66 @@ export interface QueryRecognizedEventInfoResponse {
 
 export interface QueryRecognizedEventInfoResponseSDKType {
   info?: BridgeEventInfoSDKType;
+}
+/**
+ * QueryInFlightCompleteBridgeMessagesRequest is a request type for the
+ * InFlightCompleteBridgeMessages RPC method.
+ */
+
+export interface QueryInFlightCompleteBridgeMessagesRequest {
+  /**
+   * QueryInFlightCompleteBridgeMessagesRequest is a request type for the
+   * InFlightCompleteBridgeMessages RPC method.
+   */
+  address: string;
+}
+/**
+ * QueryInFlightCompleteBridgeMessagesRequest is a request type for the
+ * InFlightCompleteBridgeMessages RPC method.
+ */
+
+export interface QueryInFlightCompleteBridgeMessagesRequestSDKType {
+  /**
+   * QueryInFlightCompleteBridgeMessagesRequest is a request type for the
+   * InFlightCompleteBridgeMessages RPC method.
+   */
+  address: string;
+}
+/**
+ * QueryInFlightCompleteBridgeMessagesResponse is a response type for the
+ * InFlightCompleteBridgeMessages RPC method.
+ */
+
+export interface QueryInFlightCompleteBridgeMessagesResponse {
+  messages: InFlightCompleteBridgeMessage[];
+}
+/**
+ * QueryInFlightCompleteBridgeMessagesResponse is a response type for the
+ * InFlightCompleteBridgeMessages RPC method.
+ */
+
+export interface QueryInFlightCompleteBridgeMessagesResponseSDKType {
+  messages: InFlightCompleteBridgeMessageSDKType[];
+}
+/**
+ * InFlightCompleteBridgeMessage is a message type for the response of
+ * InFlightCompleteBridgeMessages RPC method. It contains the message
+ * and the block height at which it will execute.
+ */
+
+export interface InFlightCompleteBridgeMessage {
+  message?: MsgCompleteBridge;
+  blockHeight: Long;
+}
+/**
+ * InFlightCompleteBridgeMessage is a message type for the response of
+ * InFlightCompleteBridgeMessages RPC method. It contains the message
+ * and the block height at which it will execute.
+ */
+
+export interface InFlightCompleteBridgeMessageSDKType {
+  message?: MsgCompleteBridgeSDKType;
+  block_height: Long;
 }
 
 function createBaseQueryEventParamsRequest(): QueryEventParamsRequest {
@@ -503,6 +564,151 @@ export const QueryRecognizedEventInfoResponse = {
   fromPartial(object: DeepPartial<QueryRecognizedEventInfoResponse>): QueryRecognizedEventInfoResponse {
     const message = createBaseQueryRecognizedEventInfoResponse();
     message.info = object.info !== undefined && object.info !== null ? BridgeEventInfo.fromPartial(object.info) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryInFlightCompleteBridgeMessagesRequest(): QueryInFlightCompleteBridgeMessagesRequest {
+  return {
+    address: ""
+  };
+}
+
+export const QueryInFlightCompleteBridgeMessagesRequest = {
+  encode(message: QueryInFlightCompleteBridgeMessagesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryInFlightCompleteBridgeMessagesRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryInFlightCompleteBridgeMessagesRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryInFlightCompleteBridgeMessagesRequest>): QueryInFlightCompleteBridgeMessagesRequest {
+    const message = createBaseQueryInFlightCompleteBridgeMessagesRequest();
+    message.address = object.address ?? "";
+    return message;
+  }
+
+};
+
+function createBaseQueryInFlightCompleteBridgeMessagesResponse(): QueryInFlightCompleteBridgeMessagesResponse {
+  return {
+    messages: []
+  };
+}
+
+export const QueryInFlightCompleteBridgeMessagesResponse = {
+  encode(message: QueryInFlightCompleteBridgeMessagesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.messages) {
+      InFlightCompleteBridgeMessage.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryInFlightCompleteBridgeMessagesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryInFlightCompleteBridgeMessagesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.messages.push(InFlightCompleteBridgeMessage.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryInFlightCompleteBridgeMessagesResponse>): QueryInFlightCompleteBridgeMessagesResponse {
+    const message = createBaseQueryInFlightCompleteBridgeMessagesResponse();
+    message.messages = object.messages?.map(e => InFlightCompleteBridgeMessage.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseInFlightCompleteBridgeMessage(): InFlightCompleteBridgeMessage {
+  return {
+    message: undefined,
+    blockHeight: Long.ZERO
+  };
+}
+
+export const InFlightCompleteBridgeMessage = {
+  encode(message: InFlightCompleteBridgeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.message !== undefined) {
+      MsgCompleteBridge.encode(message.message, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (!message.blockHeight.isZero()) {
+      writer.uint32(16).int64(message.blockHeight);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): InFlightCompleteBridgeMessage {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseInFlightCompleteBridgeMessage();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.message = MsgCompleteBridge.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.blockHeight = (reader.int64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<InFlightCompleteBridgeMessage>): InFlightCompleteBridgeMessage {
+    const message = createBaseInFlightCompleteBridgeMessage();
+    message.message = object.message !== undefined && object.message !== null ? MsgCompleteBridge.fromPartial(object.message) : undefined;
+    message.blockHeight = object.blockHeight !== undefined && object.blockHeight !== null ? Long.fromValue(object.blockHeight) : Long.ZERO;
     return message;
   }
 

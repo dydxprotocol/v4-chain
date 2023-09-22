@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "dydxprotocol/bridge/bridge_event_info.proto";
 import "dydxprotocol/bridge/params.proto";
+import "dydxprotocol/bridge/tx.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types";
 
@@ -43,6 +44,15 @@ service Query {
       returns (QueryRecognizedEventInfoResponse) {
     option (google.api.http).get =
         "/dydxprotocol/v4/bridge/recognized_event_info";
+  }
+
+  // Queries all `MsgCompleteBridge` messages that are in-flight (delayed
+  // but not yet executed) and corresponding block heights at which they
+  // will execute.
+  rpc InFlightCompleteBridgeMessages(QueryInFlightCompleteBridgeMessagesRequest)
+      returns (QueryInFlightCompleteBridgeMessagesResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/bridge/in_flight_complete_bridge_messages";
   }
 }
 
@@ -89,4 +99,23 @@ message QueryRecognizedEventInfoRequest {}
 // RecognizedEventInfo RPC method.
 message QueryRecognizedEventInfoResponse {
   BridgeEventInfo info = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryInFlightCompleteBridgeMessagesRequest is a request type for the
+// InFlightCompleteBridgeMessages RPC method.
+message QueryInFlightCompleteBridgeMessagesRequest { string address = 1; }
+
+// QueryInFlightCompleteBridgeMessagesResponse is a response type for the
+// InFlightCompleteBridgeMessages RPC method.
+message QueryInFlightCompleteBridgeMessagesResponse {
+  repeated InFlightCompleteBridgeMessage messages = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// InFlightCompleteBridgeMessage is a message type for the response of
+// InFlightCompleteBridgeMessages RPC method. It contains the message
+// and the block height at which it will execute.
+message InFlightCompleteBridgeMessage {
+  MsgCompleteBridge message = 1 [ (gogoproto.nullable) = false ];
+  int64 block_height = 2;
 }
