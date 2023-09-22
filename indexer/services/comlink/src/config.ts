@@ -42,6 +42,15 @@ export const configSchema = {
   // point
   RATE_LIMIT_GET_POINTS: parseInteger({ default: 100 }),
   RATE_LIMIT_GET_DURATION_SECONDS: parseInteger({ default: 10 }), // 100 requests / 10 seconds
+
+  // Rate limit for screening new / refreshed addresses
+  RATE_LIMIT_SCREEN_QUERY_PROVIDER_POINTS: parseInteger({ default: 2 }),
+  RATE_LIMIT_SCREEN_QUERY_PROVIDER_DURATION_SECONDS: parseInteger({ default: 60 }), // 2 reqs / min
+  RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_POINTS: parseInteger({ default: 100 }),
+  // 100 req / min
+  RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_DURATION_SECONDS: parseInteger({ default: 60 }),
+  // Threshold for refreshing compliance data for an address when screened
+  MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS: parseInteger({ default: 86_400 }), //  1 day
 };
 
 ////////////////////////////////////////////////////////////////////////////////

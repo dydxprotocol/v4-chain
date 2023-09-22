@@ -1,6 +1,7 @@
 import { Model } from 'objection';
 
 import { NumericPattern } from '../lib/validators';
+import UpsertQueryBuilder from '../query-builders/upsert';
 import { ComplianceProvider, IsoString } from '../types';
 
 export default class ComplianceDataModel extends Model {
@@ -33,6 +34,8 @@ export default class ComplianceDataModel extends Model {
       },
     };
   }
+
+  QueryBuilderType!: UpsertQueryBuilder<this>;
 
   address!: string;
 

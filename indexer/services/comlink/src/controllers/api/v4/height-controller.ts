@@ -44,8 +44,8 @@ router.get(
       return res.send(response);
     } catch (error) {
       return handleControllerError(
-        'FillsController GET /',
-        'Fills error',
+        'HeightController GET /',
+        'Height error',
         error,
         res,
       );
