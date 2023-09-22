@@ -2,8 +2,9 @@ package client
 
 import (
 	"context"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"time"
+
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -15,6 +16,8 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
+
+var nextKeyToFetch []byte
 
 // Start begins a job that periodically:
 // 1) Queries a gRPC server for all subaccounts including their open positions.
@@ -89,10 +92,11 @@ func RunLiquidationDaemonTaskLoop(
 	)
 
 	// Fetch all subaccounts from query service.
-	subaccounts, err := GetAllSubaccounts(
+	subaccounts, nextKey, err := GetSubaccountsFromKey(
 		ctx,
 		subaccountQueryClient,
 		liqFlags.SubaccountPageLimit,
+		nextKeyToFetch,
 	)
 	if err != nil {
 		return err
@@ -103,6 +107,11 @@ func RunLiquidationDaemonTaskLoop(
 		metrics.AllSubaccounts,
 		metrics.Count,
 	)
+	nextKeyToFetch = nextKey
+
+	if nextKeyToFetch == nil {
+		telemetry.IncrCounter(1, metrics.LiquidationDaemon, metrics.IteratedOverAllSubaccounts)
+	}
 
 	// Filter out subaccounts with no open positions.
 	subaccountsWithOpenPositions := make([]satypes.SubaccountId, 0)
@@ -158,40 +167,6 @@ func RunLiquidationDaemonTaskLoop(
 	return nil
 }
 
-// GetAllSubaccounts queries a gRPC server and returns a list of subaccounts and
-// their balances and open positions.
-func GetAllSubaccounts(
-	ctx context.Context,
-	client satypes.QueryClient,
-	limit uint64,
-) (
-	subaccounts []satypes.Subaccount,
-	err error,
-) {
-	subaccounts = make([]satypes.Subaccount, 0)
-
-	var nextKey []byte
-	for {
-		subaccountsFromKey, next, err := getSubaccountsFromKey(
-			ctx,
-			client,
-			limit,
-			nextKey,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		subaccounts = append(subaccounts, subaccountsFromKey...)
-		nextKey = next
-
-		if len(nextKey) == 0 {
-			break
-		}
-	}
-	return subaccounts, nil
-}
-
 // CheckCollateralizationForSubaccounts queries a gRPC server using `AreSubaccountsLiquidatable`
 // and returns a list of collateralization statuses for the given list of subaccount ids.
 func CheckCollateralizationForSubaccounts(
@@ -229,7 +204,7 @@ func SendLiquidatableSubaccountIds(
 	return nil
 }
 
-func getSubaccountsFromKey(
+func GetSubaccountsFromKey(
 	ctx context.Context,
 	client satypes.QueryClient,
 	limit uint64,

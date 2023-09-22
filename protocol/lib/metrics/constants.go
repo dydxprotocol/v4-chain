@@ -253,6 +253,7 @@ const (
 	AllSubaccounts               = "get_all_subaccounts"
 	LiquidatableSubaccountIds    = "liquidatable_subaccount_ids"
 	LiquidationDaemon            = "liquidation_daemon"
+	IteratedOverAllSubaccounts   = "iterated_over_all_subaccounts"
 	SubaccountsWithOpenPositions = "subaccounts_with_open_positions"
 
 	// Liquidation.
