@@ -32,6 +32,7 @@ type LiquidationsKeeper interface {
 		subaccountId satypes.SubaccountId,
 	) (
 		bool,
+		bool,
 		error,
 	)
 	GetBankruptcyPriceInQuoteQuantums(
@@ -113,6 +114,7 @@ type LiquidationsKeeper interface {
 		subaccountId satypes.SubaccountId,
 	) (
 		liquidationOrder *LiquidationOrder,
+		isNegativeTNC bool,
 		err error,
 	)
 	GetSubaccountLiquidationInfo(

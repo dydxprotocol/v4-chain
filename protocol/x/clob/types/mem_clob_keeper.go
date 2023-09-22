@@ -90,6 +90,7 @@ type MemClobKeeper interface {
 		subaccountId satypes.SubaccountId,
 	) (
 		bool,
+		bool,
 		error,
 	)
 	ValidateSubaccountEquityTierLimitForNewOrder(

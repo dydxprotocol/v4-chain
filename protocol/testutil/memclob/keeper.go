@@ -475,6 +475,7 @@ func (f *FakeMemClobKeeper) IsLiquidatable(
 	subaccountId satypes.SubaccountId,
 ) (
 	isLiquidatable bool,
+	isNegativeTNC bool,
 	err error,
 ) {
 	panic("This function should not be implemented as FakeMemClobKeeper is getting deprecated (CLOB-175)")

@@ -29,11 +29,12 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 ) error {
 	lib.AssertCheckTxMode(ctx)
 
+	negativeTncCount := 0
 	// Get the liquidation order for each subaccount.
 	liquidationOrdersForSorting := make([]types.LiquidationOrder, 0)
 	for _, subaccountId := range subaccountIds {
 		// If attempting to liquidate a subaccount returns an error, panic.
-		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
+		liquidationOrder, isNegativeTnc, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
 		if err != nil {
 			// Subaccount might not always be liquidatable since liquidation daemon runs
 			// in a separate goroutine and is not always in sync with the application.
@@ -47,8 +48,22 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return err
 		}
 
+		if isNegativeTnc {
+			negativeTncCount++
+		}
 		liquidationOrdersForSorting = append(liquidationOrdersForSorting, *liquidationOrder)
 	}
+
+	telemetry.SetGaugeWithLabels(
+		[]string{types.ModuleName, metrics.SubaccountsNegativeTnc},
+		float32(negativeTncCount),
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(
+				metrics.Callback,
+				metrics.PrepareCheckState,
+			),
+		},
+	)
 
 	// Sort liquidation orders. The most underwater accounts should be liquidated first.
 	// These orders are only used for sorting. When we match these orders here in PrepareCheckState,
@@ -59,12 +74,13 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	numFilledLiquidations := uint32(0)
+	numLiquidationsForSubaccountsWithNegativeTnc := uint32(0)
 	numAttemptedDeleveraging := uint32(0)
 	for i := 0; numFilledLiquidations < k.MaxLiquidationOrdersPerBlock && i < len(liquidationOrdersForSorting); i++ {
 		liquidationOrderSubaccountId := liquidationOrdersForSorting[i].GetSubaccountId()
 
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
-		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, liquidationOrderSubaccountId)
+		liquidationOrder, isNegativeTNC, err := k.MaybeGetLiquidationOrder(ctx, liquidationOrderSubaccountId)
 		if err != nil {
 			// Subaccount might not always be liquidatable if previous liquidation orders
 			// improves the net collateral of this subaccount.
@@ -91,6 +107,9 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		// Keep a count of partially and fully filled liquidations for this block.
 		if optimisticallyFilledQuantums > 0 {
 			numFilledLiquidations++
+			if isNegativeTNC {
+				numLiquidationsForSubaccountsWithNegativeTnc++
+			}
 		}
 
 		if optimisticallyFilledQuantums == 0 {
@@ -125,6 +144,17 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		metrics.NumMatchedLiquidationOrders,
 	)
 
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.LiquidationMatchesForNegativeTncSubaccounts, metrics.Count},
+		float32(numLiquidationsForSubaccountsWithNegativeTnc),
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(
+				metrics.Callback,
+				metrics.PrepareCheckState,
+			),
+		},
+	)
+
 	return nil
 }
 
@@ -137,28 +167,29 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	subaccountId satypes.SubaccountId,
 ) (
 	liquidationOrder *types.LiquidationOrder,
+	isNegativeTNC bool,
 	err error,
 ) {
 	// If the subaccount is not liquidatable, do nothing.
-	isLiquidatable, err := k.IsLiquidatable(ctx, subaccountId)
+	isLiquidatable, isNegativeTNC, err := k.IsLiquidatable(ctx, subaccountId)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if !isLiquidatable {
-		return nil, types.ErrSubaccountNotLiquidatable
+		return nil, false, types.ErrSubaccountNotLiquidatable
 	}
 
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
 	perpetualId, baseQuantumsBig, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
 	if err != nil {
-		return nil, err
+		return nil, isNegativeTNC, err
 	}
 
 	// Get the fillable price of the liquidation order in subticks.
 	deltaQuantumsBig := baseQuantumsBig.Neg(baseQuantumsBig)
 	fillablePriceRat, err := k.GetFillablePrice(ctx, subaccountId, perpetualId, deltaQuantumsBig)
 	if err != nil {
-		return nil, err
+		return nil, isNegativeTNC, err
 	}
 
 	// Calculate the fillable price.
@@ -180,7 +211,7 @@ func (k Keeper) MaybeGetLiquidationOrder(
 		satypes.BaseQuantums(absBaseQuantums.Uint64()),
 		fillablePriceSubticks,
 	)
-	return liquidationOrder, nil
+	return liquidationOrder, isNegativeTNC, nil
 }
 
 // PlacePerpetualLiquidation places an IOC liquidation order onto the book that results in fills of type
@@ -249,6 +280,7 @@ func (k Keeper) IsLiquidatable(
 	subaccountId satypes.SubaccountId,
 ) (
 	bool,
+	bool,
 	error,
 ) {
 	bigNetCollateral,
@@ -259,14 +291,15 @@ func (k Keeper) IsLiquidatable(
 		satypes.Update{SubaccountId: subaccountId},
 	)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
+	isNegativeTNC := bigNetCollateral.Sign() == -1
 	// The subaccount is liquidatable if both of the following are true:
 	// - The maintenance margin requirements are greater than zero (note that they can never be negative).
 	// - The maintenance margin requirements are greater than the subaccount's net collateral.
 	isLiquidatable := bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
-	return isLiquidatable, nil
+	return isLiquidatable, isNegativeTNC, nil
 }
 
 // Returns the bankruptcy-price of a subaccount’s position delta in quote quantums.

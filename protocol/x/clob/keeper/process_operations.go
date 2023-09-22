@@ -522,9 +522,22 @@ func (k Keeper) PersistMatchLiquidationToState(
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	takerOrder, err := k.MaybeGetLiquidationOrder(ctx, matchLiquidation.Liquidated)
+	takerOrder, isNegativeTnc, err := k.MaybeGetLiquidationOrder(ctx, matchLiquidation.Liquidated)
 	if err != nil {
 		return err
+	}
+
+	if isNegativeTnc {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.LiquidationMatchesForNegativeTncSubaccounts, metrics.Count},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.Callback,
+					metrics.DeliverTx,
+				),
+			},
+		)
 	}
 
 	// Perform stateless validation on the liquidation order.

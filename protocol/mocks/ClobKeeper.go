@@ -532,12 +532,13 @@ func (_m *ClobKeeper) InitializeEquityTierLimit(ctx types.Context, config clobty
 }
 
 // IsLiquidatable provides a mock function with given fields: ctx, subaccountId
-func (_m *ClobKeeper) IsLiquidatable(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (bool, error) {
+func (_m *ClobKeeper) IsLiquidatable(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (bool, bool, error) {
 	ret := _m.Called(ctx, subaccountId)
 
 	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) (bool, error)); ok {
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) (bool, bool, error)); ok {
 		return rf(ctx, subaccountId)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) bool); ok {
@@ -546,13 +547,19 @@ func (_m *ClobKeeper) IsLiquidatable(ctx types.Context, subaccountId subaccounts
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) bool); ok {
 		r1 = rf(ctx, subaccountId)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
+		r2 = rf(ctx, subaccountId)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // Logger provides a mock function with given fields: ctx
@@ -576,6 +583,10 @@ func (_m *ClobKeeper) MaybeDeleverageSubaccount(ctx types.Context, subaccountId 
 	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums)
 
 	var r0 *big.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) (*big.Int, error)); ok {
+		return rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	}
 	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Int); ok {
 		r0 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
 	} else {
@@ -584,7 +595,6 @@ func (_m *ClobKeeper) MaybeDeleverageSubaccount(ctx types.Context, subaccountId 
 		}
 	}
 
-	var r1 error
 	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
 		r1 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
 	} else {
@@ -595,12 +605,13 @@ func (_m *ClobKeeper) MaybeDeleverageSubaccount(ctx types.Context, subaccountId 
 }
 
 // MaybeGetLiquidationOrder provides a mock function with given fields: ctx, subaccountId
-func (_m *ClobKeeper) MaybeGetLiquidationOrder(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (*clobtypes.LiquidationOrder, error) {
+func (_m *ClobKeeper) MaybeGetLiquidationOrder(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (*clobtypes.LiquidationOrder, bool, error) {
 	ret := _m.Called(ctx, subaccountId)
 
 	var r0 *clobtypes.LiquidationOrder
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) (*clobtypes.LiquidationOrder, error)); ok {
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) (*clobtypes.LiquidationOrder, bool, error)); ok {
 		return rf(ctx, subaccountId)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) *clobtypes.LiquidationOrder); ok {
@@ -611,13 +622,19 @@ func (_m *ClobKeeper) MaybeGetLiquidationOrder(ctx types.Context, subaccountId s
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) bool); ok {
 		r1 = rf(ctx, subaccountId)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
+		r2 = rf(ctx, subaccountId)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // MustAddOrderToStatefulOrdersTimeSlice provides a mock function with given fields: ctx, goodTilBlockTime, orderId

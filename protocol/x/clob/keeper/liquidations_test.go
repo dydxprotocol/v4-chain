@@ -2221,7 +2221,7 @@ func TestIsLiquidatable(t *testing.T) {
 				PerpetualPositions: tc.perpetualPositions,
 			}
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
-			isLiquidatable, err := ks.ClobKeeper.IsLiquidatable(ks.Ctx, *subaccount.Id)
+			isLiquidatable, _, err := ks.ClobKeeper.IsLiquidatable(ks.Ctx, *subaccount.Id)
 
 			// Note that there should never be errors when passing the empty update.
 			require.NoError(t, err)
@@ -4665,7 +4665,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			}
 
 			// Run the test.
-			liquidationOrder, err := ks.ClobKeeper.MaybeGetLiquidationOrder(ctx, tc.liquidatableSubaccount)
+			liquidationOrder, _, err := ks.ClobKeeper.MaybeGetLiquidationOrder(ctx, tc.liquidatableSubaccount)
 
 			// Verify test expectations.
 			if tc.expectedErr != nil {
