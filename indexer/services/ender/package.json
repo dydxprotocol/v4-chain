@@ -4,7 +4,7 @@
   "description": "",
   "main": "build/index",
   "scripts": {
-    "start": "node --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
+    "start": "node --heapsnapshot-signal=SIGUSR2 --nostring_slices -r dd-trace/init -r dotenv-flow/config build/src/index.js",
     "build": "rm -rf build/ && tsc && cp -r src/scripts build/src/scripts",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",
