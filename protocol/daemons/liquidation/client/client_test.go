@@ -3,9 +3,10 @@ package client_test
 import (
 	"context"
 	"errors"
+	"testing"
+
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
-	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -324,7 +325,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
 			tc.setupMocks(grpc.Ctx, queryClientMock)
 
-			actual, err := client.GetAllSubaccounts(grpc.Ctx, queryClientMock, df.Liquidation.SubaccountPageLimit)
+			actual, _, err := client.GetSubaccountsFromKey(grpc.Ctx, queryClientMock, df.Liquidation.SubaccountPageLimit, nil)
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
 			} else {
