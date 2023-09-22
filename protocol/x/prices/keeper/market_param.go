@@ -108,3 +108,37 @@ func (k Keeper) GetAllMarketParams(ctx sdk.Context) []types.MarketParam {
 
 	return marketParams
 }
+
+// UnsafeModifyMarketParam modifies an existing market param in the store.
+func (k Keeper) UnsafeModifyMarketParam(
+	ctx sdk.Context,
+	marketParam types.MarketParam,
+) (types.MarketParam, error) {
+	// Validate input.
+	if err := marketParam.Validate(); err != nil {
+		return types.MarketParam{}, err
+	}
+
+	// Store the modified market param.
+	marketParamStore := k.newMarketParamStore(ctx)
+	b := k.cdc.MustMarshal(&marketParam)
+	marketParamStore.Set(types.MarketKey(marketParam.Id), b)
+
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeMarket,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewMarketModifyEvent(
+				marketParam.Id,
+				marketParam.Pair,
+				marketParam.MinPriceChangePpm,
+			),
+		),
+		indexerevents.MarketEventVersion,
+	)
+
+	// Update the in-memory market pair map for labelling metrics.
+	metrics.AddMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
+
+	return marketParam, nil
+}

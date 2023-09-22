@@ -16,7 +16,13 @@ func (app *App) setupUpgradeHandlers() {
 	}
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v0_3_0.UpgradeName,
-		v0_3_0.CreateUpgradeHandler(app.ModuleManager, app.configurator),
+		v0_3_0.CreateUpgradeHandler(
+			app.ModuleManager,
+			app.configurator,
+			app.ClobKeeper,
+			app.PerpetualsKeeper,
+			&app.PricesKeeper,
+		),
 	)
 }
 
