@@ -532,7 +532,11 @@ func (k Keeper) PersistMatchLiquidationToState(
 		return err
 	}
 
-	notionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(ctx, matchLiquidation.PerpetualId, new(big.Int).SetUint64(matchLiquidation.TotalSize))
+	notionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		matchLiquidation.PerpetualId,
+		new(big.Int).SetUint64(matchLiquidation.TotalSize),
+	)
 	if err != nil {
 		return err
 	}
