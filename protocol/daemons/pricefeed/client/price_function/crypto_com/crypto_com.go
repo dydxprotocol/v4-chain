@@ -31,6 +31,9 @@ type CryptoComTicker struct {
 	LastPrice string `json:"a" validate:"required,positive-float-string"`
 }
 
+// Ensure that CryptoComTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*CryptoComTicker)(nil)
+
 func (t CryptoComTicker) GetPair() string {
 	return t.Pair
 }

@@ -19,6 +19,9 @@ type CoinbaseProTicker struct {
 	LastPrice string `json:"price" validate:"required,positive-float-string"`
 }
 
+// Ensure that CoinbaseProTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*CoinbaseProTicker)(nil)
+
 func (t CoinbaseProTicker) GetPair() string {
 	return t.Pair
 }

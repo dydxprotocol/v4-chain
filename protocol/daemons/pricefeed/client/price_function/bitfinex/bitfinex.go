@@ -31,6 +31,9 @@ type BitfinexTicker struct {
 	LastPrice string `validate:"required,positive-float-string"`
 }
 
+// Ensure that BitfinexTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*BitfinexTicker)(nil)
+
 func (t BitfinexTicker) GetPair() string {
 	return t.Pair
 }
