@@ -248,6 +248,7 @@ const (
 	GetNetCollateralAndMarginRequirements = "get_net_collateral_and_margin_requirements"
 	GetSubaccount                         = "get_subaccount"
 	UpdateSubaccounts                     = "update_subaccounts"
+	SubaccountOwner                       = "subaccount_owner"
 
 	// Liquidation Daemon.
 	AllSubaccounts               = "get_all_subaccounts"
@@ -269,6 +270,7 @@ const (
 	SubaccountMaxInsuranceLost            = "exceeds_subaccount_max_insurance_lost"
 	SubaccountMaxNotionalLiquidated       = "exceeds_subaccount_max_notional_liquidated"
 	LiquidationRequiresDeleveraging       = "liquidation_requires_deleveraging"
+	LiquidationMatchNegativeTNC           = "liquidation_match_negative_tnc"
 
 	// Deleveraging.
 	CannotDeleverageSubaccount     = "cannot_deleverage_subaccount"

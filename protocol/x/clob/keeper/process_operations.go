@@ -532,6 +532,17 @@ func (k Keeper) PersistMatchLiquidationToState(
 		return err
 	}
 
+	notionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(ctx, matchLiquidation.PerpetualId, new(big.Int).SetUint64(matchLiquidation.TotalSize))
+	if err != nil {
+		return err
+	}
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums},
+		float32(notionalQuoteQuantums.Uint64()),
+		matchLiquidation.GetMetricLabels(metrics.DeliverTx),
+	)
+
 	for _, fill := range matchLiquidation.GetFills() {
 		// Fetch the maker order and statefully validate fill.
 		makerOrder, err := k.StatefulValidateMakerFill(ctx, &fill, ordersMap, nil)
@@ -566,6 +577,19 @@ func (k Keeper) PersistMatchLiquidationToState(
 				),
 			)
 		}
+
+		filledQuoteQuantums := new(big.Int)
+		filledQuoteQuantums.Mul(
+			new(big.Int).Div(matchWithOrders.FillAmount.ToBigInt(), new(big.Int).SetUint64(matchLiquidation.TotalSize)),
+			notionalQuoteQuantums,
+		)
+
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.Filled},
+			float32(filledQuoteQuantums.Uint64()),
+			matchLiquidation.GetMetricLabels(metrics.DeliverTx),
+		)
+
 		// Send on-chain update for the liquidation. The events are stored in a TransientStore which should be rolled-back
 		// if the branched state is discarded, so batching is not necessary.
 		k.GetIndexerEventManager().AddTxnEvent(

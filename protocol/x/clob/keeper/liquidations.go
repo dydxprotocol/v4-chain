@@ -452,6 +452,28 @@ func (k Keeper) GetFillablePrice(
 		return nil, err
 	}
 
+	// stat liquidation order for negative TNC when in DeliverTx
+	if tncBig.Sign() < 0 && !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.Liquidations, metrics.LiquidationMatchNegativeTNC},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.Callback,
+					metrics.DeliverTx,
+				),
+				metrics.GetLabelForStringValue(
+					metrics.SubaccountOwner,
+					subaccountId.Owner,
+				),
+				metrics.GetLabelForIntValue(
+					metrics.PerpetualId,
+					int(perpetualId),
+				),
+			},
+		)
+	}
+
 	liquidationsConfig := k.GetLiquidationsConfig(ctx)
 	ba := liquidationsConfig.FillablePriceConfig.BankruptcyAdjustmentPpm
 	smmr := liquidationsConfig.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm
