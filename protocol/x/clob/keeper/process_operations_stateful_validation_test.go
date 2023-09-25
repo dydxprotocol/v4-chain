@@ -159,12 +159,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: errorsmod.Wrapf(
-				types.ErrInvalidMatchOrder,
-				"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.GetOrderTextString(),
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.GetOrderTextString(),
-			),
+			expectedError: errors.New("Orders are not on opposing sides of the book in match"),
 		},
 		`Stateful match validation: taker order cannot be post only`: {
 			perpetuals: []*perptypes.Perpetual{
