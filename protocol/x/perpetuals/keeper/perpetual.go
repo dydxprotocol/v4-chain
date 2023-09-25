@@ -124,11 +124,11 @@ func (k Keeper) ModifyPerpetual(
 		indexerevents.SubtypeUpdatePerpetual,
 		indexer_manager.GetB64EncodedEventMessage(
 			indexerevents.NewUpdatePerpetualEventV1(
-				id,
-				ticker,
-				marketId,
+				perpetual.Params.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
-				liquidityTier,
+				perpetual.Params.LiquidityTier,
 			),
 		),
 		indexerevents.UpdatePerpetualEventVersion,
