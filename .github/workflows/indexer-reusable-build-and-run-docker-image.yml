@@ -82,8 +82,8 @@ jobs:
         id: run-image
         env:
           SERVICE: ${{ inputs.SERVICE }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_RESEARCH }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_RESEARCH }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
         # `timeout` sends a `SIGTERM` to the process, resulting in the exit code 124, so we need to
         # ignore exit code 124.
