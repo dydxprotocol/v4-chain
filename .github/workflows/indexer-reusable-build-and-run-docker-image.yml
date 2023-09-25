@@ -8,9 +8,9 @@ on:
         type: string
     secrets:
       AWS_ACCESS_KEY_ID:
-        required: true
+        required: false
       AWS_SECRET_ACCESS_KEY:
-        required: true
+        required: false
 
 jobs:
   build-and-push-service:
