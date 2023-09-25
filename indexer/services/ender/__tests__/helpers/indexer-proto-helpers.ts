@@ -832,6 +832,7 @@ export function expectPerpetualMarket(
   expect(perpetualMarket).toEqual(expect.objectContaining({
     ...HARDCODED_PERPETUAL_MARKET_VALUES,
     id: perpetual.id.toString(),
+    status: PerpetualMarketStatus.INITIALIZING,
     clobPairId: perpetual.clobPairId.toString(),
     ticker: perpetual.ticker,
     marketId: perpetual.marketId,

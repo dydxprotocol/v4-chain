@@ -60479,8 +60479,7 @@ definitions:
       the tracking issue https://github.com/cosmos/cosmos-sdk/issues/11970.
        - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
       SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not
-      require signers signing over other signers' `signer_info`. It also allows
-      for adding Tips in transactions.
+      require signers signing over other signers' `signer_info`.
 
       Since: cosmos-sdk 0.46
        - SIGN_MODE_LEGACY_AMINO_JSON: SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
@@ -62375,10 +62374,7 @@ definitions:
               SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode
               does not
 
-              require signers signing over other signers' `signer_info`. It also
-              allows
-
-              for adding Tips in transactions.
+              require signers signing over other signers' `signer_info`.
 
 
               Since: cosmos-sdk 0.46
@@ -62485,10 +62481,7 @@ definitions:
           SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does
           not
 
-          require signers signing over other signers' `signer_info`. It also
-          allows
-
-          for adding Tips in transactions.
+          require signers signing over other signers' `signer_info`.
 
 
           Since: cosmos-sdk 0.46
