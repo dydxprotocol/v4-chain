@@ -1,6 +1,6 @@
 package events
 
-// NewUpdatePerpetualEventV1t creates a UpdatePerpetualEventV1 representing
+// NewUpdatePerpetualEventV1 creates a UpdatePerpetualEventV1 representing
 // update of a perpetual.
 func NewUpdatePerpetualEventV1(
 	id uint32,
