@@ -45,4 +45,4 @@ RUN pnpm i --loglevel warn --production --frozen-lockfile
 
 WORKDIR /home/dydx/app/services/$service
 
-CMD ["./scripts/container-run.sh"]
+CMD ["sh", "-c", "sh ./scripts/container-run.sh"]

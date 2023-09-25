@@ -47,4 +47,4 @@ USER dydx
 
 WORKDIR /home/dydx/app/services/$service
 
-CMD ["./scripts/container-run.sh"]
+CMD ["sh", "-c", "sh ./scripts/container-run.sh"]
