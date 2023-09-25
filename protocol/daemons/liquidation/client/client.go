@@ -6,6 +6,7 @@ import (
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -204,7 +205,12 @@ func CheckCollateralizationForSubaccounts(
 	results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(metrics.LiquidationDaemon, time.Now(), metrics.CheckCollateralizationForSubaccounts, metrics.Latency)
+	defer telemetry.ModuleMeasureSince(
+		metrics.LiquidationDaemon,
+		time.Now(),
+		metrics.CheckCollateralizationForSubaccounts,
+		metrics.Latency,
+	)
 
 	query := &clobtypes.AreSubaccountsLiquidatableRequest{
 		SubaccountIds: subaccountIds,
@@ -223,7 +229,12 @@ func SendLiquidatableSubaccountIds(
 	client api.LiquidationServiceClient,
 	subaccountIds []satypes.SubaccountId,
 ) error {
-	defer telemetry.ModuleMeasureSince(metrics.LiquidationDaemon, time.Now(), metrics.SendLiquidatableSubaccountIds, metrics.Latency)
+	defer telemetry.ModuleMeasureSince(
+		metrics.LiquidationDaemon,
+		time.Now(),
+		metrics.SendLiquidatableSubaccountIds,
+		metrics.Latency,
+	)
 
 	request := &api.LiquidateSubaccountsRequest{
 		SubaccountIds: subaccountIds,
@@ -245,7 +256,14 @@ func getSubaccountsFromKey(
 	nextKey []byte,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(metrics.LiquidationDaemon, time.Now(), metrics.GetSubaccountsFromKey, metrics.Latency)
+	defer gometrics.MeasureSinceWithLabels(
+		[]string{metrics.GetSubaccountsFromKey, metrics.Latency},
+		time.Now().UTC(),
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(telemetry.MetricLabelNameModule, metrics.LiquidationDaemon),
+			metrics.GetLabelForIntValue(metrics.PageLimit, int(limit)),
+		},
+	)
 
 	query := &satypes.QueryAllSubaccountRequest{
 		Pagination: &query.PageRequest{
