@@ -82,7 +82,6 @@ jobs:
         id: run-image
         env:
           SERVICE: ${{ inputs.SERVICE }}
-          SECRET_ID: ${{ inputs.SERVICE }}
         # `timeout` sends a `SIGTERM` to the process, resulting in the exit code 124, so we need to
         # ignore exit code 124.
         run: |
@@ -90,6 +89,7 @@ jobs:
           -e REDIS_URL='redis://localhost:6379' \
           -e RATE_LIMIT_REDIS_URL='redis://localhost:6379' \
           -e NODE_ENV='test' \
+          -e SECRET_ID=$SERVICE \
           --network="host" \
           service-base || ( [[ $? -eq 124 ]] && \
             echo "Service container ran for 30 seconds with no errors" )
