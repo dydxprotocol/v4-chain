@@ -3,6 +3,7 @@ FROM dydxprotocol/indexer-node:16-alpine-m1
 ENV NODE_ENV=development
 ARG service
 
+RUN apk add --no-cache bash jq aws-cli
 RUN adduser -S dydx
 RUN mkdir -p /home/dydx/app
 RUN chown dydx -R /home/dydx/app
@@ -45,4 +46,4 @@ RUN pnpm i --loglevel warn --production --frozen-lockfile
 
 WORKDIR /home/dydx/app/services/$service
 
-CMD ["sh", "-c", "sh ./scripts/container-run.sh"]
+CMD ["sh", "-c", "bash ./scripts/container-run.sh"]

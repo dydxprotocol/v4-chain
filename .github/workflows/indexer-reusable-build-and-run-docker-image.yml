@@ -100,3 +100,4 @@ jobs:
           --network="host" \
           service-base || ( [[ $? -eq 124 ]] && \
             echo "Service container ran for 30 seconds with no errors" )
+
