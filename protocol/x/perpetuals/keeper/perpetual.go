@@ -118,6 +118,22 @@ func (k Keeper) ModifyPerpetual(
 	// Store the modified perpetual.
 	k.setPerpetual(ctx, perpetual)
 
+	// Emit indexer event.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpdatePerpetual,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewUpdatePerpetualEventV1(
+				perpetual.Params.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				perpetual.Params.AtomicResolution,
+				perpetual.Params.LiquidityTier,
+			),
+		),
+		indexerevents.UpdatePerpetualEventVersion,
+	)
+
 	return perpetual, nil
 }
 
