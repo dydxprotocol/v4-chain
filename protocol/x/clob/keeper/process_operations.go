@@ -545,11 +545,8 @@ func (k Keeper) PersistMatchLiquidationToState(
 			FillAmount: satypes.BaseQuantums(fill.FillAmount),
 		}
 
-		if err := matchWithOrders.Validate(); err != nil {
-			return err
-		}
-
 		// Write the position updates and state fill amounts for this match.
+		// Note stateless validation on the constructed `matchWithOrders` is performed within this function.
 		_, _, _, _, err = k.ProcessSingleMatch(
 			ctx,
 			&matchWithOrders,
