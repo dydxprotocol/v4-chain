@@ -261,3 +261,60 @@ func TestBridge_REJECT(t *testing.T) {
 		})
 	}
 }
+
+// This test case makes sure that the bridge server still accepts bridge events from bridge daemon when
+// Acknowledged Event ID (on-chain) is greater than Recognized Event ID (off-chain), which can happen if
+// - `AcknowledgedEventInfo` is initialized with Id > 0 in genesis.
+// - A node falls behind the chain in terms of acknowledged events, a scenario that can be caused by:
+//   - the node experiences issues with its Eth RPC endpoint and doesn't recognized events that are
+//     accepted by the rest of the chain.
+//   - the node restarts.
+func TestBridge_AcknowledgedEventIdGreaterThanRecognizedEventId(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *bridgetypes.GenesisState) {
+				genesisState.AcknowledgedEventInfo = bridgetypes.BridgeEventInfo{
+					NextId:         2,
+					EthBlockHeight: 123,
+				}
+			},
+		)
+		return genesis
+	}).WithTesting(t).Build()
+	ctx := tApp.InitChain()
+
+	// Verify that AcknowledgedEventInfo.NextId is 2.
+	aei := tApp.App.BridgeKeeper.GetAcknowledgedEventInfo(ctx)
+	require.Equal(t, uint32(2), aei.NextId)
+
+	// Verify that RecognizedEventInfo.NextId is still 0.
+	rei := tApp.App.BridgeKeeper.GetRecognizedEventInfo(ctx)
+	require.Equal(t, uint32(0), rei.NextId)
+
+	// Verify that bridge query `RecognizedEventInfo` returns whichever of AcknowledgedEventInfo and
+	// RecognizedEventInfo has a greater `NextId` (which is AcknowledgedEventInfo in this case).
+	reiRequest := bridgetypes.QueryRecognizedEventInfoRequest{}
+	abciResponse := tApp.App.Query(abcitypes.RequestQuery{
+		Path: "/dydxprotocol.bridge.Query/RecognizedEventInfo",
+		Data: tApp.App.AppCodec().MustMarshal(&reiRequest),
+	})
+	require.True(t, abciResponse.IsOK())
+	var reiResponse bridgetypes.QueryRecognizedEventInfoResponse
+	tApp.App.AppCodec().MustUnmarshal(abciResponse.Value, &reiResponse)
+	require.Equal(t, aei, reiResponse.Info) // Verify that AcknowledgedEventInfo is returned.
+
+	// Verify that it's ok to add events starting from `NextId` in above query response.
+	_, err := tApp.App.Server.AddBridgeEvents(ctx, &api.AddBridgeEventsRequest{
+		BridgeEvents: []bridgetypes.BridgeEvent{
+			{
+				Id:             reiResponse.Info.NextId,
+				Coin:           sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+				Address:        constants.BobAccAddress.String(),
+				EthBlockHeight: 234,
+			},
+		},
+	})
+	require.NoError(t, err)
+}
