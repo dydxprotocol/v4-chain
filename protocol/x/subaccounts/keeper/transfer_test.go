@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"math"
 	"math/big"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -184,7 +185,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			)
 			require.NoError(t, err)
 
-			subaccount := createNSubaccount(keeper, ctx, 1)[0]
+			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
 			subaccount.AssetPositions = tc.assetPositions
 
 			keeper.SetSubaccount(ctx, subaccount)
@@ -429,7 +430,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				require.NoError(t, err)
 			}
 
-			subaccount := createNSubaccount(keeper, ctx, 1)[0]
+			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
 			subaccount.AssetPositions = tc.assetPositions
 
 			keeper.SetSubaccount(ctx, subaccount)
@@ -738,7 +739,7 @@ func TestTransferFundsFromSubaccountToModule_TransferFundsFromModuleToSubaccount
 				require.NoError(t, err)
 			}
 
-			subaccount := createNSubaccount(keeper, ctx, 1)[0]
+			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
 			subaccount.AssetPositions = tc.assetPositions
 
 			keeper.SetSubaccount(ctx, subaccount)
