@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryEventParamsRequest, QueryEventParamsResponseSDKType, QueryProposeParamsRequest, QueryProposeParamsResponseSDKType, QuerySafetyParamsRequest, QuerySafetyParamsResponseSDKType, QueryAcknowledgedEventInfoRequest, QueryAcknowledgedEventInfoResponseSDKType, QueryRecognizedEventInfoRequest, QueryRecognizedEventInfoResponseSDKType, QueryInFlightCompleteBridgeMessagesRequest, QueryInFlightCompleteBridgeMessagesResponseSDKType } from "./query";
+import { QueryEventParamsRequest, QueryEventParamsResponseSDKType, QueryProposeParamsRequest, QueryProposeParamsResponseSDKType, QuerySafetyParamsRequest, QuerySafetyParamsResponseSDKType, QueryAcknowledgedEventInfoRequest, QueryAcknowledgedEventInfoResponseSDKType, QueryRecognizedEventInfoRequest, QueryRecognizedEventInfoResponseSDKType, QueryDelayedCompleteBridgeMessagesRequest, QueryDelayedCompleteBridgeMessagesResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -14,7 +14,7 @@ export class LCDQueryClient {
     this.safetyParams = this.safetyParams.bind(this);
     this.acknowledgedEventInfo = this.acknowledgedEventInfo.bind(this);
     this.recognizedEventInfo = this.recognizedEventInfo.bind(this);
-    this.inFlightCompleteBridgeMessages = this.inFlightCompleteBridgeMessages.bind(this);
+    this.delayedCompleteBridgeMessages = this.delayedCompleteBridgeMessages.bind(this);
   }
   /* Queries the EventParams. */
 
@@ -55,12 +55,11 @@ export class LCDQueryClient {
     const endpoint = `dydxprotocol/v4/bridge/recognized_event_info`;
     return await this.req.get<QueryRecognizedEventInfoResponseSDKType>(endpoint);
   }
-  /* Queries all `MsgCompleteBridge` messages that are in-flight (delayed
-   but not yet executed) and corresponding block heights at which they
-   will execute. */
+  /* Queries all `MsgCompleteBridge` messages that are delayed (not yet
+   executed) and corresponding block heights at which they will execute. */
 
 
-  async inFlightCompleteBridgeMessages(params: QueryInFlightCompleteBridgeMessagesRequest): Promise<QueryInFlightCompleteBridgeMessagesResponseSDKType> {
+  async delayedCompleteBridgeMessages(params: QueryDelayedCompleteBridgeMessagesRequest): Promise<QueryDelayedCompleteBridgeMessagesResponseSDKType> {
     const options: any = {
       params: {}
     };
@@ -69,8 +68,8 @@ export class LCDQueryClient {
       options.params.address = params.address;
     }
 
-    const endpoint = `dydxprotocol/v4/bridge/in_flight_complete_bridge_messages`;
-    return await this.req.get<QueryInFlightCompleteBridgeMessagesResponseSDKType>(endpoint, options);
+    const endpoint = `dydxprotocol/v4/bridge/delayed_complete_bridge_messages`;
+    return await this.req.get<QueryDelayedCompleteBridgeMessagesResponseSDKType>(endpoint, options);
   }
 
 }

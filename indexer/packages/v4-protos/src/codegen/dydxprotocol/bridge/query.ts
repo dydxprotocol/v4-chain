@@ -114,62 +114,62 @@ export interface QueryRecognizedEventInfoResponseSDKType {
   info?: BridgeEventInfoSDKType;
 }
 /**
- * QueryInFlightCompleteBridgeMessagesRequest is a request type for the
- * InFlightCompleteBridgeMessages RPC method.
+ * QueryDelayedCompleteBridgeMessagesRequest is a request type for the
+ * DelayedCompleteBridgeMessages RPC method.
  */
 
-export interface QueryInFlightCompleteBridgeMessagesRequest {
+export interface QueryDelayedCompleteBridgeMessagesRequest {
   /**
-   * QueryInFlightCompleteBridgeMessagesRequest is a request type for the
-   * InFlightCompleteBridgeMessages RPC method.
+   * QueryDelayedCompleteBridgeMessagesRequest is a request type for the
+   * DelayedCompleteBridgeMessages RPC method.
    */
   address: string;
 }
 /**
- * QueryInFlightCompleteBridgeMessagesRequest is a request type for the
- * InFlightCompleteBridgeMessages RPC method.
+ * QueryDelayedCompleteBridgeMessagesRequest is a request type for the
+ * DelayedCompleteBridgeMessages RPC method.
  */
 
-export interface QueryInFlightCompleteBridgeMessagesRequestSDKType {
+export interface QueryDelayedCompleteBridgeMessagesRequestSDKType {
   /**
-   * QueryInFlightCompleteBridgeMessagesRequest is a request type for the
-   * InFlightCompleteBridgeMessages RPC method.
+   * QueryDelayedCompleteBridgeMessagesRequest is a request type for the
+   * DelayedCompleteBridgeMessages RPC method.
    */
   address: string;
 }
 /**
- * QueryInFlightCompleteBridgeMessagesResponse is a response type for the
- * InFlightCompleteBridgeMessages RPC method.
+ * QueryDelayedCompleteBridgeMessagesResponse is a response type for the
+ * DelayedCompleteBridgeMessages RPC method.
  */
 
-export interface QueryInFlightCompleteBridgeMessagesResponse {
-  messages: InFlightCompleteBridgeMessage[];
+export interface QueryDelayedCompleteBridgeMessagesResponse {
+  messages: DelayedCompleteBridgeMessage[];
 }
 /**
- * QueryInFlightCompleteBridgeMessagesResponse is a response type for the
- * InFlightCompleteBridgeMessages RPC method.
+ * QueryDelayedCompleteBridgeMessagesResponse is a response type for the
+ * DelayedCompleteBridgeMessages RPC method.
  */
 
-export interface QueryInFlightCompleteBridgeMessagesResponseSDKType {
-  messages: InFlightCompleteBridgeMessageSDKType[];
+export interface QueryDelayedCompleteBridgeMessagesResponseSDKType {
+  messages: DelayedCompleteBridgeMessageSDKType[];
 }
 /**
- * InFlightCompleteBridgeMessage is a message type for the response of
- * InFlightCompleteBridgeMessages RPC method. It contains the message
+ * DelayedCompleteBridgeMessage is a message type for the response of
+ * DelayedCompleteBridgeMessages RPC method. It contains the message
  * and the block height at which it will execute.
  */
 
-export interface InFlightCompleteBridgeMessage {
+export interface DelayedCompleteBridgeMessage {
   message?: MsgCompleteBridge;
   blockHeight: Long;
 }
 /**
- * InFlightCompleteBridgeMessage is a message type for the response of
- * InFlightCompleteBridgeMessages RPC method. It contains the message
+ * DelayedCompleteBridgeMessage is a message type for the response of
+ * DelayedCompleteBridgeMessages RPC method. It contains the message
  * and the block height at which it will execute.
  */
 
-export interface InFlightCompleteBridgeMessageSDKType {
+export interface DelayedCompleteBridgeMessageSDKType {
   message?: MsgCompleteBridgeSDKType;
   block_height: Long;
 }
@@ -569,14 +569,14 @@ export const QueryRecognizedEventInfoResponse = {
 
 };
 
-function createBaseQueryInFlightCompleteBridgeMessagesRequest(): QueryInFlightCompleteBridgeMessagesRequest {
+function createBaseQueryDelayedCompleteBridgeMessagesRequest(): QueryDelayedCompleteBridgeMessagesRequest {
   return {
     address: ""
   };
 }
 
-export const QueryInFlightCompleteBridgeMessagesRequest = {
-  encode(message: QueryInFlightCompleteBridgeMessagesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryDelayedCompleteBridgeMessagesRequest = {
+  encode(message: QueryDelayedCompleteBridgeMessagesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.address !== "") {
       writer.uint32(10).string(message.address);
     }
@@ -584,10 +584,10 @@ export const QueryInFlightCompleteBridgeMessagesRequest = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryInFlightCompleteBridgeMessagesRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryDelayedCompleteBridgeMessagesRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryInFlightCompleteBridgeMessagesRequest();
+    const message = createBaseQueryDelayedCompleteBridgeMessagesRequest();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -606,40 +606,40 @@ export const QueryInFlightCompleteBridgeMessagesRequest = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryInFlightCompleteBridgeMessagesRequest>): QueryInFlightCompleteBridgeMessagesRequest {
-    const message = createBaseQueryInFlightCompleteBridgeMessagesRequest();
+  fromPartial(object: DeepPartial<QueryDelayedCompleteBridgeMessagesRequest>): QueryDelayedCompleteBridgeMessagesRequest {
+    const message = createBaseQueryDelayedCompleteBridgeMessagesRequest();
     message.address = object.address ?? "";
     return message;
   }
 
 };
 
-function createBaseQueryInFlightCompleteBridgeMessagesResponse(): QueryInFlightCompleteBridgeMessagesResponse {
+function createBaseQueryDelayedCompleteBridgeMessagesResponse(): QueryDelayedCompleteBridgeMessagesResponse {
   return {
     messages: []
   };
 }
 
-export const QueryInFlightCompleteBridgeMessagesResponse = {
-  encode(message: QueryInFlightCompleteBridgeMessagesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryDelayedCompleteBridgeMessagesResponse = {
+  encode(message: QueryDelayedCompleteBridgeMessagesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.messages) {
-      InFlightCompleteBridgeMessage.encode(v!, writer.uint32(10).fork()).ldelim();
+      DelayedCompleteBridgeMessage.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryInFlightCompleteBridgeMessagesResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryDelayedCompleteBridgeMessagesResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryInFlightCompleteBridgeMessagesResponse();
+    const message = createBaseQueryDelayedCompleteBridgeMessagesResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.messages.push(InFlightCompleteBridgeMessage.decode(reader, reader.uint32()));
+          message.messages.push(DelayedCompleteBridgeMessage.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -651,23 +651,23 @@ export const QueryInFlightCompleteBridgeMessagesResponse = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryInFlightCompleteBridgeMessagesResponse>): QueryInFlightCompleteBridgeMessagesResponse {
-    const message = createBaseQueryInFlightCompleteBridgeMessagesResponse();
-    message.messages = object.messages?.map(e => InFlightCompleteBridgeMessage.fromPartial(e)) || [];
+  fromPartial(object: DeepPartial<QueryDelayedCompleteBridgeMessagesResponse>): QueryDelayedCompleteBridgeMessagesResponse {
+    const message = createBaseQueryDelayedCompleteBridgeMessagesResponse();
+    message.messages = object.messages?.map(e => DelayedCompleteBridgeMessage.fromPartial(e)) || [];
     return message;
   }
 
 };
 
-function createBaseInFlightCompleteBridgeMessage(): InFlightCompleteBridgeMessage {
+function createBaseDelayedCompleteBridgeMessage(): DelayedCompleteBridgeMessage {
   return {
     message: undefined,
     blockHeight: Long.ZERO
   };
 }
 
-export const InFlightCompleteBridgeMessage = {
-  encode(message: InFlightCompleteBridgeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const DelayedCompleteBridgeMessage = {
+  encode(message: DelayedCompleteBridgeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.message !== undefined) {
       MsgCompleteBridge.encode(message.message, writer.uint32(10).fork()).ldelim();
     }
@@ -679,10 +679,10 @@ export const InFlightCompleteBridgeMessage = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): InFlightCompleteBridgeMessage {
+  decode(input: _m0.Reader | Uint8Array, length?: number): DelayedCompleteBridgeMessage {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseInFlightCompleteBridgeMessage();
+    const message = createBaseDelayedCompleteBridgeMessage();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -705,8 +705,8 @@ export const InFlightCompleteBridgeMessage = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<InFlightCompleteBridgeMessage>): InFlightCompleteBridgeMessage {
-    const message = createBaseInFlightCompleteBridgeMessage();
+  fromPartial(object: DeepPartial<DelayedCompleteBridgeMessage>): DelayedCompleteBridgeMessage {
+    const message = createBaseDelayedCompleteBridgeMessage();
     message.message = object.message !== undefined && object.message !== null ? MsgCompleteBridge.fromPartial(object.message) : undefined;
     message.blockHeight = object.blockHeight !== undefined && object.blockHeight !== null ? Long.fromValue(object.blockHeight) : Long.ZERO;
     return message;

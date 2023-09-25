@@ -444,28 +444,28 @@ func (m *QueryRecognizedEventInfoResponse) GetInfo() BridgeEventInfo {
 	return BridgeEventInfo{}
 }
 
-// QueryInFlightCompleteBridgeMessagesRequest is a request type for the
-// InFlightCompleteBridgeMessages RPC method.
-type QueryInFlightCompleteBridgeMessagesRequest struct {
+// QueryDelayedCompleteBridgeMessagesRequest is a request type for the
+// DelayedCompleteBridgeMessages RPC method.
+type QueryDelayedCompleteBridgeMessagesRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesRequest) Reset() {
-	*m = QueryInFlightCompleteBridgeMessagesRequest{}
+func (m *QueryDelayedCompleteBridgeMessagesRequest) Reset() {
+	*m = QueryDelayedCompleteBridgeMessagesRequest{}
 }
-func (m *QueryInFlightCompleteBridgeMessagesRequest) String() string {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) String() string {
 	return proto.CompactTextString(m)
 }
-func (*QueryInFlightCompleteBridgeMessagesRequest) ProtoMessage() {}
-func (*QueryInFlightCompleteBridgeMessagesRequest) Descriptor() ([]byte, []int) {
+func (*QueryDelayedCompleteBridgeMessagesRequest) ProtoMessage() {}
+func (*QueryDelayedCompleteBridgeMessagesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b4ca11b6b8f7f939, []int{10}
 }
-func (m *QueryInFlightCompleteBridgeMessagesRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryInFlightCompleteBridgeMessagesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryInFlightCompleteBridgeMessagesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryDelayedCompleteBridgeMessagesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -475,47 +475,47 @@ func (m *QueryInFlightCompleteBridgeMessagesRequest) XXX_Marshal(b []byte, deter
 		return b[:n], nil
 	}
 }
-func (m *QueryInFlightCompleteBridgeMessagesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryInFlightCompleteBridgeMessagesRequest.Merge(m, src)
+func (m *QueryDelayedCompleteBridgeMessagesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDelayedCompleteBridgeMessagesRequest.Merge(m, src)
 }
-func (m *QueryInFlightCompleteBridgeMessagesRequest) XXX_Size() int {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryInFlightCompleteBridgeMessagesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryInFlightCompleteBridgeMessagesRequest.DiscardUnknown(m)
+func (m *QueryDelayedCompleteBridgeMessagesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDelayedCompleteBridgeMessagesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryInFlightCompleteBridgeMessagesRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryDelayedCompleteBridgeMessagesRequest proto.InternalMessageInfo
 
-func (m *QueryInFlightCompleteBridgeMessagesRequest) GetAddress() string {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-// QueryInFlightCompleteBridgeMessagesResponse is a response type for the
-// InFlightCompleteBridgeMessages RPC method.
-type QueryInFlightCompleteBridgeMessagesResponse struct {
-	Messages []InFlightCompleteBridgeMessage `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages"`
+// QueryDelayedCompleteBridgeMessagesResponse is a response type for the
+// DelayedCompleteBridgeMessages RPC method.
+type QueryDelayedCompleteBridgeMessagesResponse struct {
+	Messages []DelayedCompleteBridgeMessage `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages"`
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesResponse) Reset() {
-	*m = QueryInFlightCompleteBridgeMessagesResponse{}
+func (m *QueryDelayedCompleteBridgeMessagesResponse) Reset() {
+	*m = QueryDelayedCompleteBridgeMessagesResponse{}
 }
-func (m *QueryInFlightCompleteBridgeMessagesResponse) String() string {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) String() string {
 	return proto.CompactTextString(m)
 }
-func (*QueryInFlightCompleteBridgeMessagesResponse) ProtoMessage() {}
-func (*QueryInFlightCompleteBridgeMessagesResponse) Descriptor() ([]byte, []int) {
+func (*QueryDelayedCompleteBridgeMessagesResponse) ProtoMessage() {}
+func (*QueryDelayedCompleteBridgeMessagesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b4ca11b6b8f7f939, []int{11}
 }
-func (m *QueryInFlightCompleteBridgeMessagesResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryInFlightCompleteBridgeMessagesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryInFlightCompleteBridgeMessagesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryDelayedCompleteBridgeMessagesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -525,45 +525,45 @@ func (m *QueryInFlightCompleteBridgeMessagesResponse) XXX_Marshal(b []byte, dete
 		return b[:n], nil
 	}
 }
-func (m *QueryInFlightCompleteBridgeMessagesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryInFlightCompleteBridgeMessagesResponse.Merge(m, src)
+func (m *QueryDelayedCompleteBridgeMessagesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDelayedCompleteBridgeMessagesResponse.Merge(m, src)
 }
-func (m *QueryInFlightCompleteBridgeMessagesResponse) XXX_Size() int {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryInFlightCompleteBridgeMessagesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryInFlightCompleteBridgeMessagesResponse.DiscardUnknown(m)
+func (m *QueryDelayedCompleteBridgeMessagesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDelayedCompleteBridgeMessagesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryInFlightCompleteBridgeMessagesResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryDelayedCompleteBridgeMessagesResponse proto.InternalMessageInfo
 
-func (m *QueryInFlightCompleteBridgeMessagesResponse) GetMessages() []InFlightCompleteBridgeMessage {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) GetMessages() []DelayedCompleteBridgeMessage {
 	if m != nil {
 		return m.Messages
 	}
 	return nil
 }
 
-// InFlightCompleteBridgeMessage is a message type for the response of
-// InFlightCompleteBridgeMessages RPC method. It contains the message
+// DelayedCompleteBridgeMessage is a message type for the response of
+// DelayedCompleteBridgeMessages RPC method. It contains the message
 // and the block height at which it will execute.
-type InFlightCompleteBridgeMessage struct {
+type DelayedCompleteBridgeMessage struct {
 	Message     MsgCompleteBridge `protobuf:"bytes,1,opt,name=message,proto3" json:"message"`
 	BlockHeight int64             `protobuf:"varint,2,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
 }
 
-func (m *InFlightCompleteBridgeMessage) Reset()         { *m = InFlightCompleteBridgeMessage{} }
-func (m *InFlightCompleteBridgeMessage) String() string { return proto.CompactTextString(m) }
-func (*InFlightCompleteBridgeMessage) ProtoMessage()    {}
-func (*InFlightCompleteBridgeMessage) Descriptor() ([]byte, []int) {
+func (m *DelayedCompleteBridgeMessage) Reset()         { *m = DelayedCompleteBridgeMessage{} }
+func (m *DelayedCompleteBridgeMessage) String() string { return proto.CompactTextString(m) }
+func (*DelayedCompleteBridgeMessage) ProtoMessage()    {}
+func (*DelayedCompleteBridgeMessage) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b4ca11b6b8f7f939, []int{12}
 }
-func (m *InFlightCompleteBridgeMessage) XXX_Unmarshal(b []byte) error {
+func (m *DelayedCompleteBridgeMessage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *InFlightCompleteBridgeMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *DelayedCompleteBridgeMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_InFlightCompleteBridgeMessage.Marshal(b, m, deterministic)
+		return xxx_messageInfo_DelayedCompleteBridgeMessage.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -573,26 +573,26 @@ func (m *InFlightCompleteBridgeMessage) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *InFlightCompleteBridgeMessage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InFlightCompleteBridgeMessage.Merge(m, src)
+func (m *DelayedCompleteBridgeMessage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DelayedCompleteBridgeMessage.Merge(m, src)
 }
-func (m *InFlightCompleteBridgeMessage) XXX_Size() int {
+func (m *DelayedCompleteBridgeMessage) XXX_Size() int {
 	return m.Size()
 }
-func (m *InFlightCompleteBridgeMessage) XXX_DiscardUnknown() {
-	xxx_messageInfo_InFlightCompleteBridgeMessage.DiscardUnknown(m)
+func (m *DelayedCompleteBridgeMessage) XXX_DiscardUnknown() {
+	xxx_messageInfo_DelayedCompleteBridgeMessage.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_InFlightCompleteBridgeMessage proto.InternalMessageInfo
+var xxx_messageInfo_DelayedCompleteBridgeMessage proto.InternalMessageInfo
 
-func (m *InFlightCompleteBridgeMessage) GetMessage() MsgCompleteBridge {
+func (m *DelayedCompleteBridgeMessage) GetMessage() MsgCompleteBridge {
 	if m != nil {
 		return m.Message
 	}
 	return MsgCompleteBridge{}
 }
 
-func (m *InFlightCompleteBridgeMessage) GetBlockHeight() int64 {
+func (m *DelayedCompleteBridgeMessage) GetBlockHeight() int64 {
 	if m != nil {
 		return m.BlockHeight
 	}
@@ -610,62 +610,62 @@ func init() {
 	proto.RegisterType((*QueryAcknowledgedEventInfoResponse)(nil), "dydxprotocol.bridge.QueryAcknowledgedEventInfoResponse")
 	proto.RegisterType((*QueryRecognizedEventInfoRequest)(nil), "dydxprotocol.bridge.QueryRecognizedEventInfoRequest")
 	proto.RegisterType((*QueryRecognizedEventInfoResponse)(nil), "dydxprotocol.bridge.QueryRecognizedEventInfoResponse")
-	proto.RegisterType((*QueryInFlightCompleteBridgeMessagesRequest)(nil), "dydxprotocol.bridge.QueryInFlightCompleteBridgeMessagesRequest")
-	proto.RegisterType((*QueryInFlightCompleteBridgeMessagesResponse)(nil), "dydxprotocol.bridge.QueryInFlightCompleteBridgeMessagesResponse")
-	proto.RegisterType((*InFlightCompleteBridgeMessage)(nil), "dydxprotocol.bridge.InFlightCompleteBridgeMessage")
+	proto.RegisterType((*QueryDelayedCompleteBridgeMessagesRequest)(nil), "dydxprotocol.bridge.QueryDelayedCompleteBridgeMessagesRequest")
+	proto.RegisterType((*QueryDelayedCompleteBridgeMessagesResponse)(nil), "dydxprotocol.bridge.QueryDelayedCompleteBridgeMessagesResponse")
+	proto.RegisterType((*DelayedCompleteBridgeMessage)(nil), "dydxprotocol.bridge.DelayedCompleteBridgeMessage")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/bridge/query.proto", fileDescriptor_b4ca11b6b8f7f939) }
 
 var fileDescriptor_b4ca11b6b8f7f939 = []byte{
-	// 743 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0x41, 0x4f, 0xd4, 0x4e,
-	0x18, 0xc6, 0x77, 0x80, 0x3f, 0xf0, 0x7f, 0x17, 0x2f, 0x83, 0xc6, 0xa5, 0x62, 0xd9, 0xad, 0x88,
-	0x1b, 0x61, 0xdb, 0xb8, 0x82, 0x18, 0x63, 0x04, 0xd7, 0x48, 0xe4, 0x40, 0x82, 0xab, 0x27, 0x62,
-	0xdc, 0x74, 0xdb, 0xd9, 0x6e, 0xc3, 0x6e, 0xa7, 0xb4, 0x05, 0x59, 0x8f, 0x7a, 0xf3, 0x64, 0xe2,
-	0xc5, 0x83, 0x07, 0xbf, 0x86, 0x47, 0x6f, 0x9c, 0x0c, 0x89, 0x17, 0x4f, 0xc6, 0x80, 0x89, 0x5f,
-	0xc3, 0xec, 0x74, 0xba, 0x69, 0xd7, 0xe9, 0x66, 0x31, 0x9e, 0x0a, 0x33, 0xef, 0xf3, 0x3e, 0xbf,
-	0x77, 0xca, 0x3c, 0x14, 0xe6, 0xcc, 0x8e, 0x79, 0xe8, 0x7a, 0x34, 0xa0, 0x06, 0x6d, 0x69, 0x75,
-	0xcf, 0x36, 0x2d, 0xa2, 0xed, 0xed, 0x13, 0xaf, 0xa3, 0xb2, 0x55, 0x3c, 0x1d, 0x2f, 0x50, 0xc3,
-	0x02, 0xe9, 0xbc, 0x45, 0x2d, 0xca, 0x16, 0xb5, 0xee, 0x4f, 0x61, 0xa9, 0x34, 0x6b, 0x51, 0x6a,
-	0xb5, 0x88, 0xa6, 0xbb, 0xb6, 0xa6, 0x3b, 0x0e, 0x0d, 0xf4, 0xc0, 0xa6, 0x8e, 0xcf, 0x77, 0x17,
-	0x45, 0x4e, 0xe1, 0xa3, 0x46, 0x0e, 0x88, 0x13, 0xd4, 0x6c, 0xa7, 0x11, 0xb5, 0xca, 0x8b, 0x8a,
-	0x5d, 0xdd, 0xd3, 0xdb, 0x51, 0xbb, 0x59, 0x51, 0x45, 0x70, 0x18, 0xee, 0x2a, 0x33, 0x70, 0xf1,
-	0x71, 0x77, 0x88, 0x87, 0xdd, 0xc6, 0xdb, 0x4c, 0x57, 0x25, 0x7b, 0xfb, 0xc4, 0x0f, 0x94, 0x1d,
-	0xc8, 0xfd, 0xb9, 0xe5, 0xbb, 0xd4, 0xf1, 0x09, 0xbe, 0x07, 0xe3, 0xa1, 0x49, 0x0e, 0xe5, 0x51,
-	0x31, 0x5b, 0xce, 0xab, 0x82, 0xe9, 0xd5, 0x98, 0xb2, 0x32, 0x76, 0xf4, 0x7d, 0x2e, 0x53, 0xe5,
-	0x2a, 0xe5, 0x12, 0xcc, 0xb0, 0xde, 0xdb, 0x1e, 0x75, 0xa9, 0x4f, 0x92, 0xc6, 0xcf, 0x41, 0x12,
-	0x6d, 0x72, 0xeb, 0xf5, 0x3e, 0x6b, 0x45, 0x68, 0x9d, 0xd0, 0xf6, 0x99, 0x4b, 0x7c, 0xb0, 0x27,
-	0x7a, 0x83, 0x04, 0x9d, 0xa4, 0xf7, 0x33, 0x0e, 0x96, 0xdc, 0xe3, 0xd6, 0x6b, 0x7d, 0xd6, 0x05,
-	0xa1, 0x75, 0x5c, 0xda, 0xe7, 0x7c, 0x05, 0x0a, 0xac, 0xfb, 0x7d, 0x63, 0xd7, 0xa1, 0x2f, 0x5a,
-	0xc4, 0xb4, 0x88, 0xc9, 0x0e, 0x69, 0xd3, 0x69, 0xd0, 0x08, 0xc1, 0x04, 0x65, 0x50, 0x51, 0xef,
-	0x0d, 0x8c, 0x75, 0xff, 0x0c, 0x38, 0xc9, 0xbc, 0x90, 0xa4, 0xc2, 0x1e, 0x3d, 0x2d, 0x87, 0x61,
-	0x3a, 0xa5, 0x00, 0x73, 0xcc, 0xa5, 0x4a, 0x0c, 0x6a, 0x39, 0xf6, 0x4b, 0x01, 0x48, 0x1d, 0xf2,
-	0xe9, 0x25, 0xff, 0x08, 0x63, 0x03, 0xae, 0x33, 0x8f, 0x4d, 0x67, 0xa3, 0x65, 0x5b, 0xcd, 0xe0,
-	0x01, 0x6d, 0xbb, 0x2d, 0x12, 0x90, 0x50, 0xb3, 0x45, 0x7c, 0x5f, 0xb7, 0x48, 0xf4, 0x76, 0x70,
-	0x0e, 0x26, 0x74, 0xd3, 0xf4, 0x88, 0x1f, 0xbe, 0x81, 0xff, 0xab, 0xd1, 0xaf, 0xca, 0x6b, 0x04,
-	0x8b, 0x43, 0x35, 0xe2, 0xdc, 0x4f, 0x61, 0xb2, 0xcd, 0xd7, 0x72, 0x28, 0x3f, 0x5a, 0xcc, 0x96,
-	0xcb, 0x42, 0xf6, 0x81, 0xed, 0xf8, 0x24, 0xbd, 0x4e, 0xca, 0x1b, 0x04, 0x97, 0x07, 0x2a, 0xf0,
-	0x06, 0x4c, 0xf0, 0x6a, 0x7e, 0x64, 0x0b, 0x42, 0xdb, 0x2d, 0xdf, 0x4a, 0xea, 0xb9, 0x55, 0x24,
-	0xc6, 0x05, 0x98, 0xaa, 0xb7, 0xa8, 0xb1, 0x5b, 0x6b, 0x92, 0xae, 0x59, 0x6e, 0x24, 0x8f, 0x8a,
-	0xa3, 0xd5, 0x2c, 0x5b, 0x7b, 0xc4, 0x96, 0xca, 0x5f, 0x26, 0xe1, 0x3f, 0x76, 0x24, 0xf8, 0x3d,
-	0x82, 0x6c, 0xec, 0x2e, 0xe2, 0x25, 0xa1, 0x67, 0x4a, 0x0e, 0x48, 0xa5, 0x21, 0xab, 0xc3, 0x93,
-	0x55, 0x96, 0x5e, 0x7d, 0xfd, 0xf9, 0x6e, 0x64, 0x01, 0xcf, 0x6b, 0x89, 0xe0, 0x39, 0x58, 0x8e,
-	0xb2, 0x27, 0xcc, 0xb0, 0xf0, 0x46, 0xe0, 0x8f, 0x08, 0xce, 0x25, 0xee, 0x2a, 0x56, 0xd3, 0xed,
-	0x44, 0x69, 0x21, 0x69, 0x43, 0xd7, 0x73, 0x40, 0x95, 0x01, 0x16, 0xf1, 0x42, 0x1a, 0xa0, 0x1b,
-	0xca, 0x22, 0xc4, 0x0f, 0x08, 0xa6, 0xe2, 0x77, 0x1a, 0x0f, 0x38, 0x10, 0x41, 0xa4, 0x48, 0xea,
-	0xb0, 0xe5, 0x9c, 0xaf, 0xc4, 0xf8, 0xae, 0xe1, 0xab, 0x69, 0x7c, 0x3e, 0x53, 0x45, 0x78, 0x9f,
-	0x11, 0x5c, 0x10, 0x46, 0x05, 0xbe, 0x95, 0x6e, 0x3c, 0x28, 0x80, 0xa4, 0xd5, 0x33, 0xeb, 0x38,
-	0xf9, 0x2a, 0x23, 0xbf, 0x81, 0xb5, 0x34, 0x72, 0x3d, 0x26, 0x8f, 0xfd, 0x2f, 0xc3, 0x9f, 0x10,
-	0x4c, 0x0b, 0x52, 0x06, 0x2f, 0xa7, 0x93, 0xa4, 0xe7, 0x96, 0xb4, 0x72, 0x46, 0x15, 0xa7, 0x5f,
-	0x61, 0xf4, 0x1a, 0x2e, 0xa5, 0xd1, 0x7b, 0x3d, 0x71, 0x9c, 0xfd, 0x17, 0x02, 0x79, 0x70, 0xe8,
-	0xe0, 0xb5, 0x74, 0xa0, 0xa1, 0x72, 0x4f, 0x5a, 0xff, 0xfb, 0x06, 0x7c, 0xb8, 0x0a, 0x1b, 0xee,
-	0x2e, 0xbe, 0x93, 0x36, 0x9c, 0xed, 0xd4, 0x1a, 0xac, 0x51, 0xcd, 0xe0, 0x9d, 0x6a, 0xfc, 0x9b,
-	0x23, 0x4a, 0xb7, 0x4a, 0xf5, 0xe8, 0x44, 0x46, 0xc7, 0x27, 0x32, 0xfa, 0x71, 0x22, 0xa3, 0xb7,
-	0xa7, 0x72, 0xe6, 0xf8, 0x54, 0xce, 0x7c, 0x3b, 0x95, 0x33, 0x3b, 0xb7, 0x2d, 0x3b, 0x68, 0xee,
-	0xd7, 0x55, 0x83, 0xb6, 0xfb, 0xfb, 0x97, 0x8c, 0xa6, 0x6e, 0x3b, 0x5a, 0x6f, 0xe5, 0xb0, 0xf7,
-	0x09, 0xd2, 0x71, 0x89, 0x5f, 0x1f, 0x67, 0x1b, 0x37, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff, 0x29,
-	0x7a, 0xd8, 0x12, 0x5f, 0x09, 0x00, 0x00,
+	// 737 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xc1, 0x53, 0xd3, 0x40,
+	0x14, 0xc6, 0xbb, 0x80, 0x80, 0xaf, 0x78, 0x59, 0x74, 0x2c, 0x11, 0x4b, 0x1b, 0x11, 0xab, 0xd2,
+	0x64, 0x40, 0x10, 0xc6, 0x03, 0x20, 0x8a, 0xa3, 0x07, 0x66, 0xb0, 0xdc, 0x18, 0xc7, 0x4e, 0x9a,
+	0x2c, 0x69, 0x86, 0x36, 0x1b, 0x92, 0x80, 0xd4, 0x9b, 0xde, 0xbc, 0x39, 0xe3, 0xc5, 0x83, 0x07,
+	0xff, 0x0d, 0x8f, 0xde, 0xf0, 0xc6, 0x8c, 0x17, 0x4f, 0x8e, 0xd3, 0xfa, 0x87, 0x38, 0xdd, 0x6c,
+	0x3a, 0x49, 0xdd, 0x64, 0x8a, 0xe3, 0x29, 0xb0, 0xfb, 0xbe, 0xf7, 0xfd, 0xde, 0x86, 0xfd, 0x08,
+	0xcc, 0x18, 0x2d, 0xe3, 0xc4, 0x71, 0xa9, 0x4f, 0x75, 0xda, 0x50, 0x6b, 0xae, 0x65, 0x98, 0x44,
+	0x3d, 0x3c, 0x22, 0x6e, 0x4b, 0x61, 0xab, 0x78, 0x32, 0x5a, 0xa0, 0x04, 0x05, 0xd2, 0x65, 0x93,
+	0x9a, 0x94, 0x2d, 0xaa, 0xdd, 0x9f, 0x82, 0x52, 0x69, 0xda, 0xa4, 0xd4, 0x6c, 0x10, 0x55, 0x73,
+	0x2c, 0x55, 0xb3, 0x6d, 0xea, 0x6b, 0xbe, 0x45, 0x6d, 0x8f, 0xef, 0xde, 0x15, 0x39, 0x05, 0x8f,
+	0x2a, 0x39, 0x26, 0xb6, 0x5f, 0xb5, 0xec, 0xfd, 0xb0, 0x55, 0x41, 0x54, 0xec, 0x68, 0xae, 0xd6,
+	0x0c, 0xdb, 0x4d, 0x8b, 0x2a, 0xfc, 0x93, 0x60, 0x57, 0x9e, 0x82, 0xab, 0xcf, 0xbb, 0x43, 0x6c,
+	0x75, 0x1b, 0xef, 0x30, 0x5d, 0x85, 0x1c, 0x1e, 0x11, 0xcf, 0x97, 0xf7, 0x20, 0xf7, 0xf7, 0x96,
+	0xe7, 0x50, 0xdb, 0x23, 0x78, 0x0d, 0x46, 0x03, 0x93, 0x1c, 0x2a, 0xa0, 0x52, 0x76, 0xb1, 0xa0,
+	0x08, 0xa6, 0x57, 0x22, 0xca, 0xcd, 0x91, 0xd3, 0x9f, 0x33, 0x99, 0x0a, 0x57, 0xc9, 0xd7, 0x60,
+	0x8a, 0xf5, 0xde, 0x71, 0xa9, 0x43, 0x3d, 0x12, 0x37, 0x7e, 0x09, 0x92, 0x68, 0x93, 0x5b, 0x6f,
+	0xf4, 0x59, 0xcb, 0x42, 0xeb, 0x98, 0xb6, 0xcf, 0x5c, 0xe2, 0x83, 0xed, 0x6a, 0xfb, 0xc4, 0x6f,
+	0xc5, 0xbd, 0x5f, 0x70, 0xb0, 0xf8, 0x1e, 0xb7, 0x5e, 0xef, 0xb3, 0x2e, 0x0a, 0xad, 0xa3, 0xd2,
+	0x3e, 0xe7, 0x1b, 0x50, 0x64, 0xdd, 0x1f, 0xea, 0x07, 0x36, 0x7d, 0xd5, 0x20, 0x86, 0x49, 0x0c,
+	0x76, 0x48, 0xcf, 0xec, 0x7d, 0x1a, 0x22, 0x18, 0x20, 0xa7, 0x15, 0xf5, 0xde, 0xc0, 0x48, 0xf7,
+	0xcf, 0x80, 0x93, 0xcc, 0x0a, 0x49, 0x36, 0xd9, 0xa3, 0xa7, 0xe5, 0x30, 0x4c, 0x27, 0x17, 0x61,
+	0x86, 0xb9, 0x54, 0x88, 0x4e, 0x4d, 0xdb, 0x7a, 0x2d, 0x00, 0xa9, 0x41, 0x21, 0xb9, 0xe4, 0x3f,
+	0x61, 0x6c, 0xc1, 0x6d, 0xe6, 0xf1, 0x98, 0x34, 0xb4, 0x16, 0x31, 0x1e, 0xd1, 0xa6, 0xd3, 0x20,
+	0x3e, 0x09, 0x24, 0xdb, 0xc4, 0xf3, 0x34, 0x93, 0x84, 0x2f, 0x07, 0xe7, 0x60, 0x4c, 0x33, 0x0c,
+	0x97, 0x78, 0xc1, 0x0b, 0xb8, 0x58, 0x09, 0x7f, 0x95, 0xdf, 0x20, 0xb8, 0x33, 0x48, 0x1f, 0x4e,
+	0xbd, 0x0b, 0xe3, 0x4d, 0xbe, 0x96, 0x43, 0x85, 0xe1, 0x52, 0x76, 0x71, 0x41, 0x48, 0x9e, 0xd6,
+	0x8d, 0x8f, 0xd1, 0x6b, 0x24, 0xbf, 0x43, 0x30, 0x9d, 0x26, 0xc0, 0x4f, 0x60, 0x8c, 0x17, 0xf3,
+	0xe3, 0x9a, 0x13, 0x9a, 0x6e, 0x7b, 0x66, 0x5c, 0xcf, 0x9d, 0x42, 0x31, 0x2e, 0xc2, 0x44, 0xad,
+	0x41, 0xf5, 0x83, 0x6a, 0x9d, 0x58, 0x66, 0xdd, 0xcf, 0x0d, 0x15, 0x50, 0x69, 0xb8, 0x92, 0x65,
+	0x6b, 0x4f, 0xd9, 0xd2, 0xe2, 0xb7, 0x71, 0xb8, 0xc0, 0xce, 0x03, 0x7f, 0x44, 0x90, 0x8d, 0xdc,
+	0x43, 0x3c, 0x2f, 0xf4, 0x4c, 0xc8, 0x00, 0xa9, 0x3c, 0x60, 0x75, 0x70, 0xae, 0xf2, 0xfc, 0xdb,
+	0xef, 0xbf, 0x3f, 0x0c, 0xcd, 0xe1, 0x59, 0x35, 0x16, 0x3a, 0xc7, 0x4b, 0x61, 0xee, 0x04, 0xf9,
+	0x15, 0xdc, 0x06, 0xfc, 0x19, 0xc1, 0xa5, 0xd8, 0x3d, 0xc5, 0x4a, 0xb2, 0x9d, 0x28, 0x29, 0x24,
+	0x75, 0xe0, 0x7a, 0x0e, 0xa8, 0x30, 0xc0, 0x12, 0x9e, 0x4b, 0x02, 0x74, 0x02, 0x59, 0x88, 0xf8,
+	0x09, 0xc1, 0x44, 0xf4, 0x3e, 0xe3, 0x94, 0x03, 0x11, 0xc4, 0x89, 0xa4, 0x0c, 0x5a, 0xce, 0xf9,
+	0xca, 0x8c, 0xef, 0x16, 0xbe, 0x99, 0xc4, 0xe7, 0x31, 0x55, 0x88, 0xf7, 0x15, 0xc1, 0x15, 0x61,
+	0x4c, 0xe0, 0xfb, 0xc9, 0xc6, 0x69, 0xe1, 0x23, 0xad, 0x9c, 0x5b, 0xc7, 0xc9, 0x57, 0x18, 0xf9,
+	0x02, 0x56, 0x93, 0xc8, 0xb5, 0x88, 0x3c, 0xf2, 0x7f, 0x0c, 0x7f, 0x41, 0x30, 0x29, 0x48, 0x18,
+	0xbc, 0x94, 0x4c, 0x92, 0x9c, 0x59, 0xd2, 0xf2, 0x39, 0x55, 0x9c, 0x7e, 0x99, 0xd1, 0xab, 0xb8,
+	0x9c, 0x44, 0xef, 0xf6, 0xc4, 0x51, 0xf6, 0x36, 0x82, 0xeb, 0xa9, 0x89, 0x83, 0xd7, 0x92, 0x79,
+	0x06, 0x89, 0x3c, 0x69, 0xfd, 0x9f, 0xf5, 0x7c, 0xb2, 0x0d, 0x36, 0xd9, 0x03, 0xbc, 0x9a, 0x34,
+	0x99, 0x11, 0xb4, 0xa9, 0xea, 0xbc, 0x4f, 0x95, 0x7f, 0x6a, 0x84, 0xb9, 0xb6, 0x59, 0x39, 0x6d,
+	0xe7, 0xd1, 0x59, 0x3b, 0x8f, 0x7e, 0xb5, 0xf3, 0xe8, 0x7d, 0x27, 0x9f, 0x39, 0xeb, 0xe4, 0x33,
+	0x3f, 0x3a, 0xf9, 0xcc, 0xde, 0xaa, 0x69, 0xf9, 0xf5, 0xa3, 0x9a, 0xa2, 0xd3, 0x66, 0x7f, 0xf7,
+	0xb2, 0x5e, 0xd7, 0x2c, 0x5b, 0xed, 0xad, 0x9c, 0xf4, 0xbe, 0x3c, 0x5a, 0x0e, 0xf1, 0x6a, 0xa3,
+	0x6c, 0xe3, 0xde, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x67, 0x35, 0x76, 0x25, 0x56, 0x09, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -694,10 +694,9 @@ type QueryClient interface {
 	// A "recognized" event is one that is finalized on the Ethereum blockchain
 	// and has been identified by the queried node. It is not yet in-consensus.
 	RecognizedEventInfo(ctx context.Context, in *QueryRecognizedEventInfoRequest, opts ...grpc.CallOption) (*QueryRecognizedEventInfoResponse, error)
-	// Queries all `MsgCompleteBridge` messages that are in-flight (delayed
-	// but not yet executed) and corresponding block heights at which they
-	// will execute.
-	InFlightCompleteBridgeMessages(ctx context.Context, in *QueryInFlightCompleteBridgeMessagesRequest, opts ...grpc.CallOption) (*QueryInFlightCompleteBridgeMessagesResponse, error)
+	// Queries all `MsgCompleteBridge` messages that are delayed (not yet
+	// executed) and corresponding block heights at which they will execute.
+	DelayedCompleteBridgeMessages(ctx context.Context, in *QueryDelayedCompleteBridgeMessagesRequest, opts ...grpc.CallOption) (*QueryDelayedCompleteBridgeMessagesResponse, error)
 }
 
 type queryClient struct {
@@ -753,9 +752,9 @@ func (c *queryClient) RecognizedEventInfo(ctx context.Context, in *QueryRecogniz
 	return out, nil
 }
 
-func (c *queryClient) InFlightCompleteBridgeMessages(ctx context.Context, in *QueryInFlightCompleteBridgeMessagesRequest, opts ...grpc.CallOption) (*QueryInFlightCompleteBridgeMessagesResponse, error) {
-	out := new(QueryInFlightCompleteBridgeMessagesResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.bridge.Query/InFlightCompleteBridgeMessages", in, out, opts...)
+func (c *queryClient) DelayedCompleteBridgeMessages(ctx context.Context, in *QueryDelayedCompleteBridgeMessagesRequest, opts ...grpc.CallOption) (*QueryDelayedCompleteBridgeMessagesResponse, error) {
+	out := new(QueryDelayedCompleteBridgeMessagesResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.bridge.Query/DelayedCompleteBridgeMessages", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -778,10 +777,9 @@ type QueryServer interface {
 	// A "recognized" event is one that is finalized on the Ethereum blockchain
 	// and has been identified by the queried node. It is not yet in-consensus.
 	RecognizedEventInfo(context.Context, *QueryRecognizedEventInfoRequest) (*QueryRecognizedEventInfoResponse, error)
-	// Queries all `MsgCompleteBridge` messages that are in-flight (delayed
-	// but not yet executed) and corresponding block heights at which they
-	// will execute.
-	InFlightCompleteBridgeMessages(context.Context, *QueryInFlightCompleteBridgeMessagesRequest) (*QueryInFlightCompleteBridgeMessagesResponse, error)
+	// Queries all `MsgCompleteBridge` messages that are delayed (not yet
+	// executed) and corresponding block heights at which they will execute.
+	DelayedCompleteBridgeMessages(context.Context, *QueryDelayedCompleteBridgeMessagesRequest) (*QueryDelayedCompleteBridgeMessagesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -803,8 +801,8 @@ func (*UnimplementedQueryServer) AcknowledgedEventInfo(ctx context.Context, req 
 func (*UnimplementedQueryServer) RecognizedEventInfo(ctx context.Context, req *QueryRecognizedEventInfoRequest) (*QueryRecognizedEventInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RecognizedEventInfo not implemented")
 }
-func (*UnimplementedQueryServer) InFlightCompleteBridgeMessages(ctx context.Context, req *QueryInFlightCompleteBridgeMessagesRequest) (*QueryInFlightCompleteBridgeMessagesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method InFlightCompleteBridgeMessages not implemented")
+func (*UnimplementedQueryServer) DelayedCompleteBridgeMessages(ctx context.Context, req *QueryDelayedCompleteBridgeMessagesRequest) (*QueryDelayedCompleteBridgeMessagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelayedCompleteBridgeMessages not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -901,20 +899,20 @@ func _Query_RecognizedEventInfo_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_InFlightCompleteBridgeMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryInFlightCompleteBridgeMessagesRequest)
+func _Query_DelayedCompleteBridgeMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDelayedCompleteBridgeMessagesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).InFlightCompleteBridgeMessages(ctx, in)
+		return srv.(QueryServer).DelayedCompleteBridgeMessages(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.bridge.Query/InFlightCompleteBridgeMessages",
+		FullMethod: "/dydxprotocol.bridge.Query/DelayedCompleteBridgeMessages",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).InFlightCompleteBridgeMessages(ctx, req.(*QueryInFlightCompleteBridgeMessagesRequest))
+		return srv.(QueryServer).DelayedCompleteBridgeMessages(ctx, req.(*QueryDelayedCompleteBridgeMessagesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -944,8 +942,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_RecognizedEventInfo_Handler,
 		},
 		{
-			MethodName: "InFlightCompleteBridgeMessages",
-			Handler:    _Query_InFlightCompleteBridgeMessages_Handler,
+			MethodName: "DelayedCompleteBridgeMessages",
+			Handler:    _Query_DelayedCompleteBridgeMessages_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1232,7 +1230,7 @@ func (m *QueryRecognizedEventInfoResponse) MarshalToSizedBuffer(dAtA []byte) (in
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1242,12 +1240,12 @@ func (m *QueryInFlightCompleteBridgeMessagesRequest) Marshal() (dAtA []byte, err
 	return dAtA[:n], nil
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1262,7 +1260,7 @@ func (m *QueryInFlightCompleteBridgeMessagesRequest) MarshalToSizedBuffer(dAtA [
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1272,12 +1270,12 @@ func (m *QueryInFlightCompleteBridgeMessagesResponse) Marshal() (dAtA []byte, er
 	return dAtA[:n], nil
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1299,7 +1297,7 @@ func (m *QueryInFlightCompleteBridgeMessagesResponse) MarshalToSizedBuffer(dAtA 
 	return len(dAtA) - i, nil
 }
 
-func (m *InFlightCompleteBridgeMessage) Marshal() (dAtA []byte, err error) {
+func (m *DelayedCompleteBridgeMessage) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1309,12 +1307,12 @@ func (m *InFlightCompleteBridgeMessage) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *InFlightCompleteBridgeMessage) MarshalTo(dAtA []byte) (int, error) {
+func (m *DelayedCompleteBridgeMessage) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *InFlightCompleteBridgeMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *DelayedCompleteBridgeMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1448,7 +1446,7 @@ func (m *QueryRecognizedEventInfoResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesRequest) Size() (n int) {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1461,7 +1459,7 @@ func (m *QueryInFlightCompleteBridgeMessagesRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryInFlightCompleteBridgeMessagesResponse) Size() (n int) {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1476,7 +1474,7 @@ func (m *QueryInFlightCompleteBridgeMessagesResponse) Size() (n int) {
 	return n
 }
 
-func (m *InFlightCompleteBridgeMessage) Size() (n int) {
+func (m *DelayedCompleteBridgeMessage) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2161,7 +2159,7 @@ func (m *QueryRecognizedEventInfoResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryInFlightCompleteBridgeMessagesRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryDelayedCompleteBridgeMessagesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2184,10 +2182,10 @@ func (m *QueryInFlightCompleteBridgeMessagesRequest) Unmarshal(dAtA []byte) erro
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryInFlightCompleteBridgeMessagesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryDelayedCompleteBridgeMessagesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryInFlightCompleteBridgeMessagesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryDelayedCompleteBridgeMessagesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2243,7 +2241,7 @@ func (m *QueryInFlightCompleteBridgeMessagesRequest) Unmarshal(dAtA []byte) erro
 	}
 	return nil
 }
-func (m *QueryInFlightCompleteBridgeMessagesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryDelayedCompleteBridgeMessagesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2266,10 +2264,10 @@ func (m *QueryInFlightCompleteBridgeMessagesResponse) Unmarshal(dAtA []byte) err
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryInFlightCompleteBridgeMessagesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryDelayedCompleteBridgeMessagesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryInFlightCompleteBridgeMessagesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryDelayedCompleteBridgeMessagesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2301,7 +2299,7 @@ func (m *QueryInFlightCompleteBridgeMessagesResponse) Unmarshal(dAtA []byte) err
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Messages = append(m.Messages, InFlightCompleteBridgeMessage{})
+			m.Messages = append(m.Messages, DelayedCompleteBridgeMessage{})
 			if err := m.Messages[len(m.Messages)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2327,7 +2325,7 @@ func (m *QueryInFlightCompleteBridgeMessagesResponse) Unmarshal(dAtA []byte) err
 	}
 	return nil
 }
-func (m *InFlightCompleteBridgeMessage) Unmarshal(dAtA []byte) error {
+func (m *DelayedCompleteBridgeMessage) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2350,10 +2348,10 @@ func (m *InFlightCompleteBridgeMessage) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: InFlightCompleteBridgeMessage: wiretype end group for non-group")
+			return fmt.Errorf("proto: DelayedCompleteBridgeMessage: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: InFlightCompleteBridgeMessage: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DelayedCompleteBridgeMessage: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
