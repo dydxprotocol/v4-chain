@@ -80,6 +80,25 @@ func (k Keeper) MustFetchOrderFromOrderId(
 	return order
 }
 
+// statefulValidateMatchTaker performs stateful validation on the taker order of a specified match.
+func (k Keeper) statefulValidateMatchTaker(
+	ctx sdk.Context,
+	takerOrder types.Order,
+) error {
+	if takerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
+		_, fillAmount, _ := k.GetOrderFillAmount(ctx, takerOrder.OrderId)
+		if fillAmount != 0 {
+			return errorsmod.Wrapf(
+				types.ErrIocOrderAlreadyFilled,
+				"Order %s",
+				takerOrder.GetOrderTextString(),
+			)
+		}
+	}
+
+	return nil
+}
+
 // StatefulValidateMakerFill performs stateful validation on a maker fill.
 // Additionally, it returns the maker order referenced in the fill.
 // The following validations are performed:

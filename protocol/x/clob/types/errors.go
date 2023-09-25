@@ -330,6 +330,11 @@ var (
 		2003,
 		"Post-only order would cross one or more maker orders",
 	)
+	ErrIocOrderAlreadyFilled = errorsmod.Register(
+		ModuleName,
+		2004,
+		"ImmediateOrCancel order is already filled, remaining size is cancelled.",
+	)
 
 	// Stateful order errors.
 	ErrInvalidOrderFlag = errorsmod.Register(

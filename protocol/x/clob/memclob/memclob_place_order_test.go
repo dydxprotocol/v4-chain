@@ -1909,12 +1909,12 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 			},
 			expectedErr: types.ErrOrderFullyFilled,
 		},
-		`Error: Taker replaces fully matched order with an order of larger size but remaining fillable amount is less than
+		`Error: Taker replaces partially matched order with an order of larger size but remaining fillable amount is less than
 		MinOrderBaseQuantums`: {
 			placedMatchableOrders: []types.MatchableOrder{
-				// Match #1: This order is fully matched before the test case as a maker order with the below order.
+				// Match #1: This order is partially matched before the test case as a maker order with the below order.
 				&constants.Order_Alice_Num1_Id10_Clob0_Buy6_Price30_GTB32,
-				// Match #1: This order is partially matched before the test case as a taker order with the above order.
+				// Match #1: This order is fully matched before the test case as a taker order with the above order.
 				&constants.Order_Alice_Num0_Id1_Clob0_Sell5_Price15_GTB15,
 			},
 
@@ -2047,6 +2047,131 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 				),
 			},
 			expectedErr: types.ErrOrderFullyFilled,
+		},
+		"Error: Taker is IOC replacement for partially filled IOC": {
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+			},
+
+			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_IOC,
+
+			expectedTotalFilledSize: 5,
+			expectedOrderStatus:     types.InternalError,
+			expectedExistingMatches: []expectedMatch{
+				{
+					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+					matchedQuantums: 5,
+				},
+			},
+			expectedOperations: []types.Operation{
+				clobtest.NewOrderPlacementOperation(
+					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+				),
+				clobtest.NewOrderPlacementOperation(
+					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+				),
+				clobtest.NewMatchOperation(
+					&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
+							FillAmount:   5,
+						},
+					},
+				),
+			},
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
+							FillAmount:   5,
+						},
+					},
+				),
+			},
+
+			expectedErr: types.ErrIocOrderAlreadyFilled,
+		},
+		"Error: Taker is IOC replacement for partially filled non-IOC order": {
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+			},
+
+			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_IOC,
+
+			expectedTotalFilledSize: 5,
+			expectedOrderStatus:     types.InternalError,
+			expectedExistingMatches: []expectedMatch{
+				{
+					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+					matchedQuantums: 5,
+				},
+			},
+			expectedRemainingAsks: []OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+					RemainingSize: 5,
+				},
+			},
+			expectedOperations: []types.Operation{
+				clobtest.NewOrderPlacementOperation(
+					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+				),
+				clobtest.NewOrderPlacementOperation(
+					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+				),
+				clobtest.NewMatchOperation(
+					&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
+							FillAmount:   5,
+						},
+					},
+				),
+			},
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+				),
+				types.NewShortTermOrderPlacementInternalOperation(
+					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
+							FillAmount:   5,
+						},
+					},
+				),
+			},
+
+			expectedErr: types.ErrInvalidReplacement,
+		},
+		"IOC Taker replaces unfilled non IOC order": {
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+			},
+
+			order:                      constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_IOC,
+			expectedInternalOperations: []types.InternalOperation{},
+
+			expectedOrderStatus:    types.ImmediateOrCancelWouldRestOnBook,
+			expectedToReplaceOrder: true,
 		},
 	}
 
