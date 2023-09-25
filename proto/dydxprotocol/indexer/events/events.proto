@@ -107,7 +107,18 @@ message MarketCreateEventV1 {
 
 // MarketModifyEvent message contains all the information about a market update
 // on the V4 chain
-message MarketModifyEventV1 { MarketBaseEventV1 base = 1; }
+message MarketModifyEventV1 {
+  MarketBaseEventV1 base = 1;
+
+  // Static value. The exponent of the price.
+  // For example if Exponent == -5 then a `exponent_price` of 1,000,000,000
+  // represents $10,000. Therefore 10 ^ Exponent represents the smallest
+  // price step (in dollars) that can be recorded.
+  //
+  // Updates to this value are allowed, but are unsafe - they can cause
+  // the network to have innacurate prices for up to ~1 minute.
+  sint32 exponent = 2;
+}
 
 // SourceOfFunds is the source of funds in a transfer event.
 message SourceOfFunds {
