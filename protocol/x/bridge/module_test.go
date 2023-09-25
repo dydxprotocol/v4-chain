@@ -238,12 +238,13 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "bridge", cmd.Use)
-	require.Equal(t, 5, len(cmd.Commands()))
+	require.Equal(t, 6, len(cmd.Commands()))
 	require.Equal(t, "get-acknowledged-event-info", cmd.Commands()[0].Name())
-	require.Equal(t, "get-event-params", cmd.Commands()[1].Name())
-	require.Equal(t, "get-propose-params", cmd.Commands()[2].Name())
-	require.Equal(t, "get-recognized-event-info", cmd.Commands()[3].Name())
-	require.Equal(t, "get-safety-params", cmd.Commands()[4].Name())
+	require.Equal(t, "get-delayed-complete-bridge-messages", cmd.Commands()[1].Name())
+	require.Equal(t, "get-event-params", cmd.Commands()[2].Name())
+	require.Equal(t, "get-propose-params", cmd.Commands()[3].Name())
+	require.Equal(t, "get-recognized-event-info", cmd.Commands()[4].Name())
+	require.Equal(t, "get-safety-params", cmd.Commands()[5].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
