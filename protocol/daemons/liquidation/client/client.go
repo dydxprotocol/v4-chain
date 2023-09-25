@@ -256,11 +256,11 @@ func getSubaccountsFromKey(
 	nextKey []byte,
 	err error,
 ) {
-	defer gometrics.MeasureSinceWithLabels(
+	defer metrics.ModuleMeasureSinceWithLabels(
+		metrics.LiquidationDaemon,
 		[]string{metrics.GetSubaccountsFromKey, metrics.Latency},
-		time.Now().UTC(),
+		time.Now(),
 		[]gometrics.Label{
-			metrics.GetLabelForStringValue(telemetry.MetricLabelNameModule, metrics.LiquidationDaemon),
 			metrics.GetLabelForIntValue(metrics.PageLimit, int(limit)),
 		},
 	)
