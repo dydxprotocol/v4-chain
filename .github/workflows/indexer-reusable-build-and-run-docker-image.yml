@@ -82,6 +82,7 @@ jobs:
         id: run-image
         env:
           SERVICE: ${{ inputs.SERVICE }}
+          SECRET_ID: ${{ inputs.SERVICE }}
         # `timeout` sends a `SIGTERM` to the process, resulting in the exit code 124, so we need to
         # ignore exit code 124.
         run: |
