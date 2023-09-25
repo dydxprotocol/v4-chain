@@ -210,6 +210,7 @@ func AssertMarketModifyEventInIndexerBlock(
 		updatedMarketParam.Id,
 		updatedMarketParam.Pair,
 		updatedMarketParam.MinPriceChangePpm,
+		updatedMarketParam.Exponent,
 	)
 	require.Contains(t, marketEvents, expectedEvent)
 }

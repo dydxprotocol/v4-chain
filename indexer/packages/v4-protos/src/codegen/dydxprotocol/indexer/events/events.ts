@@ -294,11 +294,18 @@ export interface MarketCreateEventV1SDKType {
  */
 
 export interface MarketModifyEventV1 {
-  /**
-   * MarketModifyEvent message contains all the information about a market update
-   * on the V4 chain
-   */
   base?: MarketBaseEventV1;
+  /**
+   * Static value. The exponent of the price.
+   * For example if Exponent == -5 then a `exponent_price` of 1,000,000,000
+   * represents $10,000. Therefore 10 ^ Exponent represents the smallest
+   * price step (in dollars) that can be recorded.
+   * 
+   * Updates to this value are allowed, but are unsafe - they can cause
+   * the network to have innacurate prices for up to ~1 minute.
+   */
+
+  exponent: number;
 }
 /**
  * MarketModifyEvent message contains all the information about a market update
@@ -306,11 +313,18 @@ export interface MarketModifyEventV1 {
  */
 
 export interface MarketModifyEventV1SDKType {
-  /**
-   * MarketModifyEvent message contains all the information about a market update
-   * on the V4 chain
-   */
   base?: MarketBaseEventV1SDKType;
+  /**
+   * Static value. The exponent of the price.
+   * For example if Exponent == -5 then a `exponent_price` of 1,000,000,000
+   * represents $10,000. Therefore 10 ^ Exponent represents the smallest
+   * price step (in dollars) that can be recorded.
+   * 
+   * Updates to this value are allowed, but are unsafe - they can cause
+   * the network to have innacurate prices for up to ~1 minute.
+   */
+
+  exponent: number;
 }
 /** SourceOfFunds is the source of funds in a transfer event. */
 
@@ -1411,7 +1425,8 @@ export const MarketCreateEventV1 = {
 
 function createBaseMarketModifyEventV1(): MarketModifyEventV1 {
   return {
-    base: undefined
+    base: undefined,
+    exponent: 0
   };
 }
 
@@ -1419,6 +1434,10 @@ export const MarketModifyEventV1 = {
   encode(message: MarketModifyEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.base !== undefined) {
       MarketBaseEventV1.encode(message.base, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.exponent !== 0) {
+      writer.uint32(16).sint32(message.exponent);
     }
 
     return writer;
@@ -1437,6 +1456,10 @@ export const MarketModifyEventV1 = {
           message.base = MarketBaseEventV1.decode(reader, reader.uint32());
           break;
 
+        case 2:
+          message.exponent = reader.sint32();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1449,6 +1472,7 @@ export const MarketModifyEventV1 = {
   fromPartial(object: DeepPartial<MarketModifyEventV1>): MarketModifyEventV1 {
     const message = createBaseMarketModifyEventV1();
     message.base = object.base !== undefined && object.base !== null ? MarketBaseEventV1.fromPartial(object.base) : undefined;
+    message.exponent = object.exponent ?? 0;
     return message;
   }
 

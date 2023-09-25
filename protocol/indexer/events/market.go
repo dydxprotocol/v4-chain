@@ -21,12 +21,14 @@ func NewMarketModifyEvent(
 	marketId uint32,
 	pair string,
 	minPriceChangePpm uint32,
+	exponent int32,
 ) *MarketEventV1 {
 	marketModifyEventProto := MarketModifyEventV1{
 		Base: &MarketBaseEventV1{
 			Pair:              pair,
 			MinPriceChangePpm: minPriceChangePpm,
 		},
+		Exponent: exponent,
 	}
 	marketEventProto := MarketEventV1{
 		MarketId: marketId,
