@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math"
 	"testing"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -235,11 +236,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: errorsmod.Wrapf(
-				types.ErrInvalidMatchOrder,
-				"Maker order %+v cannot be FOK or IOC.",
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK.GetOrderTextString(),
-			),
+			expectedError: errors.New("IOC / FOK order cannot be matched as a maker order"),
 		},
 		`Stateful match validation: maker order cannot be IOC`: {
 			perpetuals: []*perptypes.Perpetual{
@@ -273,11 +270,7 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 					},
 				),
 			},
-			expectedError: errorsmod.Wrapf(
-				types.ErrInvalidMatchOrder,
-				"Maker order %+v cannot be FOK or IOC.",
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC.GetOrderTextString(),
-			),
+			expectedError: errors.New("IOC / FOK order cannot be matched as a maker order"),
 		},
 		`Stateful order validation: referenced long-term order is for the wrong clob pair`: {
 			perpetuals: []*perptypes.Perpetual{
@@ -573,12 +566,7 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: errorsmod.Wrapf(
-				types.ErrInvalidMatchOrder,
-				"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
-				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.GetOrderTextString(),
-				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.GetOrderTextString(),
-			),
+			expectedError: errors.New("Orders are not on opposing sides of the book in match"),
 		},
 		`Stateful order validation: referenced conditional order is for the wrong clob pair`: {
 			perpetuals: []*perptypes.Perpetual{
