@@ -35,6 +35,9 @@ COPY ./services/${service}/package.json ./services/${service}/
 COPY ./services/${service}/build ./services/${service}/build
 COPY ./services/${service}/.env* ./services/${service}/
 
+# Copy container start script
+COPY ./scripts/container-run.sh /ome/dydx/app/services/$service
+
 RUN chown dydx -R /home/dydx/app
 
 # Install npm modules using pnpm
@@ -44,4 +47,4 @@ USER dydx
 
 WORKDIR /home/dydx/app/services/$service
 
-CMD ["pnpm", "run", "start"]
+CMD ["./scripts/container-run.sh"]
