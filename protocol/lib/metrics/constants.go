@@ -82,7 +82,6 @@ const (
 	EthBlockHeight           = "eth_block_height"
 	EventIdAlreadyRecognized = "event_id_already_recognized"
 	EventIdNotSequential     = "event_id_not_sequential"
-	EventIdNotNextExpected   = "event_id_not_next_expected"
 	NextId                   = "next_id"
 	RecognizedEventInfo      = "recognized_event_info"
 
