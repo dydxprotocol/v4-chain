@@ -1364,6 +1364,10 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '378000'
 	# Uncomment the following to schedule the message to execute in ~120 days (at 1.6s per block.)
 	# dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6480000'
+
+    # E2E gov test: set voting period to 120s
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '120s'
+
 }
 
 function add_subaccount() {
