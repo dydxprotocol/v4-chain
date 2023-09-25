@@ -25,10 +25,16 @@ import (
 // SetSubaccount set a specific subaccount in the store from its index.
 func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
-	b := k.cdc.MustMarshal(&subaccount)
-	store.Set(types.SubaccountKey(
-		*subaccount.Id,
-	), b)
+	key := types.SubaccountKey(*subaccount.Id)
+
+	if len(subaccount.PerpetualPositions) == 0 && len(subaccount.AssetPositions) == 0 {
+		if store.Has(key) {
+			store.Delete(key)
+		}
+	} else {
+		b := k.cdc.MustMarshal(&subaccount)
+		store.Set(key, b)
+	}
 }
 
 // GetSubaccount returns a subaccount from its index.
