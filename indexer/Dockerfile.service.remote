@@ -36,7 +36,7 @@ COPY ./services/${service}/build ./services/${service}/build
 COPY ./services/${service}/.env* ./services/${service}/
 
 # Copy container start script
-COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts
+COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/container-run.sh
 
 RUN chown dydx -R /home/dydx/app
 
