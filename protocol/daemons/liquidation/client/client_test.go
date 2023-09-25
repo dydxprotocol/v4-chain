@@ -225,12 +225,15 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
 			tc.setupMocks(grpc.Ctx, queryClientMock)
 
-			err := client.RunLiquidationDaemonTaskLoop(
+			var nextKeyToFetch []byte
+
+			_, err := client.RunLiquidationDaemonTaskLoop(
 				grpc.Ctx,
 				flags.GetDefaultDaemonFlags().Liquidation,
 				queryClientMock,
 				queryClientMock,
 				queryClientMock,
+				nextKeyToFetch,
 			)
 			if tc.expectedError != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
@@ -250,6 +253,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 
 		// expectations
 		expectedSubaccounts []satypes.Subaccount
+		expectedNextKey     []byte
 		expectedError       error
 	}{
 		"Success": {
@@ -289,23 +293,11 @@ func TestGetAllSubaccounts(t *testing.T) {
 					},
 				}
 				mck.On("SubaccountAll", ctx, req).Return(response, nil)
-				req2 := &satypes.QueryAllSubaccountRequest{
-					Pagination: &query.PageRequest{
-						Key:   nextKey,
-						Limit: df.Liquidation.SubaccountPageLimit,
-					},
-				}
-				response2 := &satypes.QuerySubaccountAllResponse{
-					Subaccount: []satypes.Subaccount{
-						constants.Dave_Num0_599USD,
-					},
-				}
-				mck.On("SubaccountAll", ctx, req2).Return(response2, nil)
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_599USD,
-				constants.Dave_Num0_599USD,
 			},
+			expectedNextKey: []byte("next key"),
 		},
 		"Errors are propagated": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {

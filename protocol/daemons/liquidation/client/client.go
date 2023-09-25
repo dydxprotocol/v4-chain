@@ -17,8 +17,6 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-var nextKeyToFetch []byte
-
 // Start begins a job that periodically:
 // 1) Queries a gRPC server for all subaccounts including their open positions.
 // 2) Checks collateralization statuses of subaccounts with at least one open position.
@@ -58,17 +56,26 @@ func Start(
 	clobQueryClient := clobtypes.NewQueryClient(queryConn)
 	liquidationServiceClient := api.NewLiquidationServiceClient(daemonConn)
 
+	// This is the key used for paginated requests.
+	var nextKeyToFetch []byte
+
 	ticker := time.NewTicker(time.Duration(flags.Liquidation.LoopDelayMs) * time.Millisecond)
 	for ; true; <-ticker.C {
-		if err := RunLiquidationDaemonTaskLoop(
+		nextKeyToFetch, err = RunLiquidationDaemonTaskLoop(
 			ctx,
 			flags.Liquidation,
 			subaccountQueryClient,
 			clobQueryClient,
 			liquidationServiceClient,
-		); err != nil {
+			nextKeyToFetch,
+		)
+		if err != nil {
 			// TODO(DEC-947): Move daemon shutdown to application.
 			logger.Error("Liquidations daemon returned error", "error", err)
+		}
+
+		if nextKeyToFetch == nil {
+			telemetry.IncrCounter(1, metrics.LiquidationDaemon, metrics.IteratedOverAllSubaccounts)
 		}
 	}
 
@@ -83,7 +90,8 @@ func RunLiquidationDaemonTaskLoop(
 	subaccountQueryClient satypes.QueryClient,
 	clobQueryClient clobtypes.QueryClient,
 	liquidationServiceClient api.LiquidationServiceClient,
-) error {
+	nextKeyToFetch []byte,
+) ([]byte, error) {
 	defer telemetry.ModuleMeasureSince(
 		metrics.LiquidationDaemon,
 		time.Now(),
@@ -99,7 +107,7 @@ func RunLiquidationDaemonTaskLoop(
 		nextKeyToFetch,
 	)
 	if err != nil {
-		return err
+		return nextKey, err
 	}
 	telemetry.ModuleSetGauge(
 		metrics.LiquidationDaemon,
@@ -107,11 +115,6 @@ func RunLiquidationDaemonTaskLoop(
 		metrics.AllSubaccounts,
 		metrics.Count,
 	)
-	nextKeyToFetch = nextKey
-
-	if nextKeyToFetch == nil {
-		telemetry.IncrCounter(1, metrics.LiquidationDaemon, metrics.IteratedOverAllSubaccounts)
-	}
 
 	// Filter out subaccounts with no open positions.
 	subaccountsWithOpenPositions := make([]satypes.SubaccountId, 0)
@@ -136,7 +139,7 @@ func RunLiquidationDaemonTaskLoop(
 				subaccountsWithOpenPositions,
 			)
 		if err != nil {
-			return err
+			return nextKey, err
 		}
 
 		// Append all liquidatable subaccount ids to a new slice.
@@ -161,10 +164,10 @@ func RunLiquidationDaemonTaskLoop(
 		liquidatableSubaccountIds,
 	)
 	if err != nil {
-		return err
+		return nextKey, err
 	}
 
-	return nil
+	return nextKey, nil
 }
 
 // CheckCollateralizationForSubaccounts queries a gRPC server using `AreSubaccountsLiquidatable`
@@ -204,6 +207,8 @@ func SendLiquidatableSubaccountIds(
 	return nil
 }
 
+// GetSubaccountsFromKey makes a paginated request and returns a list of subaccounts and
+// their balances and open positions.
 func GetSubaccountsFromKey(
 	ctx context.Context,
 	client satypes.QueryClient,
