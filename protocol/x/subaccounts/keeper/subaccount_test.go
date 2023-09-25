@@ -115,6 +115,24 @@ func TestSubaccountGet(t *testing.T) {
 	}
 }
 
+func TestSubaccountSet_Empty(t *testing.T) {
+	ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+	keeper.SetSubaccount(ctx, types.Subaccount{
+		Id: &constants.Alice_Num0,
+	})
+
+	require.Len(t, keeper.GetAllSubaccount(ctx), 0)
+
+	keeper.SetSubaccount(ctx, types.Subaccount{
+		Id:             &constants.Alice_Num0,
+		AssetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000)),
+	})
+	keeper.SetSubaccount(ctx, types.Subaccount{
+		Id: &constants.Alice_Num0,
+	})
+	require.Len(t, keeper.GetAllSubaccount(ctx), 0)
+}
+
 func TestSubaccountGetNonExistent(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
 	id := types.SubaccountId{
