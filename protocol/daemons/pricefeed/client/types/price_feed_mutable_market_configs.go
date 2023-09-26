@@ -190,7 +190,7 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 	marketParamErrors map[MarketId]error,
 	err error,
 ) {
-	// Track individual errors for each market param, to be returned as a single error.
+	// Track individual errors for each market param that fails to apply.
 	marketParamErrors = make(map[MarketId]error, len(marketParams))
 
 	if marketParams == nil {
