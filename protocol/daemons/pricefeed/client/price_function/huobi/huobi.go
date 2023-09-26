@@ -24,6 +24,9 @@ type HuobiTicker struct {
 	LastPrice float64 `json:"close" validate:"required,gt=0"`
 }
 
+// Ensure that HuobiTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*HuobiTicker)(nil)
+
 func (t HuobiTicker) GetPair() string {
 	return t.Pair
 }
