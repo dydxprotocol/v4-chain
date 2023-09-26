@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	pricefeed "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 )
 
@@ -18,6 +19,19 @@ var (
 
 	bitfinexTicker_Btc102  = NewBitfinexTicker("tBTCUSD", 101.0, 102.0, 103.0)
 	bitfinexTicker_Eth9002 = NewBitfinexTicker("tETHUSD", 9001.0, 9002.0, 9003.0)
+
+	// Test Bitfinex Config
+	BitfinexExchangeConfig = map[pricefeed.MarketId]pricefeed.MarketConfig{
+		exchange_common.MARKET_BTC_USD: {
+			Ticker: "tBTCUSD",
+		},
+		exchange_common.MARKET_ETH_USD: {
+			Ticker: "tETHUSD",
+		},
+		exchange_common.MARKET_USDT_USD: {
+			Ticker: "tUSTUSD",
+		},
+	}
 
 	// Exchange responses.
 	EmptyResponses_AllExchanges = map[ExchangeIdAndName]Response{

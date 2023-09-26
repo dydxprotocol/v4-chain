@@ -1,8 +1,6 @@
 package testutil
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/bitfinex"
 	"github.com/h2non/gock"
@@ -49,9 +47,7 @@ func NewGockBitfinexResponse(
 	tickers []JsonResponse,
 ) *gock.Response {
 	// Construct Bitfinex request URL.
-	sortedSymbols := GetTickersSortedByMarketId(
-		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BITFINEX].MarketToMarketConfig,
-	)
+	sortedSymbols := GetTickersSortedByMarketId(BitfinexExchangeConfig)
 	url := handler.CreateRequestUrl(bitfinex.BitfinexDetails.Url, sortedSymbols)
 
 	// Construct Bitfinex response as a list of tickers.
