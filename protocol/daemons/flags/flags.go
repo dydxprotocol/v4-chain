@@ -22,6 +22,7 @@ const (
 	FlagLiquidationDaemonEnabled             = "liquidation-daemon-enabled"
 	FlagLiquidationDaemonLoopDelayMs         = "liquidation-daemon-loop-delay-ms"
 	FlagLiquidationDaemonSubaccountPageLimit = "liquidation-daemon-subaccount-page-limit"
+	FlagLiquidationDaemonRequestChunkSize    = "liquidation-daemon-request-chunk-size"
 )
 
 type SharedFlags struct {
@@ -39,6 +40,7 @@ type LiquidationFlags struct {
 	Enabled             bool
 	LoopDelayMs         uint32
 	SubaccountPageLimit uint64
+	RequestChunkSize    uint64
 }
 
 type PriceFlags struct {
@@ -71,6 +73,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				Enabled:             true,
 				LoopDelayMs:         1_600,
 				SubaccountPageLimit: 1_000,
+				RequestChunkSize:    500,
 			},
 			Price: PriceFlags{
 				Enabled:     true,
@@ -136,6 +139,11 @@ func AddDaemonFlagsToCmd(
 		df.Liquidation.SubaccountPageLimit,
 		"Limit on the number of subaccounts to fetch per query in the Liquidation Daemon task loop.",
 	)
+	cmd.Flags().Uint64(
+		FlagLiquidationDaemonRequestChunkSize,
+		df.Liquidation.RequestChunkSize,
+		"Limit on the number of subaccounts per collateralization check in the Liquidation Daemon task loop.",
+	)
 
 	// Price Daemon.
 	cmd.Flags().Bool(
@@ -185,6 +193,9 @@ func GetDaemonFlagValuesFromOptions(
 	}
 	if v, ok := appOpts.Get(FlagLiquidationDaemonSubaccountPageLimit).(uint64); ok {
 		result.Liquidation.SubaccountPageLimit = v
+	}
+	if v, ok := appOpts.Get(FlagLiquidationDaemonRequestChunkSize).(uint64); ok {
+		result.Liquidation.RequestChunkSize = v
 	}
 
 	// Price Daemon.
