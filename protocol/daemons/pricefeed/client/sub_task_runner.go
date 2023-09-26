@@ -341,27 +341,36 @@ func RunMarketParamUpdaterTaskLoop(
 
 	// Update shared, in-memory config with the latest market params. Report update success/failure via logging/metrics.
 	marketParamErrors, err := configs.UpdateMarkets(getAllMarketsResponse.MarketParams)
-	if err == nil && len(marketParamErrors) == 0 {
-		telemetry.IncrCounter(
+
+	for _, marketParam := range getAllMarketsResponse.MarketParams {
+		outcome := metrics.Success
+
+		// Mark this update as an error either if this market failed to update, or if all markets failed.
+		if _, ok := marketParamErrors[marketParam.Id]; ok || err != nil {
+			outcome = metrics.Error
+		}
+
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.PricefeedDaemon, metrics.MarketUpdaterApplyMarketUpdates, outcome},
 			1,
-			metrics.PricefeedDaemon,
-			metrics.MarketUpdaterApplyMarketUpdates,
-			metrics.Success,
+			[]gometrics.Label{
+				pricefeedmetrics.GetLabelForMarketId(marketParam.Id),
+			},
 		)
-	} else {
+	}
+	if err != nil {
 		logger.Error(
-			"Failed to apply some or all market updates",
+			"Failed to apply all market updates",
 			"error",
 			err,
 			"marketParamErrors",
 			marketParamErrors,
 		)
-		// Measure all failures to update market params.
-		telemetry.IncrCounter(
-			1,
-			metrics.PricefeedDaemon,
-			metrics.MarketUpdaterApplyMarketUpdates,
-			metrics.Error,
+	} else if len(marketParamErrors) > 0 {
+		logger.Error(
+			"Failed to apply some market updates",
+			"marketParamErrors",
+			marketParamErrors,
 		)
 	}
 }
