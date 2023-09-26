@@ -96,7 +96,7 @@ func TestGetExchangeMarketConfigCopy_Mixed(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			pfmmc, _, _, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
 
-			require.Len(t, marketParamErrors, 0)
+			require.Empty(t, marketParamErrors)
 			require.NoError(t, err)
 
 			actual, err := pfmmc.GetExchangeMarketConfigCopy(tc.Id)
@@ -146,7 +146,7 @@ func TestGetMarketConfigCopies(t *testing.T) {
 			pfmmc, _, _, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
 
 			require.NoError(t, err)
-			require.Len(t, marketParamErrors, 0)
+			require.Empty(t, marketParamErrors)
 
 			actual, err := pfmmc.GetMarketConfigCopies(tc.Ids)
 			if tc.ExpectedError != nil {
@@ -482,7 +482,7 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			pfmmc, _, _, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
 
-			require.Len(t, marketParamErrors, 0)
+			require.Empty(t, marketParamErrors)
 			require.NoError(t, err)
 
 			mutableExchangeConfigs,
