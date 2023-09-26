@@ -90,7 +90,7 @@ func RunLiquidationDaemonTaskLoop(
 		metrics.Latency,
 	)
 
-	// Fetch all subaccounts from query service.
+	// 1. Fetch all subaccounts from query service.
 	subaccounts, err := GetAllSubaccounts(
 		ctx,
 		subaccountQueryClient,
@@ -99,55 +99,19 @@ func RunLiquidationDaemonTaskLoop(
 	if err != nil {
 		return err
 	}
-	telemetry.ModuleSetGauge(
-		metrics.LiquidationDaemon,
-		float32(len(subaccounts)),
-		metrics.GetAllSubaccounts,
-		metrics.Count,
-	)
 
-	// Filter out subaccounts with no open positions.
-	subaccountsWithOpenPositions := make([]satypes.SubaccountId, 0)
-	for _, subaccount := range subaccounts {
-		if len(subaccount.PerpetualPositions) > 0 {
-			subaccountsWithOpenPositions = append(subaccountsWithOpenPositions, *subaccount.Id)
-		}
-	}
-	telemetry.ModuleSetGauge(
-		metrics.LiquidationDaemon,
-		float32(len(subaccountsWithOpenPositions)),
-		metrics.SubaccountsWithOpenPositions,
-		metrics.Count,
+	// 2. Check collateralization statuses of subaccounts with at least one open position.
+	liquidatableSubaccountIds, err := GetLiquidatableSubaccountIds(
+		ctx,
+		clobQueryClient,
+		liqFlags,
+		subaccounts,
 	)
-	liquidatableSubaccountIds := make([]satypes.SubaccountId, 0)
-	if len(subaccountsWithOpenPositions) > 0 {
-		// Check collateralization statuses of subaccounts with at least one open position.
-		collateralizationCheckResults, err :=
-			CheckCollateralizationForSubaccounts(
-				ctx,
-				clobQueryClient,
-				subaccountsWithOpenPositions,
-			)
-		if err != nil {
-			return err
-		}
-
-		// Append all liquidatable subaccount ids to a new slice.
-		for _, result := range collateralizationCheckResults {
-			if result.IsLiquidatable {
-				liquidatableSubaccountIds = append(liquidatableSubaccountIds, result.SubaccountId)
-			}
-		}
+	if err != nil {
+		return err
 	}
 
-	telemetry.ModuleSetGauge(
-		metrics.LiquidationDaemon,
-		float32(len(liquidatableSubaccountIds)),
-		metrics.LiquidatableSubaccountIds,
-		metrics.Count,
-	)
-
-	// Send the list of liquidatable subaccount ids to the daemon server.
+	// 3. Send the list of liquidatable subaccount ids to the daemon server.
 	err = SendLiquidatableSubaccountIds(
 		ctx,
 		liquidationServiceClient,
@@ -192,7 +156,71 @@ func GetAllSubaccounts(
 			break
 		}
 	}
+
+	telemetry.ModuleSetGauge(
+		metrics.LiquidationDaemon,
+		float32(len(subaccounts)),
+		metrics.GetAllSubaccounts,
+		metrics.Count,
+	)
+
 	return subaccounts, nil
+}
+
+func GetLiquidatableSubaccountIds(
+	ctx context.Context,
+	client clobtypes.QueryClient,
+	liqFlags flags.LiquidationFlags,
+	subaccounts []satypes.Subaccount,
+) (
+	liquidatableSubaccountIds []satypes.SubaccountId,
+	err error,
+) {
+	defer telemetry.ModuleMeasureSince(
+		metrics.LiquidationDaemon,
+		time.Now(),
+		metrics.GetLiquidatableSubaccountIds,
+		metrics.Latency,
+	)
+
+	// Filter out subaccounts with no open positions.
+	subaccountsToCheck := make([]satypes.SubaccountId, 0)
+	for _, subaccount := range subaccounts {
+		if len(subaccount.PerpetualPositions) > 0 {
+			subaccountsToCheck = append(subaccountsToCheck, *subaccount.Id)
+		}
+	}
+
+	telemetry.ModuleSetGauge(
+		metrics.LiquidationDaemon,
+		float32(len(subaccountsToCheck)),
+		metrics.SubaccountsWithOpenPositions,
+		metrics.Count,
+	)
+
+	liquidatableSubaccountIds = make([]satypes.SubaccountId, 0)
+	for start := 0; start < len(subaccountsToCheck); start += int(liqFlags.RequestChunkSize) {
+		end := start + int(liqFlags.RequestChunkSize)
+		if end > len(subaccountsToCheck) {
+			end = len(subaccountsToCheck)
+		}
+
+		results, err := CheckCollateralizationForSubaccounts(
+			ctx,
+			client,
+			subaccountsToCheck[start:end],
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, result := range results {
+			if result.IsLiquidatable {
+				liquidatableSubaccountIds = append(liquidatableSubaccountIds, result.SubaccountId)
+			}
+		}
+	}
+	return liquidatableSubaccountIds, nil
 }
 
 // CheckCollateralizationForSubaccounts queries a gRPC server using `AreSubaccountsLiquidatable`
@@ -234,6 +262,13 @@ func SendLiquidatableSubaccountIds(
 		time.Now(),
 		metrics.SendLiquidatableSubaccountIds,
 		metrics.Latency,
+	)
+
+	telemetry.ModuleSetGauge(
+		metrics.LiquidationDaemon,
+		float32(len(subaccountIds)),
+		metrics.LiquidatableSubaccountIds,
+		metrics.Count,
 	)
 
 	request := &api.LiquidateSubaccountsRequest{
