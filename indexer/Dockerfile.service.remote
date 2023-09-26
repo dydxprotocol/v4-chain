@@ -3,6 +3,7 @@ FROM dydxprotocol/indexer-node:16-alpine
 ENV NODE_ENV=development
 ARG service
 
+RUN apk add --no-cache bash jq aws-cli
 RUN adduser -S dydx
 RUN mkdir -p /home/dydx/app
 RUN chown dydx -R /home/dydx/app
@@ -35,6 +36,9 @@ COPY ./services/${service}/package.json ./services/${service}/
 COPY ./services/${service}/build ./services/${service}/build
 COPY ./services/${service}/.env* ./services/${service}/
 
+# Copy container start script
+COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
+
 RUN chown dydx -R /home/dydx/app
 
 # Install npm modules using pnpm
@@ -44,4 +48,4 @@ USER dydx
 
 WORKDIR /home/dydx/app/services/$service
 
-CMD ["pnpm", "run", "start"]
+CMD ["sh", "-c", "bash ./scripts/container-run.sh"]
