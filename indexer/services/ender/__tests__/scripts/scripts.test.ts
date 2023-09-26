@@ -443,7 +443,7 @@ describe('SQL Function Tests', () => {
     const txHashes = [defaultTxHash, defaultTxHash2];
     const dateTimeIso = '2020-01-01T00:00:00.000Z';
     await getSingleRawQueryResultRow(
-      `SELECT dydx_create_initial_rows('${blockHeight}'::text, '${dateTimeIso}'::timestamp, ARRAY['${txHashes.join("','")}']::text[], ARRAY['${events.map((event) => JSON.stringify(event)).join("','")}']::jsonb[])`,
+      `SELECT dydx_create_initial_rows('${blockHeight}'::text, '${dateTimeIso}'::text, ARRAY['${txHashes.join("','")}']::text[], ARRAY['${events.map((event) => JSON.stringify(event)).join("','")}']::jsonb[])`,
     );
     // Validate blocks table
     const blocks = await BlockTable.findAll({}, [], { readReplica: true });

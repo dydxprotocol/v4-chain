@@ -265,13 +265,17 @@ async function createInitialRowsViaSqlFunction(
   txId: number,
   block: IndexerTendermintBlock,
 ): Promise<void> {
+  const txHashesString = block.txHashes.length > 0 ? `ARRAY['${block.txHashes.join("','")}']::text[]` : 'null';
+  const eventsString = block.events.length > 0 ? `ARRAY['${block.events.map((event) => JSON.stringify(event)).join("','")}']::jsonb[]` : 'null';
+
+  const queryString: string = `SELECT dydx_create_initial_rows(
+      '${blockHeight}'::text, 
+      '${block.time!.toISOString()}'::text,
+      ${txHashesString},
+      ${eventsString}
+  ) AS result;`;
   return storeHelpers.rawQuery(
-    `SELECT dydx_create_initial_rows(
-        ${blockHeight}, 
-        '${block.time!.toISOString()}', 
-        '${JSON.stringify(block.txHashes)}', 
-        '${JSON.stringify(block.events)}' 
-    ) AS result;`,
+    queryString,
     { txId },
   ).catch((error) => {
     logger.error({

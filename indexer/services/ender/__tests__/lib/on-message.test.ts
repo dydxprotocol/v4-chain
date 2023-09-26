@@ -5,17 +5,17 @@ import {
   BlockTable,
   dbHelpers,
   IsoString,
+  LiquidityTiersTable,
+  marketRefresher,
   MarketTable,
   perpetualMarketRefresher,
   PerpetualMarketTable,
   TendermintEventFromDatabase,
   TendermintEventTable,
   testConstants,
+  testMocks,
   TransactionFromDatabase,
   TransactionTable,
-  LiquidityTiersTable,
-  testMocks,
-  marketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   FundingEventV1,
@@ -48,6 +48,7 @@ import {
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { MarketModifyHandler } from '../../src/handlers/markets/market-modify-handler';
 import Long from 'long';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 jest.mock('../../src/handlers/subaccount-update-handler');
 jest.mock('../../src/handlers/transfer-handler');
@@ -87,9 +88,11 @@ describe('on-message', () => {
 
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await dbHelpers.clearData();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
+    await createPostgresFunctions();
   });
 
   afterEach(async () => {
@@ -115,8 +118,8 @@ describe('on-message', () => {
         owner: '',
         number: 0,
       },
-    // updatedPerpetualPositions: [],
-    // updatedAssetPositions: [],
+      // updatedPerpetualPositions: [],
+      // updatedAssetPositions: [],
     });
   const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
     SubaccountUpdateEventV1.encode(
@@ -502,7 +505,20 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it('successfully processes block with block event', async () => {
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with block event (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
     // -1 so that createIndexerTendermintEvent creates a block event
     const transactionIndex: number = -1;
     const eventIndex: number = 0;
@@ -544,7 +560,20 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it('successfully processes block with transaction event and block event', async () => {
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with transaction event and block event (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
 
@@ -597,7 +626,20 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it('successfully processes block with multiple transactions', async () => {
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with multiple transactions (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
     const transactionIndex0: number = 0;
     const transactionIndex1: number = 1;
     const eventIndex0: number = 0;
