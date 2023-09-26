@@ -2,7 +2,7 @@
   "name": "@dydxprotocol-indexer/compliance",
   "version": "0.0.1",
   "description": "",
-  "main": "build/index.js",
+  "main": "build/src/index.js",
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
     "jest": "^28.1.2",
