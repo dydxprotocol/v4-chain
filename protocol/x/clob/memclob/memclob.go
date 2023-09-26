@@ -1055,15 +1055,6 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 				m.mustRemoveOrder(ctx, otpOrderId)
 			} else if otpOrderId.IsShortTermOrder() {
 				order := operation.GetShortTermOrderPlacement().Order
-				if _, exists := m.operationsToPropose.
-					ShortTermOrderHashToTxBytes[order.GetOrderHash()]; !exists {
-					panic(
-						fmt.Sprintf(
-							"RemoveAndClearOperationsQueue: No TxBytes to remove for Short-Term order %+v",
-							order.GetOrderTextString(),
-						),
-					)
-				}
 				m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 			}
 		case *types.InternalOperation_PreexistingStatefulOrder:
