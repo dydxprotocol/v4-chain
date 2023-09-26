@@ -85,8 +85,6 @@ func newTestHandlerOptions() HandlerOptions {
 	}
 }
 
-type WrappedHandlerType reflect.Type
-
 func wrapDecoratorStr(decoratorStr string) string {
 	return "(" + decoratorStr + ")"
 }
