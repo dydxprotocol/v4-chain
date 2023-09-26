@@ -1,3 +1,10 @@
+/**
+  Parameters:
+    - transaction_hash: the hash of the transaction being processed.
+    - block_height: the height of the block being processed.
+    - transaction_index: the index of the transaction in the block.
+  Returns: The inserted transaction.
+*/
 CREATE OR REPLACE FUNCTION dydx_create_transaction(
     transaction_hash text, block_height text, transaction_index int
 ) RETURNS jsonb AS $$

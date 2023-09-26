@@ -27,7 +27,8 @@ import {
   uuid,
   TransactionTable,
   TransactionFromDatabase,
-  BlockTable, TendermintEventFromDatabase,
+  BlockTable,
+  TendermintEventFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
@@ -65,8 +66,6 @@ describe('SQL Function Tests', () => {
         owner: '',
         number: 0,
       },
-      // updatedPerpetualPositions: [],
-      // updatedAssetPositions: [],
     });
   const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
     SubaccountUpdateEventV1.encode(

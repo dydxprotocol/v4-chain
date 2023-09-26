@@ -2,7 +2,7 @@
   Parameters:
     - event: The IndexerTendermintEvent object.
     - block_height: the height of the block being processed.
-  Returns: void.
+  Returns: The inserted event.
 */
 CREATE OR REPLACE FUNCTION dydx_create_tendermint_event(
     event jsonb, block_height text
