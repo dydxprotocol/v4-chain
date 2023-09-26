@@ -3,9 +3,8 @@ package testutil
 import (
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"strings"
-
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/binance"
 	"github.com/h2non/gock"
@@ -13,15 +12,15 @@ import (
 
 var (
 	binanceUsMarketConfig = map[types.MarketId]types.MarketConfig{
-		exchange_common.MARKET_BTC_USD: {
+		exchange_config.MARKET_BTC_USD: {
 			Ticker:         "BTCUSDT",
-			AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+			AdjustByMarket: newMarketIdWithValue(exchange_config.MARKET_USDT_USD),
 		},
-		exchange_common.MARKET_ETH_USD: {
+		exchange_config.MARKET_ETH_USD: {
 			Ticker:         "ETHUSDT",
-			AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+			AdjustByMarket: newMarketIdWithValue(exchange_config.MARKET_USDT_USD),
 		},
-		exchange_common.MARKET_USDT_USD: {
+		exchange_config.MARKET_USDT_USD: {
 			Ticker: "USDTUSD",
 		},
 	}

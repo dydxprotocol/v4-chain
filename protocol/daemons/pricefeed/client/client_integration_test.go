@@ -19,6 +19,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
+	pricefeed2 "github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -183,19 +184,19 @@ var (
 	expectedAdjustedLinkPrice      = uint64(270_000_000_000_000)
 
 	expectedPrices1Market = map[types.MarketId]uint64{
-		exchange_common.MARKET_BTC_USD: expectedMedianBtcPrice,
+		pricefeed2.MARKET_BTC_USD: expectedMedianBtcPrice,
 	}
 
 	expectedPrices3Markets = map[types.MarketId]uint64{
-		exchange_common.MARKET_BTC_USD:  expectedMedianBtcPrice,
-		exchange_common.MARKET_ETH_USD:  expectedMedianEthPrice,
-		exchange_common.MARKET_LINK_USD: testExchangeLinkPrice,
+		pricefeed2.MARKET_BTC_USD:  expectedMedianBtcPrice,
+		pricefeed2.MARKET_ETH_USD:  expectedMedianEthPrice,
+		pricefeed2.MARKET_LINK_USD: testExchangeLinkPrice,
 	}
 
 	expectedPrices3MarketsWithConversions = map[types.MarketId]uint64{
-		exchange_common.MARKET_BTC_USD:  expectedMedianBtcPrice,
-		exchange_common.MARKET_ETH_USD:  expectedAdjustedMedianEthPrice,
-		exchange_common.MARKET_LINK_USD: expectedAdjustedLinkPrice,
+		pricefeed2.MARKET_BTC_USD:  expectedMedianBtcPrice,
+		pricefeed2.MARKET_ETH_USD:  expectedAdjustedMedianEthPrice,
+		pricefeed2.MARKET_LINK_USD: expectedAdjustedLinkPrice,
 	}
 
 	// 5s is chosen to give us a comfortable margin of error for prices to make it through the
@@ -252,12 +253,12 @@ func (s *PriceDaemonIntegrationTestSuite) mockAllMarketParamsResponseNTimes(
 func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 	// Configure test to use test exchange.
 	s.exchangeServer = pricefeed.NewExchangeServer()
-	s.exchangeServer.SetPrice(exchange_common.MARKET_BTC_USD, 1_000_000)
-	s.exchangeServer.SetPrice(exchange_common.MARKET_ETH_USD, 2_000_000)
-	s.exchangeServer.SetPrice(exchange_common.MARKET_LINK_USD, 3_000_000)
+	s.exchangeServer.SetPrice(pricefeed2.MARKET_BTC_USD, 1_000_000)
+	s.exchangeServer.SetPrice(pricefeed2.MARKET_ETH_USD, 2_000_000)
+	s.exchangeServer.SetPrice(pricefeed2.MARKET_LINK_USD, 3_000_000)
 
 	// Set USDT to 90 cents.
-	s.exchangeServer.SetPrice(exchange_common.MARKET_USDT_USD, 900_000_000)
+	s.exchangeServer.SetPrice(pricefeed2.MARKET_USDT_USD, 900_000_000)
 
 	// Save daemon flags to use for client startup.
 	s.daemonFlags = flags.GetDefaultDaemonFlags()
