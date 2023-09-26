@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"math/big"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libeth "github.com/dydxprotocol/v4-chain/protocol/lib/eth"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -29,7 +29,7 @@ func Start(
 	flags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient lib.GrpcClient,
+	grpcClient types2.GrpcClient,
 ) error {
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)

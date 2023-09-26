@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"time"
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -27,7 +27,7 @@ func Start(
 	flags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient lib.GrpcClient,
+	grpcClient types.GrpcClient,
 ) error {
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)

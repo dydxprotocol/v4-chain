@@ -16,7 +16,7 @@ import (
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	servertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
@@ -275,7 +275,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 	s.daemonServer = daemonserver.NewServer(
 		log.TestingLogger(),
 		grpc.NewServer(),
-		&lib.FileHandlerImpl{},
+		&types2.FileHandlerImpl{},
 		s.daemonFlags.Shared.SocketAddress,
 		"test",
 	)
@@ -325,7 +325,7 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 		s.daemonFlags,
 		s.appFlags,
 		log.TestingLogger(),
-		&lib.GrpcClientImpl{},
+		&types2.GrpcClientImpl{},
 		testExchangeStartupConfigs,
 		testExchangeToQueryDetails,
 		&client.SubTaskRunnerImpl{},

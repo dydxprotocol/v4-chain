@@ -10,7 +10,7 @@ import (
 	liquidationapi "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	pricefeedapi "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"net"
 	"syscall"
@@ -23,8 +23,8 @@ import (
 // needed for various services.
 type Server struct {
 	logger        log.Logger
-	gsrv          lib.GrpcServer
-	fileHandler   lib.FileHandler
+	gsrv          types2.GrpcServer
+	fileHandler   types2.FileHandler
 	socketAddress string
 
 	updateMonitor *types.UpdateMonitor
@@ -39,8 +39,8 @@ type Server struct {
 // so that they can be cleaned up after the test case is complete.
 func NewServer(
 	logger log.Logger,
-	grpcServer lib.GrpcServer,
-	fileHandler lib.FileHandler,
+	grpcServer types2.GrpcServer,
+	fileHandler types2.FileHandler,
 	socketAddress string,
 	uniqueTestIdentifier string,
 ) *Server {

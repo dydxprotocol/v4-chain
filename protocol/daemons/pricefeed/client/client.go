@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"sync"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
@@ -116,7 +116,7 @@ func (c *Client) start(ctx context.Context,
 	daemonFlags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient lib.GrpcClient,
+	grpcClient types2.GrpcClient,
 	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 	subTaskRunner SubTaskRunner,
@@ -268,7 +268,7 @@ func StartNewClient(
 	daemonFlags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient lib.GrpcClient,
+	grpcClient types2.GrpcClient,
 	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 	subTaskRunner SubTaskRunner,

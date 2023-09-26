@@ -2,6 +2,7 @@ package price_fetcher
 
 import (
 	"errors"
+	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -141,7 +142,7 @@ func TestRunTaskLoop(t *testing.T) {
 
 			// Run sub-task a specified number of iterations.
 			for i := 0; i < taskLoopIterations; i++ {
-				pf.RunTaskLoop(&lib.RequestHandlerImpl{})
+				pf.RunTaskLoop(&types2.RequestHandlerImpl{})
 			}
 
 			// Will hang until tests timeout if bCh is not full.
@@ -519,7 +520,7 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 
 			// Run sub-task a specified number of iterations.
 			for i := 0; i < taskLoopIterations; i++ {
-				pf.RunTaskLoop(&lib.RequestHandlerImpl{})
+				pf.RunTaskLoop(&types2.RequestHandlerImpl{})
 			}
 
 			// No race conditions should affect the market output of the previous or following task loops.
@@ -528,7 +529,7 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 
 			// Run sub-task a specified number of iterations.
 			for i := 0; i < taskLoopIterations; i++ {
-				go pf.RunTaskLoop(&lib.RequestHandlerImpl{})
+				go pf.RunTaskLoop(&types2.RequestHandlerImpl{})
 			}
 
 			// Will hang until tests timeout if bCh is not full.
@@ -667,7 +668,7 @@ func TestRunSubTask_Mixed(t *testing.T) {
 			mutableExchangeMarketConfig := constants.Exchange1_1Markets_MutableExchangeMarketConfig
 			mutableMarketConfigs := constants.MutableMarketConfigs_1Markets
 			mockExchangeQueryHandler := &mocks.ExchangeQueryHandler{}
-			rh := &lib.RequestHandlerImpl{}
+			rh := &types2.RequestHandlerImpl{}
 
 			mockExchangeQueryHandler.On(
 				"Query",
@@ -696,7 +697,7 @@ func TestRunSubTask_Mixed(t *testing.T) {
 
 			// We just need a valid input that matches the mock signature.
 			pf.runSubTask(
-				&lib.RequestHandlerImpl{},
+				&types2.RequestHandlerImpl{},
 				mutableExchangeMarketConfig.GetMarketIds(),
 				pf.getTaskLoopDefinition(),
 			)
@@ -773,7 +774,7 @@ func mockSingleMarketCalls(mockExchangeQueryHandler *mocks.ExchangeQueryHandler)
 				mock.AnythingOfType("*types.ExchangeQueryDetails"),
 				mock.AnythingOfType("*types.MutableExchangeMarketConfig"),
 				[]types.MarketId{marketId},
-				&lib.RequestHandlerImpl{},
+				&types2.RequestHandlerImpl{},
 				generateMarketExponentsMap(initialMarketConfigs),
 			).Return([]*types.MarketPriceTimestamp{priceTimestamp}, nil, nil)
 		}
@@ -797,7 +798,7 @@ func mockMultiMarketCall(
 		mock.AnythingOfType("*types.ExchangeQueryDetails"),
 		mock.AnythingOfType("*types.MutableExchangeMarketConfig"),
 		markets,
-		&lib.RequestHandlerImpl{},
+		&types2.RequestHandlerImpl{},
 		generateMarketExponentsMap(mutableMarketConfigs),
 	).Return(prices, nil, nil)
 }
@@ -833,7 +834,7 @@ func assertQueryHandlerCalledWithMarkets(
 		mock.AnythingOfType("*types.ExchangeQueryDetails"),
 		mock.AnythingOfType("*types.MutableExchangeMarketConfig"),
 		markets,
-		&lib.RequestHandlerImpl{},
+		&types2.RequestHandlerImpl{},
 		generateMarketExponentsMap(marketConfigs),
 	)
 }

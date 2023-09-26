@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"io"
 	"net/http"
 	"os"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	gometrics "github.com/armon/go-metrics"
@@ -530,7 +530,7 @@ func New(
 	app.Server = daemonserver.NewServer(
 		logger,
 		grpc.NewServer(),
-		&lib.FileHandlerImpl{},
+		&types2.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
 		appFlags.GrpcAddress,
 	)
@@ -568,7 +568,7 @@ func New(
 				daemonFlags,
 				appFlags,
 				logger,
-				&lib.GrpcClientImpl{},
+				&types2.GrpcClientImpl{},
 			); err != nil {
 				panic(err)
 			}
@@ -589,7 +589,7 @@ func New(
 			daemonFlags,
 			appFlags,
 			logger,
-			&lib.GrpcClientImpl{},
+			&types2.GrpcClientImpl{},
 			exchangeStartupConfig,
 			constants.StaticExchangeDetails,
 			&pricefeedclient.SubTaskRunnerImpl{},
@@ -611,7 +611,7 @@ func New(
 				daemonFlags,
 				appFlags,
 				logger,
-				&lib.GrpcClientImpl{},
+				&types2.GrpcClientImpl{},
 			); err != nil {
 				panic(err)
 			}

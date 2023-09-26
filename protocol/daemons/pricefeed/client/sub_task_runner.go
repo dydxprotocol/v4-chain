@@ -5,6 +5,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_encoder"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
+	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"net/http"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
@@ -190,7 +190,7 @@ func (s *SubTaskRunnerImpl) StartPriceFetcher(
 	// itself to the config's list of exchange config updaters here.
 	configs.AddPriceFetcher(priceFetcher)
 
-	requestHandler := lib.NewRequestHandlerImpl(
+	requestHandler := types2.NewRequestHandlerImpl(
 		&HttpClient,
 	)
 	// Begin loop to periodically start goroutines to query market prices.

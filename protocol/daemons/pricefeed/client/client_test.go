@@ -10,7 +10,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -297,7 +297,7 @@ func TestStop(t *testing.T) {
 	daemonServer := daemonserver.NewServer(
 		log.NewNopLogger(),
 		grpc.NewServer(),
-		&lib.FileHandlerImpl{},
+		&types2.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
 		"test",
 	)
@@ -334,7 +334,7 @@ func TestStop(t *testing.T) {
 		daemonFlags,
 		appFlags,
 		log.NewNopLogger(),
-		&lib.GrpcClientImpl{},
+		&types2.GrpcClientImpl{},
 		constants.TestExchangeStartupConfigs,
 		constants.TestExchangeIdToExchangeQueryDetails,
 		&SubTaskRunnerImpl{},
