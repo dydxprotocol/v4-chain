@@ -7,10 +7,10 @@
   Returns: void.
 */
 CREATE OR REPLACE FUNCTION dydx_create_initial_rows(
-    block_height text, block_time timestamp, tx_hashes text[], events jsonb[]) AS $$
+    block_height text, block_time timestamp, tx_hashes text[], events jsonb[]) RETURNS void AS $$
 BEGIN
     -- Create blocks entry
-    INSERT INTO blocks ("blockHeight", "time") VALUES (block_height, block_time);
+    INSERT INTO blocks ("blockHeight", "time") VALUES (block_height::bigint, block_time);
 
     -- Create Transactions
     FOR i IN 1..array_length(tx_hashes, 1) LOOP

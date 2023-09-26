@@ -3,7 +3,11 @@ import {
   IndexerOrder_Side,
   IndexerSubaccountId,
   IndexerOrder_TimeInForce,
-  IndexerOrderId, IndexerTendermintEvent_BlockEvent, AssetCreateEventV1,
+  IndexerOrderId,
+  IndexerTendermintEvent_BlockEvent,
+  AssetCreateEventV1,
+  SubaccountUpdateEventV1,
+  MarketEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   BUFFER_ENCODING_UTF_8,
@@ -36,8 +40,7 @@ import {
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 import { binaryToBase64String, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
-import { defaultAssetCreateEvent } from '../helpers/constants';
-import { defaultBlock } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { defaultAssetCreateEvent, defaultMarketCreate } from '../helpers/constants';
 
 describe('SQL Function Tests', () => {
   beforeAll(async () => {
@@ -53,6 +56,72 @@ describe('SQL Function Tests', () => {
     await dbHelpers.teardown();
     jest.resetAllMocks();
   });
+
+  const defaultTxHash: string = '0x32343534306431622d306461302d343831322d613730372d3965613162336162';
+  const defaultTxHash2: string = '0x32363534306431622d306461302d343831322d613730372d3965613162336162';
+  const defaultSubaccountUpdateEvent: SubaccountUpdateEventV1 = SubaccountUpdateEventV1
+    .fromPartial({
+      subaccountId: {
+        owner: '',
+        number: 0,
+      },
+      // updatedPerpetualPositions: [],
+      // updatedAssetPositions: [],
+    });
+  const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
+    SubaccountUpdateEventV1.encode(
+      defaultSubaccountUpdateEvent,
+    ).finish(),
+  );
+  const defaultSubaccountUpdateEventData: string = Buffer.from(
+    defaultSubaccountUpdateEventBinary.buffer,
+  ).toString('base64');
+
+  const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
+    defaultMarketCreate,
+  ).finish());
+  const defaultMarketEventData: string = Buffer.from(
+    defaultMarketEventBinary.buffer,
+  ).toString('base64');
+
+  const defaultAssetEventBinary: Uint8Array = Uint8Array.from(AssetCreateEventV1.encode(
+    defaultAssetCreateEvent,
+  ).finish());
+  const defaultAssetEventData: string = Buffer.from(
+    defaultAssetEventBinary.buffer,
+  ).toString('base64');
+
+  const transactionIndex0: number = 0;
+  const transactionIndex1: number = 1;
+  const eventIndex0: number = 0;
+  const eventIndex1: number = 1;
+
+  const events: IndexerTendermintEvent[] = [
+    createIndexerTendermintEvent(
+      DydxIndexerSubtypes.FUNDING,
+      defaultMarketEventData,
+      -1,
+      eventIndex0,
+    ),
+    createIndexerTendermintEvent(
+      DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+      defaultSubaccountUpdateEventData,
+      transactionIndex0,
+      eventIndex0,
+    ),
+    createIndexerTendermintEvent(
+      DydxIndexerSubtypes.ASSET,
+      defaultAssetEventData,
+      transactionIndex0,
+      eventIndex1,
+    ),
+    createIndexerTendermintEvent(
+      DydxIndexerSubtypes.MARKET,
+      defaultMarketEventData,
+      transactionIndex1,
+      eventIndex0,
+    ),
+  ];
 
   it.each([
     [0, 0, 0],
@@ -328,7 +397,7 @@ describe('SQL Function Tests', () => {
   });
 
   it('dydx_create_tendermint_event.sql should insert a tendermint event and return correct jsonb', async () => {
-    await BlockTable.create(defaultBlock);
+    await BlockTable.create(testConstants.defaultBlock);
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
 
@@ -342,7 +411,7 @@ describe('SQL Function Tests', () => {
     );
 
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_create_tendermint_event('${JSON.stringify(indexerTendermintEvent)}', '${defaultBlock.blockHeight}') AS result`,
+      `SELECT dydx_create_tendermint_event('${JSON.stringify(indexerTendermintEvent)}', '${testConstants.defaultBlock.blockHeight}') AS result`,
     );
     const tendermintEvents: TendermintEventFromDatabase[] = await TendermintEventTable.findAll(
       {},
@@ -353,20 +422,67 @@ describe('SQL Function Tests', () => {
     expect(tendermintEvents.length).toEqual(1);
     const tendermintEvent = tendermintEvents[0];
     expect(tendermintEvent).toEqual(expect.objectContaining({
-      blockHeight: defaultBlock.blockHeight,
+      blockHeight: testConstants.defaultBlock.blockHeight,
       transactionIndex,
       eventIndex,
       id: TendermintEventTable.createEventId(
-        defaultBlock.blockHeight,
+        testConstants.defaultBlock.blockHeight,
         transactionIndex,
         eventIndex,
       ),
     }));
     expect(result).toEqual(expect.objectContaining({
-      blockHeight: Number(defaultBlock.blockHeight),
+      blockHeight: Number(testConstants.defaultBlock.blockHeight),
       transactionIndex,
       eventIndex,
     }));
+  });
+
+  it('dydx_create_initial_rows.sql should insert the initial rows correctly', async () => {
+    const blockHeight = '1';
+    const txHashes = [defaultTxHash, defaultTxHash2];
+    const dateTimeIso = '2020-01-01T00:00:00.000Z';
+    await getSingleRawQueryResultRow(
+      `SELECT dydx_create_initial_rows('${blockHeight}'::text, '${dateTimeIso}'::timestamp, ARRAY['${txHashes.join("','")}']::text[], ARRAY['${events.map((event) => JSON.stringify(event)).join("','")}']::jsonb[])`,
+    );
+    // Validate blocks table
+    const blocks = await BlockTable.findAll({}, [], { readReplica: true });
+    expect(blocks.length).toEqual(1);
+    expect(blocks[0]).toEqual(expect.objectContaining({
+      blockHeight,
+      time: dateTimeIso,
+    }));
+
+    // Validate transactions table
+    const transactions: TransactionFromDatabase[] = await TransactionTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(transactions.length).toEqual(txHashes.length);
+    txHashes.forEach((txHash, index) => {
+      expect(transactions[index].transactionHash).toEqual(txHash);
+    });
+
+    // Validate tendermint_events table
+    const tendermintEvents: TendermintEventFromDatabase[] = await TendermintEventTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(tendermintEvents.length).toEqual(events.length);
+    events.forEach((event, index) => {
+      expect(tendermintEvents[index]).toEqual(expect.objectContaining({
+        blockHeight,
+        transactionIndex: indexerTendermintEventToTransactionIndex(event),
+        eventIndex: event.eventIndex,
+        id: TendermintEventTable.createEventId(
+          blockHeight,
+          indexerTendermintEventToTransactionIndex(event),
+          event.eventIndex,
+        ),
+      }));
+    });
   });
 });
 
