@@ -1,6 +1,5 @@
 import { CandleMessage_Resolution, ClobPairStatus } from '@dydxprotocol-indexer/v4-protos';
 
-import { Options } from '../build/src';
 import config from './config';
 import AssetPositionModel from './models/asset-position-model';
 import FillModel from './models/fill-model';
@@ -11,6 +10,7 @@ import SubaccountModel from './models/subaccount-model';
 import {
   APITimeInForce,
   CandleResolution,
+  Options,
   PerpetualMarketStatus,
   TimeInForce,
 } from './types';
