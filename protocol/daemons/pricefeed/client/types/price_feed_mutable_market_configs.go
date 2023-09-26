@@ -3,13 +3,14 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+	"sync"
+
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"sort"
-	"strings"
-	"sync"
 )
 
 const (
@@ -213,15 +214,15 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 		exchangeNames = append(exchangeNames, exchangeName)
 	}
 
-	for i, marketParam := range marketParams {
+	for _, marketParam := range marketParams {
 		// Perform validation on the market params.
 		if err := marketParam.Validate(); err != nil {
-			return nil, nil, fmt.Errorf("invalid market param %v: %w", i, err)
+			return nil, nil, fmt.Errorf("invalid market param %v: %w", marketParam.Id, err)
 		}
 
 		// Check for duplicate market params.
 		if _, exists := mutableMarketConfigs[marketParam.Id]; exists {
-			return nil, nil, fmt.Errorf("invalid market param %v: duplicate market id %v", i, marketParam.Id)
+			return nil, nil, fmt.Errorf("invalid market param %v: duplicate market id %v", marketParam.Id, marketParam.Id)
 		}
 
 		mutableMarketConfigs[marketParam.Id] = &MutableMarketConfig{
@@ -234,13 +235,13 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 		var exchangeConfigJson ExchangeConfigJson
 		err = json.Unmarshal([]byte(marketParam.ExchangeConfigJson), &exchangeConfigJson)
 		if err != nil {
-			wrappedErr := fmt.Errorf("invalid exchange config json for market param %v: %w", i, err)
+			wrappedErr := fmt.Errorf("invalid exchange config json for market param %v: %w", marketParam.Id, err)
 			return nil, nil, wrappedErr
 		}
 
 		err = exchangeConfigJson.Validate(exchangeNames, marketNameToId)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid exchange config json for market param %v: %w", i, err)
+			return nil, nil, fmt.Errorf("invalid exchange config json for market param %v: %w", marketParam.Id, err)
 		}
 
 		for _, exchangeConfig := range exchangeConfigJson.Exchanges {

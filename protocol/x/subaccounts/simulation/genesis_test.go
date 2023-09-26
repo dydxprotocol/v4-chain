@@ -7,7 +7,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -45,7 +44,7 @@ func TestRandomizedGenState(t *testing.T) {
 		banksim.RandomizedGenState(&simState)
 		simulation.RandomizedGenState(&simState)
 
-		totalUsdcSupply := sdk.NewInt(0)
+		totalUsdcSupply := sdkmath.NewInt(0)
 
 		var saGenesis types.GenesisState
 		simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &saGenesis)
@@ -65,7 +64,7 @@ func TestRandomizedGenState(t *testing.T) {
 				onlyAssetPosition := sa.GetAssetPositions()[0]
 				require.True(t, onlyAssetPosition.AssetId == lib.UsdcAssetId)
 
-				bigQuantums := sdk.NewIntFromBigInt(onlyAssetPosition.GetBigQuantums())
+				bigQuantums := sdkmath.NewIntFromBigInt(onlyAssetPosition.GetBigQuantums())
 				totalUsdcSupply = totalUsdcSupply.Add(bigQuantums)
 			}
 

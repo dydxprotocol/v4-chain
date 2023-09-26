@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"math/big"
 	"time"
@@ -307,7 +308,7 @@ func (k Keeper) ProcessRewardsForBlock(
 			[]sdk.Coin{
 				{
 					Denom:  params.Denom,
-					Amount: sdk.NewIntFromBigInt(rewardAmountForAddress),
+					Amount: sdkmath.NewIntFromBigInt(rewardAmountForAddress),
 				},
 			},
 		); err != nil {
