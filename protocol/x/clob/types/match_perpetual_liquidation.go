@@ -5,16 +5,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
-func (m MatchPerpetualLiquidation) GetMetricLabels(callback string) []gometrics.Label {
+// GetMetricLabels returns a slice of gometrics labels for a match perpetual liquidation.
+// Currently, the only label is the perpetual id.
+func (m MatchPerpetualLiquidation) GetMetricLabels() []gometrics.Label {
 	return []gometrics.Label{
-		metrics.GetLabelForStringValue(
-			metrics.Callback,
-			callback,
-		),
-		metrics.GetLabelForStringValue(
-			metrics.SubaccountOwner,
-			m.Liquidated.Owner,
-		),
 		metrics.GetLabelForIntValue(
 			metrics.PerpetualId,
 			int(m.PerpetualId),

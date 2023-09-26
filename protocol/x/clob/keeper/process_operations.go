@@ -542,9 +542,9 @@ func (k Keeper) PersistMatchLiquidationToState(
 	}
 
 	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums},
+		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.DeliverTx},
 		float32(notionalQuoteQuantums.Uint64()),
-		matchLiquidation.GetMetricLabels(metrics.DeliverTx),
+		matchLiquidation.GetMetricLabels(),
 	)
 
 	for _, fill := range matchLiquidation.GetFills() {
@@ -582,16 +582,15 @@ func (k Keeper) PersistMatchLiquidationToState(
 			)
 		}
 
-		filledQuoteQuantums := new(big.Int)
-		filledQuoteQuantums.Mul(
+		filledQuoteQuantums := new(big.Int).Mul(
 			new(big.Int).Div(matchWithOrders.FillAmount.ToBigInt(), new(big.Int).SetUint64(matchLiquidation.TotalSize)),
 			notionalQuoteQuantums,
 		)
 
 		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.Filled},
+			[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.Filled, metrics.DeliverTx},
 			float32(filledQuoteQuantums.Uint64()),
-			matchLiquidation.GetMetricLabels(metrics.DeliverTx),
+			matchLiquidation.GetMetricLabels(),
 		)
 
 		// Send on-chain update for the liquidation. The events are stored in a TransientStore which should be rolled-back
