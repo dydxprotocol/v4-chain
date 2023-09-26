@@ -64,7 +64,7 @@ export class EllipticProviderClient extends ComplianceClient {
       const response = await axios.post(API_URI, payload, headers);
       stats.timing(`${config.SERVICE_NAME}.get_elliptic_risk_score_total_time`, Date.now() - start);
 
-      const { success, riskScore }: ParsedResponse = this.parseApiResponse(response);
+      const { success, riskScore } = this.parseApiResponse(response);
       if (!success) {
         logger.error({
           at: 'EllipticProviderClient#getRiskScore',

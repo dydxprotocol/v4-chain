@@ -1,5 +1,9 @@
 import axios, { AxiosResponse } from 'axios';
-import { EllipticPayload, EllipticPostArgs, EllipticProviderClient, HOLISTIC } from '../../src/clients/elliptic-provider';
+import {
+  EllipticPostArgs,
+  EllipticProviderClient,
+  HOLISTIC,
+} from '../../src/clients/elliptic-provider';
 import { ComplianceClientError } from '../../src/lib/error';
 import { TooManyRequestsError } from '@dydxprotocol-indexer/base';
 import config from '../../src/config';
