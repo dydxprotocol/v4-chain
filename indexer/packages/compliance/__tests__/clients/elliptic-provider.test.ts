@@ -59,7 +59,7 @@ describe('elliptic-provider', () => {
     });
 
     it('throws error if Elliptic response throws TooManyRequesetsError', async () => {
-      axiosMock.mockRejectedValue({response: { status: 429 }});
+      axiosMock.mockRejectedValue({ response: { status: 429 } });
       await expect(provider.getRiskScore(defaultAddress))
         .rejects.toEqual(new TooManyRequestsError('Too many requests'));
     });
@@ -72,7 +72,7 @@ describe('elliptic-provider', () => {
 
     it('retries on internal error from Elliptic', async () => {
       axiosMock
-        .mockRejectedValueOnce({ response: { status: 500 }})
+        .mockRejectedValueOnce({ response: { status: 500 } })
         .mockResolvedValueOnce(getMockResponse(config.ELLIPTIC_RISK_SCORE_THRESHOLD));
       const riskScore: number = await provider.getRiskScore(defaultAddress);
       expect(riskScore).toEqual(config.ELLIPTIC_RISK_SCORE_THRESHOLD);
@@ -80,12 +80,12 @@ describe('elliptic-provider', () => {
     });
 
     it('throws error on internal error from Elliptic over retry threshold', async () => {
-      const internalError: object = { response: { status: 500 }};
+      const internalError: object = { response: { status: 500 } };
       axiosMock
-        .mockRejectedValueOnce({ response: { status: 500 }})
-        .mockRejectedValueOnce({ response: { status: 500 }})
-        .mockRejectedValueOnce({ response: { status: 500 }})
-        .mockRejectedValueOnce({ response: { status: 500 }})
+        .mockRejectedValueOnce({ response: { status: 500 } })
+        .mockRejectedValueOnce({ response: { status: 500 } })
+        .mockRejectedValueOnce({ response: { status: 500 } })
+        .mockRejectedValueOnce({ response: { status: 500 } })
         .mockResolvedValueOnce(getMockResponse(config.ELLIPTIC_RISK_SCORE_THRESHOLD));
       await expect(provider.getRiskScore(defaultAddress))
         .rejects.toEqual(internalError);
@@ -120,7 +120,7 @@ describe('elliptic-provider', () => {
 
     it('throws error if Elliptic response is an error', async () => {
       const thrownError: Error = new Error('some error');
-      axiosMock.mockRejectedValueOnce(thrownError)
+      axiosMock.mockRejectedValueOnce(thrownError);
       await expect(provider.getComplianceResponse(defaultAddress)).rejects.toEqual(thrownError);
     });
   });

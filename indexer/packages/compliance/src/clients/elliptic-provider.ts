@@ -1,11 +1,13 @@
+import crypto from 'crypto';
+
+import { TooManyRequestsError, logger, stats } from '@dydxprotocol-indexer/base';
+import axios, { AxiosResponse } from 'axios';
+import _ from 'lodash';
+
 import config from '../config';
+import { ComplianceClientError } from '../lib/error';
 import { ComplianceClientResponse } from '../types';
 import { ComplianceClient } from './compliance-client';
-import crypto from 'crypto';
-import axios, { AxiosResponse } from 'axios';
-import { TooManyRequestsError, logger, stats } from '@dydxprotocol-indexer/base';
-import _ from 'lodash';
-import { ComplianceClientError } from '../lib/error';
 
 export type EllipticPayload = object;
 
@@ -18,7 +20,7 @@ export const NO_RULES_TRIGGERED_RISK_SCORE: number = -1;
 export class EllipticProviderClient extends ComplianceClient {
   private apiKey: string;
 
-  public constructor(retries: number = 0) {
+  public constructor() {
     super();
     this.apiKey = config.ELLIPTIC_API_KEY;
   }
@@ -31,7 +33,7 @@ export class EllipticProviderClient extends ComplianceClient {
         address,
         blocked: true,
         riskScore: riskScore.toFixed(),
-      }
+      };
     }
 
     return {
@@ -70,7 +72,7 @@ export class EllipticProviderClient extends ComplianceClient {
       }
 
       return riskScore;
-    } catch(error) {
+    } catch (error) {
       if (
         error?.response?.status === 404 &&
         error?.response?.data?.name === 'NotInBlockchain'
@@ -110,7 +112,7 @@ export class EllipticProviderClient extends ComplianceClient {
       return {
         success: false,
         riskScore: null,
-      }
+      };
     }
 
     return {
@@ -120,14 +122,14 @@ export class EllipticProviderClient extends ComplianceClient {
   }
 
   getPostArgs(
-    address: string
+    address: string,
   ): {payload: EllipticPayload, headers: object} {
     const payload: EllipticPayload = this.getPayload(address);
     const requestTimeMs: number = Date.now();
     const signature: string = this.getApiSignature(requestTimeMs, JSON.stringify(payload));
     const headers: object = this.getHeaders(this.apiKey, signature, requestTimeMs);
 
-    return { payload, headers }
+    return { payload, headers };
   }
 
   /*
@@ -182,6 +184,6 @@ export class EllipticProviderClient extends ComplianceClient {
         'x-access-sign': signature,
         'x-access-timestamp': requestTimeMs,
       },
-    }
+    };
   }
 }
