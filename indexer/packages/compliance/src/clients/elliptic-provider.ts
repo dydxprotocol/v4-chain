@@ -11,6 +11,16 @@ import { ComplianceClient } from './compliance-client';
 
 export type EllipticPayload = object;
 
+export interface EllipticPostArgs {
+  payload: EllipticPayload,
+  headers: object,
+}
+
+interface ParsedResponse {
+  success: boolean,
+  riskScore: number | null,
+}
+
 export const HOLISTIC: string = 'holistic';
 export const API_PATH: string = '/v2/wallet/synchronous';
 export const API_URI: string = `https://amk-api.elliptic.co${API_PATH}`;
@@ -47,17 +57,14 @@ export class EllipticProviderClient extends ComplianceClient {
     address: string,
     retries: number = 0,
   ): Promise<number> {
-    const { payload, headers }: {
-      payload: EllipticPayload,
-      headers: object,
-    } = this.getPostArgs(address);
+    const { payload, headers }: EllipticPostArgs = this.getPostArgs(address);
     const start: number = Date.now();
 
     try {
       const response = await axios.post(API_URI, payload, headers);
       stats.timing(`${config.SERVICE_NAME}.get_elliptic_risk_score_total_time`, Date.now() - start);
 
-      const { success, riskScore } = this.parseApiResponse(response);
+      const { success, riskScore }: ParsedResponse = this.parseApiResponse(response);
       if (!success) {
         logger.error({
           at: 'EllipticProviderClient#getRiskScore',
@@ -92,10 +99,7 @@ export class EllipticProviderClient extends ComplianceClient {
     }
   }
 
-  parseApiResponse(response: AxiosResponse): {
-    success: boolean,
-    riskScore: number | null,
-  } {
+  parseApiResponse(response: AxiosResponse): ParsedResponse {
     const riskScore: number | null | undefined = response.data[RISK_SCORE_KEY];
 
     if (riskScore === null) {
@@ -123,7 +127,7 @@ export class EllipticProviderClient extends ComplianceClient {
 
   getPostArgs(
     address: string,
-  ): {payload: EllipticPayload, headers: object} {
+  ): EllipticPostArgs {
     const payload: EllipticPayload = this.getPayload(address);
     const requestTimeMs: number = Date.now();
     const signature: string = this.getApiSignature(requestTimeMs, JSON.stringify(payload));

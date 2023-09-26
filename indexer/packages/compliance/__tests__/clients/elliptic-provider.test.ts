@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { EllipticPayload, EllipticProviderClient, HOLISTIC } from '../../src/clients/elliptic-provider';
+import { EllipticPayload, EllipticPostArgs, EllipticProviderClient, HOLISTIC } from '../../src/clients/elliptic-provider';
 import { ComplianceClientError } from '../../src/lib/error';
 import { TooManyRequestsError } from '@dydxprotocol-indexer/base';
 import config from '../../src/config';
@@ -22,10 +22,7 @@ describe('elliptic-provider', () => {
   });
 
   it('gets correct arguments for POST request', () => {
-    const { payload, headers }: {
-      payload: EllipticPayload,
-      headers: object,
-    } = provider.getPostArgs(defaultAddress);
+    const { payload, headers }: EllipticPostArgs = provider.getPostArgs(defaultAddress);
     expect(payload).toEqual({
       customer_reference: 'string',
       subject: {
