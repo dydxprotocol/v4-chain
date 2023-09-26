@@ -39,7 +39,7 @@ export const configSchema = {
   LOOPS_ORDERBOOK_INSTRUMENTATION: parseBoolean({ default: true }),
   LOOPS_CANCEL_STALE_ORDERS: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_RESEARCH_ENVIRONMENT: parseBoolean({ default: true }),
-  LOOPS_ENABLED_TRACK_LAG: parseBoolean({ default: true }),
+  LOOPS_ENABLED_TRACK_LAG: parseBoolean({ default: false }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -67,8 +67,8 @@ export const configSchema = {
     default: FIVE_MINUTES_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_TRACK_LAG: parseInteger({
-    // 5 seconds
-    default: 5_000,
+    // 10 seconds
+    default: 10_000,
   }),
 
   // Start delay
@@ -94,6 +94,11 @@ export const configSchema = {
 
   // Cancel stale orders
   CANCEL_STALE_ORDERS_QUERY_BATCH_SIZE: parseInteger({ default: 10000 }),
+
+  // Tracking indexer lag
+  TRACK_LAG_INDEXER_FULL_NODE_URL: parseString({ default: '' }),
+  TRACK_LAG_VALIDATOR_URL: parseString({ default: '' }),
+  TRACK_LAG_OTHER_FULL_NODE_URL: parseString({ default: '' }),
 
   // Update research environment
   AWS_ACCOUNT_ID: parseString(),

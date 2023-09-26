@@ -1,10 +1,9 @@
-import { logger, safeAxiosRequest } from "@dydxprotocol-indexer/base";
+import { axiosRequest, logger, stats } from "@dydxprotocol-indexer/base";
 import { BlockFromDatabase, BlockTable, IsoString } from "@dydxprotocol-indexer/postgres";
 import Big from "big.js";
-import { DateTime, Duration } from "luxon";
+import { DateTime } from "luxon";
+import config from "../config";
 
-const INDEXER_FULL_NODE_URL = 'http://52.194.155.74';
-const VALIDATOR_URL = 'http://18.188.95.153/';
 const VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX = ':26657/block';
 
 type BlockData = {
@@ -13,53 +12,77 @@ type BlockData = {
 }
 
 export default async function runTask(): Promise<void> {
+  logger.info({
+    at: 'track-lag#runTask',
+    message: 'Running track lag task',
+  });
   const [
-    indexerBlock,
+    indexerBlockFromDatabase,
     indexerFullNodeBlock,
     validatorBlock,
+    otherFullNodeBlock,
   ]: [
     BlockFromDatabase | undefined,
     BlockData,
     BlockData,
+    BlockData,
   ] = await Promise.all([
     BlockTable.getLatest(),
-    getValidatorBlockData(INDEXER_FULL_NODE_URL),
-    getValidatorBlockData(VALIDATOR_URL),
+    getValidatorBlockData(config.TRACK_LAG_INDEXER_FULL_NODE_URL),
+    getValidatorBlockData(config.TRACK_LAG_VALIDATOR_URL),
+    getValidatorBlockData(config.TRACK_LAG_OTHER_FULL_NODE_URL),
   ]);
 
-  if (indexerBlock === undefined) {
+  if (indexerBlockFromDatabase === undefined) {
     return;
   }
 
-  const indexerBlockLag: string = Big(indexerFullNodeBlock.block).minus(indexerBlock.blockHeight).toString();
-  const indexerTimeLag: Duration = DateTime.fromISO(indexerFullNodeBlock.timestamp).diff(DateTime.fromISO(indexerBlock.time))
-  const validatorBlockLag: string = Big(validatorBlock.block).minus(indexerBlock.blockHeight).toString();
-  const validatorTimeLag: Duration = DateTime.fromISO(validatorBlock.timestamp).diff(DateTime.fromISO(indexerFullNodeBlock.timestamp))
-  logger.info({
-    at: 'track-lag#runTask',
-    message: 'Got block lag',
-    indexerBlockLag,
-    indexerTimeLagInMilliseconds: indexerTimeLag.milliseconds,
-    validatorBlockLag,
-    validatorTimeLagInMilliseconds: validatorTimeLag.milliseconds,
-  });
+  const indexerBlock: BlockData = {
+    block: indexerBlockFromDatabase.blockHeight,
+    timestamp: indexerBlockFromDatabase.time,
+  };
+
+  logAndStatLag(indexerFullNodeBlock, indexerBlock, 'indexer_full_node_to_indexer');
+  logAndStatLag(validatorBlock, indexerFullNodeBlock, 'validator_to_indexer_full_node');
+  logAndStatLag(validatorBlock, indexerFullNodeBlock, 'validator_to_indexer_full_node');
+  logAndStatLag(validatorBlock, otherFullNodeBlock, 'validator_to_other_full_node');
+  logAndStatLag(otherFullNodeBlock, indexerFullNodeBlock, 'other_full_node_to_indexer_full_node');
+  logAndStatLag(validatorBlock, indexerBlock, 'validator_to_indexer');
 }
 
-async function getValidatorBlockData(url: string): Promise<BlockData> {
-  const response = safeAxiosRequest({
-    url: `${url}${VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX}`,
+async function getValidatorBlockData(urlPrefix: string): Promise<BlockData> {
+  const url: string = `${urlPrefix}${VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX}`
+  const response: any = JSON.parse(await axiosRequest({
+    url,
     method: 'GET',
     transformResponse: (res) => res,
-  });
-  logger.info({
-    at: 'track-lag#getValidatorBlockData',
-    message: 'Got validator block data',
-    url,
-    response: JSON.stringify(response),
-  });
+  }) as any);
+  const header = response.result.block.header;
 
   return {
-    block: '0',
-    timestamp: '2021-01-01T00:00:00.000Z',
+    block: header.height,
+    timestamp: header.time,
   };
+}
+
+function logAndStatLag(
+  laterBlockData: BlockData,
+  earlierBlockData: BlockData,
+  lagType: string,
+): void {
+  const blockLag: string = Big(earlierBlockData.block).minus(laterBlockData.block).toString();
+  const timeLagInMilliseconds: number = DateTime
+    .fromISO(earlierBlockData.timestamp)
+    .diff(DateTime.fromISO(laterBlockData.timestamp))
+    .milliseconds;
+
+  logger.info({
+    at: 'track-lag#logAndStatLag',
+    message: 'Got block lag',
+    lagType,
+    blockLag,
+    timeLagInMilliseconds,
+  });
+  stats.timing(`${config.SERVICE_NAME}.block_lag`, Number(blockLag), { lagType, });
+  stats.timing(`${config.SERVICE_NAME}.time_lag`, timeLagInMilliseconds, { lagType,});
 }
