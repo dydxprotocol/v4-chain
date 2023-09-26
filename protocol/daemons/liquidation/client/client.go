@@ -167,6 +167,8 @@ func GetAllSubaccounts(
 	return subaccounts, nil
 }
 
+// GetLiquidatableSubaccountIds verifies collateralization statuses of subaccounts with
+// at least one open position and returns a list of unique and potentially liquidatable subaccount ids.
 func GetLiquidatableSubaccountIds(
 	ctx context.Context,
 	client clobtypes.QueryClient,
@@ -198,6 +200,7 @@ func GetLiquidatableSubaccountIds(
 		metrics.Count,
 	)
 
+	// Query the gRPC server in chunks of size `liqFlags.RequestChunkSize`.
 	liquidatableSubaccountIds = make([]satypes.SubaccountId, 0)
 	for start := 0; start < len(subaccountsToCheck); start += int(liqFlags.RequestChunkSize) {
 		end := start + int(liqFlags.RequestChunkSize)
