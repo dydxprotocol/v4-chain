@@ -3,6 +3,7 @@ package types_test
 import (
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
@@ -18,12 +19,21 @@ const (
 	exchangeConfigEmptyTicker            = `{"exchangeName":"Coinbase"}`
 	exchangeConfigInvalidAdjustByMarket  = `{"exchangeName":"Coinbase","ticker":"BTC-USD", "adjustByMarket":"invalid"}`
 	exchangeConfigCoinbaseBtcAdjustByEth = `{"exchangeName":"Coinbase","ticker":"BTC-USD", "adjustByMarket":"ETH-USD"}`
+	exchangeConfigCoinbaseBtcAdjustBySol = `{"exchangeName":"Coinbase","ticker":"BTC-USD", "adjustByMarket":"SOL-USD"}`
 	exchangeConfigBinanceBtc             = `{"exchangeName":"Binance","ticker":"BTCUSDT"}`
 	exchangeConfigCoinbaseEth            = `{"exchangeName":"Coinbase","ticker":"ETH-USD"}`
 	exchangeConfigBinanceEth             = `{"exchangeName":"Binance","ticker":"ETHUSDT"}`
 
 	exchangeIdCoinbase = "Coinbase"
 	exchangeIdBinance  = "Binance"
+)
+
+var (
+	testEmptyMarketConfigs         = map[types.MarketId]*types.MutableMarketConfig{}
+	testEmptyExchangeMarketConfigs = map[types.ExchangeId]*types.MutableExchangeMarketConfig{
+		exchangeIdBinance:  {Id: exchangeIdBinance, MarketToMarketConfig: map[types.MarketId]types.MarketConfig{}},
+		exchangeIdCoinbase: {Id: exchangeIdCoinbase, MarketToMarketConfig: map[types.MarketId]types.MarketConfig{}},
+	}
 )
 
 // newMockUpdatersForExchange returns a new mock ExchangeConfigUpdater for testing. These mocks
@@ -50,6 +60,7 @@ func newTestPriceFeedMutableMarketConfigs() (
 	pfmmc *types.PricefeedMutableMarketConfigsImpl,
 	encoder *mocks.ExchangeConfigUpdater,
 	fetcher *mocks.ExchangeConfigUpdater,
+	marketParamErrors map[types.MarketId]error,
 	err error,
 ) {
 	pfmmc = types.NewPriceFeedMutableMarketConfigs(
@@ -61,9 +72,9 @@ func newTestPriceFeedMutableMarketConfigs() (
 		pfmmc.AddPriceFetcher(fetcher)
 	}
 
-	err = pfmmc.UpdateMarkets(constants.TestMarket7And8Params)
+	marketParamErrors, err = pfmmc.UpdateMarkets(constants.TestMarket7And8Params)
 
-	return pfmmc, encoder, fetcher, err
+	return pfmmc, encoder, fetcher, marketParamErrors, err
 }
 
 func TestGetExchangeMarketConfigCopy_Mixed(t *testing.T) {
@@ -83,8 +94,11 @@ func TestGetExchangeMarketConfigCopy_Mixed(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			pfmmc, _, _, err := newTestPriceFeedMutableMarketConfigs()
+			pfmmc, _, _, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
+
+			require.Len(t, marketParamErrors, 0)
 			require.NoError(t, err)
+
 			actual, err := pfmmc.GetExchangeMarketConfigCopy(tc.Id)
 			if tc.ExpectedError != nil {
 				require.Nil(t, actual)
@@ -129,8 +143,11 @@ func TestGetMarketConfigCopies(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			pfmmc, _, _, err := newTestPriceFeedMutableMarketConfigs()
+			pfmmc, _, _, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
+
 			require.NoError(t, err)
+			require.Len(t, marketParamErrors, 0)
+
 			actual, err := pfmmc.GetMarketConfigCopies(tc.Ids)
 			if tc.ExpectedError != nil {
 				require.Nil(t, actual)
@@ -159,6 +176,7 @@ func validMarketParamWithExchangeConfig(exchangeConfig string) prices_types.Mark
 func TestValidateAndTransformParams_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		marketParams                   []prices_types.MarketParam
+		expectedMarketParamErrors      map[types.MarketId]error
 		expectedError                  error
 		expectedMutableMarketConfigs   map[types.MarketId]*types.MutableMarketConfig
 		expectedMutableExchangeConfigs map[types.ExchangeId]*types.MutableExchangeMarketConfig
@@ -175,7 +193,11 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 				MinPriceChangePpm:  1,
 				ExchangeConfigJson: "{}",
 			}},
-			expectedError: errors.New("invalid market param 0: Pair cannot be empty: Invalid input"),
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New("invalid market param 1: Pair cannot be empty: Invalid input"),
+			},
+			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
+			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
 		},
 		"Invalid: invalid exchangeConfigJson (empty, fails marketParams.Validate)": {
 			marketParams: []prices_types.MarketParam{{
@@ -186,61 +208,93 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 				MinPriceChangePpm:  1,
 				ExchangeConfigJson: "",
 			}},
-			expectedError: errors.New("ExchangeConfigJson string is not valid"),
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New("ExchangeConfigJson string is not valid"),
+			},
+			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
+			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
 		},
 		"Invalid: invalid exchangeConfigJson (not json, fails marketParams.Validate)": {
 			marketParams: []prices_types.MarketParam{
 				validMarketParamWithExchangeConfig("invalid"),
 			},
-			expectedError: errors.New("ExchangeConfigJson string is not valid"),
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New("ExchangeConfigJson string is not valid"),
+			},
+			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
+			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
 		},
 		"Invalid: invalid exchangeConfigJson (does not conform to schema)": {
 			marketParams: []prices_types.MarketParam{
 				validMarketParamWithExchangeConfig(`{"exchanges":"invalid"}`),
 			},
-			expectedError: errors.New(
-				"invalid exchange config json for market param 0: json: cannot unmarshal string into Go struct " +
-					"field ExchangeConfigJson.exchanges of type []types.ExchangeMarketConfigJson",
-			),
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New(
+					"invalid exchange config json for market param 1: json: cannot unmarshal string into Go struct " +
+						"field ExchangeConfigJson.exchanges of type []types.ExchangeMarketConfigJson",
+				),
+			},
+			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
+			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
 		},
 		"Invalid: invalid exchangeConfigJson (does not validate - empty exchanges)": {
 			marketParams: []prices_types.MarketParam{
 				validMarketParamWithExchangeConfig("{}"),
 			},
-			expectedError: errors.New(
-				"invalid exchange config json for market param 0: exchanges cannot be empty",
-			),
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New(
+					"invalid exchange config json for market param 1: exchanges cannot be empty",
+				),
+			},
+			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
+			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
 		},
 		"Invalid: invalid exchangeConfigJson (exchange name cannot be empty)": {
 			marketParams: []prices_types.MarketParam{validMarketParamWithExchangeConfig(`{"exchanges":[{}]}`)},
-			expectedError: errors.New(
-				"invalid exchange config json for market param 0: invalid exchange: exchange name cannot be empty",
-			),
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New(
+					"invalid exchange config json for market param 1: invalid exchange: exchange name cannot be empty",
+				),
+			},
+			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
+			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
 		},
 		"Invalid: invalid exchangeConfigJson (exchange name invalid)": {
 			marketParams: []prices_types.MarketParam{
 				validMarketParamWithExchangeConfig(fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigInvalidExchangeName)),
 			},
-			expectedError: errors.New(
-				"invalid exchange config json for market param 0: invalid exchange: exchange name 'invalid' is " +
-					"not valid",
-			),
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New(
+					"invalid exchange config json for market param 1: invalid exchange: exchange name 'invalid' is " +
+						"not valid",
+				),
+			},
+			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
+			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
 		},
 		"Invalid: invalid exchangeConfigJson (ticker empty)": {
 			marketParams: []prices_types.MarketParam{
 				validMarketParamWithExchangeConfig(fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigEmptyTicker)),
 			},
-			expectedError: errors.New(
-				"invalid exchange config json for market param 0: invalid exchange: ticker cannot be empty",
-			),
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New(
+					"invalid exchange config json for market param 1: invalid exchange: ticker cannot be empty",
+				),
+			},
+			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
+			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
 		},
 		"Invalid: invalid exchangeConfigJson (adjustment market invalid)": {
 			marketParams: []prices_types.MarketParam{
 				validMarketParamWithExchangeConfig(fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigInvalidAdjustByMarket)),
 			},
-			expectedError: errors.New(
-				"invalid exchange config json for market param 0: invalid exchange: adjustment market " +
-					"'invalid' is not valid"),
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New(
+					"invalid exchange config json for market param 1: invalid exchange: adjustment market " +
+						"'invalid' is not valid"),
+			},
+			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
+			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
 		},
 		"Invalid: invalid params (duplicate ids)": {
 			marketParams: []prices_types.MarketParam{
@@ -261,7 +315,100 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 					ExchangeConfigJson: fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigCoinbaseEth),
 				},
 			},
-			expectedError: errors.New("invalid market param 1: duplicate market id 1"),
+			expectedError: errors.New("invalid market params: duplicate market id 1"),
+		},
+		"Mixed: 1 valid, 1 invalid (empty pair)": {
+			marketParams: []prices_types.MarketParam{
+				{
+					Id:                 1,
+					Exponent:           -2,
+					Pair:               "BTC-USD",
+					MinExchanges:       1,
+					MinPriceChangePpm:  1,
+					ExchangeConfigJson: fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigBinanceBtc),
+				},
+				{
+					Id:                 2,
+					Exponent:           -3,
+					Pair:               "",
+					MinExchanges:       2,
+					MinPriceChangePpm:  2,
+					ExchangeConfigJson: fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigBinanceEth),
+				},
+			},
+			expectedMarketParamErrors: map[types.MarketId]error{
+				2: errors.New("invalid market param 2: Pair cannot be empty: Invalid input"),
+			},
+			expectedMutableMarketConfigs: map[types.MarketId]*types.MutableMarketConfig{
+				1: {
+					Id:           1,
+					Exponent:     -2,
+					Pair:         "BTC-USD",
+					MinExchanges: 1,
+				},
+			},
+			expectedMutableExchangeConfigs: map[types.ExchangeId]*types.MutableExchangeMarketConfig{
+				exchangeIdCoinbase: {
+					Id:                   exchangeIdCoinbase,
+					MarketToMarketConfig: map[types.MarketId]types.MarketConfig{},
+				},
+				exchangeIdBinance: {
+					Id: exchangeIdBinance,
+					MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+						1: {
+							Ticker: "BTCUSDT",
+						},
+					},
+				},
+			},
+		},
+		"Mixed: 1 invalid (invalid exchange config: missing adjust-by market), 1 valid": {
+			marketParams: []prices_types.MarketParam{
+				{
+					Id:                 1,
+					Exponent:           -2,
+					Pair:               "BTC-USD",
+					MinExchanges:       1,
+					MinPriceChangePpm:  1,
+					ExchangeConfigJson: fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigCoinbaseBtcAdjustBySol),
+				},
+				{
+					Id:                 2,
+					Exponent:           -3,
+					Pair:               "ETH-USD",
+					MinExchanges:       2,
+					MinPriceChangePpm:  2,
+					ExchangeConfigJson: fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigBinanceEth),
+				},
+			},
+			expectedMarketParamErrors: map[types.MarketId]error{
+				1: errors.New(
+					"invalid exchange config json for market param 1: invalid exchange: " +
+						"adjustment market 'SOL-USD' is not valid",
+				),
+			},
+			expectedMutableMarketConfigs: map[types.MarketId]*types.MutableMarketConfig{
+				2: {
+					Id:           2,
+					Exponent:     -3,
+					Pair:         "ETH-USD",
+					MinExchanges: 2,
+				},
+			},
+			expectedMutableExchangeConfigs: map[types.ExchangeId]*types.MutableExchangeMarketConfig{
+				exchangeIdCoinbase: {
+					Id:                   exchangeIdCoinbase,
+					MarketToMarketConfig: map[types.MarketId]types.MarketConfig{},
+				},
+				exchangeIdBinance: {
+					Id: exchangeIdBinance,
+					MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+						2: {
+							Ticker: "ETHUSDT",
+						},
+					},
+				},
+			},
 		},
 		"Valid: 2 markets, 2 exchanges, with adjust-by markets": {
 			marketParams: []prices_types.MarketParam{
@@ -333,13 +480,20 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			pfmmc, _, _, err := newTestPriceFeedMutableMarketConfigs()
+			pfmmc, _, _, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
+
+			require.Len(t, marketParamErrors, 0)
 			require.NoError(t, err)
-			mutableExchangeConfigs, mutableMarketConfigs, err := pfmmc.ValidateAndTransformParams(tc.marketParams)
+
+			mutableExchangeConfigs,
+				mutableMarketConfigs,
+				marketParamErrors,
+				err := pfmmc.ValidateAndTransformParams(tc.marketParams)
 			if tc.expectedError != nil {
 				require.ErrorContains(t, err, tc.expectedError.Error())
 			} else {
 				require.NoError(t, err)
+				pricefeed.MarketParamErrorsEqual(t, tc.expectedMarketParamErrors, marketParamErrors)
 				require.Equal(t, tc.expectedMutableMarketConfigs, mutableMarketConfigs)
 				require.Equal(t, tc.expectedMutableExchangeConfigs, mutableExchangeConfigs)
 			}
@@ -350,9 +504,13 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 // TestUpdatesEncoderAndFetcherInOrder tests that the price feed mutable market configs updates the encoder
 // before the fetcher. This test is confirmed to fail if update order is switched.
 func TestUpdatesEncoderAndFetcherInOrder(t *testing.T) {
-	pfmmc, encoder, fetcher, err := newTestPriceFeedMutableMarketConfigs()
+	pfmmc, encoder, fetcher, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
 	require.NoError(t, err)
-	require.NoError(t, pfmmc.UpdateMarkets(constants.TestMarket7And8Params))
+	require.Empty(t, marketParamErrors)
+
+	marketParamErrors, err = pfmmc.UpdateMarkets(constants.TestMarket7And8Params)
+	require.NoError(t, err)
+	require.Empty(t, marketParamErrors)
 
 	// Assert that an update happened. If it happened out of order, this test should fail due to the
 	// mock call configurations.

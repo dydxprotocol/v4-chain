@@ -70,17 +70,26 @@ func (_m *PricefeedMutableMarketConfigs) GetMarketConfigCopies(markets []uint32)
 }
 
 // UpdateMarkets provides a mock function with given fields: marketParams
-func (_m *PricefeedMutableMarketConfigs) UpdateMarkets(marketParams []pricestypes.MarketParam) error {
+func (_m *PricefeedMutableMarketConfigs) UpdateMarkets(marketParams []pricestypes.MarketParam) (map[uint32]error, error) {
 	ret := _m.Called(marketParams)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func([]pricestypes.MarketParam) error); ok {
+	var r0 map[uint32]error
+	if rf, ok := ret.Get(0).(func([]pricestypes.MarketParam) map[uint32]error); ok {
 		r0 = rf(marketParams)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[uint32]error)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]pricestypes.MarketParam) error); ok {
+		r1 = rf(marketParams)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 type mockConstructorTestingTNewPricefeedMutableMarketConfigs interface {

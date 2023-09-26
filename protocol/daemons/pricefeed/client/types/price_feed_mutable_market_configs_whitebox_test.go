@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
@@ -127,12 +128,18 @@ var (
 		7: market7MutableMarketConfig,
 	}
 
-	market5BinanceConfig                  = `{"exchangeName":"binance","ticker":"BTCUSDT"}`
+	market5BinanceConfig                  = binanceConfig("BTCUSDT")
 	market5CoinbaseConfig                 = `{"exchangeName":"coinbase","ticker":"BTC-USD"}`
-	market6BinanceConfig                  = `{"exchangeName":"binance","ticker":"ETHUSDT"}`
-	market7BinanceConfig                  = `{"exchangeName":"binance","ticker":"SOLUSDT"}`
+	market6BinanceConfig                  = binanceConfig("ETHUSDT")
+	market7BinanceConfig                  = binanceConfig("SOLUSDT")
 	market7CoinbaseConfig_AdjustByMarket6 = `{"exchangeName":"coinbase","ticker":"SOL-USD","adjustByMarket":"ETH-USD"}`
+	market8BinanceConfig                  = binanceConfig("DOTUSDT")
 )
+
+// binanceConfig returns a market exchange config for binance using the given ticker.
+func binanceConfig(ticker string) string {
+	return fmt.Sprintf(`{"exchangeName":"binance","ticker":"%s"}`, ticker)
+}
 
 func newMarketIdWithValue(id MarketId) *MarketId {
 	ptr := new(MarketId)
@@ -164,7 +171,8 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 			updatedExchangeConfig *MutableExchangeMarketConfig
 			updatedMarketConfigs  []*MutableMarketConfig
 		}
-		expectedError error
+		expectedError             error
+		expectedMarketParamErrors map[MarketId]error
 	}{
 		"Error: invalid market params": {
 			marketParams: []prices_types.MarketParam{
@@ -241,6 +249,72 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 					MinPriceChangePpm:  1,
 					ExchangeConfigJson: fmt.Sprintf(`{"exchanges":[%s]}`, market7BinanceConfig),
 				},
+			},
+			updatedExchangeConfigs: updatedBinanceExchangeMarketConfigs,
+			updatedMarketConfigs:   updatedMutableMarketConfigs,
+			expectedUpdates: map[ExchangeId]struct {
+				updatedExchangeConfig *MutableExchangeMarketConfig
+				updatedMarketConfigs  []*MutableMarketConfig
+			}{
+				exchangeIdBinance: {
+					updatedExchangeConfig: updatedBinanceMutableExchangeConfig,
+					updatedMarketConfigs: []*MutableMarketConfig{
+						market5MutableMarketConfig,
+						market6MutableMarketConfig,
+						market7MutableMarketConfig,
+					},
+				},
+			},
+		},
+		"Partial update - 1 market add succeeds, 1 fails, existing markets retained": {
+			marketParams: []prices_types.MarketParam{
+				{
+					Id:                5,
+					Exponent:          -5,
+					Pair:              "BTC-USD",
+					MinExchanges:      1,
+					MinPriceChangePpm: 1,
+					ExchangeConfigJson: fmt.Sprintf(
+						`{"exchanges":[%s,%s]}`,
+						market5CoinbaseConfig,
+						market5BinanceConfig,
+					),
+				},
+				{
+					Id:                6,
+					Exponent:          -6,
+					Pair:              "ETH-USD",
+					MinExchanges:      2,
+					MinPriceChangePpm: 1,
+					ExchangeConfigJson: fmt.Sprintf(
+						`{"exchanges":[%s]}`,
+						market6BinanceConfig,
+					),
+				},
+				// Add market 7 to binance
+				{
+					Id:                 7,
+					Exponent:           -7,
+					Pair:               "SOL-USD",
+					MinExchanges:       1,
+					MinPriceChangePpm:  1,
+					ExchangeConfigJson: fmt.Sprintf(`{"exchanges":[%s]}`, market7BinanceConfig),
+				},
+				// Market 8 will fail to add because it has an invalid MinPriceChangePpm
+				{
+					Id:                 8,
+					Exponent:           -8,
+					Pair:               "DOT-USD",
+					MinExchanges:       1,
+					MinPriceChangePpm:  0, // Invalid
+					ExchangeConfigJson: fmt.Sprintf(`{"exchanges":[%s]}`, market8BinanceConfig),
+				},
+			},
+			expectedMarketParamErrors: map[MarketId]error{
+				8: errors.New(
+					"invalid market param 8: Min price change in parts-per-million must be greater than 0 " +
+						"and less than 10000",
+				),
 			},
 			updatedExchangeConfigs: updatedBinanceExchangeMarketConfigs,
 			updatedMarketConfigs:   updatedMutableMarketConfigs,
@@ -357,10 +431,11 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 			}
 
 			// Execute the update.
-			err := pfmmc.UpdateMarkets(tc.marketParams)
+			marketParamErrors, err := pfmmc.UpdateMarkets(tc.marketParams)
 
 			if tc.expectedError != nil {
 				require.ErrorContains(t, err, tc.expectedError.Error())
+				require.Empty(t, marketParamErrors)
 
 				// Under normal circumstances, we expect that errors will come from validation and price fetchers and
 				// encoders will not be updated.
@@ -374,6 +449,7 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 				marketConfigsEqual(t, oldMarketConfigsSnapshot, pfmmc.mutableMarketToConfigs)
 			} else {
 				require.Nil(t, err)
+				pricefeed.MarketParamErrorsEqual(t, tc.expectedMarketParamErrors, marketParamErrors)
 
 				// If the exchange config was updated, expect that the appropriate updaters were updated.
 				// Otherwise, each updater should be untouched.
