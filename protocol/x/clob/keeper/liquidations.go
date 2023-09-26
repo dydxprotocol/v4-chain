@@ -458,15 +458,16 @@ func (k Keeper) GetFillablePrice(
 			[]string{metrics.Liquidations, metrics.LiquidationMatchNegativeTNC, metrics.DeliverTx},
 			1,
 			[]gometrics.Label{
-				metrics.GetLabelForStringValue(
-					metrics.SubaccountOwner,
-					subaccountId.Owner,
-				),
 				metrics.GetLabelForIntValue(
 					metrics.PerpetualId,
 					int(perpetualId),
 				),
 			},
+		)
+
+		ctx.Logger().Info(
+			"GetFillablePrice: Subaccount has negative TNC. SubaccountId: %+v",
+			subaccountId,
 		)
 	}
 

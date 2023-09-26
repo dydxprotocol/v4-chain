@@ -582,11 +582,18 @@ func (k Keeper) PersistMatchLiquidationToState(
 			)
 		}
 
-		filledQuoteQuantums := new(big.Int).Mul(
-			new(big.Int).Div(matchWithOrders.FillAmount.ToBigInt(), new(big.Int).SetUint64(matchLiquidation.TotalSize)),
-			notionalQuoteQuantums,
+		// Stat fill amount in quote quantums as ratio of notional quote quantums
+		fillAmountToTotalSizeRat := new(big.Rat).Quo(
+			new(big.Rat).SetUint64(matchWithOrders.FillAmount.ToUint64()),
+			new(big.Rat).SetUint64(matchLiquidation.TotalSize),
 		)
-
+		filledQuoteQuantums := lib.BigRatRound(
+			new(big.Rat).Mul(
+				fillAmountToTotalSizeRat,
+				new(big.Rat).SetInt(notionalQuoteQuantums),
+			),
+			true,
+		)
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.Filled, metrics.DeliverTx},
 			float32(filledQuoteQuantums.Uint64()),
