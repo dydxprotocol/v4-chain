@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,13 +18,13 @@ func TestBridgeEvent_Equal(t *testing.T) {
 		"Equal": {
 			a: types.BridgeEvent{
 				Id:             1,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(17)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(17)),
 				Address:        "address",
 				EthBlockHeight: 128,
 			},
 			b: types.BridgeEvent{
 				Id:             1,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(17)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(17)),
 				Address:        "address",
 				EthBlockHeight: 128,
 			},
@@ -32,13 +33,13 @@ func TestBridgeEvent_Equal(t *testing.T) {
 		"Id not equal": {
 			a: types.BridgeEvent{
 				Id:             1,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(17)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(17)),
 				Address:        "address",
 				EthBlockHeight: 128,
 			},
 			b: types.BridgeEvent{
 				Id:             2,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(17)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(17)),
 				Address:        "address",
 				EthBlockHeight: 128,
 			},
@@ -47,13 +48,13 @@ func TestBridgeEvent_Equal(t *testing.T) {
 		"Coin denom not equal": {
 			a: types.BridgeEvent{
 				Id:             10,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(171)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(171)),
 				Address:        "address",
 				EthBlockHeight: 1280,
 			},
 			b: types.BridgeEvent{
 				Id:             10,
-				Coin:           sdk.NewCoin("test2", sdk.NewInt(171)),
+				Coin:           sdk.NewCoin("test2", sdkmath.NewInt(171)),
 				Address:        "address",
 				EthBlockHeight: 1280,
 			},
@@ -62,13 +63,13 @@ func TestBridgeEvent_Equal(t *testing.T) {
 		"Coin amount not equal": {
 			a: types.BridgeEvent{
 				Id:             10,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(171)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(171)),
 				Address:        "address",
 				EthBlockHeight: 1280,
 			},
 			b: types.BridgeEvent{
 				Id:             10,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(1711)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(1711)),
 				Address:        "address",
 				EthBlockHeight: 1280,
 			},
@@ -77,13 +78,13 @@ func TestBridgeEvent_Equal(t *testing.T) {
 		"Address not equal": {
 			a: types.BridgeEvent{
 				Id:             10,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(171)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(171)),
 				Address:        "address",
 				EthBlockHeight: 1280,
 			},
 			b: types.BridgeEvent{
 				Id:             10,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(1711)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(1711)),
 				Address:        "address1",
 				EthBlockHeight: 1280,
 			},
@@ -92,13 +93,13 @@ func TestBridgeEvent_Equal(t *testing.T) {
 		"Eth block height not equal": {
 			a: types.BridgeEvent{
 				Id:             10,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(171)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(171)),
 				Address:        "address",
 				EthBlockHeight: 1280,
 			},
 			b: types.BridgeEvent{
 				Id:             10,
-				Coin:           sdk.NewCoin("test", sdk.NewInt(1711)),
+				Coin:           sdk.NewCoin("test", sdkmath.NewInt(1711)),
 				Address:        "address",
 				EthBlockHeight: 1281,
 			},

@@ -1,6 +1,7 @@
 package bridge_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"testing"
 	"time"
 
@@ -203,7 +204,7 @@ func TestBridge_REJECT(t *testing.T) {
 					Id: e1.Id,
 					Coin: sdk.NewCoin(
 						e1.Coin.Denom,
-						e1.Coin.Amount.Add(sdk.NewInt(1)), // bad amount.
+						e1.Coin.Amount.Add(sdkmath.NewInt(1)), // bad amount.
 					),
 					Address:        e1.Address,
 					EthBlockHeight: e1.EthBlockHeight,
