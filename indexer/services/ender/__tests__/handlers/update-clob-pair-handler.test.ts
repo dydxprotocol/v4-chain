@@ -33,10 +33,12 @@ import { UpdateClobPairHandler } from '../../src/handlers/update-clob-pair-handl
 import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('update-clob-pair-handler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');

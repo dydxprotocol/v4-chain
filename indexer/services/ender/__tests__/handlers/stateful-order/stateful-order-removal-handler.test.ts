@@ -33,10 +33,12 @@ import { StatefulOrderRemovalHandler } from '../../../src/handlers/stateful-orde
 import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('statefulOrderRemovalHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
