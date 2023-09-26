@@ -274,7 +274,7 @@ async function createInitialRowsViaSqlFunction(
       ${txHashesString},
       ${eventsString}
   ) AS result;`;
-  return storeHelpers.rawQuery(
+  await storeHelpers.rawQuery(
     queryString,
     { txId },
   ).catch((error) => {
@@ -303,7 +303,7 @@ async function createInitialRows(
       'create_initial_rows',
     );
   } else {
-    return runFuncWithTimingStat(
+    await runFuncWithTimingStat(
       Promise.all([
         BlockTable.create({
           blockHeight,
