@@ -1,5 +1,5 @@
 /**
-  Converts the event to its transaction index.
+  Gets the transaction index from the IndexerTendermint event.
   Parameters:
     - event: The IndexerTendermintEvent object.
   Returns: int.
@@ -16,8 +16,8 @@ BEGIN
         RETURN transaction_index_text::int;
     ELSIF block_event_text IS NOT NULL THEN
         CASE block_event_text
-            WHEN '1' THEN RETURN -2;
-            WHEN '2' THEN RETURN -1;
+            WHEN '1' THEN RETURN -2; -- BLOCK_EVENT_BEGIN_BLOCK
+            WHEN '2' THEN RETURN -1; -- BLOCK_EVENT_END_BLOCK
             ELSE RAISE EXCEPTION 'Received V4 event with invalid block event type: %', block_event_text;
         END CASE;
     END IF;

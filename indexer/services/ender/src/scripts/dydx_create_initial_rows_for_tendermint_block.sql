@@ -6,7 +6,7 @@
     - events: Array of IndexerTendermintEvent objects.
   Returns: void.
 */
-CREATE OR REPLACE FUNCTION dydx_create_initial_rows(
+CREATE OR REPLACE FUNCTION dydx_create_initial_rows_for_tendermint_block(
     block_height text, block_time text, tx_hashes text[], events jsonb[]) RETURNS void AS $$
 BEGIN
     -- Create block.

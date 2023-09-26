@@ -355,12 +355,11 @@ describe('SQL Function Tests', () => {
     }
   });
 
-  it.each([
-    {
+  it('dydx_uuid_from_transaction_parts (%s)', async () => {
+    const transactionParts = {
       blockHeight: '123456',
       transactionIndex: 123,
-    },
-  ])('dydx_uuid_from_transaction_parts (%s)', async (transactionParts) => {
+    };
     const result = await getSingleRawQueryResultRow(
       `SELECT dydx_uuid_from_transaction_parts('${transactionParts.blockHeight}', '${transactionParts.transactionIndex}') AS result`);
     expect(result).toEqual(
@@ -437,12 +436,12 @@ describe('SQL Function Tests', () => {
     }));
   });
 
-  it('dydx_create_initial_rows.sql should insert the initial rows correctly', async () => {
+  it('dydx_create_initial_rows_for_tendermint_block.sql should insert the initial rows correctly', async () => {
     const blockHeight = '1';
     const txHashes = [defaultTxHash, defaultTxHash2];
     const dateTimeIso = '2020-01-01T00:00:00.000Z';
     await getSingleRawQueryResultRow(
-      `SELECT dydx_create_initial_rows('${blockHeight}'::text, '${dateTimeIso}'::text, ARRAY['${txHashes.join("','")}']::text[], ARRAY['${events.map((event) => JSON.stringify(event)).join("','")}']::jsonb[])`,
+      `SELECT dydx_create_initial_rows_for_tendermint_block('${blockHeight}'::text, '${dateTimeIso}'::text, ARRAY['${txHashes.join("','")}']::text[], ARRAY['${events.map((event) => JSON.stringify(event)).join("','")}']::jsonb[])`,
     );
     // Validate blocks table
     const blocks = await BlockTable.findAll({}, [], { readReplica: true });

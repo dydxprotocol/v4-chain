@@ -268,7 +268,7 @@ async function createInitialRowsViaSqlFunction(
   const txHashesString = block.txHashes.length > 0 ? `ARRAY['${block.txHashes.join("','")}']::text[]` : 'null';
   const eventsString = block.events.length > 0 ? `ARRAY['${block.events.map((event) => JSON.stringify(event)).join("','")}']::jsonb[]` : 'null';
 
-  const queryString: string = `SELECT dydx_create_initial_rows(
+  const queryString: string = `SELECT dydx_create_initial_rows_for_tendermint_block(
       '${blockHeight}'::text, 
       '${block.time!.toISOString()}'::text,
       ${txHashesString},

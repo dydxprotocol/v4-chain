@@ -118,8 +118,6 @@ describe('on-message', () => {
         owner: '',
         number: 0,
       },
-      // updatedPerpetualPositions: [],
-      // updatedAssetPositions: [],
     });
   const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
     SubaccountUpdateEventV1.encode(
