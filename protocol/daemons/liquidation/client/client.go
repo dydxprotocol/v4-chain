@@ -203,10 +203,7 @@ func GetLiquidatableSubaccountIds(
 	// Query the gRPC server in chunks of size `liqFlags.RequestChunkSize`.
 	liquidatableSubaccountIds = make([]satypes.SubaccountId, 0)
 	for start := 0; start < len(subaccountsToCheck); start += int(liqFlags.RequestChunkSize) {
-		end := start + int(liqFlags.RequestChunkSize)
-		if end > len(subaccountsToCheck) {
-			end = len(subaccountsToCheck)
-		}
+		end := lib.Min(start+int(liqFlags.RequestChunkSize), len(subaccountsToCheck))
 
 		results, err := CheckCollateralizationForSubaccounts(
 			ctx,
