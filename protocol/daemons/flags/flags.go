@@ -69,7 +69,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				Enabled:             true,
 				LoopDelayMs:         1_600,
 				SubaccountPageLimit: 1_000,
-				RequestChunkSize:    500,
+				RequestChunkSize:    50,
 			},
 			Price: PriceFlags{
 				Enabled:     true,
