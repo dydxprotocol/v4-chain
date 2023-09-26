@@ -2100,7 +2100,7 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 				),
 			},
 
-			expectedErr: types.ErrIocOrderAlreadyFilled,
+			expectedErr: types.ErrImmediateExecutionOrderAlreadyFilled,
 		},
 		"Error: Taker is IOC replacement for partially filled non-IOC order": {
 			placedMatchableOrders: []types.MatchableOrder{

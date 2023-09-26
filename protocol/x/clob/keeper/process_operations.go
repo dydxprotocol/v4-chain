@@ -455,13 +455,15 @@ func (k Keeper) PersistMatchOrdersToState(
 		)
 	}
 
-	err = k.statefulValidateMatchTaker(ctx, takerOrder.MustGetOrder())
-	if err != nil {
-		return errorsmod.Wrapf(
-			types.ErrInvalidMatchOrder,
-			"PersistMatchOrdersToState: Failed to statefully validate taker order: %+v",
-			err,
-		)
+	if takerOrder.RequiresImmediateExecution() {
+		_, fillAmount, _ := k.GetOrderFillAmount(ctx, takerOrder.OrderId)
+		if fillAmount != 0 {
+			return errorsmod.Wrapf(
+				types.ErrImmediateExecutionOrderAlreadyFilled,
+				"Order %s",
+				takerOrder.GetOrderTextString(),
+			)
+		}
 	}
 
 	makerFills := matchOrders.GetFills()
@@ -538,15 +540,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 	// Perform stateless validation on the liquidation order.
 	if err := k.ValidateLiquidationOrderAgainstProposedLiquidation(ctx, takerOrder, matchLiquidation); err != nil {
 		return err
-	}
-
-	err = k.statefulValidateMatchTaker(ctx, takerOrder.MustGetOrder())
-	if err != nil {
-		return errorsmod.Wrapf(
-			types.ErrInvalidMatchOrder,
-			"PersistMatchLiquidationToState: Failed to statefully validate taker order: %+v",
-			err,
-		)
 	}
 
 	for _, fill := range matchLiquidation.GetFills() {

@@ -1307,19 +1307,21 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		)
 	}
 
-	// Immediate-or-cancel orders may only be filled once. The remaining size becomes unfillable. This prevents
-	// the case where an IOC order is partially filled multiple times over the course of multiple blocks.
-	if order.TimeInForce == types.Order_TIME_IN_FORCE_IOC && remainingAmount < order.GetBaseQuantums() {
-		// Prevent IOC orders from replacing partially filled orders.
+	// Immediate-or-cancel and fill-or-kill orders may only be filled once. The remaining size becomes unfillable.
+	// This prevents the case where an IOC order is partially filled multiple times over the course of multiple blocks.
+	if order.RequiresImmediateExecution() && remainingAmount < order.GetBaseQuantums() {
+		// Prevent IOC/FOK orders from replacing partially filled orders.
 		if restingOrderExists {
-			return errorsmod.Wrap(
+			return errorsmod.Wrapf(
 				types.ErrInvalidReplacement,
-				"Cannot replace partially filled order with IOC order",
+				"Cannot replace partially filled order with IOC order. Size: %d, Fill Amount: %d.",
+				order.GetBaseQuantums(),
+				order.GetBaseQuantums()-remainingAmount,
 			)
 		}
 
 		return errorsmod.Wrapf(
-			types.ErrIocOrderAlreadyFilled,
+			types.ErrImmediateExecutionOrderAlreadyFilled,
 			"Order: %s",
 			order.GetOrderTextString(),
 		)
