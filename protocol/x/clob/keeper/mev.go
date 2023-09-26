@@ -839,7 +839,7 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledQuoteQuantums(
 	}
 
 	// Calculate fees.
-	bigFeeQuoteQuantums := lib.BigIntMulSignedPpm(filledQuoteQuantums, feePpm)
+	bigFeeQuoteQuantums := lib.BigIntMulSignedPpm(filledQuoteQuantums, feePpm, true)
 	pnl.Sub(pnl, bigFeeQuoteQuantums)
 
 	c.AddDeltaToSubaccount(subaccountId, pnl)

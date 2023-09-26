@@ -1,11 +1,12 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
@@ -286,8 +287,8 @@ func (k Keeper) persistMatchedOrders(
 	err error,
 ) {
 	isTakerLiquidation := matchWithOrders.TakerOrder.IsLiquidation()
-	bigTakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, takerFeePpm)
-	bigMakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, makerFeePpm)
+	bigTakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, takerFeePpm, true)
+	bigMakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, makerFeePpm, true)
 	matchWithOrders.MakerFee = bigMakerFeeQuoteQuantums.Int64()
 	// Liquidation orders pay the liquidation fee instead of the standard taker fee
 	if matchWithOrders.TakerOrder.IsLiquidation() {
