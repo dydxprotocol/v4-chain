@@ -33,6 +33,11 @@ func TestInvert(t *testing.T) {
 			exponent: -9,
 			expected: 2_000_000_000,
 		},
+		"Zero doesn't panic": {
+			price:    0,
+			exponent: -9,
+			expected: 0,
+		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -145,6 +150,13 @@ func TestDivide(t *testing.T) {
 			price:         312_300_000,
 			exponent:      -9,
 			expectedPrice: 995_827_729,
+		},
+		"Divide by zero doesn't panic": {
+			adjustByPrice:    1_000_000,
+			adjustByExponent: -10,
+			price:            0,
+			exponent:         -10,
+			expectedPrice:    0,
 		},
 	}
 	for name, tc := range tests {
