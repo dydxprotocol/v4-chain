@@ -109,6 +109,7 @@ func TestPlaceOrder(t *testing.T) {
 		},
 		constants.AliceAccAddress.String(),
 	))
+	// TODO(CLOB-905): place another matching order, and verify that the trade is executed.
 }
 
 func TestBankSend(t *testing.T) {
