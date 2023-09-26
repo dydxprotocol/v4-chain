@@ -29,7 +29,6 @@
   "homepage": "https://github.com/dydxprotocol/indexer#readme",
   "dependencies": {
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
     "axios": "^1.2.1",
     "dotenv-flow": "^3.2.0"
   }

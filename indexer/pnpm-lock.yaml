@@ -54,7 +54,6 @@ importers:
     specifiers:
       '@dydxprotocol-indexer/base': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
-      '@dydxprotocol-indexer/postgres': workspace:^0.0.1
       '@types/jest': ^28.1.4
       axios: ^1.2.1
       dotenv-flow: ^3.2.0
@@ -62,7 +61,6 @@ importers:
       typescript: ^4.7.4
     dependencies:
       '@dydxprotocol-indexer/base': link:../base
-      '@dydxprotocol-indexer/postgres': link:../postgres
       axios: 1.2.1
       dotenv-flow: 3.2.0
     devDependencies:
