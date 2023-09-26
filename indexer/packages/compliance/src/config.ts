@@ -1,5 +1,5 @@
 /**
- * Environment variables required by postgres module.
+ * Environment variables required by compliance module.
  */
 
 import {
@@ -8,11 +8,6 @@ import {
   baseConfigSchema,
   parseInteger,
 } from '@dydxprotocol-indexer/base';
-
-export const configSecrets: (keyof typeof complianceConfigSchema)[] = [
-  'ELLIPTIC_API_KEY',
-  'ELLIPTIC_API_SECRET',
-];
 
 export const complianceConfigSchema = {
   ...baseConfigSchema,
