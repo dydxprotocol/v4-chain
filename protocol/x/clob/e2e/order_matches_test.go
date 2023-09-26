@@ -12,7 +12,7 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-func TestOrderMatches(t *testing.T) {
+func TestDeliverTxMatchValidation(t *testing.T) {
 	tests := map[string]struct {
 		subaccounts       []satypes.Subaccount
 		blockAdvancements []testapp.BlockAdvancementWithError
@@ -47,6 +47,115 @@ func TestOrderMatches(t *testing.T) {
 							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
 							clobtestutils.NewMatchOperationRaw(
 								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+								[]clobtypes.MakerFill{
+									{
+										FillAmount:   5_000,
+										MakerOrderId: constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20.OrderId,
+									},
+								},
+							),
+						},
+					},
+					ExpectedDeliverTxError: "IOC/FOK order is already filled, remaining size is cancelled.",
+				},
+			},
+		},
+		"Success: IOC order is taker with multiple maker fills": {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num1_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			blockAdvancements: []testapp.BlockAdvancementWithError{
+				{
+					BlockAdvancement: testapp.BlockAdvancement{
+						OrdersAndOperations: []interface{}{
+							MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
+							clobtestutils.NewMatchOperationRaw(
+								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+								[]clobtypes.MakerFill{
+									{
+										FillAmount:   5_000, // step base quantums is 1000 for ETH/USDC (ClobPair 1)
+										MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
+									},
+									{
+										FillAmount:   5_000,
+										MakerOrderId: constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20.OrderId,
+									},
+								},
+							),
+						},
+					},
+				},
+			},
+		},
+		"Error: IOC order is taker in multiple matches": {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num1_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			blockAdvancements: []testapp.BlockAdvancementWithError{
+				{
+					BlockAdvancement: testapp.BlockAdvancement{
+						OrdersAndOperations: []interface{}{
+							MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
+							clobtestutils.NewMatchOperationRaw(
+								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+								[]clobtypes.MakerFill{
+									{
+										FillAmount:   5_000, // step base quantums is 1000 for ETH/USDC (ClobPair 1)
+										MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
+									},
+								},
+							),
+							MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							clobtestutils.NewMatchOperationRaw(
+								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+								[]clobtypes.MakerFill{
+									{
+										FillAmount:   5_000,
+										MakerOrderId: constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20.OrderId,
+									},
+								},
+							),
+						},
+					},
+					ExpectedDeliverTxError: "IOC/FOK order is already filled, remaining size is cancelled.",
+				},
+			},
+		},
+		"Error: partially filled order cannot be replaced by FOK": {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num1_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			blockAdvancements: []testapp.BlockAdvancementWithError{
+				{
+					BlockAdvancement: testapp.BlockAdvancement{
+						OrdersAndOperations: []interface{}{
+							MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20, testapp.DefaultGenesis()),
+							clobtestutils.NewMatchOperationRaw(
+								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+								[]clobtypes.MakerFill{
+									{
+										FillAmount:   5_000, // step base quantums is 1000 for ETH/USDC (ClobPair 1)
+										MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
+									},
+								},
+							),
+						},
+					},
+				},
+				{
+					BlockAdvancement: testapp.BlockAdvancement{
+						OrdersAndOperations: []interface{}{
+							MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK, testapp.DefaultGenesis()),
+							clobtestutils.NewMatchOperationRaw(
+								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
 								[]clobtypes.MakerFill{
 									{
 										FillAmount:   5_000,
