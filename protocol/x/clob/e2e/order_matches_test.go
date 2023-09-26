@@ -15,16 +15,16 @@ import (
 func TestOrderMatches(t *testing.T) {
 	tests := map[string]struct {
 		subaccounts       []satypes.Subaccount
-		blockAdvancements []clobtestutils.BlockAdvancementWithError
+		blockAdvancements []testapp.BlockAdvancementWithError
 	}{
 		"Error: partially filled IOC taker order cannot be matched twice": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num1_10_000USD,
 				constants.Bob_Num0_10_000USD,
 			},
-			blockAdvancements: []clobtestutils.BlockAdvancementWithError{
+			blockAdvancements: []testapp.BlockAdvancementWithError{
 				{
-					BlockAdvancement: clobtestutils.BlockAdvancement{
+					BlockAdvancement: testapp.BlockAdvancement{
 						OrdersAndOperations: []interface{}{
 							MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
 							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
@@ -41,7 +41,7 @@ func TestOrderMatches(t *testing.T) {
 					},
 				},
 				{
-					BlockAdvancement: clobtestutils.BlockAdvancement{
+					BlockAdvancement: testapp.BlockAdvancement{
 						OrdersAndOperations: []interface{}{
 							MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
 							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),

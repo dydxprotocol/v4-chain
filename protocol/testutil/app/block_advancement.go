@@ -1,4 +1,4 @@
-package clob
+package app
 
 import (
 	"testing"
@@ -6,7 +6,6 @@ import (
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
@@ -31,13 +30,13 @@ type BlockAdvancementWithError struct {
 func (b BlockAdvancementWithError) AdvanceToBlock(
 	ctx sdktypes.Context,
 	blockHeight uint32,
-	tApp *testapp.TestApp,
+	tApp *TestApp,
 	t *testing.T,
 ) sdktypes.Context {
 	msgProposedOperations := &clobtypes.MsgProposedOperations{
 		OperationsQueue: b.BlockAdvancement.getOperationsQueue(ctx, tApp.App),
 	}
-	return tApp.AdvanceToBlock(blockHeight, testapp.AdvanceToBlockOptions{
+	return tApp.AdvanceToBlock(blockHeight, AdvanceToBlockOptions{
 		DeliverTxsOverride: [][]byte{testtx.MustGetTxBytes(msgProposedOperations)},
 		ValidateDeliverTxs: func(
 			ctx sdktypes.Context,
@@ -64,7 +63,7 @@ func (b BlockAdvancement) getOperationsQueue(ctx sdktypes.Context, app *app.App)
 		switch castedValue := orderOrMatch.(type) {
 		case clobtypes.Order:
 			order := castedValue
-			requestTxs := testapp.MustMakeCheckTxsWithClobMsg(
+			requestTxs := MustMakeCheckTxsWithClobMsg(
 				ctx,
 				app,
 				*clobtypes.NewMsgPlaceOrder(order),
