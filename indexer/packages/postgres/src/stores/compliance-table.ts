@@ -2,6 +2,7 @@ import Knex from 'knex';
 import _ from 'lodash';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
+import { defaultPostgresOptions } from '../constants';
 import { knexPrimary } from '../helpers/knex';
 import {
   generateBulkUpsertString,
@@ -35,7 +36,7 @@ export async function findAll(
     limit,
   }: ComplianceDataQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<ComplianceDataFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -146,7 +147,7 @@ export async function upsert(
 export async function findByAddressAndProvider(
   address: string,
   provider: string,
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<ComplianceDataFromDatabase | undefined> {
   const baseQuery: QueryBuilder<ComplianceDataModel> = setupBaseQuery<ComplianceDataModel>(
     ComplianceDataModel,

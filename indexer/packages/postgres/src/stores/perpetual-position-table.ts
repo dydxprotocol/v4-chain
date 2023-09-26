@@ -2,7 +2,7 @@ import Knex from 'knex';
 import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8 } from '../constants';
+import { BUFFER_ENCODING_UTF_8, defaultPostgresOptions } from '../constants';
 import { logAndThrowValidationError } from '../helpers/error-helpers';
 import { knexPrimary, knexReadReplica } from '../helpers/knex';
 import {
@@ -60,7 +60,7 @@ export async function findAll(
     limit,
   }: PerpetualPositionQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<PerpetualPositionFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -170,7 +170,7 @@ export async function update(
 
 export async function findById(
   id: string,
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<PerpetualPositionFromDatabase | undefined> {
   const baseQuery: QueryBuilder<PerpetualPositionModel> = setupBaseQuery<PerpetualPositionModel>(
     PerpetualPositionModel,
@@ -184,7 +184,7 @@ export async function findById(
 export async function findOpenPositionForSubaccountPerpetual(
   subaccountId: string,
   perpetualId: string,
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<PerpetualPositionFromDatabase | undefined> {
   const positions: PerpetualPositionFromDatabase[] = await findAll(
     {
@@ -204,7 +204,7 @@ export async function findOpenPositionForSubaccountPerpetual(
 
 export async function findOpenPositionsForSubaccounts(
   subaccountIds: string[],
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<SubaccountToPerpetualPositionsMap> {
   const positions: PerpetualPositionFromDatabase[] = await findAll(
     {

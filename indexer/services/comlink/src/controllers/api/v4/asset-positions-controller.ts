@@ -98,9 +98,7 @@ class AddressesController extends Controller {
         [],
         { readReplica: true },
       ),
-      BlockTable.getLatest({
-        readReplica: true,
-      }),
+      BlockTable.getLatest(),
     ]);
 
     const sortedAssetPositions:

@@ -1,6 +1,6 @@
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8 } from '../constants';
+import { BUFFER_ENCODING_UTF_8, defaultPostgresOptions } from '../constants';
 import {
   verifyAllRequiredFields,
   setupBaseQuery,
@@ -32,7 +32,7 @@ export async function findAll(
     limit,
   }: TransactionQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<TransactionFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -104,7 +104,7 @@ export async function create(
 
 export async function findById(
   id: string,
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<TransactionFromDatabase | undefined> {
   const baseQuery: QueryBuilder<TransactionModel> = setupBaseQuery<TransactionModel>(
     TransactionModel,

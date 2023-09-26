@@ -1,6 +1,7 @@
 import { Big } from 'big.js';
 import { QueryBuilder } from 'objection';
 
+import { defaultPostgresOptions } from '../constants';
 import {
   verifyAllRequiredFields,
   setupBaseQuery,
@@ -45,7 +46,7 @@ export async function findAll(
     limit,
   }: TendermintEventQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<TendermintEventFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -118,7 +119,7 @@ export async function create(
 
 export async function findById(
   id: Buffer,
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<TendermintEventFromDatabase | undefined> {
   const events: TendermintEventFromDatabase[] = await findAll(
     { id: [id] },

@@ -35,6 +35,7 @@ export const postgresConfigSchema = {
   ASSET_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
   MARKET_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
   LIQUIDITY_TIER_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
+  USE_READ_REPLICA: parseBoolean({ default: false }),
 
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),

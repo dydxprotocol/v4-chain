@@ -385,15 +385,9 @@ export async function getFundingIndexMaps(
   [FundingIndexMap, FundingIndexMap] = await Promise.all([
     FundingIndexUpdatesTable.findFundingIndexMap(
       subaccount.updatedAtHeight,
-      {
-        readReplica: true,
-      },
     ),
     FundingIndexUpdatesTable.findFundingIndexMap(
       latestBlock.blockHeight,
-      {
-        readReplica: true,
-      },
     ),
   ]);
   return {

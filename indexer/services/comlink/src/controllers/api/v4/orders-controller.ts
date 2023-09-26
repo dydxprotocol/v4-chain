@@ -101,6 +101,7 @@ class OrdersController extends Controller {
           goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
           goodTilBlockTimeBeforeOrAt,
         }, [], {
+          readReplica: true,
           orderBy: [
             // Order by `goodTilBlock` and then order by `goodTilBlockTime`
             // This way, orders with `goodTilBlock` defined are ordered before orders with

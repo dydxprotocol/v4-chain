@@ -1,5 +1,6 @@
 import { QueryBuilder } from 'objection';
 
+import { defaultPostgresOptions } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import BlockModel from '../models/block-model';
@@ -21,7 +22,7 @@ export async function findAll(
     limit,
   }: BlockQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<BlockFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -77,7 +78,7 @@ export async function create(
 
 export async function findByBlockHeight(
   blockHeight: string,
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<BlockFromDatabase | undefined> {
   const baseQuery: QueryBuilder<BlockModel> = setupBaseQuery<BlockModel>(
     BlockModel,
@@ -89,7 +90,7 @@ export async function findByBlockHeight(
 }
 
 export async function getLatest(
-  options: Options = { txId: undefined },
+  options: Options = defaultPostgresOptions,
 ): Promise<BlockFromDatabase | undefined> {
   const baseQuery: QueryBuilder<BlockModel> = setupBaseQuery<BlockModel>(
     BlockModel,

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, ZERO_TIME_ISO_8601 } from '../constants';
+import { BUFFER_ENCODING_UTF_8, defaultPostgresOptions, ZERO_TIME_ISO_8601 } from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllInjectableVariables, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
@@ -43,7 +43,7 @@ export async function findAll(
     createdOnOrAfterBlockHeight,
   }: PnlTicksQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<PnlTicksFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -163,7 +163,7 @@ export async function createMany(
 
 export async function findById(
   id: string,
-  options: Options = {},
+  options: Options = defaultPostgresOptions,
 ): Promise<PnlTicksFromDatabase | undefined> {
   const baseQuery: QueryBuilder<PnlTicksModel> = setupBaseQuery<PnlTicksModel>(
     PnlTicksModel,
