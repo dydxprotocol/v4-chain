@@ -9,7 +9,7 @@ import (
 // LiquidatableSubaccountIds maintains the list of subaccount ids to be liquidated
 // in the next block. Methods are goroutine safe.
 type LiquidatableSubaccountIds struct {
-	sync.RWMutex                         // reader-writer lock
+	sync.Mutex                           // lock
 	subaccountIds []satypes.SubaccountId // liquidatable subaccount ids
 }
 
@@ -31,8 +31,8 @@ func (ls *LiquidatableSubaccountIds) UpdateSubaccountIds(updates []satypes.Subac
 // GetSubaccountIds returns the list of potentially liquidatable subaccount ids
 // reported by the liquidation daemon.
 func (ls *LiquidatableSubaccountIds) GetSubaccountIds() []satypes.SubaccountId {
-	ls.RLock()
-	defer ls.RUnlock()
+	ls.Lock()
+	defer ls.Unlock()
 	results := make([]satypes.SubaccountId, len(ls.subaccountIds))
 	copy(results, ls.subaccountIds)
 	return results
