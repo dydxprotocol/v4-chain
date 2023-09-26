@@ -1,11 +1,12 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
@@ -136,7 +137,7 @@ func (k Keeper) ProcessSingleMatch(
 
 	takerInsuranceFundDelta := new(big.Int)
 	if takerMatchableOrder.IsLiquidation() {
-		// Liquidation orders do not take trading fees because they already pay a liquidation fee.
+		// Liquidation orders do not pay trading fees because they already pay a liquidation fee.
 		takerFeePpm = 0
 		// Temporarily cap maker rebates to 0 for liquidations. This is to prevent an issue where
 		// the fee collector has insufficient funds to pay the maker rebate.

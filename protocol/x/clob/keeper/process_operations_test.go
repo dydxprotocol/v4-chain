@@ -952,6 +952,79 @@ func TestProcessProposerOperations(t *testing.T) {
 				},
 			},
 		},
+		"Fails when attempting to match order with invalid order side": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+			},
+			preExistingStatefulOrders: []types.Order{},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_UNSPECIFIED, // Note this side is invalid.
+						Quantums:     100_000_000,                  // 1 BTC
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					},
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100_000_000, // 1 BTC
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					},
+				),
+				clobtest.NewMatchOperationRaw(
+					&types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100_000_000, // 1 BTC
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					},
+					[]types.MakerFill{
+						{
+							FillAmount:   100_000_000,
+							MakerOrderId: types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						},
+					},
+				),
+			},
+
+			expectedError: types.ErrInvalidOrderSide,
+		},
 		// This test proposes an invalid perpetual deleveraging liquidation match operation. The
 		// subaccount is not liquidatable, so the match operation should be rejected.
 		"Fails with deleveraging match for non-liquidatable subaccount": {
