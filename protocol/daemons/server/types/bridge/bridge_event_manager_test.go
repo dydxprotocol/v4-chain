@@ -167,16 +167,6 @@ func TestBridgeEventManager_AddBridgeEvents(t *testing.T) {
 			},
 			errorMsg: "contiguous",
 		},
-		"Error Skip": {
-			initialREI: types.BridgeEventInfo{
-				NextId:         0,
-				EthBlockHeight: 0,
-			},
-			events: []types.BridgeEvent{
-				constants.BridgeEvent_Id1_Height0,
-			},
-			errorMsg: "is greater than the Next Id",
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

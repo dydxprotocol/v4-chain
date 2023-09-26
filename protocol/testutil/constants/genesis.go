@@ -856,7 +856,6 @@ const GenesisState = `{
         "next_client_sequence": "0",
         "params": {
           "allowed_clients": [
-            "06-solomachine",
             "07-tendermint"
           ]
         }

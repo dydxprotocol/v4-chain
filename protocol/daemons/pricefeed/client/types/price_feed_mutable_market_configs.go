@@ -3,13 +3,14 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+	"sync"
+
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"sort"
-	"strings"
-	"sync"
 )
 
 const (
@@ -234,6 +235,8 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 				nil,
 				nil,
 				fmt.Errorf("invalid market params: duplicate market id %v", marketParam.Id)
+		}
+
 		}
 
 		var exchangeConfigJson ExchangeConfigJson
