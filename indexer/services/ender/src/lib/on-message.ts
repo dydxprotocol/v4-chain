@@ -16,6 +16,7 @@ import {
   TransactionFromDatabase,
   IsolationLevel,
   CandleFromDatabase,
+  storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
@@ -74,25 +75,10 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   try {
     validateIndexerTendermintBlock(indexerTendermintBlock);
 
-    await runFuncWithTimingStat(
-      Promise.all([
-        BlockTable.create({
-          blockHeight,
-          time: indexerTendermintBlock.time!.toISOString(),
-        }, { txId }),
-        ...createTransactions(
-          indexerTendermintBlock.txHashes,
-          blockHeight,
-          txId,
-        ),
-        ...createTendermintEvents(
-          indexerTendermintBlock.events,
-          blockHeight,
-          txId,
-        ),
-      ]),
-      {},
-      'create_initial_rows',
+    await createInitialRows(
+      blockHeight,
+      txId,
+      indexerTendermintBlock,
     );
     const blockProcessor: BlockProcessor = new BlockProcessor(
       indexerTendermintBlock,
@@ -272,4 +258,66 @@ function createTransactions(
       );
     },
   );
+}
+
+async function createInitialRowsViaSqlFunction(
+  blockHeight: string,
+  txId: number,
+  block: IndexerTendermintBlock,
+): Promise<void> {
+  return storeHelpers.rawQuery(
+    `SELECT dydx_create_initial_rows(
+        ${blockHeight}, 
+        '${block.time!.toISOString()}', 
+        '${JSON.stringify(block.txHashes)}', 
+        '${JSON.stringify(block.events)}' 
+    ) AS result;`,
+    { txId },
+  ).catch((error) => {
+    logger.error({
+      at: 'on-message#createInitialRowsViaSqlFunction',
+      message: 'Failed to create initial rows',
+      error,
+    });
+    throw error;
+  });
+}
+
+async function createInitialRows(
+  blockHeight: string,
+  txId: number,
+  indexerTendermintBlock: IndexerTendermintBlock,
+): Promise<void> {
+  if (config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS) {
+    return runFuncWithTimingStat(
+      createInitialRowsViaSqlFunction(
+        blockHeight,
+        txId,
+        indexerTendermintBlock,
+      ),
+      {},
+      'create_initial_rows',
+    );
+  } else {
+    return runFuncWithTimingStat(
+      Promise.all([
+        BlockTable.create({
+          blockHeight,
+          time: indexerTendermintBlock.time!.toISOString(),
+        }, { txId }),
+        ...createTransactions(
+          indexerTendermintBlock.txHashes,
+          blockHeight,
+          txId,
+        ),
+        ...createTendermintEvents(
+          indexerTendermintBlock.events,
+          blockHeight,
+          txId,
+        ),
+      ]),
+      {},
+      'create_initial_rows',
+    );
+  }
 }

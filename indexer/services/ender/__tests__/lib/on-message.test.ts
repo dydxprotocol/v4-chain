@@ -164,7 +164,20 @@ describe('on-message', () => {
     defaultMarketEventBinary.buffer,
   ).toString('base64');
 
-  it('successfully processes block with transaction event', async () => {
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with transaction event (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
@@ -208,7 +221,20 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it('successfully processes block with transaction event with unset version', async () => {
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with transaction event with unset version (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [

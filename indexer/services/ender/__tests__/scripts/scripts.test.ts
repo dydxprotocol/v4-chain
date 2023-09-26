@@ -3,7 +3,7 @@ import {
   IndexerOrder_Side,
   IndexerSubaccountId,
   IndexerOrder_TimeInForce,
-  IndexerOrderId, IndexerTendermintEvent_BlockEvent,
+  IndexerOrderId, IndexerTendermintEvent_BlockEvent, AssetCreateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   BUFFER_ENCODING_UTF_8,
@@ -21,6 +21,9 @@ import {
   storeHelpers,
   testConstants,
   uuid,
+  TransactionTable,
+  TransactionFromDatabase,
+  BlockTable, TendermintEventFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
@@ -31,11 +34,19 @@ import {
   perpetualPositionAndOrderSideMatching,
 } from '../../src/lib/helper';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
+import { binaryToBase64String, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
+import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { defaultAssetCreateEvent } from '../helpers/constants';
+import { defaultBlock } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('SQL Function Tests', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
+  });
+
+  beforeEach(async () => {
+    await dbHelpers.clearData();
   });
 
   afterAll(async () => {
@@ -235,6 +246,127 @@ describe('SQL Function Tests', () => {
 
     result = await getSingleRawQueryResultRow(`SELECT dydx_uuid_from_subaccount_id_parts('${subaccountId.owner}', '${subaccountId.number}') AS result`);
     expect(result).toEqual(SubaccountTable.subaccountIdToUuid(subaccountId));
+  });
+
+  it.each([
+    {
+      event: { transactionIndex: 123 },
+      expectedResult: 123,
+    },
+    {
+      event: { blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_BEGIN_BLOCK },
+      expectedResult: -2,
+    },
+    {
+      event: { blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_END_BLOCK },
+      expectedResult: -1,
+    },
+    {
+      event: { blockEvent: '3' },
+      expectedError: 'Received V4 event with invalid block event type: 3',
+    },
+    {
+      event: {},
+      expectedError: 'Either transactionIndex or blockEvent must be defined in IndexerTendermintEvent',
+    },
+  ])('dydx_tendermint_event_to_transaction_index should return the expected result', async (
+    { event, expectedResult, expectedError },
+  ) => {
+    try {
+      const result = await getSingleRawQueryResultRow(
+        `SELECT dydx_tendermint_event_to_transaction_index('${JSON.stringify(event)}') AS result`);
+      if (expectedError) {
+        throw new Error('Expected an error but got a result.');
+      }
+      expect(result).toEqual(expectedResult);
+    } catch (error) {
+      if (!expectedError) {
+        throw error;
+      }
+      expect(error.message).toContain(expectedError);
+    }
+  });
+
+  it.each([
+    {
+      blockHeight: '123456',
+      transactionIndex: 123,
+    },
+  ])('dydx_uuid_from_transaction_parts (%s)', async (transactionParts) => {
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_uuid_from_transaction_parts('${transactionParts.blockHeight}', '${transactionParts.transactionIndex}') AS result`);
+    expect(result).toEqual(
+      TransactionTable.uuid(transactionParts.blockHeight, transactionParts.transactionIndex),
+    );
+  });
+
+  it('dydx_create_transaction.sql should insert a transaction and return correct jsonb', async () => {
+    const transactionHash: string = 'txnhash';
+    const blockHeight: string = '1';
+    const transactionIndex: number = 123;
+
+    const returnedJsonb = await getSingleRawQueryResultRow(`SELECT dydx_create_transaction('${transactionHash}', '${blockHeight}', ${transactionIndex}) AS result`);
+
+    const transactions: TransactionFromDatabase[] = await TransactionTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+
+    expect(transactions.length).toEqual(1);
+    const transaction = transactions[0];
+    expect(transaction).toEqual(expect.objectContaining({
+      transactionHash,
+      blockHeight,
+      transactionIndex,
+    }));
+    expect(returnedJsonb).toEqual(expect.objectContaining({
+      transactionHash,
+      blockHeight: Number(blockHeight),
+      transactionIndex,
+    }));
+  });
+
+  it('dydx_create_tendermint_event.sql should insert a tendermint event and return correct jsonb', async () => {
+    await BlockTable.create(defaultBlock);
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+
+    const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
+      DydxIndexerSubtypes.ASSET,
+      binaryToBase64String(
+        AssetCreateEventV1.encode(defaultAssetCreateEvent).finish(),
+      ),
+      transactionIndex,
+      eventIndex,
+    );
+
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_create_tendermint_event('${JSON.stringify(indexerTendermintEvent)}', '${defaultBlock.blockHeight}') AS result`,
+    );
+    const tendermintEvents: TendermintEventFromDatabase[] = await TendermintEventTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+
+    expect(tendermintEvents.length).toEqual(1);
+    const tendermintEvent = tendermintEvents[0];
+    expect(tendermintEvent).toEqual(expect.objectContaining({
+      blockHeight: defaultBlock.blockHeight,
+      transactionIndex,
+      eventIndex,
+      id: TendermintEventTable.createEventId(
+        defaultBlock.blockHeight,
+        transactionIndex,
+        eventIndex,
+      ),
+    }));
+    expect(result).toEqual(expect.objectContaining({
+      blockHeight: Number(defaultBlock.blockHeight),
+      transactionIndex,
+      eventIndex,
+    }));
   });
 });
 
