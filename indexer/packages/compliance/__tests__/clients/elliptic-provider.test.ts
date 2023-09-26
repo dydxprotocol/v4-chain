@@ -39,8 +39,8 @@ describe('elliptic-provider', () => {
     expect(headers).toEqual({
       headers: {
         'x-access-key': 'default_elliptic_api_key',
-        'x-access-sign': 'xvwWu06hgDfznqiVI2pkte5QaVTkvzA47h6IKdW1JVo=',
-        'x-access-timestamp': 1698206400000,
+        'x-access-sign': 'R4UGA98pd6XaA6rsrmPhNefg9cm9QSBjzFj+KNQJrZE=',
+        'x-access-timestamp': 1698192000000,
       },
     });
   });
