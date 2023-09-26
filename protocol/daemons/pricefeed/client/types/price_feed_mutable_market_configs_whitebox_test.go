@@ -174,16 +174,9 @@ func TestUpdateMarkets_Mixed(t *testing.T) {
 		expectedError             error
 		expectedMarketParamErrors map[MarketId]error
 	}{
-		"Error: invalid market params": {
-			marketParams: []prices_types.MarketParam{
-				{
-					// Empty pair is invalid
-					Pair: "",
-				},
-			},
+		"Error: market params nil": {
 			expectedError: errors.New(
-				"UpdateMarkets market param validation failed: invalid market param 0: Pair cannot be empty: " +
-					"Invalid input",
+				"UpdateMarkets: marketParams cannot be nil",
 			),
 		},
 		"Success: No updates": {
