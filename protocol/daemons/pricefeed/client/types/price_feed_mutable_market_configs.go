@@ -237,8 +237,6 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 				fmt.Errorf("invalid market params: duplicate market id %v", marketParam.Id)
 		}
 
-		}
-
 		var exchangeConfigJson ExchangeConfigJson
 		err = json.Unmarshal([]byte(marketParam.ExchangeConfigJson), &exchangeConfigJson)
 		if err != nil {
