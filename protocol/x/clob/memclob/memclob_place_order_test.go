@@ -2241,7 +2241,7 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 			order:                      constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_FOK,
 			expectedInternalOperations: []types.InternalOperation{},
 
-			expectedOrderStatus:  types.InternalError,
+			expectedOrderStatus:    types.InternalError,
 			expectedToReplaceOrder: true,
 
 			expectedErr: types.ErrFokOrderCouldNotBeFullyFilled,
