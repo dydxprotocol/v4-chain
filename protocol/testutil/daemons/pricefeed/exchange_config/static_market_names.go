@@ -7,8 +7,6 @@ import (
 var (
 	// StaticMarketNames maps marketIds to their human-readable market names. This list is
 	// used for generating market exchange config that is then read back into the daemon.
-	// Please do not use this mapping to determine the market name of given id, or vice versa,
-	// in code that executes when the protocol is running.
 	StaticMarketNames = map[types.MarketId]string{
 		MARKET_BTC_USD:   "BTC-USD",
 		MARKET_ETH_USD:   "ETH-USD",
