@@ -85,7 +85,7 @@ func TestGetMarketIds_Success(t *testing.T) {
 	}
 }
 
-func TestEqual_Mixed(t *testing.T) {
+func TestMutableExchangeMarketConfig_Equal(t *testing.T) {
 	tests := map[string]struct {
 		A, B          *types.MutableExchangeMarketConfig
 		expectedEqual bool
@@ -251,7 +251,7 @@ func TestEqual_Mixed(t *testing.T) {
 	}
 }
 
-func TestValidate_Mixed(t *testing.T) {
+func TestMutableExchangeMarketConfig_Validate(t *testing.T) {
 	tests := map[string]struct {
 		mutableExchangeConfig *types.MutableExchangeMarketConfig
 		marketConfigs         []*types.MutableMarketConfig

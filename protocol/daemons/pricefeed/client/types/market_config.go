@@ -1,7 +1,5 @@
 package types
 
-import "fmt"
-
 // MarketConfig specifies the exchange-specific market configuration used to resolve a market's price on
 // a particular exchange.
 type MarketConfig struct {
@@ -41,14 +39,6 @@ type MarketConfig struct {
 	//
 	// BTC-USD = 1 / USD-BTC
 	Invert bool
-}
-
-// Validate validates the market configuration.
-func (mc *MarketConfig) Validate() error {
-	if mc.Ticker == "" {
-		return fmt.Errorf("ticker cannot be empty")
-	}
-	return nil
 }
 
 // Equal returns true if the two MarketConfigs are equal.
