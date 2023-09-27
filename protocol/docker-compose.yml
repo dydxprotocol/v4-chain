@@ -3,12 +3,6 @@ version: "3"
 services:
   dydxprotocold0:
     image: local:dydxprotocol
-    build:
-      context: .
-      dockerfile: ./testing/testnet-local/Dockerfile
-      args:
-        RUNNER_IMAGE: alpine:3.16
-        GO_VERSION: 1.19
     entrypoint:
       - dydxprotocold
       - start
