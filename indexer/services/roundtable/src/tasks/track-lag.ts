@@ -5,11 +5,16 @@ import { DateTime } from 'luxon';
 
 import config from '../config';
 
-const VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX = ':26657/block';
+const VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX = '/block';
 
 type BlockData = {
   block: string;
   timestamp: IsoString;
+};
+
+type ValidatorHeader = {
+  height: string;
+  time: IsoString;
 };
 
 export default async function runTask(): Promise<void> {
@@ -29,9 +34,9 @@ export default async function runTask(): Promise<void> {
     BlockData,
   ] = await Promise.all([
     BlockTable.getLatest(),
-    getValidatorBlockData(config.TRACK_LAG_INDEXER_FULL_NODE_URL),
-    getValidatorBlockData(config.TRACK_LAG_VALIDATOR_URL),
-    getValidatorBlockData(config.TRACK_LAG_OTHER_FULL_NODE_URL),
+    getValidatorBlockData(config.TRACK_LAG_INDEXER_FULL_NODE_URL, 'indexer_full_node'),
+    getValidatorBlockData(config.TRACK_LAG_VALIDATOR_URL, 'validator'),
+    getValidatorBlockData(config.TRACK_LAG_OTHER_FULL_NODE_URL, 'other_full_node'),
   ]);
 
   if (indexerBlockFromDatabase === undefined) {
@@ -45,13 +50,13 @@ export default async function runTask(): Promise<void> {
 
   logAndStatLag(indexerFullNodeBlock, indexerBlock, 'indexer_full_node_to_indexer');
   logAndStatLag(validatorBlock, indexerFullNodeBlock, 'validator_to_indexer_full_node');
-  logAndStatLag(validatorBlock, indexerFullNodeBlock, 'validator_to_indexer_full_node');
   logAndStatLag(validatorBlock, otherFullNodeBlock, 'validator_to_other_full_node');
   logAndStatLag(otherFullNodeBlock, indexerFullNodeBlock, 'other_full_node_to_indexer_full_node');
   logAndStatLag(validatorBlock, indexerBlock, 'validator_to_indexer');
 }
 
-async function getValidatorBlockData(urlPrefix: string): Promise<BlockData> {
+async function getValidatorBlockData(urlPrefix: string, metricName: string): Promise<BlockData> {
+  const start: number = Date.now();
   const url: string = `${urlPrefix}${VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX}`;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const response: any = JSON.parse(await axiosRequest({
@@ -59,7 +64,13 @@ async function getValidatorBlockData(urlPrefix: string): Promise<BlockData> {
     method: 'GET',
     transformResponse: (res) => res,
   }) as string);
-  const header = response.result.block.header;
+  stats.timing(
+    `${config.SERVICE_NAME}.get_validator_block_data.timing`,
+    Date.now() - start,
+    { metricName },
+  );
+  const header: ValidatorHeader = response.result.block.header;
+  stats.gauge(`${config.SERVICE_NAME}.block_height`, Number(header.height), { metricName });
 
   return {
     block: header.height,

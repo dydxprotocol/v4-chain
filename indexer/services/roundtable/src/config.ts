@@ -96,9 +96,9 @@ export const configSchema = {
   CANCEL_STALE_ORDERS_QUERY_BATCH_SIZE: parseInteger({ default: 10000 }),
 
   // Tracking indexer lag
-  TRACK_LAG_INDEXER_FULL_NODE_URL: parseString({ default: '' }),
-  TRACK_LAG_VALIDATOR_URL: parseString({ default: '' }),
-  TRACK_LAG_OTHER_FULL_NODE_URL: parseString({ default: '' }),
+  TRACK_LAG_INDEXER_FULL_NODE_URL: parseString({ default: '' }), // i.e. http://11.11.11.11:26657
+  TRACK_LAG_VALIDATOR_URL: parseString({ default: '' }), // i.e. http://11.11.11.11:26657
+  TRACK_LAG_OTHER_FULL_NODE_URL: parseString({ default: '' }), // i.e. http://11.11.11.11:26657
 
   // Update research environment
   AWS_ACCOUNT_ID: parseString(),
