@@ -5,6 +5,7 @@ import {
   parseSchema,
   parseString,
 } from '@dydxprotocol-indexer/base';
+import { complianceConfigSchema } from '@dydxprotocol-indexer/compliance';
 import {
   postgresConfigSchema,
 } from '@dydxprotocol-indexer/postgres';
@@ -14,6 +15,7 @@ export const configSchema = {
   ...baseConfigSchema,
   ...postgresConfigSchema,
   ...redisConfigSchema,
+  ...complianceConfigSchema,
 
   CHAIN_ID: parseString({ default: 'dydxprotocol' }),
   API_LIMIT_V4: parseInteger({
@@ -51,14 +53,6 @@ export const configSchema = {
   RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_DURATION_SECONDS: parseInteger({ default: 60 }),
   // Threshold for refreshing compliance data for an address when screened
   MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS: parseInteger({ default: 86_400 }), //  1 day
-
-  // Geo-blocking
-  RESTRICTED_COUNTRIES: parseString({
-    default: '', // comma de-limited
-  }),
-  INDEXER_LEVEL_GEOBLOCKING_ENABLED: parseBoolean({
-    default: true,
-  }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

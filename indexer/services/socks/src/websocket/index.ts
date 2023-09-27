@@ -50,7 +50,7 @@ export class Index {
     this.subscriptions = subscriptions;
     this.pingHandler = new PingHandler();
     this.invalidMessageHandler = new InvalidMessageHandler();
-    this.countryRestrictor = new CountryRestrictor(config.RESTRICTED_COUNTRIES);
+    this.countryRestrictor = new CountryRestrictor();
 
     // Attach the new connection handler to the websocket server.
     this.wss.onConnection((ws: WebSocket, req: IncomingMessage) => this.onConnection(ws, req));

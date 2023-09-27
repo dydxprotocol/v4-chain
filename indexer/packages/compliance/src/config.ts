@@ -7,6 +7,7 @@ import {
   parseSchema,
   baseConfigSchema,
   parseInteger,
+  parseBoolean,
 } from '@dydxprotocol-indexer/base';
 
 export const complianceConfigSchema = {
@@ -17,6 +18,14 @@ export const complianceConfigSchema = {
   ELLIPTIC_API_SECRET: parseString({ default: '' }),
   ELLIPTIC_MAX_RETRIES: parseInteger({ default: 3 }),
   ELLIPTIC_RISK_SCORE_THRESHOLD: parseInteger({ default: 10 }),
+
+  // Geo-blocking
+  RESTRICTED_COUNTRIES: parseString({
+    default: '', // comma de-limited
+  }),
+  INDEXER_LEVEL_GEOBLOCKING_ENABLED: parseBoolean({
+    default: true,
+  }),
 };
 
 export default parseSchema(complianceConfigSchema);

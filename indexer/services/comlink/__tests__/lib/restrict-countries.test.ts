@@ -1,6 +1,8 @@
 import config from '../../src/config';
 import { rejectRestrictedCountries } from '../../src/lib/restrict-countries';
-import * as utils from '../../src/lib/utils';
+import { isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
+
+jest.mock('@dydxprotocol-indexer/compliance');
 
 const restrictedHeaders = {
   'cf-ipcountry': 'US',
@@ -18,9 +20,16 @@ describe('rejectRestrictedCountries', () => {
 
   const defaultEnabled: boolean = config.INDEXER_LEVEL_GEOBLOCKING_ENABLED;
 
-  beforeEach(() => {
+  beforeAll(() => {
     config.INDEXER_LEVEL_GEOBLOCKING_ENABLED = true;
-    isRestrictedCountrySpy = jest.spyOn(utils, 'isRestrictedCountry');
+  });
+
+  afterAll(() => {
+    config.INDEXER_LEVEL_GEOBLOCKING_ENABLED = defaultEnabled;
+  });
+
+  beforeEach(() => {
+    isRestrictedCountrySpy = isRestrictedCountryHeaders as unknown as jest.Mock;
     req = {
       get: jest.fn().mockReturnThis(),
     };
@@ -33,7 +42,6 @@ describe('rejectRestrictedCountries', () => {
   });
 
   afterEach(() => {
-    config.INDEXER_LEVEL_GEOBLOCKING_ENABLED = defaultEnabled;
     jest.restoreAllMocks();
   });
 
@@ -45,15 +53,6 @@ describe('rejectRestrictedCountries', () => {
     rejectRestrictedCountries(req, res, next);
     expect(res.status).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalled();
-  });
-
-  it('does reject requests without country headers', () => {
-    // empty headers
-    req.headers = {};
-
-    rejectRestrictedCountries(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(next).not.toHaveBeenCalled();
   });
 
   it('rejects request from restricted countries with a 403', () => {
