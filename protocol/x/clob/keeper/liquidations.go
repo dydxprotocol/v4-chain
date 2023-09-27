@@ -452,22 +452,31 @@ func (k Keeper) GetFillablePrice(
 		return nil, err
 	}
 
-	// stat liquidation order for negative TNC when in DeliverTx
-	if tncBig.Sign() < 0 && !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+	// stat liquidation order for negative TNC
+	if tncBig.Sign() < 0 {
+		callback := metrics.PrepareCheckState
+		if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+			callback = metrics.DeliverTx
+		}
 		telemetry.IncrCounterWithLabels(
-			[]string{metrics.Liquidations, metrics.LiquidationMatchNegativeTNC, metrics.DeliverTx},
+			[]string{metrics.Liquidations, metrics.LiquidationMatchNegativeTNC},
 			1,
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(
 					metrics.PerpetualId,
 					int(perpetualId),
 				),
+				metrics.GetLabelForStringValue(
+					metrics.Callback,
+					callback,
+				),
 			},
 		)
 
 		ctx.Logger().Info(
-			"GetFillablePrice: Subaccount has negative TNC. SubaccountId: %+v",
+			"GetFillablePrice: Subaccount has negative TNC. SubaccountId: %+v, TNC: %d",
 			subaccountId,
+			tncBig.Uint64(),
 		)
 	}
 

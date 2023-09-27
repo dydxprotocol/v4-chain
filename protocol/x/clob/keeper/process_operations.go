@@ -540,6 +540,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 	if err != nil {
 		return err
 	}
+	notionalQuoteQuantums.Abs(notionalQuoteQuantums)
 
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.DeliverTx},
