@@ -1,14 +1,15 @@
 package off_chain_updates
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -363,9 +364,13 @@ func TestShouldSendOrderRemovalOnReplay(t *testing.T) {
 			orderError: errorsmod.Wrapf(clobtypes.ErrTimeExceedsGoodTilBlockTime, "wrapped error"),
 			expected:   false,
 		},
-		"Returns false for other error": {
+		"Returns true for other error": {
 			orderError: clobtypes.ErrFokOrderCouldNotBeFullyFilled,
 			expected:   true,
+		},
+		"Returns false for ErrImmediateExecutionOrderAlreadyFilled": {
+			orderError: clobtypes.ErrImmediateExecutionOrderAlreadyFilled,
+			expected:   false,
 		},
 	}
 	for name, tc := range tests {
