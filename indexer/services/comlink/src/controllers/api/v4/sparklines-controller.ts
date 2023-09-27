@@ -4,7 +4,7 @@ import {
   CandleFromDatabase,
   CandleResolution,
   CandleTable,
-  defaultPostgresOptions,
+  DEFAULT_POSTGRES_OPTIONS,
   Ordering,
   PerpetualMarketColumns,
   perpetualMarketRefresher,
@@ -49,7 +49,7 @@ class FillsController extends Controller {
         limit: limit * tickers.length,
       },
       [],
-      { ...defaultPostgresOptions, orderBy: [[CandleColumns.startedAt, Ordering.DESC]] },
+      { ...DEFAULT_POSTGRES_OPTIONS, orderBy: [[CandleColumns.startedAt, Ordering.DESC]] },
     );
 
     return candlesToSparklineResponseObject(tickers, ungroupedTickerCandles, limit);

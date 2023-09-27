@@ -2,7 +2,7 @@ import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   APIOrderStatus,
   APIOrderStatusEnum,
-  defaultPostgresOptions,
+  DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   OrderColumns,
   OrderFromDatabase,
@@ -102,7 +102,7 @@ class OrdersController extends Controller {
           goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
           goodTilBlockTimeBeforeOrAt,
         }, [], {
-          ...defaultPostgresOptions,
+          ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [
             // Order by `goodTilBlock` and then order by `goodTilBlockTime`
             // This way, orders with `goodTilBlock` defined are ordered before orders with

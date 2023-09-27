@@ -102,7 +102,7 @@ Record<SpecifiedClobPairStatus, PerpetualMarketStatus> = {
   [ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING]: PerpetualMarketStatus.INITIALIZING,
 };
 
-export const defaultPostgresOptions : Options = config.USE_READ_REPLICA
+export const DEFAULT_POSTGRES_OPTIONS : Options = config.USE_READ_REPLICA
   ? {
     readReplica: true,
   } : {};

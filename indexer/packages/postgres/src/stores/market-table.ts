@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
-import { defaultPostgresOptions } from '../constants';
+import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import MarketModel from '../models/market-model';
@@ -25,7 +25,7 @@ export async function findAll(
     pair,
   }: MarketQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<MarketFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -99,7 +99,7 @@ export async function update(
 
 export async function findById(
   id: number,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<MarketFromDatabase | undefined> {
   const baseQuery: QueryBuilder<MarketModel> = setupBaseQuery<MarketModel>(
     MarketModel,
@@ -112,7 +112,7 @@ export async function findById(
 
 export async function findByPair(
   pair: string,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<MarketFromDatabase | undefined> {
   const baseQuery: QueryBuilder<MarketModel> = setupBaseQuery<MarketModel>(
     MarketModel,
@@ -130,7 +130,7 @@ export async function findByPair(
 }
 
 export async function getMarketsMap(
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<MarketsMap> {
   const markets: MarketFromDatabase[] = await findAll(
     {},

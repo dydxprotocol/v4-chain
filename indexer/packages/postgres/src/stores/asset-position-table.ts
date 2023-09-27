@@ -2,7 +2,7 @@ import Big from 'big.js';
 import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, defaultPostgresOptions, USDC_ASSET_ID } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, USDC_ASSET_ID } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
@@ -33,7 +33,7 @@ export async function findAll(
     isLong,
   }: AssetPositionQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AssetPositionFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -114,7 +114,7 @@ export async function upsert(
 
 export async function findById(
   id: string,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AssetPositionFromDatabase | undefined> {
   const baseQuery: QueryBuilder<AssetPositionModel> = setupBaseQuery<AssetPositionModel>(
     AssetPositionModel,
@@ -135,7 +135,7 @@ function convertToSubaccountUsdcMap(
 
 export async function findUsdcPositionForSubaccounts(
   subaccountIds: string[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<{ [subaccountId: string]: Big }> {
   const positions: AssetPositionFromDatabase[] = await findAll(
     {

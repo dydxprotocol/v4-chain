@@ -1,6 +1,6 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
-  defaultPostgresOptions,
+  DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   Ordering,
   PnlTicksFromDatabase,
@@ -69,7 +69,7 @@ class HistoricalPnlController extends Controller {
         },
         [QueryableField.LIMIT],
         {
-          ...defaultPostgresOptions,
+          ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
         },
       ),

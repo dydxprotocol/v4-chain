@@ -1,6 +1,6 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
-  defaultPostgresOptions,
+  DEFAULT_POSTGRES_OPTIONS,
   FundingIndexUpdatesColumns,
   FundingIndexUpdatesFromDatabase,
   FundingIndexUpdatesTable,
@@ -62,7 +62,7 @@ class HistoricalFundingController extends Controller {
         limit,
       }, [],
       {
-        ...defaultPostgresOptions,
+        ...DEFAULT_POSTGRES_OPTIONS,
         orderBy: [[FundingIndexUpdatesColumns.effectiveAtHeight, Ordering.DESC]],
       },
     );

@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, defaultPostgresOptions } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
@@ -39,7 +39,7 @@ export async function findAll(
     effectiveBeforeOrAtHeight,
   }: OraclePriceQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<OraclePriceFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -123,7 +123,7 @@ export async function create(
 
 export async function findById(
   id: string,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<OraclePriceFromDatabase | undefined> {
   const baseQuery: QueryBuilder<OraclePriceModel> = setupBaseQuery<OraclePriceModel>(
     OraclePriceModel,
@@ -136,7 +136,7 @@ export async function findById(
 
 export async function findOraclePricesInReverseChronologicalOrder(
   marketId: number,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<OraclePriceFromDatabase[] | undefined> {
   const baseQuery: QueryBuilder<OraclePriceModel> = setupBaseQuery<OraclePriceModel>(
     OraclePriceModel,
@@ -151,7 +151,7 @@ export async function findOraclePricesInReverseChronologicalOrder(
 
 export async function findMostRecentMarketOraclePrice(
   marketId: number,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<OraclePriceFromDatabase | undefined> {
   const baseQuery: QueryBuilder<OraclePriceModel> = setupBaseQuery<OraclePriceModel>(
     OraclePriceModel,

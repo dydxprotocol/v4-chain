@@ -3,7 +3,7 @@ import Knex from 'knex';
 import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
-import { defaultPostgresOptions } from '../constants';
+import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { knexPrimary } from '../helpers/knex';
 import {
   generateBulkUpdateString,
@@ -34,7 +34,7 @@ export async function findAll(
     limit,
   }: PerpetualMarketQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PerpetualMarketFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -135,7 +135,7 @@ export async function updateByMarketId(
 
 export async function findById(
   id: string,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PerpetualMarketFromDatabase | undefined> {
   const baseQuery: QueryBuilder<PerpetualMarketModel> = setupBaseQuery<PerpetualMarketModel>(
     PerpetualMarketModel,
@@ -148,7 +148,7 @@ export async function findById(
 
 export async function findByClobPairId(
   clobPairId: string,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PerpetualMarketFromDatabase | undefined> {
   const baseQuery: QueryBuilder<PerpetualMarketModel> = setupBaseQuery<PerpetualMarketModel>(
     PerpetualMarketModel,
@@ -167,7 +167,7 @@ export async function findByClobPairId(
 
 export async function findByMarketId(
   marketId: number,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PerpetualMarketFromDatabase | undefined> {
   const baseQuery: QueryBuilder<PerpetualMarketModel> = setupBaseQuery<PerpetualMarketModel>(
     PerpetualMarketModel,
@@ -186,7 +186,7 @@ export async function findByMarketId(
 
 export async function findByTicker(
   ticker: string,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PerpetualMarketFromDatabase | undefined> {
   const baseQuery: QueryBuilder<PerpetualMarketModel> = setupBaseQuery<PerpetualMarketModel>(
     PerpetualMarketModel,

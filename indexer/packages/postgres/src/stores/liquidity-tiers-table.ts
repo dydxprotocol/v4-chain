@@ -1,6 +1,6 @@
 import { PartialModelObject, QueryBuilder } from 'objection';
 
-import { defaultPostgresOptions } from '../constants';
+import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import LiquidityTiersModel from '../models/liquidity-tiers-model';
@@ -22,7 +22,7 @@ export async function findAll(
     id,
   }: LiquidityTiersQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<LiquidityTiersFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -73,7 +73,7 @@ export async function create(
 
 export async function findById(
   id: number,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<LiquidityTiersFromDatabase | undefined> {
   const baseQuery: QueryBuilder<LiquidityTiersModel> = setupBaseQuery<LiquidityTiersModel>(
     LiquidityTiersModel,

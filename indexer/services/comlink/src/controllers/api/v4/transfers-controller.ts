@@ -3,7 +3,7 @@ import {
   AssetColumns,
   AssetFromDatabase,
   AssetTable,
-  defaultPostgresOptions,
+  DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   Ordering,
   QueryableField,
@@ -74,7 +74,7 @@ class TransfersController extends Controller {
         },
         [QueryableField.LIMIT],
         {
-          ...defaultPostgresOptions,
+          ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
         },
       ),

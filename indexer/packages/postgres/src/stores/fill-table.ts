@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, defaultPostgresOptions } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
@@ -48,7 +48,7 @@ export async function findAll(
     fee,
   }: FillQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<FillFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -175,7 +175,7 @@ export async function update(
 
 export async function findById(
   id: string,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<FillFromDatabase | undefined> {
   const baseQuery: QueryBuilder<FillModel> = setupBaseQuery<FillModel>(
     FillModel,

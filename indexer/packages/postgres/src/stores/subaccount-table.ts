@@ -1,7 +1,7 @@
 import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, defaultPostgresOptions } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import {
   verifyAllRequiredFields,
   setupBaseQuery,
@@ -40,7 +40,7 @@ export async function findAll(
     limit,
   }: SubaccountQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<SubaccountFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -139,7 +139,7 @@ export async function create(
 
 export async function findById(
   id: string,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<SubaccountFromDatabase | undefined> {
   const baseQuery: QueryBuilder<SubaccountModel> = setupBaseQuery<SubaccountModel>(
     SubaccountModel,

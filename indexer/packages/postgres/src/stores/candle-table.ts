@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, defaultPostgresOptions } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
@@ -38,7 +38,7 @@ export async function findAll(
     toISO,
   }: CandleQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<CandleFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -134,7 +134,7 @@ export async function update(
 
 export async function findById(
   id: string,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<CandleFromDatabase | undefined> {
   const baseQuery: QueryBuilder<CandleModel> = setupBaseQuery<CandleModel>(
     CandleModel,
@@ -148,7 +148,7 @@ export async function findById(
 export async function findLatest(
   ticker: string,
   resolution: CandleResolution,
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<CandleFromDatabase | undefined> {
   const candles: CandleFromDatabase[] = await findAll(
     {
@@ -174,7 +174,7 @@ export async function findLatest(
 export async function findCandlesMap(
   tickers: string[],
   resolutions: CandleResolution[],
-  options: Options = defaultPostgresOptions,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<CandlesMap> {
   const candlesMap: CandlesMap = {};
 
