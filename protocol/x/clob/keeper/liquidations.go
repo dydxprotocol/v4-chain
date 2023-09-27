@@ -453,7 +453,7 @@ func (k Keeper) GetFillablePrice(
 	}
 
 	// stat liquidation order for negative TNC
-	// CLOB(906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
+	// TODO(CLOB-906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
 	if tncBig.Sign() < 0 {
 		callback := metrics.PrepareCheckState
 		if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {

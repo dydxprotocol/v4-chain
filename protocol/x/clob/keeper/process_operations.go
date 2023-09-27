@@ -540,11 +540,11 @@ func (k Keeper) PersistMatchLiquidationToState(
 	if err != nil {
 		return err
 	}
-	notionalQuoteQuantums.Abs(notionalQuoteQuantums)
+	absNotionalQuoteQuantums := new(big.Int).Abs(notionalQuoteQuantums)
 
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.DeliverTx},
-		float32(notionalQuoteQuantums.Uint64()),
+		float32(absNotionalQuoteQuantums.Uint64()),
 		matchLiquidation.GetMetricLabels(),
 	)
 
@@ -588,7 +588,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 		filledQuoteQuantums := lib.BigRatRound(
 			new(big.Rat).Mul(
 				fillAmountToTotalSizeRat,
-				new(big.Rat).SetInt(notionalQuoteQuantums),
+				new(big.Rat).SetInt(absNotionalQuoteQuantums),
 			),
 			true,
 		)
