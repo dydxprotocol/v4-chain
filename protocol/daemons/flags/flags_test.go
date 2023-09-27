@@ -49,6 +49,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap[flags.FlagLiquidationDaemonEnabled] = true
 	optsMap[flags.FlagLiquidationDaemonLoopDelayMs] = uint32(2222)
 	optsMap[flags.FlagLiquidationDaemonSubaccountPageLimit] = uint64(3333)
+	optsMap[flags.FlagLiquidationDaemonRequestChunkSize] = uint64(4444)
 
 	optsMap[flags.FlagPriceDaemonEnabled] = true
 	optsMap[flags.FlagPriceDaemonLoopDelayMs] = uint32(4444)
@@ -73,6 +74,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	require.Equal(t, optsMap[flags.FlagLiquidationDaemonEnabled], r.Liquidation.Enabled)
 	require.Equal(t, optsMap[flags.FlagLiquidationDaemonLoopDelayMs], r.Liquidation.LoopDelayMs)
 	require.Equal(t, optsMap[flags.FlagLiquidationDaemonSubaccountPageLimit], r.Liquidation.SubaccountPageLimit)
+	require.Equal(t, optsMap[flags.FlagLiquidationDaemonRequestChunkSize], r.Liquidation.RequestChunkSize)
 
 	// Price Daemon.
 	require.Equal(t, optsMap[flags.FlagPriceDaemonEnabled], r.Price.Enabled)

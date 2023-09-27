@@ -29,7 +29,7 @@ var (
 		Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
 		Coins: []sdk.Coin{{
 			Denom:  TestRewardTokenDenom,
-			Amount: sdk.NewInt(0),
+			Amount: sdkmath.NewInt(0),
 		}},
 	}
 )
@@ -296,15 +296,15 @@ func TestProcessRewardsForBlock(t *testing.T) {
 		"zero reward share, no change in treasury balance": {
 			rewardShares:           []types.RewardShare{},
 			tokenPrice:             tokenPrice2Usdc,
-			treasuryAccountBalance: sdk.NewInt(1_000_000_000), // 1000 full coins
-			feeMultiplierPpm:       1_000_000,                 // 100%
+			treasuryAccountBalance: sdkmath.NewInt(1_000_000_000), // 1000 full coins
+			feeMultiplierPpm:       1_000_000,                     // 100%
 			// 1$ / 2$ * 100% = 0.5 full coin, all paid to TestAddress1
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(1_000_000_000),
+						Amount: sdkmath.NewInt(1_000_000_000),
 					}},
 				},
 			},
@@ -317,22 +317,22 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				},
 			},
 			tokenPrice:             tokenPrice2Usdc,
-			treasuryAccountBalance: sdk.NewInt(1_000_000_000), // 1000 full coins
-			feeMultiplierPpm:       1_000_000,                 // 100%
+			treasuryAccountBalance: sdkmath.NewInt(1_000_000_000), // 1000 full coins
+			feeMultiplierPpm:       1_000_000,                     // 100%
 			// 1$ / 2$ * 100% = 0.5 full coin, all paid to TestAddress1
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(500_000),
+						Amount: sdkmath.NewInt(500_000),
 					}},
 				},
 				{
 					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(999_500_000), // 999.5 full coins
+						Amount: sdkmath.NewInt(999_500_000), // 999.5 full coins
 					}},
 				},
 			},
@@ -345,22 +345,22 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				},
 			},
 			tokenPrice:             tokenPrice2Usdc,
-			treasuryAccountBalance: sdk.NewInt(1_000_000_000), // 1000 full coins
-			feeMultiplierPpm:       950_000,                   // 95%
+			treasuryAccountBalance: sdkmath.NewInt(1_000_000_000), // 1000 full coins
+			feeMultiplierPpm:       950_000,                       // 95%
 			// 1$ / 2$ * 95% = 0.475 full coin, all paid to TestAddress1
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(475_000),
+						Amount: sdkmath.NewInt(475_000),
 					}},
 				},
 				{
 					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(999_525_000), // 999.525 full coins
+						Amount: sdkmath.NewInt(999_525_000), // 999.525 full coins
 					}},
 				},
 			},
@@ -373,15 +373,15 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				},
 			},
 			tokenPrice:             tokenPrice2Usdc,
-			treasuryAccountBalance: sdk.NewInt(200_000), // 0.2 full coin
-			feeMultiplierPpm:       1_000_000,           // 100%
+			treasuryAccountBalance: sdkmath.NewInt(200_000), // 0.2 full coin
+			feeMultiplierPpm:       1_000_000,               // 100%
 			// 1$ / 2$ * 100% = 0.5 full coin > 0.2 full coin. Pay 0.2 full coin to TestAddress1.
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(200_000),
+						Amount: sdkmath.NewInt(200_000),
 					}},
 				},
 				ZeroTreasuryAccountBalance, // No balance left in treasury.
@@ -395,14 +395,14 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				},
 			},
 			tokenPrice:             tokenPrice2Usdc,
-			treasuryAccountBalance: sdk.NewInt(0),
+			treasuryAccountBalance: sdkmath.NewInt(0),
 			feeMultiplierPpm:       1_000_000, // 100%
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(0),
+						Amount: sdkmath.NewInt(0),
 					}}, // No balance to pay out to TestAddress1.
 				},
 				ZeroTreasuryAccountBalance,
@@ -424,35 +424,35 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				},
 			},
 			tokenPrice:             tokenPrice2Usdc,
-			treasuryAccountBalance: sdk.NewInt(1_000_000_000), // 1000 full coins
-			feeMultiplierPpm:       990_000,                   // 99%
+			treasuryAccountBalance: sdkmath.NewInt(1_000_000_000), // 1000 full coins
+			feeMultiplierPpm:       990_000,                       // 99%
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(495_000), // $1 weight / $2 price * 99% = 0.495 full coin
+						Amount: sdkmath.NewInt(495_000), // $1 weight / $2 price * 99% = 0.495 full coin
 					}},
 				},
 				{
 					Address: TestAddress2,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(990_000), // $2 weight / $2 price * 99% = 0.99 full coin
+						Amount: sdkmath.NewInt(990_000), // $2 weight / $2 price * 99% = 0.99 full coin
 					}},
 				},
 				{
 					Address: TestAddress3,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(1_485_000), // $3 weight / $2 price * 99% = 1.485 full coin
+						Amount: sdkmath.NewInt(1_485_000), // $3 weight / $2 price * 99% = 1.485 full coin
 					}},
 				},
 				{
 					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(997_030_000), // 997.03 full coins
+						Amount: sdkmath.NewInt(997_030_000), // 997.03 full coins
 					}},
 				},
 			},
@@ -473,35 +473,35 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				},
 			},
 			tokenPrice:             tokenPrice2Usdc,
-			treasuryAccountBalance: sdk.NewInt(10_000_000), // 10 full coins
-			feeMultiplierPpm:       1_000_000,              // 100%
+			treasuryAccountBalance: sdkmath.NewInt(10_000_000), // 10 full coins
+			feeMultiplierPpm:       1_000_000,                  // 100%
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(1_666_666), // 1/6 of 10 = 1.666666 full coins
+						Amount: sdkmath.NewInt(1_666_666), // 1/6 of 10 = 1.666666 full coins
 					}},
 				},
 				{
 					Address: TestAddress2,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(3_333_333), // 1/3 of 10 = 3.333333 full coins
+						Amount: sdkmath.NewInt(3_333_333), // 1/3 of 10 = 3.333333 full coins
 					}},
 				},
 				{
 					Address: TestAddress3,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(5_000_000), // 1/2 of 10 = 5 full coins
+						Amount: sdkmath.NewInt(5_000_000), // 1/2 of 10 = 5 full coins
 					}},
 				},
 				{
 					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(1), // 0.000001 full coins left due to rounding
+						Amount: sdkmath.NewInt(1), // 0.000001 full coins left due to rounding
 					}},
 				},
 			},
@@ -522,35 +522,35 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				},
 			},
 			tokenPrice:             tokenPrice1_18Usdc,
-			treasuryAccountBalance: sdk.NewInt(100_000_000), // 100 full coins
-			feeMultiplierPpm:       990_000,                 // 99%
+			treasuryAccountBalance: sdkmath.NewInt(100_000_000), // 100 full coins
+			feeMultiplierPpm:       990_000,                     // 99%
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(56_722081), // 56.722081 full coins
+						Amount: sdkmath.NewInt(56_722081), // 56.722081 full coins
 					}},
 				},
 				{
 					Address: TestAddress2,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(225_876), // 0.225876 full coin
+						Amount: sdkmath.NewInt(225_876), // 0.225876 full coin
 					}},
 				},
 				{
 					Address: TestAddress3,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(43_052_041), // 43.052041 full coins
+						Amount: sdkmath.NewInt(43_052_041), // 43.052041 full coins
 					}},
 				},
 				{
 					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(2), // 0.000002 full coins left due to rounding
+						Amount: sdkmath.NewInt(2), // 0.000002 full coins left due to rounding
 					}},
 				},
 			},
@@ -567,28 +567,28 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				},
 			},
 			tokenPrice:             tokenPrice2Usdc,
-			treasuryAccountBalance: sdk.NewInt(1_000), // 0.001 full coins
-			feeMultiplierPpm:       990_000,           // 0.99
+			treasuryAccountBalance: sdkmath.NewInt(1_000), // 0.001 full coins
+			feeMultiplierPpm:       990_000,               // 0.99
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(999),
+						Amount: sdkmath.NewInt(999),
 					}},
 				},
 				{
 					Address: TestAddress2,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(0), // rounded to 0
+						Amount: sdkmath.NewInt(0), // rounded to 0
 					}},
 				},
 				{
 					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdk.NewInt(1),
+						Amount: sdkmath.NewInt(1),
 					}},
 				},
 			},

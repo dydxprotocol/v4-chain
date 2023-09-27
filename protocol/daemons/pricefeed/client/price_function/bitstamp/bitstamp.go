@@ -17,6 +17,9 @@ type BitstampTicker struct {
 	LastPrice string `json:"last" validate:"required,positive-float-string"`
 }
 
+// Ensure that BitstampTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*BitstampTicker)(nil)
+
 func (t BitstampTicker) GetPair() string {
 	return t.Pair
 }

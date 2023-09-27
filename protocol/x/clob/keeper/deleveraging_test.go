@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"errors"
 	"math"
 	"math/big"
@@ -94,7 +95,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 					authtypes.NewModuleAddress(types.InsuranceFundName),
 					constants.Usdc.Denom,
 				).Return(
-					sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(tc.insuranceFundBalance)),
+					sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
 				)
 			}
 
@@ -200,7 +201,7 @@ func TestIsValidInsuranceFundDelta(t *testing.T) {
 				authtypes.NewModuleAddress(types.InsuranceFundName),
 				constants.Usdc.Denom,
 			).Return(
-				sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(tc.insuranceFundBalance)),
+				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
 			)
 			require.Equal(
 				t,
@@ -332,7 +333,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 				authtypes.NewModuleAddress(types.InsuranceFundName),
 				constants.Usdc.Denom,
 			).Return(
-				sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(tc.insuranceFundBalance)),
+				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
 			)
 
 			// Create test markets.

@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitfinex",
-      "ticker": "tADAUSD"
-    },
-    {
       "exchangeName": "Bitstamp",
       "ticker": "ADA/USD"
     },

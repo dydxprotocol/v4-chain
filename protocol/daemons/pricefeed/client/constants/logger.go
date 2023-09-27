@@ -3,6 +3,7 @@ package constants
 import "time"
 
 const (
+	// Log keys are used to provide a consistent key-value interface for logging across the daemon.
 	SubmoduleLogKey = "submodule"
 
 	ErrorLogKey      = "error"
@@ -11,6 +12,7 @@ const (
 	PriceLogKey      = "Price"
 	ReasonLogKey     = "reason"
 
+	// Module and Submodule names are used to provide consistent key-value pairs for logging across the daemon.
 	PricefeedDaemonModuleName       = "pricefeed-daemon"
 	PriceFetcherSubmoduleName       = "price-fetcher"
 	PriceEncoderSubmoduleName       = "price-encoder"

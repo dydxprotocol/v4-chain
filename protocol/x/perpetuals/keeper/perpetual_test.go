@@ -44,6 +44,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 	// Create liquidity tiers and perpetuals,
 	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
 	numMarkets := keepertest.GetNumMarkets(t, pc.Ctx, pc.PricesKeeper)
+	expectedIndexerEvents := make([]*indexerevents.UpdatePerpetualEventV1, len(perps))
 	for i, item := range perps {
 		// Modify each field arbitrarily and
 		// verify the fields were modified in state.
@@ -60,6 +61,17 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			liquidityTier,
 		)
 		require.NoError(t, err)
+
+		// Record the indexer event expected to emit from above `ModifyPerpetual`.
+		expectedIndexerEvents[i] = &indexerevents.UpdatePerpetualEventV1{
+			Id:               item.Params.Id,
+			Ticker:           ticker,
+			MarketId:         marketId,
+			AtomicResolution: item.Params.AtomicResolution,
+			LiquidityTier:    liquidityTier,
+		}
+
+		// Verify updatedp perpetual in store.
 		newItem, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, item.Params.Id)
 		require.NoError(t, err)
 		require.Equal(
@@ -93,6 +105,35 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			newItem.Params.LiquidityTier,
 		)
 	}
+
+	// Verify that expected indexer events were emitted.
+	emittedIndexerEvents := getUpdatePerpetualEventsFromIndexerBlock(pc.Ctx, pc.PerpetualsKeeper)
+	require.Equal(t, emittedIndexerEvents, expectedIndexerEvents)
+}
+
+// getUpdatePerpetualEventsFromIndexerBlock returns all UpdatePerpetual events from the indexer block.
+func getUpdatePerpetualEventsFromIndexerBlock(
+	ctx sdk.Context,
+	perpetualsKeeper *keeper.Keeper,
+) []*indexerevents.UpdatePerpetualEventV1 {
+	block := perpetualsKeeper.GetIndexerEventManager().ProduceBlock(ctx)
+	var updatePerpetualEvents []*indexerevents.UpdatePerpetualEventV1
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeUpdatePerpetual {
+			continue
+		}
+		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
+			bytes := indexer_manager.GetBytesFromEventData(event.Data)
+			unmarshaler := common.UnmarshalerImpl{}
+			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV1
+			err := unmarshaler.Unmarshal(bytes, &updatePerpetualEvent)
+			if err != nil {
+				panic(err)
+			}
+			updatePerpetualEvents = append(updatePerpetualEvents, &updatePerpetualEvent)
+		}
+	}
+	return updatePerpetualEvents
 }
 
 func TestCreatePerpetual_Failure(t *testing.T) {

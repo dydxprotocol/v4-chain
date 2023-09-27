@@ -3,18 +3,17 @@ package client
 import (
 	"context"
 	"fmt"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"math/big"
 	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
 	libeth "github.com/dydxprotocol/v4-chain/protocol/lib/eth"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"

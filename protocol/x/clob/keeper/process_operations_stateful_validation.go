@@ -80,49 +80,6 @@ func (k Keeper) MustFetchOrderFromOrderId(
 	return order
 }
 
-// StatefulValidateMakerFill performs stateful validation on a maker fill.
-// Additionally, it returns the maker order referenced in the fill.
-// The following validations are performed:
-// - Validation on any short term orders
-// - Validation that maker order cannot be FOK or IOC
-// - Taker and Maker must be on opposite sides
-func (k Keeper) StatefulValidateMakerFill(
-	ctx sdk.Context,
-	fill *types.MakerFill,
-	shortTermOrdersMap map[types.OrderId]types.Order,
-	takerOrder *types.Order,
-) (makerOrder types.Order, err error) {
-	makerOrderId := fill.GetMakerOrderId()
-	// Fetch the maker order from either short term orders or state
-	makerOrder, err = k.FetchOrderFromOrderId(ctx, makerOrderId, shortTermOrdersMap)
-	if err != nil {
-		return makerOrder, err
-	}
-
-	// Orders must be on different sides of the book.
-	if takerOrder != nil {
-		if takerOrder.IsBuy() == makerOrder.IsBuy() {
-			return makerOrder, errorsmod.Wrapf(
-				types.ErrInvalidMatchOrder,
-				"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
-				takerOrder.GetOrderTextString(),
-				makerOrder.GetOrderTextString(),
-			)
-		}
-	}
-
-	// Maker order cannot be FOK or IOC.
-	if makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
-		makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
-		return makerOrder, errorsmod.Wrapf(
-			types.ErrInvalidMatchOrder,
-			"Maker order %+v cannot be FOK or IOC.",
-			makerOrder.GetOrderTextString(),
-		)
-	}
-	return makerOrder, nil
-}
-
 // ValidateLiquidationOrderAgainstProposedLiquidation performs stateless validation of a liquidation order
 // against a proposed liquidation.
 // An error is returned when

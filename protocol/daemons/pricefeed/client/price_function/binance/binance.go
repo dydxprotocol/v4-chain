@@ -9,13 +9,16 @@ import (
 )
 
 // BinanceTicker is our representation of ticker information returned in Binance response.
-// implements interface `Ticker` in util.go.
+// It implements interface `Ticker` in util.go.
 type BinanceTicker struct {
 	Pair      string `json:"symbol" validate:"required"`
 	AskPrice  string `json:"askPrice" validate:"required,positive-float-string"`
 	BidPrice  string `json:"bidPrice" validate:"required,positive-float-string"`
 	LastPrice string `json:"lastPrice" validate:"required,positive-float-string"`
 }
+
+// Ensure that BinanceTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*BinanceTicker)(nil)
 
 func (t BinanceTicker) GetPair() string {
 	// needs to be wrapped in quotes to be consistent with the API request format.

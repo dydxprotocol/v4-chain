@@ -1,4 +1,4 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
 import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
 import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
@@ -16,7 +16,6 @@ import {
 import config from '../../../config';
 import { placeHolderProvider } from '../../../helpers/compliance/compliance-clients';
 import { complianceCheck } from '../../../lib/compliance-check';
-import { TooManyRequestsError } from '../../../lib/errors';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { getIpAddr, rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';

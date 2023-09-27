@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"math/big"
 	"time"
@@ -128,7 +129,7 @@ func (k Keeper) AddRewardSharesForFill(
 	lowestMakerFee := k.feeTiersKeeper.GetLowestMakerFee(ctx)
 	maxMakerRebatePpm := lib.Min(int32(0), lowestMakerFee)
 	// Calculate quote_quantums * max_maker_rebate. Result is non-positive.
-	makerRebateMulTakerVolume := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, maxMakerRebatePpm)
+	makerRebateMulTakerVolume := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, maxMakerRebatePpm, false)
 	takerWeight := new(big.Int).Add(
 		bigTakerFeeQuoteQuantums,
 		makerRebateMulTakerVolume,
@@ -307,7 +308,7 @@ func (k Keeper) ProcessRewardsForBlock(
 			[]sdk.Coin{
 				{
 					Denom:  params.Denom,
-					Amount: sdk.NewIntFromBigInt(rewardAmountForAddress),
+					Amount: sdkmath.NewIntFromBigInt(rewardAmountForAddress),
 				},
 			},
 		); err != nil {

@@ -118,6 +118,22 @@ func (k Keeper) ModifyPerpetual(
 	// Store the modified perpetual.
 	k.setPerpetual(ctx, perpetual)
 
+	// Emit indexer event.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpdatePerpetual,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewUpdatePerpetualEventV1(
+				perpetual.Params.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				perpetual.Params.AtomicResolution,
+				perpetual.Params.LiquidityTier,
+			),
+		),
+		indexerevents.UpdatePerpetualEventVersion,
+	)
+
 	return perpetual, nil
 }
 
@@ -440,27 +456,31 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 
 	for _, perp := range allPerpetuals {
 		indexPrice, exists := marketIdToIndexPrice[perp.Params.MarketId]
-		// If a valid index price is missing, skip this market, effectively emitting a zero premium.
+		// Valid index price is missing
 		if !exists {
-			k.Logger(ctx).Error(
-				fmt.Sprintf(
-					"Perpetual (%d) does not have valid index price yet. Not including in AddPremiumVotes message",
-					perp.Params.Id,
-				))
-			telemetry.IncrCounterWithLabels(
-				[]string{
-					types.ModuleName,
-					metrics.MissingIndexPriceForFunding,
-					metrics.Count,
-				},
-				1,
-				[]gometrics.Label{
-					metrics.GetLabelForIntValue(
-						metrics.MarketId,
-						int(perp.Params.MarketId),
-					),
-				},
-			)
+			// Only log and increment stats if height is passed initialization period.
+			if ctx.BlockHeight() > pricestypes.PriceDaemonInitializationBlocks {
+				k.Logger(ctx).Error(
+					fmt.Sprintf(
+						"Perpetual (%d) does not have valid index price. Skipping premium",
+						perp.Params.Id,
+					))
+				telemetry.IncrCounterWithLabels(
+					[]string{
+						types.ModuleName,
+						metrics.MissingIndexPriceForFunding,
+						metrics.Count,
+					},
+					1,
+					[]gometrics.Label{
+						metrics.GetLabelForIntValue(
+							metrics.MarketId,
+							int(perp.Params.MarketId),
+						),
+					},
+				)
+			}
+			// Skip this market, effectively emitting a zero premium.
 			continue
 		}
 
