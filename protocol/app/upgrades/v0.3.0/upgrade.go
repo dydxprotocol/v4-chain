@@ -17,7 +17,7 @@ var (
 		UpgradeName: UpgradeName,
 		StoreUpgrades: store.StoreUpgrades{
 			Added: []string{
-				evidencetypes.ModuleName,
+				evidencetypes.StoreKey,
 			},
 		},
 	}
