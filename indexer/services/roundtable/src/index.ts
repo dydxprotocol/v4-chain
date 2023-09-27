@@ -14,9 +14,9 @@ import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
+import trackLag from './tasks/track-lag';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
-import trackLag from './tasks/track-lag';
 
 process.on('SIGTERM', () => {
   logger.info({

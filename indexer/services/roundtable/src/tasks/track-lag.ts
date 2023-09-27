@@ -1,15 +1,16 @@
-import { axiosRequest, logger, stats } from "@dydxprotocol-indexer/base";
-import { BlockFromDatabase, BlockTable, IsoString } from "@dydxprotocol-indexer/postgres";
-import Big from "big.js";
-import { DateTime } from "luxon";
-import config from "../config";
+import { axiosRequest, logger, stats } from '@dydxprotocol-indexer/base';
+import { BlockFromDatabase, BlockTable, IsoString } from '@dydxprotocol-indexer/postgres';
+import Big from 'big.js';
+import { DateTime } from 'luxon';
+
+import config from '../config';
 
 const VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX = ':26657/block';
 
 type BlockData = {
   block: string;
   timestamp: IsoString;
-}
+};
 
 export default async function runTask(): Promise<void> {
   logger.info({
@@ -51,12 +52,13 @@ export default async function runTask(): Promise<void> {
 }
 
 async function getValidatorBlockData(urlPrefix: string): Promise<BlockData> {
-  const url: string = `${urlPrefix}${VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX}`
+  const url: string = `${urlPrefix}${VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX}`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const response: any = JSON.parse(await axiosRequest({
     url,
     method: 'GET',
     transformResponse: (res) => res,
-  }) as any);
+  }) as string);
   const header = response.result.block.header;
 
   return {
@@ -83,6 +85,6 @@ function logAndStatLag(
     blockLag,
     timeLagInMilliseconds,
   });
-  stats.timing(`${config.SERVICE_NAME}.block_lag`, Number(blockLag), { lagType, });
-  stats.timing(`${config.SERVICE_NAME}.time_lag`, timeLagInMilliseconds, { lagType,});
+  stats.timing(`${config.SERVICE_NAME}.block_lag`, Number(blockLag), { lagType });
+  stats.timing(`${config.SERVICE_NAME}.time_lag`, timeLagInMilliseconds, { lagType });
 }
