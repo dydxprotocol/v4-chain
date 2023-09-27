@@ -24,6 +24,9 @@ type MexcTicker struct {
 	LastPrice string `json:"last" validate:"required,positive-float-string"`
 }
 
+// Ensure that MexcTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*MexcTicker)(nil)
+
 func (t MexcTicker) GetPair() string {
 	return t.Pair
 }

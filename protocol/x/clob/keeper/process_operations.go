@@ -258,7 +258,7 @@ func (k Keeper) PersistOrderRemovalToState(
 
 	// Order removals are always for long-term orders which must exist or conditional orders
 	// which must be triggered.
-	orderToRemove, err := k.FetchOrderFromOrderId(ctx, orderIdToRemove, make(map[types.OrderId]types.Order, 0))
+	orderToRemove, err := k.FetchOrderFromOrderId(ctx, orderIdToRemove, nil)
 	if err != nil {
 		return err
 	}
@@ -468,8 +468,8 @@ func (k Keeper) PersistMatchOrdersToState(
 
 	makerFills := matchOrders.GetFills()
 	for _, makerFill := range makerFills {
-		// Fetch the maker order and statefully validate fill.
-		makerOrder, err := k.StatefulValidateMakerFill(ctx, &makerFill, ordersMap, &takerOrder)
+		// Fetch the maker order from either short term orders or state.
+		makerOrder, err := k.FetchOrderFromOrderId(ctx, makerFill.MakerOrderId, ordersMap)
 		if err != nil {
 			return err
 		}
@@ -543,8 +543,8 @@ func (k Keeper) PersistMatchLiquidationToState(
 	}
 
 	for _, fill := range matchLiquidation.GetFills() {
-		// Fetch the maker order and statefully validate fill.
-		makerOrder, err := k.StatefulValidateMakerFill(ctx, &fill, ordersMap, nil)
+		// Fetch the maker order from either short term orders or state.
+		makerOrder, err := k.FetchOrderFromOrderId(ctx, fill.MakerOrderId, ordersMap)
 		if err != nil {
 			return err
 		}
@@ -555,11 +555,8 @@ func (k Keeper) PersistMatchLiquidationToState(
 			FillAmount: satypes.BaseQuantums(fill.FillAmount),
 		}
 
-		if err := matchWithOrders.Validate(); err != nil {
-			return err
-		}
-
 		// Write the position updates and state fill amounts for this match.
+		// Note stateless validation on the constructed `matchWithOrders` is performed within this function.
 		_, _, _, _, err = k.ProcessSingleMatch(
 			ctx,
 			&matchWithOrders,

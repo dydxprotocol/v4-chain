@@ -78,7 +78,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(tc.firstMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.firstMsg),
 				},
 				tc.firstMsg,
 			)
@@ -90,7 +90,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(tc.secondMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.secondMsg),
 				},
 				tc.secondMsg,
 			)
@@ -406,7 +406,7 @@ func TestRateLimitingOrders_StatefulOrderRateLimitsAreAcrossMarkets(t *testing.T
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5),
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
@@ -417,7 +417,7 @@ func TestRateLimitingOrders_StatefulOrderRateLimitsAreAcrossMarkets(t *testing.T
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5),
 			AccSequenceNumberForSigning: 2,
 		},
@@ -462,7 +462,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreRateLimited(t *testi
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5),
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
@@ -471,7 +471,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreRateLimited(t *testi
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5),
 			AccSequenceNumberForSigning: 2,
 		},

@@ -1,5 +1,6 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
+  DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   Ordering,
   PnlTicksFromDatabase,
@@ -52,7 +53,6 @@ class HistoricalPnlController extends Controller {
     ] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
-        { readReplica: true },
       ),
       PnlTicksTable.findAll(
         {
@@ -69,7 +69,7 @@ class HistoricalPnlController extends Controller {
         },
         [QueryableField.LIMIT],
         {
-          readReplica: true,
+          ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
         },
       ),

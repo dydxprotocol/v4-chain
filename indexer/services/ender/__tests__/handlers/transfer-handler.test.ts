@@ -52,10 +52,12 @@ import {
   defaultWithdrawalEvent,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('transferHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');

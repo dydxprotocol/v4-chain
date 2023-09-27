@@ -24,6 +24,9 @@ type OkxTicker struct {
 	LastPrice string `json:"last" validate:"required,positive-float-string"`
 }
 
+// Ensure that OkxTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*OkxTicker)(nil)
+
 func (t OkxTicker) GetPair() string {
 	return t.Pair
 }

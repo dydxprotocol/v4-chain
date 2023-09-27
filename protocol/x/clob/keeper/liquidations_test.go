@@ -7,13 +7,12 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -266,7 +265,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			).Return(
 				sdk.NewCoin(
 					constants.Usdc.Denom,
-					sdk.NewIntFromBigInt(big.NewInt(1_000_000_000_000)),
+					sdkmath.NewIntFromBigInt(big.NewInt(1_000_000_000_000)),
 				),
 			)
 
@@ -721,7 +720,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(0))) // Insurance fund is empty.
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(0))) // Insurance fund is empty.
 			},
 
 			liquidationConfig: constants.LiquidationsConfig_No_Limit, // `MaxInsuranceFundQuantumsForDeleveraging` is zero.
@@ -761,7 +760,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(0))) // Insurance fund is empty.
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(0))) // Insurance fund is empty.
 			},
 
 			liquidationConfig: constants.LiquidationsConfig_No_Limit, // `MaxInsuranceFundQuantumsForDeleveraging` is zero.
@@ -803,7 +802,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(
 					// Insurance fund has $0.99 initially.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(990_000)),
+					sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(990_000)),
 				).Once()
 				bk.On(
 					"GetBalance",
@@ -812,7 +811,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(
 					// Insurance fund has $0.74 after covering the loss of the first match.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(740_000)),
+					sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(740_000)),
 				).Twice()
 			},
 
@@ -886,7 +885,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(
 					// Insurance fund has $0.99 initially.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(990_000)),
+					sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(990_000)),
 				).Once()
 				bk.On(
 					"GetBalance",
@@ -895,7 +894,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(
 					// Insurance fund has $0.74 after covering the loss of the first match.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(740_000)),
+					sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(740_000)),
 				).Once()
 			},
 
@@ -1011,7 +1010,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
 			}
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
@@ -1893,7 +1892,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
-			).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(tc.insuranceFundBalance))).Twice()
+			).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(tc.insuranceFundBalance))).Twice()
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			mockIndexerEventManager.On("Enabled").Return(false)
@@ -4600,7 +4599,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			).Return(
 				sdk.NewCoin(
 					constants.Usdc.Denom,
-					sdk.NewIntFromBigInt(big.NewInt(1_000_000_000_000)),
+					sdkmath.NewIntFromBigInt(big.NewInt(1_000_000_000_000)),
 				),
 			)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())

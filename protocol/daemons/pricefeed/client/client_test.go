@@ -745,7 +745,7 @@ func TestMarketUpdater_Mixed(t *testing.T) {
 			pricesQueryClient.On("AllMarketParams", grpc_util.Ctx, mock.Anything).
 				Return(response, tc.queryError)
 			configs := &mocks.PricefeedMutableMarketConfigs{}
-			configs.On("UpdateMarkets", params).Return(tc.queryError)
+			configs.On("UpdateMarkets", params).Return(map[types.MarketId]error{}, tc.queryError)
 
 			RunMarketParamUpdaterTaskLoop(
 				grpc_util.Ctx,

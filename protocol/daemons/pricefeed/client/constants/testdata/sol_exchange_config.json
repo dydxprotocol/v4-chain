@@ -6,11 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitfinex",
-      "ticker": "tSOLUSD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "SOLUSDT",
       "adjustByMarket": "USDT-USD"

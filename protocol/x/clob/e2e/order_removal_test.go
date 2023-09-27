@@ -330,7 +330,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					ctx,
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
-						AccAddressForSigning: testtx.MustGetSignerAddress(tc.withdrawal),
+						AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.withdrawal),
 						Gas:                  100_000,
 					},
 					tc.withdrawal,
@@ -921,7 +921,7 @@ func TestOrderRemoval(t *testing.T) {
 					ctx,
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
-						AccAddressForSigning: testtx.MustGetSignerAddress(tc.withdrawal),
+						AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.withdrawal),
 						Gas:                  100_000,
 					},
 					tc.withdrawal,

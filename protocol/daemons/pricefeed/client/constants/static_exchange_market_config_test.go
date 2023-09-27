@@ -11,7 +11,7 @@ import (
 )
 
 func TestStaticExchangeMarketConfigCacheLen(t *testing.T) {
-	require.Len(t, StaticExchangeMarketConfig, 14)
+	require.Len(t, StaticExchangeMarketConfig, 13)
 }
 
 func TestGenerateExchangeConfigJsonLength(t *testing.T) {

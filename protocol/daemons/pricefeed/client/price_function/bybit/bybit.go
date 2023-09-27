@@ -21,13 +21,16 @@ type BybitResponseResult struct {
 }
 
 // BybitTicker is our representation of ticker information returned in Bybit response.
-// Need to implement interface `Ticker` in util.go.
+// It implements the Ticker interface in util.go.
 type BybitTicker struct {
 	Pair      string `json:"symbol" validate:"required"`
 	AskPrice  string `json:"ask1Price" validate:"required,positive-float-string"`
 	BidPrice  string `json:"bid1Price" validate:"required,positive-float-string"`
 	LastPrice string `json:"lastPrice" validate:"required,positive-float-string"`
 }
+
+// Ensure that BybitTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*BybitTicker)(nil)
 
 func (t BybitTicker) GetPair() string {
 	return t.Pair

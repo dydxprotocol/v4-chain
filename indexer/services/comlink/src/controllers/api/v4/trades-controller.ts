@@ -64,7 +64,6 @@ class TradesController extends Controller {
         createdBeforeOrAt,
       },
       [QueryableField.LIQUIDITY, QueryableField.CLOB_PAIR_ID, QueryableField.LIMIT],
-      { readReplica: true },
     );
 
     return {

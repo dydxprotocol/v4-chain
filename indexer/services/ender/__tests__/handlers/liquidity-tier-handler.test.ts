@@ -39,10 +39,12 @@ import {
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { defaultLiquidityTier } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import _ from 'lodash';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('liquidityTierHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');

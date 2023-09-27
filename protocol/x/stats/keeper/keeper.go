@@ -200,6 +200,8 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		userStatsMap[userWithStats.User] = userWithStats
 	}
 
+	// NB: These unsigned ints can technically overflow and wrap around, but the trading volume
+	// required to do so is unrealistic.
 	for _, fill := range blockStats.Fills {
 		userStats := k.GetUserStats(ctx, fill.Taker)
 		userStats.TakerNotional += fill.Notional

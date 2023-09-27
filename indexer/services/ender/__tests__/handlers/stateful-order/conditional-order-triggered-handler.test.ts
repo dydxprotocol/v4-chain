@@ -37,10 +37,12 @@ import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import { ConditionalOrderTriggeredHandler } from '../../../src/handlers/stateful-order/conditional-order-triggered-handler';
 import { defaultPerpetualMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('statefulOrderRemovalHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
