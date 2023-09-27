@@ -14,6 +14,7 @@ import {
   FIVE_MINUTES_IN_MILLISECONDS,
   ONE_HOUR_IN_MILLISECONDS,
   ONE_SECOND_IN_MILLISECONDS,
+  TEN_SECONDS_IN_MILLISECONDS,
 } from '@dydxprotocol-indexer/base';
 import {
   kafkaConfigSchema,
@@ -67,8 +68,7 @@ export const configSchema = {
     default: FIVE_MINUTES_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_TRACK_LAG: parseInteger({
-    // 10 seconds
-    default: 10_000,
+    default: TEN_SECONDS_IN_MILLISECONDS,
   }),
 
   // Start delay
