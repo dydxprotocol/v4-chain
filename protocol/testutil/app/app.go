@@ -634,7 +634,7 @@ func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancel
 			panic(fmt.Errorf("MustMakeCheckTxsWithClobMsg: Unknown message type %T", msg))
 		}
 
-		msgSignerAddress := testtx.MustGetSignerAddress(m)
+		msgSignerAddress := testtx.MustGetOnlySignerAddress(m)
 		if signerAddress == "" {
 			signerAddress = msgSignerAddress
 		}

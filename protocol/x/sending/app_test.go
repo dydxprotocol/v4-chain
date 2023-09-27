@@ -118,7 +118,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(&msgDepositToSubaccount),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgDepositToSubaccount),
 					Gas:                  100_000,
 				},
 				&msgDepositToSubaccount,
@@ -307,7 +307,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(&msgWithdrawFromSubaccount),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgWithdrawFromSubaccount),
 					Gas:                  100_000,
 				},
 				&msgWithdrawFromSubaccount,

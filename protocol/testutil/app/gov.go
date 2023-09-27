@@ -114,6 +114,9 @@ func SubmitAndTallyProposal(
 		require.True(t, tApp.CheckTx(voteCheckTx).IsOK())
 	}
 
+	// Advance to the height right before voting period ends.
+	ctx = tApp.AdvanceToBlock(TestProposalTallyHeight-1, AdvanceToBlockOptions{})
+	// Advance height to TestProposalTallyHeight; advance block time to right after voting period.
 	ctx = tApp.AdvanceToBlock(TestProposalTallyHeight, AdvanceToBlockOptions{
 		// Ensure the voting period has passed.
 		BlockTime: ctx.BlockTime().Add(TestVotingPeriod).Add(1 * time.Second),

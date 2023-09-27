@@ -23,7 +23,7 @@ func MustGetTxBytes(msgs ...sdk.Msg) []byte {
 }
 
 // Returns the account address that should sign the msg. Will panic if it is an unsupported message type.
-func MustGetSignerAddress(msg sdk.Msg) string {
+func MustGetOnlySignerAddress(msg sdk.Msg) string {
 	if len(msg.GetSigners()) == 0 {
 		panic(fmt.Errorf("msg does not have designated signer: %T", msg))
 	}
