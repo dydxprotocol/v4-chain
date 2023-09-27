@@ -39,7 +39,6 @@ class CandleController extends Controller {
         limit,
       },
       [],
-      { readReplica: true },
     );
 
     return {

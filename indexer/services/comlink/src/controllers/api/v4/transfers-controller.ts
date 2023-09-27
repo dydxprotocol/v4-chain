@@ -2,7 +2,7 @@ import { stats } from '@dydxprotocol-indexer/base';
 import {
   AssetColumns,
   AssetFromDatabase,
-  AssetTable,
+  AssetTable, defaultPostgresOptions,
   IsoString,
   Ordering,
   QueryableField,
@@ -61,7 +61,6 @@ class TransfersController extends Controller {
     Promise.all([
       SubaccountTable.findById(
         subaccountId,
-        { readReplica: true },
       ),
       TransferTable.findAllToOrFromSubaccountId(
         {
@@ -74,14 +73,13 @@ class TransfersController extends Controller {
         },
         [QueryableField.LIMIT],
         {
-          readReplica: true,
+          ...defaultPostgresOptions,
           orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
         },
       ),
       AssetTable.findAll(
         {},
         [],
-        { readReplica: true },
       ),
     ]);
     if (subaccount === undefined) {
@@ -109,7 +107,6 @@ class TransfersController extends Controller {
         id: subaccountIds,
       },
       [],
-      { readReplica: true },
     );
     const idToSubaccount: SubaccountById = _.keyBy(
       subaccounts,

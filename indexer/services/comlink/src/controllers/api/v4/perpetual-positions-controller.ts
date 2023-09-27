@@ -83,12 +83,10 @@ class PerpetualPositionsController extends Controller {
           createdBeforeOrAt,
         },
         [QueryableField.LIMIT],
-        { readReplica: true },
       ),
       MarketTable.findAll(
         {},
         [],
-        { readReplica: true },
       ),
     ]);
 
@@ -108,9 +106,8 @@ class PerpetualPositionsController extends Controller {
       ] = await Promise.all([
         SubaccountTable.findById(
           subaccountUuid,
-          { readReplica: true },
         ),
-        BlockTable.getLatest({ readReplica: true }),
+        BlockTable.getLatest(),
       ]);
 
       if (subaccount === undefined || latestBlock === undefined) {

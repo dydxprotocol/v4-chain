@@ -347,7 +347,6 @@ export async function filterPositionsByLatestEventIdPerPerpetual(
       id: positions.map((position: PerpetualPositionWithFunding) => position.lastEventId),
     },
     [],
-    { readReplica: true },
   );
   const eventByIdHex: { [eventId: string]: TendermintEventFromDatabase } = _.keyBy(
     events,
