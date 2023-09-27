@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
@@ -13,6 +14,13 @@ const (
 	// TestGasLimit is the gas limit used for test transactions.
 	// It's set to a larger amount such that the transaction never runs out of gas.
 	TestGasLimit = 1_000_000
+	// TestNativeTokenDenom is the denom of the native token used for testing.
+	TestNativeTokenDenom = "dv4tnt"
+)
+
+var (
+	// TestFeeCoins_5Cents is the gas fee offered for test transactions.
+	TestFeeCoins_5Cents = lib.MustParseCoinsNormalized(TestFee)
 )
 
 // BigNegMaxUint64 returns a `big.Int` that is set to -math.MaxUint64.

@@ -167,7 +167,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 						ctx,
 						tApp.App,
 						testapp.MustMakeCheckTxOptions{
-							AccAddressForSigning: testtx.MustGetSignerAddress(testSdkMsg.Msg),
+							AccAddressForSigning: testtx.MustGetOnlySignerAddress(testSdkMsg.Msg),
 						},
 						testSdkMsg.Msg,
 					))
