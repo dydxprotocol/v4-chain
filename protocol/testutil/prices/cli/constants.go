@@ -1,4 +1,4 @@
-package testutil
+package cli
 
 import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"

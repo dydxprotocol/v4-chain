@@ -1,4 +1,4 @@
-package testutil
+package cli
 
 import (
 	pricescli "github.com/dydxprotocol/v4-chain/protocol/x/prices/client/cli"

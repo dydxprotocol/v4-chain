@@ -6,6 +6,7 @@ import (
 	"fmt"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	cli_util "github.com/dydxprotocol/v4-chain/protocol/testutil/prices/cli"
 	"time"
 
 	"path/filepath"
@@ -22,7 +23,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/testutil"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/suite"
@@ -161,7 +161,7 @@ func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[ui
 
 		val := s.network.Validators[0]
 		ctx := val.ClientCtx
-		resp, err := testutil.MsgQueryAllMarketPriceExec(ctx)
+		resp, err := cli_util.MsgQueryAllMarketPriceExec(ctx)
 		s.Require().NoError(err)
 
 		var allMarketPricesQueryResponse types.QueryAllMarketPricesResponse
@@ -196,7 +196,7 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_AllEmptyResponses_NoPriceUpda
 	// Setup.
 	ts := s.T()
 
-	testutil.SetupExchangeResponses(ts, testutil.EmptyResponses_AllExchanges)
+	cli_util.SetupExchangeResponses(ts, cli_util.EmptyResponses_AllExchanges)
 
 	// Run.
 	s.network = network.New(ts, s.cfg)
@@ -210,7 +210,7 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPrice
 	ts := s.T()
 
 	// Add logging to see what's going on in circleCI.
-	testutil.SetupExchangeResponses(ts, testutil.PartialResponses_AllExchanges_Eth9001)
+	cli_util.SetupExchangeResponses(ts, cli_util.PartialResponses_AllExchanges_Eth9001)
 
 	// Run.
 	s.network = network.New(ts, s.cfg)
@@ -222,7 +222,7 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPrice
 func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceUpdate() {
 	// Setup.
 	ts := s.T()
-	testutil.SetupExchangeResponses(ts, testutil.FullResponses_AllExchanges_Btc101_Eth9001)
+	cli_util.SetupExchangeResponses(ts, cli_util.FullResponses_AllExchanges_Btc101_Eth9001)
 
 	// Run.
 	s.network = network.New(ts, s.cfg)

@@ -3,6 +3,8 @@ package cli
 import (
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"sort"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -51,4 +53,22 @@ func NetworkWithMarketObjects(t *testing.T, n int) (*network.Network, []types.Ma
 	})
 
 	return network.New(t, cfg), state.MarketParams, state.MarketPrices
+}
+func GetTickersSortedByMarketId(marketToMarketConfig map[uint32]pricefeedtypes.MarketConfig) []string {
+	// Get all `marketId`s in `marketIdToTicker` as a sorted array.
+	marketIds := make([]uint32, 0, len(marketToMarketConfig))
+	for marketId := range marketToMarketConfig {
+		marketIds = append(marketIds, marketId)
+	}
+	sort.Slice(marketIds, func(i, j int) bool {
+		return marketIds[i] < marketIds[j]
+	})
+
+	// Get a list of tickers sorted by their corresponding `marketId`.
+	tickers := make([]string, 0, len(marketToMarketConfig))
+	for _, marketId := range marketIds {
+		tickers = append(tickers, marketToMarketConfig[marketId].Ticker)
+	}
+
+	return tickers
 }
