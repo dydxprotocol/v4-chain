@@ -1,11 +1,12 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math"
 	"math/big"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -417,12 +418,10 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 			continue
 		}
 
-		placeOrderCtx, writeCache := ctx.CacheContext()
-
 		order := orderPlacement.GetOrder()
 		// Validate and place order.
 		_, orderStatus, placeOrderOffchainUpdates, err := k.AddPreexistingStatefulOrder(
-			placeOrderCtx,
+			ctx,
 			&order,
 			0,
 			k.MemClob,
@@ -460,12 +459,8 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 					existingOffchainUpdates.AddRemoveMessage(order.OrderId, message)
 				}
 			}
-		} else {
-			writeCache()
-
-			if k.indexerEventManager.Enabled() {
-				existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-			}
+		} else if k.indexerEventManager.Enabled() {
+			existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 		}
 	}
 
