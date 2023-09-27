@@ -187,4 +187,16 @@ func (k Keeper) UnsafeSetMarketPrice(
 	// Store the modified market price.
 	b := k.cdc.MustMarshal(&price)
 	store.Set(types.MarketKey(price.Id), b)
+
+	marketPriceUpdateSingleton := GenerateMarketPriceUpdateEvents([]types.MarketPrice{price})
+	for _, update := range marketPriceUpdateSingleton {
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeMarket,
+			indexer_manager.GetB64EncodedEventMessage(
+				update,
+			),
+			indexerevents.MarketEventVersion,
+		)
+	}
 }
