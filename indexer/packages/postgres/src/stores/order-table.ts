@@ -2,7 +2,7 @@ import { IndexerOrderId } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8 } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
@@ -68,7 +68,7 @@ export async function findAll(
     triggerPrice,
   }: OrderQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<OrderFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -238,7 +238,7 @@ export async function update(
 
 export async function findById(
   id: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<OrderFromDatabase | undefined> {
   const baseQuery: QueryBuilder<OrderModel> = setupBaseQuery<OrderModel>(
     OrderModel,
@@ -316,7 +316,7 @@ export function isLongTermOrConditionalOrder(orderFlags: string): boolean {
  * @param options
  */
 export async function findOpenLongTermOrConditionalOrders(
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<OrderFromDatabase[]> {
   const baseQuery: QueryBuilder<OrderModel> = setupBaseQuery<OrderModel>(
     OrderModel,

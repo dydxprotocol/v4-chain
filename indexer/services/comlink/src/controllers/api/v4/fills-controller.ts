@@ -73,7 +73,6 @@ class FillsController extends Controller {
         createdBeforeOrAt,
       },
       [QueryableField.LIMIT],
-      { readReplica: true },
     );
 
     const clobPairIdToPerpetualMarket: Record<

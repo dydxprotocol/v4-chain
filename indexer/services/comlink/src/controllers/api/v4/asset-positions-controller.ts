@@ -83,7 +83,6 @@ class AddressesController extends Controller {
           subaccountId: [subaccountUuid],
         },
         [QueryableField.SUBACCOUNT_ID],
-        { readReplica: true },
       ),
       PerpetualPositionTable.findAll(
         {
@@ -91,16 +90,12 @@ class AddressesController extends Controller {
           status: [PerpetualPositionStatus.OPEN],
         },
         [QueryableField.SUBACCOUNT_ID],
-        { readReplica: true },
       ),
       AssetTable.findAll(
         {},
         [],
-        { readReplica: true },
       ),
-      BlockTable.getLatest({
-        readReplica: true,
-      }),
+      BlockTable.getLatest(),
     ]);
 
     const sortedAssetPositions:
