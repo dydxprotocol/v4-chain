@@ -14,6 +14,7 @@ import {
   FIVE_MINUTES_IN_MILLISECONDS,
   ONE_HOUR_IN_MILLISECONDS,
   ONE_SECOND_IN_MILLISECONDS,
+  TEN_SECONDS_IN_MILLISECONDS,
 } from '@dydxprotocol-indexer/base';
 import {
   kafkaConfigSchema,
@@ -39,6 +40,7 @@ export const configSchema = {
   LOOPS_ORDERBOOK_INSTRUMENTATION: parseBoolean({ default: true }),
   LOOPS_CANCEL_STALE_ORDERS: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_RESEARCH_ENVIRONMENT: parseBoolean({ default: true }),
+  LOOPS_ENABLED_TRACK_LAG: parseBoolean({ default: false }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -65,6 +67,9 @@ export const configSchema = {
   LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA: parseInteger({
     default: FIVE_MINUTES_IN_MILLISECONDS,
   }),
+  LOOPS_INTERVAL_MS_TRACK_LAG: parseInteger({
+    default: TEN_SECONDS_IN_MILLISECONDS,
+  }),
 
   // Start delay
   START_DELAY_ENABLED: parseBoolean({ default: true }),
@@ -89,6 +94,11 @@ export const configSchema = {
 
   // Cancel stale orders
   CANCEL_STALE_ORDERS_QUERY_BATCH_SIZE: parseInteger({ default: 10000 }),
+
+  // Tracking indexer lag
+  TRACK_LAG_INDEXER_FULL_NODE_URL: parseString({ default: '' }), // i.e. http://11.11.11.11:26657
+  TRACK_LAG_VALIDATOR_URL: parseString({ default: '' }), // i.e. http://11.11.11.11:26657
+  TRACK_LAG_OTHER_FULL_NODE_URL: parseString({ default: '' }), // i.e. http://11.11.11.11:26657
 
   // Update research environment
   AWS_ACCOUNT_ID: parseString(),
