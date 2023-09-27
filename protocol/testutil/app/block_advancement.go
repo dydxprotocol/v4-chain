@@ -16,7 +16,8 @@ import (
 // without going through CheckTx and, therefore, not affect the local memclob state. This also allows us to propose
 // an invalid set of operations that an honest validator would not generate.
 type BlockAdvancement struct {
-	OrdersAndOperations []interface{} // should hold Order and OperationRaw types.
+	ShortTermOrdersAndOperations []interface{}     // should hold Order and OperationRaw types. Slice to allow for ordering.
+	StatefulOrders               []clobtypes.Order // should hold stateful orders to include in DeliverTx after ProposedOperationsTx
 }
 
 type BlockAdvancementWithError struct {
@@ -33,11 +34,7 @@ func (b BlockAdvancementWithError) AdvanceToBlock(
 	tApp *TestApp,
 	t *testing.T,
 ) sdktypes.Context {
-	msgProposedOperations := &clobtypes.MsgProposedOperations{
-		OperationsQueue: b.BlockAdvancement.getOperationsQueue(ctx, tApp.App),
-	}
-	return tApp.AdvanceToBlock(blockHeight, AdvanceToBlockOptions{
-		DeliverTxsOverride: [][]byte{testtx.MustGetTxBytes(msgProposedOperations)},
+	advanceToBlockOptions := AdvanceToBlockOptions{
 		ValidateDeliverTxs: func(
 			ctx sdktypes.Context,
 			request abcitypes.RequestDeliverTx,
@@ -51,16 +48,58 @@ func (b BlockAdvancementWithError) AdvanceToBlock(
 			}
 			return false
 		},
-	})
+	}
+
+	deliverTxsOverride := b.BlockAdvancement.getDeliverTxs(ctx, tApp.App)
+	if len(deliverTxsOverride) > 0 {
+		advanceToBlockOptions.DeliverTxsOverride = deliverTxsOverride
+	}
+
+	return tApp.AdvanceToBlock(blockHeight, advanceToBlockOptions)
 }
 
-// getOperationsQueue iterates through the ordersAndOperations slice, signing every order and appending a
+// getDeliverTxs returns a slice of tx bytes to be executed in DeliverTx.
+func (b BlockAdvancement) getDeliverTxs(ctx sdktypes.Context, app *app.App) [][]byte {
+	deliverTxs := make([][]byte, 0)
+
+	// operations come first in block
+	if len(b.ShortTermOrdersAndOperations) > 0 {
+		deliverTxs = append(deliverTxs, b.getProposedOperationsTxBytes(ctx, app))
+	}
+
+	// stateful order placements come after all app-injected messages
+	deliverTxs = append(deliverTxs, b.getStatefulMsgPlaceOrderTxBytes(ctx, app)...)
+
+	return deliverTxs
+}
+
+// getStatefulMsgPlaceOrderTxBytes iterates over StatefulOrders and returns a slice of tx bytes corresponding to the
+// signed set of MsgPlaceOrder txs.
+func (b BlockAdvancement) getStatefulMsgPlaceOrderTxBytes(ctx sdktypes.Context, app *app.App) [][]byte {
+	txs := make([][]byte, len(b.StatefulOrders))
+
+	for i, order := range b.StatefulOrders {
+		if !order.IsStatefulOrder() {
+			panic("Order should be stateful")
+		}
+		requestTxs := MustMakeCheckTxsWithClobMsg(
+			ctx,
+			app,
+			*clobtypes.NewMsgPlaceOrder(order),
+		)
+		txs[i] = requestTxs[0].Tx
+	}
+	return txs
+}
+
+// getProposedOperationsTxBytes iterates through the ShortTermOrdersAndOperations slice, signing every order and appending a
 // short term order placement operation to the operations queue. Other elements in the list should be of type
-// OperationRaw and will be appended to the operations queue as is.
-func (b BlockAdvancement) getOperationsQueue(ctx sdktypes.Context, app *app.App) []clobtypes.OperationRaw {
-	operationsQueue := make([]clobtypes.OperationRaw, len(b.OrdersAndOperations))
-	for i, orderOrMatch := range b.OrdersAndOperations {
-		switch castedValue := orderOrMatch.(type) {
+// OperationRaw and will be appended to the operations queue as is. Transaction bytes for tx containing
+// the MsgProposedOperations msg are returned.
+func (b BlockAdvancement) getProposedOperationsTxBytes(ctx sdktypes.Context, app *app.App) []byte {
+	operationsQueue := make([]clobtypes.OperationRaw, len(b.ShortTermOrdersAndOperations))
+	for i, orderOrOperation := range b.ShortTermOrdersAndOperations {
+		switch castedValue := orderOrOperation.(type) {
 		case clobtypes.Order:
 			order := castedValue
 			requestTxs := MustMakeCheckTxsWithClobMsg(
@@ -80,5 +119,9 @@ func (b BlockAdvancement) getOperationsQueue(ctx sdktypes.Context, app *app.App)
 		}
 	}
 
-	return operationsQueue
+	msgProposedOperations := &clobtypes.MsgProposedOperations{
+		OperationsQueue: operationsQueue,
+	}
+
+	return testtx.MustGetTxBytes(msgProposedOperations)
 }
