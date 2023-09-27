@@ -15,11 +15,13 @@ import { MarketEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@
 import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../../helpers/indexer-proto-helpers';
 import { MarketModifyHandler } from '../../../src/handlers/markets/market-modify-handler';
 import Long from 'long';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('marketModifyHandler', () => {
 
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
   });
 
   beforeEach(async () => {

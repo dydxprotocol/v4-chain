@@ -52,7 +52,7 @@ export function indexerTendermintEventToTransactionIndex(
   }
 
   throw new ParseMessageError(
-    'TendermintEventTable.orderingWithinBlock.oneOfKind cannot be undefined',
+    'Either transactionIndex or blockEvent must be defined in IndexerTendermintEvent',
   );
 }
 

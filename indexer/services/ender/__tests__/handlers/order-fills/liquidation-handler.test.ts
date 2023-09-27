@@ -73,6 +73,7 @@ import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import { LiquidationHandler } from '../../../src/handlers/order-fills/liquidation-handler';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import Long from 'long';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
@@ -89,6 +90,7 @@ const defaultTakerFee: string = protocolTranslations.quantumsToHumanFixedString(
 describe('LiquidationHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');

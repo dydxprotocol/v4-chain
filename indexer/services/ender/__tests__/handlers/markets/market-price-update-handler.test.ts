@@ -33,10 +33,12 @@ import { MarketEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@
 import { MarketPriceUpdateHandler } from '../../../src/handlers/markets/market-price-update-handler';
 import Long from 'long';
 import { getPrice } from '../../../src/caches/price-cache';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('marketPriceUpdateHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
   });
 
   beforeEach(async () => {

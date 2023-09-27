@@ -23,10 +23,12 @@ import {
   createIndexerTendermintEvent,
 } from '../../helpers/indexer-proto-helpers';
 import Long from 'long';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('marketCreateHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
   });
 
   beforeEach(async () => {

@@ -51,6 +51,11 @@ const scripts: string[] = [
   'dydx_uuid_from_perpetual_position_parts.sql',
   'dydx_uuid_from_subaccount_id.sql',
   'dydx_uuid_from_subaccount_id_parts.sql',
+  'dydx_uuid_from_transaction_parts.sql',
+  'dydx_create_transaction.sql',
+  'dydx_create_initial_rows_for_tendermint_block.sql',
+  'dydx_create_tendermint_event.sql',
+  'dydx_tendermint_event_to_transaction_index.sql',
 ];
 
 export async function createPostgresFunctions(): Promise<void> {
