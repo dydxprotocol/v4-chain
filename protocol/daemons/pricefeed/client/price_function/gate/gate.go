@@ -17,6 +17,9 @@ type GateTicker struct {
 	LastPrice string `json:"last" validate:"required,positive-float-string"`
 }
 
+// Ensure that GateTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*GateTicker)(nil)
+
 func (t GateTicker) GetPair() string {
 	return t.Pair
 }

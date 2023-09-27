@@ -114,10 +114,10 @@ func (k Keeper) GetAllMarketParams(ctx sdk.Context) []types.MarketParam {
 func (k Keeper) UnsafeModifyMarketParam(
 	ctx sdk.Context,
 	marketParam types.MarketParam,
-) (types.MarketParam, error) {
+) error {
 	// Validate input.
 	if err := marketParam.Validate(); err != nil {
-		return types.MarketParam{}, err
+		return err
 	}
 
 	// Store the modified market param.
@@ -142,5 +142,5 @@ func (k Keeper) UnsafeModifyMarketParam(
 	// Update the in-memory market pair map for labelling metrics.
 	metrics.AddMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
 
-	return marketParam, nil
+	return nil
 }

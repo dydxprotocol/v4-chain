@@ -28,13 +28,14 @@ import (
 // Prevent strconv unused error
 var _ = strconv.IntSize
 
-func createNSubaccount(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Subaccount {
+func createNSubaccount(keeper *keeper.Keeper, ctx sdk.Context, n int, usdcBalance *big.Int) []types.Subaccount {
 	items := make([]types.Subaccount, n)
 	for i := range items {
 		items[i].Id = &types.SubaccountId{
 			Owner:  strconv.Itoa(i),
 			Number: uint32(i),
 		}
+		items[i].AssetPositions = testutil.CreateUsdcAssetPosition(usdcBalance)
 
 		keeper.SetSubaccount(ctx, items[i])
 	}
@@ -102,7 +103,7 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 
 func TestSubaccountGet(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
-	items := createNSubaccount(keeper, ctx, 10)
+	items := createNSubaccount(keeper, ctx, 10, big.NewInt(1_000))
 	for _, item := range items {
 		rst := keeper.GetSubaccount(ctx,
 			*item.Id,
@@ -112,6 +113,24 @@ func TestSubaccountGet(t *testing.T) {
 			nullify.Fill(&rst),  //nolint:staticcheck
 		)
 	}
+}
+
+func TestSubaccountSet_Empty(t *testing.T) {
+	ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+	keeper.SetSubaccount(ctx, types.Subaccount{
+		Id: &constants.Alice_Num0,
+	})
+
+	require.Len(t, keeper.GetAllSubaccount(ctx), 0)
+
+	keeper.SetSubaccount(ctx, types.Subaccount{
+		Id:             &constants.Alice_Num0,
+		AssetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000)),
+	})
+	keeper.SetSubaccount(ctx, types.Subaccount{
+		Id: &constants.Alice_Num0,
+	})
+	require.Len(t, keeper.GetAllSubaccount(ctx), 0)
 }
 
 func TestSubaccountGetNonExistent(t *testing.T) {
@@ -130,7 +149,7 @@ func TestSubaccountGetNonExistent(t *testing.T) {
 
 func TestGetAllSubaccount(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
-	items := createNSubaccount(keeper, ctx, 10)
+	items := createNSubaccount(keeper, ctx, 10, big.NewInt(1_000))
 	require.Equal(
 		t,
 		items,
@@ -171,7 +190,7 @@ func TestForEachSubaccount(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
-			items := createNSubaccount(keeper, ctx, tc.numSubaccountsInState)
+			items := createNSubaccount(keeper, ctx, tc.numSubaccountsInState, big.NewInt(1_000))
 			collectedSubaccounts := make([]types.Subaccount, 0)
 			i := 0
 			keeper.ForEachSubaccount(ctx, func(subaccount types.Subaccount) bool {
@@ -222,7 +241,7 @@ func TestForEachSubaccountRandomStart(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			rand := rand.New(rand.NewSource(53))
 			ctx, keeper, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
-			_ = createNSubaccount(keeper, ctx, tc.numSubaccountsInState)
+			_ = createNSubaccount(keeper, ctx, tc.numSubaccountsInState, big.NewInt(1_000))
 			collectedSubaccounts := make([]types.Subaccount, 0)
 			i := 0
 			keeper.ForEachSubaccountRandomStart(
@@ -2185,7 +2204,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				}
 			}
 
-			subaccount := createNSubaccount(keeper, ctx, 1)[0]
+			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
 			subaccount.PerpetualPositions = tc.perpetualPositions
 			subaccount.AssetPositions = tc.assetPositions
 			keeper.SetSubaccount(ctx, subaccount)
@@ -2797,7 +2816,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 
 			subaccountId := types.SubaccountId{Owner: "foo", Number: 0}
 			if !tc.useEmptySubaccount {
-				subaccount := createNSubaccount(keeper, ctx, 1)[0]
+				subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
 				subaccount.PerpetualPositions = tc.perpetualPositions
 				subaccount.AssetPositions = tc.assetPositions
 				keeper.SetSubaccount(ctx, subaccount)
@@ -3212,7 +3231,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 
 			subaccountId := types.SubaccountId{Owner: "foo", Number: 0}
 			if !tc.useEmptySubaccount {
-				subaccount := createNSubaccount(keeper, ctx, 1)[0]
+				subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
 				subaccount.PerpetualPositions = tc.perpetualPositions
 				subaccount.AssetPositions = tc.assetPositions
 				keeper.SetSubaccount(ctx, subaccount)

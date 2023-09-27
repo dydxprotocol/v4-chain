@@ -118,6 +118,31 @@ export async function update(
   return updatedComplianceData as unknown as (ComplianceDataFromDatabase | undefined);
 }
 
+export async function upsert(
+  complianceDataToUpsert: ComplianceDataCreateObject,
+  options: Options = { txId: undefined },
+): Promise<ComplianceDataFromDatabase> {
+  const complianceData: ComplianceDataFromDatabase | undefined = await findByAddressAndProvider(
+    complianceDataToUpsert.address,
+    complianceDataToUpsert.provider,
+  );
+  if (complianceData === undefined) {
+    return create({
+      ...complianceDataToUpsert,
+    }, options);
+  }
+
+  const updatedComplianceData: ComplianceDataFromDatabase | undefined = await update({
+    ...complianceDataToUpsert,
+  }, options);
+
+  if (updatedComplianceData === undefined) {
+    throw Error('order must exist after update');
+  }
+
+  return updatedComplianceData;
+}
+
 export async function findByAddressAndProvider(
   address: string,
   provider: string,

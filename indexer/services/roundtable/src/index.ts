@@ -2,6 +2,7 @@ import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/
 import { producer } from '@dydxprotocol-indexer/kafka';
 
 import config from './config';
+import { placeHolderProvider } from './helpers/compliance-clients';
 import { startLoop } from './helpers/loops-helper';
 import {
   redisClient,
@@ -13,6 +14,7 @@ import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
+import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
 
 process.on('SIGTERM', () => {
@@ -94,6 +96,12 @@ async function start(): Promise<void> {
       config.LOOPS_INTERVAL_MS_UPDATE_RESEARCH_ENVIRONMENT,
     );
   }
+
+  startLoop(
+    () => updateComplianceDataTask(placeHolderProvider),
+    'update_compliance_data',
+    config.LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA,
+  );
 
   logger.info({
     at: 'index',

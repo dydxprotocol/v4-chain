@@ -1,6 +1,7 @@
 package process_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -115,7 +116,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 						Id: event.Id,
 						Coin: sdk.NewCoin(
 							event.Coin.Denom,
-							event.Coin.Amount.Add(sdk.NewInt(10_000)), // second event has different amount.
+							event.Coin.Amount.Add(sdkmath.NewInt(10_000)), // second event has different amount.
 						),
 						Address:        event.Address,
 						EthBlockHeight: event.EthBlockHeight,

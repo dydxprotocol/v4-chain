@@ -97,14 +97,14 @@ func TestPendingUpdates(t *testing.T) {
 					isBuy:                true,
 					feePpm:               500,
 					bigFillBaseQuantums:  big.NewInt(100),
-					bigFillQuoteQuantums: big.NewInt(10_050), // 5_025_000 / 1_000_000) (round to 5)
+					bigFillQuoteQuantums: big.NewInt(10_050), // 5_025_000 / 1_000_000) (round to 6)
 				},
 			},
 			expectedUpdates: []satypes.Update{
 				{
 					SubaccountId: constants.Bob_Num0,
-					// - 10_050 - (fee) 5
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-10_055)),
+					// - 10_050 - (fee) 6
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-10_056)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -195,7 +195,7 @@ func TestPendingUpdates(t *testing.T) {
 					isBuy:                true,
 					feePpm:               200,
 					bigFillBaseQuantums:  big.NewInt(200),
-					bigFillQuoteQuantums: big.NewInt(1_500), // fee = 300_000 / 1_000_000 (rounds to 0)
+					bigFillQuoteQuantums: big.NewInt(1_500), // fee = 300_000 / 1_000_000 (rounds to 1)
 				},
 				{
 					subaccountId:         constants.Alice_Num0,
@@ -203,7 +203,7 @@ func TestPendingUpdates(t *testing.T) {
 					isBuy:                false,
 					feePpm:               500,
 					bigFillBaseQuantums:  big.NewInt(50),
-					bigFillQuoteQuantums: big.NewInt(1_600), // fee = 800_000 / 1_000_000 (rounds to 0)
+					bigFillQuoteQuantums: big.NewInt(1_600), // fee = 800_000 / 1_000_000 (rounds to 1)
 				},
 				{
 					subaccountId:         constants.Alice_Num0,
@@ -211,14 +211,14 @@ func TestPendingUpdates(t *testing.T) {
 					isBuy:                false,
 					feePpm:               500,
 					bigFillBaseQuantums:  big.NewInt(100),
-					bigFillQuoteQuantums: big.NewInt(2_100), // fee = 1_050_000 / 1_000_000 (rounds to 1)
+					bigFillQuoteQuantums: big.NewInt(2_100), // fee = 1_050_000 / 1_000_000 (rounds to 2)
 				},
 			},
 			expectedUpdates: []satypes.Update{
 				{
 					SubaccountId: constants.Alice_Num0,
-					// - 15_000 - 1_500 + 1_600 + 2_100 - (fee) 4
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-12_804)),
+					// - 15_000 - 1_500 + 1_600 + 2_100 - (fee) 7
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-12_807)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -241,7 +241,7 @@ func TestPendingUpdates(t *testing.T) {
 					isBuy:                true,
 					feePpm:               -200,
 					bigFillBaseQuantums:  big.NewInt(100),
-					bigFillQuoteQuantums: big.NewInt(15_000), // fee = -3_000_000 / 1_000_000
+					bigFillQuoteQuantums: big.NewInt(15_000), // fee = -3_000_000 / 1_000_000 (rounds to 0)
 				},
 				{
 					subaccountId:         constants.Alice_Num0,
@@ -249,7 +249,7 @@ func TestPendingUpdates(t *testing.T) {
 					isBuy:                true,
 					feePpm:               -200,
 					bigFillBaseQuantums:  big.NewInt(200),
-					bigFillQuoteQuantums: big.NewInt(1_500), // fee = -300_000 / 1_000_000 (rounds to -1)
+					bigFillQuoteQuantums: big.NewInt(1_500), // fee = -300_000 / 1_000_000 (rounds to 0)
 				},
 				{
 					subaccountId:         constants.Alice_Num0,
@@ -257,7 +257,7 @@ func TestPendingUpdates(t *testing.T) {
 					isBuy:                false,
 					feePpm:               500,
 					bigFillBaseQuantums:  big.NewInt(50),
-					bigFillQuoteQuantums: big.NewInt(1_600), // fee = 800_000 / 1_000_000 (rounds to 0)
+					bigFillQuoteQuantums: big.NewInt(1_600), // fee = 800_000 / 1_000_000 (rounds to 1)
 				},
 				{
 					subaccountId:         constants.Alice_Num0,
@@ -265,14 +265,14 @@ func TestPendingUpdates(t *testing.T) {
 					isBuy:                false,
 					feePpm:               500,
 					bigFillBaseQuantums:  big.NewInt(100),
-					bigFillQuoteQuantums: big.NewInt(2_100), // fee = 1_050_000 / 1_000_000 (rounds to 1)
+					bigFillQuoteQuantums: big.NewInt(2_100), // fee = 1_050_000 / 1_000_000 (rounds to 2)
 				},
 			},
 			expectedUpdates: []satypes.Update{
 				{
 					SubaccountId: constants.Alice_Num0,
 					// - 15_000 - 1_500 + 1_600 + 2_100 + (fee) 3
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-12_797)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-12_800)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),

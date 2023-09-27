@@ -118,3 +118,20 @@ func (k Keeper) RecognizedEventInfo(
 		Info: recognizedEventInfo,
 	}, nil
 }
+
+func (k Keeper) DelayedCompleteBridgeMessages(
+	c context.Context,
+	req *types.QueryDelayedCompleteBridgeMessagesRequest,
+) (
+	*types.QueryDelayedCompleteBridgeMessagesResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	return &types.QueryDelayedCompleteBridgeMessagesResponse{
+		Messages: k.GetDelayedCompleteBridgeMessages(ctx, req.Address),
+	}, nil
+}

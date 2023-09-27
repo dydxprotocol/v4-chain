@@ -1,6 +1,7 @@
 package msgs
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +31,7 @@ var (
 					Id: 0,
 					Coin: sdk.NewCoin(
 						"bridge-token",
-						sdk.NewIntFromUint64(1234),
+						sdkmath.NewIntFromUint64(1234),
 					),
 					Address: constants.Alice_Num0.Owner,
 				},

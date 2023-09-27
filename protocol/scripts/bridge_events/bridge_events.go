@@ -28,7 +28,7 @@ relevant state that would be modified as a result of these events.
 
 Usage:
 
-	go run scripts/bridge_events.go \
+	go run scripts/bridge_events/bridge_events.go \
 		-denom <token_denom> \
 		-rpc <rpc_node_url> \
 		-address <bridge_contract_address> \

@@ -175,7 +175,7 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 				MinPriceChangePpm:  1,
 				ExchangeConfigJson: "{}",
 			}},
-			expectedError: errors.New("invalid market param 0: Pair cannot be empty: Invalid input"),
+			expectedError: errors.New("invalid market param 1: Pair cannot be empty: Invalid input"),
 		},
 		"Invalid: invalid exchangeConfigJson (empty, fails marketParams.Validate)": {
 			marketParams: []prices_types.MarketParam{{
@@ -199,7 +199,7 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 				validMarketParamWithExchangeConfig(`{"exchanges":"invalid"}`),
 			},
 			expectedError: errors.New(
-				"invalid exchange config json for market param 0: json: cannot unmarshal string into Go struct " +
+				"invalid exchange config json for market param 1: json: cannot unmarshal string into Go struct " +
 					"field ExchangeConfigJson.exchanges of type []types.ExchangeMarketConfigJson",
 			),
 		},
@@ -208,13 +208,13 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 				validMarketParamWithExchangeConfig("{}"),
 			},
 			expectedError: errors.New(
-				"invalid exchange config json for market param 0: exchanges cannot be empty",
+				"invalid exchange config json for market param 1: exchanges cannot be empty",
 			),
 		},
 		"Invalid: invalid exchangeConfigJson (exchange name cannot be empty)": {
 			marketParams: []prices_types.MarketParam{validMarketParamWithExchangeConfig(`{"exchanges":[{}]}`)},
 			expectedError: errors.New(
-				"invalid exchange config json for market param 0: invalid exchange: exchange name cannot be empty",
+				"invalid exchange config json for market param 1: invalid exchange: exchange name cannot be empty",
 			),
 		},
 		"Invalid: invalid exchangeConfigJson (exchange name invalid)": {
@@ -222,7 +222,7 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 				validMarketParamWithExchangeConfig(fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigInvalidExchangeName)),
 			},
 			expectedError: errors.New(
-				"invalid exchange config json for market param 0: invalid exchange: exchange name 'invalid' is " +
+				"invalid exchange config json for market param 1: invalid exchange: exchange name 'invalid' is " +
 					"not valid",
 			),
 		},
@@ -231,7 +231,7 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 				validMarketParamWithExchangeConfig(fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigEmptyTicker)),
 			},
 			expectedError: errors.New(
-				"invalid exchange config json for market param 0: invalid exchange: ticker cannot be empty",
+				"invalid exchange config json for market param 1: invalid exchange: ticker cannot be empty",
 			),
 		},
 		"Invalid: invalid exchangeConfigJson (adjustment market invalid)": {
@@ -239,7 +239,7 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 				validMarketParamWithExchangeConfig(fmt.Sprintf(`{"exchanges":[%s]}`, exchangeConfigInvalidAdjustByMarket)),
 			},
 			expectedError: errors.New(
-				"invalid exchange config json for market param 0: invalid exchange: adjustment market " +
+				"invalid exchange config json for market param 1: invalid exchange: adjustment market " +
 					"'invalid' is not valid"),
 		},
 		"Invalid: invalid params (duplicate ids)": {

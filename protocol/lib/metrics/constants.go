@@ -82,7 +82,6 @@ const (
 	EthBlockHeight           = "eth_block_height"
 	EventIdAlreadyRecognized = "event_id_already_recognized"
 	EventIdNotSequential     = "event_id_not_sequential"
-	EventIdNotNextExpected   = "event_id_not_next_expected"
 	NextId                   = "next_id"
 	RecognizedEventInfo      = "recognized_event_info"
 
@@ -250,10 +249,15 @@ const (
 	UpdateSubaccounts                     = "update_subaccounts"
 
 	// Liquidation Daemon.
-	AllSubaccounts               = "get_all_subaccounts"
-	LiquidatableSubaccountIds    = "liquidatable_subaccount_ids"
-	LiquidationDaemon            = "liquidation_daemon"
-	SubaccountsWithOpenPositions = "subaccounts_with_open_positions"
+	CheckCollateralizationForSubaccounts = "check_collateralization_for_subaccounts"
+	GetAllSubaccounts                    = "get_all_subaccounts"
+	GetLiquidatableSubaccountIds         = "get_liquidatable_subaccount_ids"
+	GetSubaccountsFromKey                = "get_subaccounts_from_key"
+	LiquidatableSubaccountIds            = "liquidatable_subaccount_ids"
+	LiquidationDaemon                    = "liquidation_daemon"
+	PageLimit                            = "page_limit"
+	SendLiquidatableSubaccountIds        = "send_liquidatable_subaccount_ids"
+	SubaccountsWithOpenPositions         = "subaccounts_with_open_positions"
 
 	// Liquidation.
 	InsuranceFundBalance                  = "insurance_fund_balance"
