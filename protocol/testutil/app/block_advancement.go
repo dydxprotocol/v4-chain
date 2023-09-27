@@ -16,13 +16,19 @@ import (
 // without going through CheckTx and, therefore, not affect the local memclob state. This also allows us to propose
 // an invalid set of operations that an honest validator would not generate.
 type BlockAdvancement struct {
-	ShortTermOrdersAndOperations []interface{}     // should hold Order and OperationRaw types. Slice to allow for ordering.
-	StatefulOrders               []clobtypes.Order // should hold stateful orders to include in DeliverTx after ProposedOperationsTx
+	// should hold Order and OperationRaw types. Stored as slice to allow for ordering.
+	ShortTermOrdersAndOperations []interface{}
+	// should hold stateful orders to include in DeliverTx after ProposedOperationsTx
+	StatefulOrders []clobtypes.Order
 }
 
+// TxIndexesToErrors allows us to specify the expected error (if any) for each tx in the
+// block proposal.
+type TxIndexesToErrors map[int]string
+
 type BlockAdvancementWithError struct {
-	BlockAdvancement       BlockAdvancement
-	ExpectedDeliverTxError string
+	BlockAdvancement        BlockAdvancement
+	ExpectedDeliverTxErrors TxIndexesToErrors
 }
 
 // AdvanceToBlock advances the test app to the given block height using the operations queue
@@ -39,10 +45,12 @@ func (b BlockAdvancementWithError) AdvanceToBlock(
 			ctx sdktypes.Context,
 			request abcitypes.RequestDeliverTx,
 			response abcitypes.ResponseDeliverTx,
+			txIndex int,
 		) (haltchain bool) {
-			if b.ExpectedDeliverTxError != "" {
+			expectedError, found := b.ExpectedDeliverTxErrors[txIndex]
+			if found && expectedError != "" {
 				require.True(t, response.IsErr())
-				require.Contains(t, response.Log, b.ExpectedDeliverTxError)
+				require.Contains(t, response.Log, expectedError)
 			} else {
 				require.True(t, response.IsOK())
 			}
@@ -92,10 +100,10 @@ func (b BlockAdvancement) getStatefulMsgPlaceOrderTxBytes(ctx sdktypes.Context, 
 	return txs
 }
 
-// getProposedOperationsTxBytes iterates through the ShortTermOrdersAndOperations slice, signing every order and appending a
-// short term order placement operation to the operations queue. Other elements in the list should be of type
-// OperationRaw and will be appended to the operations queue as is. Transaction bytes for tx containing
-// the MsgProposedOperations msg are returned.
+// getProposedOperationsTxBytes iterates through the ShortTermOrdersAndOperations slice,
+// signing every order and appending a short term order placement operation to the operations queue.
+// Other elements in the list should be of type OperationRaw and will be appended to the operations queue as is.
+// Transaction bytes for tx containing the MsgProposedOperations msg are returned.
 func (b BlockAdvancement) getProposedOperationsTxBytes(ctx sdktypes.Context, app *app.App) []byte {
 	operationsQueue := make([]clobtypes.OperationRaw, len(b.ShortTermOrdersAndOperations))
 	for i, orderOrOperation := range b.ShortTermOrdersAndOperations {

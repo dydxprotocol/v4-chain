@@ -439,7 +439,6 @@ func (k Keeper) PersistMatchOrdersToState(
 	matchOrders *types.MatchOrders,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	fmt.Printf("PersistMatchOrdersToState: %+v\n", matchOrders)
 	takerOrderId := matchOrders.GetTakerOrderId()
 	// Fetch the taker order from either short term orders or state
 	takerOrder, err := k.FetchOrderFromOrderId(ctx, takerOrderId, ordersMap)
@@ -458,7 +457,6 @@ func (k Keeper) PersistMatchOrdersToState(
 
 	if takerOrder.RequiresImmediateExecution() {
 		_, fillAmount, _ := k.GetOrderFillAmount(ctx, takerOrder.OrderId)
-		fmt.Println(fillAmount)
 		if fillAmount != 0 {
 			return errorsmod.Wrapf(
 				types.ErrImmediateExecutionOrderAlreadyFilled,

@@ -67,10 +67,12 @@ type ValidateResponsePrepareProposalFn func(sdk.Context, abcitypes.ResponsePrepa
 type ValidateResponseProcessProposalFn func(sdk.Context, abcitypes.ResponseProcessProposal) (haltChain bool)
 
 // ValidateDeliverTxsFn is a function that validates the response from each transaction that is delivered.
+// txIndex specifies the index of the transaction in the block.
 type ValidateDeliverTxsFn func(
 	ctx sdk.Context,
 	request abcitypes.RequestDeliverTx,
 	response abcitypes.ResponseDeliverTx,
+	txIndex int,
 ) (haltchain bool)
 
 // AdvanceToBlockOptions is a struct containing options for AdvanceToBlock.* functions.
@@ -488,7 +490,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		})
 
 		// Deliver the transaction from the previous block
-		for _, bz := range deliverTxs {
+		for i, bz := range deliverTxs {
 			deliverTxRequest := abcitypes.RequestDeliverTx{Tx: bz}
 			deliverTxResponse := tApp.App.DeliverTx(deliverTxRequest)
 			// Use the supplied validator otherwise use the default validation which expects all delivered
@@ -498,6 +500,7 @@ func (tApp *TestApp) AdvanceToBlock(
 					tApp.App.NewContext(false, tApp.header),
 					deliverTxRequest,
 					deliverTxResponse,
+					i,
 				)
 				tApp.halted = haltChain
 				if tApp.halted {

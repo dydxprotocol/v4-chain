@@ -57,7 +57,9 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 							),
 						},
 					},
-					ExpectedDeliverTxError: "IOC/FOK order is already filled, remaining size is cancelled.",
+					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
+						0: "IOC/FOK order is already filled, remaining size is cancelled.",
+					},
 				},
 			},
 		},
@@ -97,7 +99,9 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 							),
 						},
 					},
-					ExpectedDeliverTxError: clobtypes.ErrStatefulOrderDoesNotExist.Error(),
+					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
+						0: clobtypes.ErrStatefulOrderDoesNotExist.Error(),
+					},
 				},
 			},
 		},
@@ -163,7 +167,9 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 							),
 						},
 					},
-					ExpectedDeliverTxError: "IOC/FOK order is already filled, remaining size is cancelled.",
+					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
+						0: "IOC/FOK order is already filled, remaining size is cancelled.",
+					},
 				},
 			},
 		},
@@ -206,7 +212,9 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 							),
 						},
 					},
-					ExpectedDeliverTxError: "IOC/FOK order is already filled, remaining size is cancelled.",
+					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
+						0: "IOC/FOK order is already filled, remaining size is cancelled.",
+					},
 				},
 			},
 		},
