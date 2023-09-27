@@ -153,6 +153,9 @@ func TestProduceBlockBasicTxnEvent(t *testing.T) {
 			&OrderFillEvent,
 		),
 		EventVersion,
+		indexer_manager.GetBytes(
+			&OrderFillEvent,
+		),
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
@@ -182,6 +185,9 @@ func TestProduceBlockBasicBlockEvent(t *testing.T) {
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		EventVersion,
+		indexer_manager.GetBytes(
+			&FundingRateAndIndexEvent,
+		),
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
@@ -210,6 +216,9 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 			&OrderFillEvent,
 		),
 		EventVersion,
+		indexer_manager.GetBytes(
+			&OrderFillEvent,
+		),
 	)
 	indexerEventManager.AddTxnEvent(
 		ctx,
@@ -218,6 +227,9 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 			&SubaccountEvent,
 		),
 		EventVersion,
+		indexer_manager.GetBytes(
+			&SubaccountEvent,
+		),
 	)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes1)
 	indexerEventManager.AddTxnEvent(
@@ -227,6 +239,9 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 			&TransferEvent,
 		),
 		EventVersion,
+		indexer_manager.GetBytes(
+			&TransferEvent,
+		),
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
@@ -260,6 +275,9 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 			&OrderFillEvent,
 		),
 		EventVersion,
+		indexer_manager.GetBytes(
+			&OrderFillEvent,
+		),
 	)
 	indexerEventManager.AddTxnEvent(
 		ctx,
@@ -268,6 +286,9 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 			&SubaccountEvent,
 		),
 		EventVersion,
+		indexer_manager.GetBytes(
+			&SubaccountEvent,
+		),
 	)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes1)
 	indexerEventManager.AddTxnEvent(
@@ -277,6 +298,9 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 			&TransferEvent,
 		),
 		EventVersion,
+		indexer_manager.GetBytes(
+			&TransferEvent,
+		),
 	)
 	indexerEventManager.AddBlockEvent(
 		ctx,
@@ -286,6 +310,9 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		EventVersion,
+		indexer_manager.GetBytes(
+			&FundingRateAndIndexEvent,
+		),
 	)
 	indexerEventManager.AddBlockEvent(
 		ctx,
@@ -295,6 +322,9 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		EventVersion,
+		indexer_manager.GetBytes(
+			&FundingPremiumSampleEvent,
+		),
 	)
 	indexerEventManager.AddBlockEvent(
 		ctx,
@@ -304,6 +334,9 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
 		EventVersion,
+		indexer_manager.GetBytes(
+			&FundingPremiumSampleEvent,
+		),
 	)
 	indexerEventManager.AddBlockEvent(
 		ctx,
@@ -313,6 +346,9 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
 		EventVersion,
+		indexer_manager.GetBytes(
+			&FundingRateAndIndexEvent,
+		),
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
@@ -350,6 +386,9 @@ func TestClearEvents(t *testing.T) {
 			&OrderFillEvent,
 		),
 		EventVersion,
+		indexer_manager.GetBytes(
+			&OrderFillEvent,
+		),
 	)
 
 	block := indexerEventManager.ProduceBlock(ctx)
