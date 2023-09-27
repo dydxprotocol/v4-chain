@@ -22,6 +22,7 @@ const (
 
 var (
 	TestVotingPeriod = 1 * time.Minute
+	TestDeposit      = sdk.Coins{sdk.NewInt64Coin(constants.TestNativeTokenDenom, 10_000_000)}
 )
 
 // SubmitAndTallyProposal simulates the following:
@@ -40,7 +41,7 @@ func SubmitAndTallyProposal(
 	// Create a MsgSubmitProposal
 	msgSubmitProposal, err := govtypesv1.NewMsgSubmitProposal(
 		messages,
-		sdk.Coins{sdk.NewInt64Coin(constants.TestNativeTokenDenom, 10_000_000)},
+		TestDeposit,
 		constants.AliceAccAddress.String(),
 		TestMetadata,
 		TestTitle,
