@@ -3,10 +3,15 @@
 package containertest
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/gogoproto/jsonpb"
@@ -20,10 +25,6 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"testing"
-	"time"
 )
 
 const expectDirName = "expect"
@@ -100,7 +101,7 @@ func TestPlaceOrder(t *testing.T) {
 				},
 				Side:     clob.Order_SIDE_BUY,
 				Quantums: 10_000_000,
-				Subticks: 10_000,
+				Subticks: 1_000_000,
 				GoodTilOneof: &clob.Order_GoodTilBlock{
 					GoodTilBlock: 20,
 				},
@@ -108,6 +109,7 @@ func TestPlaceOrder(t *testing.T) {
 		},
 		constants.AliceAccAddress.String(),
 	))
+	// TODO(CLOB-905): place another matching order, and verify that the trade is executed.
 }
 
 func TestBankSend(t *testing.T) {
