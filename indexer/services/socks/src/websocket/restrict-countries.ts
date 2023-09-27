@@ -13,7 +13,7 @@ export class CountryRestrictor {
   }
 
   public isRestrictedCountry(req: IncomingMessage): boolean {
-    if (config.INDEXER_LEVEL_GEOBLOCKING_ENABLED ===  false) {
+    if (config.INDEXER_LEVEL_GEOBLOCKING_ENABLED === false) {
       return false;
     }
 

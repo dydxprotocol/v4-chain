@@ -123,7 +123,7 @@ describe('Index', () => {
 
       it('rejects connection if from restricted country', () => {
         jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
-  
+
         for (const country of restrictedCountries) {
           const message: IncomingMessage = new IncomingMessage(new Socket());
           message.headers = {
@@ -137,17 +137,17 @@ describe('Index', () => {
           expect(sendMessage).not.toHaveBeenCalled();
         }
       });
-  
+
       it('does not reject connection if from restricted country', () => {
         (v4 as unknown as jest.Mock).mockReturnValueOnce(connectionId);
         jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
-  
+
         const message: IncomingMessage = new IncomingMessage(new Socket());
         message.headers = {
           'cf-ipcountry': 'SA',
         };
         mockConnect(websocket, message);
-  
+
         // Test that the connection is tracked.
         expect(index.connections[connectionId]).not.toBeUndefined();
         expect(index.connections[connectionId].ws).toEqual(websocket);
