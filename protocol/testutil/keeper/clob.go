@@ -285,6 +285,20 @@ func CreateNClobPair(
 				),
 			),
 			indexerevents.PerpetualMarketEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewPerpetualMarketCreateEvent(
+					clobtest.MustPerpetualId(items[i]),
+					items[i].Id,
+					perps[i].Params.Ticker,
+					perps[i].Params.MarketId,
+					items[i].Status,
+					items[i].QuantumConversionExponent,
+					perps[i].Params.AtomicResolution,
+					items[i].SubticksPerTick,
+					items[i].StepBaseQuantums,
+					perps[i].Params.LiquidityTier,
+				),
+			),
 		).Return()
 
 		_, err := keeper.CreatePerpetualClobPair(

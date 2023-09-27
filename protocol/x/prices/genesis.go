@@ -33,6 +33,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 				update,
 			),
 			indexerevents.MarketEventVersion,
+			indexer_manager.GetBytes(
+				update,
+			),
 		)
 	}
 }
