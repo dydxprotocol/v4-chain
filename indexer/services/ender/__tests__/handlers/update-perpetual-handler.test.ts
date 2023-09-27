@@ -22,7 +22,6 @@ import {
   UpdatePerpetualEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectPerpetualMarketKafkaMessage,
@@ -69,9 +68,7 @@ describe('update-perpetual-handler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.UPDATE_PERPETUAL,
-        binaryToBase64String(
-          UpdatePerpetualEventV1.encode(defaultUpdatePerpetualEvent).finish(),
-        ),
+        UpdatePerpetualEventV1.encode(defaultUpdatePerpetualEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -154,9 +151,7 @@ function createKafkaMessageFromUpdatePerpetualEvent({
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.UPDATE_PERPETUAL,
-      binaryToBase64String(
-        UpdatePerpetualEventV1.encode(updatePerpetualEvent).finish(),
-      ),
+      UpdatePerpetualEventV1.encode(updatePerpetualEvent).finish(),
       transactionIndex,
       0,
     ),

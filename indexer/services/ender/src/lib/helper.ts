@@ -29,7 +29,6 @@ import {
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
 } from '../constants';
-import { base64StringToBinary } from '../helpers/encoding-helper';
 import {
   DydxIndexerSubtypes,
   EventProtoWithTypeAndVersion,
@@ -80,7 +79,7 @@ export function dateToDateTime(
 export function indexerTendermintEventToEventProtoWithType(
   event: IndexerTendermintEvent,
 ): EventProtoWithTypeAndVersion | undefined {
-  const eventDataBinary: Uint8Array = base64StringToBinary(event.data);
+  const eventDataBinary: Uint8Array = event.dataBytes;
   // set the default version to 1
   const version: number = event.version === 0 ? 1 : event.version;
   switch (event.subtype) {

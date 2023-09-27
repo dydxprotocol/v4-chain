@@ -21,7 +21,7 @@ import {
   defaultTime,
   defaultTxHash,
 } from '../helpers/constants';
-import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
+import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
@@ -363,9 +363,7 @@ function createBlock(
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.STATEFUL_ORDER,
-    binaryToBase64String(
-      StatefulOrderEventV1.encode(statefulOrderEvent).finish(),
-    ),
+    StatefulOrderEventV1.encode(statefulOrderEvent).finish(),
     0,
     0,
   );

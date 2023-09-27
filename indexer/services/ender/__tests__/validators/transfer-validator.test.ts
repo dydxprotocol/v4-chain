@@ -14,7 +14,7 @@ import {
   defaultTxHash,
   defaultWalletAddress,
 } from '../helpers/constants';
-import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
+import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 
 describe('transfer-validator', () => {
@@ -110,9 +110,7 @@ function createBlock(
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.TRANSFER,
-    binaryToBase64String(
-      TransferEventV1.encode(transferEvent).finish(),
-    ),
+    TransferEventV1.encode(transferEvent).finish(),
     0,
     0,
   );
