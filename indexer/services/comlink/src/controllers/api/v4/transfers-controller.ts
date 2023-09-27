@@ -2,7 +2,8 @@ import { stats } from '@dydxprotocol-indexer/base';
 import {
   AssetColumns,
   AssetFromDatabase,
-  AssetTable, defaultPostgresOptions,
+  AssetTable,
+  defaultPostgresOptions,
   IsoString,
   Ordering,
   QueryableField,

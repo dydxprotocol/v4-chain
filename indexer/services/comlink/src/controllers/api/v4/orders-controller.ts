@@ -1,7 +1,8 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   APIOrderStatus,
-  APIOrderStatusEnum, defaultPostgresOptions,
+  APIOrderStatusEnum,
+  defaultPostgresOptions,
   IsoString,
   OrderColumns,
   OrderFromDatabase,
