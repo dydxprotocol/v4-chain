@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
-	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"math/big"
 	"time"
 
@@ -29,7 +29,7 @@ func Start(
 	flags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient types2.GrpcClient,
+	grpcClient daemontypes.GrpcClient,
 ) error {
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)

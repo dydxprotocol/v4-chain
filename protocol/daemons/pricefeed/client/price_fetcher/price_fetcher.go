@@ -3,7 +3,7 @@ package price_fetcher
 import (
 	"context"
 	"fmt"
-	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"sync"
 	"time"
 
@@ -155,7 +155,7 @@ func (p *PriceFetcher) getNumQueriesPerTaskLoop() int {
 // RunTaskLoop queries the exchange for market prices.
 // Each goroutine makes a single exchange query for a specific set of one or more markets.
 // RunTaskLoop blocks until all spwaned goroutines have completed.
-func (pf *PriceFetcher) RunTaskLoop(requestHandler types2.RequestHandler) {
+func (pf *PriceFetcher) RunTaskLoop(requestHandler daemontypes.RequestHandler) {
 	taskLoopDefinition := pf.getTaskLoopDefinition()
 
 	if pf.isMultiMarketAndHasMarkets() {
@@ -191,7 +191,7 @@ func (pf *PriceFetcher) RunTaskLoop(requestHandler types2.RequestHandler) {
 // the taskLoopDefinition. For multi-market exchanges, the taskLoop will execute exactly one subtask, and
 // that subtask will query all markets defined in the taskLoopDefinition.
 func (pf *PriceFetcher) runSubTask(
-	requestHandler types2.RequestHandler,
+	requestHandler daemontypes.RequestHandler,
 	marketIds []types.MarketId,
 	taskLoopDefinition *taskLoopDefinition,
 ) {

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"sync"
 	"time"
 
@@ -116,7 +116,7 @@ func (c *Client) start(ctx context.Context,
 	daemonFlags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient types2.GrpcClient,
+	grpcClient daemontypes.GrpcClient,
 	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 	subTaskRunner SubTaskRunner,
@@ -268,7 +268,7 @@ func StartNewClient(
 	daemonFlags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient types2.GrpcClient,
+	grpcClient daemontypes.GrpcClient,
 	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 	subTaskRunner SubTaskRunner,

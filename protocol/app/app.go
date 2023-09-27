@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
-	types2 "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"io"
 	"net/http"
 	"os"
@@ -530,7 +530,7 @@ func New(
 	app.Server = daemonserver.NewServer(
 		logger,
 		grpc.NewServer(),
-		&types2.FileHandlerImpl{},
+		&daemontypes.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
 		appFlags.GrpcAddress,
 	)
@@ -568,7 +568,7 @@ func New(
 				daemonFlags,
 				appFlags,
 				logger,
-				&types2.GrpcClientImpl{},
+				&daemontypes.GrpcClientImpl{},
 			); err != nil {
 				panic(err)
 			}
@@ -589,7 +589,7 @@ func New(
 			daemonFlags,
 			appFlags,
 			logger,
-			&types2.GrpcClientImpl{},
+			&daemontypes.GrpcClientImpl{},
 			exchangeStartupConfig,
 			constants.StaticExchangeDetails,
 			&pricefeedclient.SubTaskRunnerImpl{},
@@ -611,7 +611,7 @@ func New(
 				daemonFlags,
 				appFlags,
 				logger,
-				&types2.GrpcClientImpl{},
+				&daemontypes.GrpcClientImpl{},
 			); err != nil {
 				panic(err)
 			}
