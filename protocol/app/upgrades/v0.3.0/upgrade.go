@@ -67,7 +67,10 @@ func CreateUpgradeHandler(
 			panic("PEPE MarketParam not found")
 		}
 		pepeParams.Exponent = -16
-		pricesKeeper.UnsafeModifyMarketParam(ctx, pepeParams)
+		err = pricesKeeper.UnsafeModifyMarketParam(ctx, pepeParams)
+		if err != nil {
+			panic(err)
+		}
 
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
