@@ -102,7 +102,7 @@ export const defaultMarketModify: MarketEventV1 = {
   marketId: 0,
   marketModify: {
     base: defaultMarketBase,
-    exponent: -5,
+    exponent: -3,
   },
 };
 
