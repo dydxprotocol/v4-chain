@@ -45,10 +45,12 @@ import Big from 'big.js';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 import { startPriceCache } from '../../src/caches/price-cache';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('fundingHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
