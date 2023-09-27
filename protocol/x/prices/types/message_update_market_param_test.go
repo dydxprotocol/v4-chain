@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/testutil"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,7 @@ func TestMsgUpdateMarketParam_ValidateBasic(t *testing.T) {
 	}{
 		"Success": {
 			msg: types.MsgUpdateMarketParam{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				MarketParam: types.MarketParam{
 					Pair:               "test",
 					MinExchanges:       1,
@@ -33,12 +34,20 @@ func TestMsgUpdateMarketParam_ValidateBasic(t *testing.T) {
 			},
 		},
 		"Failure: Empty authority": {
-			msg:         types.MsgUpdateMarketParam{},
-			expectedErr: "authority cannot be empty",
+			msg: types.MsgUpdateMarketParam{},
+			expectedErr: "authority '' must be a valid bech32 address, but got error 'empty address string is not " +
+				"allowed': Authority is invalid",
+		},
+		"Failure: Invalid authority": {
+			msg: types.MsgUpdateMarketParam{
+				Authority: "invalid",
+			},
+			expectedErr: "authority 'invalid' must be a valid bech32 address, but got error 'decoding bech32 " +
+				"failed: invalid bech32 string length 7': Authority is invalid",
 		},
 		"Failure: Empty pair": {
 			msg: types.MsgUpdateMarketParam{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				MarketParam: types.MarketParam{
 					Pair:              "",
 					MinExchanges:      1,
@@ -49,7 +58,7 @@ func TestMsgUpdateMarketParam_ValidateBasic(t *testing.T) {
 		},
 		"Failure: 0 MinExchanges": {
 			msg: types.MsgUpdateMarketParam{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				MarketParam: types.MarketParam{
 					Pair:              "test",
 					MinExchanges:      0,
@@ -60,7 +69,7 @@ func TestMsgUpdateMarketParam_ValidateBasic(t *testing.T) {
 		},
 		"Failure: 0 MinPriceChangePpm": {
 			msg: types.MsgUpdateMarketParam{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				MarketParam: types.MarketParam{
 					Pair:              "test",
 					MinExchanges:      2,
@@ -71,7 +80,7 @@ func TestMsgUpdateMarketParam_ValidateBasic(t *testing.T) {
 		},
 		"Failure: 10_000 MinPriceChangePpm": {
 			msg: types.MsgUpdateMarketParam{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				MarketParam: types.MarketParam{
 					Pair:              "test",
 					MinExchanges:      2,

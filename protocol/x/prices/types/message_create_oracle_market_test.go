@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/testutil"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,14 +25,23 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			desc:        "Empty authority",
-			msg:         types.MsgCreateOracleMarket{},
-			expectedErr: "authority cannot be empty",
+			desc: "Empty authority",
+			msg:  types.MsgCreateOracleMarket{},
+			expectedErr: "authority '' must be a valid bech32 address, but got error 'empty address string is not " +
+				"allowed': Authority is invalid",
+		},
+		{
+			desc: "Malformatted authority",
+			msg: types.MsgCreateOracleMarket{
+				Authority: "invalid",
+			},
+			expectedErr: "authority 'invalid' must be a valid bech32 address, but got error 'decoding bech32 " +
+				"failed: invalid bech32 string length 7': Authority is invalid",
 		},
 		{
 			desc: "Valid MsgCreateOracleMarket",
 			msg: types.MsgCreateOracleMarket{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				Params: types.MarketParam{
 					Pair:               "BTC-USD",
 					MinExchanges:       1,
@@ -44,7 +54,7 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 		{
 			desc: "Empty pair",
 			msg: types.MsgCreateOracleMarket{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				Params: types.MarketParam{
 					Pair:               "",
 					MinExchanges:       1,
@@ -57,7 +67,7 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 		{
 			desc: "Invalid MinPriceChangePpm",
 			msg: types.MsgCreateOracleMarket{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				Params: types.MarketParam{
 					Pair:               "BTC-USD",
 					MinExchanges:       1,
@@ -70,7 +80,7 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 		{
 			desc: "Empty ExchangeConfigJson",
 			msg: types.MsgCreateOracleMarket{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				Params: types.MarketParam{
 					Pair:               "BTC-USD",
 					MinExchanges:       1,
@@ -83,7 +93,7 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 		{
 			desc: "Typo in ExchangeConfigJson",
 			msg: types.MsgCreateOracleMarket{
-				Authority: "test",
+				Authority: testutil.ValidAuthority,
 				Params: types.MarketParam{
 					Pair:               "BTC-USD",
 					MinExchanges:       1,
