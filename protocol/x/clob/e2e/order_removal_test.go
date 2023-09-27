@@ -91,7 +91,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				},
 			},
 			expectedOrderRemovals: []bool{
-				false,
+				true,
 				true, // non fully filled IOC order should be removed
 			},
 		},
@@ -727,6 +727,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					ctx sdktypes.Context,
 					request abcitypes.RequestDeliverTx,
 					response abcitypes.ResponseDeliverTx,
+					txIndex int,
 				) (haltchain bool) {
 					require.True(t, response.IsErr())
 					require.Equal(t, clobtypes.ErrInvalidOrderRemoval.ABCICode(), response.Code)

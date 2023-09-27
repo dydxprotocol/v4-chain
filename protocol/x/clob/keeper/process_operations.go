@@ -455,8 +455,18 @@ func (k Keeper) PersistMatchOrdersToState(
 		)
 	}
 
-	makerFills := matchOrders.GetFills()
+	if takerOrder.RequiresImmediateExecution() {
+		_, fillAmount, _ := k.GetOrderFillAmount(ctx, takerOrder.OrderId)
+		if fillAmount != 0 {
+			return errorsmod.Wrapf(
+				types.ErrImmediateExecutionOrderAlreadyFilled,
+				"Order %s",
+				takerOrder.GetOrderTextString(),
+			)
+		}
+	}
 
+	makerFills := matchOrders.GetFills()
 	for _, makerFill := range makerFills {
 		// Fetch the maker order from either short term orders or state.
 		makerOrder, err := k.FetchOrderFromOrderId(ctx, makerFill.MakerOrderId, ordersMap)

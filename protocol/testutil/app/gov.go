@@ -69,6 +69,7 @@ func SubmitAndTallyProposal(
 				context sdk.Context,
 				request abcitypes.RequestDeliverTx,
 				response abcitypes.ResponseDeliverTx,
+				_ int,
 			) (haltChain bool) {
 				if bytes.Equal(request.Tx, submitProposalCheckTx.Tx) {
 					require.True(t, response.IsErr())
