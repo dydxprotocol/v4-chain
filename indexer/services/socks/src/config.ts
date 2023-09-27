@@ -45,6 +45,14 @@ export const configSchema = {
   COMLINK_URL: parseString(),
   AXIOS_TIMEOUT_MS: parseInteger({ default: 5000 }), // 5 seconds
   INITIAL_GET_TIMEOUT_MS: parseInteger({ default: 20_000 }), // 20 seconds
+
+  // Restrictions
+  RESTRICTED_COUNTRIES: parseString({
+    default: '', // comma de-limited
+  }),
+  INDEXER_LEVEL_GEOBLOCKING_ENABLED: parseBoolean({
+    default: true,
+  }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

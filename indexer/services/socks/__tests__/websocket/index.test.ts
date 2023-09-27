@@ -14,6 +14,7 @@ import {
 } from '../../src/types';
 import { InvalidMessageHandler } from '../../src/lib/invalid-message';
 import { PingHandler } from '../../src/lib/ping';
+import config from '../../src/config';
 
 jest.mock('uuid');
 jest.mock('../../src/helpers/wss');
@@ -29,16 +30,22 @@ describe('Index', () => {
   let mockConnect: (ws: WebSocket, req: IncomingMessage) => void;
   let wsOnSpy: jest.SpyInstance;
   let wsPingSpy: jest.SpyInstance;
+  let wsTerminateSpy: jest.SpyInstance;
   let invalidMsgHandlerSpy: jest.SpyInstance;
   let pingHandlerSpy: jest.SpyInstance;
 
   const connectionId: string = 'conId';
+  const restrictedCountries: string[] = ['US', 'CA'];
+  config.RESTRICTED_COUNTRIES = restrictedCountries.join(',');
+  const defaultRestrictedCountries: string = config.RESTRICTED_COUNTRIES;
+  const defaultGeoblockingEnabled: boolean = config.INDEXER_LEVEL_GEOBLOCKING_ENABLED;
 
   beforeAll(() => {
     jest.useFakeTimers();
   });
 
   afterAll(() => {
+    config.RESTRICTED_COUNTRIES = defaultRestrictedCountries;
     jest.resetAllMocks();
     jest.useRealTimers();
   });
@@ -52,6 +59,7 @@ describe('Index', () => {
     websocket = new WebSocket(null);
     wsOnSpy = jest.spyOn(websocket, 'on');
     wsPingSpy = jest.spyOn(websocket, 'ping').mockImplementation(jest.fn());
+    wsTerminateSpy = jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
     mockWss.onConnection = jest.fn().mockImplementation(
       (cb: (ws: WebSocket, req: IncomingMessage) => void) => {
         mockConnect = cb;
@@ -89,6 +97,62 @@ describe('Index', () => {
           type: OutgoingMessageType.CONNECTED,
         }),
       );
+    });
+
+    describe('geoblocking', () => {
+      beforeAll(() => {
+        config.INDEXER_LEVEL_GEOBLOCKING_ENABLED = true;
+      });
+
+      afterAll(() => {
+        config.INDEXER_LEVEL_GEOBLOCKING_ENABLED = defaultGeoblockingEnabled;
+      });
+
+      it('rejects connection if message lacks country headers', () => {
+        jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
+
+        const message: IncomingMessage = new IncomingMessage(new Socket());
+        message.headers = {};
+        mockConnect(websocket, message);
+        expect(websocket.terminate).toHaveBeenCalled();
+        expect(Object.keys(index.connections)).toHaveLength(0);
+        expect(wsOnSpy).not.toHaveBeenCalled();
+        expect(wsTerminateSpy).toHaveBeenCalled();
+        expect(sendMessage).not.toHaveBeenCalled();
+      });
+
+      it('rejects connection if from restricted country', () => {
+        jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
+  
+        for (const country of restrictedCountries) {
+          const message: IncomingMessage = new IncomingMessage(new Socket());
+          message.headers = {
+            'cf-ipcountry': country,
+          };
+          mockConnect(websocket, message);
+          expect(websocket.terminate).toHaveBeenCalled();
+          expect(Object.keys(index.connections)).toHaveLength(0);
+          expect(wsOnSpy).not.toHaveBeenCalled();
+          expect(wsTerminateSpy).toHaveBeenCalled();
+          expect(sendMessage).not.toHaveBeenCalled();
+        }
+      });
+  
+      it('does not reject connection if from restricted country', () => {
+        (v4 as unknown as jest.Mock).mockReturnValueOnce(connectionId);
+        jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
+  
+        const message: IncomingMessage = new IncomingMessage(new Socket());
+        message.headers = {
+          'cf-ipcountry': 'SA',
+        };
+        mockConnect(websocket, message);
+  
+        // Test that the connection is tracked.
+        expect(index.connections[connectionId]).not.toBeUndefined();
+        expect(index.connections[connectionId].ws).toEqual(websocket);
+        expect(index.connections[connectionId].messageId).toEqual(0);
+      });
     });
   });
 
