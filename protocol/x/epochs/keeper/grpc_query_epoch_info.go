@@ -21,7 +21,7 @@ func (k Keeper) EpochInfoAll(
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochInfoStore := prefix.NewStore(store, types.KeyPrefix(types.EpochInfoKeyPrefix))
+	epochInfoStore := prefix.NewStore(store, []byte(types.EpochInfoKeyPrefix))
 
 	pageRes, err := query.Paginate(epochInfoStore, req.Pagination, func(key []byte, value []byte) error {
 		var epochInfo types.EpochInfo

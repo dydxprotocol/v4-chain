@@ -22,14 +22,3 @@ const (
 	// CommunityVesterAccountName defines the root string for community vester module account.
 	CommunityVesterAccountName = "community_vester"
 )
-
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
-
-// VestEntryKey returns the store key (using the vester account) to retrieve a vest entry from state.
-func VestEntryKey(
-	vesterAccount string,
-) []byte {
-	return []byte(vesterAccount)
-}

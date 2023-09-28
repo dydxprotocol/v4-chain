@@ -22,14 +22,3 @@ const (
 	// RewardShareKeyPrefix is the prefix to retrieve reward shares for all addresses.
 	RewardShareKeyPrefix = "reward_shares/"
 )
-
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
-
-// RewardShareKey returns the store key (using the address) to retrieve a address from the index fields
-func RewardShareKey(
-	address string,
-) []byte {
-	return []byte(address)
-}

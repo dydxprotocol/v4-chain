@@ -184,7 +184,7 @@ func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 // setClobPair sets a specific `ClobPair` in the store from its index.
 func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 	b := k.cdc.MustMarshal(&clobPair)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
 	// Write the `ClobPair` to state.
 	store.Set(types.ClobPairKey(clobPair.GetClobPairId()), b)
 }
@@ -266,7 +266,7 @@ func (k Keeper) GetClobPair(
 	id types.ClobPairId,
 
 ) (val types.ClobPair, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
 
 	b := store.Get(types.ClobPairKey(
 		id,
@@ -285,7 +285,7 @@ func (k Keeper) RemoveClobPair(
 	id types.ClobPairId,
 
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
 	store.Delete(types.ClobPairKey(
 		id,
 	))
@@ -293,7 +293,7 @@ func (k Keeper) RemoveClobPair(
 
 // GetAllClobPairs returns all clobPair, sorted by ClobPair id.
 func (k Keeper) GetAllClobPairs(ctx sdk.Context) (list []types.ClobPair) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()

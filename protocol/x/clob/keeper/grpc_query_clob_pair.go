@@ -23,7 +23,7 @@ func (k Keeper) ClobPairAll(
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	clobPairStore := prefix.NewStore(store, types.KeyPrefix(types.ClobPairKeyPrefix))
+	clobPairStore := prefix.NewStore(store, []byte(types.ClobPairKeyPrefix))
 
 	pageRes, err := query.Paginate(clobPairStore, req.Pagination, func(key []byte, value []byte) error {
 		var clobPair types.ClobPair

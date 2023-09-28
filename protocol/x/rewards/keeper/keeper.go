@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"math/big"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdklog "cosmossdk.io/log"
 	"github.com/cometbft/cometbft/libs/log"
@@ -91,8 +92,8 @@ func (k Keeper) GetRewardShare(
 	)
 
 	// Check state for the subaccount.
-	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), types.KeyPrefix(types.RewardShareKeyPrefix))
-	b := store.Get(types.RewardShareKey(address))
+	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), []byte(types.RewardShareKeyPrefix))
+	b := store.Get([]byte(address))
 
 	// If RewardShare does not exist in state, return a default value.
 	if b == nil {
@@ -180,19 +181,17 @@ func (k Keeper) SetRewardShare(
 	ctx sdk.Context,
 	rewardShare types.RewardShare,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), types.KeyPrefix(types.RewardShareKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), []byte(types.RewardShareKeyPrefix))
 	b := k.cdc.MustMarshal(&rewardShare)
 
-	store.Set(types.RewardShareKey(
-		rewardShare.Address,
-	), b)
+	store.Set([]byte(rewardShare.Address), b)
 }
 
 func (k Keeper) getAllRewardSharesAndTotalWeight(ctx sdk.Context) (
 	list []types.RewardShare,
 	totalWeight *big.Int,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), types.KeyPrefix(types.RewardShareKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), []byte(types.RewardShareKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	totalWeight = big.NewInt(0)

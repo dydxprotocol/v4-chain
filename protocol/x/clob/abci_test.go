@@ -1,13 +1,14 @@
 package clob_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
 	"math/big"
 	"sort"
 	"testing"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
@@ -72,7 +73,7 @@ func assertFillAmountAndPruneState(
 		// Verify that expected `blockHeightToPotentiallyPrunableOrders` were deleted.
 		blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
 			ctx.KVStore(storeKey),
-			types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+			[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 		)
 
 		potentiallyPrunableOrdersBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
