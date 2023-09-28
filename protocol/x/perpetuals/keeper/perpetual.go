@@ -1494,3 +1494,27 @@ func (k Keeper) IsPositionUpdatable(
 	}
 	return true, nil
 }
+
+// UnsafeSetPerpetual sets a specific `Perpetual` in the store from its index.
+func (k Keeper) UnsafeSetPerpetual(
+	ctx sdk.Context,
+	perpetual types.Perpetual,
+) {
+	k.setPerpetual(ctx, perpetual)
+
+	// Emit indexer event.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpdatePerpetual,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewUpdatePerpetualEventV1(
+				perpetual.Params.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				perpetual.Params.AtomicResolution,
+				perpetual.Params.LiquidityTier,
+			),
+		),
+		indexerevents.UpdatePerpetualEventVersion,
+	)
+}

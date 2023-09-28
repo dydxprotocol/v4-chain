@@ -588,3 +588,27 @@ func (k Keeper) IsPerpetualClobPairActive(
 
 	return clobPair.Status == types.ClobPair_STATUS_ACTIVE, nil
 }
+
+// UnsafeSetClobPair sets a specific `ClobPair` in the store from its index.
+func (k Keeper) UnsafeSetClobPair(ctx sdk.Context, clobPair types.ClobPair) {
+	b := k.cdc.MustMarshal(&clobPair)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	// Write the `ClobPair` to state.
+	store.Set(types.ClobPairKey(clobPair.GetClobPairId()), b)
+
+	// Send UpdateClobPair to indexer.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpdateClobPair,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewUpdateClobPairEvent(
+				clobPair.GetClobPairId(),
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				clobPair.GetClobPairSubticksPerTick(),
+				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+			),
+		),
+		indexerevents.UpdateClobPairEventVersion,
+	)
+}

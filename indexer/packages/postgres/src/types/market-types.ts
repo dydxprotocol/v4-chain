@@ -11,6 +11,8 @@ export interface MarketCreateObject {
 export interface MarketUpdateObject {
   id: number,
   pair?: string,
+  // Unsafe to update as it can lead to inaccurate price calculations for a market
+  exponent?: number,
   minPriceChangePpm?: number,
   oraclePrice?: string;
 }

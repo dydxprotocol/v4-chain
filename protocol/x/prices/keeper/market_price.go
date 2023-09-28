@@ -177,3 +177,26 @@ func (k Keeper) GetMarketIdToValidIndexPrice(
 	}
 	return ret
 }
+
+// UnsafeSetMarketPrice sets market price without validation.
+func (k Keeper) UnsafeSetMarketPrice(
+	ctx sdk.Context,
+	price types.MarketPrice,
+) {
+	store := k.newMarketPriceStore(ctx)
+	// Store the modified market price.
+	b := k.cdc.MustMarshal(&price)
+	store.Set(types.MarketKey(price.Id), b)
+
+	marketPriceUpdateSingleton := GenerateMarketPriceUpdateEvents([]types.MarketPrice{price})
+	for _, update := range marketPriceUpdateSingleton {
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeMarket,
+			indexer_manager.GetB64EncodedEventMessage(
+				update,
+			),
+			indexerevents.MarketEventVersion,
+		)
+	}
+}
