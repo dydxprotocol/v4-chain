@@ -190,8 +190,8 @@ var (
 	// expectedPricesPartialUpdate preserves the expected price of BTC, ignoring the invalid update params, and also
 	// updates to expect the median price of ETH.
 	expectedPricesPartialUpdate = map[types.MarketId]uint64{
-		exchange_common.MARKET_BTC_USD: expectedMedianBtcPrice,
-		exchange_common.MARKET_ETH_USD: expectedMedianEthPrice,
+		exchange_config.MARKET_BTC_USD: expectedMedianBtcPrice,
+		exchange_config.MARKET_ETH_USD: expectedMedianEthPrice,
 	}
 
 	expectedPrices3Markets = map[types.MarketId]uint64{
