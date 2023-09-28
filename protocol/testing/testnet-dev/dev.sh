@@ -192,6 +192,8 @@ setup_cosmovisor() {
 		cosmovisor init /bin/dydxprotocold
 
 		cp /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/genesis/bin/"
+		mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v0.3.0/bin/"
+		cp /bin/dydxprotocold_upgrade "$VAL_HOME_DIR/cosmovisor/upgrades/v0.3.0/bin/dydxprotocold"
 	done
 
 	for i in "${!MONIKERS[@]}"; do
@@ -202,6 +204,8 @@ setup_cosmovisor() {
 		cosmovisor init /bin/dydxprotocold
 
 		cp /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/genesis/bin/"
+		mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v0.3.0/bin/"
+		cp /bin/dydxprotocold_upgrade "$VAL_HOME_DIR/cosmovisor/upgrades/v0.3.0/bin/dydxprotocold"
 	done
 }
 
