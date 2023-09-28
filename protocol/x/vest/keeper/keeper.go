@@ -189,9 +189,7 @@ func (k Keeper) SetVestEntry(
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
 	b := k.cdc.MustMarshal(&entry)
-	store.Set([]byte(
-		entry.VesterAccount,
-	), b)
+	store.Set([]byte(entry.VesterAccount), b)
 	return nil
 }
 
