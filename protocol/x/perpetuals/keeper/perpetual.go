@@ -1518,3 +1518,10 @@ func (k Keeper) UnsafeSetPerpetual(
 		indexerevents.UpdatePerpetualEventVersion,
 	)
 }
+
+func (k Keeper) UnsafeDeleteNumLiquidityTiersKey(
+	ctx sdk.Context,
+) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.KeyPrefix(types.NumLiquidityTiersKey))
+}
