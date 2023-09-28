@@ -23,6 +23,9 @@ func (k msgServer) DelayMessage(
 	msg *types.MsgDelayMessage,
 ) (*types.MsgDelayMessageResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	// x/delaymsg accepts messages that may have been created by other modules. In this case, the
+	// ValidateBasic method of the message will not have been called. We call it here to ensure
+	// that the message is valid before continuing.
 	if err := msg.ValidateBasic(); err != nil {
 		k.Logger(ctx).Error(
 			"DelayMessage failed because msg.ValidateBasic failed",
