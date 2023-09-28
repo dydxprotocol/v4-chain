@@ -53,6 +53,10 @@ func CreateUpgradeHandler(
 		pepePerpetual.Params.AtomicResolution = 1
 		perpetualsKeeper.UnsafeSetPerpetual(ctx, pepePerpetual)
 
+		// https://github.com/dydxprotocol/v4-chain/pull/279 removes usage of this key, but this key has
+		// a prefix that is now iterated over. This needs to be removed or else that iterator will break.
+		perpetualsKeeper.UnsafeDeleteNumLiquidityTiersKey(ctx)
+
 		// Update market price exponent for PEPE.
 		pepePrice, err := pricesKeeper.GetMarketPrice(ctx, PEPE_ID)
 		if err != nil {
