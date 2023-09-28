@@ -18,8 +18,8 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 	}
 
 	// Maintain a list of events emitted by all delayed messages executed in this block.
-	// As each delayed message is executed in a cached context, their emitted events need
-	// to be explicitly propagated to the current context.
+	// As message handlers create new event managers, such emitted events need to be
+	// explicitly propagated to the current context.
 	// Note: events in EndBlocker can be found in `end_block_events` in response from
 	// `/block_results` endpoint.
 	var events sdk.Events
@@ -44,7 +44,7 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 			if err != nil {
 				return err
 			}
-			// Append events emitted in cached context to `events`.
+			// Append events emitted in message handler to `events`.
 			events = append(events, res.GetEvents()...)
 			return nil
 		}); err != nil {
@@ -52,7 +52,7 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 		}
 	}
 
-	// Propagate events emitted in cached contexts to current context.
+	// Propagate events emitted in message handlers to current context.
 	ctx.EventManager().EmitEvents(events)
 
 	for _, id := range blockMessageIds.Ids {
