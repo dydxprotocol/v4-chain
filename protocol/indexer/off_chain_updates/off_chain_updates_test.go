@@ -364,13 +364,13 @@ func TestShouldSendOrderRemovalOnReplay(t *testing.T) {
 			orderError: errorsmod.Wrapf(clobtypes.ErrTimeExceedsGoodTilBlockTime, "wrapped error"),
 			expected:   false,
 		},
-		"Returns true for other error": {
-			orderError: clobtypes.ErrFokOrderCouldNotBeFullyFilled,
-			expected:   true,
-		},
 		"Returns false for ErrImmediateExecutionOrderAlreadyFilled": {
 			orderError: clobtypes.ErrImmediateExecutionOrderAlreadyFilled,
 			expected:   false,
+		},
+		"Returns true for other error": {
+			orderError: clobtypes.ErrFokOrderCouldNotBeFullyFilled,
+			expected:   true,
 		},
 	}
 	for name, tc := range tests {
