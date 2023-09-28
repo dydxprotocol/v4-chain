@@ -28,11 +28,30 @@ func (msg *FakeRoutableMsg) XXX_MessageName() string {
 	return "dydxprotocol.bridge.MsgCompleteBridge"
 }
 
+// implementing XXX_Size along with XXX_Marshal proto interface methods allows us to simulate an encoding failure.
+func (msg *FakeRoutableMsg) XXX_Size() int {
+	return 0
+}
+
+// implementing XXX_Marshal along with XXX_Size proto interface methods allows us to simulate an encoding failure.
+func (msg *FakeRoutableMsg) XXX_Marshal([]byte, bool) ([]byte, error) {
+	return nil, fmt.Errorf("Invalid input")
+}
+
 // routableInvalidSdkMsg returns a mock sdk.Msg that fools the router into thinking it is a registered message type,
 // then fails ValidateBasic.
 func routableInvalidSdkMsg() sdk.Msg {
 	msg := &FakeRoutableMsg{}
 	msg.On("ValidateBasic").Return(fmt.Errorf("Invalid msg"))
+	return msg
+}
+
+// unencodableSdkMsg returns a mock sdk.Msg that fools the router into thinking it is a registered message type,
+// passes ValidateBasic, passes validateSigners, then fails to encode.
+func unencodableSdkMsg() sdk.Msg {
+	msg := &FakeRoutableMsg{}
+	msg.On("ValidateBasic").Return(nil)
+	msg.On("GetSigners").Return([]sdk.AccAddress{authtypes.NewModuleAddress(types.ModuleName)})
 	return msg
 }
 
@@ -163,6 +182,10 @@ func TestDelayMessageByBlocks_Failures(t *testing.T) {
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedError: "message signer must be delaymsg module address: Invalid signer",
+		},
+		"Message fails to encode": {
+			msg:           unencodableSdkMsg(),
+			expectedError: "failed to convert message to Any: Invalid input",
 		},
 	}
 	for name, tc := range tests {
