@@ -2853,6 +2853,7 @@ func TestGetAllLiquidityTiers_Sorted(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	pc.PerpetualsKeeper.SetNumLiquidityTiers(pc.Ctx, 3)
 	got := pc.PerpetualsKeeper.GetAllLiquidityTiers(pc.Ctx)
 	require.Equal(
 		t,

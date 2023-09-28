@@ -1370,6 +1370,13 @@ func (k Keeper) GetAllLiquidityTiers(ctx sdk.Context) (list []types.LiquidityTie
 	return list
 }
 
+func (k Keeper) SetNumLiquidityTiers(
+	ctx sdk.Context,
+	num uint32,
+) {
+	k.setUint32InStore(ctx, types.NumLiquidityTiersKey, num)
+}
+
 // `setLiquidityTier` sets a liquidity tier in store.
 func (k Keeper) setLiquidityTier(
 	ctx sdk.Context,
