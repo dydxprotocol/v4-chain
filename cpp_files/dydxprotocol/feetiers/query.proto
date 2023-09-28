@@ -1,0 +1,46 @@
+syntax = "proto3";
+package dydxprotocol.feetiers;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "dydxprotocol/feetiers/params.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Queries the PerpetualFeeParams.
+  rpc PerpetualFeeParams(QueryPerpetualFeeParamsRequest)
+      returns (QueryPerpetualFeeParamsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/feetiers/perpetual_fee_params";
+  }
+
+  // Queries a user's fee tier
+  rpc UserFeeTier(QueryUserFeeTierRequest) returns (QueryUserFeeTierResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/feetiers/user_fee_tier";
+  }
+}
+
+// QueryPerpetualFeeParamsRequest is a request type for the PerpetualFeeParams
+// RPC method.
+message QueryPerpetualFeeParamsRequest {}
+
+// QueryPerpetualFeeParamsResponse is a response type for the PerpetualFeeParams
+// RPC method.
+message QueryPerpetualFeeParamsResponse {
+  PerpetualFeeParams params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryUserFeeTierRequest is a request type for the UserFeeTier RPC method.
+message QueryUserFeeTierRequest {
+  string user = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+// QueryUserFeeTierResponse is a request type for the UserFeeTier RPC method.
+message QueryUserFeeTierResponse {
+  // Index of the fee tier in the list queried from PerpetualFeeParams.
+  uint32 index = 1;
+  PerpetualFeeTier tier = 2;
+}

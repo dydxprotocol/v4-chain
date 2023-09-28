@@ -1,0 +1,17 @@
+syntax = "proto3";
+package dydxprotocol.delaymsg;
+
+import "dydxprotocol/delaymsg/delayed_message.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types";
+
+// GenesisState defines the delaymsg module's genesis state.
+message GenesisState {
+  repeated DelayedMessage delayed_messages = 1;
+
+  // num_messages is the number of messages that have been created. It denotes
+  // the id to be assigned to the next message. This number may not match the
+  // number of messages currently stored on the chain because messages are
+  // deleted from the chain after they are executed.
+  uint32 num_messages = 2;
+}

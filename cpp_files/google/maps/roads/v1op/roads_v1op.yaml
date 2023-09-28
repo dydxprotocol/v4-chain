@@ -1,0 +1,12 @@
+type: google.api.Service
+config_version: 3
+name: roads.googleapis.com
+title: Roads API
+
+apis:
+- name: google.maps.roads.v1op.RoadsService  # must stay as v1op
+
+documentation:
+  summary: |-
+    Snap GPS points to roads to identify the roads a vehicle was traveling
+    along, making up for GPS error.

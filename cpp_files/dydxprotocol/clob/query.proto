@@ -1,0 +1,118 @@
+syntax = "proto3";
+package dydxprotocol.clob;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "dydxprotocol/clob/clob_pair.proto";
+import "dydxprotocol/clob/equity_tier_limit_config.proto";
+import "dydxprotocol/clob/mev.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Queries a ClobPair by id.
+  rpc ClobPair(QueryGetClobPairRequest) returns (QueryClobPairResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/clob_pair/{id}";
+  }
+
+  // Queries a list of ClobPair items.
+  rpc ClobPairAll(QueryAllClobPairRequest) returns (QueryClobPairAllResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/clob_pair";
+  }
+
+  // Returns whether a subaccount is liquidatable.
+  rpc AreSubaccountsLiquidatable(AreSubaccountsLiquidatableRequest)
+      returns (AreSubaccountsLiquidatableResponse);
+
+  // Runs the MEV node <> node calculation with the provided parameters.
+  rpc MevNodeToNodeCalculation(MevNodeToNodeCalculationRequest)
+      returns (MevNodeToNodeCalculationResponse) {
+    option (google.api.http) = {
+      post : "/dydxprotocol/clob/mev_node_to_node_calculation"
+      body : "*"
+    };
+  }
+
+  // Queries EquityTierLimitConfiguration.
+  rpc EquityTierLimitConfiguration(QueryEquityTierLimitConfigurationRequest)
+      returns (QueryEquityTierLimitConfigurationResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/equity_tier";
+  }
+}
+
+// QueryGetClobPairRequest is request type for the ClobPair method.
+message QueryGetClobPairRequest { uint32 id = 1; }
+
+// QueryClobPairResponse is response type for the ClobPair method.
+message QueryClobPairResponse {
+  ClobPair clob_pair = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryAllClobPairRequest is request type for the ClobPairAll method.
+message QueryAllClobPairRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryClobPairAllResponse is response type for the ClobPairAll method.
+message QueryClobPairAllResponse {
+  repeated ClobPair clob_pair = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// AreSubaccountsLiquidatableRequest is a request message used to check whether
+// the given subaccounts are liquidatable.
+// The subaccount ids should not contain duplicates.
+message AreSubaccountsLiquidatableRequest {
+  repeated dydxprotocol.subaccounts.SubaccountId subaccount_ids = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// AreSubaccountsLiquidatableResponse is a response message that contains the
+// liquidation status for each subaccount.
+message AreSubaccountsLiquidatableResponse {
+  // Result returns whether a subaccount should be liquidated.
+  message Result {
+    dydxprotocol.subaccounts.SubaccountId subaccount_id = 1
+        [ (gogoproto.nullable) = false ];
+    bool is_liquidatable = 2;
+  }
+  repeated Result results = 1 [ (gogoproto.nullable) = false ];
+}
+
+// MevNodeToNodeCalculationRequest is a request message used to run the
+// MEV node <> node calculation.
+message MevNodeToNodeCalculationRequest {
+  // Represents the matches on the "block proposer". Note that this field
+  // does not need to be the actual block proposer's matches for a block, since
+  // the MEV calculation logic is run with this nodes matches as the "block
+  // proposer" matches.
+  dydxprotocol.clob.ValidatorMevMatches block_proposer_matches = 1;
+  // Represents the matches and mid-prices on the validator.
+  dydxprotocol.clob.MevNodeToNodeMetrics validator_mev_metrics = 2;
+}
+
+// MevNodeToNodeCalculationResponse is a response message that contains the
+// MEV node <> node calculation result.
+message MevNodeToNodeCalculationResponse {
+  // MevAndVolumePerClob contains information about the MEV and volume per CLOB.
+  message MevAndVolumePerClob {
+    uint32 clob_pair_id = 1;
+    float mev = 2;
+    uint64 volume = 3;
+  }
+  repeated MevAndVolumePerClob results = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryEquityTierLimitConfigurationRequest is a request message for
+// EquityTierLimitConfiguration.
+message QueryEquityTierLimitConfigurationRequest {}
+
+// QueryEquityTierLimitConfigurationResponse is a response message that contains
+// the EquityTierLimitConfiguration.
+message QueryEquityTierLimitConfigurationResponse {
+  EquityTierLimitConfiguration equity_tier_limit_config = 1
+      [ (gogoproto.nullable) = false ];
+}

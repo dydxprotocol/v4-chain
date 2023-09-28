@@ -1,0 +1,44 @@
+syntax = "proto3";
+package dydxprotocol.perpetuals;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "dydxprotocol/perpetuals/perpetual.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Queries a Perpetual by id.
+  rpc Perpetual(QueryPerpetualRequest) returns (QueryPerpetualResponse) {
+    option (google.api.http).get = "/dydxprotocol/perpetuals/perpetual/{id}";
+  }
+
+  // Queries a list of Perpetual items.
+  rpc AllPerpetuals(QueryAllPerpetualsRequest)
+      returns (QueryAllPerpetualsResponse) {
+    option (google.api.http).get = "/dydxprotocol/perpetuals/perpetual";
+  }
+}
+
+// Queries a Perpetual by id.
+message QueryPerpetualRequest { uint32 id = 1; }
+
+// QueryPerpetualResponse is response type for the Perpetual RPC method.
+message QueryPerpetualResponse {
+  Perpetual perpetual = 1 [ (gogoproto.nullable) = false ];
+}
+
+// Queries a list of Perpetual items.
+message QueryAllPerpetualsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAllPerpetualsResponse is response type for the AllPerpetuals RPC method.
+message QueryAllPerpetualsResponse {
+  repeated Perpetual perpetual = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// this line is used by starport scaffolding # 3

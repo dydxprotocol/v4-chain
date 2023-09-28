@@ -1,0 +1,20 @@
+syntax = "proto3";
+package dydxprotocol.blocktime;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+// DowntimeParams defines the parameters for downtime.
+message DowntimeParams {
+  // Durations tracked for downtime. The durations must be sorted from
+  // shortest to longest and must all be positive.
+  repeated google.protobuf.Duration durations = 1
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+
+  // Grace-period duration when validating `MsgIsDelayedBlock` messages. Must be
+  // positive.
+  google.protobuf.Duration clock_drift_grace_period_duration = 2
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+}

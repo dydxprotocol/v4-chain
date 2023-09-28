@@ -1,0 +1,27 @@
+syntax = "proto3";
+package dydxprotocol.daemons.liquidation;
+
+import "gogoproto/gogo.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api";
+
+// LiquidationService defines the gRPC service used by liquidation daemon.
+service LiquidationService {
+  // Sends a list of subaccount ids that are potentially liquidatable.
+  rpc LiquidateSubaccounts(LiquidateSubaccountsRequest)
+      returns (LiquidateSubaccountsResponse);
+}
+
+// LiquidateSubaccountsRequest is a request message that contains a list of
+// subaccount ids that potentially need to be liquidated. The list of subaccount
+// ids should not contain duplicates. The application should re-verify these
+// subaccount ids against current state before liquidating their positions.
+message LiquidateSubaccountsRequest {
+  repeated dydxprotocol.subaccounts.SubaccountId subaccount_ids = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// LiquidateSubaccountsResponse is a response message for
+// LiquidateSubaccountsRequest.
+message LiquidateSubaccountsResponse {}
