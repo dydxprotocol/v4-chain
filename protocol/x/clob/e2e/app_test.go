@@ -235,7 +235,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(msg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(msg),
 				},
 				privKeySupplier,
 				msg,
@@ -273,7 +273,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(placeOrderMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(placeOrderMsg),
 				},
 				privKeySupplier,
 				placeOrderMsg,
@@ -283,7 +283,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(cancelOrderMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(cancelOrderMsg),
 				},
 				privKeySupplier,
 				cancelOrderMsg,

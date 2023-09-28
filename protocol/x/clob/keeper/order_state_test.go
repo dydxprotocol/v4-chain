@@ -278,7 +278,7 @@ func TestAddOrdersForPruning_Determinism(t *testing.T) {
 
 	store := prefix.NewStore(
 		ks.Ctx.KVStore(ks.StoreKey),
-		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
 	orders := []types.OrderId{
@@ -342,7 +342,7 @@ func TestAddOrdersForPruning_DuplicateOrderIds(t *testing.T) {
 
 	store := prefix.NewStore(
 		ks.Ctx.KVStore(ks.StoreKey),
-		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
 	potentiallyPrunableOrdersBytes := store.Get(
@@ -575,7 +575,7 @@ func TestPruning(t *testing.T) {
 			// Verify that expected `blockHeightToPotentiallyPrunableOrdersStore` were deleted.
 			blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
 				ks.Ctx.KVStore(ks.StoreKey),
-				types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+				[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 			)
 
 			for _, blockHeight := range tc.expectedEmptyPotentiallyPrunableOrderBlockHeights {

@@ -1,5 +1,6 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
+  DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   Ordering,
   PnlTicksFromDatabase,
@@ -20,6 +21,7 @@ import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import {
   CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   CheckSubaccountSchema,
@@ -52,7 +54,6 @@ class HistoricalPnlController extends Controller {
     ] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
-        { readReplica: true },
       ),
       PnlTicksTable.findAll(
         {
@@ -69,7 +70,7 @@ class HistoricalPnlController extends Controller {
         },
         [QueryableField.LIMIT],
         {
-          readReplica: true,
+          ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
         },
       ),
@@ -90,6 +91,7 @@ class HistoricalPnlController extends Controller {
 
 router.get(
   '/',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,

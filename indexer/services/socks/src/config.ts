@@ -6,6 +6,9 @@ import {
   parseSchema,
   parseString,
 } from '@dydxprotocol-indexer/base';
+import {
+  complianceConfigSchema,
+} from '@dydxprotocol-indexer/compliance';
 import { kafkaConfigSchema } from '@dydxprotocol-indexer/kafka';
 import {
   postgresConfigSchema,
@@ -15,6 +18,7 @@ export const configSchema = {
   ...baseConfigSchema,
   ...postgresConfigSchema,
   ...kafkaConfigSchema,
+  ...complianceConfigSchema,
 
   PORT: parseString({
     default: '8000',

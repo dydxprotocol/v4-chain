@@ -23,7 +23,7 @@ import (
 
 // newMarketPriceStore creates a new prefix store for MarketPrices.
 func (k Keeper) newMarketPriceStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketPriceKeyPrefix))
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketPriceKeyPrefix))
 }
 
 // UpdateMarketPrices updates the prices for markets.
@@ -103,6 +103,9 @@ func (k Keeper) UpdateMarketPrices(
 				update,
 			),
 			indexerevents.MarketEventVersion,
+			indexer_manager.GetBytes(
+				update,
+			),
 		)
 	}
 

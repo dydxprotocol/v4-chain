@@ -27,7 +27,6 @@ import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectPerpetualMarketKafkaMessage,
@@ -82,9 +81,7 @@ describe('liquidityTierHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.LIQUIDITY_TIER,
-        binaryToBase64String(
-          LiquidityTierUpsertEventV1.encode(defaultLiquidityTierUpsertEvent).finish(),
-        ),
+        LiquidityTierUpsertEventV1.encode(defaultLiquidityTierUpsertEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -224,9 +221,7 @@ function createKafkaMessageFromLiquidityTiersEvent({
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.LIQUIDITY_TIER,
-      binaryToBase64String(
-        LiquidityTierUpsertEventV1.encode(liquidityTierEvent).finish(),
-      ),
+      LiquidityTierUpsertEventV1.encode(liquidityTierEvent).finish(),
       transactionIndex,
       0,
     ),

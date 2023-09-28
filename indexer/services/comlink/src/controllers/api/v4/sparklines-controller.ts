@@ -4,6 +4,7 @@ import {
   CandleFromDatabase,
   CandleResolution,
   CandleTable,
+  DEFAULT_POSTGRES_OPTIONS,
   Ordering,
   PerpetualMarketColumns,
   perpetualMarketRefresher,
@@ -20,6 +21,7 @@ import config from '../../../config';
 import { SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP, SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP } from '../../../lib/constants';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import { candlesToSparklineResponseObject } from '../../../request-helpers/request-transformer';
 import { SparklineResponseObject, SparklinesRequest, SparklineTimePeriod } from '../../../types';
@@ -48,7 +50,7 @@ class FillsController extends Controller {
         limit: limit * tickers.length,
       },
       [],
-      { readReplica: true, orderBy: [[CandleColumns.startedAt, Ordering.DESC]] },
+      { ...DEFAULT_POSTGRES_OPTIONS, orderBy: [[CandleColumns.startedAt, Ordering.DESC]] },
     );
 
     return candlesToSparklineResponseObject(tickers, ungroupedTickerCandles, limit);
@@ -57,6 +59,7 @@ class FillsController extends Controller {
 
 router.get(
   '/',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     timePeriod: {

@@ -79,6 +79,7 @@ func TestCancelOrder_Error(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
+				mock.Anything,
 			).Return().Once()
 
 			ks := keepertest.NewClobKeepersTestContext(
@@ -145,6 +146,12 @@ func TestCancelOrder_Success(t *testing.T) {
 					),
 				),
 				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewStatefulOrderRemovalEvent(
+						tc.StatefulOrderPlacement.GetOrderId(),
+						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
+					),
+				),
 			).Return().Once()
 
 			// Add stateful order placement to state

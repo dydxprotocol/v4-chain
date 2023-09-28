@@ -39,7 +39,7 @@ import {
   perpetualPositionAndOrderSideMatching,
 } from '../../src/lib/helper';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
-import { binaryToBase64String, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
+import { createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import { defaultAssetCreateEvent, defaultMarketCreate } from '../helpers/constants';
 
@@ -72,23 +72,14 @@ describe('SQL Function Tests', () => {
       defaultSubaccountUpdateEvent,
     ).finish(),
   );
-  const defaultSubaccountUpdateEventData: string = Buffer.from(
-    defaultSubaccountUpdateEventBinary.buffer,
-  ).toString('base64');
 
   const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
     defaultMarketCreate,
   ).finish());
-  const defaultMarketEventData: string = Buffer.from(
-    defaultMarketEventBinary.buffer,
-  ).toString('base64');
 
   const defaultAssetEventBinary: Uint8Array = Uint8Array.from(AssetCreateEventV1.encode(
     defaultAssetCreateEvent,
   ).finish());
-  const defaultAssetEventData: string = Buffer.from(
-    defaultAssetEventBinary.buffer,
-  ).toString('base64');
 
   const transactionIndex0: number = 0;
   const transactionIndex1: number = 1;
@@ -98,25 +89,25 @@ describe('SQL Function Tests', () => {
   const events: IndexerTendermintEvent[] = [
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.FUNDING,
-      defaultMarketEventData,
+      defaultMarketEventBinary,
       -1,
       eventIndex0,
     ),
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-      defaultSubaccountUpdateEventData,
+      defaultSubaccountUpdateEventBinary,
       transactionIndex0,
       eventIndex0,
     ),
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.ASSET,
-      defaultAssetEventData,
+      defaultAssetEventBinary,
       transactionIndex0,
       eventIndex1,
     ),
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.MARKET,
-      defaultMarketEventData,
+      defaultMarketEventBinary,
       transactionIndex1,
       eventIndex0,
     ),
@@ -401,9 +392,7 @@ describe('SQL Function Tests', () => {
 
     const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
       DydxIndexerSubtypes.ASSET,
-      binaryToBase64String(
-        AssetCreateEventV1.encode(defaultAssetCreateEvent).finish(),
-      ),
+      AssetCreateEventV1.encode(defaultAssetCreateEvent).finish(),
       transactionIndex,
       eventIndex,
     );

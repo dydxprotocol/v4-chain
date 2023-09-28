@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
-var encodingConfig EncodingConfig = initEncodingConfig()
+var encodingConfig = initEncodingConfig()
 
 // EncodingConfig specifies the concrete encoding types to use for a given app.
 // This is provided for compatibility between protobuf and amino implementations.
@@ -43,14 +43,14 @@ func makeEncodingConfig() EncodingConfig {
 
 // initEncodingConfig initializes an EncodingConfig.
 func initEncodingConfig() EncodingConfig {
-	encodingConfig := makeEncodingConfig()
+	encConfig := makeEncodingConfig()
 
 	// This is currently required in order to support various CLI commands such as the `dydxprotocold status` command.
-	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	std.RegisterLegacyAminoCodec(encConfig.Amino)
+	std.RegisterInterfaces(encConfig.InterfaceRegistry)
 
 	// Skipping `ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)` because it's not needed.
-	basic_manager.ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	basic_manager.ModuleBasics.RegisterInterfaces(encConfig.InterfaceRegistry)
 
-	return encodingConfig
+	return encConfig
 }

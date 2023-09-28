@@ -2,16 +2,17 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestDelayMessageByBlocks(t *testing.T) {
@@ -104,7 +105,7 @@ func TestDelayMessageByBlocks(t *testing.T) {
 			idToDelayedMsg := make(map[uint32]types.DelayedMessage)
 			for i, testDelayedMsg := range tc.testDelayedMsgs {
 				idToDelayedMsg[uint32(i)] = types.DelayedMessage{
-					Msg:         testutildelaymsg.EncodeMessageToAny(t, testDelayedMsg.msg),
+					Msg:         encoding.EncodeMessageToAny(t, testDelayedMsg.msg),
 					BlockHeight: int64(testDelayedMsg.delay),
 				}
 			}
@@ -216,7 +217,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 		delaymsg,
 		map[uint32]types.DelayedMessage{
 			0: {
-				Msg:         testutildelaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: 10,
 			},
 		},
@@ -252,7 +253,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 		delaymsg,
 		map[uint32]types.DelayedMessage{
 			1: { // Id incremented.
-				Msg:         testutildelaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: 10,
 			},
 		},
@@ -281,7 +282,7 @@ func TestSetDelayedMessage_Errors(t *testing.T) {
 		"invalid block height": {
 			msg: types.DelayedMessage{
 				Id:          0,
-				Msg:         testutildelaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: -1,
 			},
 			expErr: fmt.Errorf("failed to delay message: block height -1 is in the past: Invalid input"),

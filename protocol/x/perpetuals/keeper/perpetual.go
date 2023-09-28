@@ -78,7 +78,7 @@ func (k Keeper) HasPerpetual(
 	ctx sdk.Context,
 	id uint32,
 ) (found bool) {
-	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
+	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 	return perpetualStore.Has(types.PerpetualKey(id))
 }
 
@@ -132,6 +132,15 @@ func (k Keeper) ModifyPerpetual(
 			),
 		),
 		indexerevents.UpdatePerpetualEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewUpdatePerpetualEventV1(
+				perpetual.Params.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				perpetual.Params.AtomicResolution,
+				perpetual.Params.LiquidityTier,
+			),
+		),
 	)
 
 	return perpetual, nil
@@ -143,7 +152,7 @@ func (k Keeper) getUint32InStore(
 	key string,
 ) uint32 {
 	store := ctx.KVStore(k.storeKey)
-	var numBytes []byte = store.Get(types.KeyPrefix(key))
+	var numBytes []byte = store.Get([]byte(key))
 	return lib.BytesToUint32(numBytes)
 }
 
@@ -152,7 +161,7 @@ func (k Keeper) GetPerpetual(
 	ctx sdk.Context,
 	id uint32,
 ) (val types.Perpetual, err error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 
 	b := store.Get(types.PerpetualKey(id))
 	if b == nil {
@@ -165,7 +174,7 @@ func (k Keeper) GetPerpetual(
 
 // GetAllPerpetuals returns all perpetuals, sorted by perpetual Id.
 func (k Keeper) GetAllPerpetuals(ctx sdk.Context) (list []types.Perpetual) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
@@ -335,6 +344,9 @@ func (k Keeper) processPremiumVotesIntoSamples(
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.FundingValuesEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPremiumSamplesEvent(newSamplesForEvent),
+		),
 	)
 
 	k.SetEmptyPremiumVotes(ctx)
@@ -730,6 +742,9 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.FundingValuesEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewFundingRatesAndIndicesEvent(newFundingRatesAndIndicesForEvent),
+		),
 	)
 
 	// Clear premium samples.
@@ -952,7 +967,7 @@ func (k Keeper) getPremiumStore(ctx sdk.Context, key string) (
 ) {
 	store := ctx.KVStore(k.storeKey)
 
-	premiumStoreBytes := store.Get(types.KeyPrefix(key))
+	premiumStoreBytes := store.Get([]byte(key))
 
 	if premiumStoreBytes == nil {
 		return types.PremiumStore{}
@@ -1094,7 +1109,7 @@ func (k Keeper) setPerpetual(
 	perpetual types.Perpetual,
 ) {
 	b := k.cdc.MustMarshal(&perpetual)
-	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
+	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(types.PerpetualKey(perpetual.Params.Id), b)
 }
 
@@ -1108,7 +1123,7 @@ func (k Keeper) setUint32InStore(
 	store := ctx.KVStore(k.storeKey)
 
 	// Set key value pair
-	store.Set(types.KeyPrefix(key), lib.Uint32ToBytes(num))
+	store.Set([]byte(key), lib.Uint32ToBytes(num))
 }
 
 // GetPerpetualAndMarketPrice retrieves a Perpetual by its id and its corresponding MarketPrice.
@@ -1185,7 +1200,7 @@ func (k Keeper) setPremiumStore(
 	// Get necessary stores
 	store := ctx.KVStore(k.storeKey)
 
-	store.Set(types.KeyPrefix(key), b)
+	store.Set([]byte(key), b)
 }
 
 func (k Keeper) SetPremiumSamples(
@@ -1279,7 +1294,7 @@ func (k Keeper) HasLiquidityTier(
 	ctx sdk.Context,
 	id uint32,
 ) (found bool) {
-	ltStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LiquidityTierKeyPrefix))
+	ltStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
 	return ltStore.Has(types.LiquidityTierKey(id))
 }
 
@@ -1329,6 +1344,15 @@ func (k Keeper) SetLiquidityTier(
 			),
 		),
 		indexerevents.LiquidityTierEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewLiquidityTierUpsertEvent(
+				id,
+				name,
+				initialMarginPpm,
+				maintenanceFractionPpm,
+				basePositionNotional,
+			),
+		),
 	)
 
 	return liquidityTier, nil
@@ -1339,7 +1363,7 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 	liquidityTier types.LiquidityTier,
 	err error,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LiquidityTierKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
 
 	b := store.Get(types.LiquidityTierKey(id))
 	if b == nil {
@@ -1352,7 +1376,7 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 
 // `GetAllLiquidityTiers` returns all liquidity tiers, sorted by id.
 func (k Keeper) GetAllLiquidityTiers(ctx sdk.Context) (list []types.LiquidityTier) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LiquidityTierKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
@@ -1376,7 +1400,7 @@ func (k Keeper) setLiquidityTier(
 	liquidityTier types.LiquidityTier,
 ) {
 	b := k.cdc.MustMarshal(&liquidityTier)
-	liquidityTierStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LiquidityTierKeyPrefix))
+	liquidityTierStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
 	liquidityTierStore.Set(types.LiquidityTierKey(liquidityTier.Id), b)
 }
 

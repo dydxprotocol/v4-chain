@@ -150,7 +150,7 @@ var (
 		},
 	}
 
-	marketParams_InvalidUpdate = []pricetypes.MarketParam{
+	marketParams_PartialUpdate = []pricetypes.MarketParam{
 		{
 			Id:       0,
 			Pair:     "BTC-USD",
@@ -184,6 +184,13 @@ var (
 
 	expectedPrices1Market = map[types.MarketId]uint64{
 		exchange_common.MARKET_BTC_USD: expectedMedianBtcPrice,
+	}
+
+	// expectedPricesPartialUpdate preserves the expected price of BTC, ignoring the invalid update params, and also
+	// updates to expect the median price of ETH.
+	expectedPricesPartialUpdate = map[types.MarketId]uint64{
+		exchange_common.MARKET_BTC_USD: expectedMedianBtcPrice,
+		exchange_common.MARKET_ETH_USD: expectedMedianEthPrice,
 	}
 
 	expectedPrices3Markets = map[types.MarketId]uint64{
@@ -446,9 +453,10 @@ func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_AddMarketWithUSDTCon
 	)
 }
 
-// TestUpdateMarkets_InvalidUpdates tests that the pricefeed daemon ignores invalid updates.
-func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_InvalidUpdate() {
-	// Start the daemon with a single market. Then, update the endpoint to return invalid params.
+// TestUpdateMarkets_PartialUpdates tests that the pricefeed daemon applies valid market params and discards invalid
+// params whenever an update is partially valid.
+func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_PartialUpdate() {
+	// Start the daemon with a single market. Then, update the endpoint to return partially valid params.
 	s.mockAllMarketParamsResponseNTimes(
 		&pricetypes.QueryAllMarketParamsResponse{
 			MarketParams: defaultMarketParams,
@@ -457,7 +465,7 @@ func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_InvalidUpdate() {
 	)
 	s.mockAllMarketParamsResponseNTimes(
 		&pricetypes.QueryAllMarketParamsResponse{
-			MarketParams: marketParams_InvalidUpdate,
+			MarketParams: marketParams_PartialUpdate,
 		},
 		100,
 	)
@@ -470,9 +478,10 @@ func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_InvalidUpdate() {
 	time.Sleep(testPriceCacheExpirationDuration + 5*time.Second)
 
 	s.expectPricesWithTimeout(
-		// The invalid update should not have been applied, so prices will come in as before.
-		expectedPrices1Market,
-		marketParams_InvalidUpdate,
+		// The 1st market param is invalid and should not have applied, so the BTC price does not change.
+		// The 2nd market param is valid and should have applied, so the ETH price should be added.
+		expectedPricesPartialUpdate,
+		marketParams_PartialUpdate,
 		1*time.Second,
 	)
 }

@@ -167,7 +167,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 						ctx,
 						tApp.App,
 						testapp.MustMakeCheckTxOptions{
-							AccAddressForSigning: testtx.MustGetSignerAddress(testSdkMsg.Msg),
+							AccAddressForSigning: testtx.MustGetOnlySignerAddress(testSdkMsg.Msg),
 						},
 						testSdkMsg.Msg,
 					))
@@ -186,4 +186,50 @@ func TestCancelStatefulOrder(t *testing.T) {
 			require.Equal(t, uint64(0), fillAmount.ToUint64())
 		})
 	}
+}
+
+func TestImmediateExecutionLongTermOrders(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	ctx := tApp.InitChain()
+
+	// Reject long-term IOC in CheckTx
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(
+			constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC,
+		),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+		require.Contains(t, resp.Log, clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error())
+	}
+
+	// Reject long-term FOK in CheckTx
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(
+			constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK,
+		),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+		require.Contains(t, resp.Log, clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error())
+	}
+
+	// Reject long-term IOC/FOK in DeliverTx
+	blockAdvancement := testapp.BlockAdvancementWithErrors{
+		BlockAdvancement: testapp.BlockAdvancement{
+			StatefulOrders: []clobtypes.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK,
+			},
+		},
+		ExpectedDeliverTxErrors: map[int]string{
+			0: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
+			1: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
+		},
+	}
+	blockAdvancement.AdvanceToBlock(ctx, 2, &tApp, t)
 }

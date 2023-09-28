@@ -307,7 +307,7 @@ func TestGetAllAssets_MissingAsset(t *testing.T) {
 
 	// Write some bad data to the store
 	store := ctx.KVStore(storeKey)
-	store.Set(types.KeyPrefix(types.NumAssetsKey), lib.Uint32ToBytes(20))
+	store.Set([]byte(types.NumAssetsKey), lib.Uint32ToBytes(20))
 
 	// Expect a panic
 	require.Panics(t, func() { keeper.GetAllAssets(ctx) })

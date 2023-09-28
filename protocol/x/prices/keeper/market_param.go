@@ -16,7 +16,7 @@ import (
 
 // newMarketParamStore creates a new prefix store for MarketParams.
 func (k Keeper) newMarketParamStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketParamKeyPrefix))
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketParamKeyPrefix))
 }
 
 // ModifyMarketParam modifies an existing market param in the store.
@@ -60,6 +60,13 @@ func (k Keeper) ModifyMarketParam(
 			),
 		),
 		indexerevents.MarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewMarketModifyEvent(
+				marketParam.Id,
+				marketParam.Pair,
+				marketParam.MinPriceChangePpm,
+			),
+		),
 	)
 
 	// Update the in-memory market pair map for labelling metrics.

@@ -2,6 +2,7 @@ import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   APIOrderStatus,
   APIOrderStatusEnum,
+  DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   OrderColumns,
   OrderFromDatabase,
@@ -33,6 +34,7 @@ import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import {
   CheckLimitSchema,
   CheckSubaccountSchema,
@@ -101,6 +103,7 @@ class OrdersController extends Controller {
           goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
           goodTilBlockTimeBeforeOrAt,
         }, [], {
+          ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [
             // Order by `goodTilBlock` and then order by `goodTilBlockTime`
             // This way, orders with `goodTilBlock` defined are ordered before orders with
@@ -164,6 +167,7 @@ class OrdersController extends Controller {
 
 router.get(
   '/',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   ...CheckLimitSchema,
@@ -271,6 +275,7 @@ router.get(
 
 router.get(
   '/:orderId',
+  rejectRestrictedCountries,
   ...checkSchema({
     orderId: {
       in: ['params'],

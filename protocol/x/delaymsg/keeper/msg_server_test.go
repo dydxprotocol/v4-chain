@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -55,7 +56,7 @@ func setupMockWithDelayMessageFailure(ctx sdk.Context, mck *mocks.DelayMsgKeeper
 func TestDelayMessage(t *testing.T) {
 	validDelayMsg := &types.MsgDelayMessage{
 		Authority: AcceptedAuthority,
-		Msg:       delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+		Msg:       encoding.EncodeMessageToAny(t, constants.TestMsg1),
 	}
 
 	tests := map[string]struct {

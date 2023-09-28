@@ -78,7 +78,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(tc.firstMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.firstMsg),
 				},
 				tc.firstMsg,
 			)
@@ -90,7 +90,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(tc.secondMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.secondMsg),
 				},
 				tc.secondMsg,
 			)
@@ -203,7 +203,12 @@ func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
 	}
 	// We shouldn't be overfilling orders and the line below shouldn't panic.
 	_ = tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{
-		ValidateDeliverTxs: func(_ sdktypes.Context, _ abcitypes.RequestDeliverTx, _ abcitypes.ResponseDeliverTx) bool {
+		ValidateDeliverTxs: func(
+			_ sdktypes.Context,
+			_ abcitypes.RequestDeliverTx,
+			_ abcitypes.ResponseDeliverTx,
+			_ int,
+		) bool {
 			// Don't halt the chain since it's expected that the order will be removed after getting fully filled,
 			// so the subsequent cancellation will be invalid.
 			return false
@@ -401,7 +406,7 @@ func TestRateLimitingOrders_StatefulOrderRateLimitsAreAcrossMarkets(t *testing.T
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5),
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
@@ -412,7 +417,7 @@ func TestRateLimitingOrders_StatefulOrderRateLimitsAreAcrossMarkets(t *testing.T
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5),
 			AccSequenceNumberForSigning: 2,
 		},
@@ -457,7 +462,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreRateLimited(t *testi
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5),
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
@@ -466,7 +471,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreRateLimited(t *testi
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5),
 			AccSequenceNumberForSigning: 2,
 		},
@@ -479,6 +484,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreRateLimited(t *testi
 			context sdktypes.Context,
 			request abcitypes.RequestDeliverTx,
 			response abcitypes.ResponseDeliverTx,
+			_ int,
 		) (haltChain bool) {
 			if bytes.Equal(request.Tx, firstMarketCheckTx.Tx) {
 				require.Conditionf(t, response.IsOK, "Expected DeliverTx to succeed. Response: %+v", response)
@@ -498,6 +504,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreRateLimited(t *testi
 			ctx sdktypes.Context,
 			request abcitypes.RequestDeliverTx,
 			response abcitypes.ResponseDeliverTx,
+			_ int,
 		) (haltchain bool) {
 			require.Conditionf(t, response.IsErr, "Expected DeliverTx to error. Response: %+v", response)
 			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), response.Code)

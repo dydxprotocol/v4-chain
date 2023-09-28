@@ -27,7 +27,6 @@ export async function complianceCheck(
   const complianceData: ComplianceDataFromDatabase[] = await ComplianceTable.findAll(
     { address: [address], blocked: true },
     [],
-    { readReplica: true },
   );
   if (complianceData.length > 0) {
     return create4xxResponse(

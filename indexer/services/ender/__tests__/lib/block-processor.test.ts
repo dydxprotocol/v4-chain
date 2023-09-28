@@ -69,23 +69,14 @@ describe('block-processor', () => {
       defaultSubaccountUpdateEvent,
     ).finish(),
   );
-  const defaultSubaccountUpdateEventData: string = Buffer.from(
-    defaultSubaccountUpdateEventBinary.buffer,
-  ).toString('base64');
 
   const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
     defaultMarketCreate,
   ).finish());
-  const defaultMarketEventData: string = Buffer.from(
-    defaultMarketEventBinary.buffer,
-  ).toString('base64');
 
   const defaultAssetEventBinary: Uint8Array = Uint8Array.from(AssetCreateEventV1.encode(
     defaultAssetCreateEvent,
   ).finish());
-  const defaultAssetEventData: string = Buffer.from(
-    defaultAssetEventBinary.buffer,
-  ).toString('base64');
 
   const transactionIndex0: number = 0;
   const transactionIndex1: number = 1;
@@ -95,19 +86,19 @@ describe('block-processor', () => {
   const events: IndexerTendermintEvent[] = [
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-      defaultSubaccountUpdateEventData,
+      defaultSubaccountUpdateEventBinary,
       transactionIndex0,
       eventIndex0,
     ),
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.ASSET,
-      defaultAssetEventData,
+      defaultAssetEventBinary,
       transactionIndex0,
       eventIndex1,
     ),
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.MARKET,
-      defaultMarketEventData,
+      defaultMarketEventBinary,
       transactionIndex1,
       eventIndex0,
     ),

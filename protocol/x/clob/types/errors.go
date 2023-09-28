@@ -330,6 +330,11 @@ var (
 		2003,
 		"Post-only order would cross one or more maker orders",
 	)
+	ErrImmediateExecutionOrderAlreadyFilled = errorsmod.Register(
+		ModuleName,
+		2004,
+		"IOC/FOK order is already filled, remaining size is cancelled.",
+	)
 
 	// Stateful order errors.
 	ErrInvalidOrderFlag = errorsmod.Register(
@@ -342,7 +347,7 @@ var (
 		3001,
 		"Invalid order goodTilBlockTime",
 	)
-	ErrStatefulOrdersCannotRequireImmediateExecution = errorsmod.Register(
+	ErrLongTermOrdersCannotRequireImmediateExecution = errorsmod.Register(
 		ModuleName,
 		3002,
 		"Stateful orders cannot require immediate execution",

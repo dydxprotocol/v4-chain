@@ -16,7 +16,3 @@ const (
 	// InsuranceFundName defines the root string for the insurance fund account address
 	InsuranceFundName = "insurance_fund"
 )
-
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}

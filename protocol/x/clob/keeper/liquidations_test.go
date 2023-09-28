@@ -1069,6 +1069,20 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					),
 				),
 				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -1098,6 +1112,20 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					),
 				),
 				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						1,
+						1,
+						constants.EthUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.EthUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Eth.Status,
+						constants.ClobPair_Eth.QuantumConversionExponent,
+						constants.EthUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Eth.SubticksPerTick,
+						constants.ClobPair_Eth.StepBaseQuantums,
+						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -1969,6 +1997,20 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						),
 					),
 					indexerevents.PerpetualMarketEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							uint32(i),
+							uint32(i),
+							perpetuals[i].Params.Ticker,
+							perpetuals[i].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							perpetuals[i].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+							perpetuals[i].Params.LiquidityTier,
+						),
+					),
 				).Once().Return()
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
@@ -2082,6 +2124,20 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 			),
 		),
 		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				0,
+				0,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+				constants.ClobPair_Btc.Status,
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.StepBaseQuantums,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+			),
+		),
 	).Once().Return()
 	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ctx,
@@ -3602,6 +3658,20 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 					),
 				),
 				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						tc.perpetuals[0].Params.Ticker,
+						tc.perpetuals[0].Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						tc.perpetuals[0].Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						tc.perpetuals[0].Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -4353,6 +4423,20 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 						),
 					),
 					indexerevents.PerpetualMarketEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							perpetualId,
+							uint32(i),
+							tc.perpetuals[perpetualId].Params.Ticker,
+							tc.perpetuals[perpetualId].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							tc.perpetuals[perpetualId].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+							tc.perpetuals[perpetualId].Params.LiquidityTier,
+						),
+					),
 				).Once().Return()
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
@@ -4971,6 +5055,20 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 					),
 				),
 				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -5124,6 +5222,20 @@ func TestSortLiquidationOrders(t *testing.T) {
 					),
 				),
 				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,

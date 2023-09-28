@@ -23,7 +23,6 @@ import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
 } from '../helpers/indexer-proto-helpers';
@@ -77,9 +76,7 @@ describe('assetHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.ASSET,
-        binaryToBase64String(
-          AssetCreateEventV1.encode(defaultAssetCreateEvent).finish(),
-        ),
+        AssetCreateEventV1.encode(defaultAssetCreateEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -194,9 +191,7 @@ function createKafkaMessageFromAssetEvent({
     events.push(
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.ASSET,
-        binaryToBase64String(
-          AssetCreateEventV1.encode(assetEvent).finish(),
-        ),
+        AssetCreateEventV1.encode(assetEvent).finish(),
         transactionIndex,
         eventIndex,
       ),

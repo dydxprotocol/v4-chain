@@ -1055,15 +1055,6 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 				m.mustRemoveOrder(ctx, otpOrderId)
 			} else if otpOrderId.IsShortTermOrder() {
 				order := operation.GetShortTermOrderPlacement().Order
-				if _, exists := m.operationsToPropose.
-					ShortTermOrderHashToTxBytes[order.GetOrderHash()]; !exists {
-					panic(
-						fmt.Sprintf(
-							"RemoveAndClearOperationsQueue: No TxBytes to remove for Short-Term order %+v",
-							order.GetOrderTextString(),
-						),
-					)
-				}
 				m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 			}
 		case *types.InternalOperation_PreexistingStatefulOrder:
@@ -1303,6 +1294,26 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 			types.ErrOrderFullyFilled,
 			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
 			remainingAmount,
+			order.GetOrderTextString(),
+		)
+	}
+
+	// Immediate-or-cancel and fill-or-kill orders may only be filled once. The remaining size becomes unfillable.
+	// This prevents the case where an IOC order is partially filled multiple times over the course of multiple blocks.
+	if order.RequiresImmediateExecution() && remainingAmount < order.GetBaseQuantums() {
+		// Prevent IOC/FOK orders from replacing partially filled orders.
+		if restingOrderExists {
+			return errorsmod.Wrapf(
+				types.ErrInvalidReplacement,
+				"Cannot replace partially filled order with IOC order. Size: %d, Fill Amount: %d.",
+				order.GetBaseQuantums(),
+				order.GetBaseQuantums()-remainingAmount,
+			)
+		}
+
+		return errorsmod.Wrapf(
+			types.ErrImmediateExecutionOrderAlreadyFilled,
+			"Order: %s",
 			order.GetOrderTextString(),
 		)
 	}

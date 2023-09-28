@@ -184,6 +184,28 @@ create_validators() {
 	done
 }
 
+setup_cosmovisor() {
+	for i in "${!FULL_NODE_KEYS[@]}"; do
+		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
+		export DAEMON_NAME=dydxprotocold
+		export DAEMON_HOME="$HOME/chain/.full-node-$i"
+
+		cosmovisor init /bin/dydxprotocold
+
+		cp /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/genesis/bin/"
+	done
+
+	for i in "${!MONIKERS[@]}"; do
+		VAL_HOME_DIR="$HOME/chain/.${MONIKERS[$i]}"
+		export DAEMON_NAME=dydxprotocold
+		export DAEMON_HOME="$HOME/chain/.${MONIKERS[$i]}"
+
+		cosmovisor init /bin/dydxprotocold
+
+		cp /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/genesis/bin/"
+	done
+}
+
 # TODO(DEC-1894): remove this function once we migrate off of persistent peers.
 # Note: DO NOT add more config modifications in this method. Use `cmd/config.go` to configure
 # the default config values.
@@ -196,3 +218,4 @@ edit_config() {
 
 install_prerequisites
 create_validators
+setup_cosmovisor

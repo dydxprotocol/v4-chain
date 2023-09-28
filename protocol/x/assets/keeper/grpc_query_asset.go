@@ -26,7 +26,7 @@ func (k Keeper) AllAssets(
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	assetStore := prefix.NewStore(store, types.KeyPrefix(types.AssetKeyPrefix))
+	assetStore := prefix.NewStore(store, []byte(types.AssetKeyPrefix))
 
 	pageRes, err := query.Paginate(assetStore, req.Pagination, func(key []byte, value []byte) error {
 		var asset types.Asset
