@@ -2,17 +2,16 @@ package client
 
 import (
 	"context"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"time"
-
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -27,7 +26,7 @@ func Start(
 	flags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient types.GrpcClient,
+	grpcClient daemontypes.GrpcClient,
 ) error {
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
@@ -145,6 +144,7 @@ func GetAllSubaccounts(
 			limit,
 			nextKey,
 		)
+
 		if err != nil {
 			return nil, err
 		}
