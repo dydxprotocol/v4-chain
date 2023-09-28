@@ -347,7 +347,7 @@ var (
 		3001,
 		"Invalid order goodTilBlockTime",
 	)
-	ErrStatefulOrdersCannotRequireImmediateExecution = errorsmod.Register(
+	ErrLongTermOrdersCannotRequireImmediateExecution = errorsmod.Register(
 		ModuleName,
 		3002,
 		"Stateful orders cannot require immediate execution",
