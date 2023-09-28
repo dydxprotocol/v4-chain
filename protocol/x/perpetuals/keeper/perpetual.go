@@ -132,6 +132,15 @@ func (k Keeper) ModifyPerpetual(
 			),
 		),
 		indexerevents.UpdatePerpetualEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewUpdatePerpetualEventV1(
+				perpetual.Params.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				perpetual.Params.AtomicResolution,
+				perpetual.Params.LiquidityTier,
+			),
+		),
 	)
 
 	return perpetual, nil
@@ -335,6 +344,9 @@ func (k Keeper) processPremiumVotesIntoSamples(
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.FundingValuesEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPremiumSamplesEvent(newSamplesForEvent),
+		),
 	)
 
 	k.SetEmptyPremiumVotes(ctx)
@@ -730,6 +742,9 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.FundingValuesEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewFundingRatesAndIndicesEvent(newFundingRatesAndIndicesForEvent),
+		),
 	)
 
 	// Clear premium samples.
@@ -1329,6 +1344,15 @@ func (k Keeper) SetLiquidityTier(
 			),
 		),
 		indexerevents.LiquidityTierEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewLiquidityTierUpsertEvent(
+				id,
+				name,
+				initialMarginPpm,
+				maintenanceFractionPpm,
+				basePositionNotional,
+			),
+		),
 	)
 
 	return liquidityTier, nil

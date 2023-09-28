@@ -25,9 +25,10 @@ import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
-  createIndexerTendermintEvent, expectPerpetualMarket, expectPerpetualMarketKafkaMessage,
+  createIndexerTendermintEvent,
+  expectPerpetualMarket,
+  expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
 import { PerpetualMarketCreationHandler } from '../../src/handlers/perpetual-market-handler';
 import {
@@ -80,9 +81,7 @@ describe('perpetualMarketHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.PERPETUAL_MARKET,
-        binaryToBase64String(
-          PerpetualMarketCreateEventV1.encode(defaultPerpetualMarketCreateEvent).finish(),
-        ),
+        PerpetualMarketCreateEventV1.encode(defaultPerpetualMarketCreateEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -221,9 +220,7 @@ function createKafkaMessageFromPerpetualMarketEvent({
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.PERPETUAL_MARKET,
-      binaryToBase64String(
-        PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
-      ),
+      PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
       transactionIndex,
       0,
     ),

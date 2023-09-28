@@ -91,6 +91,20 @@ func (k Keeper) CreatePerpetualClobPair(
 			),
 		),
 		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				perpetualId,
+				clobPairId,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				status,
+				quantumConversionExponent,
+				perpetual.Params.AtomicResolution,
+				subticksPerTick,
+				stepSizeBaseQuantums.ToUint64(),
+				perpetual.Params.LiquidityTier,
+			),
+		),
 	)
 
 	return clobPair, nil
@@ -469,6 +483,15 @@ func (k Keeper) UpdateClobPair(
 			),
 		),
 		indexerevents.UpdateClobPairEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewUpdateClobPairEvent(
+				clobPair.GetClobPairId(),
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+			),
+		),
 	)
 
 	return nil

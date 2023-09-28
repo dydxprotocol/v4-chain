@@ -72,6 +72,15 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 						),
 					),
 					indexerevents.UpdateClobPairEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewUpdateClobPairEvent(
+							clobPair.GetClobPairId(),
+							types.ClobPair_STATUS_ACTIVE,
+							clobPair.QuantumConversionExponent,
+							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+						),
+					),
 				).Once().Return()
 			},
 			expectedResp: &types.MsgUpdateClobPairResponse{},
