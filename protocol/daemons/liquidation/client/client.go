@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
