@@ -33,7 +33,6 @@ import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent, expectSubaccountKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
@@ -52,10 +51,12 @@ import {
   defaultWithdrawalEvent,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('transferHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
@@ -111,9 +112,7 @@ describe('transferHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        binaryToBase64String(
-          TransferEventV1.encode(defaultTransferEvent).finish(),
-        ),
+        TransferEventV1.encode(defaultTransferEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -486,9 +485,7 @@ function createKafkaMessageFromTransferEvent({
     events.push(
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        binaryToBase64String(
-          TransferEventV1.encode(transferEvent).finish(),
-        ),
+        TransferEventV1.encode(transferEvent).finish(),
         transactionIndex,
         eventIndex,
       ),

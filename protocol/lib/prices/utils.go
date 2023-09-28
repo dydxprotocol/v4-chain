@@ -29,6 +29,12 @@ import (
 // is only intended to be used for pricing markets that are close to 1:1 price-wise, e.g. USD-USDT. Inverting a price
 // that is <<>> 1 could result in a loss of precision.
 func Invert(price uint64, exponent types.Exponent) uint64 {
+	// Invert 0 to 0. Zero prices are invalid and are prevented by the price fetcher, but we insert this guard just
+	// in case to prevent any panics.
+	if price == 0 {
+		return 0
+	}
+
 	decimalPrice := decimal.NewFromBigInt(new(big.Int).SetUint64(price), exponent)
 	invertedPrice := decimal.NewFromInt(1).Div(decimalPrice).Mul(
 		decimal.NewFromBigInt(new(big.Int).SetUint64(1), -exponent),
@@ -71,6 +77,12 @@ func Divide(
 	price uint64,
 	exponent types.Exponent,
 ) (adjustedPrice uint64) {
+	// Zero prices are invalid and are prevented by the price fetcher, but we insert this guard just in case to prevent
+	// any panics.
+	if price == 0 {
+		return 0
+	}
+
 	decimalPrice := decimal.NewFromBigInt(new(big.Int).SetUint64(price), exponent)
 	decimalAdjustByPrice := decimal.NewFromBigInt(new(big.Int).SetUint64(adjustByPrice), adjustByExponent)
 	adjustedPrice = decimalAdjustByPrice.Div(decimalPrice).Mul(

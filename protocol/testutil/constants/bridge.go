@@ -1,6 +1,7 @@
 package constants
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -34,7 +35,7 @@ var (
 	// Private
 	coin = sdk.Coin{
 		Denom:  "dv4tnt",
-		Amount: sdk.NewIntFromUint64(888),
+		Amount: sdkmath.NewIntFromUint64(888),
 	}
 
 	// Public

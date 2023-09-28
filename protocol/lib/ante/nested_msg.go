@@ -11,6 +11,7 @@ import (
 func IsNestedMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
+		// ------- CosmosSDK default modules
 		// gov
 		*gov.MsgSubmitProposal:
 		return true
@@ -66,6 +67,8 @@ func validateInnerMsg(innerMsgs []sdk.Msg) error {
 		if IsNestedMsg(msg) {
 			return fmt.Errorf("Invalid nested msg: double-nested msg type")
 		}
+
+		// For "internal msgs", we allow them, because they are designed to be nested.
 	}
 	return nil
 }

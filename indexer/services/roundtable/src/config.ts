@@ -9,6 +9,12 @@ import {
   parseInteger,
   parseNumber,
   parseString,
+  ONE_MINUTE_IN_MILLISECONDS,
+  THIRTY_SECONDS_IN_MILLISECONDS,
+  FIVE_MINUTES_IN_MILLISECONDS,
+  ONE_HOUR_IN_MILLISECONDS,
+  ONE_SECOND_IN_MILLISECONDS,
+  TEN_SECONDS_IN_MILLISECONDS,
 } from '@dydxprotocol-indexer/base';
 import {
   kafkaConfigSchema,
@@ -34,40 +40,40 @@ export const configSchema = {
   LOOPS_ORDERBOOK_INSTRUMENTATION: parseBoolean({ default: true }),
   LOOPS_CANCEL_STALE_ORDERS: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_RESEARCH_ENVIRONMENT: parseBoolean({ default: true }),
+  LOOPS_ENABLED_TRACK_LAG: parseBoolean({ default: false }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
-    // 10 seconds
-    default: 10000,
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_DELETE_ZERO_PRICE_LEVELS: parseInteger({
-    // 2 minutes
-    default: 120_000,
+    default: 2 * ONE_MINUTE_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_PNL_TICKS: parseInteger({
-    // 30 seconds
-    default: 30_000,
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_REMOVE_EXPIRED_ORDERS: parseInteger({
-    // 2 minutes
-    default: 120_000,
+    default: 2 * ONE_MINUTE_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_ORDERBOOK_INSTRUMENTATION: parseInteger({
-    // 5 seconds
-    default: 5_000,
+    default: FIVE_MINUTES_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_CANCEL_STALE_ORDERS: parseInteger({
-    // 30 seconds
-    default: 30_000,
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_UPDATE_RESEARCH_ENVIRONMENT: parseInteger({
-    // 1 hour
-    default: 3_600_000,
+    default: ONE_HOUR_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA: parseInteger({
+    default: FIVE_MINUTES_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_TRACK_LAG: parseInteger({
+    default: TEN_SECONDS_IN_MILLISECONDS,
   }),
 
   // Start delay
   START_DELAY_ENABLED: parseBoolean({ default: true }),
-  MAX_START_DELAY_MS: parseInteger({ default: 180000 }), // 3 minutes
+  MAX_START_DELAY_MS: parseInteger({ default: 3 * ONE_MINUTE_IN_MILLISECONDS }),
   MAX_START_DELAY_FRACTION_OF_INTERVAL: parseNumber({ default: 0.1 }),
   JITTER_FRACTION_OF_DELAY: parseNumber({ default: 0.01 }),
 
@@ -80,7 +86,7 @@ export const configSchema = {
   EXCEEDED_MAX_CONCURRENT_RUNNING_TASKS_DELAY_MS: parseInteger({ default: 1000 }),
 
   // PNL ticks
-  PNL_TICK_UPDATE_INTERVAL_MS: parseInteger({ default: 3_600_000 }), // 1 hour
+  PNL_TICK_UPDATE_INTERVAL_MS: parseInteger({ default: ONE_HOUR_IN_MILLISECONDS }),
   PNL_TICK_MAX_ROWS_PER_UPSERT: parseInteger({ default: 1000 }),
 
   // Remove expired orders
@@ -88,6 +94,11 @@ export const configSchema = {
 
   // Cancel stale orders
   CANCEL_STALE_ORDERS_QUERY_BATCH_SIZE: parseInteger({ default: 10000 }),
+
+  // Tracking indexer lag
+  TRACK_LAG_INDEXER_FULL_NODE_URL: parseString({ default: '' }), // i.e. http://11.11.11.11:26657
+  TRACK_LAG_VALIDATOR_URL: parseString({ default: '' }), // i.e. http://11.11.11.11:26657
+  TRACK_LAG_OTHER_FULL_NODE_URL: parseString({ default: '' }), // i.e. http://11.11.11.11:26657
 
   // Update research environment
   AWS_ACCOUNT_ID: parseString(),
@@ -100,6 +111,14 @@ export const configSchema = {
   ATHENA_DATABASE_NAME: parseString({ default: 'default' }),
   ATHENA_WORKING_GROUP: parseString({ default: 'primary' }),
   SKIP_TO_ATHENA_TABLE_WRITING: parseBoolean({ default: false }),
+
+  // Update compliance data
+  ACTIVE_ADDRESS_THRESHOLD_SECONDS: parseInteger({ default: 86_400 }),
+  MAX_COMPLIANCE_DATA_AGE_SECONDS: parseInteger({ default: 2_630_000 }), // 1 month
+  MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS: parseInteger({ default: 86_400 }), // 1 day
+  MAX_COMPLIANCE_DATA_QUERY_PER_LOOP: parseInteger({ default: 100 }),
+  COMPLIANCE_PROVIDER_QUERY_BATCH_SIZE: parseInteger({ default: 100 }),
+  COMPLIANCE_PROVIDER_QUERY_DELAY_MS: parseInteger({ default: ONE_SECOND_IN_MILLISECONDS }),
 };
 
 export default parseSchema(configSchema);

@@ -82,7 +82,6 @@ const (
 	EthBlockHeight           = "eth_block_height"
 	EventIdAlreadyRecognized = "event_id_already_recognized"
 	EventIdNotSequential     = "event_id_not_sequential"
-	EventIdNotNextExpected   = "event_id_not_next_expected"
 	NextId                   = "next_id"
 	RecognizedEventInfo      = "recognized_event_info"
 
@@ -156,6 +155,7 @@ const (
 	TotalOrdersClobPair                          = "total_orders_in_clob"
 	UnfilledLiquidationOrders                    = "unfilled_liquidation_orders"
 	UnknownPlaceOrders                           = "unknown_place_orders"
+	UnverifiedStatefulOrderRemoval               = "unverified_stateful_order_removal"
 	ValidateMatches                              = "validate_matches"
 	ValidateOrder                                = "validate_order"
 
@@ -165,9 +165,15 @@ const (
 	Memclob                              = "memclob"
 	RemovedFromOrderBook                 = "removed_from_orderbook"
 
+	// Daemon
+	DaemonServer    = "daemon_server"
+	ValidResponse   = "valid_response"
+	MissingResponse = "missing_response"
+
 	// Epochs.
 	EpochInfoName = "epoch_name"
 	EpochNumber   = "epoch_number"
+	IsEpochOne    = "is_epoch_one"
 
 	// Perpetuals.
 	AddPremiumSamples            = "add_premium_samples"
@@ -179,6 +185,7 @@ const (
 	GetAllPerpetualPricePremiums = "get_all_perpetual_price_premiums"
 	NewPremiumVotes              = "new_premium_votes"
 	NumPremiumsFromEpoch         = "num_premiums_from_epoch"
+	MissingIndexPriceForFunding  = "missing_index_price_for_funding"
 	NumPremiumVotes              = "num_premium_votes"
 	PerpetualTicker              = "perpetual_ticker"
 	PerpetualId                  = "perpetual_id"
@@ -240,12 +247,18 @@ const (
 	GetNetCollateralAndMarginRequirements = "get_net_collateral_and_margin_requirements"
 	GetSubaccount                         = "get_subaccount"
 	UpdateSubaccounts                     = "update_subaccounts"
+	SubaccountOwner                       = "subaccount_owner"
 
 	// Liquidation Daemon.
-	AllSubaccounts               = "get_all_subaccounts"
-	LiquidatableSubaccountIds    = "liquidatable_subaccount_ids"
-	LiquidationDaemon            = "liquidation_daemon"
-	SubaccountsWithOpenPositions = "subaccounts_with_open_positions"
+	CheckCollateralizationForSubaccounts = "check_collateralization_for_subaccounts"
+	GetAllSubaccounts                    = "get_all_subaccounts"
+	GetLiquidatableSubaccountIds         = "get_liquidatable_subaccount_ids"
+	GetSubaccountsFromKey                = "get_subaccounts_from_key"
+	LiquidatableSubaccountIds            = "liquidatable_subaccount_ids"
+	LiquidationDaemon                    = "liquidation_daemon"
+	PageLimit                            = "page_limit"
+	SendLiquidatableSubaccountIds        = "send_liquidatable_subaccount_ids"
+	SubaccountsWithOpenPositions         = "subaccounts_with_open_positions"
 
 	// Liquidation.
 	InsuranceFundBalance                  = "insurance_fund_balance"
@@ -261,6 +274,7 @@ const (
 	SubaccountMaxInsuranceLost            = "exceeds_subaccount_max_insurance_lost"
 	SubaccountMaxNotionalLiquidated       = "exceeds_subaccount_max_notional_liquidated"
 	LiquidationRequiresDeleveraging       = "liquidation_requires_deleveraging"
+	LiquidationMatchNegativeTNC           = "liquidation_match_negative_tnc"
 
 	// Deleveraging.
 	CannotDeleverageSubaccount     = "cannot_deleverage_subaccount"

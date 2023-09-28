@@ -5,17 +5,17 @@ import {
   BlockTable,
   dbHelpers,
   IsoString,
+  LiquidityTiersTable,
+  marketRefresher,
   MarketTable,
   perpetualMarketRefresher,
   PerpetualMarketTable,
   TendermintEventFromDatabase,
   TendermintEventTable,
   testConstants,
+  testMocks,
   TransactionFromDatabase,
   TransactionTable,
-  LiquidityTiersTable,
-  testMocks,
-  marketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   FundingEventV1,
@@ -48,6 +48,7 @@ import {
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { MarketModifyHandler } from '../../src/handlers/markets/market-modify-handler';
 import Long from 'long';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 jest.mock('../../src/handlers/subaccount-update-handler');
 jest.mock('../../src/handlers/transfer-handler');
@@ -87,9 +88,11 @@ describe('on-message', () => {
 
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await dbHelpers.clearData();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
+    await createPostgresFunctions();
   });
 
   afterEach(async () => {
@@ -115,17 +118,12 @@ describe('on-message', () => {
         owner: '',
         number: 0,
       },
-    // updatedPerpetualPositions: [],
-    // updatedAssetPositions: [],
     });
   const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
     SubaccountUpdateEventV1.encode(
       defaultSubaccountUpdateEvent,
     ).finish(),
   );
-  const defaultSubaccountUpdateEventData: string = Buffer.from(
-    defaultSubaccountUpdateEventBinary.buffer,
-  ).toString('base64');
 
   const defaultTransferEvent: TransferEventV1 = TransferEventV1.fromPartial({
     sender: {
@@ -146,33 +144,95 @@ describe('on-message', () => {
   const defaultTransferEventBinary: Uint8Array = Uint8Array.from(TransferEventV1.encode(
     defaultTransferEvent,
   ).finish());
-  const defaultTransferEventData: string = Buffer.from(
-    defaultTransferEventBinary.buffer,
-  ).toString('base64');
 
   const defaultFundingEventBinary: Uint8Array = Uint8Array.from(FundingEventV1.encode(
     defaultFundingUpdateSampleEvent,
   ).finish());
-  const defaultFundingEventData: string = Buffer.from(
-    defaultFundingEventBinary.buffer,
-  ).toString('base64');
 
   const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
     defaultMarketModify,
   ).finish());
-  const defaultMarketEventData: string = Buffer.from(
-    defaultMarketEventBinary.buffer,
-  ).toString('base64');
 
-  it('successfully processes block with transaction event', async () => {
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with transaction event (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
+      ),
+    ];
+
+    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+      defaultHeight,
+      defaultTime,
+      events,
+      [defaultTxHash],
+    );
+    const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
+    const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
+
+    await onMessage(kafkaMessage);
+    await Promise.all([
+      expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
+      expectTransactionWithHash([defaultTxHash]),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+    ]);
+
+    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenCalledTimes(1);
+    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenNthCalledWith(
+      1,
+      block,
+      events[0],
+      expect.any(Number),
+      defaultSubaccountUpdateEvent,
+    );
+    expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
+    expect(stats.timing).toHaveBeenCalledWith(
+      'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
+    expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
+      expect.any(Number), 1, { success: 'true' });
+  });
+
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with transaction event with unset version (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        defaultSubaccountUpdateEventBinary,
+        transactionIndex,
+        eventIndex,
+        0,
       ),
     ];
 
@@ -214,7 +274,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        defaultTransferEventData,
+        defaultTransferEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -272,7 +332,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.FUNDING,
-        defaultFundingEventData,
+        defaultFundingEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -316,7 +376,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -342,13 +402,13 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        defaultTransferEventData,
+        defaultTransferEventBinary,
         transactionIndex,
         eventIndex,
       ),
       createIndexerTendermintEvent(
         'unknown',
-        defaultTransferEventData,
+        defaultTransferEventBinary,
         transactionIndex,
         eventIndex1,
       ),
@@ -393,7 +453,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.MARKET,
-        defaultMarketEventData,
+        defaultMarketEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -431,14 +491,27 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it('successfully processes block with block event', async () => {
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with block event (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
     // -1 so that createIndexerTendermintEvent creates a block event
     const transactionIndex: number = -1;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -473,7 +546,20 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it('successfully processes block with transaction event and block event', async () => {
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with transaction event and block event (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
 
@@ -481,13 +567,13 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         blockTransactionIndex,
         eventIndex,
       ),
@@ -526,7 +612,20 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it('successfully processes block with multiple transactions', async () => {
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('successfully processes block with multiple transactions (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
     const transactionIndex0: number = 0;
     const transactionIndex1: number = 1;
     const eventIndex0: number = 0;
@@ -535,19 +634,19 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex0,
         eventIndex0,
       ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex0,
         eventIndex1,
       ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex1,
         eventIndex0,
       ),
@@ -610,7 +709,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -669,7 +768,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -726,7 +825,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -758,7 +857,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventData,
+        defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),

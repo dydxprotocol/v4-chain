@@ -1,7 +1,8 @@
 import { EventParams, EventParamsSDKType, ProposeParams, ProposeParamsSDKType, SafetyParams, SafetyParamsSDKType } from "./params";
 import { BridgeEventInfo, BridgeEventInfoSDKType } from "./bridge_event_info";
+import { MsgCompleteBridge, MsgCompleteBridgeSDKType } from "./tx";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial } from "../../helpers";
+import { DeepPartial, Long } from "../../helpers";
 /** QueryEventParamsRequest is a request type for the EventParams RPC method. */
 
 export interface QueryEventParamsRequest {}
@@ -111,6 +112,66 @@ export interface QueryRecognizedEventInfoResponse {
 
 export interface QueryRecognizedEventInfoResponseSDKType {
   info?: BridgeEventInfoSDKType;
+}
+/**
+ * QueryDelayedCompleteBridgeMessagesRequest is a request type for the
+ * DelayedCompleteBridgeMessages RPC method.
+ */
+
+export interface QueryDelayedCompleteBridgeMessagesRequest {
+  /**
+   * QueryDelayedCompleteBridgeMessagesRequest is a request type for the
+   * DelayedCompleteBridgeMessages RPC method.
+   */
+  address: string;
+}
+/**
+ * QueryDelayedCompleteBridgeMessagesRequest is a request type for the
+ * DelayedCompleteBridgeMessages RPC method.
+ */
+
+export interface QueryDelayedCompleteBridgeMessagesRequestSDKType {
+  /**
+   * QueryDelayedCompleteBridgeMessagesRequest is a request type for the
+   * DelayedCompleteBridgeMessages RPC method.
+   */
+  address: string;
+}
+/**
+ * QueryDelayedCompleteBridgeMessagesResponse is a response type for the
+ * DelayedCompleteBridgeMessages RPC method.
+ */
+
+export interface QueryDelayedCompleteBridgeMessagesResponse {
+  messages: DelayedCompleteBridgeMessage[];
+}
+/**
+ * QueryDelayedCompleteBridgeMessagesResponse is a response type for the
+ * DelayedCompleteBridgeMessages RPC method.
+ */
+
+export interface QueryDelayedCompleteBridgeMessagesResponseSDKType {
+  messages: DelayedCompleteBridgeMessageSDKType[];
+}
+/**
+ * DelayedCompleteBridgeMessage is a message type for the response of
+ * DelayedCompleteBridgeMessages RPC method. It contains the message
+ * and the block height at which it will execute.
+ */
+
+export interface DelayedCompleteBridgeMessage {
+  message?: MsgCompleteBridge;
+  blockHeight: Long;
+}
+/**
+ * DelayedCompleteBridgeMessage is a message type for the response of
+ * DelayedCompleteBridgeMessages RPC method. It contains the message
+ * and the block height at which it will execute.
+ */
+
+export interface DelayedCompleteBridgeMessageSDKType {
+  message?: MsgCompleteBridgeSDKType;
+  block_height: Long;
 }
 
 function createBaseQueryEventParamsRequest(): QueryEventParamsRequest {
@@ -503,6 +564,151 @@ export const QueryRecognizedEventInfoResponse = {
   fromPartial(object: DeepPartial<QueryRecognizedEventInfoResponse>): QueryRecognizedEventInfoResponse {
     const message = createBaseQueryRecognizedEventInfoResponse();
     message.info = object.info !== undefined && object.info !== null ? BridgeEventInfo.fromPartial(object.info) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryDelayedCompleteBridgeMessagesRequest(): QueryDelayedCompleteBridgeMessagesRequest {
+  return {
+    address: ""
+  };
+}
+
+export const QueryDelayedCompleteBridgeMessagesRequest = {
+  encode(message: QueryDelayedCompleteBridgeMessagesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryDelayedCompleteBridgeMessagesRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryDelayedCompleteBridgeMessagesRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryDelayedCompleteBridgeMessagesRequest>): QueryDelayedCompleteBridgeMessagesRequest {
+    const message = createBaseQueryDelayedCompleteBridgeMessagesRequest();
+    message.address = object.address ?? "";
+    return message;
+  }
+
+};
+
+function createBaseQueryDelayedCompleteBridgeMessagesResponse(): QueryDelayedCompleteBridgeMessagesResponse {
+  return {
+    messages: []
+  };
+}
+
+export const QueryDelayedCompleteBridgeMessagesResponse = {
+  encode(message: QueryDelayedCompleteBridgeMessagesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.messages) {
+      DelayedCompleteBridgeMessage.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryDelayedCompleteBridgeMessagesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryDelayedCompleteBridgeMessagesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.messages.push(DelayedCompleteBridgeMessage.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryDelayedCompleteBridgeMessagesResponse>): QueryDelayedCompleteBridgeMessagesResponse {
+    const message = createBaseQueryDelayedCompleteBridgeMessagesResponse();
+    message.messages = object.messages?.map(e => DelayedCompleteBridgeMessage.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseDelayedCompleteBridgeMessage(): DelayedCompleteBridgeMessage {
+  return {
+    message: undefined,
+    blockHeight: Long.ZERO
+  };
+}
+
+export const DelayedCompleteBridgeMessage = {
+  encode(message: DelayedCompleteBridgeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.message !== undefined) {
+      MsgCompleteBridge.encode(message.message, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (!message.blockHeight.isZero()) {
+      writer.uint32(16).int64(message.blockHeight);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): DelayedCompleteBridgeMessage {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDelayedCompleteBridgeMessage();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.message = MsgCompleteBridge.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.blockHeight = (reader.int64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<DelayedCompleteBridgeMessage>): DelayedCompleteBridgeMessage {
+    const message = createBaseDelayedCompleteBridgeMessage();
+    message.message = object.message !== undefined && object.message !== null ? MsgCompleteBridge.fromPartial(object.message) : undefined;
+    message.blockHeight = object.blockHeight !== undefined && object.blockHeight !== null ? Long.fromValue(object.blockHeight) : Long.ZERO;
     return message;
   }
 

@@ -3,6 +3,7 @@ import {
   AssetColumns,
   AssetFromDatabase,
   AssetTable,
+  DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   Ordering,
   QueryableField,
@@ -22,6 +23,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -60,7 +62,6 @@ class TransfersController extends Controller {
     Promise.all([
       SubaccountTable.findById(
         subaccountId,
-        { readReplica: true },
       ),
       TransferTable.findAllToOrFromSubaccountId(
         {
@@ -73,14 +74,13 @@ class TransfersController extends Controller {
         },
         [QueryableField.LIMIT],
         {
-          readReplica: true,
+          ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
         },
       ),
       AssetTable.findAll(
         {},
         [],
-        { readReplica: true },
       ),
     ]);
     if (subaccount === undefined) {
@@ -108,7 +108,6 @@ class TransfersController extends Controller {
         id: subaccountIds,
       },
       [],
-      { readReplica: true },
     );
     const idToSubaccount: SubaccountById = _.keyBy(
       subaccounts,
@@ -134,6 +133,7 @@ router.get(
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

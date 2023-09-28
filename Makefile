@@ -26,6 +26,9 @@ proto-export-deps:
 
 PROTO_DIRS=$(shell find .proto-export-deps -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 
+# The perl replace script is used to fix import statements (hacking around https://github.com/protocolbuffers/protobuf/issues/2283).
+# We exclude google.protobuf because it is a part of the protobuf python package.
+# We can't use sed here because we're using negative lookahead to exclude google.protobuf.
 v4-proto-py-gen: proto-export-deps
 	@rm -rf ./v4-proto-py/v4_proto
 	@mkdir -p ./v4-proto-py/v4_proto
@@ -36,7 +39,7 @@ v4-proto-py-gen: proto-export-deps
 		--pyi_out=./v4-proto-py/v4_proto \
 		--grpc_python_out=./v4-proto-py/v4_proto \
 		$$(find ./$${dir} -type f -name '*.proto'); \
-	done; \
-	echo "import os\nimport sys\n\nsys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))" > v4-proto-py/v4_proto/__init__.py
+	done;
+	perl -i -pe 's/^from (?!google\.protobuf)([^ ]*) import ([^ ]*)_pb2 as ([^ ]*)$$/from v4_proto.\1 import \2_pb2 as \3/' $$(find ./v4-proto-py/v4_proto -type f \( -name '*_pb2.py' -o -name '*_pb2_grpc.py' \))
 
 .PHONY: proto-format proto-lint proto-check-bc-breaking proto-export proto-export-deps v4-proto-py-gen

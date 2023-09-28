@@ -36,6 +36,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
   adjustUSDCAssetPosition,
@@ -86,13 +87,8 @@ class AddressesController extends Controller {
           address,
         },
         [],
-        {
-          readReplica: true,
-        },
       ),
-      BlockTable.getLatest({
-        readReplica: true,
-      }),
+      BlockTable.getLatest(),
     ]);
 
     if (subaccounts.length === 0 || latestBlock === undefined) {
@@ -102,9 +98,6 @@ class AddressesController extends Controller {
     const latestFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
       .findFundingIndexMap(
         latestBlock.blockHeight,
-        {
-          readReplica: true,
-        },
       );
 
     const subaccountResponses: SubaccountResponseObject[] = await Promise.all(subaccounts.map(
@@ -118,35 +111,20 @@ class AddressesController extends Controller {
         ] = await Promise.all([
           getOpenPerpetualPositionsForSubaccount(
             subaccount.id,
-            {
-              readReplica: true,
-            },
           ),
           getAssetPositionsForSubaccount(
             subaccount.id,
-            {
-              readReplica: true,
-            },
           ),
           AssetTable.findAll(
             {},
             [],
-            {
-              readReplica: true,
-            },
           ),
           MarketTable.findAll(
             {},
             [],
-            {
-              readReplica: true,
-            },
           ),
           FundingIndexUpdatesTable.findFundingIndexMap(
             subaccount.updatedAtHeight,
-            {
-              readReplica: true,
-            },
           ),
         ]);
         const unsettledFunding: Big = getTotalUnsettledFunding(
@@ -200,39 +178,22 @@ class AddressesController extends Controller {
     ] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
-        {
-          readReplica: true,
-        },
       ),
       getOpenPerpetualPositionsForSubaccount(
         subaccountId,
-        {
-          readReplica: true,
-        },
       ),
       getAssetPositionsForSubaccount(
         subaccountId,
-        {
-          readReplica: true,
-        },
       ),
       AssetTable.findAll(
         {},
         [],
-        {
-          readReplica: true,
-        },
       ),
       MarketTable.findAll(
         {},
         [],
-        {
-          readReplica: true,
-        },
       ),
-      BlockTable.getLatest({
-        readReplica: true,
-      }),
+      BlockTable.getLatest(),
     ]);
 
     if (subaccount === undefined || latestBlock === undefined) {
@@ -283,6 +244,7 @@ router.get(
     },
   }),
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const {
@@ -316,6 +278,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

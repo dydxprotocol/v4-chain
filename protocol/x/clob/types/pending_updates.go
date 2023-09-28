@@ -168,7 +168,7 @@ func (p *PendingUpdates) AddPerpetualFill(
 		totalFee = big.NewInt(0)
 	}
 
-	bigFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, feePpm)
+	bigFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, feePpm, true)
 
 	totalFee.Add(
 		totalFee,

@@ -37,3 +37,13 @@ export class ParseMessageError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+/**
+ * Common error for API requests
+ */
+export class TooManyRequestsError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TooManyRequestsError';
+  }
+}

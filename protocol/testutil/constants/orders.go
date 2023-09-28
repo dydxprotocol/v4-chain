@@ -435,6 +435,20 @@ var (
 		Subticks:     10000,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 22},
 	}
+	Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20 = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Bob_Num0, ClientId: 11, ClobPairId: 1},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     5,
+		Subticks:     40,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+	}
+	Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20 = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Bob_Num0, ClientId: 12, ClobPairId: 1},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     5,
+		Subticks:     40,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+	}
 	Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32 = clobtypes.Order{
 		OrderId:      clobtypes.OrderId{SubaccountId: Bob_Num0, ClientId: 11, ClobPairId: 1},
 		Side:         clobtypes.Order_SIDE_BUY,
@@ -873,6 +887,14 @@ var (
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
 		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_IOC,
 	}
+	Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_IOC = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num1, ClientId: 1, ClobPairId: 1},
+		Side:         clobtypes.Order_SIDE_SELL,
+		Quantums:     10,
+		Subticks:     15,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 21},
+		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_IOC,
+	}
 
 	// Fill-or-kill orders.
 	Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK = clobtypes.Order{
@@ -889,6 +911,14 @@ var (
 		Quantums:     10,
 		Subticks:     15,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
+	}
+	Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_FOK = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num1, ClientId: 1, ClobPairId: 1},
+		Side:         clobtypes.Order_SIDE_SELL,
+		Quantums:     10,
+		Subticks:     15,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 21},
 		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
 	}
 	Order_Bob_Num0_Id1_Clob1_Buy20_Price35_GTB22_FOK = clobtypes.Order{

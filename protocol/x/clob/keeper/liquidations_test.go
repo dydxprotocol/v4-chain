@@ -7,13 +7,12 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -266,7 +265,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			).Return(
 				sdk.NewCoin(
 					constants.Usdc.Denom,
-					sdk.NewIntFromBigInt(big.NewInt(1_000_000_000_000)),
+					sdkmath.NewIntFromBigInt(big.NewInt(1_000_000_000_000)),
 				),
 			)
 
@@ -721,7 +720,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(0))) // Insurance fund is empty.
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(0))) // Insurance fund is empty.
 			},
 
 			liquidationConfig: constants.LiquidationsConfig_No_Limit, // `MaxInsuranceFundQuantumsForDeleveraging` is zero.
@@ -761,7 +760,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(0))) // Insurance fund is empty.
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(0))) // Insurance fund is empty.
 			},
 
 			liquidationConfig: constants.LiquidationsConfig_No_Limit, // `MaxInsuranceFundQuantumsForDeleveraging` is zero.
@@ -803,7 +802,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(
 					// Insurance fund has $0.99 initially.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(990_000)),
+					sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(990_000)),
 				).Once()
 				bk.On(
 					"GetBalance",
@@ -812,7 +811,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(
 					// Insurance fund has $0.74 after covering the loss of the first match.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(740_000)),
+					sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(740_000)),
 				).Twice()
 			},
 
@@ -886,7 +885,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(
 					// Insurance fund has $0.99 initially.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(990_000)),
+					sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(990_000)),
 				).Once()
 				bk.On(
 					"GetBalance",
@@ -895,7 +894,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(
 					// Insurance fund has $0.74 after covering the loss of the first match.
-					sdk.NewCoin("USDC", sdk.NewIntFromUint64(740_000)),
+					sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(740_000)),
 				).Once()
 			},
 
@@ -1011,7 +1010,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
 			}
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
@@ -1069,6 +1068,21 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -1084,6 +1098,21 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
 				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						1,
+						1,
+						constants.EthUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.EthUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Eth.Status,
+						constants.ClobPair_Eth.QuantumConversionExponent,
+						constants.EthUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Eth.SubticksPerTick,
+						constants.ClobPair_Eth.StepBaseQuantums,
+						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						1,
 						1,
@@ -1891,7 +1920,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
-			).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(tc.insuranceFundBalance))).Twice()
+			).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(tc.insuranceFundBalance))).Twice()
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			mockIndexerEventManager.On("Enabled").Return(false)
@@ -1954,6 +1983,21 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					ctx,
 					indexerevents.SubtypePerpetualMarket,
 					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							uint32(i),
+							uint32(i),
+							perpetuals[i].Params.Ticker,
+							perpetuals[i].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							perpetuals[i].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+							perpetuals[i].Params.LiquidityTier,
+						),
+					),
+					indexerevents.PerpetualMarketEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
 							uint32(i),
 							uint32(i),
@@ -2066,6 +2110,21 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
 		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				0,
+				0,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+				constants.ClobPair_Btc.Status,
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.StepBaseQuantums,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+			),
+		),
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
 				0,
 				0,
@@ -3598,6 +3657,21 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 						tc.perpetuals[0].Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						tc.perpetuals[0].Params.Ticker,
+						tc.perpetuals[0].Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						tc.perpetuals[0].Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						tc.perpetuals[0].Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -4348,6 +4422,21 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 							tc.perpetuals[perpetualId].Params.LiquidityTier,
 						),
 					),
+					indexerevents.PerpetualMarketEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							perpetualId,
+							uint32(i),
+							tc.perpetuals[perpetualId].Params.Ticker,
+							tc.perpetuals[perpetualId].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							tc.perpetuals[perpetualId].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+							tc.perpetuals[perpetualId].Params.LiquidityTier,
+						),
+					),
 				).Once().Return()
 				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
@@ -4594,7 +4683,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			).Return(
 				sdk.NewCoin(
 					constants.Usdc.Denom,
-					sdk.NewIntFromBigInt(big.NewInt(1_000_000_000_000)),
+					sdkmath.NewIntFromBigInt(big.NewInt(1_000_000_000_000)),
 				),
 			)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
@@ -4965,6 +5054,21 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -5104,6 +5208,21 @@ func TestSortLiquidationOrders(t *testing.T) {
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
 				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+					),
+				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						0,
 						0,

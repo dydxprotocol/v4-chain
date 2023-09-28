@@ -73,7 +73,7 @@ func (t *Testnet) Start() (err error) {
 	err = t.initialize()
 	if err != nil {
 		cleanUpErr := t.CleanUp()
-		if cleanUpErr != nil {
+		if cleanUpErr == nil {
 			return fmt.Errorf("testnet initialization failed with error: %w; resources successfully cleaned up", err)
 		}
 		return fmt.Errorf(

@@ -50,6 +50,12 @@ message IndexerTendermintEvent {
   // transaction or during processing of a block.
   // TODO(DEC-537): Deprecate this field because events are already ordered.
   uint32 event_index = 5;
+
+  // Version of the event.
+  uint32 version = 6;
+
+  // Tendermint event bytes.
+  bytes data_bytes = 7;
 }
 
 // IndexerTendermintBlock contains all the events for the block along with

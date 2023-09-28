@@ -61,17 +61,3 @@ func StringToUint32(s string) (uint32, error) {
 
 	return uint32(result), nil
 }
-
-func Uint64ToString(i uint64) string {
-	return strconv.FormatUint(i, 10)
-}
-
-func BoolToString(b bool) string {
-	return strconv.FormatBool(b)
-}
-
-func BytesSliceToBytes32(b []byte) [32]byte {
-	var byte32 [32]byte
-	copy(byte32[:], b)
-	return byte32
-}

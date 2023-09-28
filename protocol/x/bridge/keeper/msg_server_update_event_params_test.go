@@ -28,6 +28,17 @@ func TestMsgServerUpdateEventParams(t *testing.T) {
 			},
 			expectedResp: &types.MsgUpdateEventParamsResponse{},
 		},
+		"Failure: invalid params": {
+			testMsg: types.MsgUpdateEventParams{
+				Authority: constants.GovModuleAccAddressString,
+				Params: types.EventParams{
+					Denom:      "7coin",
+					EthChainId: 1,
+					EthAddress: "ethAddress",
+				},
+			},
+			expectedErr: "invalid denom",
+		},
 		"Failure: invalid authority": {
 			testMsg: types.MsgUpdateEventParams{
 				Authority: "12345",

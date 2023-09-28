@@ -29,6 +29,9 @@ type KucoinTicker struct {
 	LastPrice string `json:"last" validate:"required,positive-float-string"`
 }
 
+// Ensure that KucoinTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*KucoinTicker)(nil)
+
 func (t KucoinTicker) GetPair() string {
 	return t.Pair
 }

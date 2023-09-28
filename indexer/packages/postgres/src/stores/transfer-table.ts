@@ -2,7 +2,7 @@ import Big from 'big.js';
 import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8 } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import {
   verifyAllRequiredFields,
   setupBaseQuery,
@@ -64,7 +64,7 @@ export async function findAll(
     createdAfterHeight,
   }: TransferQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<TransferFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -195,7 +195,7 @@ export async function findAllToOrFromSubaccountId(
     createdAfter,
   }: ToAndFromSubaccountTransferQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<TransferFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -319,7 +319,7 @@ export async function getNetTransfersBetweenBlockHeightsForSubaccount(
   subaccountId: string,
   createdAfterHeight: string,
   createdBeforeOrAtHeight: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AssetTransferMap> {
   const queryString: string = `
     SELECT 
@@ -356,7 +356,7 @@ export async function getNetTransfersBetweenBlockHeightsForSubaccount(
 
 export async function getNetTransfersPerSubaccount(
   createdBeforeOrAtHeight: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<SubaccountAssetNetTransferMap> {
   // Get the net value of transfers since beginning of time up until createdBeforeOrAtHeight
   // for all subaccounts. If a subaccount is sending an asset, the value will be negative.
@@ -419,7 +419,7 @@ export async function create(
 
 export async function findById(
   id: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<TransferFromDatabase | undefined> {
   const baseQuery: QueryBuilder<TransferModel> = setupBaseQuery<TransferModel>(
     TransferModel,

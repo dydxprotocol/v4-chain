@@ -1,7 +1,6 @@
 package clob
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -55,6 +54,13 @@ func EndBlocker(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
 			indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.NewStatefulOrderRemovalEvent(
+					orderId,
+					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+				),
+			),
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
 				indexerevents.NewStatefulOrderRemovalEvent(
 					orderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
@@ -176,6 +182,9 @@ func PrepareCheckState(
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
 	subaccountIds := liquidatableSubaccountIds.GetSubaccountIds()
+	if err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds); err != nil {
+		panic(err)
+	}
 
 	telemetry.ModuleSetGauge(
 		types.ModuleName,
@@ -183,86 +192,6 @@ func PrepareCheckState(
 		metrics.Liquidations,
 		metrics.LiquidatableSubaccountIds,
 		metrics.Count,
-	)
-
-	// Get the liquidation order for each subaccount.
-	liquidationOrders := make([]types.LiquidationOrder, 0)
-	for _, subaccountId := range subaccountIds {
-		// If attempting to liquidate a subaccount returns an error, panic.
-		liquidationOrder, err := keeper.MaybeGetLiquidationOrder(ctx, subaccountId)
-		if err != nil {
-			// Subaccount might not always be liquidatable since liquidation daemon runs
-			// in a separate goroutine and is not always in sync with the application.
-			// Therefore, if subaccount is not liquidatable, continue.
-			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
-				telemetry.IncrCounter(
-					1,
-					metrics.MaybeGetLiquidationOrder,
-					metrics.SubaccountsNotLiquidatable,
-					metrics.Count,
-				)
-				continue
-			}
-
-			// Panic on unexpected errors.
-			panic(err)
-		}
-
-		liquidationOrders = append(liquidationOrders, *liquidationOrder)
-	}
-
-	// Sort liquidation orders.
-	keeper.SortLiquidationOrders(ctx, liquidationOrders)
-
-	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	numFilledLiquidations := uint32(0)
-	numAttemptedDeleveraging := uint32(0)
-	for i := 0; numFilledLiquidations < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
-		optimisticallyFilledQuantums, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrders[i])
-		if err != nil {
-			keeper.Logger(ctx).Error(
-				fmt.Sprintf(
-					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
-					liquidationOrders[i],
-					err,
-				),
-			)
-			panic(err)
-		}
-
-		// Keep a count of partially and fully filled liquidations for this block.
-		if optimisticallyFilledQuantums > 0 {
-			numFilledLiquidations++
-		} else {
-			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
-
-			if numAttemptedDeleveraging < keeper.MaxDeleveragingAttemptsPerBlock {
-				// The liquidation order was unfilled. Try to deleverage the subaccount.
-				subaccountId := liquidationOrders[i].GetSubaccountId()
-				perpetualId := liquidationOrders[i].MustGetLiquidatedPerpetualId()
-				deltaQuantums := liquidationOrders[i].GetDeltaQuantums()
-
-				_, err := keeper.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
-				if err != nil {
-					keeper.Logger(ctx).Error(
-						"Failed to deleverage subaccount.",
-						"subaccount", liquidationOrders[i].GetSubaccountId(),
-						"perpetualId", liquidationOrders[i].MustGetLiquidatedPerpetualId(),
-						"baseQuantums", liquidationOrders[i].GetBaseQuantums().ToBigInt(),
-						"error", err,
-					)
-					panic(err)
-				}
-				numAttemptedDeleveraging++
-			}
-		}
-	}
-
-	telemetry.IncrCounter(
-		float32(numFilledLiquidations),
-		types.ModuleName,
-		metrics.PrepareCheckState,
-		metrics.NumMatchedLiquidationOrders,
 	)
 
 	telemetry.ModuleSetGauge(

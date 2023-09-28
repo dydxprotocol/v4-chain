@@ -32,7 +32,13 @@ import Long from 'long';
 import { DateTime } from 'luxon';
 
 import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS } from '../../src/constants';
-import { ConsolidatedKafkaEvent, FundingEventMessage, SingleTradeMessage } from '../../src/lib/types';
+import { SubaccountUpdate } from '../../src/lib/translated-types';
+import {
+  ConsolidatedKafkaEvent,
+  FundingEventMessage,
+  OrderFillEventWithLiquidation, OrderFillEventWithOrder,
+  SingleTradeMessage,
+} from '../../src/lib/types';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 
 export const defaultMarketPriceUpdate: MarketEventV1 = {
@@ -104,7 +110,7 @@ export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
   clobPairId: 1,
   ticker: 'BTC-USD',
   marketId: 0,
-  status: ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING,
   quantumConversionExponent: -8,
   atomicResolution: -10,
   subticksPerTick: 100,
@@ -211,6 +217,15 @@ export const defaultOrderEvent: OrderFillEventV1 = {
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
 };
+export const defaultOrder: OrderFillEventWithOrder = {
+  makerOrder: defaultMakerOrder,
+  order: defaultTakerOrder,
+  makerFee: Long.fromValue(0, true),
+  takerFee: Long.fromValue(0, true),
+  fillAmount: Long.fromValue(10_000, true),
+  totalFilledMaker: Long.fromValue(0, true),
+  totalFilledTaker: Long.fromValue(0, true),
+};
 export const defaultLiquidationEvent: OrderFillEventV1 = {
   makerOrder: defaultMakerOrder,
   liquidationOrder: defaultLiquidationOrder,
@@ -219,6 +234,21 @@ export const defaultLiquidationEvent: OrderFillEventV1 = {
   fillAmount: Long.fromValue(10_000, true),
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
+};
+export const defaultLiquidation: OrderFillEventWithLiquidation = {
+  makerOrder: defaultMakerOrder,
+  liquidationOrder: defaultLiquidationOrder,
+  makerFee: Long.fromValue(0, true),
+  takerFee: Long.fromValue(0, true),
+  fillAmount: Long.fromValue(10_000, true),
+  totalFilledMaker: Long.fromValue(0, true),
+  totalFilledTaker: Long.fromValue(0, true),
+};
+
+export const defaultEmptySubaccountUpdate: SubaccountUpdate = {
+  subaccountId: defaultSubaccountId,
+  updatedPerpetualPositions: [],
+  updatedAssetPositions: [],
 };
 
 export const defaultEmptySubaccountUpdateEvent: SubaccountUpdateEventV1 = {

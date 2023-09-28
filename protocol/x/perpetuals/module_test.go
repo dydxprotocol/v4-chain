@@ -49,14 +49,14 @@ func createAppModuleWithKeeper(t *testing.T) (
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, pricesKeeper, epochsKeeper, _ := keeper.PerpetualsKeepers(t)
+	pc := keeper.PerpetualsKeepers(t)
 
 	return perpetuals.NewAppModule(
 		appCodec,
-		keeper,
+		pc.PerpetualsKeeper,
 		nil,
 		nil,
-	), keeper, pricesKeeper, epochsKeeper, ctx
+	), pc.PerpetualsKeeper, pc.PricesKeeper, pc.EpochsKeeper, pc.Ctx
 }
 
 func createAppModuleBasic(t *testing.T) perpetuals.AppModuleBasic {
@@ -84,8 +84,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgAddPremiumVotes")
-	require.Contains(t, buf.String(), "perpetuals/FundingSamples")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -97,8 +95,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgAddPremiumVotes")
-	require.Contains(t, buf.String(), "perpetuals/FundingSamples")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -108,7 +104,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 8)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 10)
 	mockRegistry.AssertExpectations(t)
 }
 

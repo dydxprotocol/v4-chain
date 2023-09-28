@@ -29,6 +29,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
   getFundingIndexMaps,
@@ -82,12 +83,10 @@ class PerpetualPositionsController extends Controller {
           createdBeforeOrAt,
         },
         [QueryableField.LIMIT],
-        { readReplica: true },
       ),
       MarketTable.findAll(
         {},
         [],
-        { readReplica: true },
       ),
     ]);
 
@@ -107,9 +106,8 @@ class PerpetualPositionsController extends Controller {
       ] = await Promise.all([
         SubaccountTable.findById(
           subaccountUuid,
-          { readReplica: true },
         ),
-        BlockTable.getLatest({ readReplica: true }),
+        BlockTable.getLatest(),
       ]);
 
       if (subaccount === undefined || latestBlock === undefined) {
@@ -168,6 +166,7 @@ router.get(
     },
   }),
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

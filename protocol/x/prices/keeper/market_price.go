@@ -23,7 +23,7 @@ import (
 
 // newMarketPriceStore creates a new prefix store for MarketPrices.
 func (k Keeper) newMarketPriceStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketPriceKeyPrefix))
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketPriceKeyPrefix))
 }
 
 // UpdateMarketPrices updates the prices for markets.
@@ -102,6 +102,10 @@ func (k Keeper) UpdateMarketPrices(
 			indexer_manager.GetB64EncodedEventMessage(
 				update,
 			),
+			indexerevents.MarketEventVersion,
+			indexer_manager.GetBytes(
+				update,
+			),
 		)
 	}
 
@@ -145,4 +149,34 @@ func (k Keeper) GetAllMarketPrices(ctx sdk.Context) []types.MarketPrice {
 	})
 
 	return marketPrices
+}
+
+// GetMarketIdToValidIndexPrice returns a map of market id to valid index price.
+// An index price is valid iff:
+// 1) the last update time is within a predefined threshold away from the given
+// read time.
+// 2) the number of prices that meet 1) are greater than the minimum number of
+// exchanges specified in the given input.
+// If a market does not have a valid index price, its `marketId` is not included
+// in returned map.
+func (k Keeper) GetMarketIdToValidIndexPrice(
+	ctx sdk.Context,
+) map[uint32]types.MarketPrice {
+	allMarketParams := k.GetAllMarketParams(ctx)
+	ret := make(map[uint32]types.MarketPrice)
+	marketIdToValidIndexPrice := k.indexPriceCache.GetValidMedianPrices(
+		allMarketParams,
+		k.timeProvider.Now(),
+	)
+
+	for _, marketParam := range allMarketParams {
+		if indexPrice, exists := marketIdToValidIndexPrice[marketParam.Id]; exists {
+			ret[marketParam.Id] = types.MarketPrice{
+				Id:       marketParam.Id,
+				Price:    indexPrice,
+				Exponent: marketParam.Exponent,
+			}
+		}
+	}
+	return ret
 }

@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"testing"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -20,14 +21,13 @@ import (
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	sakeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
-
 	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	sakeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // MatchWithOrdersForTesting represents a match which occurred between two orders and the amount that was matched.
@@ -931,7 +931,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			preExistingStatefulOrders: []types.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO,
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewOrderRemovalOperationRaw(
@@ -939,7 +939,7 @@ func TestProcessProposerOperations(t *testing.T) {
 					types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
 				),
 				clobtest.NewOrderRemovalOperationRaw(
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO.OrderId,
 					types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
 				),
 			},
@@ -947,10 +947,83 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				BlockHeight: blockHeight,
 				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO.OrderId,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 				},
 			},
+		},
+		"Fails when attempting to match order with invalid order side": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
+						},
+					},
+				},
+			},
+			preExistingStatefulOrders: []types.Order{},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_UNSPECIFIED, // Note this side is invalid.
+						Quantums:     100_000_000,                  // 1 BTC
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					},
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100_000_000, // 1 BTC
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					},
+				),
+				clobtest.NewMatchOperationRaw(
+					&types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100_000_000, // 1 BTC
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					},
+					[]types.MakerFill{
+						{
+							FillAmount:   100_000_000,
+							MakerOrderId: types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						},
+					},
+				),
+			},
+
+			expectedError: types.ErrInvalidOrderSide,
 		},
 		// This test proposes an invalid perpetual deleveraging liquidation match operation. The
 		// subaccount is not liquidatable, so the match operation should be rejected.
@@ -1316,7 +1389,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				b := cdc.MustMarshal(&constants.ClobPair_Btc_Paused)
 				store.Set(types.ClobPairKey(
 					types.ClobPairId(constants.ClobPair_Btc_Paused.Id),
@@ -1585,7 +1658,7 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
-		).Return(sdk.NewCoin("USDC", sdk.NewIntFromUint64(tc.insuranceFundBalance)))
+		).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(tc.insuranceFundBalance)))
 	}
 
 	mockIndexerEventManager = &mocks.IndexerEventManager{}
@@ -1616,6 +1689,8 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
+			mock.Anything,
 		).Return().Maybe()
 	}
 
@@ -1634,7 +1709,7 @@ func setupProcessProposerOperationsTestCase(
 	// Create all perpetuals.
 	for _, p := range tc.perpetuals {
 		_, err := ks.PerpetualsKeeper.CreatePerpetual(
-			ctx,
+			ks.Ctx,
 			p.Params.Id,
 			p.Params.Ticker,
 			p.Params.MarketId,
@@ -1660,6 +1735,21 @@ func setupProcessProposerOperationsTestCase(
 				mock.Anything,
 				indexerevents.SubtypePerpetualMarket,
 				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						perpetualId,
+						uint32(i),
+						tc.perpetuals[perpetualId].Params.Ticker,
+						tc.perpetuals[perpetualId].Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						tc.perpetuals[perpetualId].Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.StepBaseQuantums,
+						tc.perpetuals[perpetualId].Params.LiquidityTier,
+					),
+				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						perpetualId,
 						uint32(i),
@@ -1839,6 +1929,17 @@ func setupNewMockEventManager(
 						match.TotalFilledTaker,
 					),
 				),
+				indexerevents.OrderFillEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewLiquidationOrderFillEvent(
+						match.MakerOrder.MustGetOrder(),
+						match.TakerOrder,
+						match.FillAmount,
+						match.MakerFee,
+						match.TakerFee,
+						match.TotalFilledTaker,
+					),
+				),
 			).Return()
 
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
@@ -1847,6 +1948,18 @@ func setupNewMockEventManager(
 				mock.Anything,
 				indexerevents.SubtypeOrderFill,
 				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewOrderFillEvent(
+						match.MakerOrder.MustGetOrder(),
+						match.TakerOrder.MustGetOrder(),
+						match.FillAmount,
+						match.MakerFee,
+						match.TakerFee,
+						match.TotalFilledMaker,
+						match.TotalFilledTaker,
+					),
+				),
+				indexerevents.OrderFillEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewOrderFillEvent(
 						match.MakerOrder.MustGetOrder(),
 						match.TakerOrder.MustGetOrder(),
@@ -1869,6 +1982,15 @@ func setupNewMockEventManager(
 				mock.Anything,
 				indexerevents.SubtypeStatefulOrder,
 				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewStatefulOrderRemovalEvent(
+						removal.OrderRemoval.OrderId,
+						shared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+							removal.OrderRemoval.RemovalReason,
+						),
+					),
+				),
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewStatefulOrderRemovalEvent(
 						removal.OrderRemoval.OrderId,
 						shared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(

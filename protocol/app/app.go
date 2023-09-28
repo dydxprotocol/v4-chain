@@ -7,9 +7,15 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
+
+	gometrics "github.com/armon/go-metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 
@@ -36,6 +42,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -59,6 +66,9 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
@@ -96,7 +106,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	// Lib
-	"github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -227,6 +237,7 @@ type App struct {
 	ParamsKeeper     paramskeeper.Keeper
 	// IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCKeeper             *ibckeeper.Keeper
+	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
@@ -284,6 +295,10 @@ func New(
 ) *App {
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
+	// Panic if this is not a full node and gRPC is disabled.
+	if err := appFlags.Validate(); err != nil {
+		panic(err)
+	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
@@ -306,6 +321,7 @@ func New(
 		distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		ibcexported.StoreKey, ibctransfertypes.StoreKey,
+		evidencetypes.StoreKey,
 		capabilitytypes.StoreKey,
 		pricesmoduletypes.StoreKey,
 		assetsmoduletypes.StoreKey,
@@ -483,6 +499,13 @@ func New(
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
+	// create evidence keeper with router
+	evidenceKeeper := evidencekeeper.NewKeeper(
+		appCodec, keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper,
+	)
+	// If evidence needs to be handled for the app, set routes in router here and seal
+	app.EvidenceKeeper = *evidenceKeeper
+
 	/****  dYdX specific modules/setup ****/
 	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)
 	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
@@ -490,7 +513,7 @@ func New(
 		tkeys[indexer_manager.TransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
-	timeProvider := &time.TimeProviderImpl{}
+	timeProvider := &timelib.TimeProviderImpl{}
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
 		appCodec,
@@ -509,6 +532,7 @@ func New(
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
+		appFlags.GrpcAddress,
 	)
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
@@ -533,12 +557,16 @@ func New(
 
 	// Start liquidations client for sending potentially liquidatable subaccounts to the application.
 	if daemonFlags.Liquidation.Enabled {
+		app.Server.ExpectLiquidationsDaemon(
+			daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
+		)
 		go func() {
 			if err := liquidationclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
 				context.Background(),
 				daemonFlags,
+				appFlags,
 				logger,
 				&lib.GrpcClientImpl{},
 			); err != nil {
@@ -550,32 +578,38 @@ func New(
 	// Non-validating full-nodes have no need to run the price daemon.
 	if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
 		exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
-
+		app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
 		// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 		// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 		// periodically sent via gRPC to a shared socket with the server.
-		pricefeedclient.StartNewClient(
+		client := pricefeedclient.StartNewClient(
 			// The client will use `context.Background` so that it can have a different context from
 			// the main application.
 			context.Background(),
 			daemonFlags,
+			appFlags,
 			logger,
 			&lib.GrpcClientImpl{},
 			exchangeStartupConfig,
 			constants.StaticExchangeDetails,
 			&pricefeedclient.SubTaskRunnerImpl{},
 		)
+		stoppable.RegisterServiceForTestCleanup(appFlags.GrpcAddress, client)
 	}
 
 	// Start Bridge Daemon.
 	// Non-validating full-nodes have no need to run the bridge daemon.
 	if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
+		// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
+		// environments.
+		// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
 		go func() {
 			if err := bridgeclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
 				context.Background(),
 				daemonFlags,
+				appFlags,
 				logger,
 				&lib.GrpcClientImpl{},
 			); err != nil {
@@ -827,6 +861,7 @@ func New(
 			app.getSubspace(stakingtypes.ModuleName),
 		),
 		upgrade.NewAppModule(app.UpgradeKeeper),
+		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
@@ -858,6 +893,7 @@ func New(
 		capabilitytypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -897,6 +933,7 @@ func New(
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
 		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
@@ -936,6 +973,7 @@ func New(
 		crisistypes.ModuleName,
 		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -970,6 +1008,7 @@ func New(
 		crisistypes.ModuleName,
 		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -1159,6 +1198,20 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
+
+	// Report app version and git commit if not in dev. Delay by 100 blocks to get a metric on initial startup.
+	// TODO(DEC-2107): Doing this based on chain id seems brittle.
+	if !strings.Contains(req.Header.ChainID, "dev") && ctx.BlockHeight()%10_100 == 0 {
+		version := version.NewInfo()
+		telemetry.SetGaugeWithLabels(
+			[]string{metrics.AppInfo},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
+				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
+			},
+		)
+	}
 
 	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx, req)

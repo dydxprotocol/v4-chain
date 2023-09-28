@@ -50,7 +50,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				clobPair := constants.ClobPair_Btc
 				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
@@ -63,6 +63,16 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					ks.Ctx,
 					indexerevents.SubtypeUpdateClobPair,
 					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewUpdateClobPairEvent(
+							clobPair.GetClobPairId(),
+							types.ClobPair_STATUS_ACTIVE,
+							clobPair.QuantumConversionExponent,
+							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+						),
+					),
+					indexerevents.UpdateClobPairEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewUpdateClobPairEvent(
 							clobPair.GetClobPairId(),
 							types.ClobPair_STATUS_ACTIVE,
@@ -94,7 +104,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status active.
 				clobPair := constants.ClobPair_Btc
 				clobPair.Status = types.ClobPair_STATUS_ACTIVE
@@ -143,7 +153,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
 				store.Set(types.ClobPairKey(
@@ -172,7 +182,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
 				store.Set(types.ClobPairKey(
@@ -201,7 +211,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
 				store.Set(types.ClobPairKey(
@@ -230,7 +240,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
 				store.Set(types.ClobPairKey(
@@ -259,7 +269,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				// write default btc clob pair to state
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
 				store.Set(types.ClobPairKey(

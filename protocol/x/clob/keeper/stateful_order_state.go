@@ -187,9 +187,7 @@ func (k Keeper) GetNextStatefulOrderTransactionIndex(ctx sdk.Context) (
 ) {
 	nextTransactionIndexTransientStore := k.getTransientStore(ctx)
 	nextStatefulOrderTransactionIndexBytes := nextTransactionIndexTransientStore.Get(
-		types.KeyPrefix(
-			types.NextStatefulOrderBlockTransactionIndexKey,
-		),
+		[]byte(types.NextStatefulOrderBlockTransactionIndexKey),
 	)
 	nextStatefulOrderTransactionIndex = uint32(0)
 	if nextStatefulOrderTransactionIndexBytes != nil {
@@ -198,7 +196,7 @@ func (k Keeper) GetNextStatefulOrderTransactionIndex(ctx sdk.Context) (
 	// Set the next stateful order transaction index to be one greater than the current transaction
 	// index, to ensure that transaction indexes are monotonically increasing.
 	nextTransactionIndexTransientStore.Set(
-		types.KeyPrefix(types.NextStatefulOrderBlockTransactionIndexKey),
+		[]byte(types.NextStatefulOrderBlockTransactionIndexKey),
 		lib.Uint32ToBytes(nextStatefulOrderTransactionIndex+1),
 	)
 	return nextStatefulOrderTransactionIndex
@@ -451,7 +449,7 @@ func (k Keeper) setStatefulOrdersTimeSliceInState(
 func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	startKey :=
-		types.KeyPrefix(types.StatefulOrdersTimeSlicePrefix)
+		[]byte(types.StatefulOrdersTimeSlicePrefix)
 	endKey := append(
 		startKey,
 		sdk.InclusiveEndBytes(
@@ -471,7 +469,7 @@ func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time
 func (k Keeper) getPlacedOrdersIterator(ctx sdk.Context) sdk.Iterator {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.PlacedStatefulOrderKeyPrefix),
+		[]byte(types.PlacedStatefulOrderKeyPrefix),
 	)
 	return sdk.KVStorePrefixIterator(store, []byte{})
 }
@@ -481,7 +479,7 @@ func (k Keeper) getPlacedOrdersIterator(ctx sdk.Context) sdk.Iterator {
 func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) sdk.Iterator {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.UntriggeredConditionalOrderKeyPrefix),
+		[]byte(types.UntriggeredConditionalOrderKeyPrefix),
 	)
 	return sdk.KVStorePrefixIterator(store, []byte{})
 }

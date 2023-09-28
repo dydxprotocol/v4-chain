@@ -1035,6 +1035,21 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 			),
 		),
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				0,
+				0,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+				constants.ClobPair_Btc.Status,
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.StepBaseQuantums,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+			),
+		),
 	).Once().Return()
 	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ctx,
@@ -1075,6 +1090,21 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 		ks.Ctx,
 		indexerevents.SubtypePerpetualMarket,
 		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				0,
+				0,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+				constants.ClobPair_Btc.Status,
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.StepBaseQuantums,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+			),
+		),
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
 				0,
 				0,
@@ -1720,10 +1750,10 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			)
 
 			if tc.expectedErr != "" {
-				require.True(t, resp.IsErr())
+				require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 				require.Contains(t, resp.Log, tc.expectedErr)
 			} else {
-				require.True(t, resp.IsOK())
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 		})
 	}
@@ -1804,6 +1834,21 @@ func TestGetStatePosition_Success(t *testing.T) {
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
 					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							perpetualId,
+							uint32(i),
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.Ticker,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketId,
+							cp.Status,
+							cp.QuantumConversionExponent,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.AtomicResolution,
+							cp.SubticksPerTick,
+							cp.StepBaseQuantums,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
+						),
+					),
+					indexerevents.PerpetualMarketEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
 							perpetualId,
 							uint32(i),
@@ -2029,6 +2074,21 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -2144,6 +2204,21 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
 				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+					),
+				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						0,
 						0,

@@ -26,7 +26,6 @@ import {
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
@@ -37,10 +36,12 @@ import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import { ConditionalOrderTriggeredHandler } from '../../../src/handlers/stateful-order/conditional-order-triggered-handler';
 import { defaultPerpetualMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('statefulOrderRemovalHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
@@ -82,9 +83,7 @@ describe('statefulOrderRemovalHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.STATEFUL_ORDER,
-        binaryToBase64String(
-          StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
-        ),
+        StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
         transactionIndex,
         eventIndex,
       );

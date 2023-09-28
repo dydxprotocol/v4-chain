@@ -16,7 +16,6 @@ func TestAddDaemonFlagsToCmd(t *testing.T) {
 
 	flags.AddDaemonFlagsToCmd(&cmd)
 	tests := []string{
-		flags.FlagGrpcAddress,
 		flags.FlagUnixSocketAddress,
 
 		flags.FlagBridgeDaemonEnabled,
@@ -42,7 +41,6 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap := make(map[string]interface{})
 
 	optsMap[flags.FlagUnixSocketAddress] = "test-socket-address"
-	optsMap[flags.FlagGrpcAddress] = "test-grpc-server-address"
 
 	optsMap[flags.FlagBridgeDaemonEnabled] = true
 	optsMap[flags.FlagBridgeDaemonLoopDelayMs] = uint32(1111)
@@ -51,6 +49,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap[flags.FlagLiquidationDaemonEnabled] = true
 	optsMap[flags.FlagLiquidationDaemonLoopDelayMs] = uint32(2222)
 	optsMap[flags.FlagLiquidationDaemonSubaccountPageLimit] = uint64(3333)
+	optsMap[flags.FlagLiquidationDaemonRequestChunkSize] = uint64(4444)
 
 	optsMap[flags.FlagPriceDaemonEnabled] = true
 	optsMap[flags.FlagPriceDaemonLoopDelayMs] = uint32(4444)
@@ -64,7 +63,6 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	r := flags.GetDaemonFlagValuesFromOptions(&mockOpts)
 
 	// Shared.
-	require.Equal(t, optsMap[flags.FlagGrpcAddress], r.Shared.GrpcServerAddress)
 	require.Equal(t, optsMap[flags.FlagUnixSocketAddress], r.Shared.SocketAddress)
 
 	// Bridge Daemon.
@@ -76,6 +74,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	require.Equal(t, optsMap[flags.FlagLiquidationDaemonEnabled], r.Liquidation.Enabled)
 	require.Equal(t, optsMap[flags.FlagLiquidationDaemonLoopDelayMs], r.Liquidation.LoopDelayMs)
 	require.Equal(t, optsMap[flags.FlagLiquidationDaemonSubaccountPageLimit], r.Liquidation.SubaccountPageLimit)
+	require.Equal(t, optsMap[flags.FlagLiquidationDaemonRequestChunkSize], r.Liquidation.RequestChunkSize)
 
 	// Price Daemon.
 	require.Equal(t, optsMap[flags.FlagPriceDaemonEnabled], r.Price.Enabled)

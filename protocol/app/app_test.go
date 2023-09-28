@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	evidencemodule "github.com/cosmos/cosmos-sdk/x/evidence"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -104,6 +105,13 @@ func TestAppIsFullyInitialized(t *testing.T) {
 	}
 }
 
+func TestAppPanicsWithGrpcDisabled(t *testing.T) {
+	customFlags := map[string]interface{}{
+		flags.GrpcEnable: false,
+	}
+	require.Panics(t, func() { testapp.DefaultTestApp(customFlags) })
+}
+
 func TestClobKeeperMemStoreHasBeenInitialized(t *testing.T) {
 	dydxApp := testapp.DefaultTestApp(nil)
 	ctx := dydxApp.NewUncachedContext(true, tmproto.Header{})
@@ -168,6 +176,7 @@ func TestModuleBasics(t *testing.T) {
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		custommodule.SlashingModuleBasic{},
+		evidencemodule.AppModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ibctm.AppModuleBasic{},

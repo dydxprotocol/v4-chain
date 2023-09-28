@@ -18,15 +18,16 @@ import { producer } from '@dydxprotocol-indexer/kafka';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import { MarketCreateHandler } from '../../../src/handlers/markets/market-create-handler';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
 } from '../../helpers/indexer-proto-helpers';
 import Long from 'long';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('marketCreateHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
   });
 
   beforeEach(async () => {
@@ -61,9 +62,7 @@ describe('marketCreateHandler', () => {
       };
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.MARKET,
-        binaryToBase64String(
-          MarketEventV1.encode(marketEvent).finish(),
-        ),
+        MarketEventV1.encode(marketEvent).finish(),
         transactionIndex,
         eventIndex,
       );

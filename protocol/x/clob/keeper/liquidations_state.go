@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -136,7 +137,7 @@ func (k Keeper) getSubaccountLiquidationInfoStore(
 ) prefix.Store {
 	store := prefix.NewStore(
 		ctx.TransientStore(k.transientStoreKey),
-		types.KeyPrefix(types.SubaccountLiquidationInfoKeyPrefix),
+		[]byte(types.SubaccountLiquidationInfoKeyPrefix),
 	)
 
 	return store

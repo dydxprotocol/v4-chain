@@ -15,7 +15,7 @@ func TestInternalMsgSamples_All_Key(t *testing.T) {
 }
 
 func TestInternalMsgSamples_All_Value(t *testing.T) {
-	validateSampleMsgValue(t, msgs.InternalMsgSamplesAll)
+	validateMsgValue(t, msgs.InternalMsgSamplesAll)
 }
 
 func TestInternalMsgSamples_Gov_Key(t *testing.T) {
@@ -102,10 +102,16 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTier",
 		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse",
+		"/dydxprotocol.perpetuals.MsgUpdateParams",
+		"/dydxprotocol.perpetuals.MsgUpdateParamsResponse",
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams",
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse",
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket",
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse",
+		"/dydxprotocol.prices.MsgUpdateMarketParam",
+		"/dydxprotocol.prices.MsgUpdateMarketParamResponse",
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams",
@@ -127,4 +133,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.InternalMsgSamplesGovAuth))
+}
+
+func TestInternalMsgSamples_Gov_Value(t *testing.T) {
+	validateMsgValue(t, msgs.InternalMsgSamplesGovAuth)
 }

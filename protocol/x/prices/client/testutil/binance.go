@@ -2,14 +2,37 @@ package testutil
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"strings"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/binance"
 	"github.com/h2non/gock"
 )
+
+var (
+	binanceUsMarketConfig = map[types.MarketId]types.MarketConfig{
+		exchange_common.MARKET_BTC_USD: {
+			Ticker:         "BTCUSDT",
+			AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+		},
+		exchange_common.MARKET_ETH_USD: {
+			Ticker:         "ETHUSDT",
+			AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+		},
+		exchange_common.MARKET_USDT_USD: {
+			Ticker: "USDTUSD",
+		},
+	}
+)
+
+// newMarketIdWithValue returns a pointer to a new MarketId with the given value.
+func newMarketIdWithValue(id types.MarketId) *types.MarketId {
+	val := new(types.MarketId)
+	*val = id
+	return val
+}
 
 // BinanceTicker represents ticker returned by Binance for testing purposes.
 type BinanceTicker struct {
@@ -48,7 +71,7 @@ func NewGockBinanceResponse(
 
 	// Construct `symbols` parameter in Binance API request.
 	sortedTickers := GetTickersSortedByMarketId(
-		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BINANCE].MarketToMarketConfig,
+		binanceUsMarketConfig,
 	)
 	symbolsParam := fmt.Sprintf(
 		"[%s]",
@@ -77,7 +100,7 @@ func NewGockBinanceUSResponse(
 
 	// Construct `symbols` parameter in BinanceUS API request.
 	sortedTickers := GetTickersSortedByMarketId(
-		constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_BINANCE_US].MarketToMarketConfig,
+		binanceUsMarketConfig,
 	)
 	symbolsParam := fmt.Sprintf(
 		"[%s]",

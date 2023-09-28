@@ -25,6 +25,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { complianceCheck } from '../../../lib/compliance-check';
 import {
   adjustUSDCAssetPosition,
   filterAssetPositions,
@@ -82,7 +83,6 @@ class AddressesController extends Controller {
           subaccountId: [subaccountUuid],
         },
         [QueryableField.SUBACCOUNT_ID],
-        { readReplica: true },
       ),
       PerpetualPositionTable.findAll(
         {
@@ -90,16 +90,12 @@ class AddressesController extends Controller {
           status: [PerpetualPositionStatus.OPEN],
         },
         [QueryableField.SUBACCOUNT_ID],
-        { readReplica: true },
       ),
       AssetTable.findAll(
         {},
         [],
-        { readReplica: true },
       ),
-      BlockTable.getLatest({
-        readReplica: true,
-      }),
+      BlockTable.getLatest(),
     ]);
 
     const sortedAssetPositions:
@@ -154,6 +150,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

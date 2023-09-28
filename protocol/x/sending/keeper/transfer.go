@@ -6,8 +6,6 @@ import (
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -56,6 +54,10 @@ func (k Keeper) ProcessTransfer(
 		ctx,
 		indexerevents.SubtypeTransfer,
 		indexer_manager.GetB64EncodedEventMessage(
+			k.GenerateTransferEvent(pendingTransfer),
+		),
+		indexerevents.TransferEventVersion,
+		indexer_manager.GetBytes(
 			k.GenerateTransferEvent(pendingTransfer),
 		),
 	)
@@ -113,9 +115,6 @@ func (k Keeper) ProcessDepositToSubaccount(
 			float32(msgDepositToSubaccount.Quantums),
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(metrics.AssetId, int(msgDepositToSubaccount.AssetId)),
-				metrics.GetLabelForStringValue(metrics.SenderAddress, msgDepositToSubaccount.Sender),
-				metrics.GetLabelForStringValue(metrics.RecipientAddress, msgDepositToSubaccount.Recipient.Owner),
-				metrics.GetLabelForIntValue(metrics.RecipientSubaccount, int(msgDepositToSubaccount.Recipient.Number)),
 			},
 		)
 
@@ -124,6 +123,10 @@ func (k Keeper) ProcessDepositToSubaccount(
 			ctx,
 			indexerevents.SubtypeTransfer,
 			indexer_manager.GetB64EncodedEventMessage(
+				k.GenerateDepositEvent(msgDepositToSubaccount),
+			),
+			indexerevents.TransferEventVersion,
+			indexer_manager.GetBytes(
 				k.GenerateDepositEvent(msgDepositToSubaccount),
 			),
 		)
@@ -179,9 +182,6 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 			float32(msgWithdrawFromSubaccount.Quantums),
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(metrics.AssetId, int(msgWithdrawFromSubaccount.AssetId)),
-				metrics.GetLabelForStringValue(metrics.SenderAddress, msgWithdrawFromSubaccount.Sender.Owner),
-				metrics.GetLabelForIntValue(metrics.SenderSubaccount, int(msgWithdrawFromSubaccount.Sender.Number)),
-				metrics.GetLabelForStringValue(metrics.RecipientAddress, msgWithdrawFromSubaccount.Recipient),
 			},
 		)
 
@@ -190,6 +190,10 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 			ctx,
 			indexerevents.SubtypeTransfer,
 			indexer_manager.GetB64EncodedEventMessage(
+				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
+			),
+			indexerevents.TransferEventVersion,
+			indexer_manager.GetBytes(
 				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
 			),
 		)
@@ -215,6 +219,14 @@ func (k Keeper) SendFromModuleToAccount(
 	ctx sdk.Context,
 	msg *types.MsgSendFromModuleToAccount,
 ) (err error) {
-	// TODO(CORE-559): Implement this method.
-	return status.Errorf(codes.Unimplemented, "SendFromModuleToAccount not implemented")
+	if err = msg.ValidateBasic(); err != nil {
+		return err
+	}
+
+	return k.bankKeeper.SendCoinsFromModuleToAccount(
+		ctx,
+		msg.GetSenderModuleName(),
+		sdk.MustAccAddressFromBech32(msg.GetRecipient()),
+		sdk.NewCoins(msg.Coin),
+	)
 }

@@ -5,6 +5,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidence "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -60,6 +61,11 @@ var (
 		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse":     nil,
 		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":         &distr.MsgWithdrawValidatorCommission{},
 		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse": nil,
+
+		// evidence
+		"/cosmos.evidence.v1beta1.Equivocation":              nil,
+		"/cosmos.evidence.v1beta1.MsgSubmitEvidence":         &evidence.MsgSubmitEvidence{},
+		"/cosmos.evidence.v1beta1.MsgSubmitEvidenceResponse": nil,
 
 		// feegrant
 		"/cosmos.feegrant.v1beta1.AllowedMsgAllowance":        nil,
@@ -195,6 +201,7 @@ var (
 		"/ibc.core.connection.v1.Version":                          nil,
 
 		// ibc.lightclients
+		"/ibc.lightclients.localhost.v2.ClientState":     nil,
 		"/ibc.lightclients.tendermint.v1.ClientState":    nil,
 		"/ibc.lightclients.tendermint.v1.ConsensusState": nil,
 		"/ibc.lightclients.tendermint.v1.Header":         nil,

@@ -56,6 +56,15 @@ func (k Keeper) CreateMarket(
 				marketParam.Exponent,
 			),
 		),
+		indexerevents.MarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewMarketCreateEvent(
+				marketParam.Id,
+				marketParam.Pair,
+				marketParam.MinPriceChangePpm,
+				marketParam.Exponent,
+			),
+		),
 	)
 
 	k.marketToCreatedAt[marketParam.Id] = k.timeProvider.Now()

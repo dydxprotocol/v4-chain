@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -10,5 +11,8 @@ func (msg *MsgUpdateProposeParams) GetSigners() []sdk.AccAddress {
 }
 
 func (msg *MsgUpdateProposeParams) ValidateBasic() error {
+	if msg.Authority == "" {
+		return errorsmod.Wrap(ErrInvalidAuthority, "authority cannot be empty")
+	}
 	return nil
 }

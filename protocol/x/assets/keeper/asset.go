@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
@@ -68,6 +69,16 @@ func (k Keeper) CreateAsset(
 		ctx,
 		indexerevents.SubtypeAsset,
 		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewAssetCreateEvent(
+				nextId,
+				asset.Symbol,
+				asset.HasMarket,
+				asset.MarketId,
+				asset.AtomicResolution,
+			),
+		),
+		indexerevents.AssetEventVersion,
+		indexer_manager.GetBytes(
 			indexerevents.NewAssetCreateEvent(
 				nextId,
 				asset.Symbol,
@@ -141,7 +152,7 @@ func (k Keeper) GetNumAssets(
 	ctx sdk.Context,
 ) uint32 {
 	store := ctx.KVStore(k.storeKey)
-	var rawBytes []byte = store.Get(types.KeyPrefix(types.NumAssetsKey))
+	var rawBytes []byte = store.Get([]byte(types.NumAssetsKey))
 	return lib.BytesToUint32(rawBytes)
 }
 
@@ -153,7 +164,7 @@ func (k Keeper) setNumAssets(
 	store := ctx.KVStore(k.storeKey)
 
 	// Set `numAssets`
-	store.Set(types.KeyPrefix(types.NumAssetsKey), lib.Uint32ToBytes(numAssets))
+	store.Set([]byte(types.NumAssetsKey), lib.Uint32ToBytes(numAssets))
 }
 
 func (k Keeper) setAsset(
@@ -161,7 +172,7 @@ func (k Keeper) setAsset(
 	asset types.Asset,
 ) {
 	b := k.cdc.MustMarshal(&asset)
-	assetStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.AssetKeyPrefix))
+	assetStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
 	assetStore.Set(types.AssetKey(asset.Id), b)
 }
 
@@ -170,8 +181,8 @@ func (k Keeper) setDenomToId(
 	denom string,
 	id uint32,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.DenomToIdKeyPrefix))
-	store.Set(types.KeyPrefix(denom), lib.Uint32ToBytes(id))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DenomToIdKeyPrefix))
+	store.Set([]byte(denom), lib.Uint32ToBytes(id))
 }
 
 func (k Keeper) internalGetIdByDenom(
@@ -181,9 +192,9 @@ func (k Keeper) internalGetIdByDenom(
 	id uint32,
 	found bool,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.DenomToIdKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DenomToIdKeyPrefix))
 
-	idBytes := store.Get(types.KeyPrefix(denom))
+	idBytes := store.Get([]byte(denom))
 	if idBytes == nil {
 		return 0, false
 	}
@@ -230,7 +241,7 @@ func (k Keeper) GetAsset(
 	ctx sdk.Context,
 	id uint32,
 ) (val types.Asset, err error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.AssetKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
 
 	b := store.Get(types.AssetKey(id))
 	if b == nil {
@@ -389,7 +400,7 @@ func (k Keeper) ConvertAssetToCoin(
 
 	bigConvertedQuantums := bigRatConvertedQuantums.Num()
 
-	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdk.NewIntFromBigInt(bigConvertedDenomAmount)), nil
+	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmount)), nil
 }
 
 // IsPositionUpdatable returns whether position of an asset is updatable.

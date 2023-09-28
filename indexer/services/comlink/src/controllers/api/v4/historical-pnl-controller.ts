@@ -1,5 +1,6 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
+  DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   Ordering,
   PnlTicksFromDatabase,
@@ -16,6 +17,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -51,7 +53,6 @@ class HistoricalPnlController extends Controller {
     ] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
-        { readReplica: true },
       ),
       PnlTicksTable.findAll(
         {
@@ -68,7 +69,7 @@ class HistoricalPnlController extends Controller {
         },
         [QueryableField.LIMIT],
         {
-          readReplica: true,
+          ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
         },
       ),
@@ -93,6 +94,7 @@ router.get(
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

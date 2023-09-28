@@ -538,7 +538,8 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.firstOrder)) {
-				require.True(t, tApp.CheckTx(tx).IsOK())
+				resp := tApp.CheckTx(tx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			if tc.advanceBlock {
@@ -547,19 +548,20 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 
 			if tc.cancellation != nil {
 				for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *tc.cancellation) {
-					require.True(t, tApp.CheckTx(tx).IsOK())
+					resp := tApp.CheckTx(tx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.secondOrder)) {
-				response := tApp.CheckTx(tx)
+				resp := tApp.CheckTx(tx)
 				if tc.expectError {
-					require.False(t, response.IsOK())
-					require.Contains(t, response.Log, "Opening order would exceed equity tier limit of 1.")
+					require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+					require.Contains(t, resp.Log, "Opening order would exceed equity tier limit of 1.")
 
 					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, &tApp, ctx)
 				} else {
-					require.True(t, response.IsOK())
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
 
@@ -707,7 +709,8 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.firstOrder)) {
-				require.True(t, tApp.CheckTx(tx).IsOK())
+				resp := tApp.CheckTx(tx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			ctx = tApp.AdvanceToBlock(
@@ -716,14 +719,14 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 			)
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.secondOrder)) {
-				response := tApp.CheckTx(tx)
+				resp := tApp.CheckTx(tx)
 				if tc.expectError {
-					require.False(t, response.IsOK())
-					require.Contains(t, response.Log, "Opening order would exceed equity tier limit of 1.")
+					require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+					require.Contains(t, resp.Log, "Opening order would exceed equity tier limit of 1.")
 
 					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, &tApp, ctx)
 				} else {
-					require.True(t, response.IsOK())
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
 
@@ -1014,26 +1017,28 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.makerOrder)) {
-				require.True(t, tApp.CheckTx(tx).IsOK())
+				resp := tApp.CheckTx(tx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			if tc.advanceBlock {
 				ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.takerOrder)) {
-				require.True(t, tApp.CheckTx(tx).IsOK())
+				resp := tApp.CheckTx(tx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			if tc.advanceBlock {
 				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.extraOrder)) {
-				response := tApp.CheckTx(tx)
+				resp := tApp.CheckTx(tx)
 				if tc.expectError {
-					require.False(t, response.IsOK())
-					require.Contains(t, response.Log, "Opening order would exceed equity tier limit of 1.")
+					require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+					require.Contains(t, resp.Log, "Opening order would exceed equity tier limit of 1.")
 				} else {
-					require.True(t, response.IsOK())
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
 
@@ -1053,7 +1058,7 @@ func checkThatFoKOrderIsNotBlockedByEquityTierLimits(t *testing.T, tApp *testapp
 		)),
 	) {
 		fokResponse := tApp.CheckTx(fokTx)
-		require.False(t, fokResponse.IsOK())
+		require.Conditionf(t, fokResponse.IsErr, "Expected CheckTx to error. Response: %+v", fokResponse)
 		require.Contains(t, fokResponse.Log, "FillOrKill order could not be fully filled")
 	}
 }

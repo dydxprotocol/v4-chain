@@ -451,6 +451,21 @@ func TestGenesis(t *testing.T) {
 								perpetual.Params.LiquidityTier,
 							),
 						),
+						indexerevents.PerpetualMarketEventVersion,
+						indexer_manager.GetBytes(
+							indexerevents.NewPerpetualMarketCreateEvent(
+								perpetualId,
+								uint32(i),
+								perpetual.Params.Ticker,
+								perpetual.Params.MarketId,
+								clobPair.Status,
+								clobPair.QuantumConversionExponent,
+								perpetual.Params.AtomicResolution,
+								clobPair.SubticksPerTick,
+								clobPair.StepBaseQuantums,
+								perpetual.Params.LiquidityTier,
+							),
+						),
 					).Once().Return()
 				}
 			}

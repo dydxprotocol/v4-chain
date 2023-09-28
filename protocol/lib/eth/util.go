@@ -1,6 +1,7 @@
 package eth
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"strings"
 
@@ -72,7 +73,7 @@ func BridgeLogToEvent(
 
 	return bridgetypes.BridgeEvent{
 		Id:             id,
-		Coin:           sdk.NewCoin(denom, sdk.NewIntFromBigInt(amount)),
+		Coin:           sdk.NewCoin(denom, sdkmath.NewIntFromBigInt(amount)),
 		Address:        sdk.MustBech32ifyAddressBytes(config.Bech32PrefixAccAddr, address),
 		EthBlockHeight: log.BlockNumber,
 	}

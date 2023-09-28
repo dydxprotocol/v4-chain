@@ -28,24 +28,41 @@ import (
 func IsInternalMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
-		// MsgUpdateParams
+		// ------- CosmosSDK default modules
+		// auth
 		*auth.MsgUpdateParams,
-		*blocktime.MsgUpdateDowntimeParams,
-		*bank.MsgUpdateParams,
-		*consensus.MsgUpdateParams,
-		*crisis.MsgUpdateParams,
-		*feetiers.MsgUpdatePerpetualFeeParams,
-		*distribution.MsgUpdateParams,
-		*gov.MsgUpdateParams,
-		*slashing.MsgUpdateParams,
-		*staking.MsgUpdateParams,
-		*stats.MsgUpdateParams,
-		*rewards.MsgUpdateParams,
-		*vest.MsgSetVestEntry,
-		*vest.MsgDeleteVestEntry,
 
 		// bank
 		*bank.MsgSetSendEnabled,
+		*bank.MsgUpdateParams,
+
+		// consensus
+		*consensus.MsgUpdateParams,
+
+		// crisis
+		*crisis.MsgUpdateParams,
+
+		// distribution
+		*distribution.MsgCommunityPoolSpend,
+		*distribution.MsgUpdateParams,
+
+		// gov
+		*gov.MsgExecLegacyContent,
+		*gov.MsgUpdateParams,
+
+		// slashing
+		*slashing.MsgUpdateParams,
+
+		// staking
+		*staking.MsgUpdateParams,
+
+		// upgrade
+		*upgrade.MsgCancelUpgrade,
+		*upgrade.MsgSoftwareUpgrade,
+
+		// ------- Custom modules
+		// blocktime
+		*blocktime.MsgUpdateDowntimeParams,
 
 		// bridge
 		*bridge.MsgCompleteBridge,
@@ -63,25 +80,31 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		// delaymsg
 		*delaymsg.MsgDelayMessage,
 
-		// distribution
-		*distribution.MsgCommunityPoolSpend,
-
-		// gov
-		*gov.MsgExecLegacyContent,
+		// feetiers
+		*feetiers.MsgUpdatePerpetualFeeParams,
 
 		// perpetuals
 		*perpetuals.MsgCreatePerpetual,
 		*perpetuals.MsgSetLiquidityTier,
+		*perpetuals.MsgUpdateParams,
+		*perpetuals.MsgUpdatePerpetualParams,
 
 		// prices
 		*prices.MsgCreateOracleMarket,
+		*prices.MsgUpdateMarketParam,
+
+		// rewards
+		*rewards.MsgUpdateParams,
 
 		// sending
 		*sending.MsgSendFromModuleToAccount,
 
-		// upgrade
-		*upgrade.MsgCancelUpgrade,
-		*upgrade.MsgSoftwareUpgrade:
+		// stats
+		*stats.MsgUpdateParams,
+
+		// vest
+		*vest.MsgDeleteVestEntry,
+		*vest.MsgSetVestEntry:
 
 		return true
 

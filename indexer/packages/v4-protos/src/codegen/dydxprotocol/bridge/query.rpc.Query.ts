@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryEventParamsRequest, QueryEventParamsResponse, QueryProposeParamsRequest, QueryProposeParamsResponse, QuerySafetyParamsRequest, QuerySafetyParamsResponse, QueryAcknowledgedEventInfoRequest, QueryAcknowledgedEventInfoResponse, QueryRecognizedEventInfoRequest, QueryRecognizedEventInfoResponse } from "./query";
+import { QueryEventParamsRequest, QueryEventParamsResponse, QueryProposeParamsRequest, QueryProposeParamsResponse, QuerySafetyParamsRequest, QuerySafetyParamsResponse, QueryAcknowledgedEventInfoRequest, QueryAcknowledgedEventInfoResponse, QueryRecognizedEventInfoRequest, QueryRecognizedEventInfoResponse, QueryDelayedCompleteBridgeMessagesRequest, QueryDelayedCompleteBridgeMessagesResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -27,6 +27,12 @@ export interface Query {
    */
 
   recognizedEventInfo(request?: QueryRecognizedEventInfoRequest): Promise<QueryRecognizedEventInfoResponse>;
+  /**
+   * Queries all `MsgCompleteBridge` messages that are delayed (not yet
+   * executed) and corresponding block heights at which they will execute.
+   */
+
+  delayedCompleteBridgeMessages(request: QueryDelayedCompleteBridgeMessagesRequest): Promise<QueryDelayedCompleteBridgeMessagesResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -38,6 +44,7 @@ export class QueryClientImpl implements Query {
     this.safetyParams = this.safetyParams.bind(this);
     this.acknowledgedEventInfo = this.acknowledgedEventInfo.bind(this);
     this.recognizedEventInfo = this.recognizedEventInfo.bind(this);
+    this.delayedCompleteBridgeMessages = this.delayedCompleteBridgeMessages.bind(this);
   }
 
   eventParams(request: QueryEventParamsRequest = {}): Promise<QueryEventParamsResponse> {
@@ -70,6 +77,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryRecognizedEventInfoResponse.decode(new _m0.Reader(data)));
   }
 
+  delayedCompleteBridgeMessages(request: QueryDelayedCompleteBridgeMessagesRequest): Promise<QueryDelayedCompleteBridgeMessagesResponse> {
+    const data = QueryDelayedCompleteBridgeMessagesRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.bridge.Query", "DelayedCompleteBridgeMessages", data);
+    return promise.then(data => QueryDelayedCompleteBridgeMessagesResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -93,6 +106,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     recognizedEventInfo(request?: QueryRecognizedEventInfoRequest): Promise<QueryRecognizedEventInfoResponse> {
       return queryService.recognizedEventInfo(request);
+    },
+
+    delayedCompleteBridgeMessages(request: QueryDelayedCompleteBridgeMessagesRequest): Promise<QueryDelayedCompleteBridgeMessagesResponse> {
+      return queryService.delayedCompleteBridgeMessages(request);
     }
 
   };

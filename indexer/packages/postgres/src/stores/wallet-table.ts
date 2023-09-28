@@ -1,5 +1,6 @@
 import { QueryBuilder } from 'objection';
 
+import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import WalletModel from '../models/wallet-model';
@@ -20,7 +21,7 @@ export async function findAll(
     limit,
   }: WalletQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<WalletFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -81,7 +82,7 @@ export async function upsert(
 }
 export async function findById(
   address: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<WalletFromDatabase | undefined> {
   const baseQuery: QueryBuilder<WalletModel> = setupBaseQuery<WalletModel>(
     WalletModel,

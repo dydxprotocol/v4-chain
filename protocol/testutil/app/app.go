@@ -27,6 +27,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	sdkproto "github.com/cosmos/gogoproto/proto"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -58,6 +60,8 @@ type MustMakeCheckTxOptions struct {
 	AccSequenceNumberForSigning uint64
 	// Amount of Gas for the transaction.
 	Gas uint64
+	// Gas fees offered for the transaction.
+	FeeAmt sdk.Coins
 }
 
 // ValidateResponsePrepareProposal is a function that validates the response from the PrepareProposalHandler.
@@ -67,10 +71,12 @@ type ValidateResponsePrepareProposalFn func(sdk.Context, abcitypes.ResponsePrepa
 type ValidateResponseProcessProposalFn func(sdk.Context, abcitypes.ResponseProcessProposal) (haltChain bool)
 
 // ValidateDeliverTxsFn is a function that validates the response from each transaction that is delivered.
+// txIndex specifies the index of the transaction in the block.
 type ValidateDeliverTxsFn func(
 	ctx sdk.Context,
 	request abcitypes.RequestDeliverTx,
 	response abcitypes.ResponseDeliverTx,
+	txIndex int,
 ) (haltchain bool)
 
 // AdvanceToBlockOptions is a struct containing options for AdvanceToBlock.* functions.
@@ -152,7 +158,8 @@ type GenesisStates interface {
 		epochstypes.GenesisState |
 		sendingtypes.GenesisState |
 		delaymsgtypes.GenesisState |
-		bridgetypes.GenesisState
+		bridgetypes.GenesisState |
+		govtypesv1.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function
@@ -200,6 +207,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = epochstypes.ModuleName
 	case sendingtypes.GenesisState:
 		moduleName = sendingtypes.ModuleName
+	case govtypesv1.GenesisState:
+		moduleName = govtypes.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}
@@ -237,8 +246,9 @@ type ExecuteCheckTxs func(ctx sdk.Context, app *app.App) (stop bool)
 //   - an ExecuteCheckTxs function that will stop on after the first block
 func NewTestAppBuilder() TestAppBuilder {
 	return TestAppBuilder{
-		genesisDocFn: DefaultGenesis,
-		appCreatorFn: DefaultTestAppCreatorFn(nil),
+		genesisDocFn:         DefaultGenesis,
+		appCreatorFn:         DefaultTestAppCreatorFn(nil),
+		usesDefaultAppConfig: true,
 		executeCheckTxs: func(ctx sdk.Context, app *app.App) (stop bool) {
 			return true
 		},
@@ -250,10 +260,11 @@ func NewTestAppBuilder() TestAppBuilder {
 // Note that we specifically use value receivers for the With... methods because we want to make the builder instances
 // immutable.
 type TestAppBuilder struct {
-	genesisDocFn    GenesisDocCreatorFn
-	appCreatorFn    func() *app.App
-	executeCheckTxs ExecuteCheckTxs
-	t               *testing.T
+	genesisDocFn         GenesisDocCreatorFn
+	appCreatorFn         func() *app.App
+	usesDefaultAppConfig bool
+	executeCheckTxs      ExecuteCheckTxs
+	t                    *testing.T
 }
 
 // WithGenesisDocFn returns a builder like this one with specified function that will be used to create
@@ -267,6 +278,7 @@ func (tApp TestAppBuilder) WithGenesisDocFn(fn GenesisDocCreatorFn) TestAppBuild
 // the application.
 func (tApp TestAppBuilder) WithAppCreatorFn(fn AppCreatorFn) TestAppBuilder {
 	tApp.appCreatorFn = fn
+	tApp.usesDefaultAppConfig = false
 	return tApp
 }
 
@@ -323,6 +335,10 @@ func (tApp *TestApp) initChainIfNeeded() {
 	// Get the initial genesis state and initialize the chain and commit the results of the initialization.
 	tApp.genesis = tApp.builder.genesisDocFn()
 	tApp.App = tApp.builder.appCreatorFn()
+	if tApp.builder.usesDefaultAppConfig {
+		tApp.App.Server.DisableUpdateMonitoringForTesting()
+	}
+
 	baseapp.SetChainID(tApp.genesis.ChainID)(tApp.App.GetBaseApp())
 	if tApp.genesis.GenesisTime.UnixNano() <= time.UnixMilli(0).UnixNano() {
 		panic(fmt.Errorf(
@@ -481,7 +497,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		})
 
 		// Deliver the transaction from the previous block
-		for _, bz := range deliverTxs {
+		for i, bz := range deliverTxs {
 			deliverTxRequest := abcitypes.RequestDeliverTx{Tx: bz}
 			deliverTxResponse := tApp.App.DeliverTx(deliverTxRequest)
 			// Use the supplied validator otherwise use the default validation which expects all delivered
@@ -491,6 +507,7 @@ func (tApp *TestApp) AdvanceToBlock(
 					tApp.App.NewContext(false, tApp.header),
 					deliverTxRequest,
 					deliverTxResponse,
+					i,
 				)
 				tApp.halted = haltChain
 				if tApp.halted {
@@ -620,7 +637,7 @@ func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancel
 			panic(fmt.Errorf("MustMakeCheckTxsWithClobMsg: Unknown message type %T", msg))
 		}
 
-		msgSignerAddress := testtx.MustGetSignerAddress(m)
+		msgSignerAddress := testtx.MustGetOnlySignerAddress(m)
 		if signerAddress == "" {
 			signerAddress = msgSignerAddress
 		}
@@ -696,7 +713,7 @@ func MustMakeCheckTxWithPrivKeySupplier(
 		rand.New(rand.NewSource(42)),
 		app.TxConfig(),
 		messages,
-		sdk.Coins{},
+		options.FeeAmt,
 		options.Gas,
 		ctx.ChainID(),
 		[]uint64{account.GetAccountNumber()},

@@ -45,8 +45,26 @@ describe('Compliance data store', () => {
     );
 
     expect(complianceData.length).toEqual(2);
+    expect(complianceData[0]).toEqual(blockedComplianceData);
+    expect(complianceData[1]).toEqual(nonBlockedComplianceData);
+  });
+
+  it('Successfully finds compliance data with address', async () => {
+    await Promise.all([
+      ComplianceDataTable.create(blockedComplianceData),
+      ComplianceDataTable.create(nonBlockedComplianceData),
+    ]);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
+      {
+        address: [blockedAddress],
+      },
+      [],
+      { readReplica: true },
+    );
+
+    expect(complianceData.length).toEqual(1);
     expect(complianceData[0]).toEqual(expect.objectContaining(blockedComplianceData));
-    expect(complianceData[1]).toEqual(expect.objectContaining(nonBlockedComplianceData));
   });
 
   it('Successfully finds compliance data with updatedBeforeOrAt', async () => {
@@ -64,7 +82,7 @@ describe('Compliance data store', () => {
     );
 
     expect(complianceData.length).toEqual(1);
-    expect(complianceData[0]).toEqual(expect.objectContaining(blockedComplianceData));
+    expect(complianceData[0]).toEqual(blockedComplianceData);
   });
 
   it('Successfully finds compliance data with provider', async () => {
@@ -82,8 +100,8 @@ describe('Compliance data store', () => {
     );
 
     expect(complianceData.length).toEqual(2);
-    expect(complianceData[0]).toEqual(expect.objectContaining(blockedComplianceData));
-    expect(complianceData[1]).toEqual(expect.objectContaining(nonBlockedComplianceData));
+    expect(complianceData[0]).toEqual(blockedComplianceData);
+    expect(complianceData[1]).toEqual(nonBlockedComplianceData);
   });
 
   it('Successfully finds compliance data with blocked', async () => {
@@ -101,7 +119,7 @@ describe('Compliance data store', () => {
     );
 
     expect(complianceData.length).toEqual(1);
-    expect(complianceData[0]).toEqual(expect.objectContaining(nonBlockedComplianceData));
+    expect(complianceData[0]).toEqual(nonBlockedComplianceData);
   });
 
   it('Successfully finds compliance data by address and provider', async () => {
@@ -118,7 +136,7 @@ describe('Compliance data store', () => {
     );
 
     expect(complianceData).toBeDefined();
-    expect(complianceData).toEqual(expect.objectContaining(blockedComplianceData));
+    expect(complianceData).toEqual(blockedComplianceData);
   });
 
   it('Unable finds compliance data', async () => {
@@ -142,7 +160,7 @@ describe('Compliance data store', () => {
     expect(complianceData.length).toEqual(1);
 
     const updatedTime: string = DateTime.fromISO(
-      nonBlockedComplianceData.updatedAt,
+      nonBlockedComplianceData.updatedAt!,
     ).plus(10).toUTC().toISO();
 
     await ComplianceDataTable.update({
@@ -159,11 +177,100 @@ describe('Compliance data store', () => {
       { readReplica: true },
     );
 
-    expect(updatedComplianceData).toEqual(expect.objectContaining({
+    expect(updatedComplianceData).toEqual({
       ...nonBlockedComplianceData,
       riskScore: '30.00',
       blocked: true,
       updatedAt: updatedTime,
-    }));
+    });
+  });
+
+  it('Successfully upserts a new compliance data', async () => {
+    await ComplianceDataTable.upsert(nonBlockedComplianceData);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(complianceData.length).toEqual(1);
+    expect(complianceData[0]).toEqual(nonBlockedComplianceData);
+  });
+
+  it('Successfully upserts an existing compliance data', async () => {
+    await ComplianceDataTable.upsert(nonBlockedComplianceData);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(complianceData.length).toEqual(1);
+
+    const updatedTime: string = DateTime.fromISO(
+      nonBlockedComplianceData.updatedAt!,
+    ).plus(10).toUTC().toISO();
+
+    await ComplianceDataTable.upsert({
+      address: nonBlockedComplianceData.address,
+      provider: nonBlockedComplianceData.provider,
+      riskScore: '30.00',
+      blocked: true,
+      updatedAt: updatedTime,
+    });
+    const updatedComplianceData:
+    ComplianceDataFromDatabase | undefined = await ComplianceDataTable.findByAddressAndProvider(
+      nonBlockedComplianceData.address,
+      nonBlockedComplianceData.provider,
+      { readReplica: true },
+    );
+
+    expect(updatedComplianceData).toEqual({
+      ...nonBlockedComplianceData,
+      riskScore: '30.00',
+      blocked: true,
+      updatedAt: updatedTime,
+    });
+  });
+
+  it('Successfully bulk upserts compliance data', async () => {
+    await ComplianceDataTable.create(nonBlockedComplianceData);
+
+    let complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(complianceData.length).toEqual(1);
+
+    const updatedTime: string = DateTime.fromISO(
+      nonBlockedComplianceData.updatedAt!,
+    ).plus(10).toUTC().toISO();
+
+    await ComplianceDataTable.bulkUpsert(
+      [
+        blockedComplianceData,
+        {
+          ...nonBlockedComplianceData,
+          riskScore: '30.00',
+          blocked: true,
+          updatedAt: updatedTime,
+        },
+      ],
+    );
+
+    complianceData = await ComplianceDataTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(complianceData.length).toEqual(2);
+    expect(complianceData[0]).toEqual(blockedComplianceData);
+    expect(complianceData[1]).toEqual({
+      ...nonBlockedComplianceData,
+      riskScore: '30.00',
+      blocked: true,
+      updatedAt: updatedTime,
+    });
   });
 });

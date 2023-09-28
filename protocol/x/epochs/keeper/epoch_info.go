@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -14,7 +15,7 @@ import (
 )
 
 func (k Keeper) setEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EpochInfoKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochInfoKeyPrefix))
 	b := k.cdc.MustMarshal(&epochInfo)
 	store.Set(types.EpochInfoKey(
 		epochInfo.Name,
@@ -93,7 +94,6 @@ func (k Keeper) MaybeStartNextEpoch(ctx sdk.Context, id types.EpochInfoName) (ne
 		float32(epoch.CurrentEpoch),
 		[]gometrics.Label{
 			metrics.GetLabelForStringValue(types.AttributeKeyEpochInfoName, epoch.Name),
-			metrics.GetLabelForIntValue(metrics.BlockHeight, int(epoch.CurrentEpochStartBlock)),
 		},
 	)
 
@@ -129,7 +129,7 @@ func (k Keeper) GetEpochInfo(
 	ctx sdk.Context,
 	id types.EpochInfoName,
 ) (val types.EpochInfo, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EpochInfoKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochInfoKeyPrefix))
 
 	b := store.Get(types.EpochInfoKey(
 		string(id),
@@ -145,7 +145,7 @@ func (k Keeper) GetEpochInfo(
 
 // GetAllEpochInfo returns all epochInfos
 func (k Keeper) GetAllEpochInfo(ctx sdk.Context) (list []types.EpochInfo) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EpochInfoKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochInfoKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()

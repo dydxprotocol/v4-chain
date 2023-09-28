@@ -36,7 +36,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	allSubaccounts := make([]types.Subaccount, 0)
 
 	// Define the total USDC supply as the sum of all USDC quantums in all subaccounts.
-	totalUsdcSupply := sdk.NewInt(0)
+	totalUsdcSupply := sdkmath.NewInt(0)
 
 	for _, acc := range simState.Accounts {
 		saIdNumbers := genSubaccountIdNumbers(r)
@@ -60,7 +60,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 					},
 				}
 
-				bigQuantums := sdk.NewIntFromUint64(quantums)
+				bigQuantums := sdkmath.NewIntFromUint64(quantums)
 				totalUsdcSupply = totalUsdcSupply.Add(bigQuantums)
 			}
 

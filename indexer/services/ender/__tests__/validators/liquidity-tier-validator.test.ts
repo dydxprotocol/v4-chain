@@ -10,7 +10,6 @@ import {
   defaultHeight, defaultLiquidityTierUpsertEvent, defaultTime, defaultTxHash,
 } from '../helpers/constants';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
 } from '../helpers/indexer-proto-helpers';
@@ -105,9 +104,7 @@ function createBlock(
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.LIQUIDITY_TIER,
-    binaryToBase64String(
-      LiquidityTierUpsertEventV1.encode(liquidityTierEvent).finish(),
-    ),
+    LiquidityTierUpsertEventV1.encode(liquidityTierEvent).finish(),
     0,
     0,
   );

@@ -2,14 +2,15 @@ import { Liquidity } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintEvent,
   LiquidationOrderV1,
-  IndexerOrder,
-  OrderFillEventV1,
+  IndexerOrder, OrderFillEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
 
 import { Handler, HandlerInitializer } from '../handlers/handler';
 import { LiquidationHandler } from '../handlers/order-fills/liquidation-handler';
 import { OrderHandler } from '../handlers/order-fills/order-handler';
+import { orderFillEventV1ToOrderFill } from '../helpers/translation-helper';
+import { OrderFillWithLiquidity } from '../lib/translated-types';
 import { OrderFillEventWithLiquidity } from '../lib/types';
 import { validateOrderAndReturnErrorMessage } from './helpers';
 import { Validator } from './validator';
@@ -60,7 +61,7 @@ export class OrderFillValidator extends Validator<OrderFillEventV1> {
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
-  ): Handler<OrderFillEventV1>[] {
+  ): Handler<OrderFillWithLiquidity>[] {
     const orderFillEventsWithLiquidity: OrderFillEventWithLiquidity[] = [
       {
         event: this.event,
@@ -83,7 +84,7 @@ export class OrderFillValidator extends Validator<OrderFillEventV1> {
           this.block,
           indexerTendermintEvent,
           txId,
-          orderFillEventWithLiquidity,
+          orderFillEventV1ToOrderFill(orderFillEventWithLiquidity),
         );
       },
     );

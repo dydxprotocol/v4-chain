@@ -187,3 +187,33 @@ export function generateBulkUpdateString({
   WHERE c."${uniqueIdentifier}"${isUuid ? '::uuid' : ''} = "${table}"."${uniqueIdentifier}";
 `;
 }
+
+export function generateBulkUpsertString({
+  table,
+  objectRows,
+  columns,
+  uniqueIdentifiers = ['id'],
+}: {
+  table: string,
+  objectRows: string[],
+  columns: string[],
+  uniqueIdentifiers?: string[],
+}): string {
+  const columnsToUpdate: string[] = _.without(columns, ...uniqueIdentifiers);
+
+  const idFields: string = uniqueIdentifiers.map(
+    (id: string): string => { return `"${id}"`; },
+  ).join(',');
+  const insertFields: string = columns.map(
+    (column: string):string => { return `"${column}"`; },
+  ).join(',');
+  const setFields: string[] = columnsToUpdate.map((col) => {
+    return `"${col}" = excluded."${col}"`;
+  });
+
+  return `
+  INSERT INTO "${table}" (${insertFields}) VALUES
+    ${objectRows.map((object) => `(${object})`).join(',')}
+  ON CONFLICT (${idFields}) DO UPDATE SET ${setFields.join(',')};
+  `;
+}

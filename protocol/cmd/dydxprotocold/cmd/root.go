@@ -5,11 +5,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
-	gometrics "github.com/armon/go-metrics"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
@@ -26,9 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -38,8 +34,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/app/params"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -114,7 +108,7 @@ func NewRootCmd(option *RootCmdOption) *cobra.Command {
 }
 
 // initRootCmd initializes the app's root command with useful commands.
-func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig dydxapp.EncodingConfig) {
 	gentxModule := basic_manager.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basic_manager.ModuleBasics, dydxapp.DefaultNodeHome),
@@ -219,7 +213,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg params.EncodingConfig
+	encCfg dydxapp.EncodingConfig
 }
 
 // newApp initializes and returns a new app.
@@ -271,20 +265,6 @@ func (a appCreator) newApp(
 		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
-
-	// Report app version and git commit if not in dev
-	// TODO(DEC-2107): Doing this based on chain id seems brittle.
-	if !strings.Contains(chainID, "dev") {
-		version := version.NewInfo()
-		telemetry.SetGaugeWithLabels(
-			[]string{metrics.AppInfo},
-			1,
-			[]gometrics.Label{
-				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
-				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
-			},
-		)
-	}
 
 	return dydxapp.New(
 		logger,

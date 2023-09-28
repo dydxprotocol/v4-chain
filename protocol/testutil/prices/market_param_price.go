@@ -32,6 +32,12 @@ func WithPriceValue(price uint64) MarketParamPriceModifierOption {
 	}
 }
 
+func WithMinExchanges(minExchanges uint32) MarketParamPriceModifierOption {
+	return func(cp *pricestypes.MarketParamPrice) {
+		cp.Param.MinExchanges = minExchanges
+	}
+}
+
 func WithExchangeConfigJson(configJson string) MarketParamPriceModifierOption {
 	return func(cp *pricestypes.MarketParamPrice) {
 		cp.Param.ExchangeConfigJson = configJson

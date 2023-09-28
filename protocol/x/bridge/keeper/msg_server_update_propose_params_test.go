@@ -30,6 +30,18 @@ func TestMsgServerUpdateProposeParams(t *testing.T) {
 			},
 			expectedResp: &types.MsgUpdateProposeParamsResponse{},
 		},
+		"Failure: invalid params": {
+			testMsg: types.MsgUpdateProposeParams{
+				Authority: constants.GovModuleAccAddressString,
+				Params: types.ProposeParams{
+					MaxBridgesPerBlock:           3,
+					ProposeDelayDuration:         -time.Second, // invalid
+					SkipRatePpm:                  600_000,
+					SkipIfBlockDelayedByDuration: time.Second,
+				},
+			},
+			expectedErr: "Duration is negative",
+		},
 		"Failure: invalid authority": {
 			testMsg: types.MsgUpdateProposeParams{
 				Authority: "12345",

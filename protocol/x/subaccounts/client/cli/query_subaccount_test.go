@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	"math/big"
 	"strconv"
 	"testing"
 
@@ -14,6 +15,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/client/cli"
@@ -35,6 +38,7 @@ func networkWithSubaccountObjects(t *testing.T, n int) (*network.Network, []type
 				Owner:  strconv.Itoa(i),
 				Number: uint32(n),
 			},
+			AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
 		}
 		nullify.Fill(&subaccount) //nolint:staticcheck
 		state.Subaccounts = append(state.Subaccounts, subaccount)
@@ -42,6 +46,11 @@ func networkWithSubaccountObjects(t *testing.T, n int) (*network.Network, []type
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
+
+	t.Cleanup(func() {
+		stoppable.StopServices(t, cfg.GRPCAddress)
+	})
+
 	return network.New(t, cfg), state.Subaccounts
 }
 

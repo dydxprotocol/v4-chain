@@ -24,7 +24,7 @@ func (k Keeper) GetAllOrderFillStates(ctx sdk.Context) (fillStates []OrderIdFill
 	// Retrieve an instance of the store.
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	// Iterate over all keys with the `OrderAmountFilledKeyPrefx`.
@@ -89,7 +89,7 @@ func (k Keeper) SetOrderFillAmount(
 	// Retrieve an instance of the store.
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	// Write `orderFillStateBytes` to state.
@@ -101,7 +101,7 @@ func (k Keeper) SetOrderFillAmount(
 	// Retrieve an instance of the memStore.
 	memStore := prefix.NewStore(
 		ctx.KVStore(k.memKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	// Write `orderFillStateBytes` to memStore.
@@ -125,7 +125,7 @@ func (k Keeper) GetOrderFillAmount(
 	// Retrieve an instance of the memStore.
 	memPrefixStore := prefix.NewStore(
 		memStore,
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	// Retrieve the `OrderFillState` bytes from the store.
@@ -152,7 +152,7 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 	// Retrieve an instance of the store.
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
 	// Retrieve the `PotentiallyPrunableOrders` bytes from the store.
@@ -210,7 +210,7 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 	// Retrieve an instance of the stores.
 	blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
 	// Retrieve the raw bytes of the `prunableOrders`.
@@ -257,7 +257,7 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 	// Delete the fill amount from the state store.
 	orderAmountFilledStore := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	orderAmountFilledStore.Delete(types.OrderIdKey(
@@ -267,7 +267,7 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 	// Delete the fill amount from the mem store.
 	memStore := prefix.NewStore(
 		ctx.KVStore(k.memKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 	memStore.Delete(types.OrderIdKey(
 		orderId,

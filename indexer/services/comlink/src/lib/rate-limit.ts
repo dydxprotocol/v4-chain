@@ -73,7 +73,7 @@ export function rateLimiterMiddleware(
   };
 }
 
-function getIpAddr(req: express.Request): string | undefined {
+export function getIpAddr(req: express.Request): string | undefined {
   const {
     'cf-connecting-ip': cloudflareIP,
     'x-forwarded-for': loadBalancerHeader,

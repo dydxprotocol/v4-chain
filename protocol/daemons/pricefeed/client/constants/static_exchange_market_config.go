@@ -155,63 +155,8 @@ var (
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
 				},
 				exchange_common.MARKET_USDT_USD: {
-					Ticker:         "BTCUSDT", // Adjusted with BTC index price.
-					Invert:         true,
-					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_BTC_USD),
-				},
-			},
-		},
-		exchange_common.EXCHANGE_ID_BINANCE_US: {
-			Id: exchange_common.EXCHANGE_ID_BINANCE_US,
-			// example `symbols` parameter: ["BTCUSD","BNBUSD"]
-			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
-				exchange_common.MARKET_BTC_USD: {
-					Ticker:         "BTCUSDT",
-					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
-				},
-				exchange_common.MARKET_ETH_USD: {
-					Ticker:         "ETHUSDT",
-					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
-				},
-				exchange_common.MARKET_DOGE_USD: {
-					Ticker:         "DOGEUSDT",
-					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
-				},
-				exchange_common.MARKET_USDT_USD: {
-					Ticker: "USDTUSD",
-				},
-			},
-		},
-		exchange_common.EXCHANGE_ID_BITFINEX: {
-			Id: exchange_common.EXCHANGE_ID_BITFINEX,
-			// Note: we treat all Bitfinex pairs as USDT.
-			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
-				exchange_common.MARKET_BTC_USD: {
-					Ticker: "tBTCUSD",
-				},
-				exchange_common.MARKET_ETH_USD: {
-					Ticker: "tETHUSD",
-				},
-				exchange_common.MARKET_SOL_USD: {
-					Ticker:         "tSOLUSD",
-					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
-				},
-				exchange_common.MARKET_ADA_USD: {
-					Ticker: "tADAUSD",
-				},
-				exchange_common.MARKET_DOT_USD: {
-					Ticker: "tDOTUSD",
-				},
-				exchange_common.MARKET_XLM_USD: {
-					Ticker:         "tXLMUSD",
-					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
-				},
-				exchange_common.MARKET_XRP_USD: {
-					Ticker: "tXRPUSD",
-				},
-				exchange_common.MARKET_USDT_USD: {
-					Ticker:         "tUSTUSD",
-					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
+					Ticker: "USDCUSDT",
+					Invert: true,
 				},
 			},
 		},
@@ -397,9 +342,6 @@ var (
 				exchange_common.MARKET_COMP_USD: {
 					Ticker:         "COMP_USDT",
 					AdjustByMarket: newMarketIdWithValue(exchange_common.MARKET_USDT_USD),
-				},
-				exchange_common.MARKET_USDT_USD: {
-					Ticker: "USDT_USD",
 				},
 			},
 		},

@@ -68,6 +68,7 @@ export enum QueryableField {
   FEE = 'fee',
   TRIGGER_PRICE = 'triggerPrice',
   UPDATED_BEFORE_OR_AT = 'updatedBeforeOrAt',
+  UPDATED_ON_OR_AFTER = 'updatedOnOrAfter',
   PROVIDER = 'provider',
   BLOCKED = 'blocked',
 }
@@ -80,6 +81,8 @@ export interface SubaccountQueryConfig extends QueryConfig {
   [QueryableField.ID]?: string[];
   [QueryableField.ADDRESS]?: string;
   [QueryableField.SUBACCOUNT_NUMBER]?: number;
+  [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
+  [QueryableField.UPDATED_ON_OR_AFTER]?: string;
 }
 
 export interface WalletQueryConfig extends QueryConfig {
@@ -255,6 +258,7 @@ export interface LiquidityTiersQueryConfig extends QueryConfig {
 }
 
 export interface ComplianceDataQueryConfig extends QueryConfig {
+  [QueryableField.ADDRESS]?: string[];
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.PROVIDER]?: string;
   [QueryableField.BLOCKED]?: boolean;

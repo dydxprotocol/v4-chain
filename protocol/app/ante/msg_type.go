@@ -35,11 +35,18 @@ func (vbd ValidateMsgTypeDecorator) AnteHandle(
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "msgs cannot be empty")
 	}
 
-	containsAppInjectedMsg := false
 	for _, msg := range msgs {
 		// 1. "App-injected message" check.
 		if libante.IsAppInjectedMsg(msg) {
-			containsAppInjectedMsg = true
+			// "App-injected message" must be the only msg in the tx.
+			if numMsgs > 1 {
+				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "app-injected msg must be the only msg in a tx")
+			}
+
+			// "App-injected message" must only be included in DeliverTx.
+			if !lib.IsDeliverTxMode(ctx) {
+				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "app-injected msg must only be included in DeliverTx")
+			}
 		}
 
 		// 2. Internal-only message check.
@@ -58,16 +65,6 @@ func (vbd ValidateMsgTypeDecorator) AnteHandle(
 		if libante.IsUnsupportedMsg(msg) {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
 		}
-	}
-
-	// "App-injected message" must be the only msg in the tx.
-	if numMsgs > 1 && containsAppInjectedMsg {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "app-injected msg must be the only msg in a tx")
-	}
-
-	// "App-injected message" must only be included in DeliverTx.
-	if containsAppInjectedMsg && !lib.IsDeliverTxMode(ctx) {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "app-injected msg must only be included in DeliverTx")
 	}
 
 	return next(ctx, tx, simulate)

@@ -2,6 +2,7 @@ import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   APIOrderStatus,
   APIOrderStatusEnum,
+  DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   OrderColumns,
   OrderFromDatabase,
@@ -27,6 +28,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { redisClient } from '../../../helpers/redis/redis-controller';
+import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
   handleControllerError,
@@ -100,6 +102,7 @@ class OrdersController extends Controller {
           goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
           goodTilBlockTimeBeforeOrAt,
         }, [], {
+          ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [
             // Order by `goodTilBlock` and then order by `goodTilBlockTime`
             // This way, orders with `goodTilBlock` defined are ordered before orders with
@@ -219,6 +222,7 @@ router.get(
   query('goodTilBlock').if(query('goodTilBlockTime').exists()).isEmpty()
     .withMessage('Cannot provide both goodTilBlock and goodTilBlockTime'),
   handleValidationErrors,
+  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

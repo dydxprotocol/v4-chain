@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
@@ -307,7 +307,7 @@ func TestGetAllAssets_MissingAsset(t *testing.T) {
 
 	// Write some bad data to the store
 	store := ctx.KVStore(storeKey)
-	store.Set(types.KeyPrefix(types.NumAssetsKey), lib.Uint32ToBytes(20))
+	store.Set([]byte(types.NumAssetsKey), lib.Uint32ToBytes(20))
 
 	// Expect a panic
 	require.Panics(t, func() { keeper.GetAllAssets(ctx) })
@@ -464,63 +464,63 @@ func TestConvertAssetToCoin_Success(t *testing.T) {
 			denomExponent:             -6,
 			atomicResolution:          -8,
 			quantumsToConvert:         big.NewInt(1100),
-			expectedCoin:              sdk.NewCoin(testDenom, sdk.NewInt(11)),
+			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(11)),
 			expectedConvertedQuantums: big.NewInt(1100),
 		},
 		"atomicResolution < denomExponent, divisble, DenomExponent=-6, AtomicResolution=-7": {
 			denomExponent:             -6,
 			atomicResolution:          -7,
 			quantumsToConvert:         big.NewInt(1120),
-			expectedCoin:              sdk.NewCoin(testDenom, sdk.NewInt(112)),
+			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(112)),
 			expectedConvertedQuantums: big.NewInt(1120),
 		},
 		"atomicResolution < denomExponent, not divisble, DenomExponent=-6,AtomicResolution=-8": {
 			denomExponent:             -6,
 			atomicResolution:          -8,
 			quantumsToConvert:         big.NewInt(1125),
-			expectedCoin:              sdk.NewCoin(testDenom, sdk.NewInt(11)), // 11.25 rounded down
-			expectedConvertedQuantums: big.NewInt(1100),                       // 11 * 100
+			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(11)), // 11.25 rounded down
+			expectedConvertedQuantums: big.NewInt(1100),                           // 11 * 100
 		},
 		"atomicResolution < denomExponent, not, divisble, DenomExponent=-6, AtomicResolution=-7": {
 			denomExponent:             -6,
 			atomicResolution:          -7,
 			quantumsToConvert:         big.NewInt(1125),
-			expectedCoin:              sdk.NewCoin(testDenom, sdk.NewInt(112)), // 112.5 rounded down
-			expectedConvertedQuantums: big.NewInt(1120),                        // 112 * 10
+			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(112)), // 112.5 rounded down
+			expectedConvertedQuantums: big.NewInt(1120),                            // 112 * 10
 		},
 		"atomicResolution < denomExponent, not, divisble, DenomExponent=1, AtomicResolution=-3": {
 			denomExponent:             1,
 			atomicResolution:          -3,
 			quantumsToConvert:         big.NewInt(123456),
-			expectedCoin:              sdk.NewCoin(testDenom, sdk.NewInt(12)), // 12.3456 rounded down
-			expectedConvertedQuantums: big.NewInt(120000),                     // 12*10000
+			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(12)), // 12.3456 rounded down
+			expectedConvertedQuantums: big.NewInt(120000),                         // 12*10000
 		},
 		"atomicResolution = denomExponent, DenomExponent=-6, AtomicResolution=-6": {
 			denomExponent:             -6,
 			atomicResolution:          -6,
 			quantumsToConvert:         big.NewInt(1500),
-			expectedCoin:              sdk.NewCoin(testDenom, sdk.NewInt(1500)),
+			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(1500)),
 			expectedConvertedQuantums: big.NewInt(1500),
 		},
 		"atomicResolution = denomExponent, DenomExponent=-6, AtomicResolution=-6, large input": {
 			denomExponent:             -6,
 			atomicResolution:          -6,
 			quantumsToConvert:         big.NewInt(12345678),
-			expectedCoin:              sdk.NewCoin(testDenom, sdk.NewInt(12345678)),
+			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(12345678)),
 			expectedConvertedQuantums: big.NewInt(12345678),
 		},
 		"atomicResolution > denomExponent": {
 			denomExponent:             -6,
 			atomicResolution:          -4,
 			quantumsToConvert:         big.NewInt(275),
-			expectedCoin:              sdk.NewCoin(testDenom, sdk.NewInt(27500)),
+			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(27500)),
 			expectedConvertedQuantums: big.NewInt(275),
 		},
 		"atomicResolution > denomExponent, positive AtomicResoluton": {
 			denomExponent:             -2,
 			atomicResolution:          1,
 			quantumsToConvert:         big.NewInt(275),
-			expectedCoin:              sdk.NewCoin(testDenom, sdk.NewInt(275000)),
+			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(275000)),
 			expectedConvertedQuantums: big.NewInt(275),
 		},
 	}

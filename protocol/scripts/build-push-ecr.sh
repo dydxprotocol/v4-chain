@@ -62,10 +62,7 @@ ecr="$aws_account.dkr.ecr.us-east-2.amazonaws.com/$ecr_repo"
 current_time=$(date '+%Y%m%d%H%M')
 commit_hash=$(git rev-parse --short=7 HEAD)
 
-DOCKER_BUILDKIT=1 docker build \
-	--platform linux/amd64 \
-	-t dydxprotocol-base \
-	-f Dockerfile .
+make localnet-build-amd64
 
 docker_tag="$ecr:$current_time-$commit_hash-test-build"
 docker_file="testing/testnet-dev/Dockerfile"

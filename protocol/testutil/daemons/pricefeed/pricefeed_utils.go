@@ -2,6 +2,7 @@ package pricefeed
 
 import (
 	"fmt"
+	"golang.org/x/exp/maps"
 	"os"
 	"testing"
 
@@ -36,4 +37,24 @@ func ReadJsonTestFile(t *testing.T, fileName string) string {
 	fileBytes, err := os.ReadFile(fmt.Sprintf("testdata/%v", fileName))
 	require.NoError(t, err, "Error reading test file")
 	return json.CompactJsonString(t, string(fileBytes))
+}
+
+// MarketParamErrorsEqual is a testing method that takes any two maps of market ids to errors and asserts that they
+// have the same sets of keys, and that each associated error value has the same rendered message
+func MarketParamErrorsEqual(
+	t *testing.T,
+	expectedMarketParamErrors map[uint32]error,
+	actualMarketParamErrors map[uint32]error,
+) {
+	require.Equal(t, maps.Keys(expectedMarketParamErrors), maps.Keys(actualMarketParamErrors))
+	for marketId, expectedErr := range expectedMarketParamErrors {
+		actualErr := actualMarketParamErrors[marketId]
+		require.ErrorContains(
+			t,
+			actualErr,
+			expectedErr.Error(),
+			"Errors for market id %v do not match",
+			marketId,
+		)
+	}
 }

@@ -1,5 +1,6 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
+  DEFAULT_POSTGRES_OPTIONS,
   FundingIndexUpdatesColumns,
   FundingIndexUpdatesFromDatabase,
   FundingIndexUpdatesTable,
@@ -44,7 +45,7 @@ class HistoricalFundingController extends Controller {
   ): Promise<HistoricalFundingResponse> {
     const perpetualMarket: (
       PerpetualMarketFromDatabase | undefined
-    ) = await PerpetualMarketTable.findByTicker(ticker, { readReplica: true });
+    ) = await PerpetualMarketTable.findByTicker(ticker);
 
     if (perpetualMarket === undefined) {
       throw new NotFoundError(`${ticker} not found in markets of type ${MarketType.PERPETUAL}`);
@@ -61,8 +62,8 @@ class HistoricalFundingController extends Controller {
         limit,
       }, [],
       {
+        ...DEFAULT_POSTGRES_OPTIONS,
         orderBy: [[FundingIndexUpdatesColumns.effectiveAtHeight, Ordering.DESC]],
-        readReplica: true,
       },
     );
 

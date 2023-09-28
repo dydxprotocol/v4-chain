@@ -19,5 +19,5 @@ func TestNestedMsgs_Key(t *testing.T) {
 }
 
 func TestNestedMsgs_Value(t *testing.T) {
-	validateSampleMsgValue(t, msgs.NestedMsgSamples)
+	validateMsgValue(t, msgs.NestedMsgSamples)
 }

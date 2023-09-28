@@ -6,11 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitfinex",
-      "ticker": "tXLMUSD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Bitstamp",
       "ticker": "XLM/USD"
     },

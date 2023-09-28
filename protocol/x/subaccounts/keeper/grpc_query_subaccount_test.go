@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"strconv"
 	"testing"
 
@@ -21,7 +22,7 @@ var _ = strconv.IntSize
 func TestSubaccountQuerySingle(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNSubaccount(keeper, ctx, 2)
+	msgs := createNSubaccount(keeper, ctx, 2, big.NewInt(1_000))
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryGetSubaccountRequest
@@ -93,7 +94,7 @@ func TestSubaccountQuerySingle(t *testing.T) {
 func TestSubaccountQueryPaginated(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNSubaccount(keeper, ctx, 5)
+	msgs := createNSubaccount(keeper, ctx, 5, big.NewInt(1_000))
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllSubaccountRequest {
 		return &types.QueryAllSubaccountRequest{

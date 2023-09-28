@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"sort"
@@ -17,6 +19,114 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
+
+// LiquidateSubaccountsAgainstOrderbook takes a list of subaccount IDs and liquidates them against
+// the orderbook. It will liquidate as many subaccounts as possible up to the maximum number of
+// liquidations per block.
+func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
+	ctx sdk.Context,
+	subaccountIds []satypes.SubaccountId,
+) error {
+	lib.AssertCheckTxMode(ctx)
+
+	// Get the liquidation order for each subaccount.
+	liquidationOrdersForSorting := make([]types.LiquidationOrder, 0)
+	for _, subaccountId := range subaccountIds {
+		// If attempting to liquidate a subaccount returns an error, panic.
+		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
+		if err != nil {
+			// Subaccount might not always be liquidatable since liquidation daemon runs
+			// in a separate goroutine and is not always in sync with the application.
+			// Therefore, if subaccount is not liquidatable, continue.
+			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				telemetry.IncrCounter(1, metrics.MaybeGetLiquidationOrder, metrics.SubaccountsNotLiquidatable, metrics.Count)
+				continue
+			}
+
+			// Return unexpected errors.
+			return err
+		}
+
+		liquidationOrdersForSorting = append(liquidationOrdersForSorting, *liquidationOrder)
+	}
+
+	// Sort liquidation orders. The most underwater accounts should be liquidated first.
+	// These orders are only used for sorting. When we match these orders here in PrepareCheckState,
+	// liquidation matches will be put into the Operations Queue. However, when we process liquidations,
+	// we will generate a new liquidation order for each subaccount because previous liquidation orders
+	// can alter quantity sizes of subsequent liquidation orders.
+	k.SortLiquidationOrders(ctx, liquidationOrdersForSorting)
+
+	// Attempt to place each liquidation order and perform deleveraging if necessary.
+	numFilledLiquidations := uint32(0)
+	numAttemptedDeleveraging := uint32(0)
+	for i := 0; numFilledLiquidations < k.MaxLiquidationOrdersPerBlock && i < len(liquidationOrdersForSorting); i++ {
+		liquidationOrderSubaccountId := liquidationOrdersForSorting[i].GetSubaccountId()
+
+		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
+		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, liquidationOrderSubaccountId)
+		if err != nil {
+			// Subaccount might not always be liquidatable if previous liquidation orders
+			// improves the net collateral of this subaccount.
+			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				continue
+			}
+
+			// Return unexpected errors.
+			return err
+		}
+
+		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
+		if err != nil {
+			k.Logger(ctx).Error(
+				fmt.Sprintf(
+					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
+					liquidationOrder,
+					err,
+				),
+			)
+			return err
+		}
+
+		// Keep a count of partially and fully filled liquidations for this block.
+		if optimisticallyFilledQuantums > 0 {
+			numFilledLiquidations++
+		}
+
+		if optimisticallyFilledQuantums == 0 {
+			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
+
+			if numAttemptedDeleveraging < k.MaxDeleveragingAttemptsPerBlock {
+				// The liquidation order was unfilled. Try to deleverage the subaccount.
+				subaccountId := liquidationOrder.GetSubaccountId()
+				perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
+				deltaQuantums := liquidationOrder.GetDeltaQuantums()
+
+				_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+				if err != nil {
+					k.Logger(ctx).Error(
+						"Failed to deleverage subaccount.",
+						"subaccount", subaccountId,
+						"perpetualId", perpetualId,
+						"deltaQuantums", deltaQuantums,
+						"error", err,
+					)
+					return err
+				}
+				numAttemptedDeleveraging++
+			}
+		}
+	}
+
+	telemetry.IncrCounter(
+		float32(numFilledLiquidations),
+		types.ModuleName,
+		metrics.PrepareCheckState,
+		metrics.NumMatchedLiquidationOrders,
+	)
+
+	return nil
+}
 
 // MaybeGetLiquidationOrder takes a subaccount ID and returns a liquidation order that can be used to
 // liquidate the subaccount.
@@ -39,13 +149,13 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	}
 
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
-	perpetualId, positionSizeBig, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
+	perpetualId, baseQuantumsBig, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the fillable price of the liquidation order in subticks.
-	deltaQuantumsBig := positionSizeBig.Neg(positionSizeBig)
+	deltaQuantumsBig := baseQuantumsBig.Neg(baseQuantumsBig)
 	fillablePriceRat, err := k.GetFillablePrice(ctx, subaccountId, perpetualId, deltaQuantumsBig)
 	if err != nil {
 		return nil, err
@@ -62,12 +172,12 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	)
 
 	// Create the liquidation order.
-	positionSize := deltaQuantumsBig.Abs(deltaQuantumsBig).Uint64()
+	absBaseQuantums := deltaQuantumsBig.Abs(deltaQuantumsBig)
 	liquidationOrder = types.NewLiquidationOrder(
 		subaccountId,
 		clobPair,
 		!isLiquidatingLong,
-		satypes.BaseQuantums(positionSize),
+		satypes.BaseQuantums(absBaseQuantums.Uint64()),
 		fillablePriceSubticks,
 	)
 	return liquidationOrder, nil
@@ -340,6 +450,35 @@ func (k Keeper) GetFillablePrice(
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// stat liquidation order for negative TNC
+	// TODO(CLOB-906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
+	if tncBig.Sign() < 0 {
+		callback := metrics.PrepareCheckState
+		if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+			callback = metrics.DeliverTx
+		}
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.Liquidations, metrics.LiquidationMatchNegativeTNC},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(
+					metrics.PerpetualId,
+					int(perpetualId),
+				),
+				metrics.GetLabelForStringValue(
+					metrics.Callback,
+					callback,
+				),
+			},
+		)
+
+		ctx.Logger().Info(
+			"GetFillablePrice: Subaccount has negative TNC. SubaccountId: %+v, TNC: %+v",
+			subaccountId,
+			tncBig,
+		)
 	}
 
 	liquidationsConfig := k.GetLiquidationsConfig(ctx)
@@ -809,6 +948,141 @@ func (k Keeper) ConvertFillablePriceToSubticks(
 	}
 
 	return types.Subticks(boundedSubticks)
+}
+
+func (k Keeper) validateMatchedLiquidation(
+	ctx sdk.Context,
+	order types.MatchableOrder,
+	perpetualId uint32,
+	fillAmount satypes.BaseQuantums,
+	makerSubticks types.Subticks,
+) (
+	insuranceFundDelta *big.Int,
+	err error,
+) {
+	if !order.IsLiquidation() {
+		panic("Expected validateMatchedLiquidation to be called with a liquidation order")
+	}
+
+	// Calculate the insurance fund delta for this fill.
+	liquidatedSubaccountId := order.GetSubaccountId()
+	insuranceFundDelta, err = k.GetLiquidationInsuranceFundDelta(
+		ctx,
+		liquidatedSubaccountId,
+		perpetualId,
+		order.IsBuy(),
+		fillAmount.ToUint64(),
+		makerSubticks,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	sign := metrics.Positive
+	if insuranceFundDelta.Sign() == -1 {
+		sign = metrics.Negative
+	}
+
+	// Only increment this counter during `DeliverTx`.
+	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+		telemetry.IncrCounter(1, metrics.Liquidations, metrics.InsuranceFundDelta, sign)
+	}
+
+	// Validate that processing the liquidation fill does not leave insufficient funds
+	// in the insurance fund (such that the liquidation couldn't have possibly continued).
+	if !k.IsValidInsuranceFundDelta(ctx, insuranceFundDelta) {
+		k.Logger(ctx).Info("ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
+		return nil, errorsmod.Wrapf(
+			types.ErrInsuranceFundHasInsufficientFunds,
+			"Liquidation order %v, insurance fund delta %v",
+			order,
+			insuranceFundDelta.String(),
+		)
+	}
+
+	// Validate that total notional liquidated and total insurance funds lost do not exceed subaccount block limits.
+	if err := k.validateLiquidationAgainstSubaccountBlockLimits(
+		ctx,
+		liquidatedSubaccountId,
+		perpetualId,
+		fillAmount,
+		insuranceFundDelta,
+	); err != nil {
+		return nil, err
+	}
+
+	return insuranceFundDelta, nil
+}
+
+// validateLiquidationAgainstSubaccountBlockLimits performs stateful validation
+// against the subaccount block limits specified in liquidation configs.
+// If validation fails, an error is returned.
+//
+// The following validation occurs in this method:
+//   - The subaccount and perpetual ID pair has not been previously liquidated in the same block.
+//   - The total notional liquidated does not exceed the maximum notional amount that a single subaccount
+//     can have liquidated per block.
+//   - The total insurance lost does not exceed the maximum insurance lost per block.
+func (k Keeper) validateLiquidationAgainstSubaccountBlockLimits(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	fillAmount satypes.BaseQuantums,
+	insuranceFundDeltaQuoteQuantums *big.Int,
+) (
+	err error,
+) {
+	// Validate that this liquidation does not exceed the maximum notional amount that a single subaccount can have
+	// liquidated per block.
+	bigMaxNotionalLiquidatable, err := k.GetSubaccountMaxNotionalLiquidatable(
+		ctx,
+		subaccountId,
+		perpetualId,
+	)
+	if err != nil {
+		return err
+	}
+
+	bigNotionalLiquidated, err := k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, fillAmount.ToBigInt())
+	if err != nil {
+		return err
+	}
+
+	if bigNotionalLiquidated.CmpAbs(bigMaxNotionalLiquidatable) > 0 {
+		return errorsmod.Wrapf(
+			types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
+			"Subaccount ID: %v, Perpetual ID: %v, Max Notional Liquidatable: %v, Notional Liquidated: %v",
+			subaccountId,
+			perpetualId,
+			bigMaxNotionalLiquidatable,
+			bigNotionalLiquidated,
+		)
+	}
+
+	// Validate that this liquidation does not exceed the maximum insurance fund payout amount for this
+	// subaccount per block.
+	if insuranceFundDeltaQuoteQuantums.Sign() == -1 {
+		bigMaxQuantumsInsuranceLost, err := k.GetSubaccountMaxInsuranceLost(
+			ctx,
+			subaccountId,
+			perpetualId,
+		)
+		if err != nil {
+			return err
+		}
+
+		if insuranceFundDeltaQuoteQuantums.CmpAbs(bigMaxQuantumsInsuranceLost) > 0 {
+			return errorsmod.Wrapf(
+				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
+				"Subaccount ID: %v, Perpetual ID: %v, Max Insurance Lost: %v, Insurance Lost: %v",
+				subaccountId,
+				perpetualId,
+				bigMaxQuantumsInsuranceLost,
+				insuranceFundDeltaQuoteQuantums,
+			)
+		}
+	}
+	return nil
 }
 
 // SortLiquidationOrders deterministically sorts the liquidation orders in place.

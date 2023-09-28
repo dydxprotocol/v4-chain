@@ -1,11 +1,13 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // FetchOrderFromOrderId is a helper function that fetches a order from an order id.
@@ -78,45 +80,52 @@ func (k Keeper) MustFetchOrderFromOrderId(
 	return order
 }
 
-// StatefulValidateMakerFill performs stateful validation on a maker fill.
-// Additionally, it returns the maker order referenced in the fill.
-// The following validations are performed:
-// - Validation on any short term orders
-// - Validation that maker order cannot be FOK or IOC
-// - Taker and Maker must be on opposite sides
-func (k Keeper) StatefulValidateMakerFill(
+// ValidateLiquidationOrderAgainstProposedLiquidation performs stateless validation of a liquidation order
+// against a proposed liquidation.
+// An error is returned when
+//   - The CLOB pair IDs of the order and proposed liquidation do not match.
+//   - The perpetual IDs of the order and proposed liquidation do not match.
+//   - The total size of the order and proposed liquidation do not match.
+//   - The side of the order and proposed liquidation do not match.
+func (k Keeper) ValidateLiquidationOrderAgainstProposedLiquidation(
 	ctx sdk.Context,
-	fill *types.MakerFill,
-	shortTermOrdersMap map[types.OrderId]types.Order,
-	takerOrder *types.Order,
-) (makerOrder types.Order, err error) {
-	makerOrderId := fill.GetMakerOrderId()
-	// Fetch the maker order from either short term orders or state
-	makerOrder, err = k.FetchOrderFromOrderId(ctx, makerOrderId, shortTermOrdersMap)
-	if err != nil {
-		return makerOrder, err
-	}
-
-	// Orders must be on different sides of the book.
-	if takerOrder != nil {
-		if takerOrder.IsBuy() == makerOrder.IsBuy() {
-			return makerOrder, errorsmod.Wrapf(
-				types.ErrInvalidMatchOrder,
-				"Taker Order %+v and Maker order %+v are not on opposing sides of the book",
-				takerOrder.GetOrderTextString(),
-				makerOrder.GetOrderTextString(),
-			)
-		}
-	}
-
-	// Maker order cannot be FOK or IOC.
-	if makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_FILL_OR_KILL ||
-		makerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
-		return makerOrder, errorsmod.Wrapf(
-			types.ErrInvalidMatchOrder,
-			"Maker order %+v cannot be FOK or IOC.",
-			makerOrder.GetOrderTextString(),
+	order *types.LiquidationOrder,
+	proposedMatch *types.MatchPerpetualLiquidation,
+) error {
+	if order.GetClobPairId() != types.ClobPairId(proposedMatch.GetClobPairId()) {
+		return errorsmod.Wrapf(
+			types.ErrClobPairAndPerpetualDoNotMatch,
+			"Order CLOB Pair ID: %v, Match CLOB Pair ID: %v",
+			order.GetClobPairId(),
+			proposedMatch.GetClobPairId(),
 		)
 	}
-	return makerOrder, nil
+
+	if order.MustGetLiquidatedPerpetualId() != proposedMatch.GetPerpetualId() {
+		return errorsmod.Wrapf(
+			types.ErrClobPairAndPerpetualDoNotMatch,
+			"Order Perpetual ID: %v, Match Perpetual ID: %v",
+			order.MustGetLiquidatedPerpetualId(),
+			proposedMatch.GetPerpetualId(),
+		)
+	}
+
+	if order.GetBaseQuantums() != satypes.BaseQuantums(proposedMatch.TotalSize) {
+		return errorsmod.Wrapf(
+			types.ErrInvalidLiquidationOrderTotalSize,
+			"Order Size: %v, Match Size: %v",
+			order.GetBaseQuantums(),
+			proposedMatch.TotalSize,
+		)
+	}
+
+	if order.IsBuy() != proposedMatch.GetIsBuy() {
+		return errorsmod.Wrapf(
+			types.ErrInvalidLiquidationOrderSide,
+			"Order Side: %v, Match Side: %v",
+			order.IsBuy(),
+			proposedMatch.GetIsBuy(),
+		)
+	}
+	return nil
 }

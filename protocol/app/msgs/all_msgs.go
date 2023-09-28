@@ -59,6 +59,11 @@ var (
 		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":         {},
 		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse": {},
 
+		// evidence
+		"/cosmos.evidence.v1beta1.Equivocation":              {},
+		"/cosmos.evidence.v1beta1.MsgSubmitEvidence":         {},
+		"/cosmos.evidence.v1beta1.MsgSubmitEvidenceResponse": {},
+
 		// feegrant
 		"/cosmos.feegrant.v1beta1.AllowedMsgAllowance":        {},
 		"/cosmos.feegrant.v1beta1.BasicAllowance":             {},
@@ -173,18 +178,24 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":          {},
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":  {},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":          {},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":  {},
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":         {},
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse": {},
+		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
+		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":       {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               {},
+		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":       {},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":              {},
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse":      {},
+		"/dydxprotocol.perpetuals.MsgUpdateParams":                  {},
+		"/dydxprotocol.perpetuals.MsgUpdateParamsResponse":          {},
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams":         {},
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse": {},
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         {},
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": {},
 		"/dydxprotocol.prices.MsgUpdateMarketPrices":         {},
 		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse": {},
+		"/dydxprotocol.prices.MsgUpdateMarketParam":          {},
+		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  {},
 
 		// sending
 		"/dydxprotocol.sending.MsgCreateTransfer":                  {},
@@ -273,6 +284,7 @@ var (
 		"/ibc.core.connection.v1.Version":                          {},
 
 		// ibc.lightclients
+		"/ibc.lightclients.localhost.v2.ClientState":     {},
 		"/ibc.lightclients.tendermint.v1.ClientState":    {},
 		"/ibc.lightclients.tendermint.v1.ConsensusState": {},
 		"/ibc.lightclients.tendermint.v1.Header":         {},

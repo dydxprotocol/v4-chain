@@ -36,6 +36,11 @@ var (
 		6,
 		"Bridge event content mismatch",
 	)
+	ErrInvalidEthAddress = errorsmod.Register(
+		ModuleName,
+		7,
+		"Invalid Ethereum address",
+	)
 
 	ErrNegativeDuration = errorsmod.Register(
 		ModuleName,

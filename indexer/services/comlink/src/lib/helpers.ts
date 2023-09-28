@@ -347,7 +347,6 @@ export async function filterPositionsByLatestEventIdPerPerpetual(
       id: positions.map((position: PerpetualPositionWithFunding) => position.lastEventId),
     },
     [],
-    { readReplica: true },
   );
   const eventByIdHex: { [eventId: string]: TendermintEventFromDatabase } = _.keyBy(
     events,
@@ -385,15 +384,9 @@ export async function getFundingIndexMaps(
   [FundingIndexMap, FundingIndexMap] = await Promise.all([
     FundingIndexUpdatesTable.findFundingIndexMap(
       subaccount.updatedAtHeight,
-      {
-        readReplica: true,
-      },
     ),
     FundingIndexUpdatesTable.findFundingIndexMap(
       latestBlock.blockHeight,
-      {
-        readReplica: true,
-      },
     ),
   ]);
   return {
