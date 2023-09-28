@@ -42,7 +42,7 @@ var (
 // struct should only be used for testing.
 type FakeSubTaskRunner struct {
 	sync.WaitGroup
-	sync.RWMutex
+	sync.Mutex
 	UpdaterCallCount       int
 	EncoderCallCount       int
 	FetcherCallCount       int

@@ -18,7 +18,7 @@ import (
 // MarketToExchangePrices supports methods to update prices and to retrieve
 // median prices. Methods are goroutine safe.
 type MarketToExchangePrices struct {
-	sync.RWMutex                                       // reader-writer lock
+	sync.Mutex                                         // lock
 	marketToExchangePrices map[uint32]*ExchangeToPrice // {k: market id, v: exchange prices}
 	// maxPriceAge is the maximum age of a price before it is considered too stale to be used.
 	// Prices older than this age will not be used to calculate the median price.
@@ -66,8 +66,8 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 	cutoffTime := readTime.Add(-mte.maxPriceAge)
 	marketIdToMedianPrice := make(map[uint32]uint64)
 
-	mte.RLock()
-	defer mte.RUnlock()
+	mte.Lock()
+	defer mte.Unlock()
 	for _, marketParam := range marketParams {
 		marketId := marketParam.Id
 		exchangeToPrice, ok := mte.marketToExchangePrices[marketId]
