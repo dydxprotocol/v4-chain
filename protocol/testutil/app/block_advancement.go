@@ -49,10 +49,10 @@ func (b BlockAdvancementWithErrors) AdvanceToBlock(
 		) (haltchain bool) {
 			expectedError, found := b.ExpectedDeliverTxErrors[txIndex]
 			if found && expectedError != "" {
-				require.Conditionf(t, response.IsErr, "Expected CheckTx to error. Response: %+v", response)
+				require.True(t, response.IsErr(), "Expected CheckTx to error. Response: %+v", response)
 				require.Contains(t, response.Log, expectedError)
 			} else {
-				require.Conditionf(t, response.IsOK, "Expected CheckTx to succeed. Response: %+v", response)
+				require.True(t, response.IsOK(), "Expected CheckTx to succeed. Response: %+v", response)
 			}
 			return false
 		},
