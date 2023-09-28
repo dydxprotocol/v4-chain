@@ -66,7 +66,7 @@ FAUCET_ACCOUNTS=(
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
 install_prerequisites() {
-	apk add dasel jq
+	apk add curl dasel jq
 }
 
 # Create all validators for the chain including a full-node.
@@ -142,6 +142,15 @@ create_validators() {
 	done
 }
 
+swap_old_binary() {
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv0.3.0-rc1/dydxprotocold-v0.3.0-rc1-linux-arm64.tar.gz'
+	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
+	mkdir -p /tmp/dydxprotocold
+	curl -vL $tar_url -o $tar_path
+	dydxprotocold_path=$(tar -xvf $tar_path --directory /tmp/dydxprotocold)
+	cp /tmp/dydxprotocold/$dydxprotocold_path /bin/dydxprotocold_upgrade
+}
+
 setup_cosmovisor() {
 	for i in "${!MONIKERS[@]}"; do
 		VAL_HOME_DIR="$HOME/chain/.${MONIKERS[$i]}"
@@ -151,6 +160,8 @@ setup_cosmovisor() {
 		cosmovisor init /bin/dydxprotocold
 
 		cp /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/genesis/bin/"
+		mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v0.3.0/bin/"
+		cp /bin/dydxprotocold_upgrade "$VAL_HOME_DIR/cosmovisor/upgrades/v0.3.0/bin/dydxprotocold"
 	done
 }
 
@@ -169,5 +180,6 @@ edit_config() {
 }
 
 install_prerequisites
+swap_old_binary
 create_validators
 setup_cosmovisor
