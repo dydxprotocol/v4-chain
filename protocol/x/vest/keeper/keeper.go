@@ -143,7 +143,7 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 func (k Keeper) GetAllVestEntries(ctx sdk.Context) (
 	list []types.VestEntry,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -165,7 +165,7 @@ func (k Keeper) GetVestEntry(ctx sdk.Context, vesterAccount string) (
 		metrics.Latency,
 	)
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
 	b := store.Get([]byte(vesterAccount))
 
 	// If VestEntry does not exist in state, return error
@@ -187,7 +187,7 @@ func (k Keeper) SetVestEntry(
 		return err
 	}
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
 	b := k.cdc.MustMarshal(&entry)
 	store.Set([]byte(
 		entry.VesterAccount,
@@ -204,7 +204,7 @@ func (k Keeper) DeleteVestEntry(
 	if _, err := k.GetVestEntry(ctx, vesterAccount); err != nil {
 		return errorsmod.Wrap(err, "failed to delete vest entry")
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
 	store.Delete([]byte(vesterAccount))
 
 	return nil
