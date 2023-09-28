@@ -28,13 +28,20 @@ func TestMsgDelayMessage_ValidateBasic(t *testing.T) {
 		mdm         types.MsgDelayMessage
 		expectedErr error
 	}{
-		"Failure: nil message": {
+		"Failure: invalid authority": {
 			mdm:         types.MsgDelayMessage{},
+			expectedErr: types.ErrInvalidAuthority,
+		},
+		"Failure: nil message": {
+			mdm: types.MsgDelayMessage{
+				Authority: AcceptedAuthority.String(),
+			},
 			expectedErr: types.ErrMsgIsNil,
 		},
 		"Success": {
 			mdm: types.MsgDelayMessage{
-				Msg: encoding.EncodeMessageToAny(t, constants.TestMsg1),
+				Authority: AcceptedAuthority.String(),
+				Msg:       encoding.EncodeMessageToAny(t, constants.TestMsg1),
 			},
 		},
 	}

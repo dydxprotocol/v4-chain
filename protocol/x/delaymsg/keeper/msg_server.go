@@ -23,6 +23,18 @@ func (k msgServer) DelayMessage(
 	msg *types.MsgDelayMessage,
 ) (*types.MsgDelayMessageResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := msg.ValidateBasic(); err != nil {
+		k.Logger(ctx).Error(
+			"DelayMessage failed because msg.ValidateBasic failed",
+			constants.ErrorLogKey,
+			err,
+		)
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"msg.ValidateBasic failed, err = %v",
+			err,
+		)
+	}
 
 	if !k.HasAuthority(msg.GetAuthority()) {
 		k.Logger(ctx).Error(
