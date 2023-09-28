@@ -49,6 +49,7 @@ export class MarketModifyHandler extends Handler<MarketEventV1> {
     const updateObject: MarketUpdateObject = {
       id: castedMarketModifyMessage.marketId,
       pair: castedMarketModifyMessage.marketModify.base!.pair!,
+      exponent: castedMarketModifyMessage.marketModify.exponent,
       minPriceChangePpm: castedMarketModifyMessage.marketModify.base!.minPriceChangePpm!,
     };
 

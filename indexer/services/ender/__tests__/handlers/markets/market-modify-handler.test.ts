@@ -136,5 +136,6 @@ function expectMarketMatchesEvent(
 ) {
   expect(market.id).toEqual(event.marketId);
   expect(market.pair).toEqual(event.marketModify.base!.pair!);
+  expect(market.exponent).toEqual(event.marketModify.exponent);
   expect(market.minPriceChangePpm).toEqual(event.marketModify.base!.minPriceChangePpm!);
 }

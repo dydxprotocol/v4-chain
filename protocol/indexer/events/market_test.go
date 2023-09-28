@@ -13,7 +13,7 @@ var (
 	priceWithExponent = constants.Price5
 	pair              = constants.BtcUsdPair
 	minPriceChangePpm = uint32(50)
-	exponent          = constants.BtcUsdExponent
+	exponent          = int32(constants.BtcUsdExponent)
 )
 
 func TestNewMarketPriceUpdateEvent_Success(t *testing.T) {
@@ -30,7 +30,7 @@ func TestNewMarketPriceUpdateEvent_Success(t *testing.T) {
 }
 
 func TestNewMarketModifyEvent_Success(t *testing.T) {
-	marketModifyEvent := events.NewMarketModifyEvent(marketId, pair, minPriceChangePpm)
+	marketModifyEvent := events.NewMarketModifyEvent(marketId, pair, minPriceChangePpm, exponent)
 	expectedMarketEventProto := &events.MarketEventV1{
 		MarketId: marketId,
 		Event: &events.MarketEventV1_MarketModify{
@@ -39,6 +39,7 @@ func TestNewMarketModifyEvent_Success(t *testing.T) {
 					Pair:              pair,
 					MinPriceChangePpm: minPriceChangePpm,
 				},
+				Exponent: exponent,
 			},
 		},
 	}
