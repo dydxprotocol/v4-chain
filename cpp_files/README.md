@@ -1,5 +1,5 @@
 added folders amino , cosmos, cosmos_proto , gogproto,google for compiling protos to cpp files
-you will find cpp files in every folder in dydxprotocol folder
+you will find cpp files in every folder of dydxprotocol folder
 
 example:
 to find cpp files for subaccounts folder
