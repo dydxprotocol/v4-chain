@@ -452,6 +452,35 @@ func (k Keeper) GetFillablePrice(
 		return nil, err
 	}
 
+	// stat liquidation order for negative TNC
+	// TODO(CLOB-906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
+	if tncBig.Sign() < 0 {
+		callback := metrics.PrepareCheckState
+		if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+			callback = metrics.DeliverTx
+		}
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.Liquidations, metrics.LiquidationMatchNegativeTNC},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(
+					metrics.PerpetualId,
+					int(perpetualId),
+				),
+				metrics.GetLabelForStringValue(
+					metrics.Callback,
+					callback,
+				),
+			},
+		)
+
+		ctx.Logger().Info(
+			"GetFillablePrice: Subaccount has negative TNC. SubaccountId: %+v, TNC: %+v",
+			subaccountId,
+			tncBig,
+		)
+	}
+
 	liquidationsConfig := k.GetLiquidationsConfig(ctx)
 	ba := liquidationsConfig.FillablePriceConfig.BankruptcyAdjustmentPpm
 	smmr := liquidationsConfig.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm

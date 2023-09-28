@@ -3,14 +3,9 @@ version: "3"
 services:
   dydxprotocold0:
     image: local:dydxprotocol
-    build:
-      context: .
-      dockerfile: ./testing/testnet-local/Dockerfile
-      args:
-        RUNNER_IMAGE: alpine:3.16
-        GO_VERSION: 1.19
     entrypoint:
-      - dydxprotocold
+      - cosmovisor
+      - run
       - start
       - --log_level
       # Note that only this validator has a log-level of `info`; other validators use `error` by default.
@@ -24,6 +19,7 @@ services:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
+      - DAEMON_HOME=/dydxprotocol/chain/.alice
     volumes:
       - ./localnet/dydxprotocol0:/dydxprotocol/chain/.alice/data
     ports:
@@ -34,7 +30,8 @@ services:
   dydxprotocold1:
     image: local:dydxprotocol
     entrypoint:
-       - dydxprotocold
+       - cosmovisor
+       - run
        - start
        - --log_level
        - error
@@ -46,6 +43,7 @@ services:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
+      - DAEMON_HOME=/dydxprotocol/chain/.bob
     volumes:
       - ./localnet/dydxprotocol1:/dydxprotocol/chain/.bob/data
     ports:
@@ -54,7 +52,8 @@ services:
   dydxprotocold2:
     image: local:dydxprotocol
     entrypoint:
-       - dydxprotocold
+       - cosmovisor
+       - run
        - start
        - --log_level
        - error
@@ -66,13 +65,15 @@ services:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
+      - DAEMON_HOME=/dydxprotocol/chain/.carl
     volumes:
       - ./localnet/dydxprotocol2:/dydxprotocol/chain/.carl/data
   
   dydxprotocold3:
     image: local:dydxprotocol
     entrypoint:
-       - dydxprotocold
+       - cosmovisor
+       - run
        - start
        - --log_level
        - error
@@ -84,6 +85,7 @@ services:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
+      - DAEMON_HOME=/dydxprotocol/chain/.dave
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
 
