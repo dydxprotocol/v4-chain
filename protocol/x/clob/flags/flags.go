@@ -33,7 +33,7 @@ const (
 // Default values.
 const (
 	DefaultMaxLiquidationOrdersPerBlock    = math.MaxUint32
-	DefaultMaxDeleveragingAttemptsPerBlock = 35
+	DefaultMaxDeleveragingAttemptsPerBlock = 5
 
 	DefaultMevTelemetryEnabled    = false
 	DefaultMevTelemetryHost       = ""
