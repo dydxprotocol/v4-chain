@@ -2,8 +2,8 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -23,13 +23,13 @@ func TestMutableExchangeMarketConfig_Copy(t *testing.T) {
 	mutableMarketExchangeConfig := &types.MutableExchangeMarketConfig{
 		Id: ExchangeId1,
 		MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
-			exchange_common.MARKET_ETH_USD: {
+			exchange_config.MARKET_ETH_USD: {
 				Ticker: "ETHUSD",
 				Invert: false,
 			},
-			exchange_common.MARKET_BTC_USD: {
+			exchange_config.MARKET_BTC_USD: {
 				Ticker:         "BTCUSD",
-				AdjustByMarket: newUint32WithValue(exchange_common.MARKET_ETH_USD),
+				AdjustByMarket: newUint32WithValue(exchange_config.MARKET_ETH_USD),
 				Invert:         true,
 			},
 		},
@@ -50,26 +50,26 @@ func TestGetMarketIds_Success(t *testing.T) {
 		},
 		"One market": {
 			marketToConfig: map[types.MarketId]types.MarketConfig{
-				exchange_common.MARKET_ETH_USD: {
+				exchange_config.MARKET_ETH_USD: {
 					Ticker: "ETHUSD",
 				},
 			},
 			expectedMarkets: []types.MarketId{
-				exchange_common.MARKET_ETH_USD,
+				exchange_config.MARKET_ETH_USD,
 			},
 		},
 		"Multiple markets": {
 			marketToConfig: map[types.MarketId]types.MarketConfig{
-				exchange_common.MARKET_ETH_USD: {
+				exchange_config.MARKET_ETH_USD: {
 					Ticker: "ETHUSD",
 				},
-				exchange_common.MARKET_BTC_USD: {
+				exchange_config.MARKET_BTC_USD: {
 					Ticker: "BTCUSD",
 				},
 			},
 			expectedMarkets: []types.MarketId{
-				exchange_common.MARKET_BTC_USD,
-				exchange_common.MARKET_ETH_USD,
+				exchange_config.MARKET_BTC_USD,
+				exchange_config.MARKET_ETH_USD,
 			},
 		},
 	}
