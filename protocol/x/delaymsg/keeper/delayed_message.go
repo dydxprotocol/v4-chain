@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"bytes"
+	"sort"
+
 	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -9,7 +11,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	"sort"
 )
 
 // newDelayedMessageStore returns a prefix store for delayed messages.
@@ -22,7 +23,7 @@ func (k Keeper) GetNumMessages(
 	ctx sdk.Context,
 ) uint32 {
 	store := ctx.KVStore(k.storeKey)
-	var numMessagesBytes = store.Get([]byte(types.NumDelayedMessagesKeyPrefix))
+	var numMessagesBytes = store.Get([]byte(types.NumDelayedMessagesKey))
 	return lib.BytesToUint32(numMessagesBytes)
 }
 
@@ -32,7 +33,7 @@ func (k Keeper) SetNumMessages(
 	numMessages uint32,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte(types.NumDelayedMessagesKeyPrefix), lib.Uint32ToBytes(numMessages))
+	store.Set([]byte(types.NumDelayedMessagesKey), lib.Uint32ToBytes(numMessages))
 }
 
 // GetMessage returns a message from its id.
@@ -44,7 +45,7 @@ func (k Keeper) GetMessage(
 	found bool,
 ) {
 	store := k.newDelayedMessageStore(ctx)
-	b := store.Get(lib.Uint32ToBytesForState(id))
+	b := store.Get(lib.Uint32ToBytes(id))
 	if b == nil {
 		return types.DelayedMessage{}, false
 	}
@@ -93,7 +94,7 @@ func (k Keeper) DeleteMessage(
 		)
 	}
 	store := k.newDelayedMessageStore(ctx)
-	store.Delete(lib.Uint32ToBytesForState(id))
+	store.Delete(lib.Uint32ToBytes(id))
 
 	// Remove message id from block message ids.
 	if err := k.deleteMessageIdFromBlock(ctx, id, delayedMsg.BlockHeight); err != nil {
@@ -124,7 +125,7 @@ func (k Keeper) SetDelayedMessage(
 
 	// Add message to the store.
 	store := k.newDelayedMessageStore(ctx)
-	store.Set(lib.Uint32ToBytesForState(msg.Id), k.cdc.MustMarshal(msg))
+	store.Set(lib.Uint32ToBytes(msg.Id), k.cdc.MustMarshal(msg))
 
 	// Add message id to the list of message ids for the block.
 	k.addMessageIdToBlock(ctx, msg.Id, msg.BlockHeight)

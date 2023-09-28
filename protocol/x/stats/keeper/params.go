@@ -7,10 +7,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
-const (
-	paramsKey = "Params"
-)
-
 // GetParams returns the Params in state.
 func (k Keeper) GetParams(
 	ctx sdk.Context,
@@ -18,14 +14,14 @@ func (k Keeper) GetParams(
 	params types.Params,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(paramsKey))
+	b := store.Get([]byte(types.ParamsKey))
 	k.cdc.MustUnmarshal(b, &params)
 	return params
 }
 
 func (k Keeper) GetWindowDuration(ctx sdk.Context) time.Duration {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(paramsKey))
+	b := store.Get([]byte(types.ParamsKey))
 	var params types.Params
 	k.cdc.MustUnmarshal(b, &params)
 	return params.WindowDuration
@@ -43,7 +39,7 @@ func (k Keeper) SetParams(
 
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&params)
-	store.Set([]byte(paramsKey), b)
+	store.Set([]byte(types.ParamsKey), b)
 
 	return nil
 }

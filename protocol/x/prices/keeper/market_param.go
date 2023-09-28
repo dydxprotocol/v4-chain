@@ -47,7 +47,7 @@ func (k Keeper) ModifyMarketParam(
 	// Store the modified market param.
 	marketParamStore := k.newMarketParamStore(ctx)
 	b := k.cdc.MustMarshal(&marketParam)
-	marketParamStore.Set(types.MarketKey(marketParam.Id), b)
+	marketParamStore.Set(lib.Uint32ToBytes(marketParam.Id), b)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
@@ -84,7 +84,7 @@ func (k Keeper) GetMarketParam(
 	exists bool,
 ) {
 	marketParamStore := k.newMarketParamStore(ctx)
-	b := marketParamStore.Get(types.MarketKey(id))
+	b := marketParamStore.Get(lib.Uint32ToBytes(id))
 	if b == nil {
 		return types.MarketParam{}, false
 	}

@@ -186,7 +186,7 @@ func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 	b := k.cdc.MustMarshal(&clobPair)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
 	// Write the `ClobPair` to state.
-	store.Set(types.ClobPairKey(clobPair.GetClobPairId()), b)
+	store.Set(lib.Uint32ToBytes(clobPair.GetClobPairId().ToUint32()), b)
 }
 
 // InitMemClobOrderbooks initializes the memclob with `ClobPair`s from state.
@@ -264,13 +264,10 @@ func (k Keeper) GetClobPairIdForPerpetual(
 func (k Keeper) GetClobPair(
 	ctx sdk.Context,
 	id types.ClobPairId,
-
 ) (val types.ClobPair, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
 
-	b := store.Get(types.ClobPairKey(
-		id,
-	))
+	b := store.Get(lib.Uint32ToBytes(id.ToUint32()))
 	if b == nil {
 		return val, false
 	}
@@ -286,9 +283,7 @@ func (k Keeper) RemoveClobPair(
 
 ) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
-	store.Delete(types.ClobPairKey(
-		id,
-	))
+	store.Delete(lib.Uint32ToBytes(id.ToUint32()))
 }
 
 // GetAllClobPairs returns all clobPair, sorted by ClobPair id.

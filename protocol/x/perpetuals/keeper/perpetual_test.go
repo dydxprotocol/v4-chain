@@ -766,7 +766,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -800,7 +800,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -965,7 +965,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -1129,7 +1129,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -1294,7 +1294,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 

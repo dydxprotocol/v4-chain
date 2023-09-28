@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -303,7 +304,7 @@ func TestAddOrdersForPruning_Determinism(t *testing.T) {
 		)
 
 		potentiallyPrunableOrdersBytes := store.Get(
-			types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+			lib.Uint32ToBytes(blockHeight),
 		)
 
 		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -346,7 +347,7 @@ func TestAddOrdersForPruning_DuplicateOrderIds(t *testing.T) {
 	)
 
 	potentiallyPrunableOrdersBytes := store.Get(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+		lib.Uint32ToBytes(blockHeight),
 	)
 
 	var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -580,7 +581,7 @@ func TestPruning(t *testing.T) {
 
 			for _, blockHeight := range tc.expectedEmptyPotentiallyPrunableOrderBlockHeights {
 				has := blockHeightToPotentiallyPrunableOrdersStore.Has(
-					types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+					lib.Uint32ToBytes(blockHeight),
 				)
 				require.False(t, has)
 			}

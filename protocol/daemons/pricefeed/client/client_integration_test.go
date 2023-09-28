@@ -4,6 +4,10 @@ package client_test
 
 import (
 	"fmt"
+	"net"
+	"sync"
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
@@ -26,9 +30,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
-	"net"
-	"sync"
-	"time"
 
 	"testing"
 )

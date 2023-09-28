@@ -2530,7 +2530,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 
 			// Write to triggered orders state
 			for _, order := range tc.triggeredOrders {
-				orderIdBytes := types.OrderIdKey(order.OrderId)
+				orderIdBytes := order.OrderId.MustMarshal()
 				longTermOrderPlacement := types.LongTermOrderPlacement{
 					Order: order,
 				}
@@ -2545,7 +2545,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 
 			// Write to untriggered orders state
 			for _, order := range tc.untriggeredOrders {
-				orderIdBytes := types.OrderIdKey(order.OrderId)
+				orderIdBytes := order.OrderId.MustMarshal()
 				longTermOrderPlacement := types.LongTermOrderPlacement{
 					Order: order,
 				}

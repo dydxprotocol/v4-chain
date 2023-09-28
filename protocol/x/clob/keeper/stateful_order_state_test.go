@@ -61,7 +61,7 @@ func TestLongTermOrderInitMemStore_Success(t *testing.T) {
 			},
 		}
 		longTermOrderPlacementBytes := ks.Cdc.MustMarshal(&longTermOrderPlacement)
-		orderIdBytes := types.OrderIdKey(order.OrderId)
+		orderIdBytes := order.OrderId.MustMarshal()
 		store.Set(orderIdBytes, longTermOrderPlacementBytes)
 	}
 
@@ -145,7 +145,7 @@ func TestMustTriggerConditionalOrder(t *testing.T) {
 		orderPlacement types.LongTermOrderPlacement,
 		found bool,
 	) {
-		orderIdBytes := types.OrderIdKey(orderId)
+		orderIdBytes := orderId.MustMarshal()
 		bytes := store.Get(orderIdBytes)
 		if bytes == nil {
 			return orderPlacement, false
