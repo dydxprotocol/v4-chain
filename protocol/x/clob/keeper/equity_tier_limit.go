@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -15,11 +16,7 @@ func (k Keeper) GetEquityTierLimitConfiguration(
 	ctx sdk.Context,
 ) (config types.EquityTierLimitConfiguration) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(
-		types.KeyPrefix(
-			types.EquityTierLimitConfigKey,
-		),
-	)
+	b := store.Get([]byte(types.EquityTierLimitConfigKey))
 
 	// The equity tier limit configuration should be set in state by the genesis logic.
 	// If it's not found, then that indicates it was never set in state, which is invalid.
@@ -51,12 +48,7 @@ func (k *Keeper) InitializeEquityTierLimit(
 	// Write the rate limit configuration to state.
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&config)
-	store.Set(
-		types.KeyPrefix(
-			types.EquityTierLimitConfigKey,
-		),
-		b,
-	)
+	store.Set([]byte(types.EquityTierLimitConfigKey), b)
 
 	return nil
 }

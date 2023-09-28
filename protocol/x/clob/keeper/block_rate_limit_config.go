@@ -11,11 +11,7 @@ func (k Keeper) GetBlockRateLimitConfiguration(
 	ctx sdk.Context,
 ) (config types.BlockRateLimitConfiguration) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(
-		types.KeyPrefix(
-			types.BlockRateLimitConfigKey,
-		),
-	)
+	b := store.Get([]byte(types.BlockRateLimitConfigKey))
 
 	// The block rate limit configuration should be set in state by the genesis logic.
 	// If it's not found, then that indicates it was never set in state, which is invalid.
@@ -32,11 +28,7 @@ func (k Keeper) GetBlockRateLimitConfiguration(
 // from state. Should be invoked during application start and before CLOB genesis.
 func (k *Keeper) InitalizeBlockRateLimitFromStateIfExists(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(
-		types.KeyPrefix(
-			types.BlockRateLimitConfigKey,
-		),
-	)
+	b := store.Get([]byte(types.BlockRateLimitConfigKey))
 
 	if b == nil {
 		return
@@ -67,12 +59,7 @@ func (k *Keeper) InitializeBlockRateLimit(
 	// Write the rate limit configuration to state.
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&config)
-	store.Set(
-		types.KeyPrefix(
-			types.BlockRateLimitConfigKey,
-		),
-		b,
-	)
+	store.Set([]byte(types.BlockRateLimitConfigKey), b)
 
 	k.placeOrderRateLimiter = rate_limit.NewPlaceOrderRateLimiter(config)
 	k.cancelOrderRateLimiter = rate_limit.NewCancelOrderRateLimiter(config)

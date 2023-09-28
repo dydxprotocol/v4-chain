@@ -25,7 +25,7 @@ func (k Keeper) AllPerpetuals(
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	perpetualStore := prefix.NewStore(store, types.KeyPrefix(types.PerpetualKeyPrefix))
+	perpetualStore := prefix.NewStore(store, []byte(types.PerpetualKeyPrefix))
 
 	pageRes, err := query.Paginate(perpetualStore, req.Pagination, func(key []byte, value []byte) error {
 		var perpetual types.Perpetual

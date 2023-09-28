@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdklog "cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -142,7 +143,7 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 func (k Keeper) GetAllVestEntries(ctx sdk.Context) (
 	list []types.VestEntry,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VestEntryKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKey))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -164,8 +165,8 @@ func (k Keeper) GetVestEntry(ctx sdk.Context, vesterAccount string) (
 		metrics.Latency,
 	)
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VestEntryKeyPrefix))
-	b := store.Get(types.VestEntryKey(vesterAccount))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKey))
+	b := store.Get([]byte(vesterAccount))
 
 	// If VestEntry does not exist in state, return error
 	if b == nil {
@@ -186,9 +187,9 @@ func (k Keeper) SetVestEntry(
 		return err
 	}
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VestEntryKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKey))
 	b := k.cdc.MustMarshal(&entry)
-	store.Set(types.VestEntryKey(
+	store.Set([]byte(
 		entry.VesterAccount,
 	), b)
 	return nil
@@ -203,8 +204,8 @@ func (k Keeper) DeleteVestEntry(
 	if _, err := k.GetVestEntry(ctx, vesterAccount); err != nil {
 		return errorsmod.Wrap(err, "failed to delete vest entry")
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VestEntryKeyPrefix))
-	store.Delete(types.VestEntryKey(vesterAccount))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKey))
+	store.Delete([]byte(vesterAccount))
 
 	return nil
 }

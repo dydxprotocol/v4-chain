@@ -1389,7 +1389,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				b := cdc.MustMarshal(&constants.ClobPair_Btc_Paused)
 				store.Set(types.ClobPairKey(
 					types.ClobPairId(constants.ClobPair_Btc_Paused.Id),

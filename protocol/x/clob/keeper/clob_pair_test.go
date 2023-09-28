@@ -160,7 +160,7 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 	// Write `ClobPair` to state, but don't call `keeper.createOrderbook`.
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
-	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 
 	// Write clob pair to state with clob pair id 0.
 	b := cdc.MustMarshal(&constants.ClobPair_Btc)
@@ -477,7 +477,7 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
 
 	// Write multiple `ClobPairs` to state, but don't call `MemClob.CreateOrderbook`.
-	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
@@ -513,7 +513,7 @@ func TestHydrateClobPairAndPerpetualMapping(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
 
 	// Write multiple `ClobPairs` to state, but don't call `MemClob.CreateOrderbook`.
-	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
@@ -948,7 +948,7 @@ func TestIsPerpetualClobPairActive(t *testing.T) {
 				// test this function with unsupported statuses.
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 
 				b := cdc.MustMarshal(tc.clobPair)
 				store.Set(types.ClobPairKey(
