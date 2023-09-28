@@ -184,6 +184,16 @@ create_validators() {
 }
 
 setup_cosmovisor() {
+	for i in "${!FULL_NODE_KEYS[@]}"; do
+		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
+		export DAEMON_NAME=dydxprotocold
+		export DAEMON_HOME="$HOME/chain/.full-node-$i"
+
+		cosmovisor init /bin/dydxprotocold
+
+		cp /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/genesis/bin/"
+	done
+
 	for i in "${!MONIKERS[@]}"; do
 		VAL_HOME_DIR="$HOME/chain/.${MONIKERS[$i]}"
 		export DAEMON_NAME=dydxprotocold
