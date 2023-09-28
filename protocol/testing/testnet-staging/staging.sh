@@ -238,7 +238,7 @@ create_validators() {
 }
 
 swap_old_binary() {
-	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv0.3.0-rc1/dydxprotocold-v0.3.0-rc1-linux-amd64.tar.gz'
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv0.3.0-rc2/dydxprotocold-v0.3.0-rc2-linux-amd64.tar.gz'
 	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
 	mkdir -p /tmp/dydxprotocold
 	curl -vL $tar_url -o $tar_path
