@@ -9,8 +9,9 @@ import (
 // ExchangeQueryDetails represents the information needed to query a specific exchange.
 type ExchangeQueryDetails struct {
 	Exchange ExchangeId
-	Url      string // url to query exchange
-	// function to get a map of tickers to prices from an exchange's response
+	// Url is the url to query the exchange.
+	Url string
+	// PriceFunction computes a map of tickers to prices from an exchange's response
 	PriceFunction func(
 		response *http.Response,
 		tickerToPriceExponent map[string]int32,
@@ -20,5 +21,6 @@ type ExchangeQueryDetails struct {
 		unavailableTickers map[string]error,
 		err error,
 	)
+	// IsMultiMarket indicates whether the url query response contains multiple tickers.
 	IsMultiMarket bool
 }
