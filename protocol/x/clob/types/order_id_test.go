@@ -16,6 +16,16 @@ import (
 // `OrderFlags` is greater than one byte (proto varints are encoded with 7 bits per byte).
 const numOrderIdFlagsTestCases = 129
 
+func TestMustMarshal(t *testing.T) {
+	// Success
+	b, _ := constants.OrderId_Alice_Num0_ClientId0_Clob0.Marshal()
+	require.Equal(t, b, constants.OrderId_Alice_Num0_ClientId0_Clob0.MustMarshal())
+
+	// Panic
+	var oid types.OrderId
+	require.Panics(t, func() { oid.MustMarshal() })
+}
+
 func TestIsShortTermOrder(t *testing.T) {
 	for i := 0; i < numOrderIdFlagsTestCases; i++ {
 		orderFlags := uint32(i)
