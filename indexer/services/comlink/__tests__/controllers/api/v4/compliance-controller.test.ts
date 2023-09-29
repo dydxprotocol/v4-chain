@@ -8,7 +8,7 @@ import {
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import { stats } from '@dydxprotocol-indexer/base';
-import { placeHolderProvider } from '../../../../src/helpers/compliance/compliance-clients';
+import { complianceProvider } from '../../../../src/helpers/compliance/compliance-clients';
 import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { redis } from '@dydxprotocol-indexer/redis';
@@ -40,7 +40,7 @@ describe('compliance-controller#V4', () => {
 
   describe('GET', () => {
     beforeEach(async () => {
-      jest.spyOn(placeHolderProvider.client, 'getComplianceResponse').mockImplementation(
+      jest.spyOn(complianceProvider.client, 'getComplianceResponse').mockImplementation(
         (address: string): Promise<ComplianceClientResponse> => {
           return Promise.resolve({
             address,
@@ -69,13 +69,13 @@ describe('compliance-controller#V4', () => {
 
       expect(response.body.restricted).toEqual(false);
       expect(stats.timing).toHaveBeenCalledTimes(1);
-      expect(placeHolderProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
+      expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
 
       data = await ComplianceTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
       expect(data[0]).toEqual(expect.objectContaining({
         address: testConstants.defaultAddress,
-        provider: placeHolderProvider.provider,
+        provider: complianceProvider.provider,
         blocked,
         riskScore,
       }));
@@ -94,7 +94,7 @@ describe('compliance-controller#V4', () => {
 
       expect(response.body.restricted).toEqual(false);
       expect(stats.timing).toHaveBeenCalledTimes(1);
-      expect(placeHolderProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
+      expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
 
       data = await ComplianceTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
@@ -119,13 +119,13 @@ describe('compliance-controller#V4', () => {
 
       expect(response.body.restricted).toEqual(false);
       expect(stats.timing).toHaveBeenCalledTimes(1);
-      expect(placeHolderProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
+      expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
 
       data = await ComplianceTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
       expect(data[0]).not.toEqual({
         address: testConstants.defaultAddress,
-        provider: placeHolderProvider.provider,
+        provider: complianceProvider.provider,
         blocked,
         riskScore,
       });
