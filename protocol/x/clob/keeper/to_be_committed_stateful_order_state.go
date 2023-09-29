@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // To be committed stateful orders are ones that this validator is aware of during block processing (e.g. `DeliverTx`).
@@ -25,7 +24,7 @@ func (k Keeper) GetToBeCommittedStatefulOrderCount(
 
 	store := k.GetToBeCommittedStatefulOrderCountTransientStore(ctx)
 
-	b := store.Get(satypes.SubaccountKey(orderId.SubaccountId))
+	b := store.Get(orderId.SubaccountId.MustMarshal())
 	if b == nil {
 		return 0
 	}
@@ -48,7 +47,7 @@ func (k Keeper) SetToBeCommittedStatefulOrderCount(
 
 	store := k.GetToBeCommittedStatefulOrderCountTransientStore(ctx)
 	store.Set(
-		satypes.SubaccountKey(orderId.SubaccountId),
+		orderId.SubaccountId.MustMarshal(),
 		lib.Int32ToBytes(count),
 	)
 }

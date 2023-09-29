@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -20,8 +19,7 @@ func (k Keeper) EpochInfoAll(
 	var epochInfos []types.EpochInfo
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
-	epochInfoStore := prefix.NewStore(store, []byte(types.EpochInfoKeyPrefix))
+	epochInfoStore := k.getEpochInfoStore(ctx)
 
 	pageRes, err := query.Paginate(epochInfoStore, req.Pagination, func(key []byte, value []byte) error {
 		var epochInfo types.EpochInfo

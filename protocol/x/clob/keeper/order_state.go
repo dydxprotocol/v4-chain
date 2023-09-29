@@ -94,7 +94,7 @@ func (k Keeper) SetOrderFillAmount(
 
 	// Write `orderFillStateBytes` to state.
 	store.Set(
-		types.OrderIdKey(orderId),
+		orderId.MustMarshal(),
 		orderFillStateBytes,
 	)
 
@@ -106,7 +106,7 @@ func (k Keeper) SetOrderFillAmount(
 
 	// Write `orderFillStateBytes` to memStore.
 	memStore.Set(
-		types.OrderIdKey(orderId),
+		orderId.MustMarshal(),
 		orderFillStateBytes,
 	)
 }
@@ -130,7 +130,7 @@ func (k Keeper) GetOrderFillAmount(
 
 	// Retrieve the `OrderFillState` bytes from the store.
 	orderFillStateBytes := memPrefixStore.Get(
-		types.OrderIdKey(orderId),
+		orderId.MustMarshal(),
 	)
 
 	// If the `OrderFillState` does not exist, early return.
@@ -157,7 +157,7 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 
 	// Retrieve the `PotentiallyPrunableOrders` bytes from the store.
 	potentiallyPrunableOrdersBytes := store.Get(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(prunableBlockHeight),
+		lib.Uint32ToBytes(prunableBlockHeight),
 	)
 
 	var potentiallyPrunableOrdersSet = make(map[types.OrderId]bool)
@@ -197,7 +197,7 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 
 	// Write `prunableOrders` to state for the appropriate block height.
 	store.Set(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(prunableBlockHeight),
+		lib.Uint32ToBytes(prunableBlockHeight),
 		potentiallyPrunableOrdersBytes,
 	)
 }
@@ -215,7 +215,7 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 
 	// Retrieve the raw bytes of the `prunableOrders`.
 	potentiallyPrunableOrderBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+		lib.Uint32ToBytes(blockHeight),
 	)
 
 	// If there are no prunable orders for this block, then there is nothing to do. Early return.
@@ -245,7 +245,7 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 
 	// Delete the key for prunable orders at this block height.
 	blockHeightToPotentiallyPrunableOrdersStore.Delete(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+		lib.Uint32ToBytes(blockHeight),
 	)
 
 	return prunedOrderIds
@@ -260,18 +260,14 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
-	orderAmountFilledStore.Delete(types.OrderIdKey(
-		orderId,
-	))
+	orderAmountFilledStore.Delete(orderId.MustMarshal())
 
 	// Delete the fill amount from the mem store.
 	memStore := prefix.NewStore(
 		ctx.KVStore(k.memKey),
 		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
-	memStore.Delete(types.OrderIdKey(
-		orderId,
-	))
+	memStore.Delete(orderId.MustMarshal())
 }
 
 // PruneStateFillAmountsForShortTermOrders prunes Short-Term order fill amounts from state that are pruneable

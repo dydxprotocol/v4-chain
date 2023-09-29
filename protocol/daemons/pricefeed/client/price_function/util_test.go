@@ -123,7 +123,7 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 			tickerToExponent: map[string]int32{
 				ETHUSDC: 6,
 			},
-			exchange:         exchange_common.EXCHANGE_NAME_BINANCE,
+			exchange:         exchange_common.EXCHANGE_ID_BINANCE,
 			expectedTicker:   ETHUSDC,
 			expectedExponent: 6,
 		},
@@ -132,13 +132,13 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 			tickerToExponent: map[string]int32{
 				ETHUSDC: -6,
 			},
-			exchange:         exchange_common.EXCHANGE_NAME_BITFINEX,
+			exchange:         exchange_common.EXCHANGE_ID_BITFINEX,
 			expectedTicker:   ETHUSDC,
 			expectedExponent: -6,
 		},
 		"Failure - no exponents": {
 			tickerToExponent: map[string]int32{},
-			exchange:         exchange_common.EXCHANGE_NAME_BINANCE,
+			exchange:         exchange_common.EXCHANGE_ID_BINANCE,
 			expectedError: errors.New(
 				"Invalid market price exponent map for Binance price function of length: 0, expected length 1",
 			),
@@ -149,7 +149,7 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 				ETHUSDC: -6,
 				BTCUSDC: -8,
 			},
-			exchange: exchange_common.EXCHANGE_NAME_BITFINEX,
+			exchange: exchange_common.EXCHANGE_ID_BITFINEX,
 			expectedError: errors.New(
 				"Invalid market price exponent map for Bitfinex price function of length: 2, expected length 1",
 			),

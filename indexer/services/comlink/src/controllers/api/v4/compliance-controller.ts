@@ -18,6 +18,7 @@ import { placeHolderProvider } from '../../../helpers/compliance/compliance-clie
 import { complianceCheck } from '../../../lib/compliance-check';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { getIpAddr, rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { ComplianceRequest, ComplianceResponse } from '../../../types';
@@ -72,6 +73,7 @@ class ComplianceController extends Controller {
 
 router.get(
   '/',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     address: {
@@ -107,7 +109,6 @@ router.get(
           429,
         );
       }
-      console.log(error);
       return handleControllerError(
         'ComplianceController GET /',
         'Compliance error',

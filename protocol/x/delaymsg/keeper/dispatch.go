@@ -17,6 +17,13 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 		return
 	}
 
+	// Maintain a list of events emitted by all delayed messages executed in this block.
+	// As message handlers create new event managers, such emitted events need to be
+	// explicitly propagated to the current context.
+	// Note: events in EndBlocker can be found in `end_block_events` in response from
+	// `/block_results` endpoint.
+	var events sdk.Events
+
 	// Execute all delayed messages scheduled for this block and delete them from the store.
 	for _, id := range blockMessageIds.Ids {
 		delayedMsg, found := k.GetMessage(ctx, id)
@@ -33,12 +40,20 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 
 		if err = abci.RunCached(ctx, func(ctx sdk.Context) error {
 			handler := k.Router().Handler(msg)
-			_, err := handler(ctx, msg)
-			return err
+			res, err := handler(ctx, msg)
+			if err != nil {
+				return err
+			}
+			// Append events emitted in message handler to `events`.
+			events = append(events, res.GetEvents()...)
+			return nil
 		}); err != nil {
 			k.Logger(ctx).Error("failed to execute delayed message with id %v: %v", id, err)
 		}
 	}
+
+	// Propagate events emitted in message handlers to current context.
+	ctx.EventManager().EmitEvents(events)
 
 	for _, id := range blockMessageIds.Ids {
 		if err := k.DeleteMessage(ctx, id); err != nil {

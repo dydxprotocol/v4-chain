@@ -8,6 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -40,10 +41,10 @@ func (k Keeper) CreateMarket(
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
 
 	marketParamStore := k.newMarketParamStore(ctx)
-	marketParamStore.Set(types.MarketKey(marketParam.Id), paramBytes)
+	marketParamStore.Set(lib.Uint32ToBytes(marketParam.Id), paramBytes)
 
 	marketPriceStore := k.newMarketPriceStore(ctx)
-	marketPriceStore.Set(types.MarketKey(marketPrice.Id), priceBytes)
+	marketPriceStore.Set(lib.Uint32ToBytes(marketPrice.Id), priceBytes)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,

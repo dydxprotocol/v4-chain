@@ -166,7 +166,7 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 
 			expectedMultistoreWrites := make([]string, tc.expectedNumWrites)
 			for i := 0; i < int(tc.expectedNumWrites); i++ {
-				expectedMultistoreWrites[i] = "ProcessProposerMatchesEvents/value"
+				expectedMultistoreWrites[i] = types.ProcessProposerMatchesEventsKey
 			}
 
 			traceDecoder.RequireKeyPrefixWrittenInSequence(

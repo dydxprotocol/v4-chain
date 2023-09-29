@@ -16,9 +16,9 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -246,9 +246,9 @@ func assertPricesWithTimeout(t *testing.T, node *Node, marketTags map[types.Mark
 func TestMarketPrices(t *testing.T) {
 	testnet, err := NewTestnet()
 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
-	testnet.setPrice(exchange_common.MARKET_BTC_USD, 50001)
-	testnet.setPrice(exchange_common.MARKET_ETH_USD, 55002)
-	testnet.setPrice(exchange_common.MARKET_LINK_USD, 55003)
+	testnet.setPrice(exchange_config.MARKET_BTC_USD, 50001)
+	testnet.setPrice(exchange_config.MARKET_ETH_USD, 55002)
+	testnet.setPrice(exchange_config.MARKET_LINK_USD, 55003)
 
 	err = testnet.Start()
 	require.NoError(t, err)
@@ -256,9 +256,9 @@ func TestMarketPrices(t *testing.T) {
 	node := testnet.Nodes["alice"]
 
 	expectedPrices := map[types.MarketId]string{
-		exchange_common.MARKET_BTC_USD:  "initialBTCPrice",
-		exchange_common.MARKET_ETH_USD:  "initialETHPrice",
-		exchange_common.MARKET_LINK_USD: "initialLINKPrice",
+		exchange_config.MARKET_BTC_USD:  "initialBTCPrice",
+		exchange_config.MARKET_ETH_USD:  "initialETHPrice",
+		exchange_config.MARKET_LINK_USD: "initialLINKPrice",
 	}
 	assertPricesWithTimeout(t, node, expectedPrices, 30*time.Second)
 }

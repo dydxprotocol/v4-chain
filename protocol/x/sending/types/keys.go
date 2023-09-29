@@ -1,5 +1,6 @@
 package types
 
+// Module name and store keys
 const (
 	// ModuleName defines the module name
 	ModuleName = "sending"
