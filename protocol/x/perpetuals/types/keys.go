@@ -14,9 +14,6 @@ const (
 	// PerpetualKeyPrefix is the prefix to retrieve all Perpetual
 	PerpetualKeyPrefix = "perpetual/"
 
-	// PerpetualKeyPrefix is the prefix to retrieve all funding premium samples
-	FundingSamplesKeyPrefix = "funding_samples/"
-
 	// PremiumVotesKey is the key to retrieve `PremiumStore` object
 	// that represents existing premium sample votes during the current
 	// `funding-sample` epoch.

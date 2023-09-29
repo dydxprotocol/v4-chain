@@ -15,6 +15,20 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// getClobPairStore returns a prefix store where the ClobPair objects are stored.
+func (k Keeper) getClobPairStore(
+	ctx sdk.Context,
+) prefix.Store {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
+}
+
+// clobPairKey returns the store key to retrieve a ClobPair by id.
+func clobPairKey(
+	id types.ClobPairId,
+) []byte {
+	return lib.Uint32ToBytes(id.ToUint32())
+}
+
 // CreatePerpetualClobPair creates a new perpetual CLOB pair in the store.
 // Additionally, it creates an order book matching the ID of the newly created CLOB pair.
 //
@@ -183,10 +197,9 @@ func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 
 // setClobPair sets a specific `ClobPair` in the store from its index.
 func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
+	store := k.getClobPairStore(ctx)
 	b := k.cdc.MustMarshal(&clobPair)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
-	// Write the `ClobPair` to state.
-	store.Set(lib.Uint32ToBytes(clobPair.GetClobPairId().ToUint32()), b)
+	store.Set(clobPairKey(clobPair.GetClobPairId()), b)
 }
 
 // InitMemClobOrderbooks initializes the memclob with `ClobPair`s from state.
@@ -265,9 +278,9 @@ func (k Keeper) GetClobPair(
 	ctx sdk.Context,
 	id types.ClobPairId,
 ) (val types.ClobPair, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
+	store := k.getClobPairStore(ctx)
 
-	b := store.Get(lib.Uint32ToBytes(id.ToUint32()))
+	b := store.Get(clobPairKey(id))
 	if b == nil {
 		return val, false
 	}
@@ -280,17 +293,16 @@ func (k Keeper) GetClobPair(
 func (k Keeper) RemoveClobPair(
 	ctx sdk.Context,
 	id types.ClobPairId,
-
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
-	store.Delete(lib.Uint32ToBytes(id.ToUint32()))
+	store := k.getClobPairStore(ctx)
+	store.Delete(clobPairKey(id))
 }
 
 // GetAllClobPairs returns all clobPair, sorted by ClobPair id.
 func (k Keeper) GetAllClobPairs(ctx sdk.Context) (list []types.ClobPair) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	store := k.getClobPairStore(ctx)
 
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
