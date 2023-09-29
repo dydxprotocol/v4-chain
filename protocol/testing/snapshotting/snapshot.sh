@@ -89,7 +89,7 @@ sleep 10
 dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
 curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
 
-cosmovisor init dydxprotocold
+setup_cosmovisor
 
 # TODO: add metrics around snapshot upload latency/frequency/success rate
 while true; do
