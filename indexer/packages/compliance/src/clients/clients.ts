@@ -1,8 +1,8 @@
-import { ComplianceClient } from './compliance-client';
-import { PlaceHolderProviderClient } from './placeholder-provider';
-import { BlocklistProviderClient } from './blocklist-provider';
-import { EllipticProviderClient } from './elliptic-provider';
 import config from '../config';
+import { BlocklistProviderClient } from './blocklist-provider';
+import { ComplianceClient } from './compliance-client';
+import { EllipticProviderClient } from './elliptic-provider';
+import { PlaceHolderProviderClient } from './placeholder-provider';
 
 enum ClientType {
   PLACEHOLDER = 'PLACEHOLDER',
@@ -14,13 +14,13 @@ enum ClientType {
 const placeHolderProvider: ComplianceClient = new PlaceHolderProviderClient();
 const blocklistProvider: ComplianceClient = new BlocklistProviderClient();
 // Elliptic provider
-const ellipticProvider: ComplianceClient  = new EllipticProviderClient();
+const ellipticProvider: ComplianceClient = new EllipticProviderClient();
 
 const COMPLIANCE_CLIENTS: Record<ClientType, ComplianceClient> = {
   [ClientType.PLACEHOLDER]: placeHolderProvider,
   [ClientType.BLOCKLIST]: blocklistProvider,
   [ClientType.ELLIPTIC]: ellipticProvider,
-}
+};
 
 export function getComplianceClient(): ComplianceClient {
   let complianceClient: ComplianceClient = ellipticProvider;

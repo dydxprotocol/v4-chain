@@ -7,7 +7,7 @@ describe('getComplianceClient', () => {
 
   afterAll(() => {
     config.COMPLIANCE_DATA_CLIENT = defaultClient;
-  })
+  });
 
   it('uses Elliptic provider if invalid value in config', () => {
     config.COMPLIANCE_DATA_CLIENT = 'invalid';
