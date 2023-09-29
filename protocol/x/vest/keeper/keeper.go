@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"math/big"
 	"time"
 
@@ -120,7 +121,25 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 				entry.TreasuryAccount,
 				sdk.NewCoins(sdk.NewCoin(entry.Denom, vestAmount)),
 			); err != nil {
-				panic(err)
+				// This should never happen. However, if it does, we should not panic.
+				// ProcessVesting is called in BeginBlocker, and panicking in BeginBlocker could cause liveness issues.
+				// Instead, we log the error and continue.
+				k.Logger(ctx).Error(
+					"unexpected internal error: failed to transfer vest amount to treasury account",
+					constants.ErrorLogKey,
+					err,
+					"vester_account",
+					entry.VesterAccount,
+					"treasury_account",
+					entry.TreasuryAccount,
+					"denom",
+					entry.Denom,
+					"vest_amount",
+					vestAmount,
+					"vest_account_balance",
+					vesterBalance,
+				)
+				continue
 			}
 		}
 
