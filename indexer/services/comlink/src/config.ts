@@ -53,6 +53,9 @@ export const configSchema = {
   RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_DURATION_SECONDS: parseInteger({ default: 60 }),
   // Threshold for refreshing compliance data for an address when screened
   MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS: parseInteger({ default: 86_400 }), //  1 day
+  // will be matched with enums in helpers/compliance/compliance-clients and default to
+  // BLOCKLIST if unset or an invalid value is set
+  COMPLIANCE_DATA_CLIENT: parseString({ default: 'BLOCKLIST' }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////
