@@ -64,11 +64,11 @@ func (ufe *UpdatersForExchange) Validate() error {
 
 // PricefeedMutableMarketConfigsImpl implements PricefeedMutableMarketConfigs.
 type PricefeedMutableMarketConfigsImpl struct {
-	sync.RWMutex
+	sync.Mutex
 
 	// mutableExchangeToConfigs contains the latest market configuration for each exchange.
 	// These maps are updated when the exchange market params are updated. Map reads
-	// and updates are synchronized by the RWMutex.
+	// and updates are synchronized by the Mutex.
 	mutableExchangeToConfigs map[ExchangeId]*MutableExchangeMarketConfig
 
 	// mutableMarketToConfigs contains the latest market configuration for each market, common
@@ -484,8 +484,8 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) GetExchangeMarketConfigCopy(
 	mutableExchangeMarketConfig *MutableExchangeMarketConfig,
 	err error,
 ) {
-	pfmmc.RLock()
-	defer func() { pfmmc.RUnlock() }()
+	pfmmc.Lock()
+	defer pfmmc.Unlock()
 	memc, ok := pfmmc.mutableExchangeToConfigs[id]
 	if !ok {
 		return nil, fmt.Errorf("mutableExchangeMarketConfig not found for exchange %v", id)
@@ -502,8 +502,8 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) GetMarketConfigCopies(
 	mutableMarketConfigs []*MutableMarketConfig,
 	err error,
 ) {
-	pfmmc.RLock()
-	defer func() { pfmmc.RUnlock() }()
+	pfmmc.Lock()
+	defer pfmmc.Unlock()
 
 	mutableMarketConfigs = make([]*MutableMarketConfig, 0, len(markets))
 	for _, market := range markets {
@@ -527,8 +527,8 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) GetMarketConfigCopies(
 // for static config that is used within the types directory. The ultimate solution is to either remove this
 // config or pass all of it
 func (pfmmc *PricefeedMutableMarketConfigsImpl) emitMarketAndExchangeCountMetrics() {
-	pfmmc.RLock()
-	defer pfmmc.RUnlock()
+	pfmmc.Lock()
+	defer pfmmc.Unlock()
 
 	// Set configured market count.
 	telemetry.SetGauge(

@@ -15,7 +15,7 @@ import (
 // All access is synchronized by a RW mutex.
 type mutableState struct {
 	// Market configuration for the price fetcher is synchronized as it is subject to change over time.
-	sync.RWMutex
+	sync.Mutex
 	// Access to all following fields is protected.
 	// mutableExchangeConfig contains a copy of the current MutableExchangeMarketConfig for the exchange.
 	// It is updated periodically by the daemon's PriceFeedMutableMarketConfig when a change in the
@@ -32,8 +32,8 @@ type mutableState struct {
 // GetMarketIds returns the current set of markets the price fetcher queries for this exchange.
 // This method is synchronized.
 func (ms *mutableState) GetMarketIds() []types.MarketId {
-	ms.RLock()
-	defer ms.RUnlock()
+	ms.Lock()
+	defer ms.Unlock()
 
 	return ms.mutableExchangeConfig.GetMarketIds()
 }
@@ -57,8 +57,8 @@ func (ms *mutableState) GetNextNMarkets(n int) []types.MarketId {
 // GetMarketExponents returns a copy of the current set of market exponents for this exchange.
 // This method is synchronized.
 func (ms *mutableState) GetMarketExponents() map[types.MarketId]types.Exponent {
-	ms.RLock()
-	defer ms.RUnlock()
+	ms.Lock()
+	defer ms.Unlock()
 
 	return maps.Clone(ms.marketExponents)
 }
@@ -66,8 +66,8 @@ func (ms *mutableState) GetMarketExponents() map[types.MarketId]types.Exponent {
 // GetMutableExchangeConfig returns a copy of the current MutableExchangeMarketConfig for the exchange.
 // This method is synchronized.
 func (ms *mutableState) GetMutableExchangeConfig() *types.MutableExchangeMarketConfig {
-	ms.RLock()
-	defer ms.RUnlock()
+	ms.Lock()
+	defer ms.Unlock()
 
 	return ms.mutableExchangeConfig.Copy()
 }

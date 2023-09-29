@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"net/http"
 	"testing"
 	"time"
 
 	pf_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pft "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
@@ -45,10 +45,10 @@ var (
 	baseEmc = &types.MutableExchangeMarketConfig{
 		Id: "BinanceUS",
 		MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
-			exchange_common.MARKET_BTC_USD: {
+			exchange_config.MARKET_BTC_USD: {
 				Ticker: constants.BtcUsdPair,
 			},
-			exchange_common.MARKET_ETH_USD: {
+			exchange_config.MARKET_ETH_USD: {
 				Ticker: constants.EthUsdPair,
 			},
 			noPriceExponentMarketId: {
@@ -84,7 +84,7 @@ func TestQuery(t *testing.T) {
 	}{
 		"Success - single market": {
 			priceFunc: priceFunc,
-			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD},
+			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				successStatus,
@@ -94,14 +94,14 @@ func TestQuery(t *testing.T) {
 			expectedPrices: []*types.MarketPriceTimestamp{
 				{
 					Price:         dummyPrice,
-					MarketId:      exchange_common.MARKET_BTC_USD,
+					MarketId:      exchange_config.MARKET_BTC_USD,
 					LastUpdatedAt: lastUpdatedAt,
 				},
 			},
 		},
 		"Success - multiple markets": {
 			priceFunc: priceFunc,
-			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD, exchange_common.MARKET_ETH_USD},
+			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD, exchange_config.MARKET_ETH_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{
 					constants.BtcUsdPair,
@@ -114,19 +114,19 @@ func TestQuery(t *testing.T) {
 			expectedPrices: []*types.MarketPriceTimestamp{
 				{
 					Price:         dummyPrice,
-					MarketId:      exchange_common.MARKET_BTC_USD,
+					MarketId:      exchange_config.MARKET_BTC_USD,
 					LastUpdatedAt: lastUpdatedAt,
 				},
 				{
 					Price:         dummyPrice,
-					MarketId:      exchange_common.MARKET_ETH_USD,
+					MarketId:      exchange_config.MARKET_ETH_USD,
 					LastUpdatedAt: lastUpdatedAt,
 				},
 			},
 		},
 		"Success - multiple markets and unavailable ticker": {
 			priceFunc: priceFuncWithValidAndUnavailableTickers,
-			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD, exchange_common.MARKET_ETH_USD, unavailableId},
+			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD, exchange_config.MARKET_ETH_USD, unavailableId},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{
 					constants.BtcUsdPair,
@@ -140,12 +140,12 @@ func TestQuery(t *testing.T) {
 			expectedPrices: []*types.MarketPriceTimestamp{
 				{
 					Price:         dummyPrice,
-					MarketId:      exchange_common.MARKET_BTC_USD,
+					MarketId:      exchange_config.MARKET_BTC_USD,
 					LastUpdatedAt: lastUpdatedAt,
 				},
 				{
 					Price:         dummyPrice,
-					MarketId:      exchange_common.MARKET_ETH_USD,
+					MarketId:      exchange_config.MARKET_ETH_USD,
 					LastUpdatedAt: lastUpdatedAt,
 				},
 			},
@@ -155,7 +155,7 @@ func TestQuery(t *testing.T) {
 		},
 		"Failure - price function returns non-existent unavailable ticker": {
 			priceFunc: priceFuncReturnsInvalidUnavailableTicker,
-			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD},
+			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{
 					constants.BtcUsdPair,
@@ -197,7 +197,7 @@ func TestQuery(t *testing.T) {
 			expectedError:    fmt.Errorf("No market price exponent for id: %v", noPriceExponentMarketId),
 		},
 		"Failure - query fails": {
-			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD},
+			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				successStatus,
@@ -208,7 +208,7 @@ func TestQuery(t *testing.T) {
 		},
 		"Failure - unexpected API response code: 400": {
 			priceFunc: priceFunc,
-			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD},
+			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				failStatus400,
@@ -219,7 +219,7 @@ func TestQuery(t *testing.T) {
 		},
 		"Failure - unexpected API response code: 500": {
 			priceFunc: priceFunc,
-			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD},
+			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				failStatus500,
@@ -230,7 +230,7 @@ func TestQuery(t *testing.T) {
 		},
 		"Failure - PriceFunction fails": {
 			priceFunc: priceFuncWithErr,
-			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD},
+			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				successStatus,
@@ -241,7 +241,7 @@ func TestQuery(t *testing.T) {
 		},
 		"Failure - PriceFunction returns invalid response": {
 			priceFunc: priceFuncWithInvalidResponse,
-			marketIds: []types.MarketId{exchange_common.MARKET_BTC_USD, exchange_common.MARKET_ETH_USD},
+			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD, exchange_config.MARKET_ETH_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{
 					constants.BtcUsdPair,
@@ -307,11 +307,11 @@ func generateMockRequestHandler(url string, statusCode int, err error) *mocks.Re
 
 func generateTestMarketPriceExponentMap() map[types.MarketId]types.Exponent {
 	marketExponents := make(map[types.MarketId]types.Exponent, 6)
-	marketExponents[exchange_common.MARKET_BTC_USD] = constants.BtcUsdExponent
-	marketExponents[exchange_common.MARKET_ETH_USD] = constants.EthUsdExponent
-	marketExponents[exchange_common.MARKET_LINK_USD] = constants.LinkUsdExponent
-	marketExponents[exchange_common.MARKET_MATIC_USD] = constants.MaticUsdExponent
-	marketExponents[exchange_common.MARKET_CRV_USD] = constants.CrvUsdExponent
+	marketExponents[exchange_config.MARKET_BTC_USD] = constants.BtcUsdExponent
+	marketExponents[exchange_config.MARKET_ETH_USD] = constants.EthUsdExponent
+	marketExponents[exchange_config.MARKET_LINK_USD] = constants.LinkUsdExponent
+	marketExponents[exchange_config.MARKET_MATIC_USD] = constants.MaticUsdExponent
+	marketExponents[exchange_config.MARKET_CRV_USD] = constants.CrvUsdExponent
 	marketExponents[unavailableId] = unavailableExponent
 	return marketExponents
 }
