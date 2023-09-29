@@ -87,6 +87,5 @@ func TestMsgDeleteVestEntry_ValidateBasic(t *testing.T) {
 				require.NoError(t, err)
 			}
 		})
-
 	}
 }
