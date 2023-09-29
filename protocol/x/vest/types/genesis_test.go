@@ -18,6 +18,15 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: types.DefaultGenesis(),
 			valid:    true,
 		},
+		{
+			desc: "invalid",
+			genState: &types.GenesisState{
+				VestEntries: []types.VestEntry{
+					{}, // invalid - empty vester account
+				},
+			},
+			valid: false,
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
