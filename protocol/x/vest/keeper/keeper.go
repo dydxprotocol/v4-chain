@@ -123,7 +123,7 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 			); err != nil {
 				// This should never happen. However, if it does, we should not panic.
 				// ProcessVesting is called in BeginBlocker, and panicking in BeginBlocker could cause liveness issues.
-				// Instead, we log the error and continue.
+				// Instead, we generate an informative error log, emit an error metric, and continue.
 				k.Logger(ctx).Error(
 					"unexpected internal error: failed to transfer vest amount to treasury account",
 					constants.ErrorLogKey,
@@ -139,6 +139,8 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 					"vest_account_balance",
 					vesterBalance,
 				)
+				// Increment error counter.
+				telemetry.IncrCounter(1, metrics.ProcessVesting, metrics.AccountTransfer, metrics.Error)
 				continue
 			}
 		}
