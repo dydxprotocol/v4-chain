@@ -14,7 +14,7 @@ import {
   screenProviderGlobalLimiter,
 } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { placeHolderProvider } from '../../../helpers/compliance/compliance-clients';
+import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
 import { complianceCheck } from '../../../lib/compliance-check';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { getIpAddr, rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -48,19 +48,19 @@ class ComplianceController extends Controller {
     let complianceData:
     ComplianceDataFromDatabase | undefined = await ComplianceTable.findByAddressAndProvider(
       address,
-      placeHolderProvider.provider,
+      complianceProvider.provider,
     );
 
     if (complianceData === undefined || DateTime.fromISO(complianceData.updatedAt) < ageThreshold) {
       await checkRateLimit(this.ipAddress);
       // TODO(IND-369): Use Ellptic client
       const response:
-      ComplianceClientResponse = await placeHolderProvider.client.getComplianceResponse(
+      ComplianceClientResponse = await complianceProvider.client.getComplianceResponse(
         address,
       );
       complianceData = await ComplianceTable.upsert({
         ...response,
-        provider: placeHolderProvider.provider,
+        provider: complianceProvider.provider,
         updatedAt: DateTime.utc().toISO(),
       });
     }
