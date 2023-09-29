@@ -21,9 +21,7 @@ func TestMustMarshal(t *testing.T) {
 	b, _ := constants.OrderId_Alice_Num0_ClientId0_Clob0.Marshal()
 	require.Equal(t, b, constants.OrderId_Alice_Num0_ClientId0_Clob0.MustMarshal())
 
-	// Panic
-	var oid types.OrderId
-	require.Panics(t, func() { oid.MustMarshal() })
+	// No panic case. MustMarshal() > Marshal() > MarshalToSizedBuffer() which never returns an error.
 }
 
 func TestIsShortTermOrder(t *testing.T) {
