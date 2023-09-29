@@ -139,12 +139,6 @@ func TestCancelOrder_Success(t *testing.T) {
 				"AddTxnEvent",
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewStatefulOrderRemovalEvent(
-						tc.StatefulOrderPlacement.GetOrderId(),
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
-					),
-				),
 				indexerevents.StatefulOrderEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewStatefulOrderRemovalEvent(

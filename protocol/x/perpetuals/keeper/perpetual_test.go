@@ -123,10 +123,9 @@ func getUpdatePerpetualEventsFromIndexerBlock(
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
-			bytes := indexer_manager.GetBytesFromEventData(event.Data)
 			unmarshaler := common.UnmarshalerImpl{}
 			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV1
-			err := unmarshaler.Unmarshal(bytes, &updatePerpetualEvent)
+			err := unmarshaler.Unmarshal(event.DataBytes, &updatePerpetualEvent)
 			if err != nil {
 				panic(err)
 			}
@@ -2027,10 +2026,9 @@ func getFundingBlockEventsFromIndexerBlock(
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_BlockEvent_); ok {
-			bytes := indexer_manager.GetBytesFromEventData(event.Data)
 			unmarshaler := common.UnmarshalerImpl{}
 			var fundingEvent indexerevents.FundingEventV1
-			err := unmarshaler.Unmarshal(bytes, &fundingEvent)
+			err := unmarshaler.Unmarshal(event.DataBytes, &fundingEvent)
 			if err != nil {
 				panic(err)
 			}

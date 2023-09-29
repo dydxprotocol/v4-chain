@@ -50,20 +50,6 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 		mockIndexerEventManager.On("AddTxnEvent",
 			ks.Ctx,
 			indexerevents.SubtypePerpetualMarket,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewPerpetualMarketCreateEvent(
-					clobPair.MustGetPerpetualId(),
-					clobPair.Id,
-					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.Ticker,
-					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketId,
-					clobPair.Status,
-					clobPair.QuantumConversionExponent,
-					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.AtomicResolution,
-					clobPair.SubticksPerTick,
-					clobPair.StepBaseQuantums,
-					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
-				),
-			),
 			indexerevents.PerpetualMarketEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewPerpetualMarketCreateEvent(
@@ -186,20 +172,6 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 	mockIndexerEventManager.On("AddTxnEvent",
 		ks.Ctx,
 		indexerevents.SubtypePerpetualMarket,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				clobPair.MustGetPerpetualId(),
-				clobPair.Id,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-				clobPair.Status,
-				clobPair.QuantumConversionExponent,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-				clobPair.SubticksPerTick,
-				clobPair.StepBaseQuantums,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-			),
-		),
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
@@ -291,20 +263,6 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewPerpetualMarketCreateEvent(
-							perpetualId,
-							perpetualId,
-							perpetual.Params.Ticker,
-							perpetual.Params.MarketId,
-							tc.clobPair.Status,
-							tc.clobPair.QuantumConversionExponent,
-							perpetual.Params.AtomicResolution,
-							tc.clobPair.SubticksPerTick,
-							tc.clobPair.StepBaseQuantums,
-							perpetual.Params.LiquidityTier,
-						),
-					),
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
@@ -457,20 +415,6 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 					mockIndexerEventManager.On("AddTxnEvent",
 						ks.Ctx,
 						indexerevents.SubtypePerpetualMarket,
-						indexer_manager.GetB64EncodedEventMessage(
-							indexerevents.NewPerpetualMarketCreateEvent(
-								perpetualId,
-								perpetualId,
-								perpetual.Params.Ticker,
-								perpetual.Params.MarketId,
-								make.clobPair.Status,
-								make.clobPair.QuantumConversionExponent,
-								perpetual.Params.AtomicResolution,
-								make.clobPair.SubticksPerTick,
-								make.clobPair.StepBaseQuantums,
-								perpetual.Params.LiquidityTier,
-							),
-						),
 						indexerevents.PerpetualMarketEventVersion,
 						indexer_manager.GetBytes(
 							indexerevents.NewPerpetualMarketCreateEvent(
@@ -666,20 +610,6 @@ func TestUpdateClobPair(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewPerpetualMarketCreateEvent(
-							0,
-							0,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-							types.ClobPair_STATUS_INITIALIZING,
-							clobPair.QuantumConversionExponent,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-							clobPair.SubticksPerTick,
-							clobPair.StepBaseQuantums,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-						),
-					),
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
@@ -711,15 +641,6 @@ func TestUpdateClobPair(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeUpdateClobPair,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewUpdateClobPairEvent(
-							clobPair.GetClobPairId(),
-							types.ClobPair_STATUS_ACTIVE,
-							clobPair.QuantumConversionExponent,
-							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
-							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
-						),
-					),
 					indexerevents.UpdateClobPairEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewUpdateClobPairEvent(
@@ -746,20 +667,6 @@ func TestUpdateClobPair(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewPerpetualMarketCreateEvent(
-							0,
-							0,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-							clobPair.Status,
-							clobPair.QuantumConversionExponent,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-							clobPair.SubticksPerTick,
-							clobPair.StepBaseQuantums,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-						),
-					),
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
@@ -797,20 +704,6 @@ func TestUpdateClobPair(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewPerpetualMarketCreateEvent(
-							0,
-							0,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-							clobPair.Status,
-							clobPair.QuantumConversionExponent,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-							clobPair.SubticksPerTick,
-							clobPair.StepBaseQuantums,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-						),
-					),
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(

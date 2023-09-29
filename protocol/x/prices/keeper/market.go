@@ -49,14 +49,6 @@ func (k Keeper) CreateMarket(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeMarket,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewMarketCreateEvent(
-				marketParam.Id,
-				marketParam.Pair,
-				marketParam.MinPriceChangePpm,
-				marketParam.Exponent,
-			),
-		),
 		indexerevents.MarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewMarketCreateEvent(

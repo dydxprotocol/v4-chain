@@ -99,9 +99,6 @@ func (k Keeper) UpdateMarketPrices(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeMarket,
-			indexer_manager.GetB64EncodedEventMessage(
-				update,
-			),
 			indexerevents.MarketEventVersion,
 			indexer_manager.GetBytes(
 				update,

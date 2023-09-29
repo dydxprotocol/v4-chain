@@ -53,12 +53,6 @@ func EndBlocker(
 		keeper.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewStatefulOrderRemovalEvent(
-					orderId,
-					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewStatefulOrderRemovalEvent(

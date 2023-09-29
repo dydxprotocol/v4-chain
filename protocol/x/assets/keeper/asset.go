@@ -68,15 +68,6 @@ func (k Keeper) CreateAsset(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeAsset,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewAssetCreateEvent(
-				nextId,
-				asset.Symbol,
-				asset.HasMarket,
-				asset.MarketId,
-				asset.AtomicResolution,
-			),
-		),
 		indexerevents.AssetEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewAssetCreateEvent(

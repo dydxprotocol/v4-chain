@@ -43,12 +43,6 @@ func (m msgServer) CancelOrder(
 	m.Keeper.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeStatefulOrder,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewStatefulOrderRemovalEvent(
-				msg.OrderId,
-				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
-			),
-		),
 		indexerevents.StatefulOrderEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewStatefulOrderRemovalEvent(

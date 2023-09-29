@@ -52,13 +52,6 @@ func (k Keeper) ModifyMarketParam(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeMarket,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewMarketModifyEvent(
-				marketParam.Id,
-				marketParam.Pair,
-				marketParam.MinPriceChangePpm,
-			),
-		),
 		indexerevents.MarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewMarketModifyEvent(

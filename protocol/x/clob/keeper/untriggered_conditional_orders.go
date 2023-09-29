@@ -307,11 +307,6 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewConditionalOrderTriggeredEvent(
-					triggeredConditionalOrderId,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewConditionalOrderTriggeredEvent(
