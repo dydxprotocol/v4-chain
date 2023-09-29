@@ -1,4 +1,4 @@
-import { 
+import {
   ComplianceClient,
   getComplianceClient,
 } from '@dydxprotocol-indexer/compliance';
