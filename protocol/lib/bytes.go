@@ -17,12 +17,6 @@ func Int32ToBytes(i int32) []byte {
 	return bytes
 }
 
-func Uint64ToBytes(i uint64) []byte {
-	bytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bytes, i)
-	return bytes
-}
-
 func Int64ToBytes(i int64) []byte {
 	bytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(bytes, uint64(i))

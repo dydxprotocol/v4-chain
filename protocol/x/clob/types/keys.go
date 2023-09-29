@@ -62,7 +62,7 @@ const (
 	PlacedStatefulOrderKeyPrefix = StatefulOrderKeyPrefix + "placed/"
 )
 
-// Stateful orders
+// Store / Memstore
 const (
 	// TriggeredConditionalOrderKeyPrefix is the key to retrieve an triggered conditional order and
 	// information about when it was triggered.
@@ -72,14 +72,25 @@ const (
 	// when it was placed.
 	LongTermOrderPlacementKeyPrefix = PlacedStatefulOrderKeyPrefix + "long_term/"
 
+	// UntriggeredConditionalOrderKeyPrefix is the key to retrieve an untriggered conditional order and
+	// information about when it was placed.
+	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "untriggered/conditional/"
+
+	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
+	// expire at a given timestamp, sorted by order ID.
+	StatefulOrdersTimeSlicePrefix = "stateful_orders_time_slice/"
+)
+
+// Transient Store
+const (
+	// NextStatefulOrderBlockTransactionIndexKey is the transient store key that stores the next
+	// transaction index to use for the next newly-placed stateful order.
+	NextStatefulOrderBlockTransactionIndexKey = "next_stateful_order_block_transaction_index"
+
 	// UncommittedStatefulOrderPlacementKeyPrefix is the key to retrieve an uncommitted stateful order and information
 	// about when it was placed. uncommitted orders are orders that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
 	UncommittedStatefulOrderPlacementKeyPrefix = StatefulOrderKeyPrefix + "uncommitted/long_term/"
-
-	// UntriggeredConditionalOrderKeyPrefix is the key to retrieve an untriggered conditional order and
-	// information about when it was placed.
-	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "untriggered/conditional/"
 
 	// UncommittedStatefulOrderCancellationKeyPrefix is the key to retrieve an uncommitted stateful order cancellation.
 	// uncommitted cancelleations are cancellations that this validator is aware of that have yet to be
@@ -97,14 +108,6 @@ const (
 	// or being committed to a block and are stored in a transient store. This count represents the number of to
 	// be committed stateful `placements - removals`.
 	ToBeCommittedStatefulOrderCountPrefix = "stateful_order_count/to_be_committed/long_term/"
-
-	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
-	// expire at a given timestamp, sorted by order ID.
-	StatefulOrdersTimeSlicePrefix = "stateful_orders_time_slice/"
-
-	// NextStatefulOrderBlockTransactionIndexKey is the transient store key that stores the next
-	// transaction index to use for the next newly-placed stateful order.
-	NextStatefulOrderBlockTransactionIndexKey = "next_stateful_order_block_transaction_index"
 )
 
 // Module Accounts

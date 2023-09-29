@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"math"
 	"math/big"
 	"testing"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -486,11 +487,11 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			},
 			expectedFills: []types.MatchPerpetualDeleveraging_Fill{
 				{
-					OffsettingSubaccountId: constants.Dave_Num1,
+					OffsettingSubaccountId: constants.Dave_Num0,
 					FillAmount:             50_000_000,
 				},
 				{
-					OffsettingSubaccountId: constants.Dave_Num0,
+					OffsettingSubaccountId: constants.Dave_Num1,
 					FillAmount:             50_000_000,
 				},
 			},
