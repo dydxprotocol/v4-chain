@@ -79,7 +79,7 @@ func (k Keeper) HasPerpetual(
 	id uint32,
 ) (found bool) {
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
-	return perpetualStore.Has(types.PerpetualKey(id))
+	return perpetualStore.Has(lib.Uint32ToBytes(id))
 }
 
 func (k Keeper) HasAuthority(authority string) bool {
@@ -163,7 +163,7 @@ func (k Keeper) GetPerpetual(
 ) (val types.Perpetual, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 
-	b := store.Get(types.PerpetualKey(id))
+	b := store.Get(lib.Uint32ToBytes(id))
 	if b == nil {
 		return val, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, lib.Uint32ToString(id))
 	}
@@ -1110,7 +1110,7 @@ func (k Keeper) setPerpetual(
 ) {
 	b := k.cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(perpetual.Params.Id), b)
+	perpetualStore.Set(lib.Uint32ToBytes(perpetual.Params.Id), b)
 }
 
 // setUint32InStore sets a uint32 value in store for a given key.
@@ -1295,7 +1295,7 @@ func (k Keeper) HasLiquidityTier(
 	id uint32,
 ) (found bool) {
 	ltStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
-	return ltStore.Has(types.LiquidityTierKey(id))
+	return ltStore.Has(lib.Uint32ToBytes(id))
 }
 
 // `SetLiquidityTier` sets a liquidity tier in the store (i.e. updates if `id` exists and creates otherwise).
@@ -1365,7 +1365,7 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 ) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
 
-	b := store.Get(types.LiquidityTierKey(id))
+	b := store.Get(lib.Uint32ToBytes(id))
 	if b == nil {
 		return liquidityTier, errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(id))
 	}
@@ -1401,7 +1401,7 @@ func (k Keeper) setLiquidityTier(
 ) {
 	b := k.cdc.MustMarshal(&liquidityTier)
 	liquidityTierStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
-	liquidityTierStore.Set(types.LiquidityTierKey(liquidityTier.Id), b)
+	liquidityTierStore.Set(lib.Uint32ToBytes(liquidityTier.Id), b)
 }
 
 /* === PARAMETERS FUNCTIONS === */

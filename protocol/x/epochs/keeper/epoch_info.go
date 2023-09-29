@@ -14,12 +14,16 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 )
 
+func (k Keeper) getEpochInfoStore(
+	ctx sdk.Context,
+) prefix.Store {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochInfoKeyPrefix))
+}
+
 func (k Keeper) setEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochInfoKeyPrefix))
+	store := k.getEpochInfoStore(ctx)
 	b := k.cdc.MustMarshal(&epochInfo)
-	store.Set(types.EpochInfoKey(
-		epochInfo.Name,
-	), b)
+	store.Set([]byte(epochInfo.Name), b)
 }
 
 // MaybeStartNextEpoch initializes and/or ticks the next epoch.
@@ -129,11 +133,9 @@ func (k Keeper) GetEpochInfo(
 	ctx sdk.Context,
 	id types.EpochInfoName,
 ) (val types.EpochInfo, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochInfoKeyPrefix))
+	store := k.getEpochInfoStore(ctx)
 
-	b := store.Get(types.EpochInfoKey(
-		string(id),
-	))
+	b := store.Get([]byte(id))
 
 	if b == nil {
 		return val, false
@@ -145,7 +147,7 @@ func (k Keeper) GetEpochInfo(
 
 // GetAllEpochInfo returns all epochInfos
 func (k Keeper) GetAllEpochInfo(ctx sdk.Context) (list []types.EpochInfo) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochInfoKeyPrefix))
+	store := k.getEpochInfoStore(ctx)
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()

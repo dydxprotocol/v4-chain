@@ -7,6 +7,7 @@ import (
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -178,9 +179,7 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 
 	// Write clob pair to state with clob pair id 0.
 	b := cdc.MustMarshal(&constants.ClobPair_Btc)
-	store.Set(types.ClobPairKey(
-		types.ClobPairId(constants.ClobPair_Btc.Id),
-	), b)
+	store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
 
 	clobPair := *clobtest.GenerateClobPair()
 
@@ -538,14 +537,10 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 
 	b := cdc.MustMarshal(&constants.ClobPair_Eth)
-	store.Set(types.ClobPairKey(
-		types.ClobPairId(constants.ClobPair_Eth.Id),
-	), b)
+	store.Set(lib.Uint32ToBytes(constants.ClobPair_Eth.Id), b)
 
 	b = cdc.MustMarshal(&constants.ClobPair_Btc)
-	store.Set(types.ClobPairKey(
-		types.ClobPairId(constants.ClobPair_Btc.Id),
-	), b)
+	store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
 
 	// Read the new `ClobPairs` and make sure they do not exist.
 	_, err = ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 1)
@@ -574,14 +569,10 @@ func TestHydrateClobPairAndPerpetualMapping(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 
 	b := cdc.MustMarshal(&constants.ClobPair_Eth)
-	store.Set(types.ClobPairKey(
-		types.ClobPairId(constants.ClobPair_Eth.Id),
-	), b)
+	store.Set(lib.Uint32ToBytes(constants.ClobPair_Eth.Id), b)
 
 	b = cdc.MustMarshal(&constants.ClobPair_Btc)
-	store.Set(types.ClobPairKey(
-		types.ClobPairId(constants.ClobPair_Btc.Id),
-	), b)
+	store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
 
 	// Read the new `ClobPairs` and make sure they do not exist.
 	_, err = ks.ClobKeeper.GetClobPairIdForPerpetual(ks.Ctx, 1)
@@ -1059,9 +1050,7 @@ func TestIsPerpetualClobPairActive(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 
 				b := cdc.MustMarshal(tc.clobPair)
-				store.Set(types.ClobPairKey(
-					types.ClobPairId(tc.clobPair.Id),
-				), b)
+				store.Set(lib.Uint32ToBytes(tc.clobPair.Id), b)
 			}
 
 			ks.ClobKeeper.PerpetualIdToClobPairId = tc.perpetualIdToClobPairId

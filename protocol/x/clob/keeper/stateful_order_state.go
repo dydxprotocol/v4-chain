@@ -40,7 +40,7 @@ func (k Keeper) SetLongTermOrderPlacement(
 	// Note that the transaction index will always be overwritten at the end of this method.
 	nextStatefulOrderTransactionIndex := k.GetNextStatefulOrderTransactionIndex(ctx)
 
-	orderIdBytes := types.OrderIdKey(order.OrderId)
+	orderIdBytes := order.OrderId.MustMarshal()
 	longTermOrderPlacement := types.LongTermOrderPlacement{
 		Order: order,
 		PlacementIndex: types.TransactionOrdering{
@@ -85,7 +85,7 @@ func (k Keeper) GetTriggeredConditionalOrderPlacement(
 ) (val types.LongTermOrderPlacement, found bool) {
 	memStore := k.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 
-	b := memStore.Get(types.OrderIdKey(orderId))
+	b := memStore.Get(orderId.MustMarshal())
 	if b == nil {
 		return val, false
 	}
@@ -102,7 +102,7 @@ func (k Keeper) GetUntriggeredConditionalOrderPlacement(
 ) (val types.LongTermOrderPlacement, found bool) {
 	memStore := k.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
 
-	b := memStore.Get(types.OrderIdKey(orderId))
+	b := memStore.Get(orderId.MustMarshal())
 	if b == nil {
 		return val, false
 	}
@@ -123,7 +123,7 @@ func (k Keeper) GetLongTermOrderPlacement(
 
 	_, memStore := k.fetchStateStoresForOrder(ctx, orderId)
 
-	b := memStore.Get(types.OrderIdKey(orderId))
+	b := memStore.Get(orderId.MustMarshal())
 	if b == nil {
 		return val, false
 	}
@@ -141,7 +141,7 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	// If this is a Short-Term order, panic.
 	orderId.MustBeStatefulOrder()
 
-	orderIdBytes := types.OrderIdKey(orderId)
+	orderIdBytes := orderId.MustMarshal()
 
 	store, memStore := k.fetchStateStoresForOrder(ctx, orderId)
 
@@ -167,7 +167,7 @@ func (k Keeper) GetStatefulOrdersTimeSlice(ctx sdk.Context, goodTilBlockTime tim
 	orderIds []types.OrderId,
 ) {
 	store := k.getStatefulOrdersTimeSliceStore(ctx)
-	statefulOrdersTimeSliceBytes := store.Get(types.GetTimeSliceKey(goodTilBlockTime))
+	statefulOrdersTimeSliceBytes := store.Get(sdk.FormatTimeBytes(goodTilBlockTime))
 
 	// If there are no stateful orders that expire at this block, then return an empty slice.
 	if statefulOrdersTimeSliceBytes == nil {
@@ -214,12 +214,12 @@ func (k Keeper) MustTriggerConditionalOrder(
 	orderId.MustBeConditionalOrder()
 
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
-	orderIdBytes := types.OrderIdKey(orderId)
+	orderIdBytes := orderId.MustMarshal()
 
 	untriggeredConditionalOrderMemStore := k.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
 	untriggeredConditionalOrderStore := k.GetUntriggeredConditionalOrderPlacementStore(ctx)
 
-	bytes := untriggeredConditionalOrderMemStore.Get(types.OrderIdKey(orderId))
+	bytes := untriggeredConditionalOrderMemStore.Get(orderId.MustMarshal())
 	if bytes == nil {
 		panic(
 			fmt.Sprintf(
@@ -332,7 +332,7 @@ func (k Keeper) MustRemoveStatefulOrder(
 	// Else, set the updated list of order IDs in state.
 	if len(updatedStatefulOrdersExpiringAtTime) == 0 {
 		store := k.getStatefulOrdersTimeSliceStore(ctx)
-		store.Delete(types.GetTimeSliceKey(goodTilBlockTime))
+		store.Delete(sdk.FormatTimeBytes(goodTilBlockTime))
 	} else {
 		k.setStatefulOrdersTimeSliceInState(ctx, goodTilBlockTime, updatedStatefulOrdersExpiringAtTime)
 	}
@@ -352,7 +352,7 @@ func (k Keeper) IsConditionalOrderTriggered(
 ) (triggered bool) {
 	// If this is not a conditional order, panic.
 	orderId.MustBeConditionalOrder()
-	orderIdBytes := types.OrderIdKey(orderId)
+	orderIdBytes := orderId.MustMarshal()
 	triggeredMemstore := k.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 	return triggeredMemstore.Has(orderIdBytes)
 }
@@ -437,9 +437,7 @@ func (k Keeper) setStatefulOrdersTimeSliceInState(
 	b := k.cdc.MustMarshal(&statefulOrderPlacement)
 	store := k.getStatefulOrdersTimeSliceStore(ctx)
 	store.Set(
-		types.GetTimeSliceKey(
-			goodTilBlockTime,
-		),
+		sdk.FormatTimeBytes(goodTilBlockTime),
 		b,
 	)
 }
@@ -448,14 +446,11 @@ func (k Keeper) setStatefulOrdersTimeSliceInState(
 // from time 0 until `endTime`.
 func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	startKey :=
-		[]byte(types.StatefulOrdersTimeSlicePrefix)
+	startKey := []byte(types.StatefulOrdersTimeSlicePrefix)
 	endKey := append(
 		startKey,
 		sdk.InclusiveEndBytes(
-			types.GetTimeSliceKey(
-				endTime,
-			),
+			sdk.FormatTimeBytes(endTime),
 		)...,
 	)
 	return store.Iterator(

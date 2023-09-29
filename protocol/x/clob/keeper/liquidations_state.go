@@ -23,9 +23,7 @@ func (k Keeper) GetSubaccountLiquidationInfo(
 ) {
 	store := k.getSubaccountLiquidationInfoStore(ctx)
 
-	b := store.Get(types.SubaccountLiquidationInfoKey(
-		subaccountId,
-	))
+	b := store.Get(subaccountId.MustMarshal())
 	if b == nil {
 		return liquidationInfo
 	}
@@ -61,12 +59,7 @@ func (k Keeper) MustUpdateSubaccountPerpetualLiquidated(
 
 	store := k.getSubaccountLiquidationInfoStore(ctx)
 	b := k.cdc.MustMarshal(&subaccountLiquidationInfo)
-	store.Set(
-		types.SubaccountLiquidationInfoKey(
-			subaccountId,
-		),
-		b,
-	)
+	store.Set(subaccountId.MustMarshal(), b)
 }
 
 // UpdateSubaccountLiquidationInfo updates the total notional liquidated and total insurance lost
@@ -122,12 +115,7 @@ func (k Keeper) UpdateSubaccountLiquidationInfo(
 
 	store := k.getSubaccountLiquidationInfoStore(ctx)
 	b := k.cdc.MustMarshal(&subaccountLiquidationInfo)
-	store.Set(
-		types.SubaccountLiquidationInfoKey(
-			subaccountId,
-		),
-		b,
-	)
+	store.Set(subaccountId.MustMarshal(), b)
 }
 
 // getSubaccountLiquidationInfoStore is an internal helper function for fetching the store

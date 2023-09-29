@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // Uncommitted stateful orders are ones that this validator is aware of that have yet to be
@@ -25,7 +25,7 @@ func (k Keeper) GetUncommittedStatefulOrderPlacement(
 
 	store := k.GetUncommittedStatefulOrderPlacementTransientStore(ctx)
 
-	b := store.Get(types.OrderIdKey(orderId))
+	b := store.Get(orderId.MustMarshal())
 	if b == nil {
 		return val, false
 	}
@@ -46,7 +46,7 @@ func (k Keeper) GetUncommittedStatefulOrderCancellation(
 
 	store := k.GetUncommittedStatefulOrderCancellationTransientStore(ctx)
 
-	b := store.Get(types.OrderIdKey(orderId))
+	b := store.Get(orderId.MustMarshal())
 	if b == nil {
 		return val, false
 	}
@@ -69,7 +69,7 @@ func (k Keeper) GetUncommittedStatefulOrderCount(
 
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
 
-	b := store.Get(satypes.SubaccountKey(orderId.SubaccountId))
+	b := store.Get(orderId.SubaccountId.MustMarshal())
 	if b == nil {
 		return 0
 	}
@@ -92,7 +92,7 @@ func (k Keeper) SetUncommittedStatefulOrderCount(
 
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
 	store.Set(
-		satypes.SubaccountKey(orderId.SubaccountId),
+		orderId.SubaccountId.MustMarshal(),
 		lib.Int32ToBytes(count),
 	)
 }
@@ -116,7 +116,7 @@ func (k Keeper) MustAddUncommittedStatefulOrderPlacement(ctx sdk.Context, msg *t
 		Order: msg.Order,
 	}
 
-	orderIdBytes := types.OrderIdKey(orderId)
+	orderIdBytes := orderId.MustMarshal()
 	b := k.cdc.MustMarshal(&longTermOrderPlacement)
 
 	store := k.GetUncommittedStatefulOrderPlacementTransientStore(ctx)
@@ -144,7 +144,7 @@ func (k Keeper) MustAddUncommittedStatefulOrderCancellation(ctx sdk.Context, msg
 		panic(fmt.Sprintf("MustAddUncommittedStatefulOrderPlacement: order cancellation %v already exists", orderId))
 	}
 
-	orderIdBytes := types.OrderIdKey(orderId)
+	orderIdBytes := orderId.MustMarshal()
 	b := k.cdc.MustMarshal(msg)
 
 	store := k.GetUncommittedStatefulOrderCancellationTransientStore(ctx)

@@ -173,7 +173,7 @@ func (k Keeper) setAsset(
 ) {
 	b := k.cdc.MustMarshal(&asset)
 	assetStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
-	assetStore.Set(types.AssetKey(asset.Id), b)
+	assetStore.Set(lib.Uint32ToBytes(asset.Id), b)
 }
 
 func (k Keeper) setDenomToId(
@@ -243,7 +243,7 @@ func (k Keeper) GetAsset(
 ) (val types.Asset, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
 
-	b := store.Get(types.AssetKey(id))
+	b := store.Get(lib.Uint32ToBytes(id))
 	if b == nil {
 		return val, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
 	}
