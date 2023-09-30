@@ -10,8 +10,10 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libeth "github.com/dydxprotocol/v4-chain/protocol/lib/eth"
@@ -42,10 +44,12 @@ func main() {
 	// Get flags.
 	var denom, rpcNode, bridgeAddress string
 	var toBlock int64
+	var verbose bool
 	flag.StringVar(&denom, "denom", "dv4tnt", "token denom")
 	flag.StringVar(&rpcNode, "rpc", "https://eth-sepolia.g.alchemy.com/v2/demo", "rpc node url")
 	flag.StringVar(&bridgeAddress, "address", "0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0", "bridge address")
 	flag.Int64Var(&toBlock, "toblock", 100_000_000, "last block (inclusive)")
+	flag.BoolVar(&verbose, "verbose", false, "print additional JSON")
 	flag.Parse()
 
 	// Print the flags used for the user
@@ -110,6 +114,8 @@ func main() {
 
 	// ------------ OUTPUT ------------
 
+	cdc := app.GetEncodingConfig().Codec
+
 	// Print x/bridge event params.
 	eventParams := bridgetypes.EventParams{
 		Denom:      denom,
@@ -125,13 +131,57 @@ func main() {
 	bankBalances := make([]banktypes.Balance, 0)
 	sortedAddresses := lib.GetSortedKeys[sort.StringSlice](balances)
 	for _, address := range sortedAddresses {
-		newBalance := balances[address]
-		bankBalances = append(bankBalances, banktypes.Balance{
-			Address: address,
-			Coins:   sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromBigInt(newBalance))),
-		})
+		bankBalances = append(
+			bankBalances,
+			banktypes.Balance{
+				Address: address,
+				Coins:   sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromBigInt(balances[address]))),
+			},
+		)
 	}
-	fmt.Printf("\"bank.balances\": %s\n", mustJson(bankBalances))
+	bankGenesisJson := cdc.MustMarshalJSON(banktypes.NewGenesisState(
+		banktypes.Params{},
+		bankBalances,
+		sdk.NewCoins(),
+		[]banktypes.Metadata{},
+		[]banktypes.SendEnabled{},
+	))
+	fmt.Printf("\"bank.balances\": %s\n", extractFieldFromJson(bankGenesisJson, "balances"))
+
+	// Stop here if not verbose.
+	if !verbose {
+		return
+	}
+
+	// Print x/auth accounts information.
+	genesisAccounts := authtypes.GenesisAccounts{}
+	for i, address := range sortedAddresses {
+		var ba authtypes.AccountI = &authtypes.BaseAccount{
+			Address:       address,
+			PubKey:        nil,
+			AccountNumber: uint64(i),
+			Sequence:      uint64(0),
+		}
+		genesisAccounts = append(
+			genesisAccounts,
+			ba.(authtypes.GenesisAccount),
+		)
+	}
+	authGenesisJson := cdc.MustMarshalJSON(authtypes.NewGenesisState(
+		authtypes.Params{},
+		genesisAccounts,
+	))
+	fmt.Printf("\"auth.accounts\": %s\n", extractFieldFromJson(authGenesisJson, "accounts"))
+}
+
+// extractFieldFromJson takes a JSON dictionary as an input and returns the json of a single field.
+func extractFieldFromJson(input []byte, field string) string {
+	var v map[string]interface{}
+	err := json.Unmarshal(input, &v)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return mustJson(v[field])
 }
 
 // mustJson marshals v into indented JSON and exits the program if it fails to do so.

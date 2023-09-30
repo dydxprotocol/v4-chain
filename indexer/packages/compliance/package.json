@@ -5,8 +5,8 @@
   "main": "build/src/index.js",
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
-    "@types/jest": "^28.1.4",
     "jest": "^28.1.2",
+    "@types/jest": "^28.1.4",
     "typescript": "^4.7.4"
   },
   "scripts": {
