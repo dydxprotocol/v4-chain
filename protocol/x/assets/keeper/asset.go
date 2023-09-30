@@ -37,6 +37,11 @@ func (k Keeper) CreateAsset(
 		return types.Asset{}, errorsmod.Wrap(types.ErrAssetDenomAlreadyExists, denom)
 	}
 
+	// Ensure assetId zero is always USDC. This is a protocol-wide invariant.
+	if assetId == types.AssetUsdc.Id && denom != types.AssetUsdc.Denom {
+		return types.Asset{}, types.ErrAssetZeroNotUsdc
+	}
+
 	// Create the asset
 	asset := types.Asset{
 		Id:               assetId,
