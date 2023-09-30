@@ -1,6 +1,8 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -30,6 +32,17 @@ func (msg *MsgSendFromModuleToAccount) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic runs validation on the fields of a MsgSendFromModuleToAccount.
 func (msg *MsgSendFromModuleToAccount) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return errorsmod.Wrap(
+			ErrInvalidAuthority,
+			fmt.Sprintf(
+				"authority '%s' must be a valid bech32 address, but got error '%v'",
+				msg.Authority,
+				err.Error(),
+			),
+		)
+	}
+
 	// Validate sender module name is non-empty.
 	if len(msg.SenderModuleName) == 0 {
 		return ErrEmptyModuleName

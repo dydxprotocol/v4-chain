@@ -10,6 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	validAuthority = constants.AliceAccAddress.String()
+)
+
 func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
 		msg types.MsgSendFromModuleToAccount
@@ -17,6 +21,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 	}{
 		"Valid": {
 			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
 				SenderModuleName: "gov",
 				Recipient:        constants.AliceAccAddress.String(),
 				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
@@ -24,13 +29,19 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 		},
 		"Valid - module name has underscore": {
 			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
 				SenderModuleName: "insurance_fund",
 				Recipient:        constants.AliceAccAddress.String(),
 				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
 			},
 		},
+		"Invalid authority": {
+			msg: types.MsgSendFromModuleToAccount{},
+			err: types.ErrInvalidAuthority,
+		},
 		"Invalid sender module name": {
 			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
 				SenderModuleName: "", // empty module name
 				Recipient:        constants.BobAccAddress.String(),
 				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
@@ -39,6 +50,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 		},
 		"Invalid recipient address": {
 			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
 				SenderModuleName: "bridge",
 				Recipient:        "invalid_address",
 				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
@@ -47,6 +59,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 		},
 		"Invalid coin denom": {
 			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
 				SenderModuleName: "bridge",
 				Recipient:        constants.CarlAccAddress.String(),
 				Coin: sdk.Coin{
@@ -58,6 +71,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 		},
 		"Invalid coin amount": {
 			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
 				SenderModuleName: "rewards",
 				Recipient:        constants.CarlAccAddress.String(),
 				Coin: sdk.Coin{

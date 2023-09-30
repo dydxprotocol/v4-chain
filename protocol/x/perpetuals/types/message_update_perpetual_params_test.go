@@ -23,20 +23,20 @@ func TestMsgUpdatePerpetualParams_ValidateBasic(t *testing.T) {
 	}{
 		"Success": {
 			msg: types.MsgUpdatePerpetualParams{
-				Authority: "test",
+				Authority: validAuthority,
 				PerpetualParams: types.PerpetualParams{
 					Ticker:            "test",
 					DefaultFundingPpm: 217,
 				},
 			},
 		},
-		"Failure: Empty authority": {
+		"Failure: Invalid authority": {
 			msg:         types.MsgUpdatePerpetualParams{},
-			expectedErr: "authority cannot be empty",
+			expectedErr: "Authority is invalid",
 		},
 		"Failure: Empty ticker": {
 			msg: types.MsgUpdatePerpetualParams{
-				Authority: "test",
+				Authority: validAuthority,
 				PerpetualParams: types.PerpetualParams{
 					Ticker: "",
 				},
@@ -45,7 +45,7 @@ func TestMsgUpdatePerpetualParams_ValidateBasic(t *testing.T) {
 		},
 		"Failure: DefaultFundingPpm >= MaxDefaultFundingPpmAbs": {
 			msg: types.MsgUpdatePerpetualParams{
-				Authority: "test",
+				Authority: validAuthority,
 				PerpetualParams: types.PerpetualParams{
 					Ticker:            "test",
 					DefaultFundingPpm: 100_000_000,
