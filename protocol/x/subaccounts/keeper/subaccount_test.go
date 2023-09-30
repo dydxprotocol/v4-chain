@@ -2171,6 +2171,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			for _, a := range tc.assets {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,
+					a.Id,
 					a.Symbol,
 					a.Denom,
 					a.DenomExponent,
@@ -2782,6 +2783,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			for _, a := range tc.assets {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,
+					a.Id,
 					a.Symbol,
 					a.Denom,
 					a.DenomExponent,
@@ -3206,6 +3208,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			for _, a := range tc.assets {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,
+					a.Id,
 					a.Symbol,
 					a.Denom,
 					a.DenomExponent,

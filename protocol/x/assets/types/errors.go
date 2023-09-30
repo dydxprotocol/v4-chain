@@ -17,6 +17,7 @@ var (
 	ErrInvalidMarketId              = errorsmod.Register(ModuleName, 9, "Found market id for asset without market")
 	ErrInvalidAssetAtomicResolution = errorsmod.Register(ModuleName, 10, "Invalid asset atomic resolution")
 	ErrInvalidDenomExponent         = errorsmod.Register(ModuleName, 11, "Invalid denom exponent")
+	ErrAssetAlreadyExists           = errorsmod.Register(ModuleName, 12, "Asset already exists")
 
 	// Errors for Not Implemented
 	ErrNotImplementedMulticollateral = errorsmod.Register(ModuleName, 401, "Not Implemented: Multi-Collateral")

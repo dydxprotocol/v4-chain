@@ -16,7 +16,4 @@ const (
 
 	// AssetKeyPrefix is the prefix to retrieve all Assets
 	AssetKeyPrefix = "asset/"
-
-	// NumAssetsKey is the prefix to retrieve the cardinality of Assets
-	NumAssetsKey = "num_assets"
 )
