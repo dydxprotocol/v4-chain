@@ -37,7 +37,11 @@ var (
 	BridgeGenesisAccountBalance = sdk.NewCoin(testDenom, sdkmath.NewInt(1000000000))
 
 	delta                        = constants.BridgeEvent_Id0_Height0.Coin.Amount.Int64()
-	BridgeExpectedAccountBalance = sdk.NewCoin(testDenom, sdkmath.NewInt(1000000000-delta))
+	BridgeExpectedAccountBalance = sdk.NewCoin(testDenom,
+		BridgeGenesisAccountBalance.Amount.Sub(
+			constants.BridgeEvent_Id0_Height0.Coin.Amount,
+		),
+	)
 )
 
 func TestDispatchMessagesForBlock(t *testing.T) {
@@ -395,7 +399,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 
 	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
 
-	// Sanity check: at block 1, expect bridge balance is expected before the message is sent.
+	// Sanity check: at block 1, expect bridge balance is genesis value before the message is sent.
 	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Get initial Alice balance

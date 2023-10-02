@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -291,7 +292,7 @@ type App struct {
 // assertAppPreconditions assert invariants required for an application to start.
 func assertAppPreconditions() {
 	// Check that the default power reduction is set correctly.
-	if sdk.DefaultPowerReduction.Uint64() != 1_000_000_000_000_000_000 {
+	if sdk.DefaultPowerReduction.BigInt().Cmp(big.NewInt(1_000_000_000_000_000_000)) != 0 {
 		panic("DefaultPowerReduction is not set correctly")
 	}
 }
@@ -306,6 +307,7 @@ func New(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	assertAppPreconditions()
+
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.
