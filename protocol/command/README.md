@@ -14,7 +14,7 @@ rootCmd.AddCommand(mycommandpkg.Command())
 
 The above will surface your command as `dydxprotocold mycommand`.
 
-If instead you wish to define your command as the subcommand of a subcommand (i.e. You wish define something like `dydxprotocold tendermint mycommmand`), you can first search for the subcommand (i.e. `tendermint`) and subsequently add your command to it like so:
+If instead you wish to define your command as the subcommand of a subcommand (i.e. You wish to define something like `dydxprotocold tendermint mycommmand`), you can first search for the subcommand (i.e. `tendermint`) and subsequently add your command to it like so:
 
 ```go
 // Fetch Tendermint subcommand.
