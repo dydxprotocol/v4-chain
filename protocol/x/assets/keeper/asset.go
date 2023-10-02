@@ -39,7 +39,12 @@ func (k Keeper) CreateAsset(
 
 	// Ensure assetId zero is always USDC. This is a protocol-wide invariant.
 	if assetId == types.AssetUsdc.Id && denom != types.AssetUsdc.Denom {
-		return types.Asset{}, types.ErrAssetZeroNotUsdc
+		return types.Asset{}, types.ErrUsdcMustBeAssetZero
+	}
+
+	// Ensure USDC is not created with a non-zero assetId. This is a protocol-wide invariant.
+	if assetId != types.AssetUsdc.Id && denom == types.AssetUsdc.Denom {
+		return types.Asset{}, types.ErrUsdcMustBeAssetZero
 	}
 
 	// Create the asset
