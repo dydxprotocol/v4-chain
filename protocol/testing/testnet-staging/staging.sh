@@ -193,13 +193,13 @@ create_validators() {
 		update_genesis_complete_bridge_delay "$VAL_CONFIG_DIR" "600"
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,100000000000$NATIVE_TOKEN --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 		for acct in "${FAUCET_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,100000000000$NATIVE_TOKEN --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 
-		dydxprotocold gentx "${MONIKERS[$i]}" 500000000$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+		dydxprotocold gentx "${MONIKERS[$i]}" $TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 		# Copy the gentx to a shared directory.
 		cp -a "$VAL_CONFIG_DIR/gentx/." /tmp/gentx

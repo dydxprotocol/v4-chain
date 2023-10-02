@@ -32,12 +32,12 @@ var (
 
 	DelayMsgAuthority = authtypes.NewModuleAddress(types.ModuleName).String()
 
-	BridgeGenesisAccountBalance = sdk.NewCoin("dv4tnt", sdkmath.NewInt(1000000000))
-	AliceInitialAccountBalance  = sdk.NewCoin("dv4tnt", sdkmath.NewInt(99500000000))
+	testDenom = "dv4tnt"
+
+	BridgeGenesisAccountBalance = sdk.NewCoin(testDenom, sdkmath.NewInt(1000000000))
 
 	delta                        = constants.BridgeEvent_Id0_Height0.Coin.Amount.Int64()
-	BridgeExpectedAccountBalance = sdk.NewCoin("dv4tnt", sdkmath.NewInt(1000000000-delta))
-	AliceExpectedAccountBalance  = sdk.NewCoin("dv4tnt", sdkmath.NewInt(99500000000+delta))
+	BridgeExpectedAccountBalance = sdk.NewCoin(testDenom, sdkmath.NewInt(1000000000-delta))
 )
 
 func TestDispatchMessagesForBlock(t *testing.T) {
@@ -395,16 +395,23 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 
 	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
 
-	// Sanity check: at block 1, balances are as expected before the message is sent.
+	// Sanity check: at block 1, expect bridge balance is expected before the message is sent.
 	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
-	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, AliceInitialAccountBalance)
+
+	// Get initial Alice balance
+	aliceInitialBalance := tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, testDenom)
+	// Calculate Alice's expected balance after complete bridge event.
+	aliceExpectedAccountBalance := sdk.NewCoin(
+		testDenom,
+		aliceInitialBalance.Amount.Add(sdkmath.NewInt(delta)),
+	)
 
 	// Advance to block 2 and invoke delayed message to complete bridge.
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
 	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
-	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, AliceExpectedAccountBalance)
+	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, aliceExpectedAccountBalance)
 
 	// Assert: the message has been deleted from the keeper.
 	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
