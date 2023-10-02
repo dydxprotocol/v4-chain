@@ -191,8 +191,6 @@ setup_cosmovisor() {
 		export DAEMON_HOME="$HOME/chain/.full-node-$i"
 
 		cosmovisor init /bin/dydxprotocold
-
-		cp /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/genesis/bin/"
 	done
 
 	for i in "${!MONIKERS[@]}"; do
@@ -201,8 +199,6 @@ setup_cosmovisor() {
 		export DAEMON_HOME="$HOME/chain/.${MONIKERS[$i]}"
 
 		cosmovisor init /bin/dydxprotocold
-
-		cp /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/genesis/bin/"
 	done
 }
 
