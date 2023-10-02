@@ -206,7 +206,7 @@ Our current implementation contains a light fork of CosmosSDK. The fork can be f
 
 ## Daemons
 
-Daemons are background processes that run in go-routines to do asyncronous work. Daemons can be configured with their respective flags, e.g. `price-daemon-enabled` or `price-daemon-delay-loop-ms`.
+Daemons are background processes that run in go-routines to do asynchronous work. Daemons can be configured with their respective flags, e.g. `price-daemon-enabled` or `price-daemon-delay-loop-ms`.
 
 ### Pricefeed Daemon
 
