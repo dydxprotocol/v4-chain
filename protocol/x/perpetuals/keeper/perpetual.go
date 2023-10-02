@@ -1385,7 +1385,7 @@ func (k Keeper) setLiquidityTier(
 // `GetParams` returns perpetuals module parameters as a `Params` object from store.
 func (k Keeper) GetParams(
 	ctx sdk.Context,
-) params types.Params {
+) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get([]byte(types.ParamsKey))
 	k.cdc.MustUnmarshal(b, &params)
