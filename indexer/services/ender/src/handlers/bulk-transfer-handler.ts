@@ -7,27 +7,24 @@ import {
   TendermintEventTable,
   TransferCreateObject,
   TransferFromDatabase,
-  TransferTable,
+  TransferTable, WalletCreateObject,
   WalletTable,
 } from '@dydxprotocol-indexer/postgres';
-import { TransferEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { generateTransferContents } from '../helpers/kafka-helper';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
 import { ConsolidatedKafkaEvent, TransferEventType } from '../lib/types';
-import { Handler } from './handler';
-import * as helpers from './helpers';
 
-export class TransferHandler extends Handler<TransferEventV1> {
+export type BulkTransferResults = {
+  transfer: TransferCreateObject;
+  wallet: WalletCreateObject;
+  events: ConsolidatedKafkaEvent[];
+};
+
+export class BulkTransferHandler {
   eventType: string = 'TransferEvent';
 
-  public getParallelizationIds(): string[] {
-    // Must be handled sequentially with asset create events
-    return [];
-  }
-
-  public async internalHandle(
-  ): Promise<ConsolidatedKafkaEvent[]> {
+  public async handle(): Promise<BulkTransferResults> {
     await this.runFuncWithTimingStatAndErrorLogging(
       Promise.all([
         this.upsertRecipientSubaccount(),
@@ -50,7 +47,7 @@ export class TransferHandler extends Handler<TransferEventV1> {
     );
   }
 
-  protected async createTransferFromEvent(asset: AssetFromDatabase): Promise<TransferFromDatabase> {
+  protected createTransferFromEvent(asset: AssetFromDatabase): TransferCreateObject {
     const eventId: Buffer = TendermintEventTable.createEventId(
       this.block.height.toString(),
       indexerTendermintEventToTransactionIndex(this.indexerTendermintEvent),
@@ -85,13 +82,6 @@ export class TransferHandler extends Handler<TransferEventV1> {
       createdAt: this.timestamp.toISO(),
       createdAtHeight: this.block.height.toString(),
     };
-
-    const transferFromDatabase: TransferFromDatabase = await TransferTable.create(
-      transferToCreate,
-      { txId: this.txId },
-    );
-
-    return transferFromDatabase;
   }
 
   protected async upsertRecipientSubaccount(): Promise<void> {
@@ -162,11 +152,9 @@ export class TransferHandler extends Handler<TransferEventV1> {
       );
 
       kafkaEvents.push(
-        helpers.generateConsolidatedSubaccountKafkaEvent(
+        this.generateConsolidatedSubaccountKafkaEvent(
           JSON.stringify(senderContents),
           this.event.sender!.subaccountId!,
-          this.block.height.toString(),
-          this.indexerTendermintEvent,
         ),
       );
     }
@@ -181,11 +169,9 @@ export class TransferHandler extends Handler<TransferEventV1> {
       );
 
       kafkaEvents.push(
-        helpers.generateConsolidatedSubaccountKafkaEvent(
+        this.generateConsolidatedSubaccountKafkaEvent(
           JSON.stringify(recipientContents),
           this.event.recipient!.subaccountId!,
-          this.block.height.toString(),
-          this.indexerTendermintEvent,
         ),
       );
     }

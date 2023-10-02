@@ -441,6 +441,27 @@ describe('Transfer store', () => {
     }));
   });
 
+  describe('bulkCreate', () => {
+    it('Successfully creates multiple transfers', async () => {
+      const createdTransfers:
+      TransferFromDatabase[] = await TransferTable.bulkCreate([
+        defaultTransfer,
+        {
+          ...defaultTransfer,
+          eventId: defaultTendermintEventId2,
+        },
+      ]);
+
+      expect(createdTransfers).toHaveLength(2);
+      for (let i = 0; i < createdTransfers.length; i += 1) {
+        const transfer: TransferFromDatabase = createdTransfers[i];
+        expect(
+          await TransferTable.findById(transfer.id),
+        ).toEqual(transfer);
+      }
+    });
+  });
+
   it('Successfully gets net transfers between block heights for a subaccount', async () => {
     await SubaccountTable.create(defaultSubaccount3);
     await Promise.all([

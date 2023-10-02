@@ -8,6 +8,7 @@ import { UpdatePerpetualEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import * as helpers from './helpers';
 
 export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
   eventType: string = 'UpdatePerpetualEventV1';
@@ -24,7 +25,7 @@ export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
       this.generateTimingStatsOptions('update_perpetual'),
     );
     return [
-      this.generateConsolidatedMarketKafkaEvent(
+      helpers.generateConsolidatedMarketKafkaEvent(
         JSON.stringify(generatePerpetualMarketMessage([perpetualMarket])),
       ),
     ];

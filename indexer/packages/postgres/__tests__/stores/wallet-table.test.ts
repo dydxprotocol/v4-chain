@@ -1,6 +1,6 @@
 import { WalletFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
-import { defaultAddress, defaultWallet } from '../helpers/constants';
+import { blockedAddress, defaultAddress, defaultWallet } from '../helpers/constants';
 import * as WalletTable from '../../src/stores/wallet-table';
 
 describe('Wallet store', () => {
@@ -64,5 +64,25 @@ describe('Wallet store', () => {
     );
 
     expect(wallet).toEqual(expect.objectContaining(defaultWallet));
+  });
+
+  describe('bulkCreate', () => {
+    it('Successfully creates multiple wallets', async () => {
+      const createdWallets:
+      WalletFromDatabase[] = await WalletTable.bulkCreate([
+        defaultWallet,
+        {
+          address: blockedAddress,
+        },
+      ]);
+
+      expect(createdWallets).toHaveLength(2);
+      for (let i = 0; i < createdWallets.length; i += 1) {
+        const wallet: WalletFromDatabase = createdWallets[i];
+        expect(
+          await WalletTable.findById(wallet.address),
+        ).toEqual(wallet);
+      }
+    });
   });
 });

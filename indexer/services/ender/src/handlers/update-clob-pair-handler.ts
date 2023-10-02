@@ -8,6 +8,7 @@ import { UpdateClobPairEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import * as helpers from './helpers';
 
 export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
   eventType: string = 'UpdateClobPairEventV1';
@@ -24,7 +25,7 @@ export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
       this.generateTimingStatsOptions('update_clob_pair'),
     );
     return [
-      this.generateConsolidatedMarketKafkaEvent(
+      helpers.generateConsolidatedMarketKafkaEvent(
         JSON.stringify(generatePerpetualMarketMessage([perpetualMarket])),
       ),
     ];

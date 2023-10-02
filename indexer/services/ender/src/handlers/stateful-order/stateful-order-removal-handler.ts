@@ -12,6 +12,7 @@ import {
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import * as helpers from '../helpers';
 
 export class StatefulOrderRemovalHandler extends
   AbstractStatefulOrderHandler<StatefulOrderEventV1> {
@@ -39,7 +40,7 @@ export class StatefulOrderRemovalHandler extends
     });
 
     return [
-      this.generateConsolidatedVulcanKafkaEvent(
+      helpers.generateConsolidatedVulcanKafkaEvent(
         getOrderIdHash(orderIdProto),
         offChainUpdate,
       ),

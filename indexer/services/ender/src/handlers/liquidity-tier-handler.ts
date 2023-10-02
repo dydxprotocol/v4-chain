@@ -14,6 +14,7 @@ import { QUOTE_CURRENCY_ATOMIC_RESOLUTION } from '../constants';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import * as helpers from './helpers';
 
 export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
   eventType: string = 'LiquidityTierUpsertEvent';
@@ -69,7 +70,7 @@ export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
     }
 
     return [
-      this.generateConsolidatedMarketKafkaEvent(
+      helpers.generateConsolidatedMarketKafkaEvent(
         JSON.stringify(generatePerpetualMarketMessage(perpetualMarkets)),
       ),
     ];

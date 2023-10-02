@@ -17,6 +17,7 @@ import { UpdateClobPairValidator } from '../validators/update-clob-pair-validato
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
 import { BatchedHandlers } from './batched-handlers';
+import { BULK_UPDATE_SUBTYPES, BulkUpdateHandlers } from './bulk-update-handlers';
 import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
 import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
@@ -53,6 +54,7 @@ export class BlockProcessor {
   txId: number;
   batchedHandlers: BatchedHandlers;
   syncHandlers: SyncHandlers;
+  bulkUpdateHandlers: BulkUpdateHandlers;
 
   constructor(
     block: IndexerTendermintBlock,
@@ -62,6 +64,7 @@ export class BlockProcessor {
     this.txId = txId;
     this.batchedHandlers = new BatchedHandlers();
     this.syncHandlers = new SyncHandlers();
+    this.bulkUpdateHandlers = new BulkUpdateHandlers();
   }
 
   /**
@@ -177,6 +180,8 @@ export class BlockProcessor {
     _.map(handlers, (handler: Handler<EventMessage>) => {
       if (SYNCHRONOUS_SUBTYPES.includes(eventProto.type as DydxIndexerSubtypes)) {
         this.syncHandlers.addHandler(eventProto.type, handler);
+      } else if (BULK_UPDATE_SUBTYPES.includes(eventProto.type as DydxIndexerSubtypes)) {
+        this.bulkUpdateHandlers.addEvent(eventProto);
       } else {
         this.batchedHandlers.addHandler(handler);
       }

@@ -42,6 +42,7 @@ import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
 import { SubaccountUpdate } from '../lib/translated-types';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import * as helpers from './helpers';
 
 export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
   eventType: string = 'SubaccountUpdateEvent';
@@ -526,9 +527,11 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
       assetsMap,
     );
 
-    return this.generateConsolidatedSubaccountKafkaEvent(
+    return helpers.generateConsolidatedSubaccountKafkaEvent(
       JSON.stringify(contents),
       this.event.subaccountId!,
+      this.block.height.toString(),
+      this.indexerTendermintEvent,
     );
   }
 }

@@ -59,6 +59,7 @@ import {
   SumFields,
 } from '../../lib/types';
 import { Handler } from '../handler';
+import * as helpers from '../helpers';
 
 export type OrderFillEventBase = {
   subaccountId: string;
@@ -361,9 +362,11 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
         generateOrderSubaccountMessage(order, perpetualMarket.ticker),
       ];
     }
-    return this.generateConsolidatedSubaccountKafkaEvent(
+    return helpers.generateConsolidatedSubaccountKafkaEvent(
       JSON.stringify(message),
       subaccountIdProto,
+      this.block.height.toString(),
+      this.indexerTendermintEvent,
     );
   }
 
@@ -382,9 +385,11 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
         },
       ],
     };
-    return this.generateConsolidatedTradeKafkaEvent(
+    return helpers.generateConsolidatedTradeKafkaEvent(
       JSON.stringify(tradeContents),
       fill.clobPairId,
+      this.block.height.toString(),
+      this.indexerTendermintEvent,
     );
   }
 
@@ -405,7 +410,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
         totalFilledQuantums,
       },
     });
-    return this.generateConsolidatedVulcanKafkaEvent(
+    return helpers.generateConsolidatedVulcanKafkaEvent(
       getOrderIdHash(orderId),
       offChainUpdate,
     );
@@ -427,7 +432,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
         removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_FILLED,
       },
     });
-    return this.generateConsolidatedVulcanKafkaEvent(
+    return helpers.generateConsolidatedVulcanKafkaEvent(
       getOrderIdHash(orderId),
       offchainUpdate,
     );

@@ -18,6 +18,7 @@ import {
   MarketPriceUpdateEventMessage,
 } from '../../lib/types';
 import { Handler } from '../handler';
+import * as helpers from '../helpers';
 
 type OraclePriceWithTicker = {
   oraclePrice: OraclePriceFromDatabase,
@@ -126,7 +127,7 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
       oraclePrice, pair,
     );
 
-    return this.generateConsolidatedMarketKafkaEvent(
+    return helpers.generateConsolidatedMarketKafkaEvent(
       JSON.stringify(contents),
     );
   }

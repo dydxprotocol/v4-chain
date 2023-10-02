@@ -18,6 +18,7 @@ import {
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import * as helpers from '../helpers';
 
 export class ConditionalOrderTriggeredHandler extends
   AbstractStatefulOrderHandler<StatefulOrderEventV1> {
@@ -64,7 +65,7 @@ export class ConditionalOrderTriggeredHandler extends
     });
 
     return [
-      this.generateConsolidatedVulcanKafkaEvent(
+      helpers.generateConsolidatedVulcanKafkaEvent(
         getOrderIdHash(orderIdProto),
         offChainUpdate,
       ),

@@ -92,3 +92,14 @@ export async function findById(
     .findById(address)
     .returning('*');
 }
+
+export async function bulkCreate(
+  walletsToCreate: WalletCreateObject[],
+  options: Options = {},
+): Promise<WalletFromDatabase[]> {
+  return WalletModel.query(
+    Transaction.get(options.txId),
+  ).insert(
+    walletsToCreate,
+  ).returning('*');
+}

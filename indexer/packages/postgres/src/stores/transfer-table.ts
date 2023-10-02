@@ -417,6 +417,27 @@ export async function create(
   }).returning('*');
 }
 
+export async function bulkCreate(
+  transfersToCreate: TransferCreateObject[],
+  options: Options = {},
+): Promise<TransferFromDatabase[]> {
+  return TransferModel.query(
+    Transaction.get(options.txId),
+  ).insert(
+    transfersToCreate.map((transferToCreate) => ({
+      id: uuid(
+        transferToCreate.eventId,
+        transferToCreate.assetId,
+        transferToCreate.senderSubaccountId,
+        transferToCreate.recipientSubaccountId,
+        transferToCreate.senderWalletAddress,
+        transferToCreate.recipientWalletAddress,
+      ),
+      ...transferToCreate,
+    })),
+  ).returning('*');
+}
+
 export async function findById(
   id: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,

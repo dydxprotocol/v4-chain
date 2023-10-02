@@ -16,6 +16,7 @@ import {
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import * as helpers from '../helpers';
 
 // TODO(IND-334): Rename to LongTermOrderPlacementHandler after deprecating StatefulOrderPlacement
 export class StatefulOrderPlacementHandler extends
@@ -68,7 +69,7 @@ export class StatefulOrderPlacementHandler extends
     });
 
     return [
-      this.generateConsolidatedVulcanKafkaEvent(
+      helpers.generateConsolidatedVulcanKafkaEvent(
         getOrderIdHash(order.orderId!),
         offChainUpdate,
       ),

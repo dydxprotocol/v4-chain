@@ -18,6 +18,7 @@ import { generateOrderSubaccountMessage } from '../../helpers/kafka-helper';
 import { getTriggerPrice } from '../../lib/helper';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import * as helpers from '../helpers';
 
 export class ConditionalOrderPlacementHandler extends
   AbstractStatefulOrderHandler<StatefulOrderEventV1> {
@@ -67,9 +68,11 @@ export class ConditionalOrderPlacementHandler extends
     };
 
     return [
-      this.generateConsolidatedSubaccountKafkaEvent(
+      helpers.generateConsolidatedSubaccountKafkaEvent(
         JSON.stringify(message),
         subaccountId,
+        this.block.height.toString(),
+        this.indexerTendermintEvent,
       ),
     ];
   }
