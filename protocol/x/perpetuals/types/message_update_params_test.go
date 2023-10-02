@@ -32,7 +32,9 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 			},
 		},
 		"Failure: Invalid authority": {
-			msg:         types.MsgUpdateParams{},
+			msg: types.MsgUpdateParams{
+				Authority: "",
+			},
 			expectedErr: "Authority is invalid",
 		},
 		"Failure: 0 FundingRateClampFactorPpm": {

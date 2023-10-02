@@ -35,7 +35,9 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 			},
 		},
 		"Failure: Invalid authority": {
-			msg:         types.MsgSetLiquidityTier{},
+			msg: types.MsgSetLiquidityTier{
+				Authority: "",
+			},
 			expectedErr: "Authority is invalid",
 		},
 		"Failure: Initial Margin Ppm is greater than 100%": {

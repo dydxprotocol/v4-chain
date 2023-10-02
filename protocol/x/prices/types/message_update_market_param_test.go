@@ -34,7 +34,9 @@ func TestMsgUpdateMarketParam_ValidateBasic(t *testing.T) {
 			},
 		},
 		"Failure: Empty authority": {
-			msg: types.MsgUpdateMarketParam{},
+			msg: types.MsgUpdateMarketParam{
+				Authority: "",
+			},
 			expectedErr: "authority '' must be a valid bech32 address, but got error 'empty address string is not " +
 				"allowed': Authority is invalid",
 		},

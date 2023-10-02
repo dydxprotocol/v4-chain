@@ -31,7 +31,9 @@ func TestMsgUpdatePerpetualParams_ValidateBasic(t *testing.T) {
 			},
 		},
 		"Failure: Invalid authority": {
-			msg:         types.MsgUpdatePerpetualParams{},
+			msg: types.MsgUpdatePerpetualParams{
+				Authority: "",
+			},
 			expectedErr: "Authority is invalid",
 		},
 		"Failure: Empty ticker": {

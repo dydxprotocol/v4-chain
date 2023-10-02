@@ -26,7 +26,9 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 	}{
 		{
 			desc: "Empty authority",
-			msg:  types.MsgCreateOracleMarket{},
+			msg: types.MsgCreateOracleMarket{
+				Authority: "",
+			},
 			expectedErr: "authority '' must be a valid bech32 address, but got error 'empty address string is not " +
 				"allowed': Authority is invalid",
 		},

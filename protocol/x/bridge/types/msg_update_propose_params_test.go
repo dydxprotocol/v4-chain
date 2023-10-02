@@ -33,7 +33,9 @@ func TestMsgUpdateProposeParams_ValidateBasic(t *testing.T) {
 			},
 		},
 		"Failure: Invalid authority": {
-			msg:         types.MsgUpdateProposeParams{},
+			msg: types.MsgUpdateProposeParams{
+				Authority: "",
+			},
 			expectedErr: types.ErrInvalidAuthority,
 		},
 	}

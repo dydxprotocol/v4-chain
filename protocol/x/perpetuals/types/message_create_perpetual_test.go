@@ -28,8 +28,10 @@ func TestMsgCreatePerpetual_ValidateBasic(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			desc:        "Invalid authority",
-			msg:         types.MsgCreatePerpetual{},
+			desc: "Invalid authority",
+			msg: types.MsgCreatePerpetual{
+				Authority: "",
+			},
 			expectedErr: "Authority is invalid",
 		},
 		{

@@ -36,7 +36,9 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 			},
 		},
 		"Invalid authority": {
-			msg: types.MsgSendFromModuleToAccount{},
+			msg: types.MsgSendFromModuleToAccount{
+				Authority: "",
+			},
 			err: types.ErrInvalidAuthority,
 		},
 		"Invalid sender module name": {
