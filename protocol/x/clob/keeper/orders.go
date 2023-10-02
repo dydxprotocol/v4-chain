@@ -201,8 +201,10 @@ func (k Keeper) PlaceStatefulOrder(
 	}
 
 	// 3. Check that adding the order would not exceed the equity tier for the account.
-	if err := k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order); err != nil {
-		return err
+	if ctx.BlockHeight() < 956441 {
+		if err := k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order); err != nil {
+			return err
+		}
 	}
 
 	// 4. Perform a collateralization check for the full size of the order to mitigate spam.
