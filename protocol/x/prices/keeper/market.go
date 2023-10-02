@@ -74,17 +74,22 @@ func (k Keeper) CreateMarket(
 	return marketParam, nil
 }
 
-// IsRecentlyAdded returns true if the market was added recently. Since it takes a few seconds for
-// index prices to populate, we would not consider missing index prices for a recently added market
-// to be an error.
-func (k Keeper) IsRecentlyAdded(marketId uint32) bool {
+// IsRecentlyAvailable returns true if the market was recently made available to the pricefeed daemon. A market is
+// considered recently available either if it was recently created, or if the pricefeed daemon was recently started. If
+// an index price does not exist for a recently available market, the protocol does not consider this an error
+// condition, as it is expected that the pricefeed daemon will eventually provide a price for the market within a
+// few seconds.
+func (k Keeper) IsRecentlyAvailable(ctx sdk.Context, marketId uint32) bool {
 	createdAt, ok := k.marketToCreatedAt[marketId]
 
 	if !ok {
 		return false
 	}
 
-	return k.timeProvider.Now().Sub(createdAt) < types.MarketIsRecentDuration
+	// The comparison condition considers both market age and price daemon warmup time because a market can be
+	// created before or after the daemon starts.
+	return k.timeProvider.Now().Sub(createdAt) < types.MarketIsRecentDuration ||
+		ctx.BlockHeight() < types.PriceDaemonInitializationBlocks
 }
 
 // GetAllMarketParamPrices returns a slice of MarketParam, MarketPrice tuples for all markets.
