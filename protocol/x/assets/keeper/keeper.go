@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -41,7 +42,6 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-	k.setNumAssets(ctx, uint32(0))
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
