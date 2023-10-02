@@ -31,11 +31,12 @@ func TestMsgUpdateSafetyParams_ValidateBasic(t *testing.T) {
 			},
 		},
 		"Failure: Invalid authority": {
-			msg:         types.MsgUpdateSafetyParams{},
+			msg: types.MsgUpdateSafetyParams{
+				Authority: "",
+			},
 			expectedErr: types.ErrInvalidAuthority,
 		},
 	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
