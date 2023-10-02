@@ -18,6 +18,10 @@ REWARD_TOKEN="dv4tnt"
 NATIVE_TOKEN="dv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
+# Each testnet validator has 1 million whole coins of native token.
+TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000000000000000000000 # 1e24
+# Each testnet validator self-delegates 500k whole coins of native token.
+TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000000000000000000000 # 5e23
 # TODO(GENESIS): 11155111 is the chain ID for sepolia testnet.
 ETH_CHAIN_ID=11155111 # sepolia
 # TODO(GENESIS): below is the bridge contract on sepolia testnet.

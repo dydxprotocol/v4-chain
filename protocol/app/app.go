@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -206,6 +207,10 @@ func init() {
 	}
 
 	DefaultNodeHome = filepath.Join(userHomeDir, "."+AppName)
+
+	// Set DefaultPowerReduction to 1e18 to avoid overflow whe calculating
+	// consensus power.
+	sdk.DefaultPowerReduction = lib.PowerReduction
 }
 
 // App extends an ABCI application, but with most of its parameters exported.
@@ -284,6 +289,14 @@ type App struct {
 	Server              *daemonserver.Server
 }
 
+// assertAppPreconditions assert invariants required for an application to start.
+func assertAppPreconditions() {
+	// Check that the default power reduction is set correctly.
+	if sdk.DefaultPowerReduction.BigInt().Cmp(big.NewInt(1_000_000_000_000_000_000)) != 0 {
+		panic("DefaultPowerReduction is not set correctly")
+	}
+}
+
 // New returns a reference to an initialized blockchain app
 func New(
 	logger log.Logger,
@@ -293,6 +306,8 @@ func New(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+	assertAppPreconditions()
+
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.
