@@ -3,6 +3,7 @@ name: Protocol Build & Push Image to AWS ECR
 on:  # yamllint disable-line rule:truthy
   push:
     branches:
+      - roy/test-upgrade-example
       - main
       - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
       - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x

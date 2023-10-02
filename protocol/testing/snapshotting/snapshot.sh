@@ -62,12 +62,23 @@ install_prerequisites() {
     && rm -rf /var/cache/apk/*
 }
 
+swap_old_binary() {
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv0.3.0-rc2/dydxprotocold-v0.3.0-rc2-linux-amd64.tar.gz'
+	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
+	mkdir -p /tmp/dydxprotocold
+	curl -vL $tar_url -o $tar_path
+	dydxprotocold_path=$(tar -xvf $tar_path --directory /tmp/dydxprotocold)
+	mv /tmp/dydxprotocold/$dydxprotocold_path /bin/dydxprotocold_upgrade
+}
+
 setup_cosmovisor() {
     VAL_HOME_DIR="$HOME/chain/local_node"
     export DAEMON_NAME=dydxprotocold
     export DAEMON_HOME="$HOME/chain/local_node"
 
     cosmovisor init /bin/dydxprotocold
+    mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v0.3.0/bin/"
+	ln -s /bin/dydxprotocold_upgrade "$VAL_HOME_DIR/cosmovisor/upgrades/v0.3.0/bin/dydxprotocold"
 }
 
 install_prerequisites
@@ -87,6 +98,7 @@ sleep 10
 dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
 curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
 
+swap_old_binary
 setup_cosmovisor
 
 # TODO: add metrics around snapshot upload latency/frequency/success rate
