@@ -246,7 +246,6 @@ test-container-accept:
 
 test-container-build:
 	$(MAKE) localnet-build
-	@docker build . -t dydxprotocol-localnet -f testing/testnet-local/Dockerfile --no-cache
 	@docker build . -t dydxprotocol-container-test -f testing/containertest/Dockerfile --no-cache
 
 .PHONY: test test-all test-cover test-unit test-race test-container
@@ -364,11 +363,13 @@ localnet-init:
 
 localnet-compose-up:
 	@echo "Launching localnet at commit ${GIT_COMMIT_HASH}"
-	@docker-compose -f docker-compose.yml up --build --force-recreate $(ARGS)
+	@docker build . -t local:dydxprotocol -f testing/testnet-local/Dockerfile --no-cache
+	@docker-compose -f docker-compose.yml up --force-recreate $(ARGS)
 
 localnet-compose-upd:
 	@echo "Launching localnet at commit ${GIT_COMMIT_HASH}"
-	@docker-compose -f docker-compose.yml up --build --force-recreate -d $(ARGS)
+	@docker build . -t local:dydxprotocol -f testing/testnet-local/Dockerfile --no-cache
+	@docker-compose -f docker-compose.yml up --force-recreate -d $(ARGS)
 
 localnet-start: localnet-init localnet-compose-up
 localnet-startd: localnet-init localnet-compose-upd

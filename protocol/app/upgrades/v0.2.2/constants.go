@@ -9,7 +9,7 @@ const (
 	UpgradeName = "v0.2.2"
 	// Target upgrade time is Sept 15, 2023, 1pm EST,
 	// estimated to occur on block 178500, assuming 1.5s block time.
-	UpgradeHeight = 178500
+	UpgradeHeight = 100
 )
 
 var (
