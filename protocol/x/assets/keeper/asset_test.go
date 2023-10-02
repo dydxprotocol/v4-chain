@@ -392,7 +392,7 @@ func TestModifyLongInterest_CannotNegative(t *testing.T) {
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrNegativeLongInterest, "1").Error())
 	getAsset, exists = keeper.GetAsset(ctx, assetId)
-	require.True(t, true)
+	require.True(t, exists)
 	require.Equal(t, asset, getAsset)
 }
 
