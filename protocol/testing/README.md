@@ -14,7 +14,7 @@ TODO(CORE-512): add info/resources around cloud setup. [Doc](https://www.notion.
 
 # [Manual] Add new validator node keys to `dev.sh` or `staging.sh`
 
-In order to add a new validator node to `dev.sh` or `staging.sh`, simply run `make localnet-new-validator` and copy the `mnemonic`, `address`, `node_key`, `node_id` in the their respective fields in `dev.sh` or `staging.sh`, and add a new `moniker` for this validator.
+In order to add a new validator node to `dev.sh` or `staging.sh`, simply run `make localnet-new-validator` and copy the `mnemonic`, `address`, `node_key`, `node_id` in their respective fields in `dev.sh` or `staging.sh`, and add a new `moniker` for this validator.
 
 # Running the `local` chain
 
