@@ -19,21 +19,21 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 			msg: types.MsgSendFromModuleToAccount{
 				SenderModuleName: "gov",
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
 			},
 		},
 		"Valid - module name has underscore": {
 			msg: types.MsgSendFromModuleToAccount{
 				SenderModuleName: "insurance_fund",
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
 			},
 		},
 		"Invalid sender module name": {
 			msg: types.MsgSendFromModuleToAccount{
 				SenderModuleName: "", // empty module name
 				Recipient:        constants.BobAccAddress.String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
 			},
 			err: types.ErrEmptyModuleName,
 		},
@@ -41,7 +41,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 			msg: types.MsgSendFromModuleToAccount{
 				SenderModuleName: "bridge",
 				Recipient:        "invalid_address",
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
 			},
 			err: types.ErrInvalidAccountAddress,
 		},

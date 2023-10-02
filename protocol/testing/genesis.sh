@@ -14,8 +14,8 @@ REWARDS_VESTER_ACCOUNT_ADDR="dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp"
 # Obtained from `authtypes.NewModuleAddress(bridgetypes.ModuleName)`.
 BRIDGE_MODACC_ADDR="dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"
 USDC_DENOM="ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
-REWARD_TOKEN="dv4tnt"
-NATIVE_TOKEN="dv4tnt" # public testnet token
+REWARD_TOKEN="adv4tnt"
+NATIVE_TOKEN="adv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 # TODO(GENESIS): 11155111 is the chain ID for sepolia testnet.

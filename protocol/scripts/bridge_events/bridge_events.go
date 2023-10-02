@@ -45,7 +45,7 @@ func main() {
 	var denom, rpcNode, bridgeAddress string
 	var toBlock int64
 	var verbose bool
-	flag.StringVar(&denom, "denom", "dv4tnt", "token denom")
+	flag.StringVar(&denom, "denom", "adv4tnt", "token denom")
 	flag.StringVar(&rpcNode, "rpc", "https://eth-sepolia.g.alchemy.com/v2/demo", "rpc node url")
 	flag.StringVar(&bridgeAddress, "address", "0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0", "bridge address")
 	flag.Int64Var(&toBlock, "toblock", 100_000_000, "last block (inclusive)")

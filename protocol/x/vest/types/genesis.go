@@ -14,7 +14,7 @@ func DefaultGenesis() *GenesisState {
 			{
 				VesterAccount:   rewardstypes.VesterAccountName,
 				TreasuryAccount: rewardstypes.TreasuryAccountName,
-				Denom:           "dv4tnt",
+				Denom:           "adv4tnt",
 				StartTime:       time.Date(2023, 9, 13, 0, 0, 0, 0, time.UTC).In(time.UTC),
 				EndTime:         time.Date(2023, 10, 13, 0, 0, 0, 0, time.UTC).In(time.UTC),
 			},

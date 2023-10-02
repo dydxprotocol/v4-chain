@@ -32,12 +32,12 @@ var (
 
 	DelayMsgAuthority = authtypes.NewModuleAddress(types.ModuleName).String()
 
-	BridgeGenesisAccountBalance = sdk.NewCoin("dv4tnt", sdkmath.NewInt(1000000000))
-	AliceInitialAccountBalance  = sdk.NewCoin("dv4tnt", sdkmath.NewInt(99500000000))
+	BridgeGenesisAccountBalance = sdk.NewCoin("adv4tnt", sdkmath.NewInt(1000000000))
+	AliceInitialAccountBalance  = sdk.NewCoin("adv4tnt", sdkmath.NewInt(99500000000))
 
 	delta                        = constants.BridgeEvent_Id0_Height0.Coin.Amount.Int64()
-	BridgeExpectedAccountBalance = sdk.NewCoin("dv4tnt", sdkmath.NewInt(1000000000-delta))
-	AliceExpectedAccountBalance  = sdk.NewCoin("dv4tnt", sdkmath.NewInt(99500000000+delta))
+	BridgeExpectedAccountBalance = sdk.NewCoin("adv4tnt", sdkmath.NewInt(1000000000-delta))
+	AliceExpectedAccountBalance  = sdk.NewCoin("adv4tnt", sdkmath.NewInt(99500000000+delta))
 )
 
 func TestDispatchMessagesForBlock(t *testing.T) {
@@ -518,7 +518,7 @@ func TestDispatchMessagesForBlock_EventsArePropagated(t *testing.T) {
 	// Delay a complete bridge message, which calls bank transfer that emits a transfer event.
 	bridgeEvent := bridgetypes.BridgeEvent{
 		Id:             1,
-		Coin:           sdk.NewCoin("dv4tnt", sdkmath.NewInt(1_000)),
+		Coin:           sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 		Address:        constants.AliceAccAddress.String(),
 		EthBlockHeight: 0,
 	}
