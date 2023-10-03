@@ -34,7 +34,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 		"Fail: invalid authority": {
 			msg: &sendingtypes.MsgSendFromModuleToAccount{
 				Authority:        authtypes.NewModuleAddress(sendingtypes.ModuleName).String(),
-				SenderModuleName: banktypes.ModuleName,
+				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        constants.AliceAccAddress.String(),
 				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(123)),
 			},
