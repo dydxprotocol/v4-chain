@@ -28,7 +28,7 @@ var (
 			Id: 3,
 		},
 	}
-	InvalidMsg = &testdata.TestMsg{Signers: []string{"invalid - no module handles this message"}}
+	NoHandlerMsg = &testdata.TestMsg{Signers: []string{"invalid - no module handles this message"}}
 
 	AllMsgs = []sdk.Msg{TestMsg1, TestMsg2, TestMsg3}
 )
