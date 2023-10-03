@@ -4,6 +4,7 @@ import {
 } from '@dydxprotocol-indexer/compliance';
 import express from 'express';
 
+import { INDEXER_GEOBLOCKED_PAYLOAD } from '../constants';
 import { create4xxResponse } from './helpers';
 
 /**
@@ -17,7 +18,7 @@ export function rejectRestrictedCountries(
   if (isRestrictedCountryHeaders(req.headers as CountryHeaders)) {
     return create4xxResponse(
       res,
-      'Forbidden',
+      INDEXER_GEOBLOCKED_PAYLOAD,
       403,
     );
   }

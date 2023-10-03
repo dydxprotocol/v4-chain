@@ -15,7 +15,6 @@ import {
 } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
-import { complianceCheck } from '../../../lib/compliance-check';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { getIpAddr, rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
@@ -82,7 +81,6 @@ router.get(
     },
   }),
   handleValidationErrors,
-  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
