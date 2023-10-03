@@ -87,7 +87,9 @@ func (k Keeper) IsRecentlyAvailable(ctx sdk.Context, marketId uint32) bool {
 	}
 
 	// The comparison condition considers both market age and price daemon warmup time because a market can be
-	// created before or after the daemon starts.
+	// created before or after the daemon starts. We use block height as a proxy for daemon warmup time because
+	// the price daemon is started when the gRPC service comes up, which typically occurs just before the first
+	// block is processed.
 	return k.timeProvider.Now().Sub(createdAt) < types.MarketIsRecentDuration ||
 		ctx.BlockHeight() < types.PriceDaemonInitializationBlocks
 }
