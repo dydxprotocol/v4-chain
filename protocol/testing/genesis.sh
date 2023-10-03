@@ -1497,6 +1497,7 @@ update_genesis_complete_bridge_delay() {
 set_denom_metadata() {
 	local BASE_DENOM=$1
 	local WHOLE_COIN_DENOM=$2
+	local COIN_NAME=$3
 	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata" -v "[]"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].description" -v "The native token of the network"
@@ -1507,5 +1508,7 @@ set_denom_metadata() {
 	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[1].denom" -v "$WHOLE_COIN_DENOM"
 	dasel put -t int -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[1].exponent" -v 18
 	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].base" -v "$BASE_DENOM"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].name" -v "$COIN_NAME"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].display" -v "$WHOLE_COIN_DENOM"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].symbol" -v "$WHOLE_COIN_DENOM"
 }

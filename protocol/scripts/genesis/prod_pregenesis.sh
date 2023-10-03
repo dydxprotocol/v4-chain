@@ -34,6 +34,8 @@ CHAIN_ID="dydx-1"
 NATIVE_TOKEN="adv4tnt"
 # Denomination of the native token in whole coins.
 NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
+# Human readable name of token.
+COIN_NAME="dYdX Testnet Token"
 # Market ID in the oracle price list for the rwards token.
 REWARDS_TOKEN_MARKET_ID=11
 # The numerical chain ID of the Ethereum chain for bridge daemon to query.
@@ -96,7 +98,7 @@ function overwrite_genesis_production() {
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].coins.[0].denom" -v "${NATIVE_TOKEN}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].coins.[0].amount" -v "${BRIDGE_MODACC_BALANCE}"
 	# Set denom metadata
-	set_denom_metadata "$NATIVE_TOKEN" "$NATIVE_TOKEN_WHOLE_COIN"
+	set_denom_metadata "$NATIVE_TOKEN" "$NATIVE_TOKEN_WHOLE_COIN" "$COIN_NAME"
 
 	# Governance params
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].amount' -v "10000$EIGHTEEN_ZEROS" # 10k whole coins of native token
@@ -131,6 +133,7 @@ function overwrite_genesis_production() {
     # Delayed message params
     # Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.num_messages' -v '1'
+	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages' -v "[]"
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
 
