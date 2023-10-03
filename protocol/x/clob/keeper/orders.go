@@ -293,8 +293,8 @@ func (k Keeper) ReplayPlaceOrder(
 //
 // An error will be returned if any of the following conditions are true:
 //   - Standard stateful validation fails.
-//   - Equity tier limit exceeded.
-//   - The memclob itself returns an error.
+//   - The subaccount's equity tier limit is exceeded.
+//   - Placing the stateful order on the memclob returns an error.
 func (k Keeper) placeOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,

@@ -569,7 +569,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 				}
 			}
 
-			// Ensure that any succesful transactions can be delivered.
+			// Ensure that any successful transactions can be delivered.
 			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 		})
 	}
@@ -1049,7 +1049,7 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 				}
 			}
 
-			// Ensure that any succesful transactions can be delivered.
+			// Ensure that any successful transactions can be delivered.
 			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 		})
 	}
