@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-# This script creates the pregenesis file for the public testnet.
+# This script creates the pregenesis file for a production network.
 #
 # The script must be run from the root of the `v4-chain` repo.
 #
@@ -26,6 +26,7 @@ BRIDGE_MODACC_BALANCE="1000000000$EIGHTEEN_ZEROS" # 1e27
 BRIDGE_MODACC_ADDR="dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"
 
 source "./testing/genesis.sh"
+
 # TODO(GENESIS): Update below values before running this script. Sample values are shown.
 ################## Start of required values to be updated ##################
 CHAIN_ID="dydx-1"
