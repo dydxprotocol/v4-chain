@@ -14,6 +14,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -1391,9 +1392,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				cdc := codec.NewProtoCodec(registry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				b := cdc.MustMarshal(&constants.ClobPair_Btc_Paused)
-				store.Set(types.ClobPairKey(
-					types.ClobPairId(constants.ClobPair_Btc_Paused.Id),
-				), b)
+				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc_Paused.Id), b)
 			},
 			expectedPanics: "validateInternalOperationAgainstClobPairStatus: ClobPair's status is not supported",
 		},

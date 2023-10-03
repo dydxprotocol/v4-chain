@@ -1,5 +1,6 @@
 package types
 
+// Module name and store keys
 const (
 	// ModuleName defines the module name
 	ModuleName = "vest"
@@ -11,11 +12,17 @@ const (
 	RouterKey = ModuleName
 
 	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_vest"
+	MemStoreKey = "mem_" + ModuleName
+)
 
+// State
+const (
 	// VestEntryKeyPrefix is the prefix used when storing a VestEntry in the state.
-	VestEntryKeyPrefix = "vest_entry"
+	VestEntryKeyPrefix = "vest_entry/"
+)
 
+// Module accounts
+const (
 	// CommunityTreasuryAccountName defines the root string for community treasury module account.
 	CommunityTreasuryAccountName = "community_treasury"
 

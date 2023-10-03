@@ -766,7 +766,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -800,7 +800,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -965,7 +965,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -1129,7 +1129,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -1294,7 +1294,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(
+	perpetualStore.Set(lib.Uint32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -2787,7 +2787,15 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 4)
 			require.NoError(t, err)
 
-			err = pc.PerpetualsKeeper.SetMinNumVotesPerSample(pc.Ctx, tc.minNumVotesPerSample)
+			params := pc.PerpetualsKeeper.GetParams(pc.Ctx)
+			err = pc.PerpetualsKeeper.SetParams(
+				pc.Ctx,
+				types.Params{
+					FundingRateClampFactorPpm: params.FundingRateClampFactorPpm,
+					PremiumVoteClampFactorPpm: params.PremiumVoteClampFactorPpm,
+					MinNumVotesPerSample:      tc.minNumVotesPerSample,
+				},
+			)
 			require.NoError(t, err)
 			pc.PerpetualsKeeper.SetPremiumVotes(pc.Ctx, tc.premiumVotes)
 			pc.PerpetualsKeeper.SetPremiumSamples(pc.Ctx, tc.prevPremiumSamples)
@@ -3138,115 +3146,6 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 
 			require.Error(t, err)
 			require.EqualError(t, err, tc.expectedError.Error())
-		})
-	}
-}
-
-func TestSetFundingRateClampFactorPpm(t *testing.T) {
-	tests := map[string]struct {
-		fundingRateClampFactorPpm uint32
-		expectedError             error
-	}{
-		"Sets successfully": {
-			fundingRateClampFactorPpm: 6_000_000,
-			expectedError:             nil,
-		},
-		"Sets successfully: max funding rate": {
-			fundingRateClampFactorPpm: math.MaxUint32,
-			expectedError:             nil,
-		},
-		"Failure: funding rate clamp factor ppm is zero": {
-			fundingRateClampFactorPpm: 0,
-			expectedError:             types.ErrFundingRateClampFactorPpmIsZero,
-		},
-	}
-
-	// Test setup.
-	pc := keepertest.PerpetualsKeepers(t)
-
-	// Run tests.
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			err := pc.PerpetualsKeeper.SetFundingRateClampFactorPpm(pc.Ctx, tc.fundingRateClampFactorPpm)
-			if tc.expectedError != nil {
-				require.Error(t, err)
-				require.ErrorIs(t, err, tc.expectedError)
-			} else {
-				require.NoError(t, err)
-				// Check that value in store is as expected.
-				got := pc.PerpetualsKeeper.GetFundingRateClampFactorPpm(pc.Ctx)
-				require.Equal(t, tc.fundingRateClampFactorPpm, got)
-			}
-		})
-	}
-}
-
-func TestSetPremiumVoteClampFactorPpm(t *testing.T) {
-	tests := map[string]struct {
-		premiumVoteClampFactorPpm uint32
-		expectedError             error
-	}{
-		"Sets successfully": {
-			premiumVoteClampFactorPpm: 60_000_000,
-			expectedError:             nil,
-		},
-		"Sets successfully: max uint32": {
-			premiumVoteClampFactorPpm: math.MaxUint32,
-			expectedError:             nil,
-		},
-		"Failure: premium vote clamp factor ppm is zero": {
-			premiumVoteClampFactorPpm: 0,
-			expectedError:             types.ErrPremiumVoteClampFactorPpmIsZero,
-		},
-	}
-
-	// Test setup.
-	pc := keepertest.PerpetualsKeepers(t)
-
-	// Run tests.
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			err := pc.PerpetualsKeeper.SetPremiumVoteClampFactorPpm(pc.Ctx, tc.premiumVoteClampFactorPpm)
-			if tc.expectedError != nil {
-				require.Error(t, err)
-				require.ErrorIs(t, err, tc.expectedError)
-			} else {
-				require.NoError(t, err)
-				// Check that value in store is as expected.
-				got := pc.PerpetualsKeeper.GetPremiumVoteClampFactorPpm(pc.Ctx)
-				require.Equal(t, tc.premiumVoteClampFactorPpm, got)
-			}
-		})
-	}
-}
-
-func TestSetMinNumVotesPerSample(t *testing.T) {
-	tests := map[string]struct {
-		minNumVotesPerSample uint32
-	}{
-		"Sets successfully: zero": {
-			minNumVotesPerSample: 0,
-		},
-		"Sets successfully: default genesis value": {
-			minNumVotesPerSample: 15,
-		},
-		"Sets successfully: max uint32": {
-			minNumVotesPerSample: math.MaxUint32,
-		},
-	}
-
-	// Test setup.
-	pc := keepertest.PerpetualsKeepers(t)
-
-	// Run tests.
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			err := pc.PerpetualsKeeper.SetMinNumVotesPerSample(pc.Ctx, tc.minNumVotesPerSample)
-
-			require.NoError(t, err)
-			// Check that value in store is as expected.
-			got := pc.PerpetualsKeeper.GetMinNumVotesPerSample(pc.Ctx)
-			require.Equal(t, tc.minNumVotesPerSample, got)
 		})
 	}
 }

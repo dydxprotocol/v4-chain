@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -58,22 +59,49 @@ func TestCreateMarket(t *testing.T) {
 	keepertest.AssertMarketCreateEventInIndexerBlock(t, keeper, ctx, marketParam)
 }
 
-func TestMarketIsRecentlyAdded(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
-	mockTimeProvider.On("Now").Return(constants.TimeT).Once()
+func TestMarketIsRecentlyAvailable(t *testing.T) {
+	tests := map[string]struct {
+		blockHeight      int64
+		now              time.Time
+		expectedIsRecent bool
+	}{
+		"Recent: << block height, << elapsed since market creation time": {
+			blockHeight:      0,
+			now:              constants.TimeT.Add(types.MarketIsRecentDuration - 1),
+			expectedIsRecent: true,
+		},
+		"Recent: >> block height, << elapsed since market creation time": {
+			blockHeight:      types.PriceDaemonInitializationBlocks + 1,
+			now:              constants.TimeT.Add(types.MarketIsRecentDuration - 1),
+			expectedIsRecent: true,
+		},
+		"Recent: << block height, >> elapsed since market creation time": {
+			blockHeight:      0,
+			now:              constants.TimeT.Add(types.MarketIsRecentDuration + 1),
+			expectedIsRecent: true,
+		},
+		"Not recent: >> block height, >> elapsed since market creation time": {
+			blockHeight:      types.PriceDaemonInitializationBlocks + 1,
+			now:              constants.TimeT.Add(types.MarketIsRecentDuration + 1),
+			expectedIsRecent: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 
-	// Nonexistent markets should not be recently added.
-	require.False(t, keeper.IsRecentlyAdded(0))
+			// Create market with TimeT creation timestamp.
+			mockTimeProvider.On("Now").Return(constants.TimeT).Once()
+			require.False(t, keeper.IsRecentlyAvailable(ctx, 0))
 
-	keepertest.CreateNMarkets(t, ctx, keeper, 1)
+			keepertest.CreateNMarkets(t, ctx, keeper, 1)
 
-	// Before the duration passes, the market should be recently added.
-	mockTimeProvider.On("Now").Return(constants.TimeT.Add(types.MarketIsRecentDuration - 1)).Once()
-	require.True(t, keeper.IsRecentlyAdded(0))
+			ctx = ctx.WithBlockHeight(tc.blockHeight)
+			mockTimeProvider.On("Now").Return(tc.now).Once()
 
-	// After the duration passes, the market is no longer recently added.
-	mockTimeProvider.On("Now").Return(constants.TimeT.Add(types.MarketIsRecentDuration)).Once()
-	require.False(t, keeper.IsRecentlyAdded(0))
+			require.Equal(t, tc.expectedIsRecent, keeper.IsRecentlyAvailable(ctx, 0))
+		})
+	}
 }
 
 func TestCreateMarket_Errors(t *testing.T) {

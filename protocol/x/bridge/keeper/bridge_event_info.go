@@ -7,16 +7,12 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
-const (
-	acknowledgedEventInfoKey = "AcknowledgedEventInfo"
-)
-
 // GetAcknowledgedEventInfo returns `AcknowledgedEventInfo` from state.
 func (k Keeper) GetAcknowledgedEventInfo(
 	ctx sdk.Context,
 ) (acknowledgedEventInfo types.BridgeEventInfo) {
 	store := ctx.KVStore(k.storeKey)
-	var rawBytes []byte = store.Get([]byte(acknowledgedEventInfoKey))
+	var rawBytes []byte = store.Get([]byte(types.AcknowledgedEventInfoKey))
 
 	k.cdc.MustUnmarshal(rawBytes, &acknowledgedEventInfo)
 	return acknowledgedEventInfo
@@ -33,7 +29,7 @@ func (k Keeper) SetAcknowledgedEventInfo(
 
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&acknowledgedEventInfo)
-	store.Set([]byte(acknowledgedEventInfoKey), b)
+	store.Set([]byte(types.AcknowledgedEventInfoKey), b)
 
 	// Emit metrics on acknowledged event info.
 	telemetry.SetGauge(

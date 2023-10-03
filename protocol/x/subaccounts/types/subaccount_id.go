@@ -2,6 +2,15 @@ package types
 
 import "sort"
 
+// MustMarshal returns the marshaled bytes representation of a SubaccountId, panic'ing on error.
+func (id *SubaccountId) MustMarshal() []byte {
+	b, err := id.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
 // SortedSubaccountIds is type alias for `[]SubaccountId` which supports deterministic
 // sorting. SubaccountIds are first ordered by string comparison
 // of their `Owner`, followed by integer comparison of their

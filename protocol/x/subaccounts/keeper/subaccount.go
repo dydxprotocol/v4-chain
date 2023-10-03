@@ -26,7 +26,7 @@ import (
 // Note that empty subaccounts are removed from state.
 func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	key := types.SubaccountKey(*subaccount.Id)
+	key := subaccount.Id.MustMarshal()
 
 	if len(subaccount.PerpetualPositions) == 0 && len(subaccount.AssetPositions) == 0 {
 		if store.Has(key) {
@@ -52,7 +52,7 @@ func (k Keeper) GetSubaccount(
 
 	// Check state for the subaccount.
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	b := store.Get(types.SubaccountKey(id))
+	b := store.Get(id.MustMarshal())
 
 	// If subaccount does not exist in state, return a default value.
 	if b == nil {

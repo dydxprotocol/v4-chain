@@ -66,7 +66,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			// Conditionally escalate log level to error 20s after genesis/restart. We expect that it may take a few
 			// seconds for the index price to populate after network genesis or a network restart.
 			logMethod := k.Logger(ctx).Error
-			if k.IsRecentlyAdded(marketId) {
+			if k.IsRecentlyAvailable(ctx, marketId) {
 				logMethod = k.Logger(ctx).Info
 			}
 			logMethod(fmt.Sprintf("Index price for market (%v) does not exist", marketId))
@@ -89,7 +89,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			// in populating historical smoothed prices after network genesis or a network restart, because they
 			// depend on present index prices.
 			logMethod := k.Logger(ctx).Error
-			if k.IsRecentlyAdded(marketId) {
+			if k.IsRecentlyAvailable(ctx, marketId) {
 				logMethod = k.Logger(ctx).Info
 			}
 			logMethod(fmt.Sprintf("Smoothed price for market (%v) does not exist", marketId))

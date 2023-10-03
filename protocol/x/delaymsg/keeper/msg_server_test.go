@@ -78,6 +78,13 @@ func TestDelayMessage(t *testing.T) {
 				InvalidAuthority,
 			),
 		},
+		"Fails if message cannot be unpacked": {
+			setupMocks: setupMockWithValidReturnValues,
+			msg: &types.MsgDelayMessage{
+				Authority: AcceptedAuthority,
+			},
+			expectedErr: fmt.Errorf("GetMessage for MsgDelayedMessage failed, err = Delayed msg is nil: Invalid input"),
+		},
 		"Fails if DelayMessageByBlocks returns an error": {
 			setupMocks:  setupMockWithDelayMessageFailure,
 			msg:         validDelayMsg,

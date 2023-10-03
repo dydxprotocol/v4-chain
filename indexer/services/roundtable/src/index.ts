@@ -2,7 +2,7 @@ import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/
 import { producer } from '@dydxprotocol-indexer/kafka';
 
 import config from './config';
-import { placeHolderProvider } from './helpers/compliance-clients';
+import { complianceProvider } from './helpers/compliance-clients';
 import { startLoop } from './helpers/loops-helper';
 import {
   redisClient,
@@ -99,7 +99,7 @@ async function start(): Promise<void> {
   }
 
   startLoop(
-    () => updateComplianceDataTask(placeHolderProvider),
+    () => updateComplianceDataTask(complianceProvider),
     'update_compliance_data',
     config.LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA,
   );

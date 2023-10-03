@@ -26,7 +26,7 @@ func (k Keeper) GetBlockMessageIds(
 	}
 
 	store := k.newBlockMessageIdsStore(ctx)
-	b := store.Get(lib.Int64ToBytesForState(blockHeight))
+	b := store.Get(lib.Int64ToBytes(blockHeight))
 
 	if b == nil {
 		return types.BlockMessageIds{}, false
@@ -47,7 +47,7 @@ func (k Keeper) addMessageIdToBlock(
 ) {
 	store := k.newBlockMessageIdsStore(ctx)
 	var blockMessageIds types.BlockMessageIds
-	key := lib.Int64ToBytesForState(blockHeight)
+	key := lib.Int64ToBytes(blockHeight)
 	if b := store.Get(key); b != nil {
 		k.cdc.MustUnmarshal(b, &blockMessageIds)
 		blockMessageIds.Ids = append(blockMessageIds.Ids, id)
@@ -91,11 +91,11 @@ func (k Keeper) deleteMessageIdFromBlock(
 
 		// If the remaining list of ids is empty, go ahead and delete the BlockMessageIds from the store.
 		if len(blockMessageIds.Ids) == 0 {
-			k.newBlockMessageIdsStore(ctx).Delete(lib.Int64ToBytesForState(blockHeight))
+			k.newBlockMessageIdsStore(ctx).Delete(lib.Int64ToBytes(blockHeight))
 		} else {
 			// Otherwise, update the BlockMessageIds to have the id of this delayed message removed.
 			k.newBlockMessageIdsStore(ctx).Set(
-				lib.Int64ToBytesForState(blockHeight),
+				lib.Int64ToBytes(blockHeight),
 				k.cdc.MustMarshal(&blockMessageIds),
 			)
 		}

@@ -13,6 +13,15 @@ import {
 export const complianceConfigSchema = {
   ...baseConfigSchema,
 
+  // will be matched with enums in helpers/compliance/compliance-clients and default to
+  // ELLIPTIC if unset or an invalid value is set
+  COMPLIANCE_DATA_CLIENT: parseString({ default: 'ELLIPTIC' }),
+
+  // Block-list provider environment variables.
+  BLOCKED_ADDRESSES: parseString({
+    default: '', // comma de-limited
+  }),
+
   // Required environment variables.
   ELLIPTIC_API_KEY: parseString({ default: 'default_elliptic_api_key' }),
   ELLIPTIC_API_SECRET: parseString({ default: '' }),

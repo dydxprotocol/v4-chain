@@ -65,8 +65,8 @@ func (k Keeper) GetInsuranceFundBalance(
 ) (
 	balance *big.Int,
 ) {
-	usdcAsset, err := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
-	if err != nil {
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
+	if !exists {
 		panic("GetInsuranceFundBalance: Usdc asset not found in state")
 	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
