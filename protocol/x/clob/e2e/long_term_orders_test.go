@@ -292,7 +292,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
 	bobSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
 
-	// orders
+	// order msgs
 	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5 := *clobtypes.NewMsgPlaceOrder(
 		clobtypes.Order{
 			OrderId: clobtypes.OrderId{
@@ -316,6 +316,12 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
 		},
 	)
+	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO := *clobtypes.NewMsgPlaceOrder(
+		MustScaleOrder(
+			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
+			testapp.DefaultGenesis(),
+		),
+	)
 
 	// CheckTx Txs needed for indexer expectation assertions
 	CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5 := testapp.MustMakeCheckTx(
@@ -334,20 +340,32 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		},
 		&PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20,
 	)
+	CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO),
+		},
+		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
+	)
 
 	tests := map[string]struct {
 		makerOrders []clobtypes.MsgPlaceOrder
 		takerOrder  clobtypes.MsgPlaceOrder
+
+		takerShouldRestOnOrderbook bool
+		expectedTakerFillAmount uint64
 
 		expectedOffchainMessagesAfterCheckTx []msgsender.Message
 		expectedOffchainMessagesInFirstBlock []msgsender.Message
 		expectedOnchainMessagesInFirstBlock []msgsender.Message
 		// expectedOffchainMessagesInSecondBlock []msgsender.Message
 		expectedOnchainMessagesInSecondBlock []msgsender.Message
-		// expectedFillAmount int
 	} {
 		"Test placing an order": {
 			takerOrder: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+			takerShouldRestOnOrderbook: true,
+			expectedTakerFillAmount: 0,
 			// No offchain messages in CheckTx because stateful MsgPlaceOrder is not placed in CheckTx
 			expectedOffchainMessagesAfterCheckTx: []msgsender.Message{},
 			// Order update message, note order place messages are skipped for stateful orders
@@ -383,12 +401,20 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					},
 				},
 			)},
+			expectedOnchainMessagesInSecondBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
+				&indexer_manager.IndexerTendermintBlock{
+					Height: 3,
+					Time:   ctx.BlockTime(),
+				},
+			)},
 		},
 		"Test matching an order fully as taker": {
 			makerOrders: []clobtypes.MsgPlaceOrder{
 				PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20,
 			},
 			takerOrder: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+			takerShouldRestOnOrderbook: false,
+			expectedTakerFillAmount: 0, // order is fully-filled and removed from state
 			// Short term order placement results in Create and Update with 0 fill amount
 			expectedOffchainMessagesAfterCheckTx: []msgsender.Message{
 				off_chain_updates.MustCreateOrderPlaceMessage(
@@ -563,6 +589,49 @@ func TestPlaceLongTermOrder(t *testing.T) {
 				},
 			)},
 		},
+		"Test post-only order placed on the book": {
+			takerOrder: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
+			takerShouldRestOnOrderbook: true,
+			expectedTakerFillAmount: 0,
+			expectedOffchainMessagesInFirstBlock: []msgsender.Message{
+				// post-only shouldn't match and will have 0 fill size in update message
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					nil,
+					LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO.Order.OrderId,
+					0,
+				),
+			},
+			expectedOnchainMessagesInFirstBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
+				&indexer_manager.IndexerTendermintBlock{
+					Height: 2,
+					Time:   ctx.BlockTime(),
+					Events: []*indexer_manager.IndexerTendermintEvent{
+						{
+							Subtype: indexerevents.SubtypeStatefulOrder,
+							Data: indexer_manager.GetB64EncodedEventMessage(
+								indexerevents.NewLongTermOrderPlacementEvent(
+									LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO.Order,
+								),
+							),
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          0,
+							Version:             indexerevents.StatefulOrderEventVersion,
+						},
+					},
+					TxHashes: []string{
+						string(lib.GetTxHash(
+							CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO.Tx,
+						)),
+					},
+				},
+			)},
+			expectedOnchainMessagesInSecondBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
+				&indexer_manager.IndexerTendermintBlock{
+					Height: 3,
+					Time:   ctx.BlockTime(),
+				},
+			)},
+		},
 		// "Test matching an order partially, maker order remains on book": {
 
 		// },
@@ -621,7 +690,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			)
 			msgSender.Clear()
 
-			// places short term makers on the book and writes long term orders to state
+			// places short term orders on the book and writes long term orders to state
 			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			require.ElementsMatch(
 				t,
@@ -644,16 +713,20 @@ func TestPlaceLongTermOrder(t *testing.T) {
 				msgSender.GetOnchainMessages(),
 			)
 
-			// require.True(t, false)
+			// Verify orderbook
+			_, found := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, tc.takerOrder.Order.OrderId)
+			require.Equal(t, tc.takerShouldRestOnOrderbook, found)
 
-			// // Verify expectations
-			// // IOC orders should not have remaining size placed as makers
-			// _, found := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, order.OrderId)
-			// require.True(t, found, "Partially filled order should be on the orderbook")
-
-			// // Fill amount should be 50
-			// _, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, order.OrderId)
-			// require.Equal(t, 50, fillAmount, "Fill amount should be 50, not %d", fillAmount)
+			// Verify fill amount
+			_, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, tc.takerOrder.Order.OrderId)
+			require.Equal(
+				t,
+				tc.expectedTakerFillAmount,
+				fillAmount.ToUint64(),
+				"Fill amount should be %d, not %d",
+				tc.expectedTakerFillAmount,
+				fillAmount,
+			)
 		})
 	}
 }
