@@ -75,7 +75,9 @@ const (
 	// MARKET_TEST_USD is the id used for the TEST-USD market pair.
 	MARKET_TEST_USD types.MarketId = 33
 
-	// Non-trading adjust-by markets.
+	// Non-trading markets.
 	// MARKET_USDT_USD is the id for the USDT-USD market pair.
 	MARKET_USDT_USD types.MarketId = 1_000_000
+	// MARKET_DYDX_USD is the id for the DYDX-USD market pair.
+	MARKET_DYDX_USD types.MarketId = 1_000_001
 )

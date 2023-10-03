@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "XRP/USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "XRPUSDT",
       "adjustByMarket": "USDT-USD"
@@ -17,10 +13,6 @@
     {
       "exchangeName": "CoinbasePro",
       "ticker": "XRP-USD"
-    },
-    {
-      "exchangeName": "CryptoCom",
-      "ticker": "XRP_USD"
     },
     {
       "exchangeName": "Gate",

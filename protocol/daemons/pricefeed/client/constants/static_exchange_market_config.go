@@ -16,7 +16,7 @@ const (
 	// compute an index price for a market, given exchange unavailability due to exchange geo-fencing,
 	// downtime, etc.
 	// Ok to drop this to 5 for some markets if needed, but 6 is better.
-	MinimumRequiredExchangesPerMarket = 6
+	MinimumRequiredExchangesPerMarket = 5
 )
 
 // GenerateExchangeConfigJson generates human-readable exchange config json for each market based on the contents
