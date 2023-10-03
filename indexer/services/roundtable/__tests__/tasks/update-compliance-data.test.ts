@@ -12,7 +12,7 @@ import {
   ComplianceDataCreateObject,
 } from '@dydxprotocol-indexer/postgres';
 import updateComplianceDataTask from '../../src/tasks/update-compliance-data';
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import _ from 'lodash';
 import config from '../../src/config';
 import { ClientAndProvider } from '../../src/helpers/compliance-clients';
@@ -37,8 +37,10 @@ describe('update-compliance-data', () => {
         getComplianceResponse: jest.fn(),
       },
     };
+    jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
+    jest.spyOn(logger, 'error');
   });
 
   afterEach(async () => {
@@ -312,6 +314,90 @@ describe('update-compliance-data', () => {
     expectTimingStats(mockProvider.provider);
   });
 
+  it('succeeds with updating multiple addresses, with failures', async () => {
+    // Seed database with old compliance data and set up accounts to not be active
+    await Promise.all([
+      setupComplianceData(config.MAX_COMPLIANCE_DATA_AGE_SECONDS * 2),
+      setupInitialSubaccounts(config.MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS * 2),
+    ]);
+    // Create a new active subaccount
+    await SubaccountTable.create({
+      address: testConstants.blockedAddress,
+      subaccountNumber: 0,
+      updatedAtHeight: '1',
+      updatedAt: DateTime.utc().toISO(),
+    });
+
+    const addressWithComplianceError: string = 'dydx1gem4xs643fjhaqvphrvv0adpg4435j7xx9pp4z';
+    // Create a new active subaccount that will return an error when queried
+    await SubaccountTable.create({
+      address: addressWithComplianceError,
+      subaccountNumber: 0,
+      updatedAtHeight: '1',
+      updatedAt: DateTime.utc().toISO(),
+    });
+
+    const riskScores: string[] = ['75.00', '50.00'];
+    setupMockProvider(
+      mockProvider,
+      {
+        [testConstants.defaultAddress]: { blocked: true, riskScore: riskScores[0] },
+        [testConstants.blockedAddress]: { blocked: true, riskScore: riskScores[1] },
+      },
+    );
+
+    await updateComplianceDataTask(mockProvider);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {
+      orderBy: [[ComplianceDataColumns.address, Ordering.DESC]],
+    });
+    expect(complianceData).toHaveLength(2);
+    expectUpdatedCompliance(
+      complianceData[0],
+      {
+        address: testConstants.defaultAddress,
+        blocked: true,
+        riskScore: riskScores[0],
+      },
+      mockProvider.provider,
+    );
+    expectUpdatedCompliance(
+      complianceData[1],
+      {
+        address: testConstants.blockedAddress,
+        blocked: true,
+        riskScore: riskScores[1],
+      },
+      mockProvider.provider,
+    );
+    // Both addresses screened
+    expectGaugeStats({
+      activeAddresses: 0,
+      newAddresses: 2,
+      oldAddresses: 1,
+      addressesScreened: 3,
+      upserted: 2,
+    },
+    mockProvider.provider,
+    );
+    expectTimingStats(mockProvider.provider);
+    // error log
+    expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+      addresses: [addressWithComplianceError],
+      errors: [{
+        reason: new Error(`Unexpected address ${addressWithComplianceError} passed to provider`),
+        status: 'rejected',
+      }],
+    }));
+    // increments stat for failures to get compliance data
+    expect(stats.increment).toHaveBeenCalledWith(
+      'roundtable.update_compliance_data.get_compliance_data_fail',
+      1,
+      undefined,
+      { provider: mockProvider.provider },
+    );
+  });
+
   it('limits number of addresses scanned per run', async () => {
     // Set the limit of addresses to scan to 1
     config.MAX_COMPLIANCE_DATA_QUERY_PER_LOOP = 1;
@@ -447,14 +533,15 @@ function setupMockProvider(
 ): void {
   // eslint-disable-next-line no-param-reassign
   clientAndProvider.client.getComplianceResponse = jest.fn().mockImplementation(
-    (address: string): Promise<ComplianceClientResponse> => {
+    // eslint-disable-next-line @typescript-eslint/require-await
+    async (address: string): Promise<ComplianceClientResponse> => {
       if (expectedResponses[address] === undefined) {
-        throw new Error(`Unexpected adress ${address} passed to provider`);
+        throw new Error(`Unexpected address ${address} passed to provider`);
       } else {
-        return Promise.resolve({
+        return {
           address,
           ...expectedResponses[address],
-        });
+        };
       }
     },
   );
