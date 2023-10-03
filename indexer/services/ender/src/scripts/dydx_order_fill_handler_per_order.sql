@@ -112,7 +112,9 @@ BEGIN
             "goodTilBlockTime" = order_record."goodTilBlockTime",
             "timeInForce" = order_record."timeInForce",
             "reduceOnly" = order_record."reduceOnly",
-            "clientMetadata" = order_record."clientMetadata"
+            "clientMetadata" = order_record."clientMetadata",
+            "updatedAt" = block_time,
+            "updatedAtHeight" = block_height
         WHERE id = order_uuid;
     ELSE
         order_record."id" = order_uuid;
@@ -125,9 +127,12 @@ BEGIN
         order_record."totalFilled" = fill_amount;
         order_record."status" = get_order_status(fill_amount, order_size, is_cancelled);
         order_record."createdAtHeight" = block_height;
+        order_record."updatedAt" = block_time;
+        order_record."updatedAtHeight" = block_height;
         INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
-             "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight", "clientMetadata", "triggerPrice")
+            "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
+            "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight")
         VALUES (order_record.*);
     END IF;
 

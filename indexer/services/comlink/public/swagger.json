@@ -647,6 +647,12 @@
           },
           "ticker": {
             "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "updatedAtHeight": {
+            "type": "string"
           }
         },
         "required": [

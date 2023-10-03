@@ -8,6 +8,7 @@ import {
   FillType,
   IsoString,
   Liquidity,
+  OrderColumns,
   OrderFromDatabase,
   OrderSide,
   OrderStatus,
@@ -244,11 +245,13 @@ export interface OrderbookResponsePriceLevel {
 /* ------- ORDER TYPES ------- */
 // TimeInForce stored in the database is different from the TimeInForce expected in the API
 // The omitted field name have to be literal strings for Typescript to parse them correctly
-export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForce' | 'status'> {
+export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForce' | 'status' | 'updatedAt' | 'updatedAtHeight'> {
   timeInForce: APITimeInForce,
   status: APIOrderStatus,
   postOnly: boolean,
   ticker: string;
+  updatedAt?: IsoString;
+  updatedAtHeight?: string
 }
 
 export type RedisOrderMap = { [orderId: string]: RedisOrder };
