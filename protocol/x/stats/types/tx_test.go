@@ -1,40 +1,52 @@
 package types_test
 
 import (
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
+	"testing"
+	"time"
 )
 
-func TestMsgUpdateSafetyParams_GetSigners(t *testing.T) {
-	msg := types.MsgUpdateProposeParams{
-		Authority: constants.BobAccAddress.String(),
+var (
+	validAuthority = constants.BobAccAddress.String()
+)
+
+func TestGetSigners(t *testing.T) {
+	msg := types.MsgUpdateParams{
+		Authority: validAuthority,
 	}
 	require.Equal(t, []sdk.AccAddress{constants.BobAccAddress}, msg.GetSigners())
 }
 
-func TestMsgUpdateSafetyParams_ValidateBasic(t *testing.T) {
+func TestValidateBasic(t *testing.T) {
 	tests := map[string]struct {
-		msg         types.MsgUpdateSafetyParams
+		msg         types.MsgUpdateParams
 		expectedErr error
 	}{
 		"Success": {
-			msg: types.MsgUpdateSafetyParams{
+			msg: types.MsgUpdateParams{
 				Authority: validAuthority,
-				Params: types.SafetyParams{
-					IsDisabled:  false,
-					DelayBlocks: 500,
+				Params: types.Params{
+					WindowDuration: 1 * time.Second,
 				},
 			},
 		},
 		"Failure: Invalid authority": {
-			msg: types.MsgUpdateSafetyParams{
-				Authority: "",
+			msg: types.MsgUpdateParams{
+				Authority: "", // invalid - empty
 			},
 			expectedErr: types.ErrInvalidAuthority,
+		},
+		"Failure: Invalid params": {
+			msg: types.MsgUpdateParams{
+				Authority: validAuthority,
+				Params: types.Params{
+					WindowDuration: 0, // invalid - zero
+				},
+			},
+			expectedErr: types.ErrNonpositiveDuration,
 		},
 	}
 	for name, tc := range tests {

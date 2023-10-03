@@ -13,6 +13,7 @@ var (
 	ErrMissingFields               = errorsmod.Register(ModuleName, 5, "Transfer does not contain all required fields")
 	ErrInvalidAccountAddress       = errorsmod.Register(ModuleName, 6, "Account address is invalid")
 	ErrEmptyModuleName             = errorsmod.Register(ModuleName, 7, "Module name is empty")
+	ErrInvalidAuthority            = errorsmod.Register(ModuleName, 8, "Authority is invalid")
 	ErrKeeperMethodsNotImplemented = errorsmod.Register(
 		ModuleName,
 		1100,

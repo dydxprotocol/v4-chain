@@ -15,4 +15,9 @@ var (
 		401,
 		"Durations must be in ascending order by length",
 	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		402,
+		"Authority is invalid",
+	)
 )
