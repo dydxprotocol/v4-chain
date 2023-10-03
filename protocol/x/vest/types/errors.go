@@ -6,6 +6,7 @@ import errorsmod "cosmossdk.io/errors"
 
 // x/vest module sentinel errors
 var (
+	ErrInvalidAuthority        = errorsmod.Register(ModuleName, 1000, "invalid authority")
 	ErrInvalidVesterAccount    = errorsmod.Register(ModuleName, 1001, "invalid vester account")
 	ErrInvalidTreasuryAccount  = errorsmod.Register(ModuleName, 1002, "invalid treasury account")
 	ErrInvalidDenom            = errorsmod.Register(ModuleName, 1003, "invalid denom")
