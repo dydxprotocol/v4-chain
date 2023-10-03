@@ -8,7 +8,6 @@ import {
   FillType,
   IsoString,
   Liquidity,
-  OrderColumns,
   OrderFromDatabase,
   OrderSide,
   OrderStatus,
