@@ -1499,7 +1499,7 @@ set_denom_metadata() {
 	local WHOLE_COIN_DENOM=$2
 	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata" -v "[]"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[]" -v "{}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].description" -v "The native token of dYdX Chain"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].description" -v "The native token of the network"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units" -v "[]"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[0].denom" -v "$BASE_DENOM"

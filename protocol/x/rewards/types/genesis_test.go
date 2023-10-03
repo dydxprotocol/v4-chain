@@ -14,7 +14,7 @@ func TestDefaultGenesis(t *testing.T) {
 		Params: types.Params{
 			TreasuryAccount:  "rewards_treasury",
 			Denom:            "dv4tnt",
-			DenomExponent:    -6,
+			DenomExponent:    -18,
 			MarketId:         1,
 			FeeMultiplierPpm: 990_000, // 0.99
 		},

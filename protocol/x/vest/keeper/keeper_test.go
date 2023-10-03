@@ -85,8 +85,8 @@ func TestGetAllVestEntries(t *testing.T) {
 		TestValidEntry3,
 	}
 
-	// 1 default from genesis + 3 added
-	require.Len(t, gotEntries, 4)
+	// 2 default from genesis + 3 added
+	require.Len(t, gotEntries, 5)
 	for i := range gotEntries {
 		require.Equal(t, expectedEntries[i], gotEntries[i])
 	}

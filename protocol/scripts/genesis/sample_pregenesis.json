@@ -32,12 +32,27 @@
           "coins": [
             {
               "amount": "1000000000000000000000000000",
-              "denom": "dv4tnt"
+              "denom": "adv4tnt"
             }
           ]
         }
       ],
-      "denom_metadata": [],
+      "denom_metadata": [
+        {
+          "base": "adv4tnt",
+          "denom_units": [
+            {
+              "denom": "adv4tnt"
+            },
+            {
+              "denom": "dv4tnt",
+              "exponent": 18
+            }
+          ],
+          "description": "The native token of the network",
+          "display": "dv4tnt"
+        }
+      ],
       "params": {
         "default_send_enabled": true,
         "send_enabled": []
@@ -60,7 +75,7 @@
         "next_id": 0
       },
       "event_params": {
-        "denom": "dv4tnt",
+        "denom": "adv4tnt",
         "eth_address": "0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0",
         "eth_chain_id": 1
       },
@@ -510,7 +525,7 @@
     "crisis": {
       "constant_fee": {
         "amount": "1000000000000000000",
-        "denom": "dv4tnt"
+        "denom": "adv4tnt"
       }
     },
     "delaymsg": {
@@ -750,7 +765,7 @@
         "min_deposit": [
           {
             "amount": "10000000000000000000000",
-            "denom": "dv4tnt"
+            "denom": "adv4tnt"
           }
         ],
         "min_initial_deposit_ratio": "0.000000000000000000",
@@ -1610,7 +1625,7 @@
     },
     "rewards": {
       "params": {
-        "denom": "dv4tnt",
+        "denom": "adv4tnt",
         "denom_exponent": -18,
         "fee_multiplier_ppm": 0,
         "market_id": 11,
@@ -1635,7 +1650,7 @@
       "last_total_power": "0",
       "last_validator_powers": [],
       "params": {
-        "bond_denom": "dv4tnt",
+        "bond_denom": "adv4tnt",
         "historical_entries": 10000,
         "max_entries": 7,
         "max_validators": 60,
@@ -1667,14 +1682,14 @@
     "vest": {
       "vest_entries": [
         {
-          "denom": "dv4tnt",
+          "denom": "adv4tnt",
           "end_time": "2050-01-01T00:00:00Z",
           "start_time": "2001-01-01T00:00:00Z",
           "treasury_account": "community_treasury",
           "vester_account": "community_vester"
         },
         {
-          "denom": "dv4tnt",
+          "denom": "adv4tnt",
           "end_time": "2050-01-01T00:00:00Z",
           "start_time": "2001-01-01T00:00:00Z",
           "treasury_account": "rewards_treasury",
