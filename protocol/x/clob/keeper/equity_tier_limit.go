@@ -146,7 +146,6 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 			equityTierCount = uint32(equityTierCountMaybeNegative)
 		}
 	} else {
-		lib.AssertCheckTxMode(ctx)
 		// For short term orders we just count how many orders exist on the memclob.
 		equityTierCount = k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter)
 	}

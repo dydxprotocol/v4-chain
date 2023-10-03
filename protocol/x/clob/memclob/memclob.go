@@ -153,6 +153,7 @@ func (m *MemClobPriceTimePriority) CountSubaccountOrders(
 	subaccountId satypes.SubaccountId,
 	filter func(types.OrderId) bool,
 ) (count uint32) {
+	lib.AssertCheckTxMode(ctx)
 	for _, openOrdersPerClob := range m.openOrders.orderbooksMap {
 		for _, openOrdersPerClobAndSide := range openOrdersPerClob.SubaccountOpenClobOrders[subaccountId] {
 			for orderId := range openOrdersPerClobAndSide {
