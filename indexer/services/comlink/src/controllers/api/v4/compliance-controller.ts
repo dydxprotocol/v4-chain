@@ -50,7 +50,7 @@ class ComplianceController extends Controller {
       complianceProvider.provider,
     );
 
-    // Immediately return for blocked addresses
+    // Immediately return for blocked addresses, do not refresh
     if (complianceData?.blocked) {
       return {
         restricted: true,
