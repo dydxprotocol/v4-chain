@@ -141,6 +141,10 @@ var (
 					Ticker:         "XRPUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
+				MARKET_DYDX_USD: {
+					Ticker:         "DYDXUSDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_USDT_USD: {
 					Ticker: "USDCUSDT",
 					Invert: true,
