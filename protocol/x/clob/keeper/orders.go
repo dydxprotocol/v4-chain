@@ -206,6 +206,11 @@ func (k Keeper) PlaceStatefulOrder(
 		return err
 	}
 
+	/*
+		Nonsense changes to see if AI code reviewer will catch it.
+	*/
+	fmt.Println("This should not be merged to main")
+
 	// 4. Perform a collateralization check for the full size of the order to mitigate spam.
 	// TODO(CLOB-725): Consider using a pessimistic collateralization check.
 	_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
