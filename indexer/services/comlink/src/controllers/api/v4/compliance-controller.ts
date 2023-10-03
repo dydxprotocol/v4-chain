@@ -15,7 +15,6 @@ import {
 } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
-import { complianceCheck } from '../../../lib/compliance-check';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { getIpAddr, rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
@@ -51,6 +50,13 @@ class ComplianceController extends Controller {
       complianceProvider.provider,
     );
 
+    // Immediately return for blocked addresses
+    if (complianceData?.blocked) {
+      return {
+        restricted: true,
+      };
+    }
+
     if (complianceData === undefined || DateTime.fromISO(complianceData.updatedAt) < ageThreshold) {
       await checkRateLimit(this.ipAddress);
       // TODO(IND-369): Use Ellptic client
@@ -82,7 +88,6 @@ router.get(
     },
   }),
   handleValidationErrors,
-  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
