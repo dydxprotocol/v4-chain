@@ -2,11 +2,11 @@ package types_test
 
 import (
 	"errors"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
@@ -29,14 +29,14 @@ func TestGenesisState_Validate(t *testing.T) {
 						Pair:               constants.BtcUsdPair,
 						MinExchanges:       1,
 						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 					{
 						Id:                 1,
 						Pair:               constants.EthUsdPair,
 						MinExchanges:       1,
 						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 					},
 				},
 				MarketPrices: []types.MarketPrice{
@@ -80,14 +80,14 @@ func TestGenesisState_Validate(t *testing.T) {
 						Pair:               constants.BtcUsdPair,
 						MinExchanges:       1,
 						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 					{
 						Id:                 0,
 						Pair:               constants.EthUsdPair,
 						MinExchanges:       1,
 						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 					},
 				},
 			},
@@ -99,7 +99,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						Id:                 0,
 						Pair:               "",
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 				},
 			},
@@ -113,14 +113,14 @@ func TestGenesisState_Validate(t *testing.T) {
 						Pair:               constants.BtcUsdPair,
 						MinExchanges:       1,
 						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 					{
 						Id:                 1,
 						Pair:               constants.EthUsdPair,
 						MinExchanges:       1,
 						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 					},
 				},
 				MarketPrices: []types.MarketPrice{
@@ -140,14 +140,14 @@ func TestGenesisState_Validate(t *testing.T) {
 						Pair:               constants.BtcUsdPair,
 						MinExchanges:       1,
 						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 					{
 						Id:                 1,
 						Pair:               constants.EthUsdPair,
 						MinExchanges:       1,
 						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 					},
 				},
 				MarketPrices: []types.MarketPrice{

@@ -1,9 +1,11 @@
 package testutil
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	pricefeed "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 )
 
 const (
@@ -22,13 +24,13 @@ var (
 
 	// Test Bitfinex Config
 	BitfinexExchangeConfig = map[pricefeed.MarketId]pricefeed.MarketConfig{
-		exchange_common.MARKET_BTC_USD: {
+		exchange_config.MARKET_BTC_USD: {
 			Ticker: "tBTCUSD",
 		},
-		exchange_common.MARKET_ETH_USD: {
+		exchange_config.MARKET_ETH_USD: {
 			Ticker: "tETHUSD",
 		},
-		exchange_common.MARKET_USDT_USD: {
+		exchange_config.MARKET_USDT_USD: {
 			Ticker: "tUSTUSD",
 		},
 	}
@@ -99,4 +101,7 @@ var (
 			Tickers:      []JsonResponse{bitfinexTicker_Eth9002},
 		},
 	}
+
+	// ValidAuthority is an authority address that passes basic validation.
+	ValidAuthority = authtypes.NewModuleAddress("test").String()
 )

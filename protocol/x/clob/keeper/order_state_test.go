@@ -1,16 +1,15 @@
 package keeper_test
 
 import (
-	"fmt"
 	"sort"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/tracer"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -278,7 +277,7 @@ func TestAddOrdersForPruning_Determinism(t *testing.T) {
 
 	store := prefix.NewStore(
 		ks.Ctx.KVStore(ks.StoreKey),
-		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
 	orders := []types.OrderId{
@@ -303,7 +302,7 @@ func TestAddOrdersForPruning_Determinism(t *testing.T) {
 		)
 
 		potentiallyPrunableOrdersBytes := store.Get(
-			types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+			lib.Uint32ToBytes(blockHeight),
 		)
 
 		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -342,11 +341,11 @@ func TestAddOrdersForPruning_DuplicateOrderIds(t *testing.T) {
 
 	store := prefix.NewStore(
 		ks.Ctx.KVStore(ks.StoreKey),
-		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
 	potentiallyPrunableOrdersBytes := store.Get(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+		lib.Uint32ToBytes(blockHeight),
 	)
 
 	var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -575,12 +574,12 @@ func TestPruning(t *testing.T) {
 			// Verify that expected `blockHeightToPotentiallyPrunableOrdersStore` were deleted.
 			blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
 				ks.Ctx.KVStore(ks.StoreKey),
-				types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+				[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 			)
 
 			for _, blockHeight := range tc.expectedEmptyPotentiallyPrunableOrderBlockHeights {
 				has := blockHeightToPotentiallyPrunableOrdersStore.Has(
-					types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+					lib.Uint32ToBytes(blockHeight),
 				)
 				require.False(t, has)
 			}
@@ -618,30 +617,14 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 
 			expectedExists: false,
 			expectedMultiStoreWrites: []string{
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.Marshal(),
-					)),
-				),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.MustMarshal()),
 			},
 		},
 		"SetOrderFillAmount twice and then RemoveOrderFillAmount removes the fill amount": {
@@ -667,42 +650,18 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 
 			expectedExists: false,
 			expectedMultiStoreWrites: []string{
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
 			},
 		},
 		"RemoveOrderFillAmount with non-existent order": {
@@ -712,18 +671,10 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 			},
 			expectedExists: false,
 			expectedMultiStoreWrites: []string{
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
 			},
 		},
 		"SetOrderFillAmount, RemoveOrderFillAmount, SetOrderFillAmount re-creates the fill amount": {
@@ -750,42 +701,18 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 			expectedExists:     true,
 			expectedFillAmount: 50,
 			expectedMultiStoreWrites: []string{
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
 			},
 		},
 		"RemoveOrderFillAmount does not delete fill amounts for other orders": {
@@ -814,42 +741,18 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 			expectedExists:     true,
 			expectedFillAmount: 100,
 			expectedMultiStoreWrites: []string{
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.Marshal(),
-					)),
-				),
-				fmt.Sprintf(
-					"OrderAmount/value/%v",
-					string(proto.MustFirst(
-						constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.Marshal(),
-					)),
-				),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.MustMarshal()),
+				types.OrderAmountFilledKeyPrefix +
+					string(constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.MustMarshal()),
 			},
 		},
 	}

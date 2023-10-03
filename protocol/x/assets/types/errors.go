@@ -12,11 +12,12 @@ var (
 	ErrAssetDenomAlreadyExists      = errorsmod.Register(ModuleName, 4, "Existing asset found with the same denom")
 	ErrAssetIdAlreadyExists         = errorsmod.Register(ModuleName, 5, "Existing asset found with the same asset id")
 	ErrGapFoundInAssetId            = errorsmod.Register(ModuleName, 6, "Found gap in asset Id")
-	ErrAssetZeroNotUsdc             = errorsmod.Register(ModuleName, 7, "First asset is not USDC")
+	ErrUsdcMustBeAssetZero          = errorsmod.Register(ModuleName, 7, "USDC must be asset 0")
 	ErrNoAssetInGenesis             = errorsmod.Register(ModuleName, 8, "No asset found in genesis state")
 	ErrInvalidMarketId              = errorsmod.Register(ModuleName, 9, "Found market id for asset without market")
 	ErrInvalidAssetAtomicResolution = errorsmod.Register(ModuleName, 10, "Invalid asset atomic resolution")
 	ErrInvalidDenomExponent         = errorsmod.Register(ModuleName, 11, "Invalid denom exponent")
+	ErrAssetAlreadyExists           = errorsmod.Register(ModuleName, 12, "Asset already exists")
 
 	// Errors for Not Implemented
 	ErrNotImplementedMulticollateral = errorsmod.Register(ModuleName, 401, "Not Implemented: Multi-Collateral")

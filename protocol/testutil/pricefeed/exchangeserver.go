@@ -3,10 +3,10 @@ package pricefeed
 import (
 	"context"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/testexchange"
 	pricefeed "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/testutil"
 	"io"
 	"log"
@@ -28,7 +28,7 @@ var (
 )
 
 func init() {
-	testExchangeConfig := constants.StaticExchangeMarketConfig[exchange_common.EXCHANGE_ID_TEST_EXCHANGE]
+	testExchangeConfig := exchange_config.TestnetExchangeMarketConfig[exchange_common.EXCHANGE_ID_TEST_EXCHANGE]
 	for marketId, config := range testExchangeConfig.MarketToMarketConfig {
 		testExchangeSymbolToMarketId[config.Ticker] = marketId
 	}

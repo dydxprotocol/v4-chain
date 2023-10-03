@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"math"
 	"math/big"
 	"testing"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -78,6 +79,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 			for _, a := range tc.assets {
 				_, err := ks.AssetsKeeper.CreateAsset(
 					ks.Ctx,
+					a.Id,
 					a.Symbol,
 					a.Denom,
 					a.DenomExponent,
@@ -184,15 +186,7 @@ func TestIsValidInsuranceFundDelta(t *testing.T) {
 			bankMock := &mocks.BankKeeper{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
 
-			_, err := ks.AssetsKeeper.CreateAsset(
-				ks.Ctx,
-				constants.Usdc.Symbol,
-				constants.Usdc.Denom,
-				constants.Usdc.DenomExponent,
-				constants.Usdc.HasMarket,
-				constants.Usdc.MarketId,
-				constants.Usdc.AtomicResolution,
-			)
+			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			bankMock.On(
@@ -312,15 +306,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			bankMock := &mocks.BankKeeper{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
 
-			_, err := ks.AssetsKeeper.CreateAsset(
-				ks.Ctx,
-				constants.Usdc.Symbol,
-				constants.Usdc.Denom,
-				constants.Usdc.DenomExponent,
-				constants.Usdc.HasMarket,
-				constants.Usdc.MarketId,
-				constants.Usdc.AtomicResolution,
-			)
+			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Initialize the liquidations config.
@@ -486,11 +472,11 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			},
 			expectedFills: []types.MatchPerpetualDeleveraging_Fill{
 				{
-					OffsettingSubaccountId: constants.Dave_Num1,
+					OffsettingSubaccountId: constants.Dave_Num0,
 					FillAmount:             50_000_000,
 				},
 				{
-					OffsettingSubaccountId: constants.Dave_Num0,
+					OffsettingSubaccountId: constants.Dave_Num1,
 					FillAmount:             50_000_000,
 				},
 			},

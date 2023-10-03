@@ -23,7 +23,7 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 	}{
 		"Success": {
 			msg: types.MsgUpdateParams{
-				Authority: "test",
+				Authority: validAuthority,
 				Params: types.Params{
 					FundingRateClampFactorPpm: 400_000,
 					PremiumVoteClampFactorPpm: 400_000,
@@ -31,13 +31,15 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 				},
 			},
 		},
-		"Failure: Empty authority": {
-			msg:         types.MsgUpdateParams{},
-			expectedErr: "authority cannot be empty",
+		"Failure: Invalid authority": {
+			msg: types.MsgUpdateParams{
+				Authority: "",
+			},
+			expectedErr: "Authority is invalid",
 		},
 		"Failure: 0 FundingRateClampFactorPpm": {
 			msg: types.MsgUpdateParams{
-				Authority: "test",
+				Authority: validAuthority,
 				Params: types.Params{
 					FundingRateClampFactorPpm: 0,
 					PremiumVoteClampFactorPpm: 400_000,
@@ -48,7 +50,7 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 		},
 		"Failure: 0 PremiumVoteClampFactorPpm": {
 			msg: types.MsgUpdateParams{
-				Authority: "test",
+				Authority: validAuthority,
 				Params: types.Params{
 					FundingRateClampFactorPpm: 400_000,
 					PremiumVoteClampFactorPpm: 0,

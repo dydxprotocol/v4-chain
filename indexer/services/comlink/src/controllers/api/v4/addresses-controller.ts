@@ -50,6 +50,7 @@ import {
   initializePerpetualPositionsWithFunding,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { CheckSubaccountSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -236,6 +237,7 @@ class AddressesController extends Controller {
 
 router.get(
   '/:address',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     address: {
@@ -275,6 +277,7 @@ router.get(
 
 router.get(
   '/:address/subaccountNumber/:subaccountNumber',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   handleValidationErrors,

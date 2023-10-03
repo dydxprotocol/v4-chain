@@ -5,10 +5,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 )
 
-const (
-	paramsKey = "DowntimeParams"
-)
-
 // GetParams returns the DowntimeParams in state.
 func (k Keeper) GetDowntimeParams(
 	ctx sdk.Context,
@@ -16,7 +12,7 @@ func (k Keeper) GetDowntimeParams(
 	params types.DowntimeParams,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(paramsKey))
+	b := store.Get([]byte(types.DowntimeParamsKey))
 	k.cdc.MustUnmarshal(b, &params)
 	return params
 }
@@ -33,7 +29,7 @@ func (k Keeper) SetDowntimeParams(
 
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&params)
-	store.Set([]byte(paramsKey), b)
+	store.Set([]byte(types.DowntimeParamsKey), b)
 
 	// For each new duration, we assume the worst case. For new durations that are smaller than all existing
 	// durations, we'll use the current block's info. Note that at genesis, this is true for all durations.

@@ -165,13 +165,13 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 		// Retrieve an instance of the memstore.
 		memPrefixStore := prefix.NewStore(
 			memStore,
-			types.KeyPrefix(keyPrefix),
+			[]byte(keyPrefix),
 		)
 
 		// Retrieve an instance of the store.
 		store := prefix.NewStore(
 			ctx.KVStore(k.storeKey),
-			types.KeyPrefix(keyPrefix),
+			[]byte(keyPrefix),
 		)
 
 		// Copy over all keys and values with the current key prefix to the `MemStore`.

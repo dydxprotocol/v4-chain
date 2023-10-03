@@ -1,5 +1,6 @@
 package types
 
+// Module name and store keys
 const (
 	// ModuleName defines the module name
 	ModuleName = "assets"
@@ -8,6 +9,11 @@ const (
 	StoreKey = ModuleName
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
+// State
+const (
+	// DenomToIdKeyPrefix is the prefix to retrieve denom-to-asset-id mappings
+	DenomToIdKeyPrefix = "denom_to_id/"
+
+	// AssetKeyPrefix is the prefix to retrieve all Assets
+	AssetKeyPrefix = "asset/"
+)

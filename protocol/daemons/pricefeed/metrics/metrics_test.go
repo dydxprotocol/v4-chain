@@ -1,6 +1,7 @@
 package metrics_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
@@ -14,11 +15,11 @@ const (
 )
 
 func TestGetLabelForMarketIdSuccess(t *testing.T) {
-	pricefeedmetrics.AddMarketPairForTelemetry(exchange_common.MARKET_BTC_USD, "BTCUSD")
+	pricefeedmetrics.AddMarketPairForTelemetry(exchange_config.MARKET_BTC_USD, "BTCUSD")
 	require.Equal(
 		t,
 		metrics.GetLabelForStringValue(metrics.MarketId, "BTCUSD"),
-		pricefeedmetrics.GetLabelForMarketId(exchange_common.MARKET_BTC_USD),
+		pricefeedmetrics.GetLabelForMarketId(exchange_config.MARKET_BTC_USD),
 	)
 }
 
@@ -33,7 +34,7 @@ func TestGetLabelForMarketIdFailure(t *testing.T) {
 func TestGetLabelForExchangeId(t *testing.T) {
 	require.Equal(
 		t,
-		metrics.GetLabelForStringValue(metrics.ExchangeId, exchange_common.EXCHANGE_NAME_BINANCEUS),
+		metrics.GetLabelForStringValue(metrics.ExchangeId, exchange_common.EXCHANGE_ID_BINANCE_US),
 		pricefeedmetrics.GetLabelForExchangeId(exchange_common.EXCHANGE_ID_BINANCE_US),
 	)
 }

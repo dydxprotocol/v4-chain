@@ -1,8 +1,8 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	pricefeedclient "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -52,7 +52,7 @@ const (
 )
 
 var TestMarketExchangeConfigs = map[pricefeedclient.MarketId]string{
-	exchange_common.MARKET_BTC_USD: `{
+	exchange_config.MARKET_BTC_USD: `{
 		"exchanges": [
 		  {
 			"exchangeName": "Binance",
@@ -101,7 +101,7 @@ var TestMarketExchangeConfigs = map[pricefeedclient.MarketId]string{
 		  }
 		]
 	  }`,
-	exchange_common.MARKET_ETH_USD: `{
+	exchange_config.MARKET_ETH_USD: `{
 		"exchanges": [
 		  {
 			"exchangeName": "Binance",
@@ -150,7 +150,7 @@ var TestMarketExchangeConfigs = map[pricefeedclient.MarketId]string{
 		  }
 		]
 	  }`,
-	exchange_common.MARKET_SOL_USD: `{
+	exchange_config.MARKET_SOL_USD: `{
 		"exchanges": [
 		  {
 			"exchangeName": "Binance",
@@ -210,7 +210,7 @@ var TestMarketParams = []types.MarketParam{
 		Exponent:           BtcUsdExponent,
 		MinExchanges:       1,
 		MinPriceChangePpm:  50,
-		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 	},
 	{
 		Id:                 1,
@@ -218,7 +218,7 @@ var TestMarketParams = []types.MarketParam{
 		Exponent:           EthUsdExponent,
 		MinExchanges:       1,
 		MinPriceChangePpm:  50,
-		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 	},
 	{
 		Id:                 2,
@@ -226,7 +226,7 @@ var TestMarketParams = []types.MarketParam{
 		Exponent:           SolUsdExponent,
 		MinExchanges:       1,
 		MinPriceChangePpm:  50,
-		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_SOL_USD],
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_SOL_USD],
 	},
 }
 
@@ -298,7 +298,7 @@ var (
 				Pair:               BtcUsdPair,
 				Exponent:           BtcUsdExponent,
 				MinExchanges:       uint32(2),
-				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 				MinPriceChangePpm:  uint32(50),
 			},
 			{
@@ -306,7 +306,7 @@ var (
 				Pair:               EthUsdPair,
 				Exponent:           EthUsdExponent,
 				MinExchanges:       uint32(1),
-				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 				MinPriceChangePpm:  uint32(50),
 			},
 		},
@@ -330,7 +330,7 @@ var (
 				Id:                 uint32(0),
 				Pair:               BtcUsdPair,
 				Exponent:           BtcUsdExponent,
-				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_BTC_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 				MinExchanges:       uint32(2),
 				MinPriceChangePpm:  uint32(50),
 			},
@@ -338,7 +338,7 @@ var (
 				Id:                 uint32(1),
 				Pair:               EthUsdPair,
 				Exponent:           EthUsdExponent,
-				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_common.MARKET_ETH_USD],
+				ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 				MinExchanges:       uint32(2),
 				MinPriceChangePpm:  uint32(50),
 			},

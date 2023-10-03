@@ -26,7 +26,7 @@ type BlockAdvancement struct {
 // block proposal.
 type TxIndexesToErrors map[int]string
 
-type BlockAdvancementWithError struct {
+type BlockAdvancementWithErrors struct {
 	BlockAdvancement        BlockAdvancement
 	ExpectedDeliverTxErrors TxIndexesToErrors
 }
@@ -34,7 +34,7 @@ type BlockAdvancementWithError struct {
 // AdvanceToBlock advances the test app to the given block height using the operations queue
 // generated from the specified BlockAdvancement. It catches errors in DeliverTx and verifies that
 // the error matches the expected error.
-func (b BlockAdvancementWithError) AdvanceToBlock(
+func (b BlockAdvancementWithErrors) AdvanceToBlock(
 	ctx sdktypes.Context,
 	blockHeight uint32,
 	tApp *TestApp,
@@ -49,10 +49,10 @@ func (b BlockAdvancementWithError) AdvanceToBlock(
 		) (haltchain bool) {
 			expectedError, found := b.ExpectedDeliverTxErrors[txIndex]
 			if found && expectedError != "" {
-				require.True(t, response.IsErr())
+				require.True(t, response.IsErr(), "Expected CheckTx to error. Response: %+v", response)
 				require.Contains(t, response.Log, expectedError)
 			} else {
-				require.True(t, response.IsOK())
+				require.True(t, response.IsOK(), "Expected CheckTx to succeed. Response: %+v", response)
 			}
 			return false
 		},

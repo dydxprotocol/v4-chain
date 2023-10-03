@@ -16,14 +16,14 @@ import (
 func TestDeliverTxMatchValidation(t *testing.T) {
 	tests := map[string]struct {
 		subaccounts       []satypes.Subaccount
-		blockAdvancements []testapp.BlockAdvancementWithError
+		blockAdvancements []testapp.BlockAdvancementWithErrors
 	}{
 		"Error: partially filled IOC taker order cannot be matched twice": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num1_10_000USD,
 				constants.Bob_Num0_10_000USD,
 			},
-			blockAdvancements: []testapp.BlockAdvancementWithError{
+			blockAdvancements: []testapp.BlockAdvancementWithErrors{
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{
@@ -68,7 +68,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				constants.Alice_Num0_100_000USD,
 				constants.Dave_Num0_500000USD,
 			},
-			blockAdvancements: []testapp.BlockAdvancementWithError{
+			blockAdvancements: []testapp.BlockAdvancementWithErrors{
 				{
 					// place stateful orders in state, trigger conditional order in EndBlocker
 					BlockAdvancement: testapp.BlockAdvancement{
@@ -110,7 +110,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				constants.Alice_Num1_10_000USD,
 				constants.Bob_Num0_10_000USD,
 			},
-			blockAdvancements: []testapp.BlockAdvancementWithError{
+			blockAdvancements: []testapp.BlockAdvancementWithErrors{
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{
@@ -140,7 +140,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				constants.Alice_Num1_10_000USD,
 				constants.Bob_Num0_10_000USD,
 			},
-			blockAdvancements: []testapp.BlockAdvancementWithError{
+			blockAdvancements: []testapp.BlockAdvancementWithErrors{
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{
@@ -178,7 +178,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				constants.Alice_Num1_10_000USD,
 				constants.Bob_Num0_10_000USD,
 			},
-			blockAdvancements: []testapp.BlockAdvancementWithError{
+			blockAdvancements: []testapp.BlockAdvancementWithErrors{
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{

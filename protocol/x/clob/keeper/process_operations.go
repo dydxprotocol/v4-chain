@@ -419,6 +419,14 @@ func (k Keeper) PersistOrderRemovalToState(
 			),
 		),
 		indexerevents.StatefulOrderEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewStatefulOrderRemovalEvent(
+				orderIdToRemove,
+				indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+					orderRemoval.RemovalReason,
+				),
+			),
+		),
 	)
 
 	telemetry.IncrCounterWithLabels(
@@ -519,6 +527,17 @@ func (k Keeper) PersistMatchOrdersToState(
 				),
 			),
 			indexerevents.OrderFillEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewOrderFillEvent(
+					matchWithOrders.MakerOrder.MustGetOrder(),
+					matchWithOrders.TakerOrder.MustGetOrder(),
+					matchWithOrders.FillAmount,
+					matchWithOrders.MakerFee,
+					matchWithOrders.TakerFee,
+					totalFilledMaker,
+					totalFilledTaker,
+				),
+			),
 		)
 	}
 
@@ -541,6 +560,22 @@ func (k Keeper) PersistMatchLiquidationToState(
 	if err := k.ValidateLiquidationOrderAgainstProposedLiquidation(ctx, takerOrder, matchLiquidation); err != nil {
 		return err
 	}
+
+	notionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		matchLiquidation.PerpetualId,
+		new(big.Int).SetUint64(matchLiquidation.TotalSize),
+	)
+	if err != nil {
+		return err
+	}
+	absNotionalQuoteQuantums := new(big.Int).Abs(notionalQuoteQuantums)
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.DeliverTx},
+		float32(absNotionalQuoteQuantums.Uint64()),
+		matchLiquidation.GetMetricLabels(),
+	)
 
 	for _, fill := range matchLiquidation.GetFills() {
 		// Fetch the maker order from either short term orders or state.
@@ -573,6 +608,25 @@ func (k Keeper) PersistMatchLiquidationToState(
 				),
 			)
 		}
+
+		// Stat fill amount in quote quantums as ratio of notional quote quantums
+		fillAmountToTotalSizeRat := new(big.Rat).Quo(
+			new(big.Rat).SetUint64(matchWithOrders.FillAmount.ToUint64()),
+			new(big.Rat).SetUint64(matchLiquidation.TotalSize),
+		)
+		filledQuoteQuantums := lib.BigRatRound(
+			new(big.Rat).Mul(
+				fillAmountToTotalSizeRat,
+				new(big.Rat).SetInt(absNotionalQuoteQuantums),
+			),
+			true,
+		)
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.Filled, metrics.DeliverTx},
+			float32(filledQuoteQuantums.Uint64()),
+			matchLiquidation.GetMetricLabels(),
+		)
+
 		// Send on-chain update for the liquidation. The events are stored in a TransientStore which should be rolled-back
 		// if the branched state is discarded, so batching is not necessary.
 		k.GetIndexerEventManager().AddTxnEvent(
@@ -589,6 +643,16 @@ func (k Keeper) PersistMatchLiquidationToState(
 				),
 			),
 			indexerevents.OrderFillEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewLiquidationOrderFillEvent(
+					matchWithOrders.MakerOrder.MustGetOrder(),
+					matchWithOrders.TakerOrder,
+					matchWithOrders.FillAmount,
+					matchWithOrders.MakerFee,
+					matchWithOrders.TakerFee,
+					totalFilledMaker,
+				),
+			),
 		)
 	}
 

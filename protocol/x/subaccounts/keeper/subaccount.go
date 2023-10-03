@@ -25,8 +25,8 @@ import (
 // SetSubaccount set a specific subaccount in the store from its index.
 // Note that empty subaccounts are removed from state.
 func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
-	key := types.SubaccountKey(*subaccount.Id)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
+	key := subaccount.Id.MustMarshal()
 
 	if len(subaccount.PerpetualPositions) == 0 && len(subaccount.AssetPositions) == 0 {
 		if store.Has(key) {
@@ -51,8 +51,8 @@ func (k Keeper) GetSubaccount(
 	)
 
 	// Check state for the subaccount.
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
-	b := store.Get(types.SubaccountKey(id))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
+	b := store.Get(id.MustMarshal())
 
 	// If subaccount does not exist in state, return a default value.
 	if b == nil {
@@ -69,7 +69,7 @@ func (k Keeper) GetSubaccount(
 // GetAllSubaccount returns all subaccount.
 // For more performant searching and iteration, use `ForEachSubaccount`.
 func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
@@ -88,7 +88,7 @@ func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
 // This is more performant than GetAllSubaccount because it does not fetch all at once.
 // and you do not need to iterate through all the subaccounts.
 func (k Keeper) ForEachSubaccount(ctx sdk.Context, callback func(types.Subaccount) (finished bool)) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
@@ -115,7 +115,7 @@ func (k Keeper) ForEachSubaccountRandomStart(
 	callback func(types.Subaccount) (finished bool),
 	rand *rand.Rand,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
 	prefix, err := k.getRandomBytes(ctx, rand)
 	if err != nil {
 		return
@@ -148,7 +148,7 @@ func (k Keeper) ForEachSubaccountRandomStart(
 
 // GetRandomSubaccount returns a random subaccount. Will return an error if there are no subaccounts.
 func (k Keeper) GetRandomSubaccount(ctx sdk.Context, rand *rand.Rand) (types.Subaccount, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
 
 	prefix, err := k.getRandomBytes(ctx, rand)
 	if err != nil {
@@ -163,7 +163,7 @@ func (k Keeper) GetRandomSubaccount(ctx sdk.Context, rand *rand.Rand) (types.Sub
 }
 
 func (k Keeper) getRandomBytes(ctx sdk.Context, rand *rand.Rand) ([]byte, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SubaccountKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
 
 	// Use the forward iterator to get the first valid key.
 	forwardItr := store.Iterator(nil, nil)
@@ -311,6 +311,17 @@ func (k Keeper) UpdateSubaccounts(
 				),
 			),
 			indexerevents.SubaccountUpdateEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewSubaccountUpdateEvent(
+					u.SettledSubaccount.Id,
+					getUpdatedPerpetualPositions(
+						u,
+						fundingPayments,
+					),
+					getUpdatedAssetPositions(u),
+					fundingPayments,
+				),
+			),
 		)
 
 		// Emit an event indicating a funding payment was paid / received for each settled funding

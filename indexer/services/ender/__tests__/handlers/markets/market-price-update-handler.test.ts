@@ -22,7 +22,6 @@ import {
 import { createKafkaMessageFromMarketEvent } from '../../helpers/kafka-helpers';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectMarketKafkaMessage,
@@ -72,9 +71,7 @@ describe('marketPriceUpdateHandler', () => {
       };
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.MARKET,
-        binaryToBase64String(
-          MarketEventV1.encode(marketEvent).finish(),
-        ),
+        MarketEventV1.encode(marketEvent).finish(),
         transactionIndex,
         eventIndex,
       );

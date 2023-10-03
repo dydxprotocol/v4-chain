@@ -68,8 +68,6 @@ setup_cosmovisor() {
     export DAEMON_HOME="$HOME/chain/local_node"
 
     cosmovisor init /bin/dydxprotocold
-
-    cp /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/genesis/bin/"
 }
 
 install_prerequisites
@@ -86,8 +84,10 @@ log_this() {
 mkdir -p $SNAP_PATH
 touch $LOG_PATH
 sleep 10
-cosmovisor run init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
+dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
 curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
+
+setup_cosmovisor
 
 # TODO: add metrics around snapshot upload latency/frequency/success rate
 while true; do

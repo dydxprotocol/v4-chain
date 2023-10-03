@@ -1,5 +1,6 @@
 package types
 
+// Module name and store keys
 const (
 	// ModuleName defines the module name
 	ModuleName = "sending"
@@ -7,7 +8,3 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 )
-
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}

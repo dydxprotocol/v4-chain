@@ -37,7 +37,7 @@ func (gs GenesisState) Validate() error {
 
 	// The first asset should always be USDC.
 	if gs.Assets[0] != AssetUsdc {
-		return ErrAssetZeroNotUsdc
+		return ErrUsdcMustBeAssetZero
 	}
 
 	// Provided assets should not contain duplicated asset ids, and denoms.
