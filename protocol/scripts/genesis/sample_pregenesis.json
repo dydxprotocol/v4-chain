@@ -50,7 +50,9 @@
             }
           ],
           "description": "The native token of the network",
-          "display": "dv4tnt"
+          "display": "dv4tnt",
+          "name": "dYdX Testnet Token",
+          "symbol": "dv4tnt"
         }
       ],
       "params": {
@@ -613,8 +615,7 @@
               ]
             }
           }
-        },
-        {}
+        }
       ],
       "num_messages": 1
     },
