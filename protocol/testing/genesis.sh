@@ -22,11 +22,16 @@ DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000000000000000000000 # 1e24
 # Each testnet validator self-delegates 500k whole coins of native token.
 TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000000000000000000000 # 5e23
+# TODO(GENESIS): 11155111 is the chain ID for sepolia testnet.
 ETH_CHAIN_ID=11155111 # sepolia
+# TODO(GENESIS): below is the bridge contract on sepolia testnet.
 # https://sepolia.etherscan.io/address/0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0
 ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0"
+# TODO(GENESIS): verify below balance is desired amount.
 BRIDGE_MODACC_BALANCE=1000000000000000000000000000 # 1e27
+# TODO(GENESIS): determine bridge events to manually include in genesis.
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0 # TODO(CORE-329)
+# TODO(GENESIS): determine bridge events to manually include in genesis.
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=0 # TODO(CORE-329)
 
 function edit_genesis() {
@@ -934,6 +939,22 @@ function edit_genesis() {
 	usdt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/usdt_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].exchange_config_json' -v "$usdt_exchange_config_json"
 
+	# Market: DYDX-USD
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].pair' -v 'DYDX-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].id' -v '1000001'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].exponent' -v '-9'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_price_change_ppm' -v '2500'  # 0.25%
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].id' -v '1000001'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].exponent' -v '-9'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].price' -v '20500000000'          # $2.05 = 1 DYDX.
+	# DYDX Exchange Config
+	dydx_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/dydx_exchange_config.json" | jq -c '.')
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$dydx_exchange_config_json"
+
+
 	total_accounts_quote_balance=0
 	acct_idx=0
 	# Update subaccounts module for load testing accounts.
@@ -1448,16 +1469,17 @@ function update_genesis_use_test_exchange() {
 # Modify the genesis file to add test volatile market. Market TEST-USD will be added as market 33.
 function update_genesis_use_test_volatile_market() {
 	GENESIS=$1/genesis.json
+	NEXT_MARKET_ID=33
 
 	# Market: TEST-USD
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.last().pair' -v 'TEST-USD'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().id' -v '33'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().id' -v "${NEXT_MARKET_ID}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().exponent' -v '-5'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.last().min_price_change_ppm' -v '250' # 0.025%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().id' -v '33'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().id' -v "${NEXT_MARKET_ID}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().exponent' -v '-5'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().price' -v '10000000'          # $100 = 1 TEST.
 	# TEST Exchange Config
@@ -1470,7 +1492,7 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.perpetuals.[]' -v "{}"
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.ticker' -v 'TEST-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.id' -v "${NUM_PERPETUALS}"
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.market_id' -v '33'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.market_id' -v "${NEXT_MARKET_ID}"
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.atomic_resolution' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.default_funding_ppm' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.liquidity_tier' -v '0'
@@ -1492,25 +1514,4 @@ update_genesis_complete_bridge_delay() {
 
 	# Reduce complete bridge delay to 600 blocks.
 	dasel put -t int -f "$GENESIS" '.app_state.bridge.safety_params.delay_blocks' -v "$2"
-}
-
-# Set the denom metadata, which is for human readability.
-set_denom_metadata() {
-	local BASE_DENOM=$1
-	local WHOLE_COIN_DENOM=$2
-	local COIN_NAME=$3
-	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata" -v "[]"
-	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[]" -v "{}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].description" -v "The native token of the network"
-	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units" -v "[]"
-	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[]" -v "{}"
-	# Base denom is the minimum unit of the a token and the denom used by `x/bank`.
-	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[0].denom" -v "$BASE_DENOM"
-	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[]" -v "{}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[1].denom" -v "$WHOLE_COIN_DENOM"
-	dasel put -t int -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[1].exponent" -v 18
-	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].base" -v "$BASE_DENOM"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].name" -v "$COIN_NAME"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].display" -v "$WHOLE_COIN_DENOM"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].symbol" -v "$WHOLE_COIN_DENOM"
 }

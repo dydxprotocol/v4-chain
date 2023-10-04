@@ -13,6 +13,10 @@ var (
 			Id: exchange_common.EXCHANGE_ID_BINANCE,
 			// example `symbols` parameter: ["BTCUSDT","BNBUSDT"]
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_DYDX_USD: {
+					Ticker:         "DYDXUSDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_BTC_USD: {
 					Ticker:         "BTCUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
@@ -230,6 +234,10 @@ var (
 		exchange_common.EXCHANGE_ID_GATE: {
 			Id: exchange_common.EXCHANGE_ID_GATE,
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_DYDX_USD: {
+					Ticker:         "DYDX_USDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_MATIC_USD: {
 					Ticker:         "MATIC_USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
@@ -367,6 +375,10 @@ var (
 		exchange_common.EXCHANGE_ID_BYBIT: {
 			Id: exchange_common.EXCHANGE_ID_BYBIT,
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_DYDX_USD: {
+					Ticker:         "DYDXUSDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_BTC_USD: {
 					Ticker:         "BTCUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
@@ -605,6 +617,10 @@ var (
 		exchange_common.EXCHANGE_ID_KUCOIN: {
 			Id: exchange_common.EXCHANGE_ID_KUCOIN,
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_DYDX_USD: {
+					Ticker:         "DYDX-USDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_LINK_USD: {
 					Ticker:         "LINK-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
@@ -719,6 +735,10 @@ var (
 		exchange_common.EXCHANGE_ID_OKX: {
 			Id: exchange_common.EXCHANGE_ID_OKX,
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_DYDX_USD: {
+					Ticker:         "DYDX-USDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_BTC_USD: {
 					Ticker:         "BTC-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
@@ -843,6 +863,10 @@ var (
 		},
 		exchange_common.EXCHANGE_ID_MEXC: {
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_DYDX_USD: {
+					Ticker:         "DYDX_USDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_BTC_USD: {
 					Ticker:         "BTC_USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
