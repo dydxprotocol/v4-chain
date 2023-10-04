@@ -94,6 +94,7 @@ func (k Keeper) CancelShortTermOrder(
 //
 // An error will be returned if any of the following conditions are true:
 //   - Standard stateful validation fails.
+//   - Equity tier limit exceeded.
 //   - The memclob itself returns an error.
 //
 // This method will panic if the provided order is not a Short-Term order.
@@ -149,13 +150,6 @@ func (k Keeper) CancelStatefulOrder(
 		// Remove the stateful order from state. Note that if the stateful order did not
 		// exist in state, then it would have failed validation in the previous step.
 		k.MustRemoveStatefulOrder(ctx, msg.OrderId)
-
-		// Decrement the `to be committed` stateful order count.
-		k.SetToBeCommittedStatefulOrderCount(
-			ctx,
-			msg.OrderId,
-			k.GetToBeCommittedStatefulOrderCount(ctx, msg.OrderId)-1,
-		)
 	} else {
 		// Write the stateful order cancellation to uncommitted state. PerformOrderCancellationStatefulValidation will
 		// return an error if the order cancellation already exists which will prevent
@@ -298,8 +292,9 @@ func (k Keeper) ReplayPlaceOrder(
 // calling `PlaceOrder` on the specified memclob.
 //
 // An error will be returned if any of the following conditions are true:
-// - Standard stateful validation fails.
-// - The memclob itself returns an error.
+//   - Standard stateful validation fails.
+//   - Equity tier limit exceeded.
+//   - The memclob itself returns an error.
 func (k Keeper) placeOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
@@ -330,6 +325,12 @@ func (k Keeper) placeOrder(
 
 	// Perform stateful validation.
 	err = k.PerformStatefulOrderValidation(ctx, &order, blockHeight, true)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// Validate that adding the order wouldn't exceed subaccount equity tier limits.
+	err = k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order)
 	if err != nil {
 		return 0, 0, err
 	}

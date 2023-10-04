@@ -103,11 +103,9 @@ const (
 	// `placements - cancellations`.
 	UncommittedStatefulOrderCountPrefix = "stateful_order_count/uncommitted/long_term/"
 
-	// ToBeCommittedStatefulOrderCountPrefix is the key to retrieve the to be committed stateful order count.
-	// To be committed orders are orders that this validator is aware of during `DeliverTx` that are in the process
-	// or being committed to a block and are stored in a transient store. This count represents the number of to
-	// be committed stateful `placements - removals`.
-	ToBeCommittedStatefulOrderCountPrefix = "stateful_order_count/to_be_committed/long_term/"
+	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
+	// represents the number of long term order placements and triggered conditional orders stored in state.
+	StatefulOrderCountPrefix = "stateful_order_count/long_term/"
 )
 
 // Module Accounts

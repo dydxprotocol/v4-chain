@@ -266,7 +266,6 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 					).Times(4)
 					mockMemClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
 						Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult)).Once()
-					mockMemClobKeeper.On("ValidateSubaccountEquityTierLimitForNewOrder", mock.Anything, mock.Anything).Return(nil)
 
 					// Mock out all remaining calls to GetOrderFillAmount, which is called in
 					// `memclob.PurgeInvalidMemclobState` and during test assertions.

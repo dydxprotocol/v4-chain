@@ -59,9 +59,12 @@ func (k *Keeper) InitializeEquityTierLimit(
 // tier limits enforce.
 //
 // Note that the method is dependent on whether we are executing on `checkState` or on `deliverState` for
-// stateful orders. During `checkState` we rely on the uncommitted order count to tell us how many stateful
-// orders exist outside of the MemClob. For `deliverState` we use the `ProcessProposerMatchesEvents`
-// to find out how many orders (minus removals) exists outside of the `MemClob`.
+// stateful orders. For `deliverState`, we sum:
+//   - the number of long term orders.
+//   - the number of triggered conditional orders.
+//   - the number of untriggered conditional orders.
+//
+// And for `checkState`, we add to the above sum the number of to be committed stateful orders.
 func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, order types.Order) error {
 	// Always allow short-term FoK or IoC orders as they will either fill immediately or be cancelled and won't rest on
 	// the book.
@@ -117,48 +120,55 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 		)
 	}
 
-	// Count all the open orders that are on the `MemClob`.
-	equityTierCount := int32(k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter))
-
-	// Include the number of stateful orders that exist outside of the `MemClob`. This includes the number of
-	// untriggered conditional orders and during `DeliverTx` we add the count of to be committed stateful orders
-	// while in `CheckTx` we add the count of uncommitted stateful orders.
+	equityTierCount := int32(0)
 	if order.IsStatefulOrder() {
+		// For stateful orders we get the stateful order count which represents how many long term and
+		// triggered conditional orders exist in state. We add to that all untriggered conditional orders.
+		// If this is `CheckTx` then we must also add the number of uncommitted stateful orders that this validator
+		// is aware of (orders that are part of the mempool but have yet to proposed in a block).
+		equityTierCount = int32(k.GetStatefulOrderCount(ctx, order.OrderId))
 		equityTierCount += int32(k.CountUntriggeredSubaccountOrders(ctx, subaccountId, filter))
-		if lib.IsDeliverTxMode(ctx) {
-			equityTierCount += k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId)
-		} else {
+		if !lib.IsDeliverTxMode(ctx) {
 			equityTierCount += k.GetUncommittedStatefulOrderCount(ctx, order.OrderId)
-		}
-	}
 
-	if equityTierCount < 0 {
-		if lib.IsDeliverTxMode(ctx) {
-			err = fmt.Errorf(
+			if equityTierCount < 0 {
+				panic(fmt.Errorf(
+					"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
+						"equityTierCount %d, statefulOrderCount %d, untriggeredSubaccountOrders %d, "+
+						"uncommittedStatefulOrderCount %d.",
+					order,
+					equityTierCount,
+					k.GetStatefulOrderCount(ctx, order.OrderId),
+					k.CountUntriggeredSubaccountOrders(ctx, subaccountId, filter),
+					k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
+				))
+			}
+		} else if equityTierCount < 0 {
+			panic(fmt.Errorf(
 				"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
-					"equityTierCount %d, memClobCount %d, (stateful order only) toBeCommittedCount %d.",
+					"equityTierCount %d, statefulOrderCount %d, untriggeredSubaccountOrders %d.",
 				order,
 				equityTierCount,
-				k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter),
-				k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId),
-			)
-		} else {
-			err = fmt.Errorf(
-				"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
-					"equityTierCount %d, memClobCount %d, (stateful order only) uncommittedCount %d.",
-				order,
-				equityTierCount,
-				k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter),
-				k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
-			)
+				k.GetStatefulOrderCount(ctx, order.OrderId),
+				k.CountUntriggeredSubaccountOrders(ctx, subaccountId, filter),
+			))
 		}
-		panic(err)
+	} else {
+		// For short term orders we just count how many orders exist on the memclob.
+		equityTierCount = int32(k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter))
+
+		if equityTierCount < 0 {
+			panic(fmt.Errorf(
+				"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
+					"equityTierCount %d, memClobCount %d.",
+				order,
+				equityTierCount,
+				k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter),
+			))
+		}
 	}
 
 	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.
-	// Note that once we combine the count of orders on the memclob with how many `uncommitted` or `to be committed`
-	// stateful orders on the memclob we should always have a negative number since we only count order
-	// cancellations/removals for orders that exist.
 	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
 		return errorsmod.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,

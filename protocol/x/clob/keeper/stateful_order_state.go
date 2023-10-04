@@ -21,7 +21,7 @@ import (
 // it was placed. The placed order can either be a conditional order or a long term order.
 // If the order is conditional, it will be placed into the Untriggered Conditional Orders state store.
 // If it is a long term order, it will be placed in the Long Term Order state store.
-// If the `OrderId` doesn't exist then the `to be committed` stateful order count is incremented.
+// If the `OrderId` doesn't exist then the stateful order count is incremented.
 // Note the following:
 // - If a stateful order placement already exists in state with `order.OrderId`, this function will overwrite it.
 // - The `TransactionIndex` field will be set to the next unused transaction index for this block.
@@ -59,11 +59,11 @@ func (k Keeper) SetLongTermOrderPlacement(
 	memStore.Set(orderIdBytes, longTermOrderPlacementBytes)
 
 	if !found {
-		// Increment the `to be committed` stateful order count.
-		k.SetToBeCommittedStatefulOrderCount(
+		// Increment the stateful order count.
+		k.SetStatefulOrderCount(
 			ctx,
 			order.OrderId,
-			k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId)+1,
+			k.GetStatefulOrderCount(ctx, order.OrderId)+1,
 		)
 
 		telemetry.IncrCounterWithLabels(
@@ -132,7 +132,8 @@ func (k Keeper) GetLongTermOrderPlacement(
 	return val, true
 }
 
-// DeleteLongTermOrderPlacement deletes a long term order and the placement information from state.
+// DeleteLongTermOrderPlacement deletes a long term order and the placement information from state
+// and decrements the stateful order count if the `orderId` exists.
 // This function is a no-op if no stateful order exists in state with `orderId`.
 func (k Keeper) DeleteLongTermOrderPlacement(
 	ctx sdk.Context,
@@ -145,20 +146,25 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 
 	store, memStore := k.fetchStateStoresForOrder(ctx, orderId)
 
-	// Delete the `StatefulOrderPlacement` from state.
-	store.Delete(orderIdBytes)
+	if memStore.Has(orderIdBytes) {
+		// Delete the `StatefulOrderPlacement` from state.
+		store.Delete(orderIdBytes)
 
-	// Delete the `StatefulOrderPlacement` from memstore.
-	memStore.Delete(orderIdBytes)
+		// Delete the `StatefulOrderPlacement` from memstore.
+		memStore.Delete(orderIdBytes)
 
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.StatefulOrderRemoved, metrics.Count},
-		1,
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.ClobPairId, int(orderId.GetClobPairId())),
-			metrics.GetLabelForBoolValue(metrics.Conditional, orderId.IsConditionalOrder()),
-		},
-	)
+		// Decrement the count.
+		k.SetStatefulOrderCount(ctx, orderId, k.GetStatefulOrderCount(ctx, orderId)-1)
+
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.StatefulOrderRemoved, metrics.Count},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(metrics.ClobPairId, int(orderId.GetClobPairId())),
+				metrics.GetLabelForBoolValue(metrics.Conditional, orderId.IsConditionalOrder()),
+			},
+		)
+	}
 }
 
 // GetStatefulOrdersTimeSlice gets a slice of stateful order IDs that expire at `goodTilBlockTime`,
@@ -477,4 +483,53 @@ func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) sdk.Ite
 		[]byte(types.UntriggeredConditionalOrderKeyPrefix),
 	)
 	return sdk.KVStorePrefixIterator(store, []byte{})
+}
+
+// GetStatefulOrderCount gets a count of how many stateful orders are written to state. This does not
+// include any untriggered conditional orders.
+//
+// OrderId can be conditional or long term.
+func (k Keeper) GetStatefulOrderCount(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) uint32 {
+	// If this is a Short-Term order, panic.
+	orderId.MustBeStatefulOrder()
+
+	store := k.GetStatefulOrderCountMemStore(ctx)
+
+	b := store.Get(orderId.SubaccountId.MustMarshal())
+	if b == nil {
+		return 0
+	}
+
+	return lib.BytesToUint32(b)
+}
+
+// SetStatefulOrderCount sets a count of how many stateful orders are written to state. This does not
+// include any untriggered conditional orders.
+//
+// OrderId can be conditional or long term.
+func (k Keeper) SetStatefulOrderCount(
+	ctx sdk.Context,
+	orderId types.OrderId,
+	count uint32,
+) {
+	// If this is a Short-Term order, panic.
+	orderId.MustBeStatefulOrder()
+
+	subaccountIdBytes := orderId.SubaccountId.MustMarshal()
+	countBytes := lib.Bit32ToBytes(count)
+
+	store := k.GetStatefulOrderCountStore(ctx)
+	store.Set(
+		subaccountIdBytes,
+		countBytes,
+	)
+
+	memStore := k.GetStatefulOrderCountMemStore(ctx)
+	memStore.Set(
+		subaccountIdBytes,
+		countBytes,
+	)
 }
