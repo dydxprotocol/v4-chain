@@ -25,7 +25,7 @@ func BytesToUint32(b []byte) uint32 {
 	return binary.LittleEndian.Uint32(b)
 }
 
-// BytesToUint32 converts a byte slice (of length at least 4) into an int32.
+// BytesToInt32 converts a byte slice (of length at least 4) into an int32.
 // The first 4 bytes of the slice are interpreted as little-endian format.
 func BytesToInt32(b []byte) int32 {
 	return int32(binary.LittleEndian.Uint32(b))
