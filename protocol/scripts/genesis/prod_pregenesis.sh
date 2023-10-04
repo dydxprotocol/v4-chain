@@ -90,7 +90,7 @@ function overwrite_genesis_production() {
 	dasel put -t bool -f "$GENESIS" '.app_state.distribution.params.withdraw_addr_enabled' -v 'true'
 
 	# Bank params
-    # Initialize bank balance of bridge module account.
+	# Initialize bank balance of bridge module account.
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances" -v "[]"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].address" -v "${BRIDGE_MODACC_ADDR}"
@@ -116,26 +116,26 @@ function overwrite_genesis_production() {
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '4194304'
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
 
-    # Rewards params
-    dasel put -t string -f "$GENESIS" '.app_state.rewards.params.denom' -v "$NATIVE_TOKEN"
-    dasel put -t int -f "$GENESIS" '.app_state.rewards.params.fee_multiplier_ppm' -v '0'
+	# Rewards params
+	dasel put -t string -f "$GENESIS" '.app_state.rewards.params.denom' -v "$NATIVE_TOKEN"
+	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.fee_multiplier_ppm' -v '0'
 
-    # Vest params
-    # For community treasury
+	# Vest params
+	# For community treasury
 	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].vester_account' -v "community_vester"
 	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].treasury_account' -v "community_treasury"
-    dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].denom' -v "$NATIVE_TOKEN"
-    dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].start_time' -v "$COMMUNITY_VEST_START_TIME"
-    dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].end_time' -v "$COMMUNITY_VEST_END_TIME"
-    # For rewards treasury
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].denom' -v "$NATIVE_TOKEN"
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].start_time' -v "$COMMUNITY_VEST_START_TIME"
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].end_time' -v "$COMMUNITY_VEST_END_TIME"
+	# For rewards treasury
 	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].vester_account' -v "rewards_vester"
 	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].treasury_account' -v "rewards_treasury"
-    dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].denom' -v "$NATIVE_TOKEN"
-    dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].start_time' -v "$REWARDS_VEST_START_TIME"
-    dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].end_time' -v "$REWARDS_VEST_END_TIME"
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].denom' -v "$NATIVE_TOKEN"
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].start_time' -v "$REWARDS_VEST_START_TIME"
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].end_time' -v "$REWARDS_VEST_END_TIME"
 
-    # Delayed message params
-    # Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
+	# Delayed message params
+	# Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.num_messages' -v '1'
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages' -v "[]"
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
@@ -145,19 +145,19 @@ function overwrite_genesis_production() {
 	# Schedule the message to execute in ~120 days (at 1.5s per block)
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6912000'
 
-    # Bridge module params.
+	# Bridge module params.
 	dasel put -t string -f "$GENESIS" '.app_state.bridge.event_params.denom' -v "$NATIVE_TOKEN"
 	dasel put -t int -f "$GENESIS" '.app_state.bridge.event_params.eth_chain_id' -v "$ETH_CHAIN_ID"
 	dasel put -t string -f "$GENESIS" '.app_state.bridge.event_params.eth_address' -v "$ETH_BRIDGE_ADDRESS"
 	dasel put -t int -f "$GENESIS" '.app_state.bridge.acknowledged_event_info.next_id' -v "$BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID"
 	dasel put -t int -f "$GENESIS" '.app_state.bridge.acknowledged_event_info.eth_block_height' -v "$BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT"
 
-    # Crisis module
-    dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.amount' -v "1$EIGHTEEN_ZEROS" # 1 whole coin of native denom
-    dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
+	# Crisis module
+	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.amount' -v "1$EIGHTEEN_ZEROS" # 1 whole coin of native denom
+	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
 
-    # Genesis time
-    dasel put -t string -f "$GENESIS" '.genesis_time' -v "$GENESIS_TIME"
+	# Genesis time
+	dasel put -t string -f "$GENESIS" '.genesis_time' -v "$GENESIS_TIME"
 }
 
 create_pregenesis_file() {
