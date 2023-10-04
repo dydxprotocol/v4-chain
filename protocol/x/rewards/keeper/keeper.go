@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"math/big"
 	"time"
 
@@ -290,7 +291,7 @@ func (k Keeper) ProcessRewardsForBlock(
 				share.Weight.BigInt(),
 			),
 			totalRewardWeight,
-		) // big.Div() rounds down, so sum of actual distributed tokens will not exeed `tokensToDistribute`
+		) // big.Div() rounds down, so sum of actual distributed tokens will not exceed `tokensToDistribute`
 
 		if rewardAmountForAddress.Sign() == 0 {
 			// Nothing to distribute to this address. This will only happen due to rounding.
@@ -311,11 +312,14 @@ func (k Keeper) ProcessRewardsForBlock(
 				},
 			},
 		); err != nil {
-			panic(
-				fmt.Errorf(
-					"failed to send reward tokens from treasury (%s) to address %s: %w",
-					params.TreasuryAccount, share.Address, err,
-				),
+			k.Logger(ctx).Error(
+				"Failed to send reward tokens from treasury account to address",
+				"treasury_account",
+				params.TreasuryAccount,
+				"address",
+				share.Address,
+				constants.ErrorLogKey,
+				err,
 			)
 		}
 	}
