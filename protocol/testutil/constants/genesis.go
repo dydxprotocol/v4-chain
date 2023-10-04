@@ -594,7 +594,7 @@ const GenesisState = `{
                 }
               }
             ],
-            "memo": "17e5e45691f0d01449c84fd4ae87279578cdd7ec@192.168.0.158:26656",
+            "memo": "17e5e45691f0d01449c84fd4ae87279578cdd7ec@172.17.0.3:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -623,7 +623,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "uT0KACGZye8CVckf1/ucCIFvVyEzM3pmRWvWdC4rbVEdmNpKxI8NgT9K+FYLEL93Iq7EyxHYnsssImeuKBoK9A=="
+            "KqBNRNfXrxYaU2585ycZI2BOvJrUrvZWVugMr9d09gxcDSPGqdjleJWFFwO+Hbhj58uZ4wNOplv9e0SxPwZ0KQ=="
           ]
         },
         {
@@ -656,7 +656,7 @@ const GenesisState = `{
                 }
               }
             ],
-            "memo": "47539956aaa8e624e0f1d926040e54908ad0eb44@192.168.0.158:26656",
+            "memo": "47539956aaa8e624e0f1d926040e54908ad0eb44@172.17.0.3:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -685,7 +685,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "jKq/jD2h2Y05ZcsKokWpL5QwpUe9G6Zx2DyfwkrRSB4UCZC+Zwhv4r6iKbPxBzzDs9yRM2vdJUrZaVP6YLqv1Q=="
+            "QcK0WTKaXjsPPsALhn7jLJ/hhmhww+1ucTy4VZE9cJlivPcurFr1k4kfP1/M0ppqEWa9mksjIeVQhOHXTOBG/Q=="
           ]
         },
         {
@@ -718,7 +718,7 @@ const GenesisState = `{
                 }
               }
             ],
-            "memo": "5882428984d83b03d0c907c1f0af343534987052@192.168.0.158:26656",
+            "memo": "5882428984d83b03d0c907c1f0af343534987052@172.17.0.3:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -747,7 +747,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "nUITEjH8iRL3qPL8ID/gGOQ8xX1MntGzHzF+wyaHn/ID+jGdE+N3J/qfKEZN/uLNxH/+Q6Lq+6L1YXKy1iy9wQ=="
+            "jpCPNmoS5CHqbDXwFX5FYO7J5g7kSi5ZkxVkXEkgajJOZgu9nVTXavPFZ2t5w+UDzgWbtDxLJ1GqdM+kNFIWaA=="
           ]
         },
         {
@@ -780,7 +780,7 @@ const GenesisState = `{
                 }
               }
             ],
-            "memo": "b69182310be02559483e42c77b7b104352713166@192.168.0.158:26656",
+            "memo": "b69182310be02559483e42c77b7b104352713166@172.17.0.3:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -809,7 +809,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "BLwIR8xD2/4d+l+BEaLw7BaoZw383Kc5c/9ft6DU+ps00t0Ys7o6OkyPpJcvUGCWt6gp2LB1ysCYhbOtER2f6w=="
+            "SAhIiKZUWVy8tI0uDanDo9IP2ZCh2ZltV2yY2Y6umqgax34GxbU1BbrAxXxPrrhEa+IFqXJEWpocVsGo++gjuQ=="
           ]
         }
       ]

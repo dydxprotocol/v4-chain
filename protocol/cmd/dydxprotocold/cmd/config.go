@@ -16,7 +16,7 @@ const (
 	// Before this software is published for genesis, `adv4tnt` should be replaced with
 	// the chain stake token. It's also recommended that the min gas price in stake token
 	// is roughly the same in value as 0.025 micro USDC.
-	minGasPriceStakeToken = "0.025adv4tnt"
+	minGasPriceStakeToken = "25000000000adv4tnt"
 	// `minGasPrice` defines the default `minimum-gas-prices` attribute in validator's `app.toml` file.
 	MinGasPrice = minGasPriceUusdc + "," + minGasPriceStakeToken
 )
