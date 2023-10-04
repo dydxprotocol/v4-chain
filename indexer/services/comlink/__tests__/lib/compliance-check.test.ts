@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { RequestMethod } from '../../src/types';
+import { BlockedCode, RequestMethod } from '../../src/types';
 import Server from '../../src/request-helpers/server';
 import { sendRequestToApp } from '../helpers/helpers';
 import { complianceCheck } from '../../src/lib/compliance-check';
@@ -124,6 +124,7 @@ describe('compliance-check', () => {
     expect(response.body).toEqual(expect.objectContaining({
       errors: expect.arrayContaining([{
         msg: INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
+        code: BlockedCode.COMPLIANCE_BLOCKED,
       }]),
     }));
   });
