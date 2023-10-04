@@ -205,6 +205,8 @@ const (
 	VestAmount            = "vest_amount"
 	BalanceAfterVestEvent = "balance_after_vest_event"
 	VesterAccount         = "vester_account"
+	ProcessVesting        = "process_vesting"
+	AccountTransfer       = "account_transfer"
 
 	// Block Time.
 	BlockTimeMs = "block_time_ms"
