@@ -10,4 +10,9 @@ var (
 		400,
 		"Duration is nonpositive",
 	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		401,
+		"Autority is invalid",
+	)
 )

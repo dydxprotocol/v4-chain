@@ -16,9 +16,9 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
-import { ClientAndProvider } from 'src/helpers/compliance-clients';
 
 import config from '../config';
+import { ClientAndProvider } from '../helpers/compliance-clients';
 
 const taskName: string = 'update_compliance_data';
 
@@ -229,12 +229,47 @@ async function getComplianceData(
   const complianceResponses: ComplianceClientResponse[] = [];
   for (const complianceBatch of _.chunk(addresses, config.COMPLIANCE_PROVIDER_QUERY_BATCH_SIZE)) {
     const startBatch: number = Date.now();
-    complianceResponses.push(...await Promise.all(
-      // TODO(IND-369): Add error-handling once Elliptic client is fully implemented
+    const responses: PromiseSettledResult<ComplianceClientResponse>[] = await Promise.allSettled(
       complianceBatch.map((address: string): Promise<ComplianceClientResponse> => {
         return complianceProvider.client.getComplianceResponse(address);
       }),
+    );
+    const successResponses: PromiseFulfilledResult<ComplianceClientResponse>[] = responses.filter(
+      (result: PromiseSettledResult<ComplianceClientResponse>):
+        result is PromiseFulfilledResult<ComplianceClientResponse> => {
+        return result.status === 'fulfilled';
+      },
+    );
+    const failedResponses: PromiseRejectedResult[] = responses.filter(
+      (result: PromiseSettledResult<ComplianceClientResponse>):
+        result is PromiseRejectedResult => {
+        return result.status === 'rejected';
+      },
+    );
+    complianceResponses.push(...successResponses.map(
+      (result: PromiseFulfilledResult<ComplianceClientResponse>): ComplianceClientResponse => {
+        return result.value;
+      },
     ));
+
+    if (failedResponses.length > 0) {
+      const addressesWithoutResponses: string[] = _.without(
+        addresses,
+        ..._.map(complianceResponses, 'address'),
+      );
+      stats.increment(
+        `${config.SERVICE_NAME}.${taskName}.get_compliance_data_fail`,
+        1,
+        undefined,
+        { provider: complianceProvider.provider },
+      );
+      logger.error({
+        at: 'updated-compliance-data#getComplianceData',
+        message: 'Failed to retrieve compliance data for the addresses',
+        addresses: addressesWithoutResponses,
+        errors: failedResponses,
+      });
+    }
     stats.timing(
       `${config.SERVICE_NAME}.${taskName}.get_batch_compliance_data`,
       Date.now() - startBatch,

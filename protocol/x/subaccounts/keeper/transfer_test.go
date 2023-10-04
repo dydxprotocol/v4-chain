@@ -176,6 +176,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 			_, err = assetsKeeper.CreateAsset(
 				ctx,
+				tc.asset.Id,
 				tc.asset.Symbol,
 				tc.asset.Denom,
 				tc.asset.DenomExponent,
@@ -405,21 +406,14 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 			if !tc.skipSetUpUsdc {
 				// Always create USDC as the first asset unless specificed to skip.
-				_, err = assetsKeeper.CreateAsset(
-					ctx,
-					constants.Usdc.Symbol,
-					constants.Usdc.Denom,
-					constants.Usdc.DenomExponent,
-					constants.Usdc.HasMarket,
-					constants.Usdc.MarketId,
-					constants.Usdc.AtomicResolution,
-				)
+				err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
 				require.NoError(t, err)
 			}
 
 			if tc.asset.Denom != constants.Usdc.Denom {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,
+					tc.asset.Id,
 					tc.asset.Symbol,
 					tc.asset.Denom,
 					tc.asset.DenomExponent,
@@ -714,21 +708,14 @@ func TestTransferFundsFromSubaccountToModule_TransferFundsFromModuleToSubaccount
 
 			// Always create USDC as the first asset.
 			if !tc.skipSetUpUsdc {
-				_, err := assetsKeeper.CreateAsset(
-					ctx,
-					constants.Usdc.Symbol,
-					constants.Usdc.Denom,
-					constants.Usdc.DenomExponent,
-					constants.Usdc.HasMarket,
-					constants.Usdc.MarketId,
-					constants.Usdc.AtomicResolution,
-				)
+				err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
 				require.NoError(t, err)
 			}
 
 			if tc.asset.Denom != constants.Usdc.Denom {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,
+					tc.asset.Id,
 					tc.asset.Symbol,
 					tc.asset.Denom,
 					tc.asset.DenomExponent,
@@ -933,21 +920,14 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 
 			// Always create USDC as the first asset.
 			if !tc.skipSetUpUsdc {
-				_, err := assetsKeeper.CreateAsset(
-					ctx,
-					constants.Usdc.Symbol,
-					constants.Usdc.Denom,
-					constants.Usdc.DenomExponent,
-					constants.Usdc.HasMarket,
-					constants.Usdc.MarketId,
-					constants.Usdc.AtomicResolution,
-				)
+				err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
 				require.NoError(t, err)
 			}
 
 			if tc.asset.Denom != constants.Usdc.Denom {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,
+					tc.asset.Id,
 					tc.asset.Symbol,
 					tc.asset.Denom,
 					tc.asset.DenomExponent,
@@ -1109,15 +1089,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			}
 
 			if !tc.skipSetUpUsdc {
-				_, err := assetsKeeper.CreateAsset(
-					ctx,
-					constants.Usdc.Symbol,
-					constants.Usdc.Denom,
-					constants.Usdc.DenomExponent,
-					constants.Usdc.HasMarket,
-					constants.Usdc.MarketId,
-					constants.Usdc.AtomicResolution,
-				)
+				err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
 				require.NoError(t, err)
 			}
 

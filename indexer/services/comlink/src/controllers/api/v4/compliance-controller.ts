@@ -14,8 +14,7 @@ import {
   screenProviderGlobalLimiter,
 } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { placeHolderProvider } from '../../../helpers/compliance/compliance-clients';
-import { complianceCheck } from '../../../lib/compliance-check';
+import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { getIpAddr, rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
@@ -48,19 +47,26 @@ class ComplianceController extends Controller {
     let complianceData:
     ComplianceDataFromDatabase | undefined = await ComplianceTable.findByAddressAndProvider(
       address,
-      placeHolderProvider.provider,
+      complianceProvider.provider,
     );
+
+    // Immediately return for blocked addresses, do not refresh
+    if (complianceData?.blocked) {
+      return {
+        restricted: true,
+      };
+    }
 
     if (complianceData === undefined || DateTime.fromISO(complianceData.updatedAt) < ageThreshold) {
       await checkRateLimit(this.ipAddress);
       // TODO(IND-369): Use Ellptic client
       const response:
-      ComplianceClientResponse = await placeHolderProvider.client.getComplianceResponse(
+      ComplianceClientResponse = await complianceProvider.client.getComplianceResponse(
         address,
       );
       complianceData = await ComplianceTable.upsert({
         ...response,
-        provider: placeHolderProvider.provider,
+        provider: complianceProvider.provider,
         updatedAt: DateTime.utc().toISO(),
       });
     }
@@ -82,7 +88,6 @@ router.get(
     },
   }),
   handleValidationErrors,
-  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

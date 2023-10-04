@@ -45,7 +45,7 @@ func TestMsgUpdateLiquidationsConfig_ValidateBasic(t *testing.T) {
 			msg: types.MsgUpdateLiquidationsConfig{
 				LiquidationsConfig: constants.LiquidationsConfig_No_Limit,
 			},
-			expectedError: "authority cannot be empty",
+			expectedError: "Authority is invalid",
 		},
 	}
 

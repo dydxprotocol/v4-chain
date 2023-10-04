@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +15,7 @@ func TestDefaultGenesis(t *testing.T) {
 		Params: types.Params{
 			TreasuryAccount:  "rewards_treasury",
 			Denom:            "dv4tnt",
-			DenomExponent:    -6,
+			DenomExponent:    lib.BaseDenomExponent,
 			MarketId:         1,
 			FeeMultiplierPpm: 990_000, // 0.99
 		},

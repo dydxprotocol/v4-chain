@@ -1,4 +1,7 @@
-import { ComplianceClient, PlaceHolderProviderClient } from '@dydxprotocol-indexer/compliance';
+import {
+  ComplianceClient,
+  getComplianceClient,
+} from '@dydxprotocol-indexer/compliance';
 import { ComplianceProvider } from '@dydxprotocol-indexer/postgres';
 
 export interface ClientAndProvider {
@@ -6,8 +9,7 @@ export interface ClientAndProvider {
   provider: ComplianceProvider;
 }
 
-// TODO(IND-369): Change this to the Elliptic client
-export const placeHolderProvider: ClientAndProvider = {
-  client: new PlaceHolderProviderClient(),
+export const complianceProvider: ClientAndProvider = {
+  client: getComplianceClient(),
   provider: ComplianceProvider.ELLIPTIC,
 };

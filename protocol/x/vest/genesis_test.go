@@ -22,3 +22,19 @@ func TestGenesis(t *testing.T) {
 	require.NotNil(t, got)
 	require.Equal(t, *genesisState, *got)
 }
+
+func TestInvalidGenesis_Panics(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.VestKeeper
+
+	genesisState := types.GenesisState{
+		VestEntries: []types.VestEntry{
+			{}, // invalid - empty vester account
+		},
+	}
+
+	require.Panics(t, func() {
+		vest.InitGenesis(ctx, k, genesisState)
+	})
+}

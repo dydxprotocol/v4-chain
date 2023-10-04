@@ -14,6 +14,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, asset := range genState.Assets {
 		_, err := k.CreateAsset(
 			ctx,
+			asset.Id,
 			asset.Symbol,
 			asset.Denom,
 			asset.DenomExponent,

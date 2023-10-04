@@ -23,7 +23,7 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 	}{
 		"Success": {
 			msg: types.MsgSetLiquidityTier{
-				Authority: "test",
+				Authority: validAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     1,
 					Name:                   "test",
@@ -34,13 +34,15 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 				},
 			},
 		},
-		"Failure: Empty authority": {
-			msg:         types.MsgSetLiquidityTier{},
-			expectedErr: "authority cannot be empty",
+		"Failure: Invalid authority": {
+			msg: types.MsgSetLiquidityTier{
+				Authority: "",
+			},
+			expectedErr: "Authority is invalid",
 		},
 		"Failure: Initial Margin Ppm is greater than 100%": {
 			msg: types.MsgSetLiquidityTier{
-				Authority: "test",
+				Authority: validAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     1,
 					Name:                   "test",
@@ -54,7 +56,7 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 		},
 		"Failure: Maintenance Fraction Ppm is greater than 100%": {
 			msg: types.MsgSetLiquidityTier{
-				Authority: "test",
+				Authority: validAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     1,
 					Name:                   "test",
@@ -68,7 +70,7 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 		},
 		"Failure: base position notional is zero": {
 			msg: types.MsgSetLiquidityTier{
-				Authority: "test",
+				Authority: validAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     1,
 					Name:                   "test",
@@ -82,7 +84,7 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 		},
 		"Failure: impact notional is zero": {
 			msg: types.MsgSetLiquidityTier{
-				Authority: "test",
+				Authority: validAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     1,
 					Name:                   "test",
