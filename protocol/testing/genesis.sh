@@ -1494,6 +1494,7 @@ update_genesis_complete_bridge_delay() {
 	dasel put -t int -f "$GENESIS" '.app_state.bridge.safety_params.delay_blocks' -v "$2"
 }
 
+# Set the denom metadata, which is for human readability.
 set_denom_metadata() {
 	local BASE_DENOM=$1
 	local WHOLE_COIN_DENOM=$2
@@ -1503,6 +1504,7 @@ set_denom_metadata() {
 	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].description" -v "The native token of the network"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units" -v "[]"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[]" -v "{}"
+	# Base denom is the minimum unit of the a token and the denom used by `x/bank`.
 	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[0].denom" -v "$BASE_DENOM"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[1].denom" -v "$WHOLE_COIN_DENOM"

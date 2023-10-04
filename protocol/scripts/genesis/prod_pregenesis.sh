@@ -20,9 +20,9 @@ DYDX_BINARY="$1"
 
 TMP_CHAIN_DIR="/tmp/prod-chain"
 TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/prod-exchange_config"
-FIFTEEN_ZEROS="000000000000000"
-EIGHTEEN_ZEROS="000$FIFTEEN_ZEROS"
-BRIDGE_MODACC_BALANCE="1000000000$EIGHTEEN_ZEROS" # 1e27
+NINE_ZEROS="000000000"
+EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
+BRIDGE_MODACC_BALANCE="1$NINE_ZEROS$EIGHTEEN_ZEROS" # 1e27
 BRIDGE_MODACC_ADDR="dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"
 
 source "./testing/genesis.sh"
@@ -91,7 +91,7 @@ function overwrite_genesis_production() {
 
 	# Bank params
     # Initialize bank balance of bridge module account.
-    dasel put -t json -f "$GENESIS" ".app_state.bank.balances" -v "[]"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances" -v "[]"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].address" -v "${BRIDGE_MODACC_ADDR}"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[0].coins.[]" -v "{}"
@@ -108,7 +108,7 @@ function overwrite_genesis_production() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v '0.33400' # 33.4%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.threshold' -v '0.50000' # 50%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.veto_threshold' -v '0.33400' # 33.4%
-    dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_proposal_deposit_prevote' -v 'false' 
+	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_proposal_deposit_prevote' -v 'false' 
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_vote_quorum' -v 'false' 
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_vote_veto' -v 'true'
 
@@ -136,7 +136,6 @@ function overwrite_genesis_production() {
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages' -v "[]"
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
-
 	delaymsg=$(cat "$DELAY_MSG_JSON_DIR/perpetual_fee_params_msg.json" | jq -c '.')
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].msg' -v "$delaymsg"
 	# Schedule the message to execute in ~120 days (at 1.5s per block)

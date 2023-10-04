@@ -80,6 +80,7 @@ func TestGetAllVestEntries(t *testing.T) {
 	gotEntries := k.GetAllVestEntries(ctx)
 	expectedEntries := []types.VestEntry{
 		types.DefaultGenesis().VestEntries[0],
+		types.DefaultGenesis().VestEntries[1],
 		TestValidEntry,
 		TestValidEntry2,
 		TestValidEntry3,

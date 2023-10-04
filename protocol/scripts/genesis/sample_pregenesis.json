@@ -590,7 +590,7 @@
                 },
                 {
                   "absolute_volume_requirement": "125000000000000",
-                  "maker_fee_ppm": -90,
+                  "maker_fee_ppm": -70,
                   "maker_volume_share_requirement_ppm": 10000,
                   "name": "7",
                   "taker_fee_ppm": 250,
@@ -598,7 +598,7 @@
                 },
                 {
                   "absolute_volume_requirement": "125000000000000",
-                  "maker_fee_ppm": -110,
+                  "maker_fee_ppm": -90,
                   "maker_volume_share_requirement_ppm": 20000,
                   "name": "8",
                   "taker_fee_ppm": 250,
