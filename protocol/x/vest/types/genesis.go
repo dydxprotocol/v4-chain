@@ -19,14 +19,14 @@ func DefaultGenesis() *GenesisState {
 			{
 				VesterAccount:   CommunityVesterAccountName,
 				TreasuryAccount: CommunityTreasuryAccountName,
-				Denom:           "dv4tnt",
+				Denom:           "adv4tnt",
 				StartTime:       DefaultVestingStartTime,
 				EndTime:         DefaultVestingEndTime,
 			},
 			{
 				VesterAccount:   rewardstypes.VesterAccountName,
 				TreasuryAccount: rewardstypes.TreasuryAccountName,
-				Denom:           "dv4tnt",
+				Denom:           "adv4tnt",
 				StartTime:       DefaultVestingStartTime,
 				EndTime:         DefaultVestingEndTime,
 			},

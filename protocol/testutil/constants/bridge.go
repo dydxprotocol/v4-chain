@@ -34,7 +34,7 @@ func init() {
 var (
 	// Private
 	coin = sdk.Coin{
-		Denom:  "dv4tnt",
+		Denom:  "adv4tnt",
 		Amount: sdkmath.NewIntFromUint64(888),
 	}
 

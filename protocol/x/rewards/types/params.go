@@ -11,7 +11,7 @@ func DefaultParams() Params {
 	return Params{
 		// Corresponds to module account address: dydx16wrau2x4tsg033xfrrdpae6kxfn9kyuerr5jjp
 		TreasuryAccount:  TreasuryAccountName,
-		Denom:            "dv4tnt",
+		Denom:            "adv4tnt",
 		DenomExponent:    lib.BaseDenomExponent,
 		MarketId:         1,
 		FeeMultiplierPpm: 990_000, // 0.99

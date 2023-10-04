@@ -349,7 +349,7 @@
   "rewards": {
     "params": {
       "treasury_account":"rewards_treasury",
-      "denom":"dv4tnt",
+      "denom":"adv4tnt",
       "denom_exponent":-18,
       "market_id":1,
       "fee_multiplier_ppm":990000
@@ -405,14 +405,14 @@
   "vest": {
     "vest_entries": [
       {
-        "denom": "dv4tnt",
+        "denom": "adv4tnt",
         "end_time": "2025-01-01T00:00:00Z",
         "start_time": "2023-01-01T00:00:00Z",
         "treasury_account": "community_treasury",
         "vester_account": "community_vester"
       },
       {
-        "denom": "dv4tnt",
+        "denom": "adv4tnt",
         "end_time": "2025-01-01T00:00:00Z",
         "start_time": "2023-01-01T00:00:00Z",
         "treasury_account": "rewards_treasury",
