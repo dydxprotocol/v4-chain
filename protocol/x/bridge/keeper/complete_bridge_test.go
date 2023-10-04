@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -25,37 +26,37 @@ func TestCompleteBridge(t *testing.T) {
 		expectedBalance sdk.Coin
 	}{
 		"Success": {
-			initialBalance:  sdk.NewCoin("dv4tnt", sdkmath.NewInt(1_000)),
-			bridgeEvent:     constants.BridgeEvent_Id0_Height0,          // bridges 888 tokens.
-			expectedBalance: sdk.NewCoin("dv4tnt", sdkmath.NewInt(112)), // 1000 - 888.
+			initialBalance:  sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
+			bridgeEvent:     constants.BridgeEvent_Id0_Height0,           // bridges 888 tokens.
+			expectedBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(112)), // 1000 - 888.
 		},
 		"Failure: coin amount is 0": {
-			initialBalance: sdk.NewCoin("dv4tnt", sdkmath.NewInt(1_000)),
+			initialBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 			bridgeEvent: types.BridgeEvent{
 				Id:             7,
 				Address:        constants.BobAccAddress.String(),
-				Coin:           sdk.NewCoin("dv4tnt", sdkmath.ZeroInt()),
+				Coin:           sdk.NewCoin("adv4tnt", sdkmath.ZeroInt()),
 				EthBlockHeight: 3,
 			},
 			expectedError:   "invalid coin",
-			expectedBalance: sdk.NewCoin("dv4tnt", sdkmath.NewInt(1_000)),
+			expectedBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 		},
 		"Failure: invalid address string": {
-			initialBalance: sdk.NewCoin("dv4tnt", sdkmath.NewInt(1_000)),
+			initialBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 			bridgeEvent: types.BridgeEvent{
 				Id:             4,
 				Address:        "not an address string",
-				Coin:           sdk.NewCoin("dv4tnt", sdkmath.NewInt(1)),
+				Coin:           sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
 				EthBlockHeight: 2,
 			},
 			expectedError:   "decoding bech32 failed",
-			expectedBalance: sdk.NewCoin("dv4tnt", sdkmath.NewInt(1_000)),
+			expectedBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 		},
 		"Failure: bridge module account has insufficient balance": {
-			initialBalance:  sdk.NewCoin("dv4tnt", sdkmath.NewInt(500)),
+			initialBalance:  sdk.NewCoin("adv4tnt", sdkmath.NewInt(500)),
 			bridgeEvent:     constants.BridgeEvent_Id0_Height0, // bridges 888 tokens.
 			expectedError:   "insufficient funds",
-			expectedBalance: sdk.NewCoin("dv4tnt", sdkmath.NewInt(500)),
+			expectedBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(500)),
 		},
 	}
 

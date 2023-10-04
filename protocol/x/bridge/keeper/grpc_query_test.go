@@ -237,7 +237,7 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 					authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
 					types.ModuleName,
 					constants.AliceAccAddress.String(),
-					sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+					sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
 				),
 				100,
 			)
