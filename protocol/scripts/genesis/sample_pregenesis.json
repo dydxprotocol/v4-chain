@@ -1117,7 +1117,7 @@
             "atomic_resolution": -6,
             "default_funding_ppm": 0,
             "id": 26,
-            "liquidity_tier": 1,
+            "liquidity_tier": 2,
             "market_id": 26,
             "ticker": "LDO-USD"
           }
@@ -1399,7 +1399,7 @@
           "exponent": -9,
           "id": 26,
           "min_exchanges": 3,
-          "min_price_change_ppm": 2500,
+          "min_price_change_ppm": 4000,
           "pair": "LDO-USD"
         },
         {
