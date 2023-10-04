@@ -388,3 +388,8 @@ export interface ComplianceResponse {
 }
 
 export interface ComplianceRequest extends AddressRequest {}
+
+export enum BlockedCode {
+  GEOBLOCKED = 'GEOBLOCKED',
+  COMPLIANCE_BLOCKED = 'COMPLIANCE_BLOCKED',
+}

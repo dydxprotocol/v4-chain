@@ -5,6 +5,7 @@ import {
 import express from 'express';
 
 import { INDEXER_GEOBLOCKED_PAYLOAD } from '../constants';
+import { BlockedCode } from '../types';
 import { create4xxResponse } from './helpers';
 
 /**
@@ -20,6 +21,7 @@ export function rejectRestrictedCountries(
       res,
       INDEXER_GEOBLOCKED_PAYLOAD,
       403,
+      { code: BlockedCode.GEOBLOCKED },
     );
   }
 
