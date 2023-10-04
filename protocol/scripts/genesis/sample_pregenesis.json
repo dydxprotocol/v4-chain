@@ -834,8 +834,16 @@
           "id": 2,
           "impact_notional": 2500000000,
           "initial_margin_ppm": 200000,
-          "maintenance_fraction_ppm": 250000,
+          "maintenance_fraction_ppm": 500000,
           "name": "Long-Tail"
+        },
+        {
+          "base_position_notional": 1000000000,
+          "id": 3,
+          "impact_notional": 2500000000,
+          "initial_margin_ppm": 1000000,
+          "maintenance_fraction_ppm": 200000,
+          "name": "Safety"
         }
       ],
       "params": {
