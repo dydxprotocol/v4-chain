@@ -6,6 +6,11 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Bybit",
+      "ticker": "AVAXUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "CoinbasePro",
       "ticker": "AVAX-USD"
     },

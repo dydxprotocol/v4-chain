@@ -15,10 +15,6 @@
       "ticker": "SUI-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "SUI_USD"
-    },
-    {
       "exchangeName": "Gate",
       "ticker": "SUI_USDT",
       "adjustByMarket": "USDT-USD"

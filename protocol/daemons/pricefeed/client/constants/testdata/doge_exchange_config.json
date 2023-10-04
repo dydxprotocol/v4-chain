@@ -15,10 +15,6 @@
       "ticker": "DOGE-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "DOGE_USD"
-    },
-    {
       "exchangeName": "Gate",
       "ticker": "DOGE_USDT",
       "adjustByMarket": "USDT-USD"

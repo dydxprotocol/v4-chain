@@ -10,11 +10,6 @@
       "ticker": "APE-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "APE_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Gate",
       "ticker": "APE_USDT",
       "adjustByMarket": "USDT-USD"
@@ -22,6 +17,11 @@
     {
       "exchangeName": "Kraken",
       "ticker": "APEUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "APE-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Mexc",

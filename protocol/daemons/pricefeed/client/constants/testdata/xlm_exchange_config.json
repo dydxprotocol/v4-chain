@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "XLM/USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "XLMUSDT",
       "adjustByMarket": "USDT-USD"
@@ -17,11 +13,6 @@
     {
       "exchangeName": "CoinbasePro",
       "ticker": "XLM-USD"
-    },
-    {
-      "exchangeName": "CryptoCom",
-      "ticker": "XLM_USDT",
-      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
@@ -35,6 +26,11 @@
     {
       "exchangeName": "Mexc",
       "ticker": "XLM_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "XLM-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]
