@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"fmt"
+	"reflect"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -30,12 +32,16 @@ var (
 
 	DelayMsgAuthority = authtypes.NewModuleAddress(types.ModuleName).String()
 
-	BridgeGenesisAccountBalance = sdk.NewCoin("dv4tnt", sdkmath.NewInt(1000000000))
-	AliceInitialAccountBalance  = sdk.NewCoin("dv4tnt", sdkmath.NewInt(99500000000))
+	testDenom = "dv4tnt"
+
+	BridgeGenesisAccountBalance = sdk.NewCoin(testDenom, sdkmath.NewInt(1000000000))
 
 	delta                        = constants.BridgeEvent_Id0_Height0.Coin.Amount.Int64()
-	BridgeExpectedAccountBalance = sdk.NewCoin("dv4tnt", sdkmath.NewInt(1000000000-delta))
-	AliceExpectedAccountBalance  = sdk.NewCoin("dv4tnt", sdkmath.NewInt(99500000000+delta))
+	BridgeExpectedAccountBalance = sdk.NewCoin(testDenom,
+		BridgeGenesisAccountBalance.Amount.Sub(
+			constants.BridgeEvent_Id0_Height0.Coin.Amount,
+		),
+	)
 )
 
 func TestDispatchMessagesForBlock(t *testing.T) {
@@ -393,16 +399,23 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 
 	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
 
-	// Sanity check: at block 1, balances are as expected before the message is sent.
+	// Sanity check: at block 1, expect bridge balance is genesis value before the message is sent.
 	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
-	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, AliceInitialAccountBalance)
+
+	// Get initial Alice balance
+	aliceInitialBalance := tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, testDenom)
+	// Calculate Alice's expected balance after complete bridge event.
+	aliceExpectedAccountBalance := sdk.NewCoin(
+		testDenom,
+		aliceInitialBalance.Amount.Add(sdkmath.NewInt(delta)),
+	)
 
 	// Advance to block 2 and invoke delayed message to complete bridge.
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
 	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
-	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, AliceExpectedAccountBalance)
+	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, aliceExpectedAccountBalance)
 
 	// Assert: the message has been deleted from the keeper.
 	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
@@ -503,4 +516,58 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 	// The block message ids have also been deleted.
 	_, found = tApp.App.DelayMsgKeeper.GetBlockMessageIds(ctx, 2)
 	require.False(t, found)
+}
+
+// This test case verifies that events emitted from message executions are correctly
+// propagated to the base context.
+func TestDispatchMessagesForBlock_EventsArePropagated(t *testing.T) {
+	ctx, k, _, _, bankKeeper, _ := keepertest.DelayMsgKeepers(t)
+	// Mint coins to the bridge module account so that it has enough balance for completing bridges.
+	err := bankKeeper.MintCoins(ctx, bridgetypes.ModuleName, sdk.NewCoins(BridgeGenesisAccountBalance))
+	require.NoError(t, err)
+
+	// Delay a complete bridge message, which calls bank transfer that emits a transfer event.
+	bridgeEvent := bridgetypes.BridgeEvent{
+		Id:             1,
+		Coin:           sdk.NewCoin("dv4tnt", sdkmath.NewInt(1_000)),
+		Address:        constants.AliceAccAddress.String(),
+		EthBlockHeight: 0,
+	}
+	_, err = k.DelayMessageByBlocks(
+		ctx,
+		&bridgetypes.MsgCompleteBridge{
+			Authority: authtypes.NewModuleAddress(types.ModuleName).String(),
+			Event:     bridgeEvent,
+		},
+		0,
+	)
+	require.NoError(t, err)
+
+	// Sanity check: messages appear for block 0.
+	blockMessageIds, found := k.GetBlockMessageIds(ctx, 0)
+	require.True(t, found)
+	require.Equal(t, []uint32{0}, blockMessageIds.Ids)
+
+	// Dispatch messages for block 0.
+	keeper.DispatchMessagesForBlock(k, ctx)
+
+	_, found = k.GetBlockMessageIds(ctx, 0)
+	require.False(t, found)
+
+	emittedEvents := ctx.EventManager().Events()
+	expectedTransferEvent := sdk.NewEvent(
+		"transfer",
+		sdk.NewAttribute("recipient", bridgeEvent.Address),
+		sdk.NewAttribute("sender", BridgeAccountAddress.String()),
+		sdk.NewAttribute("amount", bridgeEvent.Coin.String()),
+	)
+
+	// Verify that emitted events contains the expected transfer event exactly once.
+	foundExpectedTransferEvent := 0
+	for _, emittedEvent := range emittedEvents {
+		if reflect.DeepEqual(expectedTransferEvent, emittedEvent) {
+			foundExpectedTransferEvent++
+		}
+	}
+	require.Equal(t, 1, foundExpectedTransferEvent)
 }

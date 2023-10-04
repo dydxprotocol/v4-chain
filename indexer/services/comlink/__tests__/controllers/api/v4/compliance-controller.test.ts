@@ -8,7 +8,7 @@ import {
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import { stats } from '@dydxprotocol-indexer/base';
-import { placeHolderProvider } from '../../../../src/helpers/compliance/compliance-clients';
+import { complianceProvider } from '../../../../src/helpers/compliance/compliance-clients';
 import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { redis } from '@dydxprotocol-indexer/redis';
@@ -40,7 +40,7 @@ describe('compliance-controller#V4', () => {
 
   describe('GET', () => {
     beforeEach(async () => {
-      jest.spyOn(placeHolderProvider.client, 'getComplianceResponse').mockImplementation(
+      jest.spyOn(complianceProvider.client, 'getComplianceResponse').mockImplementation(
         (address: string): Promise<ComplianceClientResponse> => {
           return Promise.resolve({
             address,
@@ -69,67 +69,124 @@ describe('compliance-controller#V4', () => {
 
       expect(response.body.restricted).toEqual(false);
       expect(stats.timing).toHaveBeenCalledTimes(1);
-      expect(placeHolderProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
+      expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
 
       data = await ComplianceTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
       expect(data[0]).toEqual(expect.objectContaining({
         address: testConstants.defaultAddress,
-        provider: placeHolderProvider.provider,
+        provider: complianceProvider.provider,
         blocked,
         riskScore,
       }));
     });
 
-    it('Get /screen with existing address retrieves compliance data from database', async () => {
-      // Seed the database with a compliance record
-      await ComplianceTable.create(testConstants.nonBlockedComplianceData);
-      let data: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
+    it(
+      'Get /screen with existing non-blocked address retrieves compliance data from database',
+      async () => {
+      // Seed the database with a non-blocked compliance record
+        await ComplianceTable.create(testConstants.nonBlockedComplianceData);
+        let data: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
 
-      const response: any = await sendRequest({
-        type: RequestMethod.GET,
-        path: `/v4/screen?address=${testConstants.defaultAddress}`,
+        const response: any = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/screen?address=${testConstants.defaultAddress}`,
+        });
+
+        expect(response.body.restricted).toEqual(false);
+        expect(stats.timing).toHaveBeenCalledTimes(1);
+        expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
+
+        data = await ComplianceTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
+        expect(data[0]).toEqual(testConstants.nonBlockedComplianceData);
       });
 
-      expect(response.body.restricted).toEqual(false);
-      expect(stats.timing).toHaveBeenCalledTimes(1);
-      expect(placeHolderProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
+    it(
+      'Get /screen with existing blocked address retrieves compliance data from database',
+      async () => {
+      // Seed the database with a blocked compliance record
+        await ComplianceTable.create(testConstants.blockedComplianceData);
+        let data: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
 
-      data = await ComplianceTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(testConstants.nonBlockedComplianceData);
-    });
+        const response: any = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/screen?address=${testConstants.blockedAddress}`,
+        });
 
-    it('Get /screen with old existing address refreshes compliance data', async () => {
-      // Seed the database with an old compliance record
-      await ComplianceTable.create({
-        ...testConstants.nonBlockedComplianceData,
-        updatedAt: DateTime.utc().minus({
+        expect(response.body.restricted).toEqual(true);
+        expect(stats.timing).toHaveBeenCalledTimes(1);
+        expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
+
+        data = await ComplianceTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
+        expect(data[0]).toEqual(testConstants.blockedComplianceData);
+      });
+
+    it(
+      'Get /screen with old existing non-blocked address refreshes compliance data',
+      async () => {
+      // Seed the database with an old non-blocked compliance record
+        await ComplianceTable.create({
+          ...testConstants.nonBlockedComplianceData,
+          updatedAt: DateTime.utc().minus({
+            seconds: config.MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS * 2,
+          }).toISO(),
+        });
+        let data: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
+
+        const response: any = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/screen?address=${testConstants.defaultAddress}`,
+        });
+
+        expect(response.body.restricted).toEqual(false);
+        expect(stats.timing).toHaveBeenCalledTimes(1);
+        expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
+
+        data = await ComplianceTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
+        expect(data[0]).not.toEqual({
+          address: testConstants.defaultAddress,
+          provider: complianceProvider.provider,
+          blocked,
+          riskScore,
+        });
+      });
+
+    it(
+      'Get /screen with old existing blocked addressdoes not refresh compliance data',
+      async () => {
+      // Seed the database with an old blocked compliance record
+        const oldUpdatedAt: string = DateTime.utc().minus({
           seconds: config.MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS * 2,
-        }).toISO(),
-      });
-      let data: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
+        }).toISO();
+        await ComplianceTable.create({
+          ...testConstants.blockedComplianceData,
+          updatedAt: oldUpdatedAt,
+        });
+        let data: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
 
-      const response: any = await sendRequest({
-        type: RequestMethod.GET,
-        path: `/v4/screen?address=${testConstants.defaultAddress}`,
-      });
+        const response: any = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/screen?address=${testConstants.blockedAddress}`,
+        });
 
-      expect(response.body.restricted).toEqual(false);
-      expect(stats.timing).toHaveBeenCalledTimes(1);
-      expect(placeHolderProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
+        expect(response.body.restricted).toEqual(true);
+        expect(stats.timing).toHaveBeenCalledTimes(1);
+        expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
 
-      data = await ComplianceTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).not.toEqual({
-        address: testConstants.defaultAddress,
-        provider: placeHolderProvider.provider,
-        blocked,
-        riskScore,
+        data = await ComplianceTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
+        expect(data[0]).toEqual({
+          ...testConstants.blockedComplianceData,
+          updatedAt: oldUpdatedAt,
+        });
       });
-    });
 
     it('Get /screen with multiple new address from same IP gets rate-limited', async () => {
       for (let i: number = 0; i < config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_POINTS; i++) {

@@ -74,7 +74,7 @@ type SubaccountsKeeper interface {
 }
 
 type AssetsKeeper interface {
-	GetAsset(ctx sdk.Context, id uint32) (val assettypes.Asset, err error)
+	GetAsset(ctx sdk.Context, id uint32) (val assettypes.Asset, exists bool)
 }
 
 type BlockTimeKeeper interface {

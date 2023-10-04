@@ -233,9 +233,9 @@ func (k Keeper) ProcessRewardsForBlock(
 	params := k.GetParams(ctx)
 
 	// Calculate value of `F`.
-	usdcAsset, err := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
-	if err != nil {
-		return fmt.Errorf("failed to get USDC asset: %w", err)
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
+	if !exists {
+		return fmt.Errorf("failed to get USDC asset")
 	}
 	rewardTokenPrice, err := k.pricesKeeper.GetMarketPrice(ctx, params.GetMarketId())
 	if err != nil {

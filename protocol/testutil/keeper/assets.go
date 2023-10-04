@@ -1,11 +1,12 @@
 package keeper
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,6 +25,7 @@ import (
 func CreateUsdcAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
 	_, err := assetsKeeper.CreateAsset(
 		ctx,
+		constants.Usdc.Id,
 		constants.Usdc.Symbol,
 		constants.Usdc.Denom,
 		constants.Usdc.DenomExponent,

@@ -34,5 +34,5 @@ type AssetsKeeper interface {
 	GetAsset(
 		ctx sdk.Context,
 		id uint32,
-	) (val assets.Asset, err error)
+	) (val assets.Asset, exists bool)
 }

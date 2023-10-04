@@ -534,8 +534,18 @@ func AppStateRandomizedFn(
 	)
 	appParams.GetOrGenerate(
 		cdc, simtestutil.StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = math.NewInt(r.Int63n(1e12)) },
+		func(r *rand.Rand) {
+			// Since the stake token denom has 18 decimals, the initial stake balance needs to be at least
+			// 1e18 to be considered valid. However, in the current implementation of auth simulation logic
+			// (https://github.com/dydxprotocol/cosmos-sdk/blob/93454d9f/x/auth/simulation/genesis.go#L38),
+			// `initialStake` is casted to an `int64` value (max_int64 ~= 9.22e18).
+			// As such today the only valid range of values for `initialStake` is [1e18, max_int64]. Note
+			// this only represents 1~9 full coins.
+			// TODO(DEC-2132): Make this value more realistic by allowing larger values.
+			initialStake = math.NewInt(r.Int63n(8.22e18) + 1e18)
+		},
 	)
+
 	appParams.GetOrGenerate(
 		cdc, simtestutil.InitiallyBondedValidators, &numInitiallyBonded, r,
 		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(299) + 1) },
@@ -548,7 +558,7 @@ func AppStateRandomizedFn(
 	fmt.Printf(
 		`Selected randomly generated parameters for simulated genesis:
 {
-  stake_per_account: "%d",
+  stake_per_account: "%s",
   initially_bonded_validators: "%d"
 }
 `, initialStake, numInitiallyBonded,

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -20,7 +21,7 @@ import (
 
 var (
 	AcceptedAuthority = authtypes.NewModuleAddress(bridgemoduletypes.ModuleName).String()
-	InvalidAuthority  = "INVALID_AUTHORITY"
+	InvalidAuthority  = authtypes.NewModuleAddress("INVALID_AUTHORITY").String()
 	TestError         = fmt.Errorf("test error")
 	TestMsgId         = uint32(0)
 
@@ -68,14 +69,33 @@ func TestDelayMessage(t *testing.T) {
 			setupMocks: setupMockWithValidReturnValues,
 			msg:        validDelayMsg,
 		},
+		"Fails if msg.ValidateBasic fails": {
+			setupMocks: setupMockWithValidReturnValues,
+			msg:        &types.MsgDelayMessage{},
+			expectedErr: fmt.Errorf(
+				"msg.ValidateBasic failed",
+			),
+		},
 		"Fails if signed by invalid authority": {
 			setupMocks: setupMockWithValidReturnValues,
 			msg: &types.MsgDelayMessage{
 				Authority: InvalidAuthority,
+				Msg:       &codectypes.Any{},
 			},
 			expectedErr: fmt.Errorf(
 				"%v is not recognized as a valid authority for sending messages: Invalid input",
 				InvalidAuthority,
+			),
+		},
+		"Fails if message cannot be unpacked": {
+			setupMocks: setupMockWithValidReturnValues,
+			msg: &types.MsgDelayMessage{
+				Authority: AcceptedAuthority,
+				Msg:       &codectypes.Any{},
+			},
+			expectedErr: fmt.Errorf(
+				"GetMessage for MsgDelayedMessage failed, err = any cached value is nil, delayed messages " +
+					"must be correctly packed any values: Invalid input",
 			),
 		},
 		"Fails if DelayMessageByBlocks returns an error": {

@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
@@ -19,6 +20,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	// firstValidAssetId is the first valid asset ID after the reserved `assetId=0` for USDC.
+	firstValidAssetId = uint32(1)
+)
+
+// createNAssets creates n test assets with id 1 to n (0 is reserved for USDC)
 func createNAssets(
 	t *testing.T,
 	ctx sdk.Context,
@@ -38,6 +45,7 @@ func createNAssets(
 		}
 		asset, err := keeper.CreateAsset(
 			ctx,
+			uint32(i+1),                 // AssetId
 			fmt.Sprintf("symbol-%v", i), // Symbol
 			fmt.Sprintf("denom-%v", i),  // Denom
 			int32(i),                    // DenomExponent
@@ -61,6 +69,7 @@ func TestCreateAsset_MarketNotFound(t *testing.T) {
 	// Throws error when creating asset for invalid marketId.
 	_, err := keeper.CreateAsset(
 		ctx,
+		firstValidAssetId,
 		"foo-symbol", // symbol
 		"foo-denom",  // denom
 		-6,           // denomExponent
@@ -71,8 +80,43 @@ func TestCreateAsset_MarketNotFound(t *testing.T) {
 	require.EqualError(t, err, errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, "999").Error())
 
 	// Does not create an asset.
-	numAssets := keeper.GetNumAssets(ctx)
-	require.Equal(t, uint32(0), numAssets)
+	require.Len(t, keeper.GetAllAssets(ctx), 0)
+}
+
+func TestCreateAsset_UsdcMustBeAssetZero(t *testing.T) {
+	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
+
+	// Throws error when creating an asset with id 0 that's not USDC.
+	_, err := keeper.CreateAsset(
+		ctx,
+		0,
+		"foo-symbol", // symbol
+		"foo-denom",  // denom
+		-6,           // denomExponent
+		true,
+		uint32(999),
+		int32(-1),
+	)
+	require.ErrorIs(t, err, types.ErrUsdcMustBeAssetZero)
+
+	// Does not create an asset.
+	require.Len(t, keeper.GetAllAssets(ctx), 0)
+
+	// Throws error when creating asset USDC with id other than 0.
+	_, err = keeper.CreateAsset(
+		ctx,
+		1,
+		constants.Usdc.Symbol,        // symbol
+		constants.Usdc.Denom,         // denom
+		constants.Usdc.DenomExponent, // denomExponent
+		true,
+		uint32(999),
+		int32(-1),
+	)
+	require.ErrorIs(t, err, types.ErrUsdcMustBeAssetZero)
+
+	// Does not create an asset.
+	require.Len(t, keeper.GetAllAssets(ctx), 0)
 }
 
 func TestCreateAsset_MarketIdInvalid(t *testing.T) {
@@ -81,6 +125,7 @@ func TestCreateAsset_MarketIdInvalid(t *testing.T) {
 	// Throws error when creating asset for invalid marketId.
 	_, err := keeper.CreateAsset(
 		ctx,
+		firstValidAssetId,
 		"foo-symbol", // symbol
 		"foo-denom",  // denom
 		-6,           // denomExponent
@@ -91,8 +136,7 @@ func TestCreateAsset_MarketIdInvalid(t *testing.T) {
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrInvalidMarketId, "Market ID: 1").Error())
 
 	// Does not create an asset.
-	numAssets := keeper.GetNumAssets(ctx)
-	require.Equal(t, uint32(0), numAssets)
+	require.Len(t, keeper.GetAllAssets(ctx), 0)
 }
 
 func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
@@ -102,6 +146,7 @@ func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
 
 	_, err := keeper.CreateAsset(
 		ctx,
+		firstValidAssetId,
 		"BTC",       // symbol
 		"btc-denom", // denom
 		-6,          // denomExponent
@@ -114,6 +159,7 @@ func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
 	// Create a new asset with identical denom
 	_, err = keeper.CreateAsset(
 		ctx,
+		2,
 		"BTC",       // symbol
 		"btc-denom", // denom
 		-6,          // denomExponent
@@ -122,6 +168,19 @@ func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
 		10,          // atomicResolution
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrAssetDenomAlreadyExists, "btc-denom").Error())
+
+	// Create a new asset with the same ID
+	_, err = keeper.CreateAsset(
+		ctx,
+		firstValidAssetId,
+		"BTC-COPY",       // symbol
+		"btc-denom-copy", // denom
+		-6,               // denomExponent
+		false,            // hasMarket
+		0,                // marketId
+		10,               // atomicResolution
+	)
+	require.ErrorIs(t, err, types.ErrAssetIdAlreadyExists)
 }
 
 func TestModifyAsset_Success(t *testing.T) {
@@ -142,8 +201,8 @@ func TestModifyAsset_Success(t *testing.T) {
 			marketId,
 		)
 		require.NoError(t, err)
-		newItem, err := keeper.GetAsset(ctx, item.Id)
-		require.NoError(t, err)
+		newItem, exists := keeper.GetAsset(ctx, item.Id)
+		require.True(t, exists)
 		require.Equal(t,
 			retItem,
 			newItem,
@@ -173,11 +232,11 @@ func TestModifyAsset_NotFound(t *testing.T) {
 	// Expect error when modifying non-existent asset
 	_, err := keeper.ModifyAsset(
 		ctx,
-		uint32(0),
+		firstValidAssetId,
 		true,
 		uint32(1),
 	)
-	require.EqualError(t, err, errorsmod.Wrap(types.ErrAssetDoesNotExist, "0").Error())
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrAssetDoesNotExist, "1").Error())
 	require.ErrorIs(t, err, types.ErrAssetDoesNotExist)
 
 	// Actually create the asset
@@ -187,7 +246,7 @@ func TestModifyAsset_NotFound(t *testing.T) {
 	// Expect no issue with modifying the asset now
 	_, err = keeper.ModifyAsset(
 		ctx,
-		uint32(0),
+		firstValidAssetId,
 		true,
 		uint32(0),
 	)
@@ -201,7 +260,7 @@ func TestModifyAsset_MarketNotFound(t *testing.T) {
 
 	_, err = keeper.ModifyAsset(
 		ctx,
-		uint32(0),
+		firstValidAssetId,
 		true,
 		uint32(999),
 	)
@@ -272,10 +331,10 @@ func TestGetAsset_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, item := range items {
-		rst, err := keeper.GetAsset(ctx,
+		rst, exists := keeper.GetAsset(ctx,
 			item.Id,
 		)
-		require.NoError(t, err)
+		require.True(t, exists)
 		require.Equal(t,
 			nullify.Fill(&item), //nolint:staticcheck
 			nullify.Fill(&rst),  //nolint:staticcheck
@@ -285,10 +344,10 @@ func TestGetAsset_Success(t *testing.T) {
 
 func TestGetAsset_NotFound(t *testing.T) {
 	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
-	_, err := keeper.GetAsset(ctx,
+	_, exists := keeper.GetAsset(ctx,
 		uint32(0),
 	)
-	require.EqualError(t, err, errorsmod.Wrap(types.ErrAssetDoesNotExist, "0").Error())
+	require.False(t, exists)
 }
 
 func TestGetAllAssets_Success(t *testing.T) {
@@ -302,22 +361,11 @@ func TestGetAllAssets_Success(t *testing.T) {
 	)
 }
 
-func TestGetAllAssets_MissingAsset(t *testing.T) {
-	ctx, keeper, _, _, _, storeKey := keepertest.AssetsKeepers(t, true)
-
-	// Write some bad data to the store
-	store := ctx.KVStore(storeKey)
-	store.Set([]byte(types.NumAssetsKey), lib.Uint32ToBytes(20))
-
-	// Expect a panic
-	require.Panics(t, func() { keeper.GetAllAssets(ctx) })
-}
-
 func TestModifyLongInterest_Success(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 1)
 	require.NoError(t, err)
-	assetId := uint32(0)
+	assetId := firstValidAssetId
 
 	// Set long interest to positive number.
 	asset, err := keeper.ModifyLongInterest(
@@ -327,8 +375,8 @@ func TestModifyLongInterest_Success(t *testing.T) {
 		uint64(10),
 	)
 	require.NoError(t, err)
-	getAsset, err := keeper.GetAsset(ctx, assetId)
-	require.NoError(t, err)
+	getAsset, exists := keeper.GetAsset(ctx, assetId)
+	require.True(t, exists)
 	require.Equal(t, asset, getAsset)
 	require.Equal(t, uint64(10), asset.LongInterest)
 
@@ -340,8 +388,8 @@ func TestModifyLongInterest_Success(t *testing.T) {
 		uint64(7),
 	)
 	require.NoError(t, err)
-	getAsset, err = keeper.GetAsset(ctx, assetId)
-	require.NoError(t, err)
+	getAsset, exists = keeper.GetAsset(ctx, assetId)
+	require.True(t, exists)
 	require.Equal(t, asset, getAsset)
 	require.Equal(t, uint64(3), asset.LongInterest)
 
@@ -353,8 +401,8 @@ func TestModifyLongInterest_Success(t *testing.T) {
 		uint64(3),
 	)
 	require.NoError(t, err)
-	getAsset, err = keeper.GetAsset(ctx, assetId)
-	require.NoError(t, err)
+	getAsset, exists = keeper.GetAsset(ctx, assetId)
+	require.True(t, exists)
 	require.Equal(t, asset, getAsset)
 	require.Equal(t, uint64(0), asset.LongInterest)
 }
@@ -363,7 +411,7 @@ func TestModifyLongInterest_CannotNegative(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 1)
 	require.NoError(t, err)
-	assetId := uint32(0)
+	assetId := firstValidAssetId
 
 	// Set long interest to positive number.
 	asset, err := keeper.ModifyLongInterest(
@@ -373,8 +421,8 @@ func TestModifyLongInterest_CannotNegative(t *testing.T) {
 		uint64(10),
 	)
 	require.NoError(t, err)
-	getAsset, err := keeper.GetAsset(ctx, assetId)
-	require.NoError(t, err)
+	getAsset, exists := keeper.GetAsset(ctx, assetId)
+	require.True(t, exists)
 	require.Equal(t, asset, getAsset)
 
 	// Fails if long interest would be negative.
@@ -384,9 +432,9 @@ func TestModifyLongInterest_CannotNegative(t *testing.T) {
 		false,
 		uint64(12),
 	)
-	require.EqualError(t, err, errorsmod.Wrap(types.ErrNegativeLongInterest, "0").Error())
-	getAsset, err = keeper.GetAsset(ctx, assetId)
-	require.NoError(t, err)
+	require.EqualError(t, err, errorsmod.Wrap(types.ErrNegativeLongInterest, "1").Error())
+	getAsset, exists = keeper.GetAsset(ctx, assetId)
+	require.True(t, exists)
 	require.Equal(t, asset, getAsset)
 }
 
@@ -532,6 +580,7 @@ func TestConvertAssetToCoin_Success(t *testing.T) {
 			// Create test asset with the given DenomExponent and AtomicResolution values
 			asset, err := keeper.CreateAsset(
 				ctx,
+				firstValidAssetId,
 				testSymbol,
 				testDenom,
 				tc.denomExponent,
@@ -573,7 +622,7 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 	// Test convert asset with invalid asset ID.
 	_, _, err := keeper.ConvertAssetToCoin(
 		ctx,
-		1, /* invalid asset ID */
+		firstValidAssetId, /* invalid asset ID */
 		big.NewInt(100),
 	)
 
@@ -586,6 +635,7 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 	// Test convert asset with invalid denom exponent.
 	_, err = keeper.CreateAsset(
 		ctx,
+		firstValidAssetId,
 		"TEST-SYMBOL-1",
 		"test-denom-1",
 		-50, /* invalid denom exponent */
@@ -594,7 +644,8 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 		-6,
 	)
 	require.NoError(t, err)
-	_, _, err = keeper.ConvertAssetToCoin(ctx, 0, big.NewInt(100))
+
+	_, _, err = keeper.ConvertAssetToCoin(ctx, 1, big.NewInt(100))
 	require.ErrorIs(
 		t,
 		err,
@@ -604,6 +655,7 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 	// Test convert asset with invalid denom exponent.
 	_, err = keeper.CreateAsset(
 		ctx,
+		2,
 		"TEST-SYMBOL-2",
 		"test-denom-2",
 		-6,
@@ -612,7 +664,7 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 		-50, /* invalid asset atomic resolution */
 	)
 	require.NoError(t, err)
-	_, _, err = keeper.ConvertAssetToCoin(ctx, 1, big.NewInt(100))
+	_, _, err = keeper.ConvertAssetToCoin(ctx, 2, big.NewInt(100))
 	require.ErrorIs(
 		t,
 		err,
@@ -621,9 +673,8 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 }
 
 func TestIsPositionUpdatable(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
-	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 1)
-	require.NoError(t, err)
+	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
+	require.NoError(t, keepertest.CreateUsdcAsset(ctx, keeper))
 
 	// Check Usdc asset is updatable.
 	updatable, err := keeper.IsPositionUpdatable(ctx, lib.UsdcAssetId)

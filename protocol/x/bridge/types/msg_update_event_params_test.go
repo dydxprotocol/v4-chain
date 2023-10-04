@@ -9,6 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	// validAuthority is a valid bech32 address string.
+	validAuthority = constants.AliceAccAddress.String()
+)
+
 func TestMsgUpdateEventParams_GetSigners(t *testing.T) {
 	msg := types.MsgUpdateEventParams{
 		Authority: constants.CarlAccAddress.String(),
@@ -19,11 +24,11 @@ func TestMsgUpdateEventParams_GetSigners(t *testing.T) {
 func TestMsgUpdateEventParams_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
 		msg         types.MsgUpdateEventParams
-		expectedErr string
+		expectedErr error
 	}{
 		"Success": {
 			msg: types.MsgUpdateEventParams{
-				Authority: "test",
+				Authority: validAuthority,
 				Params: types.EventParams{
 					Denom:      "test-denom",
 					EthChainId: 0,
@@ -31,21 +36,21 @@ func TestMsgUpdateEventParams_ValidateBasic(t *testing.T) {
 				},
 			},
 		},
-		"Failure: Empty authority": {
+		"Failure: Invalid authority": {
 			msg: types.MsgUpdateEventParams{
 				Authority: "",
 			},
-			expectedErr: "authority cannot be empty",
+			expectedErr: types.ErrInvalidAuthority,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-			if tc.expectedErr == "" {
+			if tc.expectedErr == nil {
 				require.NoError(t, err)
 			} else {
-				require.ErrorContains(t, err, tc.expectedErr)
+				require.ErrorIs(t, err, tc.expectedErr)
 			}
 		})
 	}
