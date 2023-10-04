@@ -6,15 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "ETHUSDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tETHUSD"
-    },
-    {
       "exchangeName": "Bitstamp",
       "ticker": "ETH/USD"
     },

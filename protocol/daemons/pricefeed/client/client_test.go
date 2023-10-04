@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	pricefeed_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"google.golang.org/grpc"
@@ -40,7 +42,7 @@ var (
 // struct should only be used for testing.
 type FakeSubTaskRunner struct {
 	sync.WaitGroup
-	sync.RWMutex
+	sync.Mutex
 	UpdaterCallCount       int
 	EncoderCallCount       int
 	FetcherCallCount       int
@@ -236,7 +238,8 @@ func TestStart_InvalidConfig(t *testing.T) {
 			client := newClient()
 			err := client.start(
 				grpc_util.Ctx,
-				flags.GetDefaultDaemonFlags(),
+				daemonflags.GetDefaultDaemonFlags(),
+				appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
 				log.NewNopLogger(),
 				tc.mockGrpcClient,
 				tc.exchangeIdToStartupConfig,
@@ -287,7 +290,8 @@ func TestStart_InvalidConfig(t *testing.T) {
 // is stopped, but this test ensures that the Stop executes successfully with no hangs.
 func TestStop(t *testing.T) {
 	// Setup daemon and grpc servers.
-	daemonFlags := flags.GetDefaultDaemonFlags()
+	daemonFlags := daemonflags.GetDefaultDaemonFlags()
+	appFlags := appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil))
 
 	// Configure and run daemon server.
 	daemonServer := daemonserver.NewServer(
@@ -295,6 +299,7 @@ func TestStop(t *testing.T) {
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
+		"test",
 	)
 	daemonServer.WithPriceFeedMarketToExchangePrices(
 		pricefeed_types.NewMarketToExchangePrices(5 * time.Second),
@@ -318,7 +323,7 @@ func TestStop(t *testing.T) {
 	// Start gRPC server with cleanup.
 	defer grpcServer.Stop()
 	go func() {
-		ls, err := net.Listen("tcp", daemonFlags.Shared.GrpcServerAddress)
+		ls, err := net.Listen("tcp", appFlags.GrpcAddress)
 		require.NoError(t, err)
 		err = grpcServer.Serve(ls)
 		require.NoError(t, err)
@@ -327,6 +332,7 @@ func TestStop(t *testing.T) {
 	client := StartNewClient(
 		grpc_util.Ctx,
 		daemonFlags,
+		appFlags,
 		log.NewNopLogger(),
 		&lib.GrpcClientImpl{},
 		constants.TestExchangeStartupConfigs,
@@ -739,7 +745,7 @@ func TestMarketUpdater_Mixed(t *testing.T) {
 			pricesQueryClient.On("AllMarketParams", grpc_util.Ctx, mock.Anything).
 				Return(response, tc.queryError)
 			configs := &mocks.PricefeedMutableMarketConfigs{}
-			configs.On("UpdateMarkets", params).Return(tc.queryError)
+			configs.On("UpdateMarkets", params).Return(map[types.MarketId]error{}, tc.queryError)
 
 			RunMarketParamUpdaterTaskLoop(
 				grpc_util.Ctx,

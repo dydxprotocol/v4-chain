@@ -3,25 +3,49 @@ package app_test
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"testing"
+	"time"
 
+	"cosmossdk.io/math"
+	dbm "github.com/cometbft/cometbft-db"
+	tmjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/store"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	exportedtypes "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
+	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -31,21 +55,6 @@ import (
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-
-	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/store"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
-	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/stretchr/testify/require"
 )
 
@@ -96,6 +105,7 @@ var genesisModuleOrder = []string{
 	slashingtypes.ModuleName,
 	paramstypes.ModuleName,
 	exportedtypes.ModuleName,
+	evidencetypes.ModuleName,
 	ibctransfertypes.ModuleName,
 	pricestypes.ModuleName,
 	assetstypes.ModuleName,
@@ -206,7 +216,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b,
 		os.Stdout,
 		dydxApp.GetBaseApp(),
-		app.AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
+		AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
 		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -278,7 +288,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		dydxApp.GetBaseApp(),
-		app.AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
+		AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
 		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -353,7 +363,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				dydxApp.GetBaseApp(),
-				app.AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
+				AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
 				simtypes.RandomAccounts,
 				simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
 				app.ModuleAccountAddrs(),
@@ -385,5 +395,247 @@ func defaultAppOptionsForSimulation() simtestutil.AppOptionsMap {
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 	appOptions[daemonflags.FlagPriceDaemonEnabled] = false
 	appOptions[daemonflags.FlagBridgeDaemonEnabled] = false
+	appOptions[daemonflags.FlagLiquidationDaemonEnabled] = false
 	return appOptions
+}
+
+// Note: this content comes from github.com/cosmos/cosmos-sdk/simapp/state.go:
+// https://github.com/cosmos/cosmos-sdk/blob/1e8e923d3174cdfdb42454a96c27251ad72b6504/simapp/state.go
+
+// AppStateFn returns the initial application state using a genesis or the simulation parameters.
+// It panics if the user provides files for both of them.
+// If a file is not given for the genesis or the sim params, it creates a randomized one.
+func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
+	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
+	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
+		if simcli.FlagGenesisTimeValue == 0 {
+			genesisTimestamp = simtypes.RandTimestamp(r)
+		} else {
+			genesisTimestamp = time.Unix(simcli.FlagGenesisTimeValue, 0)
+		}
+
+		chainID = config.ChainID
+		switch {
+		case config.ParamsFile != "" && config.GenesisFile != "":
+			panic("cannot provide both a genesis file and a params file")
+
+		case config.GenesisFile != "":
+			// override the default chain-id from app to set it later to the config
+			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
+
+			if simcli.FlagGenesisTimeValue == 0 {
+				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
+				genesisTimestamp = genesisDoc.GenesisTime
+			}
+
+			appState = genesisDoc.AppState
+			chainID = genesisDoc.ChainID
+			simAccs = accounts
+
+		case config.ParamsFile != "":
+			appParams := make(simtypes.AppParams)
+			bz, err := os.ReadFile(config.ParamsFile)
+			if err != nil {
+				panic(err)
+			}
+
+			err = json.Unmarshal(bz, &appParams)
+			if err != nil {
+				panic(err)
+			}
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+
+		default:
+			appParams := make(simtypes.AppParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+		}
+
+		rawState := make(map[string]json.RawMessage)
+		err := json.Unmarshal(appState, &rawState)
+		if err != nil {
+			panic(err)
+		}
+
+		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+		if !ok {
+			panic("staking genesis state is missing")
+		}
+
+		stakingState := new(stakingtypes.GenesisState)
+		err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
+		if err != nil {
+			panic(err)
+		}
+		// compute not bonded balance
+		notBondedTokens := math.ZeroInt()
+		for _, val := range stakingState.Validators {
+			if val.Status != stakingtypes.Unbonded {
+				continue
+			}
+			notBondedTokens = notBondedTokens.Add(val.GetTokens())
+		}
+		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
+		// edit bank state to make it have the not bonded pool tokens
+		bankStateBz, ok := rawState[banktypes.ModuleName]
+		// TODO(ignore - from CosmosSDK): should we panic in this case
+		if !ok {
+			panic("bank genesis state is missing")
+		}
+		bankState := new(banktypes.GenesisState)
+		err = cdc.UnmarshalJSON(bankStateBz, bankState)
+		if err != nil {
+			panic(err)
+		}
+
+		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
+		var found bool
+		for _, balance := range bankState.Balances {
+			if balance.Address == stakingAddr {
+				found = true
+				break
+			}
+		}
+		if !found {
+			bankState.Balances = append(bankState.Balances, banktypes.Balance{
+				Address: stakingAddr,
+				Coins:   sdk.NewCoins(notBondedCoins),
+			})
+		}
+
+		// change appState back
+		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
+		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+
+		// replace appstate
+		appState, err = json.Marshal(rawState)
+		if err != nil {
+			panic(err)
+		}
+		return appState, simAccs, chainID, genesisTimestamp
+	}
+}
+
+// AppStateRandomizedFn creates calls each module's GenesisState generator function
+// and creates the simulation params
+func AppStateRandomizedFn(
+	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONCodec,
+	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
+) (json.RawMessage, []simtypes.Account) {
+	numAccs := int64(len(accs))
+	// TODO(ignore - from CosmosSDK)
+	// in case runtime.RegisterModules(...) is used, the genesis state of the module won't be reflected here
+	genesisState := basic_manager.ModuleBasics.DefaultGenesis(cdc)
+
+	// generate a random amount of initial stake coins and a random initial
+	// number of bonded accounts
+	var (
+		numInitiallyBonded int64
+		initialStake       math.Int
+	)
+	appParams.GetOrGenerate(
+		cdc, simtestutil.StakePerAccount, &initialStake, r,
+		func(r *rand.Rand) {
+			// Since the stake token denom has 18 decimals, the initial stake balance needs to be at least
+			// 1e18 to be considered valid. However, in the current implementation of auth simulation logic
+			// (https://github.com/dydxprotocol/cosmos-sdk/blob/93454d9f/x/auth/simulation/genesis.go#L38),
+			// `initialStake` is casted to an `int64` value (max_int64 ~= 9.22e18).
+			// As such today the only valid range of values for `initialStake` is [1e18, max_int64]. Note
+			// this only represents 1~9 full coins.
+			// TODO(DEC-2132): Make this value more realistic by allowing larger values.
+			initialStake = math.NewInt(r.Int63n(8.22e18) + 1e18)
+		},
+	)
+
+	appParams.GetOrGenerate(
+		cdc, simtestutil.InitiallyBondedValidators, &numInitiallyBonded, r,
+		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(299) + 1) },
+	)
+
+	if numInitiallyBonded > numAccs {
+		numInitiallyBonded = numAccs
+	}
+
+	fmt.Printf(
+		`Selected randomly generated parameters for simulated genesis:
+{
+  stake_per_account: "%s",
+  initially_bonded_validators: "%d"
+}
+`, initialStake, numInitiallyBonded,
+	)
+
+	simState := &module.SimulationState{
+		AppParams:    appParams,
+		Cdc:          cdc,
+		Rand:         r,
+		GenState:     genesisState,
+		Accounts:     accs,
+		InitialStake: initialStake,
+		NumBonded:    numInitiallyBonded,
+		GenTimestamp: genesisTimestamp,
+	}
+
+	simManager.GenerateGenesisStates(simState)
+
+	appState, err := json.Marshal(genesisState)
+	if err != nil {
+		panic(err)
+	}
+
+	return appState, accs
+}
+
+// AppStateFromGenesisFileFn util function to generate the genesis AppState
+// from a genesis.json file.
+func AppStateFromGenesisFileFn(
+	r io.Reader,
+	cdc codec.JSONCodec,
+	genesisFile string,
+) (tmtypes.GenesisDoc, []simtypes.Account) {
+	bytes, err := os.ReadFile(genesisFile)
+	if err != nil {
+		panic(err)
+	}
+
+	var genesis tmtypes.GenesisDoc
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err = tmjson.Unmarshal(bytes, &genesis)
+	if err != nil {
+		panic(err)
+	}
+
+	var appState app.GenesisState
+	err = json.Unmarshal(genesis.AppState, &appState)
+	if err != nil {
+		panic(err)
+	}
+
+	var authGenesis authtypes.GenesisState
+	if appState[authtypes.ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[authtypes.ModuleName], &authGenesis)
+	}
+
+	newAccs := make([]simtypes.Account, len(authGenesis.Accounts))
+	for i, acc := range authGenesis.Accounts {
+		// Pick a random private key, since we don't know the actual key
+		// This should be fine as it's only used for mock Tendermint validators
+		// and these keys are never actually used to sign by mock Tendermint.
+		privkeySeed := make([]byte, 15)
+		if _, err := r.Read(privkeySeed); err != nil {
+			panic(err)
+		}
+
+		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
+
+		a, ok := acc.GetCachedValue().(authtypes.AccountI)
+		if !ok {
+			panic("expected account")
+		}
+
+		// create simulator accounts
+		simAcc := simtypes.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: a.GetAddress()}
+		newAccs[i] = simAcc
+	}
+
+	return genesis, newAccs
 }

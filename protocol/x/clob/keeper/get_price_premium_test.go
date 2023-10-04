@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"math/big"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -26,7 +27,7 @@ import (
 type testMemClobMethodArgs struct {
 	// Input args for `MemClob.GetPricePremium`
 	clobPair              types.ClobPair
-	marketPrice           pricestypes.MarketPrice
+	indexPrice            pricestypes.MarketPrice
 	baseAtomicResolution  int32
 	quoteAtomicResolution int32
 	impactNotionalAmount  *big.Int
@@ -51,7 +52,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			perpetualId: 0,
 			args: testMemClobMethodArgs{
 				clobPair: constants.ClobPair_Btc,
-				marketPrice: pricestypes.MarketPrice{
+				indexPrice: pricestypes.MarketPrice{
 					Price:    1_000_000_000, // $10_000
 					Exponent: -5,
 				},
@@ -66,7 +67,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 					mock.Anything,
 					args.clobPair,
 					perptypes.GetPricePremiumParams{
-						MarketPrice:                 args.marketPrice,
+						IndexPrice:                  args.indexPrice,
 						BaseAtomicResolution:        args.baseAtomicResolution,
 						QuoteAtomicResolution:       args.quoteAtomicResolution,
 						ImpactNotionalQuoteQuantums: args.impactNotionalAmount,
@@ -93,7 +94,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			perpetualId: 0,
 			args: testMemClobMethodArgs{
 				clobPair: constants.ClobPair_Btc,
-				marketPrice: pricestypes.MarketPrice{
+				indexPrice: pricestypes.MarketPrice{
 					Price:    1_000_000_000, // $10_000
 					Exponent: -5,
 				},
@@ -109,7 +110,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 					mock.Anything,
 					args.clobPair,
 					perptypes.GetPricePremiumParams{
-						MarketPrice:                 args.marketPrice,
+						IndexPrice:                  args.indexPrice,
 						BaseAtomicResolution:        args.baseAtomicResolution,
 						QuoteAtomicResolution:       args.quoteAtomicResolution,
 						ImpactNotionalQuoteQuantums: args.impactNotionalAmount,
@@ -183,6 +184,21 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 						perpetual.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						perpetualId,
+						0,
+						perpetual.Params.Ticker,
+						perpetual.Params.MarketId,
+						tc.args.clobPair.Status,
+						tc.args.clobPair.QuantumConversionExponent,
+						perpetual.Params.AtomicResolution,
+						tc.args.clobPair.SubticksPerTick,
+						tc.args.clobPair.StepBaseQuantums,
+						perpetual.Params.LiquidityTier,
+					),
+				),
 			).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -204,7 +220,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 				ks.Ctx,
 				tc.perpetualId,
 				perptypes.GetPricePremiumParams{
-					MarketPrice:                 tc.args.marketPrice,
+					IndexPrice:                  tc.args.indexPrice,
 					BaseAtomicResolution:        tc.args.baseAtomicResolution,
 					QuoteAtomicResolution:       tc.args.quoteAtomicResolution,
 					ImpactNotionalQuoteQuantums: tc.args.impactNotionalAmount,

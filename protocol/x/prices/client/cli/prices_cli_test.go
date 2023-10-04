@@ -4,6 +4,8 @@ package cli_test
 
 import (
 	"fmt"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"time"
 
 	"path/filepath"
@@ -86,17 +88,26 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 				panic("incorrect validator type")
 			}
 
-			// Disable the Bridge daemon in the integration tests.
+			// Disable the Liquidations daemon.
+			appOptions.Set(daemonflags.FlagLiquidationDaemonEnabled, false)
+
+			// Disable the Bridge Daemon.
 			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
 
-			// Enable the Price daemon in the integration tests.
+			// Enable the Price daemon.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, true)
+
+			// Make sure the daemon is using the correct GRPC address.
+			appOptions.Set(appflags.GrpcAddress, testval.AppConfig.GRPC.Address)
+
 			homeDir := filepath.Join(testval.Dir, "simd")
 			configs.WriteDefaultPricefeedExchangeToml(homeDir) // must manually create config file.
 			appOptions.Set(daemonflags.FlagPriceDaemonLoopDelayMs, 1_000)
 
-			// Enable the common gRPC daemon server.
-			appOptions.Set(daemonflags.FlagGrpcAddress, testval.AppConfig.GRPC.Address)
+			// Make sure all daemon-related services are properly stopped.
+			s.T().Cleanup(func() {
+				stoppable.StopServices(s.T(), testval.AppConfig.GRPC.Address)
+			})
 		},
 	})
 

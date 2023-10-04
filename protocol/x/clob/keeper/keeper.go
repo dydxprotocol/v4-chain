@@ -44,8 +44,8 @@ type (
 
 		memStoreInitialized *atomic.Bool
 
-		MaxLiquidationOrdersPerBlock      uint32
-		MaxDeleveragedSubaccountsPerBlock uint32
+		MaxLiquidationOrdersPerBlock    uint32
+		MaxDeleveragingAttemptsPerBlock uint32
 
 		mevTelemetryConfig MevTelemetryConfig
 
@@ -108,10 +108,10 @@ func NewKeeper(
 			Host:       clobFlags.MevTelemetryHost,
 			Identifier: clobFlags.MevTelemetryIdentifier,
 		},
-		MaxLiquidationOrdersPerBlock:      clobFlags.MaxLiquidationOrdersPerBlock,
-		MaxDeleveragedSubaccountsPerBlock: clobFlags.MaxDeleveragedSubaccountsPerBlock,
-		placeOrderRateLimiter:             placeOrderRateLimiter,
-		cancelOrderRateLimiter:            cancelOrderRateLimiter,
+		MaxLiquidationOrdersPerBlock:    clobFlags.MaxLiquidationOrdersPerBlock,
+		MaxDeleveragingAttemptsPerBlock: clobFlags.MaxDeleveragingAttemptsPerBlock,
+		placeOrderRateLimiter:           placeOrderRateLimiter,
+		cancelOrderRateLimiter:          cancelOrderRateLimiter,
 	}
 
 	// Provide the keeper to the MemClob.
@@ -165,13 +165,13 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 		// Retrieve an instance of the memstore.
 		memPrefixStore := prefix.NewStore(
 			memStore,
-			types.KeyPrefix(keyPrefix),
+			[]byte(keyPrefix),
 		)
 
 		// Retrieve an instance of the store.
 		store := prefix.NewStore(
 			ctx.KVStore(k.storeKey),
-			types.KeyPrefix(keyPrefix),
+			[]byte(keyPrefix),
 		)
 
 		// Copy over all keys and values with the current key prefix to the `MemStore`.

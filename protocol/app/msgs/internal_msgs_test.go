@@ -6,17 +6,16 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInternalMsgSamples_All_Key(t *testing.T) {
-	expectedAllInternalMsgs := maps.MergeAllMapsMustHaveDistinctKeys(msgs.InternalMsgSamplesGovAuth)
+	expectedAllInternalMsgs := lib.MergeAllMapsMustHaveDistinctKeys(msgs.InternalMsgSamplesGovAuth)
 	require.Equal(t, expectedAllInternalMsgs, msgs.InternalMsgSamplesAll)
 }
 
 func TestInternalMsgSamples_All_Value(t *testing.T) {
-	validateSampleMsgValue(t, msgs.InternalMsgSamplesAll)
+	validateMsgValue(t, msgs.InternalMsgSamplesAll)
 }
 
 func TestInternalMsgSamples_Gov_Key(t *testing.T) {
@@ -101,10 +100,18 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTier",
+		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse",
+		"/dydxprotocol.perpetuals.MsgUpdateParams",
+		"/dydxprotocol.perpetuals.MsgUpdateParamsResponse",
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams",
+		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse",
 
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket",
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse",
+		"/dydxprotocol.prices.MsgUpdateMarketParam",
+		"/dydxprotocol.prices.MsgUpdateMarketParamResponse",
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams",
@@ -126,4 +133,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.InternalMsgSamplesGovAuth))
+}
+
+func TestInternalMsgSamples_Gov_Value(t *testing.T) {
+	validateMsgValue(t, msgs.InternalMsgSamplesGovAuth)
 }

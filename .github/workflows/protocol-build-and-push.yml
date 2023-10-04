@@ -37,10 +37,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev-validator
         run: |
-          DOCKER_BUILDKIT=1 docker build \
-            --platform amd64 \
-            -t dydxprotocol-base \
-            -f Dockerfile .
+          make localnet-build-amd64
           commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
@@ -76,10 +73,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev2-validator
         run: |
-          DOCKER_BUILDKIT=1 docker build \
-            --platform amd64 \
-            -t dydxprotocol-base \
-            -f Dockerfile .
+          make localnet-build-amd64
           commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
@@ -115,10 +109,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev3-validator
         run: |
-          DOCKER_BUILDKIT=1 docker build \
-            --platform amd64 \
-            -t dydxprotocol-base \
-            -f Dockerfile .
+          make localnet-build-amd64
           commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
@@ -154,10 +145,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev4-validator
         run: |
-          DOCKER_BUILDKIT=1 docker build \
-            --platform amd64 \
-            -t dydxprotocol-base \
-            -f Dockerfile .
+          make localnet-build-amd64
           commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
@@ -193,10 +181,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev5-validator
         run: |
-          DOCKER_BUILDKIT=1 docker build \
-            --platform amd64 \
-            -t dydxprotocol-base \
-            -f Dockerfile .
+          make localnet-build-amd64
           commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \
@@ -232,10 +217,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: staging-validator
         run: |
-          DOCKER_BUILDKIT=1 docker build \
-            --platform amd64 \
-            -t dydxprotocol-base \
-            -f Dockerfile .
+          make localnet-build-amd64
           commit_hash=$(git rev-parse --short=7 HEAD)
           docker build \
             --platform amd64 \

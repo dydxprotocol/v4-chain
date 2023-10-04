@@ -4,17 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
+
+	gometrics "github.com/armon/go-metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -43,6 +51,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -66,6 +75,9 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
@@ -103,7 +115,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	// Lib
-	"github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -203,6 +215,10 @@ func init() {
 	}
 
 	DefaultNodeHome = filepath.Join(userHomeDir, "."+AppName)
+
+	// Set DefaultPowerReduction to 1e18 to avoid overflow whe calculating
+	// consensus power.
+	sdk.DefaultPowerReduction = lib.PowerReduction
 }
 
 // App extends an ABCI application, but with most of its parameters exported.
@@ -234,6 +250,7 @@ type App struct {
 	ParamsKeeper     paramskeeper.Keeper
 	// IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCKeeper             *ibckeeper.Keeper
+	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
@@ -281,6 +298,20 @@ type App struct {
 
 	IndexerEventManager indexer_manager.IndexerEventManager
 	Server              *daemonserver.Server
+
+	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
+	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
+	// delayed until after the gRPC service is initialized so that the gRPC service will be available and the daemons
+	// can correctly operate.
+	startDaemons func()
+}
+
+// assertAppPreconditions assert invariants required for an application to start.
+func assertAppPreconditions() {
+	// Check that the default power reduction is set correctly.
+	if sdk.DefaultPowerReduction.BigInt().Cmp(big.NewInt(1_000_000_000_000_000_000)) != 0 {
+		panic("DefaultPowerReduction is not set correctly")
+	}
 }
 
 // New returns a reference to an initialized blockchain app
@@ -292,8 +323,14 @@ func New(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+	assertAppPreconditions()
+
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
+	// Panic if this is not a full node and gRPC is disabled.
+	if err := appFlags.Validate(); err != nil {
+		panic(err)
+	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
@@ -316,6 +353,7 @@ func New(
 		distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		ibcexported.StoreKey, ibctransfertypes.StoreKey,
+		evidencetypes.StoreKey,
 		capabilitytypes.StoreKey,
 		pricesmoduletypes.StoreKey,
 		assetsmoduletypes.StoreKey,
@@ -518,6 +556,13 @@ func New(
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
+	// create evidence keeper with router
+	evidenceKeeper := evidencekeeper.NewKeeper(
+		appCodec, keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper,
+	)
+	// If evidence needs to be handled for the app, set routes in router here and seal
+	app.EvidenceKeeper = *evidenceKeeper
+
 	/****  dYdX specific modules/setup ****/
 	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)
 	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
@@ -525,7 +570,7 @@ func New(
 		tkeys[indexer_manager.TransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
-	timeProvider := &time.TimeProviderImpl{}
+	timeProvider := &timelib.TimeProviderImpl{}
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
 		appCodec,
@@ -544,6 +589,7 @@ func New(
 		grpc.NewServer(),
 		&lib.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
+		appFlags.GrpcAddress,
 	)
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
@@ -563,60 +609,77 @@ func New(
 	bridgeEventManager := bridgedaemontypes.NewBridgeEventManager(timeProvider)
 	app.Server.WithBridgeEventManager(bridgeEventManager)
 
-	// Start server for handling gRPC messages from daemons.
-	go app.Server.Start()
+	// Create a closure for starting daemons and daemon server. Daemon services are delayed until after the gRPC
+	// service is started because daemons depend on the gRPC service being available. If a node is initialized
+	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
+	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
+	// monitoring service will panic.
+	app.startDaemons = func() {
+		// Start server for handling gRPC messages from daemons.
+		go app.Server.Start()
 
-	// Start liquidations client for sending potentially liquidatable subaccounts to the application.
-	if daemonFlags.Liquidation.Enabled {
-		go func() {
-			if err := liquidationclient.Start(
+		// Start liquidations client for sending potentially liquidatable subaccounts to the application.
+		if daemonFlags.Liquidation.Enabled {
+			app.Server.ExpectLiquidationsDaemon(
+				daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
+			)
+			go func() {
+				if err := liquidationclient.Start(
+					// The client will use `context.Background` so that it can have a different context from
+					// the main application.
+					context.Background(),
+					daemonFlags,
+					appFlags,
+					logger,
+					&lib.GrpcClientImpl{},
+				); err != nil {
+					panic(err)
+				}
+			}()
+		}
+
+		// Non-validating full-nodes have no need to run the price daemon.
+		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
+			exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
+			app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
+			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
+			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
+			// periodically sent via gRPC to a shared socket with the server.
+			client := pricefeedclient.StartNewClient(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
 				context.Background(),
 				daemonFlags,
+				appFlags,
 				logger,
 				&lib.GrpcClientImpl{},
-			); err != nil {
-				panic(err)
-			}
-		}()
-	}
+				exchangeStartupConfig,
+				constants.StaticExchangeDetails,
+				&pricefeedclient.SubTaskRunnerImpl{},
+			)
+			stoppable.RegisterServiceForTestCleanup(appFlags.GrpcAddress, client)
+		}
 
-	// Non-validating full-nodes have no need to run the price daemon.
-	if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
-		exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
-
-		// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
-		// are retrieved via third-party APIs like Binance and then are encoded in-memory and
-		// periodically sent via gRPC to a shared socket with the server.
-		pricefeedclient.StartNewClient(
-			// The client will use `context.Background` so that it can have a different context from
-			// the main application.
-			context.Background(),
-			daemonFlags,
-			logger,
-			&lib.GrpcClientImpl{},
-			exchangeStartupConfig,
-			constants.StaticExchangeDetails,
-			&pricefeedclient.SubTaskRunnerImpl{},
-		)
-	}
-
-	// Start Bridge Daemon.
-	// Non-validating full-nodes have no need to run the bridge daemon.
-	if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
-		go func() {
-			if err := bridgeclient.Start(
-				// The client will use `context.Background` so that it can have a different context from
-				// the main application.
-				context.Background(),
-				daemonFlags,
-				logger,
-				&lib.GrpcClientImpl{},
-			); err != nil {
-				panic(err)
-			}
-		}()
+		// Start Bridge Daemon.
+		// Non-validating full-nodes have no need to run the bridge daemon.
+		if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
+			// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
+			// environments.
+			// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
+			go func() {
+				if err := bridgeclient.Start(
+					// The client will use `context.Background` so that it can have a different context from
+					// the main application.
+					context.Background(),
+					daemonFlags,
+					appFlags,
+					logger,
+					&lib.GrpcClientImpl{},
+				); err != nil {
+					panic(err)
+				}
+			}()
+		}
 	}
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
@@ -794,7 +857,6 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.SubaccountsKeeper,
-		memClob,
 		liquidatableSubaccountIds,
 	)
 	app.PerpetualsKeeper.SetClobKeeper(app.ClobKeeper)
@@ -863,6 +925,7 @@ func New(
 			app.getSubspace(stakingtypes.ModuleName),
 		),
 		upgrade.NewAppModule(app.UpgradeKeeper),
+		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
@@ -895,6 +958,7 @@ func New(
 		capabilitytypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -935,6 +999,7 @@ func New(
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
 		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
@@ -975,6 +1040,7 @@ func New(
 		crisistypes.ModuleName,
 		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -1010,6 +1076,7 @@ func New(
 		crisistypes.ModuleName,
 		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -1130,6 +1197,9 @@ func New(
 		// Hydrate the `memclob` with all ordersbooks from state,
 		// and hydrate the next `checkState` as well as the `memclob` with stateful orders.
 		app.hydrateMemclobWithOrderbooksAndStatefulOrders()
+
+		// Hydrate the keeper in-memory data structures.
+		app.hydrateKeeperInMemoryDataStructures()
 	}
 	app.initializeRateLimiters()
 
@@ -1170,6 +1240,19 @@ func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
 	// Initialize memclob with all existing stateful orders.
 	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
 	app.ClobKeeper.InitStatefulOrdersInMemClob(checkStateCtx)
+}
+
+// hydrateKeeperInMemoryDataStructures hydrates the keeper with ClobPairId and PerpetualId mapping
+// and untriggered conditional orders from state.
+func (app *App) hydrateKeeperInMemoryDataStructures() {
+	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
+	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
+	// directly.
+	checkStateCtx := app.BaseApp.NewContext(true, tmproto.Header{})
+
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	app.ClobKeeper.HydrateClobPairAndPerpetualMapping(checkStateCtx)
 	// Initialize the untriggered conditional orders data structure with untriggered
 	// conditional orders in state.
 	app.ClobKeeper.HydrateUntriggeredConditionalOrders(checkStateCtx)
@@ -1183,6 +1266,20 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
+
+	// Report app version and git commit if not in dev. Delay by 100 blocks to get a metric on initial startup.
+	// TODO(DEC-2107): Doing this based on chain id seems brittle.
+	if !strings.Contains(req.Header.ChainID, "dev") && ctx.BlockHeight()%10_100 == 0 {
+		version := version.NewInfo()
+		telemetry.SetGaugeWithLabels(
+			[]string{metrics.AppInfo},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
+				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
+			},
+		)
+	}
 
 	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx, req)
@@ -1285,6 +1382,9 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	if apiConfig.Swagger {
 		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
 	}
+
+	// Now that the API server has been configured, start the daemons.
+	app.startDaemons()
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.

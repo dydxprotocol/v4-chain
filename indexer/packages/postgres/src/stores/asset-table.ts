@@ -1,5 +1,6 @@
 import { PartialModelObject, QueryBuilder } from 'objection';
 
+import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import AssetModel from '../models/asset-model';
@@ -25,7 +26,7 @@ export async function findAll(
     marketId,
   }: AssetQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AssetFromDatabase[]> {
   verifyAllRequiredFields(
     {
@@ -111,7 +112,7 @@ export async function update(
 
 export async function findById(
   id: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AssetFromDatabase | undefined> {
   const baseQuery: QueryBuilder<AssetModel> = setupBaseQuery<AssetModel>(
     AssetModel,

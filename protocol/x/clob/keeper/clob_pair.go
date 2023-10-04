@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"sort"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,6 +14,20 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
+
+// getClobPairStore returns a prefix store where the ClobPair objects are stored.
+func (k Keeper) getClobPairStore(
+	ctx sdk.Context,
+) prefix.Store {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ClobPairKeyPrefix))
+}
+
+// clobPairKey returns the store key to retrieve a ClobPair by id.
+func clobPairKey(
+	id types.ClobPairId,
+) []byte {
+	return lib.Uint32ToBytes(id.ToUint32())
+}
 
 // CreatePerpetualClobPair creates a new perpetual CLOB pair in the store.
 // Additionally, it creates an order book matching the ID of the newly created CLOB pair.
@@ -89,6 +104,21 @@ func (k Keeper) CreatePerpetualClobPair(
 				perpetual.Params.LiquidityTier,
 			),
 		),
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				perpetualId,
+				clobPairId,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				status,
+				quantumConversionExponent,
+				perpetual.Params.AtomicResolution,
+				subticksPerTick,
+				stepSizeBaseQuantums.ToUint64(),
+				perpetual.Params.LiquidityTier,
+			),
+		),
 	)
 
 	return clobPair, nil
@@ -136,25 +166,10 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 	return nil
 }
 
-// createOrderbook creates a new orderbook in the memclob and stores the perpetualId to clobPairId mapping
-// in memory on the keeper.
+// createOrderbook creates a new orderbook in the memclob.
 func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	// Create the corresponding orderbook in the memclob.
 	k.MemClob.CreateOrderbook(ctx, clobPair)
-
-	// If this `ClobPair` is for a perpetual, add the `clobPairId` to the list of CLOB pair IDs
-	// that facilitate trading of this perpetual.
-	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {
-		perpetualId := perpetualClobMetadata.PerpetualId
-		clobPairIds, exists := k.PerpetualIdToClobPairId[perpetualId]
-		if !exists {
-			clobPairIds = make([]types.ClobPairId, 0)
-		}
-		k.PerpetualIdToClobPairId[perpetualId] = append(
-			clobPairIds,
-			clobPair.GetClobPairId(),
-		)
-	}
 }
 
 // createClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
@@ -175,14 +190,16 @@ func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 
 	// Create the corresponding orderbook in the memclob.
 	k.createOrderbook(ctx, clobPair)
+
+	// Create the mapping between clob pair and perpetual.
+	k.SetClobPairIdForPerpetual(ctx, clobPair)
 }
 
 // setClobPair sets a specific `ClobPair` in the store from its index.
 func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
+	store := k.getClobPairStore(ctx)
 	b := k.cdc.MustMarshal(&clobPair)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
-	// Write the `ClobPair` to state.
-	store.Set(types.ClobPairKey(clobPair.GetClobPairId()), b)
+	store.Set(clobPairKey(clobPair.GetClobPairId()), b)
 }
 
 // InitMemClobOrderbooks initializes the memclob with `ClobPair`s from state.
@@ -194,6 +211,35 @@ func (k Keeper) InitMemClobOrderbooks(ctx sdk.Context) {
 		k.createOrderbook(
 			ctx,
 			clobPair,
+		)
+	}
+}
+
+// HydrateClobPairAndPerpetualMapping hydrates the in-memory mapping between clob pair and perpetual.
+func (k Keeper) HydrateClobPairAndPerpetualMapping(ctx sdk.Context) {
+	clobPairs := k.GetAllClobPairs(ctx)
+	for _, clobPair := range clobPairs {
+		// Create the corresponding mapping between clob pair and perpetual.
+		k.SetClobPairIdForPerpetual(
+			ctx,
+			clobPair,
+		)
+	}
+}
+
+// SetClobPairIdForPerpetual sets the mapping between clob pair and perpetual.
+func (k Keeper) SetClobPairIdForPerpetual(ctx sdk.Context, clobPair types.ClobPair) {
+	// If this `ClobPair` is for a perpetual, add the `clobPairId` to the list of CLOB pair IDs
+	// that facilitate trading of this perpetual.
+	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {
+		perpetualId := perpetualClobMetadata.PerpetualId
+		clobPairIds, exists := k.PerpetualIdToClobPairId[perpetualId]
+		if !exists {
+			clobPairIds = make([]types.ClobPairId, 0)
+		}
+		k.PerpetualIdToClobPairId[perpetualId] = append(
+			clobPairIds,
+			clobPair.GetClobPairId(),
 		)
 	}
 }
@@ -231,13 +277,10 @@ func (k Keeper) GetClobPairIdForPerpetual(
 func (k Keeper) GetClobPair(
 	ctx sdk.Context,
 	id types.ClobPairId,
-
 ) (val types.ClobPair, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+	store := k.getClobPairStore(ctx)
 
-	b := store.Get(types.ClobPairKey(
-		id,
-	))
+	b := store.Get(clobPairKey(id))
 	if b == nil {
 		return val, false
 	}
@@ -250,19 +293,16 @@ func (k Keeper) GetClobPair(
 func (k Keeper) RemoveClobPair(
 	ctx sdk.Context,
 	id types.ClobPairId,
-
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
-	store.Delete(types.ClobPairKey(
-		id,
-	))
+	store := k.getClobPairStore(ctx)
+	store.Delete(clobPairKey(id))
 }
 
 // GetAllClobPairs returns all clobPair, sorted by ClobPair id.
 func (k Keeper) GetAllClobPairs(ctx sdk.Context) (list []types.ClobPair) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ClobPairKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	store := k.getClobPairStore(ctx)
 
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -383,7 +423,7 @@ func (k Keeper) mustGetClobPairForPerpetualId(
 	return k.mustGetClobPair(ctx, clobPairId)
 }
 
-// UpdateClobPair overwrites a ClobPair in state.
+// UpdateClobPair overwrites a ClobPair in state and sends an update to the indexer.
 // This function returns an error if the update includes an unsupported transition
 // for the ClobPair's status.
 func (k Keeper) UpdateClobPair(
@@ -435,6 +475,31 @@ func (k Keeper) UpdateClobPair(
 	}
 
 	k.setClobPair(ctx, clobPair)
+
+	// Send UpdateClobPair to indexer.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpdateClobPair,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewUpdateClobPairEvent(
+				clobPair.GetClobPairId(),
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+			),
+		),
+		indexerevents.UpdateClobPairEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewUpdateClobPairEvent(
+				clobPair.GetClobPairId(),
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+			),
+		),
+	)
 
 	return nil
 }

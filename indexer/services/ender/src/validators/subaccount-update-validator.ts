@@ -2,6 +2,8 @@ import { IndexerTendermintEvent, SubaccountUpdateEventV1 } from '@dydxprotocol-i
 
 import { Handler } from '../handlers/handler';
 import { SubaccountUpdateHandler } from '../handlers/subaccount-update-handler';
+import { subaccountUpdateEventV1ToSubaccountUpdate } from '../helpers/translation-helper';
+import { SubaccountUpdate } from '../lib/translated-types';
 import { Validator } from './validator';
 
 export class SubaccountUpdateValidator extends Validator<SubaccountUpdateEventV1> {
@@ -17,13 +19,13 @@ export class SubaccountUpdateValidator extends Validator<SubaccountUpdateEventV1
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
-  ): Handler<SubaccountUpdateEventV1>[] {
+  ): Handler<SubaccountUpdate>[] {
     return [
       new SubaccountUpdateHandler(
         this.block,
         indexerTendermintEvent,
         txId,
-        this.event,
+        subaccountUpdateEventV1ToSubaccountUpdate(this.event),
       ),
     ];
   }

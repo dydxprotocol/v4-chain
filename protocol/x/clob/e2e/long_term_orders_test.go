@@ -21,7 +21,8 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 		tApp.App,
 		LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
@@ -34,7 +35,8 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 			30,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	// We should reject this order since there is already an uncommitted cancellation which
 	// we would reject during `DeliverTx`.
@@ -43,9 +45,9 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 		tApp.App,
 		LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 	) {
-		result := tApp.CheckTx(checkTx)
-		require.False(t, result.IsOK())
-		require.Contains(t, result.Log, "An uncommitted stateful order cancellation with this OrderId already exists")
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+		require.Contains(t, resp.Log, "An uncommitted stateful order cancellation with this OrderId already exists")
 	}
 
 	// Advancing to the next block should succeed and have the order be cancelled and a new one not being placed.
@@ -165,15 +167,13 @@ func TestCancelStatefulOrder(t *testing.T) {
 						ctx,
 						tApp.App,
 						testapp.MustMakeCheckTxOptions{
-							AccAddressForSigning: testtx.MustGetSignerAddress(testSdkMsg.Msg),
+							AccAddressForSigning: testtx.MustGetOnlySignerAddress(testSdkMsg.Msg),
 						},
 						testSdkMsg.Msg,
 					))
-					require.Equal(
-						t,
-						testSdkMsg.ExpectedIsOk,
-						result.IsOK(),
-					)
+					require.Conditionf(t, func() bool {
+						return result.IsOK() == testSdkMsg.ExpectedIsOk
+					}, "Expected CheckTx to succeed. Response: %+v", result)
 				}
 			}
 
@@ -186,4 +186,50 @@ func TestCancelStatefulOrder(t *testing.T) {
 			require.Equal(t, uint64(0), fillAmount.ToUint64())
 		})
 	}
+}
+
+func TestImmediateExecutionLongTermOrders(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	ctx := tApp.InitChain()
+
+	// Reject long-term IOC in CheckTx
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(
+			constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC,
+		),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+		require.Contains(t, resp.Log, clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error())
+	}
+
+	// Reject long-term FOK in CheckTx
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(
+			constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK,
+		),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+		require.Contains(t, resp.Log, clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error())
+	}
+
+	// Reject long-term IOC/FOK in DeliverTx
+	blockAdvancement := testapp.BlockAdvancementWithErrors{
+		BlockAdvancement: testapp.BlockAdvancement{
+			StatefulOrders: []clobtypes.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK,
+			},
+		},
+		ExpectedDeliverTxErrors: map[int]string{
+			0: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
+			1: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
+		},
+	}
+	blockAdvancement.AdvanceToBlock(ctx, 2, &tApp, t)
 }

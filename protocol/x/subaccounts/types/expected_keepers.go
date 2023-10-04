@@ -28,6 +28,13 @@ type ProductKeeper interface {
 		bigMaintenanceMarginQuoteQuantums *big.Int,
 		err error,
 	)
+	IsPositionUpdatable(
+		ctx sdk.Context,
+		id uint32,
+	) (
+		updatable bool,
+		err error,
+	)
 }
 
 type AssetsKeeper interface {
@@ -52,7 +59,7 @@ type AssetsKeeper interface {
 
 type PerpetualsKeeper interface {
 	ProductKeeper
-	GetSettlement(
+	GetSettlementPpm(
 		ctx sdk.Context,
 		perpetualId uint32,
 		quantums *big.Int,

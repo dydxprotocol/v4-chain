@@ -7,12 +7,15 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+
+	"golang.org/x/exp/maps"
 )
 
 func init() {
@@ -43,6 +46,10 @@ var (
 		rewardsmoduletypes.TreasuryAccountName: nil,
 		// rewards vester account vest rewards tokens into the rewards treasury.
 		rewardsmoduletypes.VesterAccountName: nil,
+		// community treasury account holds funds for community use.
+		vestmoduletypes.CommunityTreasuryAccountName: nil,
+		// community vester account vests funds into the community treasury.
+		vestmoduletypes.CommunityVesterAccountName: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all native SDK module accounts are blocked. This prevents
@@ -66,7 +73,8 @@ func moduleAccToAddress[V any](accs map[string]V) map[string]bool {
 
 // GetMaccPerms returns a copy of the module account permissions
 func GetMaccPerms() map[string][]string {
-	return maps.ShallowCopy(maccPerms)
+	// Shallow clone.
+	return maps.Clone(maccPerms)
 }
 
 // BlockedAddresses returns all the app's blocked account addresses.

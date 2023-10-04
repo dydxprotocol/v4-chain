@@ -85,6 +85,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
+			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
 			// Create test markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
@@ -114,6 +115,21 @@ func TestPlaceOrder_Error(t *testing.T) {
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
 				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						clobtest.MustPerpetualId(clobPair),
+						clobPair.Id,
+						perpetual.Params.Ticker,
+						perpetual.Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						perpetual.Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.StepBaseQuantums,
+						perpetual.Params.LiquidityTier,
+					),
+				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						clobtest.MustPerpetualId(clobPair),
 						clobPair.Id,
@@ -213,6 +229,8 @@ func TestPlaceOrder_Success(t *testing.T) {
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
+			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
+
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
@@ -265,6 +283,21 @@ func TestPlaceOrder_Success(t *testing.T) {
 						perpetual.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						perpetual.Params.Ticker,
+						perpetual.Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						perpetual.Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.StepBaseQuantums,
+						perpetual.Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -288,6 +321,12 @@ func TestPlaceOrder_Success(t *testing.T) {
 							tc.StatefulOrderPlacement,
 						),
 					),
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewConditionalOrderPlacementEvent(
+							tc.StatefulOrderPlacement,
+						),
+					),
 				).Return().Once()
 			} else {
 				indexerEventManager.On(
@@ -295,6 +334,12 @@ func TestPlaceOrder_Success(t *testing.T) {
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
 					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewLongTermOrderPlacementEvent(
+							tc.StatefulOrderPlacement,
+						),
+					),
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewLongTermOrderPlacementEvent(
 							tc.StatefulOrderPlacement,
 						),

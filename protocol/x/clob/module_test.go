@@ -88,7 +88,6 @@ func createAppModuleWithKeeper(t *testing.T) (
 		nil,
 		nil,
 		nil,
-		memClob,
 		liqiudations_types.NewLiquidatableSubaccountIds(),
 	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.Ctx, mockIndexerEventManager
 }
@@ -118,15 +117,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-
-	require.Contains(t, buf.String(), "MsgProposedOperations")
-	require.Contains(t, buf.String(), "clob/ProposedOperations")
-
-	require.Contains(t, buf.String(), "MsgPlaceOrder")
-	require.Contains(t, buf.String(), "clob/PlaceOrder")
-
-	require.Contains(t, buf.String(), "MsgCancelOrder")
-	require.Contains(t, buf.String(), "clob/CancelOrder")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -138,15 +128,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-
-	require.Contains(t, buf.String(), "MsgProposedOperations")
-	require.Contains(t, buf.String(), "clob/ProposedOperations")
-
-	require.Contains(t, buf.String(), "MsgPlaceOrder")
-	require.Contains(t, buf.String(), "clob/PlaceOrder")
-
-	require.Contains(t, buf.String(), "MsgCancelOrder")
-	require.Contains(t, buf.String(), "clob/CancelOrder")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -156,7 +137,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 19)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 16)
 	mockRegistry.AssertExpectations(t)
 }
 
@@ -323,6 +304,21 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
 		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				uint32(0),
+				uint32(0),
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+				clob_types.ClobPair_STATUS_ACTIVE,
+				0,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+				uint32(100),
+				uint64(5),
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+			),
+		),
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
 				uint32(0),
 				uint32(0),

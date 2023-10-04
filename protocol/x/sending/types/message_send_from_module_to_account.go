@@ -1,9 +1,9 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 )
 
 var _ sdk.Msg = &MsgSendFromModuleToAccount{}
@@ -26,12 +26,38 @@ func NewMsgSendFromModuleToAccount(
 }
 
 func (msg *MsgSendFromModuleToAccount) GetSigners() []sdk.AccAddress {
-	// TODO(CORE-559): Implement this method.
-	return []sdk.AccAddress{}
+	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
 }
 
 // ValidateBasic runs validation on the fields of a MsgSendFromModuleToAccount.
 func (msg *MsgSendFromModuleToAccount) ValidateBasic() error {
-	// TODO(CORE-559): Implement this method.
-	return status.Errorf(codes.Unimplemented, "ValidateBasic not implemented")
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return errorsmod.Wrap(
+			ErrInvalidAuthority,
+			fmt.Sprintf(
+				"authority '%s' must be a valid bech32 address, but got error '%v'",
+				msg.Authority,
+				err.Error(),
+			),
+		)
+	}
+
+	// Validate sender module name is non-empty.
+	if len(msg.SenderModuleName) == 0 {
+		return ErrEmptyModuleName
+	}
+
+	// Validate account recipient.
+	_, err := sdk.AccAddressFromBech32(msg.Recipient)
+	if err != nil {
+		return ErrInvalidAccountAddress
+	}
+
+	// Validate coin.
+	if err := msg.Coin.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }

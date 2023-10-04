@@ -19,6 +19,9 @@ type CoinbaseProTicker struct {
 	LastPrice string `json:"price" validate:"required,positive-float-string"`
 }
 
+// Ensure that CoinbaseProTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*CoinbaseProTicker)(nil)
+
 func (t CoinbaseProTicker) GetPair() string {
 	return t.Pair
 }
@@ -45,7 +48,7 @@ func CoinbaseProPriceFunction(
 	// Get ticker. The API response should only contain information for one market.
 	ticker, _, err := price_function.GetOnlyTickerAndExponent(
 		tickerToExponent,
-		exchange_common.EXCHANGE_NAME_COINBASE_PRO,
+		exchange_common.EXCHANGE_ID_COINBASE_PRO,
 	)
 	if err != nil {
 		return nil, nil, err

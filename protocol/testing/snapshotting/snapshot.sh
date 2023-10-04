@@ -62,6 +62,14 @@ install_prerequisites() {
     && rm -rf /var/cache/apk/*
 }
 
+setup_cosmovisor() {
+    VAL_HOME_DIR="$HOME/chain/local_node"
+    export DAEMON_NAME=dydxprotocold
+    export DAEMON_HOME="$HOME/chain/local_node"
+
+    cosmovisor init /bin/dydxprotocold
+}
+
 install_prerequisites
 
 # log messages prefixed by highlighted timestamp
@@ -79,16 +87,15 @@ sleep 10
 dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
 curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
 
+setup_cosmovisor
+
 # TODO: add metrics around snapshot upload latency/frequency/success rate
 while true; do
   # p2p.seeds taken from --p2p.persistent_peers flag of full node
-  dydxprotocold start --log_level info --home /dydxprotocol/chain/local_node --p2p.seeds "${p2p_seeds}" --non-validating-full-node=true &
+  cosmovisor run start --log_level info --home /dydxprotocol/chain/local_node --p2p.seeds "${p2p_seeds}" --non-validating-full-node=true &
 
   sleep ${upload_period}
-  kill -TERM $(pidof dydxprotocold)
-
-  LAST_BLOCK_HEIGHT=$(curl -s ${RPC_ADDRESS}/status | jq -r .result.sync_info.latest_block_height)
-  log_this "LAST_BLOCK_HEIGHT ${LAST_BLOCK_HEIGHT}"
+  kill -TERM $(pidof cosmovisor)
 
   log_this "Creating new snapshot"
   SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%M-%H').tar.gz")

@@ -17,6 +17,9 @@ type VolatileExchangeTicker struct {
 	Price string
 }
 
+// Ensure that VolatileExchangeTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*VolatileExchangeTicker)(nil)
+
 func (t VolatileExchangeTicker) GetPair() string {
 	return t.Pair
 }

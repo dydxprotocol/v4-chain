@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -71,11 +73,11 @@ func assertFillAmountAndPruneState(
 		// Verify that expected `blockHeightToPotentiallyPrunableOrders` were deleted.
 		blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
 			ctx.KVStore(storeKey),
-			types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+			[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 		)
 
 		potentiallyPrunableOrdersBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-			types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+			lib.Uint32ToBytes(blockHeight),
 		)
 
 		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -146,6 +148,13 @@ func TestEndBlocker_Failure(t *testing.T) {
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
 					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewStatefulOrderRemovalEvent(
+							orderId,
+							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+						),
+					),
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
 							orderId,
 							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
@@ -698,6 +707,21 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 					),
 				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.Ticker,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -716,6 +740,21 @@ func TestEndBlocker_Success(t *testing.T) {
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
 				indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						1,
+						1,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.Ticker,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.MarketId,
+						constants.ClobPair_Eth.Status,
+						constants.ClobPair_Eth.QuantumConversionExponent,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						constants.ClobPair_Eth.SubticksPerTick,
+						constants.ClobPair_Eth.StepBaseQuantums,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
+					),
+				),
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						1,
 						1,
@@ -756,6 +795,13 @@ func TestEndBlocker_Success(t *testing.T) {
 							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 						),
 					),
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewStatefulOrderRemovalEvent(
+							orderId,
+							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+						),
+					),
 				).Once().Return()
 			}
 
@@ -765,6 +811,12 @@ func TestEndBlocker_Success(t *testing.T) {
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
 					indexer_manager.GetB64EncodedEventMessage(
+						indexerevents.NewConditionalOrderTriggeredEvent(
+							orderId,
+						),
+					),
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewConditionalOrderTriggeredEvent(
 							orderId,
 						),
@@ -815,9 +867,9 @@ func TestEndBlocker_Success(t *testing.T) {
 				// TODO(CLOB-746) Once R/W methods are created, substitute those methods here.
 				triggeredConditionalOrderMemstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 				untriggeredConditionalOrderMemstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
-				exists := triggeredConditionalOrderMemstore.Has(types.OrderIdKey(triggeredConditionalOrderId))
+				exists := triggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.MustMarshal())
 				require.True(t, exists)
-				exists = untriggeredConditionalOrderMemstore.Has(types.OrderIdKey(triggeredConditionalOrderId))
+				exists = untriggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.MustMarshal())
 				require.False(t, exists)
 			}
 
@@ -1038,7 +1090,8 @@ func TestLiquidateSubaccounts(t *testing.T) {
 				existingOrderMsgs[i] = types.MsgPlaceOrder{Order: order}
 			}
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, existingOrderMsgs...) {
-				require.True(t, tApp.CheckTx(checkTx).IsOK())
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			// Update the liquidatable subaccount IDs.
@@ -1078,8 +1131,7 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 	require.Panics(t, func() {
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
-			*ks.ClobKeeper,
-			memClob,
+			ks.ClobKeeper,
 			liquidationtypes.NewLiquidatableSubaccountIds(),
 		)
 	})
@@ -1106,8 +1158,7 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 	require.Panics(t, func() {
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
-			*ks.ClobKeeper,
-			memClob,
+			ks.ClobKeeper,
 			liquidationtypes.NewLiquidatableSubaccountIds(),
 		)
 	})
@@ -1320,7 +1371,7 @@ func TestPrepareCheckState(t *testing.T) {
 				mock.Anything,
 				authtypes.NewModuleAddress(types.InsuranceFundName),
 				constants.Usdc.Denom,
-			).Return(sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(new(big.Int))))
+			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,
@@ -1463,8 +1514,7 @@ func TestPrepareCheckState(t *testing.T) {
 			// Run the test.
 			clob.PrepareCheckState(
 				ctx,
-				*ks.ClobKeeper,
-				memClob,
+				ks.ClobKeeper,
 				liquidatableSubaccountIds,
 			)
 

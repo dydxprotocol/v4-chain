@@ -13,6 +13,7 @@ import { redisClient } from '../../../helpers/redis/redis-controller';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { OrderbookLevelsToResponseObject } from '../../../request-helpers/request-transformer';
@@ -52,6 +53,7 @@ class OrderbookController extends Controller {
 
 router.get(
   '/perpetualMarket/:ticker',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     ticker: {

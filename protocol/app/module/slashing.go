@@ -1,13 +1,13 @@
 package module
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -23,8 +23,8 @@ func (SlashingModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState := slashingtypes.DefaultGenesisState()
 
 	// No slashing for downtime and double-signing.
-	genState.Params.SlashFractionDowntime = sdk.ZeroDec()
-	genState.Params.SlashFractionDoubleSign = sdk.ZeroDec()
+	genState.Params.SlashFractionDowntime = sdkmath.LegacyZeroDec()
+	genState.Params.SlashFractionDoubleSign = sdkmath.LegacyZeroDec()
 
 	// 1 minute jail duration for downtime.
 	genState.Params.DowntimeJailDuration = 1 * time.Minute
@@ -33,7 +33,7 @@ func (SlashingModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState.Params.SignedBlocksWindow = 3000
 
 	// Require 5% minimum liveness per signed block window.
-	genState.Params.MinSignedPerWindow = sdk.MustNewDecFromStr("0.05")
+	genState.Params.MinSignedPerWindow = sdkmath.LegacyMustNewDecFromStr("0.05")
 
 	return cdc.MustMarshalJSON(genState)
 }

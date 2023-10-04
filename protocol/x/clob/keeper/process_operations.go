@@ -150,45 +150,16 @@ func (k Keeper) ProcessInternalOperations(
 			}
 			placedShortTermOrders[order.GetOrderId()] = order
 		case *types.InternalOperation_OrderRemoval:
-			// Remove the stateful order from state.
-			// TODO(CLOB-85): Perform additional validation on the order removal.
 			orderRemoval := castedOperation.OrderRemoval
 
-			// Order removals are always for stateful orders that must exist.
-			orderIdToRemove := orderRemoval.GetOrderId()
-			_, found := k.GetLongTermOrderPlacement(ctx, orderIdToRemove)
-			if !found {
+			if err := k.PersistOrderRemovalToState(ctx, *orderRemoval); err != nil {
 				return errorsmod.Wrapf(
-					types.ErrStatefulOrderDoesNotExist,
-					"Stateful order id %+v does not exist in state.",
-					orderIdToRemove,
+					types.ErrInvalidOrderRemoval,
+					"Order Removal (%+v) invalid. Error: %+v",
+					*orderRemoval,
+					err,
 				)
 			}
-
-			k.MustRemoveStatefulOrder(ctx, orderIdToRemove)
-
-			// Emit an on-chain indexer event for Stateful Order Removal.
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewStatefulOrderRemovalEvent(
-						orderIdToRemove,
-						indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-							orderRemoval.RemovalReason,
-						),
-					),
-				),
-			)
-
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
-				1,
-				append(
-					orderIdToRemove.GetOrderIdLabels(),
-					metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
-				),
-			)
 		case *types.InternalOperation_PreexistingStatefulOrder:
 			// When we fetch operations to propose, preexisting stateful orders are not included
 			// in the operations queue.
@@ -248,6 +219,227 @@ func (k Keeper) PersistMatchToState(
 	return nil
 }
 
+// statUnverifiedOrderRemoval increments the unverified order removal counter
+// and the base quantums counter for the order to be removed.
+func (k Keeper) statUnverifiedOrderRemoval(
+	ctx sdk.Context,
+	orderRemoval types.OrderRemoval,
+	orderToRemove types.Order,
+) {
+	proposerConsAddress := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.ProcessOperations, metrics.UnverifiedStatefulOrderRemoval, metrics.Count},
+		1,
+		append(
+			orderRemoval.OrderId.GetOrderIdLabels(),
+			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
+			metrics.GetLabelForStringValue(metrics.Proposer, proposerConsAddress.String()),
+		),
+	)
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.ProcessOperations, metrics.UnverifiedStatefulOrderRemoval, metrics.BaseQuantums},
+		float32(orderToRemove.Quantums),
+		append(
+			orderRemoval.OrderId.GetOrderIdLabels(),
+			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
+			metrics.GetLabelForStringValue(metrics.Proposer, proposerConsAddress.String()),
+		),
+	)
+}
+
+// PersistOrderRemovalToState takes in an OrderRemoval, statefully validates it according to
+// RemovalReason, and writes the removal to state.
+func (k Keeper) PersistOrderRemovalToState(
+	ctx sdk.Context,
+	orderRemoval types.OrderRemoval,
+) error {
+	orderIdToRemove := orderRemoval.GetOrderId()
+	orderIdToRemove.MustBeStatefulOrder()
+
+	// Order removals are always for long-term orders which must exist or conditional orders
+	// which must be triggered.
+	orderToRemove, err := k.FetchOrderFromOrderId(ctx, orderIdToRemove, nil)
+	if err != nil {
+		return err
+	}
+
+	// Statefully validate that the removal reason is valid.
+	switch removalReason := orderRemoval.RemovalReason; removalReason {
+	case types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED:
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
+		// TODO (CLOB-877) - These validations are commented out because margin requirements can be non-linear.
+		// For the collateralization check, use the remaining amount of the order that is resting on the book.
+		// remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		// if !hasRemainingAmount {
+		// 	return types.ErrOrderFullyFilled
+		// }
+
+		// pendingOpenOrder := types.PendingOpenOrder{
+		// 	RemainingQuantums: remainingAmount,
+		// 	IsBuy:             orderToRemove.IsBuy(),
+		// 	Subticks:          orderToRemove.GetOrderSubticks(),
+		// 	ClobPairId:        orderToRemove.GetClobPairId(),
+		// }
+
+		// // Temporarily construct the subaccountOpenOrders with a single PendingOpenOrder.
+		// subaccountOpenOrders := map[satypes.SubaccountId][]types.PendingOpenOrder{
+		// 	orderIdToRemove.SubaccountId: {
+		// 		pendingOpenOrder,
+		// 	},
+		// }
+
+		// // TODO(DEC-1896): AddOrderToOrderbookCollatCheck should accept a single PendingOpenOrder as a
+		// // parameter rather than the subaccountOpenOrders map.
+		// _, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
+		// 	ctx,
+		// 	orderToRemove.GetClobPairId(),
+		// 	subaccountOpenOrders,
+		// )
+		// if successPerSubaccountUpdate[orderIdToRemove.SubaccountId].IsSuccess() {
+		// 	return errorsmod.Wrapf(
+		// 		types.ErrInvalidOrderRemoval,
+		// 		"Order Removal (%+v) invalid. Order passes collateralization check.",
+		// 		orderRemoval,
+		// 	)
+		// }
+	case types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
+		// TODO (CLOB-877)
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
+
+		// The order should be post-only
+		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
+			return errorsmod.Wrap(
+				types.ErrUnexpectedTimeInForce,
+				"Order is not post-only.",
+			)
+		}
+	case types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE:
+		// TODO (CLOB-877)
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
+	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED:
+		// TODO (CLOB-877)
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
+
+		// The order should be FOK
+		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_FILL_OR_KILL {
+			return errorsmod.Wrap(
+				types.ErrUnexpectedTimeInForce,
+				"Order is not fill-or-kill.",
+			)
+		}
+
+		// The order should not be fully filled.
+		_, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		if !hasRemainingAmount {
+			return errorsmod.Wrap(
+				types.ErrOrderFullyFilled,
+				"Fill-or-kill order is fully filled.",
+			)
+		}
+	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK:
+		// TODO (CLOB-877)
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
+
+		// The order should be IOC.
+		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_IOC {
+			return errorsmod.Wrap(
+				types.ErrUnexpectedTimeInForce,
+				"Order is not immediate-or-cancel.",
+			)
+		}
+
+		// The order should not be fully filled.
+		_, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		if !hasRemainingAmount {
+			return errorsmod.Wrapf(
+				types.ErrOrderFullyFilled,
+				"Immediate-or-cancel order is fully filled.",
+			)
+		}
+	case types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED:
+		// The order should be fully filled.
+		remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+		if hasRemainingAmount {
+			return errorsmod.Wrapf(
+				types.ErrOrderHasRemainingSize,
+				"Fill amount (%+v) and total size (%+v).",
+				remainingAmount,
+				orderToRemove.GetBaseQuantums(),
+			)
+		}
+	// TODO - uncomment when reduce only orders are enabled. Order Removals of this type will fail ValidateBasic.
+	// case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
+	// 	if !orderToRemove.IsReduceOnly() {
+	// 		return errorsmod.Wrapf(
+	// 			types.ErrInvalidOrderRemoval,
+	// 			"Order Removal (%+v) invalid. Order must be reduce only.",
+	// 			orderRemoval,
+	// 		)
+	// 	}
+
+	// 	// The reduce-only order must increase or change the side of the position to trigger removal.
+	// 	currentPositionSize := k.GetStatePosition(
+	// 		ctx,
+	// 		orderIdToRemove.SubaccountId,
+	// 		orderToRemove.GetClobPairId(),
+	// 	)
+	// 	orderQuantumsToFill := orderToRemove.GetBigQuantums()
+
+	// 	orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == currentPositionSize.Sign()
+
+	// 	newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
+	// 	orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
+	// 	if !orderFillWouldIncreasePositionSize && !orderChangedSide {
+	// 		return errorsmod.Wrapf(
+	// 			types.ErrInvalidOrderRemoval,
+	// 			"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
+	// 			orderRemoval,
+	// 		)
+	// 	}
+	default:
+		return errorsmod.Wrapf(
+			types.ErrInvalidOrderRemovalReason,
+			"PersistOrderRemovalToState: Unrecognized order removal type",
+		)
+	}
+
+	// Remove the stateful order from state.
+	k.MustRemoveStatefulOrder(ctx, orderIdToRemove)
+
+	// Emit an on-chain indexer event for Stateful Order Removal.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeStatefulOrder,
+		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewStatefulOrderRemovalEvent(
+				orderIdToRemove,
+				indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+					orderRemoval.RemovalReason,
+				),
+			),
+		),
+		indexerevents.StatefulOrderEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewStatefulOrderRemovalEvent(
+				orderIdToRemove,
+				indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+					orderRemoval.RemovalReason,
+				),
+			),
+		),
+	)
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
+		1,
+		append(
+			orderIdToRemove.GetOrderIdLabels(),
+			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
+		),
+	)
+	return nil
+}
+
 // PersistMatchOrdersToState writes a MatchOrders object to state and emits an onchain
 // indexer event for the match.
 func (k Keeper) PersistMatchOrdersToState(
@@ -271,11 +463,21 @@ func (k Keeper) PersistMatchOrdersToState(
 		)
 	}
 
-	makerFills := matchOrders.GetFills()
+	if takerOrder.RequiresImmediateExecution() {
+		_, fillAmount, _ := k.GetOrderFillAmount(ctx, takerOrder.OrderId)
+		if fillAmount != 0 {
+			return errorsmod.Wrapf(
+				types.ErrImmediateExecutionOrderAlreadyFilled,
+				"Order %s",
+				takerOrder.GetOrderTextString(),
+			)
+		}
+	}
 
+	makerFills := matchOrders.GetFills()
 	for _, makerFill := range makerFills {
-		// Fetch the maker order and statefully validate fill.
-		makerOrder, err := k.StatefulValidateMakerFill(ctx, &makerFill, ordersMap, &takerOrder)
+		// Fetch the maker order from either short term orders or state.
+		makerOrder, err := k.FetchOrderFromOrderId(ctx, makerFill.MakerOrderId, ordersMap)
 		if err != nil {
 			return err
 		}
@@ -324,6 +526,18 @@ func (k Keeper) PersistMatchOrdersToState(
 					totalFilledTaker,
 				),
 			),
+			indexerevents.OrderFillEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewOrderFillEvent(
+					matchWithOrders.MakerOrder.MustGetOrder(),
+					matchWithOrders.TakerOrder.MustGetOrder(),
+					matchWithOrders.FillAmount,
+					matchWithOrders.MakerFee,
+					matchWithOrders.TakerFee,
+					totalFilledMaker,
+					totalFilledTaker,
+				),
+			),
 		)
 	}
 
@@ -347,9 +561,25 @@ func (k Keeper) PersistMatchLiquidationToState(
 		return err
 	}
 
+	notionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		matchLiquidation.PerpetualId,
+		new(big.Int).SetUint64(matchLiquidation.TotalSize),
+	)
+	if err != nil {
+		return err
+	}
+	absNotionalQuoteQuantums := new(big.Int).Abs(notionalQuoteQuantums)
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.DeliverTx},
+		float32(absNotionalQuoteQuantums.Uint64()),
+		matchLiquidation.GetMetricLabels(),
+	)
+
 	for _, fill := range matchLiquidation.GetFills() {
-		// Fetch the maker order and statefully validate fill.
-		makerOrder, err := k.StatefulValidateMakerFill(ctx, &fill, ordersMap, nil)
+		// Fetch the maker order from either short term orders or state.
+		makerOrder, err := k.FetchOrderFromOrderId(ctx, fill.MakerOrderId, ordersMap)
 		if err != nil {
 			return err
 		}
@@ -360,11 +590,8 @@ func (k Keeper) PersistMatchLiquidationToState(
 			FillAmount: satypes.BaseQuantums(fill.FillAmount),
 		}
 
-		if err := matchWithOrders.Validate(); err != nil {
-			return err
-		}
-
 		// Write the position updates and state fill amounts for this match.
+		// Note stateless validation on the constructed `matchWithOrders` is performed within this function.
 		_, _, _, _, err = k.ProcessSingleMatch(
 			ctx,
 			&matchWithOrders,
@@ -381,12 +608,42 @@ func (k Keeper) PersistMatchLiquidationToState(
 				),
 			)
 		}
+
+		// Stat fill amount in quote quantums as ratio of notional quote quantums
+		fillAmountToTotalSizeRat := new(big.Rat).Quo(
+			new(big.Rat).SetUint64(matchWithOrders.FillAmount.ToUint64()),
+			new(big.Rat).SetUint64(matchLiquidation.TotalSize),
+		)
+		filledQuoteQuantums := lib.BigRatRound(
+			new(big.Rat).Mul(
+				fillAmountToTotalSizeRat,
+				new(big.Rat).SetInt(absNotionalQuoteQuantums),
+			),
+			true,
+		)
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.Filled, metrics.DeliverTx},
+			float32(filledQuoteQuantums.Uint64()),
+			matchLiquidation.GetMetricLabels(),
+		)
+
 		// Send on-chain update for the liquidation. The events are stored in a TransientStore which should be rolled-back
 		// if the branched state is discarded, so batching is not necessary.
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,
 			indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.NewLiquidationOrderFillEvent(
+					matchWithOrders.MakerOrder.MustGetOrder(),
+					matchWithOrders.TakerOrder,
+					matchWithOrders.FillAmount,
+					matchWithOrders.MakerFee,
+					matchWithOrders.TakerFee,
+					totalFilledMaker,
+				),
+			),
+			indexerevents.OrderFillEventVersion,
+			indexer_manager.GetBytes(
 				indexerevents.NewLiquidationOrderFillEvent(
 					matchWithOrders.MakerOrder.MustGetOrder(),
 					matchWithOrders.TakerOrder,

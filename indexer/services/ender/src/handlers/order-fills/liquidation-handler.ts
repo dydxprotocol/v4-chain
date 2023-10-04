@@ -18,14 +18,15 @@ import Long from 'long';
 
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
+import { orderFillWithLiquidityToOrderFillEventWithLiquidation } from '../../helpers/translation-helper';
+import { OrderFillWithLiquidity } from '../../lib/translated-types';
 import {
   ConsolidatedKafkaEvent,
   OrderFillEventWithLiquidation,
-  OrderFillEventWithLiquidity,
 } from '../../lib/types';
 import { AbstractOrderFillHandler, OrderFillEventBase } from './abstract-order-fill-handler';
 
-export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillEventWithLiquidity> {
+export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';
 
   /**
@@ -34,7 +35,9 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillEventW
   public getParallelizationIds(): string[] {
     // OrderFillEvents with the same subaccountId and clobPairId cannot be processed in parallel.
     const liquidatedOrderFill:
-    OrderFillEventWithLiquidation = this.event.event as OrderFillEventWithLiquidation;
+    OrderFillEventWithLiquidation = orderFillWithLiquidityToOrderFillEventWithLiquidation(
+      this.event,
+    );
     if (this.event.liquidity === Liquidity.MAKER) {
       const orderId: IndexerOrderId = liquidatedOrderFill.makerOrder!.orderId!;
       const orderUuid: string = OrderTable.orderIdToUuid(orderId);
@@ -73,7 +76,9 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillEventW
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
     const castedLiquidationFillEventMessage:
-    OrderFillEventWithLiquidation = this.event.event as OrderFillEventWithLiquidation;
+    OrderFillEventWithLiquidation = orderFillWithLiquidityToOrderFillEventWithLiquidation(
+      this.event,
+    );
     const clobPairId:
     string = castedLiquidationFillEventMessage.makerOrder.orderId!.clobPairId.toString();
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher

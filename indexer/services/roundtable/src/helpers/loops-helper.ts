@@ -97,97 +97,100 @@ async function startLoopAsync(
       loopIntervalMs,
     );
 
-    // If lock was created, run the task.
-    if (lockResult) {
-      let extendedLockResult: boolean = true;
+    // If lock was not created, wait and try again
+    if (!lockResult) {
+      // Wait until next task.
+      await waitUntilKeyExpiresPlusJitter(redisKey);
+      continue;
+    }
 
-      // Generate a random string to save as the value for the extended lock key in Redis
-      // This way, only this Roundtable instance can unlock the extended lock in the finally clause
-      // Otherwise, other instances could unlock the lock while this instance is still working
-      const extendedLockRedisValue: string = `${REDIS_VALUE} ${uuidv4()}`;
-      if (extendedLoopLockMultiplier !== undefined) {
-        extendedLockResult = await redis.lockWithExpiry(
+    // If lock was created, run the task.
+    let extendedLockResult: boolean = true;
+
+    // Generate a random string to save as the value for the extended lock key in Redis
+    // This way, only this Roundtable instance can unlock the extended lock in the finally clause
+    // Otherwise, other instances could unlock the lock while this instance is still working
+    const extendedLockRedisValue: string = `${REDIS_VALUE} ${uuidv4()}`;
+    if (extendedLoopLockMultiplier !== undefined) {
+      extendedLockResult = await redis.lockWithExpiry(
+        redisClient,
+        extendedLockKey,
+        extendedLockRedisValue,
+        loopIntervalMs * extendedLoopLockMultiplier,
+      );
+    }
+
+    // If lock was not created, try again
+    if (!extendedLockResult) {
+      stats.increment(
+        couldNotAcquireExtendedLockStat,
+        { taskName },
+      );
+      logger.error({
+        at: 'loop-helpers#startLoopAsync/extended-lock',
+        message: 'could not acquire extended lock to run task',
+        taskName,
+      });
+      // Unlock the regular lock and wait until next task.
+      await redis.unlock(
+        redisClient,
+        redisKey,
+        REDIS_VALUE,
+      );
+      await waitUntilKeyExpiresPlusJitter(extendedLockKey);
+      continue;
+    }
+
+    // Log start of task.
+    const start: number = Date.now();
+    stats.gauge(startedStat, 1);
+    numRunningTasks += 1;
+
+    try {
+      await loopTask();
+      stats.gauge(completedStat, 1);
+    } catch (error) {
+      stats.gauge(completedStat, 0);
+      logger.error({
+        at: `loops-helpers/${taskName}`,
+        message: 'uncaught error in an individual loop',
+        error,
+        taskName,
+        disableGroupingHash: true,
+      });
+    } finally {
+      numRunningTasks -= 1;
+      if (extendedLoopLockMultiplier !== undefined && extendedLockResult) {
+        // Only unlock the extended lock key if the value matches
+        // Otherwise, the extended lock was set by another Roundtable instance
+        await redis.unlock(
           redisClient,
           extendedLockKey,
           extendedLockRedisValue,
-          loopIntervalMs * extendedLoopLockMultiplier,
         );
       }
 
-      // If lock was not created, try again
-      if (!extendedLockResult) {
-        stats.increment(
-          couldNotAcquireExtendedLockStat,
-          { taskName },
-        );
-        logger.error({
-          at: 'loop-helpers#startLoopAsync/extended-lock',
-          message: 'could not acquire extended lock to run task',
-          taskName,
-        });
-        // Unlock the regular lock and wait until next task.
-        await redis.unlock(
-          redisClient,
-          redisKey,
-          REDIS_VALUE,
-        );
-        const pttl: number = await redis.pttl(redisClient, extendedLockKey);
-        const jitter: number = Math.ceil(
-          Math.random() * (pttl * config.JITTER_FRACTION_OF_DELAY) + 1,
-        );
-        if (pttl > 0) {
-          await delay(pttl + jitter);
-        }
-        continue;
-      }
-
-      // Log start of task.
-      const start: number = Date.now();
-      stats.gauge(startedStat, 1);
-      numRunningTasks += 1;
-
-      try {
-        await loopTask();
-        stats.gauge(completedStat, 1);
-      } catch (error) {
-        stats.gauge(completedStat, 0);
-        logger.error({
-          at: `loops-helpers/${taskName}`,
-          message: 'uncaught error in an individual loop',
-          error,
-          taskName,
-          disableGroupingHash: true,
-        });
-      } finally {
-        numRunningTasks -= 1;
-        if (extendedLoopLockMultiplier !== undefined && extendedLockResult) {
-          // Only unlock the extended lock key if the value matches
-          // Otherwise, the extended lock was set by another Roundtable instance
-          await redis.unlock(
-            redisClient,
-            extendedLockKey,
-            extendedLockRedisValue,
-          );
-        }
-
-        // Log timing of task.
-        const end: number = Date.now();
-        const loopDuration: number = end - start;
-        stats.timing(timingStat, loopDuration);
-        stats.gauge(
-          durationRatioStat,
-          loopDuration / loopIntervalMs,
-          STATS_NO_SAMPLING,
-          { taskName },
-        );
-      }
+      // Log timing of task.
+      const end: number = Date.now();
+      const loopDuration: number = end - start;
+      stats.timing(timingStat, loopDuration);
+      stats.gauge(
+        durationRatioStat,
+        loopDuration / loopIntervalMs,
+        STATS_NO_SAMPLING,
+        { taskName },
+      );
     }
 
     // Wait until next task.
-    const pttl: number = await redis.pttl(redisClient, redisKey);
-    const jitter: number = Math.ceil(Math.random() * (pttl * config.JITTER_FRACTION_OF_DELAY) + 1);
-    if (pttl > 0) {
-      await delay(pttl + jitter);
-    }
+    await waitUntilKeyExpiresPlusJitter(redisKey);
+  }
+}
+
+async function waitUntilKeyExpiresPlusJitter(redisKey: string): Promise<void> {
+  const pttl: number = await redis.pttl(redisClient, redisKey);
+  const jitter: number = Math.ceil(Math.random() * (pttl * config.JITTER_FRACTION_OF_DELAY) + 1);
+  if (pttl > 0) {
+    await delay(pttl + jitter);
   }
 }

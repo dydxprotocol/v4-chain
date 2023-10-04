@@ -3,5 +3,6 @@ package types
 import "time"
 
 const (
-	MarketIsRecentDuration = 10 * time.Second
+	MarketIsRecentDuration          = 20 * time.Second
+	PriceDaemonInitializationBlocks = 20
 )

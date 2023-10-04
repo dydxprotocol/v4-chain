@@ -9,6 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	// validAuthority is a valid bech32 address string.
+	validAuthority = constants.AliceAccAddress.String()
+)
+
 func TestMsgCreatePerpetual_GetSigners(t *testing.T) {
 	msg := types.MsgCreatePerpetual{
 		Authority: constants.AliceAccAddress.String(),
@@ -23,14 +28,16 @@ func TestMsgCreatePerpetual_ValidateBasic(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			desc:        "Empty authority",
-			msg:         types.MsgCreatePerpetual{},
-			expectedErr: "authority cannot be empty",
+			desc: "Invalid authority",
+			msg: types.MsgCreatePerpetual{
+				Authority: "",
+			},
+			expectedErr: "Authority is invalid",
 		},
 		{
 			desc: "Empty ticker",
 			msg: types.MsgCreatePerpetual{
-				Authority: "test",
+				Authority: validAuthority,
 				Params: types.PerpetualParams{
 					Ticker: "",
 				},
@@ -40,7 +47,7 @@ func TestMsgCreatePerpetual_ValidateBasic(t *testing.T) {
 		{
 			desc: "DefaultFundingPpm >= MaxDefaultFundingPpmAbs",
 			msg: types.MsgCreatePerpetual{
-				Authority: "test",
+				Authority: validAuthority,
 				Params: types.PerpetualParams{
 					Ticker:            "test",
 					DefaultFundingPpm: 100_000_000,

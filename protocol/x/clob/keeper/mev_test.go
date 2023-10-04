@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"testing"
 
@@ -839,7 +840,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				authtypes.NewModuleAddress(types.InsuranceFundName),
 				constants.Usdc.Denom,
 			).Return(
-				sdk.NewCoin(constants.Usdc.Denom, sdk.NewIntFromBigInt(new(big.Int))),
+				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
 			)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
@@ -966,7 +967,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				tc.setupPerpetualKeeperMocks(mockPerpetualKeeper)
 			} else {
 				mockPerpetualKeeper.On("MaybeProcessNewFundingTickEpoch", mock.Anything).Return()
-				mockPerpetualKeeper.On("GetSettlement", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				mockPerpetualKeeper.On("GetSettlementPpm", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(new(big.Int), new(big.Int), nil)
 				for _, p := range tc.perpetuals {
 					mockPerpetualKeeper.On("GetPerpetual", mock.Anything, p.Params.Id).Return(p, nil)

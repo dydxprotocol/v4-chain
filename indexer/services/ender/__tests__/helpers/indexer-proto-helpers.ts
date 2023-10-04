@@ -71,32 +71,38 @@ const defaultPerpetualMarketTicker: string = testConstants.defaultPerpetualMarke
  * Creates an IndexerTendermintEvent, if transactionIndex < 0, creates a block event,
  * otherwise creates a transaction event.
  * @param subtype
- * @param data
+ * @param dataBytes
  * @param transactionIndex
  * @param eventIndex
+ * @param version
  * @returns
  */
 export function createIndexerTendermintEvent(
   subtype: string,
-  data: string,
+  dataBytes: Uint8Array,
   transactionIndex: number,
   eventIndex: number,
+  version: number = 1,
 ): IndexerTendermintEvent {
   if (transactionIndex < 0) {
     // blockEvent
     return {
       subtype,
-      data,
+      data: '',
+      dataBytes,
       blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_END_BLOCK,
       eventIndex,
+      version,
     };
   }
   // transactionIndex
   return {
     subtype,
-    data,
+    data: '',
+    dataBytes,
     transactionIndex,
     eventIndex,
+    version,
   };
 }
 
@@ -352,12 +358,6 @@ export function expectVulcanKafkaMessage({
   });
 }
 
-export function binaryToBase64String(binaryMessage: Uint8Array): string {
-  return Buffer.from(
-    binaryMessage,
-  ).toString('base64');
-}
-
 export function createLiquidationOrder({
   subaccountId,
   clobPairId,
@@ -455,7 +455,7 @@ export function createKafkaMessageFromOrderFillEvent({
   const events: IndexerTendermintEvent[] = [
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.ORDER_FILL,
-      binaryToBase64String(Uint8Array.from(OrderFillEventV1.encode(orderFillEvent).finish())),
+      Uint8Array.from(OrderFillEventV1.encode(orderFillEvent).finish()),
       transactionIndex,
       eventIndex,
     ),
@@ -828,6 +828,7 @@ export function expectPerpetualMarket(
   expect(perpetualMarket).toEqual(expect.objectContaining({
     ...HARDCODED_PERPETUAL_MARKET_VALUES,
     id: perpetual.id.toString(),
+    status: PerpetualMarketStatus.INITIALIZING,
     clobPairId: perpetual.clobPairId.toString(),
     ticker: perpetual.ticker,
     marketId: perpetual.marketId,

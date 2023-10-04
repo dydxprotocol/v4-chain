@@ -3,18 +3,20 @@
 package cli_test
 
 import (
+	"strconv"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
-	"strconv"
-	"testing"
 )
 
 const (
@@ -47,6 +49,11 @@ func setupNetwork(
 	// Create network.
 	net := network.New(t, cfg)
 	ctx := net.Validators[0].ClientCtx
+
+	t.Cleanup(func() {
+		stoppable.StopServices(t, cfg.GRPCAddress)
+	})
+
 	return net, ctx
 }
 
@@ -90,7 +97,7 @@ func TestQueryMessage(t *testing.T) {
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:  0,
-						Msg: delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+						Msg: encoding.EncodeMessageToAny(t, constants.TestMsg1),
 					},
 				},
 			},
@@ -133,7 +140,7 @@ func TestQueryBlockMessageIds(t *testing.T) {
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:          0,
-						Msg:         delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+						Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 						BlockHeight: 10,
 					},
 				},

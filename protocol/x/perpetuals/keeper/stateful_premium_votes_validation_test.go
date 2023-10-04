@@ -157,7 +157,7 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			mockPerpetualsClobKeeper := &mocks.PerpetualsClobKeeper{}
-			ctx, k, pricesKeeper, _, _ := keepertest.PerpetualsKeepersWithClobHelpers(
+			pc := keepertest.PerpetualsKeepersWithClobHelpers(
 				t,
 				mockPerpetualsClobKeeper,
 			)
@@ -170,20 +170,20 @@ func TestPerformStatefulPremiumVotesValidation(t *testing.T) {
 					isActive = tc.isPerpetualClobPairActiveResp.isPerpetualClobPairActive
 					err = tc.isPerpetualClobPairActiveResp.isPerpetualClobPairActiveErr
 				}
-				mockPerpetualsClobKeeper.On("IsPerpetualClobPairActive", ctx, vote.PerpetualId).Once().Return(
+				mockPerpetualsClobKeeper.On("IsPerpetualClobPairActive", pc.Ctx, vote.PerpetualId).Once().Return(
 					isActive,
 					err,
 				)
 			}
 
-			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, k, pricesKeeper, tc.numPerpetuals)
+			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, tc.numPerpetuals)
 
 			// Run.
 			msg := &types.MsgAddPremiumVotes{
 				Votes: tc.votes,
 			}
 
-			err := k.PerformStatefulPremiumVotesValidation(ctx, msg)
+			err := pc.PerpetualsKeeper.PerformStatefulPremiumVotesValidation(pc.Ctx, msg)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, err, tc.expectedErr)
 				return

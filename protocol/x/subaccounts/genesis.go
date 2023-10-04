@@ -27,6 +27,15 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 					nil,
 				),
 			),
+			indexerevents.SubaccountUpdateEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewSubaccountUpdateEvent(
+					elem.Id,
+					elem.PerpetualPositions,
+					elem.AssetPositions,
+					nil,
+				),
+			),
 		)
 	}
 }

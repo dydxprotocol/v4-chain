@@ -451,6 +451,101 @@ paths:
                       format: byte
       tags:
         - Query
+  /dydxprotocol/v4/bridge/delayed_complete_bridge_messages:
+    get:
+      summary: |-
+        Queries all `MsgCompleteBridge` messages that are delayed (not yet
+        executed) and corresponding block heights at which they will execute.
+      operationId: DelayedCompleteBridgeMessages
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              messages:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    message:
+                      type: object
+                      properties:
+                        authority:
+                          type: string
+                        event:
+                          description: The event to complete.
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: int64
+                              description: The unique id of the Ethereum event log.
+                            coin:
+                              description: The tokens bridged.
+                              type: object
+                              properties:
+                                denom:
+                                  type: string
+                                amount:
+                                  type: string
+                            address:
+                              type: string
+                              description: >-
+                                The account address or module address to bridge
+                                to.
+                            eth_block_height:
+                              type: string
+                              format: uint64
+                              description: The Ethereum block height of the event.
+                      description: >-
+                        MsgCompleteBridge is the Msg/CompleteBridgeResponse
+                        request type.
+                    block_height:
+                      type: string
+                      format: int64
+                  description: >-
+                    DelayedCompleteBridgeMessage is a message type for the
+                    response of
+
+                    DelayedCompleteBridgeMessages RPC method. It contains the
+                    message
+
+                    and the block height at which it will execute.
+            description: >-
+              QueryDelayedCompleteBridgeMessagesResponse is a response type for
+              the
+
+              DelayedCompleteBridgeMessages RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: address
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /dydxprotocol/v4/bridge/event_params:
     get:
       summary: Queries the EventParams.
@@ -29889,6 +29984,29 @@ paths:
                         bonded shares
 
                         multiplied by exchange rate.
+              historical_record:
+                type: object
+                properties:
+                  apphash:
+                    type: string
+                    format: byte
+                  time:
+                    type: string
+                    format: date-time
+                  validators_hash:
+                    type: string
+                    format: byte
+                description: >-
+                  Historical contains a set of minimum values needed for
+                  evaluating historical validator sets and blocks.
+
+                  It is stored as part of staking module's state, which persists
+                  the `n` most
+
+                  recent HistoricalInfo
+
+                  (`n` is set by the staking module's `historical_entries`
+                  parameter).
             description: >-
               QueryHistoricalInfoResponse is response type for the
               Query/HistoricalInfo RPC
@@ -34521,7 +34639,7 @@ paths:
           description: >-
             events is the list of transaction event type.
 
-            Deprecated post v0.47.x: use query instead, which should contain a
+            Deprecated: post v0.47.x use query instead, which should contain a
             valid
 
             events query.
@@ -35183,7 +35301,7 @@ paths:
                   method.
 
                    - BROADCAST_MODE_UNSPECIFIED: zero-value for mode ordering
-                   - BROADCAST_MODE_BLOCK: DEPRECATED: use BROADCAST_MODE_SYNC instead,
+                   - BROADCAST_MODE_BLOCK: Deprecated: use BROADCAST_MODE_SYNC instead,
                   BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x
                   onwards.
                    - BROADCAST_MODE_SYNC: BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
@@ -42373,6 +42491,41 @@ definitions:
     description: |-
       QueryPreviousBlockInfoResponse is a request type for the PreviousBlockInfo
       RPC method.
+  cosmos.base.v1beta1.Coin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      Coin defines a token with a denomination and an amount.
+
+      NOTE: The amount field is an Int which implements the custom method
+      signatures required by gogoproto.
+  dydxprotocol.bridge.BridgeEvent:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: The unique id of the Ethereum event log.
+      coin:
+        description: The tokens bridged.
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+      address:
+        type: string
+        description: The account address or module address to bridge to.
+      eth_block_height:
+        type: string
+        format: uint64
+        description: The Ethereum block height of the event.
+    description: BridgeEvent is a recognized event from the Ethereum blockchain.
   dydxprotocol.bridge.BridgeEventInfo:
     type: object
     properties:
@@ -42393,6 +42546,45 @@ definitions:
       bridge
 
       event.
+  dydxprotocol.bridge.DelayedCompleteBridgeMessage:
+    type: object
+    properties:
+      message:
+        type: object
+        properties:
+          authority:
+            type: string
+          event:
+            description: The event to complete.
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int64
+                description: The unique id of the Ethereum event log.
+              coin:
+                description: The tokens bridged.
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+              address:
+                type: string
+                description: The account address or module address to bridge to.
+              eth_block_height:
+                type: string
+                format: uint64
+                description: The Ethereum block height of the event.
+        description: MsgCompleteBridge is the Msg/CompleteBridgeResponse request type.
+      block_height:
+        type: string
+        format: int64
+    description: |-
+      DelayedCompleteBridgeMessage is a message type for the response of
+      DelayedCompleteBridgeMessages RPC method. It contains the message
+      and the block height at which it will execute.
   dydxprotocol.bridge.EventParams:
     type: object
     properties:
@@ -42409,6 +42601,35 @@ definitions:
     description: |-
       EventParams stores parameters about which events to recognize and which
       tokens to mint.
+  dydxprotocol.bridge.MsgCompleteBridge:
+    type: object
+    properties:
+      authority:
+        type: string
+      event:
+        description: The event to complete.
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            description: The unique id of the Ethereum event log.
+          coin:
+            description: The tokens bridged.
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+          address:
+            type: string
+            description: The account address or module address to bridge to.
+          eth_block_height:
+            type: string
+            format: uint64
+            description: The Ethereum block height of the event.
+    description: MsgCompleteBridge is the Msg/CompleteBridgeResponse request type.
   dydxprotocol.bridge.ProposeParams:
     type: object
     properties:
@@ -42474,6 +42695,55 @@ definitions:
     description: |-
       QueryAcknowledgedEventInfoResponse is a response type for the
       AcknowledgedEventInfo RPC method.
+  dydxprotocol.bridge.QueryDelayedCompleteBridgeMessagesResponse:
+    type: object
+    properties:
+      messages:
+        type: array
+        items:
+          type: object
+          properties:
+            message:
+              type: object
+              properties:
+                authority:
+                  type: string
+                event:
+                  description: The event to complete.
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                      description: The unique id of the Ethereum event log.
+                    coin:
+                      description: The tokens bridged.
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                    address:
+                      type: string
+                      description: The account address or module address to bridge to.
+                    eth_block_height:
+                      type: string
+                      format: uint64
+                      description: The Ethereum block height of the event.
+              description: >-
+                MsgCompleteBridge is the Msg/CompleteBridgeResponse request
+                type.
+            block_height:
+              type: string
+              format: int64
+          description: |-
+            DelayedCompleteBridgeMessage is a message type for the response of
+            DelayedCompleteBridgeMessages RPC method. It contains the message
+            and the block height at which it will execute.
+    description: |-
+      QueryDelayedCompleteBridgeMessagesResponse is a response type for the
+      DelayedCompleteBridgeMessages RPC method.
   dydxprotocol.bridge.QueryEventParamsResponse:
     type: object
     properties:
@@ -45931,18 +46201,6 @@ definitions:
     description: |-
       VestEntry specifies a Vester Account and the rate at which tokens are
       dripped into the corresponding Treasury Account.
-  cosmos.base.v1beta1.Coin:
-    type: object
-    properties:
-      denom:
-        type: string
-      amount:
-        type: string
-    description: |-
-      Coin defines a token with a denomination and an amount.
-
-      NOTE: The amount field is an Int which implements the custom method
-      signatures required by gogoproto.
   ibc.applications.transfer.v1.DenomTrace:
     type: object
     properties:
@@ -56653,6 +56911,28 @@ definitions:
       recent HistoricalInfo
 
       (`n` is set by the staking module's `historical_entries` parameter).
+  cosmos.staking.v1beta1.HistoricalRecord:
+    type: object
+    properties:
+      apphash:
+        type: string
+        format: byte
+      time:
+        type: string
+        format: date-time
+      validators_hash:
+        type: string
+        format: byte
+    description: >-
+      Historical contains a set of minimum values needed for evaluating
+      historical validator sets and blocks.
+
+      It is stored as part of staking module's state, which persists the `n`
+      most
+
+      recent HistoricalInfo
+
+      (`n` is set by the staking module's `historical_entries` parameter).
   cosmos.staking.v1beta1.Params:
     type: object
     properties:
@@ -57944,6 +58224,28 @@ definitions:
                 shares
 
                 multiplied by exchange rate.
+      historical_record:
+        type: object
+        properties:
+          apphash:
+            type: string
+            format: byte
+          time:
+            type: string
+            format: date-time
+          validators_hash:
+            type: string
+            format: byte
+        description: >-
+          Historical contains a set of minimum values needed for evaluating
+          historical validator sets and blocks.
+
+          It is stored as part of staking module's state, which persists the `n`
+          most
+
+          recent HistoricalInfo
+
+          (`n` is set by the staking module's `historical_entries` parameter).
     description: >-
       QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo
       RPC
@@ -60391,14 +60693,20 @@ definitions:
       - SIGN_MODE_LEGACY_AMINO_JSON
       - SIGN_MODE_EIP_191
     default: SIGN_MODE_UNSPECIFIED
-    description: |-
+    description: >-
       SignMode represents a signing mode with its own security guarantees.
 
+
       This enum should be considered a registry of all known sign modes
+
       in the Cosmos ecosystem. Apps are not expected to support all known
+
       sign modes. Apps that would like to support custom  sign modes are
+
       encouraged to open a small PR against this file to add a new case
+
       to this SignMode enum describing their sign mode so that different
+
       apps have a consistent version of this enum.
 
        - SIGN_MODE_UNSPECIFIED: SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be
@@ -60407,13 +60715,17 @@ definitions:
       verified with raw bytes from Tx.
        - SIGN_MODE_TEXTUAL: SIGN_MODE_TEXTUAL is a future signing mode that will verify some
       human-readable textual representation on top of the binary representation
+
       from SIGN_MODE_DIRECT. It is currently experimental, and should be used
+
       for testing purposes only, until Textual is fully released. Please follow
+
       the tracking issue https://github.com/cosmos/cosmos-sdk/issues/11970.
        - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
       SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not
-      require signers signing over other signers' `signer_info`. It also allows
-      for adding Tips in transactions.
+
+      require signers signing over other signers' `signer_info`.
+
 
       Since: cosmos-sdk 0.46
        - SIGN_MODE_LEGACY_AMINO_JSON: SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
@@ -60421,13 +60733,32 @@ definitions:
        - SIGN_MODE_EIP_191: SIGN_MODE_EIP_191 specifies the sign mode for EIP 191 signing on the Cosmos
       SDK. Ref: https://eips.ethereum.org/EIPS/eip-191
 
+
       Currently, SIGN_MODE_EIP_191 is registered as a SignMode enum variant,
+
       but is not implemented on the SDK by default. To enable EIP-191, you need
+
       to pass a custom `TxConfig` that has an implementation of
+
       `SignModeHandler` for EIP-191. The SDK may decide to fully support
+
       EIP-191 in the future.
 
+
       Since: cosmos-sdk 0.45.2
+
+      Deprecated: post 0.47.x Sign mode refers to a method of encoding string
+      data for
+
+      signing, but in the SDK, it also refers to how to encode a transaction
+      into a string.
+
+      This opens the possibility for additional EIP191 sign modes, like
+      SIGN_MODE_EIP_191_TEXTUAL,
+
+      SIGN_MODE_EIP_191_LEGACY_JSON, and more.
+
+      Each new EIP191 sign mode should be accompanied by an associated ADR.
   cosmos.tx.v1beta1.AuthInfo:
     type: object
     properties:
@@ -60558,7 +60889,7 @@ definitions:
       method.
 
        - BROADCAST_MODE_UNSPECIFIED: zero-value for mode ordering
-       - BROADCAST_MODE_BLOCK: DEPRECATED: use BROADCAST_MODE_SYNC instead,
+       - BROADCAST_MODE_BLOCK: Deprecated: use BROADCAST_MODE_SYNC instead,
       BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
        - BROADCAST_MODE_SYNC: BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
       for a CheckTx execution response only.
@@ -60586,7 +60917,7 @@ definitions:
           method.
 
            - BROADCAST_MODE_UNSPECIFIED: zero-value for mode ordering
-           - BROADCAST_MODE_BLOCK: DEPRECATED: use BROADCAST_MODE_SYNC instead,
+           - BROADCAST_MODE_BLOCK: Deprecated: use BROADCAST_MODE_SYNC instead,
           BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
            - BROADCAST_MODE_SYNC: BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
           for a CheckTx execution response only.
@@ -62227,7 +62558,7 @@ definitions:
       pagination:
         description: |-
           pagination defines a pagination for the response.
-          Deprecated post v0.46.x: use total instead.
+          Deprecated: post v0.46.x use total instead.
         type: object
         properties:
           next_key:
@@ -62308,10 +62639,7 @@ definitions:
               SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode
               does not
 
-              require signers signing over other signers' `signer_info`. It also
-              allows
-
-              for adding Tips in transactions.
+              require signers signing over other signers' `signer_info`.
 
 
               Since: cosmos-sdk 0.46
@@ -62335,6 +62663,20 @@ definitions:
 
 
               Since: cosmos-sdk 0.45.2
+
+              Deprecated: post 0.47.x Sign mode refers to a method of encoding
+              string data for
+
+              signing, but in the SDK, it also refers to how to encode a
+              transaction into a string.
+
+              This opens the possibility for additional EIP191 sign modes, like
+              SIGN_MODE_EIP_191_TEXTUAL,
+
+              SIGN_MODE_EIP_191_LEGACY_JSON, and more.
+
+              Each new EIP191 sign mode should be accompanied by an associated
+              ADR.
       multi:
         $ref: '#/definitions/cosmos.tx.v1beta1.ModeInfo.Multi'
         title: multi represents a nested multisig signer
@@ -62418,10 +62760,7 @@ definitions:
           SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does
           not
 
-          require signers signing over other signers' `signer_info`. It also
-          allows
-
-          for adding Tips in transactions.
+          require signers signing over other signers' `signer_info`.
 
 
           Since: cosmos-sdk 0.46
@@ -62444,6 +62783,19 @@ definitions:
 
 
           Since: cosmos-sdk 0.45.2
+
+          Deprecated: post 0.47.x Sign mode refers to a method of encoding
+          string data for
+
+          signing, but in the SDK, it also refers to how to encode a transaction
+          into a string.
+
+          This opens the possibility for additional EIP191 sign modes, like
+          SIGN_MODE_EIP_191_TEXTUAL,
+
+          SIGN_MODE_EIP_191_LEGACY_JSON, and more.
+
+          Each new EIP191 sign mode should be accompanied by an associated ADR.
     title: |-
       Single is the mode info for a single signer. It is structured as a message
       to allow for additional fields such as locale for SIGN_MODE_TEXTUAL in the

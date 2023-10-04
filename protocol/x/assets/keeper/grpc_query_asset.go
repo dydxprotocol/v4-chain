@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -26,7 +25,7 @@ func (k Keeper) AllAssets(
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	assetStore := prefix.NewStore(store, types.KeyPrefix(types.AssetKeyPrefix))
+	assetStore := prefix.NewStore(store, []byte(types.AssetKeyPrefix))
 
 	pageRes, err := query.Paginate(assetStore, req.Pagination, func(key []byte, value []byte) error {
 		var asset types.Asset
@@ -51,23 +50,20 @@ func (k Keeper) Asset(c context.Context, req *types.QueryAssetRequest) (*types.Q
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, err := k.GetAsset(
+	val, exists := k.GetAsset(
 		ctx,
 		req.Id,
 	)
-	if err != nil {
-		if errors.Is(err, types.ErrAssetDoesNotExist) {
-			return nil,
-				status.Error(
-					codes.NotFound,
-					fmt.Sprintf(
-						"Asset id %+v not found.",
-						req.Id,
-					),
-				)
-		}
 
-		return nil, status.Error(codes.Internal, "internal error")
+	if !exists {
+		return nil,
+			status.Error(
+				codes.NotFound,
+				fmt.Sprintf(
+					"Asset id %+v not found.",
+					req.Id,
+				),
+			)
 	}
 
 	return &types.QueryAssetResponse{Asset: val}, nil

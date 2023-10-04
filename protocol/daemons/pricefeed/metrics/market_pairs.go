@@ -19,7 +19,7 @@ var (
 	// acceptable for the use case of logging/metrics in order to manage code complexity.
 	marketToPair = map[types.MarketId]string{}
 	// lock syncronizes access to the marketToPair map.
-	lock sync.RWMutex
+	lock sync.Mutex
 )
 
 // AddMarketPairForTelemetry adds a market pair to an in-memory map of marketId to marketPair strings used
@@ -33,8 +33,8 @@ func AddMarketPairForTelemetry(marketId types.MarketId, marketPair string) {
 // GetMarketPairForTelemetry returns the market pair string for a given marketId. If the marketId is not
 // found in the map, returns the INVALID string. This method is synchronized.
 func GetMarketPairForTelemetry(marketId types.MarketId) string {
-	lock.RLock()
-	defer lock.RUnlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	marketPair, exists := marketToPair[marketId]
 	if !exists {

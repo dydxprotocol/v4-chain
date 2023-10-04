@@ -3,10 +3,6 @@ package server_test
 import (
 	"errors"
 	"fmt"
-	"net"
-	"os"
-	"testing"
-
 	"github.com/cometbft/cometbft/libs/log"
 	pricefeedconstants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server"
@@ -15,6 +11,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"net"
+	"os"
+	"testing"
 )
 
 const (
@@ -167,7 +166,9 @@ func createServerWithMocks(
 		mockGrpcServer,
 		mockFileHandler,
 		grpc.SocketPath,
+		"test",
 	)
+	server.DisableUpdateMonitoringForTesting()
 	return server
 }
 

@@ -59,7 +59,6 @@ import {
   expectPerpetualPosition,
   expectDefaultTradeKafkaMessageFromTakerFillId,
   liquidationOrderToOrderSide,
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
@@ -68,11 +67,12 @@ import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
 import { ORDER_FLAG_SHORT_TERM, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
-import { defaultLiquidationEvent, defaultPreviousHeight } from '../../helpers/constants';
+import { defaultLiquidation, defaultLiquidationEvent, defaultPreviousHeight } from '../../helpers/constants';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import { LiquidationHandler } from '../../../src/handlers/order-fills/liquidation-handler';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import Long from 'long';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
@@ -89,6 +89,7 @@ const defaultTakerFee: string = protocolTranslations.quantumsToHumanFixedString(
 describe('LiquidationHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
@@ -168,9 +169,7 @@ describe('LiquidationHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.ORDER_FILL,
-        binaryToBase64String(
-          Uint8Array.from(OrderFillEventV1.encode(defaultLiquidationEvent).finish()),
-        ),
+        Uint8Array.from(OrderFillEventV1.encode(defaultLiquidationEvent).finish()),
         transactionIndex,
         eventIndex,
       );
@@ -186,7 +185,7 @@ describe('LiquidationHandler', () => {
         indexerTendermintEvent,
         0,
         {
-          event: defaultLiquidationEvent,
+          ...defaultLiquidation,
           liquidity,
         },
       );

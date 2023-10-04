@@ -1,8 +1,9 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ sdk.Msg = &MsgCreateOracleMarket{}
@@ -13,8 +14,15 @@ func (msg *MsgCreateOracleMarket) GetSigners() []sdk.AccAddress {
 }
 
 func (msg *MsgCreateOracleMarket) ValidateBasic() error {
-	if msg.Authority == "" {
-		return sdkerrors.Wrap(ErrInvalidAuthority, "authority cannot be empty")
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return errorsmod.Wrap(
+			ErrInvalidAuthority,
+			fmt.Sprintf(
+				"authority '%s' must be a valid bech32 address, but got error '%v'",
+				msg.Authority,
+				err.Error(),
+			),
+		)
 	}
 	return msg.Params.Validate()
 }

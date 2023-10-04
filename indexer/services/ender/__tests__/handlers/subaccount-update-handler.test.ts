@@ -43,7 +43,6 @@ import { addPositionsToContents, annotateWithPnl, convertPerpetualPosition } fro
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectSubaccountKafkaMessage,
@@ -51,6 +50,7 @@ import {
 import { SubaccountUpdateHandler } from '../../src/handlers/subaccount-update-handler';
 import {
   defaultDateTime,
+  defaultEmptySubaccountUpdate,
   defaultEmptySubaccountUpdateEvent,
   defaultHeight,
   defaultPreviousHeight,
@@ -119,9 +119,7 @@ describe('subaccountUpdateHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        binaryToBase64String(
-          SubaccountUpdateEventV1.encode(defaultEmptySubaccountUpdateEvent).finish(),
-        ),
+        SubaccountUpdateEventV1.encode(defaultEmptySubaccountUpdateEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -136,7 +134,7 @@ describe('subaccountUpdateHandler', () => {
         block,
         indexerTendermintEvent,
         0,
-        defaultEmptySubaccountUpdateEvent,
+        defaultEmptySubaccountUpdate,
       );
 
       expect(handler.getParallelizationIds()).toEqual([
@@ -775,9 +773,7 @@ function createKafkaMessageFromSubaccountUpdateEvent({
     events.push(
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        binaryToBase64String(
-          SubaccountUpdateEventV1.encode(subaccountUpdateEvent).finish(),
-        ),
+        SubaccountUpdateEventV1.encode(subaccountUpdateEvent).finish(),
         transactionIndex,
         eventIndex,
       ),

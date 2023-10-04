@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"sync"
 	"time"
 
@@ -112,7 +113,8 @@ func (c *Client) Stop() {
 //  5. Start MarketUpdater subtask to periodically update the market configs.
 //  6. Start PriceUpdater to begin broadcasting prices.
 func (c *Client) start(ctx context.Context,
-	flags flags.DaemonFlags,
+	daemonFlags flags.DaemonFlags,
+	appFlags appflags.Flags,
 	logger log.Logger,
 	grpcClient lib.GrpcClient,
 	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
@@ -120,7 +122,7 @@ func (c *Client) start(ctx context.Context,
 	subTaskRunner SubTaskRunner,
 ) (err error) {
 	// 1. Establish connections to gRPC servers.
-	queryConn, err := grpcClient.NewTcpConnection(ctx, flags.Shared.GrpcServerAddress)
+	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {
 		logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
 		return err
@@ -132,7 +134,7 @@ func (c *Client) start(ctx context.Context,
 		}
 	}()
 
-	daemonConn, err := grpcClient.NewGrpcConnection(ctx, flags.Shared.SocketAddress)
+	daemonConn, err := grpcClient.NewGrpcConnection(ctx, daemonFlags.Shared.SocketAddress)
 	if err != nil {
 		logger.Error("Failed to establish gRPC connection to socket address", "error", err)
 		return err
@@ -237,7 +239,7 @@ func (c *Client) start(ctx context.Context,
 	// The price updater will read from an in-memory cache and send updates over gRPC for the
 	// server to read.
 
-	priceUpdaterTicker, priceUpdaterStop := c.newTickerWithStop(int(flags.Price.LoopDelayMs))
+	priceUpdaterTicker, priceUpdaterStop := c.newTickerWithStop(int(daemonFlags.Price.LoopDelayMs))
 
 	// Now that all persistent subtasks have been started and all tickers and stop channels are created,
 	// signal that the startup process is complete. This needs to be called before entering the
@@ -263,7 +265,8 @@ func (c *Client) start(ctx context.Context,
 // Note: the daemon will panic if it fails to start up.
 func StartNewClient(
 	ctx context.Context,
-	flags flags.DaemonFlags,
+	daemonFlags flags.DaemonFlags,
+	appFlags appflags.Flags,
 	logger log.Logger,
 	grpcClient lib.GrpcClient,
 	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
@@ -276,7 +279,8 @@ func StartNewClient(
 		defer client.runningSubtasksWaitGroup.Done()
 		err := client.start(
 			ctx,
-			flags,
+			daemonFlags,
+			appFlags,
 			logger.With(sdklog.ModuleKey, constants.PricefeedDaemonModuleName),
 			grpcClient,
 			exchangeIdToStartupConfig,

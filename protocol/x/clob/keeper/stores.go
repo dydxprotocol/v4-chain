@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -14,7 +15,7 @@ import (
 func (k Keeper) GetLongTermOrderPlacementStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.LongTermOrderPlacementKeyPrefix),
+		[]byte(types.LongTermOrderPlacementKeyPrefix),
 	)
 }
 
@@ -23,7 +24,7 @@ func (k Keeper) GetLongTermOrderPlacementStore(ctx sdk.Context) prefix.Store {
 func (k Keeper) GetLongTermOrderPlacementMemStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.memKey),
-		types.KeyPrefix(types.LongTermOrderPlacementKeyPrefix),
+		[]byte(types.LongTermOrderPlacementKeyPrefix),
 	)
 }
 
@@ -32,7 +33,7 @@ func (k Keeper) GetLongTermOrderPlacementMemStore(ctx sdk.Context) prefix.Store 
 func (k Keeper) GetUntriggeredConditionalOrderPlacementStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.UntriggeredConditionalOrderKeyPrefix),
+		[]byte(types.UntriggeredConditionalOrderKeyPrefix),
 	)
 }
 
@@ -41,7 +42,7 @@ func (k Keeper) GetUntriggeredConditionalOrderPlacementStore(ctx sdk.Context) pr
 func (k Keeper) GetUntriggeredConditionalOrderPlacementMemStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.memKey),
-		types.KeyPrefix(types.UntriggeredConditionalOrderKeyPrefix),
+		[]byte(types.UntriggeredConditionalOrderKeyPrefix),
 	)
 }
 
@@ -50,7 +51,7 @@ func (k Keeper) GetUntriggeredConditionalOrderPlacementMemStore(ctx sdk.Context)
 func (k Keeper) GetUncommittedStatefulOrderPlacementTransientStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.transientStoreKey),
-		types.KeyPrefix(types.UncommittedStatefulOrderPlacementKeyPrefix),
+		[]byte(types.UncommittedStatefulOrderPlacementKeyPrefix),
 	)
 }
 
@@ -59,7 +60,7 @@ func (k Keeper) GetUncommittedStatefulOrderPlacementTransientStore(ctx sdk.Conte
 func (k Keeper) GetUncommittedStatefulOrderCancellationTransientStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.transientStoreKey),
-		types.KeyPrefix(types.UncommittedStatefulOrderCancellationKeyPrefix),
+		[]byte(types.UncommittedStatefulOrderCancellationKeyPrefix),
 	)
 }
 
@@ -70,7 +71,7 @@ func (k Keeper) GetUncommittedStatefulOrderCountTransientStore(ctx sdk.Context) 
 	lib.AssertCheckTxMode(ctx)
 	return prefix.NewStore(
 		ctx.KVStore(k.transientStoreKey),
-		types.KeyPrefix(types.UncommittedStatefulOrderCountPrefix),
+		[]byte(types.UncommittedStatefulOrderCountPrefix),
 	)
 }
 
@@ -81,7 +82,7 @@ func (k Keeper) GetToBeCommittedStatefulOrderCountTransientStore(ctx sdk.Context
 	lib.AssertDeliverTxMode(ctx)
 	return prefix.NewStore(
 		ctx.KVStore(k.transientStoreKey),
-		types.KeyPrefix(types.ToBeCommittedStatefulOrderCountPrefix),
+		[]byte(types.ToBeCommittedStatefulOrderCountPrefix),
 	)
 }
 
@@ -90,7 +91,7 @@ func (k Keeper) GetToBeCommittedStatefulOrderCountTransientStore(ctx sdk.Context
 func (k Keeper) GetTriggeredConditionalOrderPlacementStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.TriggeredConditionalOrderKeyPrefix),
+		[]byte(types.TriggeredConditionalOrderKeyPrefix),
 	)
 }
 
@@ -99,7 +100,7 @@ func (k Keeper) GetTriggeredConditionalOrderPlacementStore(ctx sdk.Context) pref
 func (k Keeper) GetTriggeredConditionalOrderPlacementMemStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.memKey),
-		types.KeyPrefix(types.TriggeredConditionalOrderKeyPrefix),
+		[]byte(types.TriggeredConditionalOrderKeyPrefix),
 	)
 }
 
@@ -108,7 +109,7 @@ func (k Keeper) GetTriggeredConditionalOrderPlacementMemStore(ctx sdk.Context) p
 func (k Keeper) getStatefulOrdersTimeSliceStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.StatefulOrdersTimeSlicePrefix),
+		[]byte(types.StatefulOrdersTimeSlicePrefix),
 	)
 }
 

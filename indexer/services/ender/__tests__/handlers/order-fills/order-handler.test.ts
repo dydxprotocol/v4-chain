@@ -49,7 +49,6 @@ import {
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../../src/lib/on-message';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   createKafkaMessageFromOrderFillEvent,
@@ -65,7 +64,9 @@ import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
 import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
-import { defaultOrderEvent, defaultPreviousHeight, defaultTakerOrder } from '../../helpers/constants';
+import {
+  defaultOrder, defaultOrderEvent, defaultPreviousHeight, defaultTakerOrder,
+} from '../../helpers/constants';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import { OrderHandler } from '../../../src/handlers/order-fills/order-handler';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
@@ -168,9 +169,7 @@ describe('OrderHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.ORDER_FILL,
-        binaryToBase64String(
-          OrderFillEventV1.encode(defaultOrderEvent).finish(),
-        ),
+        OrderFillEventV1.encode(defaultOrderEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -186,7 +185,7 @@ describe('OrderHandler', () => {
         indexerTendermintEvent,
         0,
         {
-          event: defaultOrderEvent,
+          ...defaultOrder,
           liquidity,
         },
       );

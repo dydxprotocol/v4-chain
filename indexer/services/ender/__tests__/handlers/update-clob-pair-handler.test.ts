@@ -23,7 +23,6 @@ import {
   UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectPerpetualMarketKafkaMessage,
@@ -33,10 +32,12 @@ import { UpdateClobPairHandler } from '../../src/handlers/update-clob-pair-handl
 import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('update-clob-pair-handler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
@@ -68,9 +69,7 @@ describe('update-clob-pair-handler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
-        binaryToBase64String(
-          UpdateClobPairEventV1.encode(defaultUpdateClobPairEvent).finish(),
-        ),
+        UpdateClobPairEventV1.encode(defaultUpdateClobPairEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -156,9 +155,7 @@ function createKafkaMessageFromUpdateClobPairEvent({
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
-      binaryToBase64String(
-        UpdateClobPairEventV1.encode(updatePerpetualEvent).finish(),
-      ),
+      UpdateClobPairEventV1.encode(updatePerpetualEvent).finish(),
       transactionIndex,
       0,
     ),

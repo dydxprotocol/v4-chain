@@ -31,6 +31,12 @@ func WithTicker(ticker string) PerpetualModifierOption {
 	}
 }
 
+func WithLiquidityTier(liquidityTier uint32) PerpetualModifierOption {
+	return func(cp *perptypes.Perpetual) {
+		cp.Params.LiquidityTier = liquidityTier
+	}
+}
+
 // GeneratePerpetual returns a `Perpetual` object set to default values.
 // Passing in `PerpetualModifierOption` methods alters the value of the `Perpetual` returned.
 // It will start with the default, valid `Perpetual` value defined within the method

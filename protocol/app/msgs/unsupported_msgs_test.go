@@ -19,5 +19,5 @@ func TestUnsupportedMsgSamples_Key(t *testing.T) {
 }
 
 func TestUnsupportedMsgSamples_Value(t *testing.T) {
-	validateSampleMsgValue(t, msgs.UnsupportedMsgSamples)
+	validateMsgValue(t, msgs.UnsupportedMsgSamples)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	evidencemodule "github.com/cosmos/cosmos-sdk/x/evidence"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -29,7 +30,6 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
@@ -105,6 +105,13 @@ func TestAppIsFullyInitialized(t *testing.T) {
 	}
 }
 
+func TestAppPanicsWithGrpcDisabled(t *testing.T) {
+	customFlags := map[string]interface{}{
+		flags.GrpcEnable: false,
+	}
+	require.Panics(t, func() { testapp.DefaultTestApp(customFlags) })
+}
+
 func TestClobKeeperMemStoreHasBeenInitialized(t *testing.T) {
 	dydxApp := testapp.DefaultTestApp(nil)
 	ctx := dydxApp.NewUncachedContext(true, tmproto.Header{})
@@ -149,14 +156,6 @@ func TestSimulationManager(t *testing.T) {
 	require.Nil(t, dydxApp.SimulationManager(), "Expected nil SimulationManager")
 }
 
-func TestUpgrades(t *testing.T) {
-	require.Len(t, app.Upgrades, 0, "Expected no Upgrades")
-}
-
-func TestForks(t *testing.T) {
-	require.Len(t, app.Forks, 0, "Expected no Forks")
-}
-
 func TestModuleBasics(t *testing.T) {
 	defaultAppModuleBasics := module.NewBasicManager(
 		auth.AppModuleBasic{},
@@ -177,6 +176,7 @@ func TestModuleBasics(t *testing.T) {
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		custommodule.SlashingModuleBasic{},
+		evidencemodule.AppModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ibctm.AppModuleBasic{},

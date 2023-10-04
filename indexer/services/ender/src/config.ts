@@ -29,6 +29,9 @@ export const configSchema = {
   USE_SUBACCOUNT_UPDATE_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
+  USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS: parseBoolean({
+    default: true,
+  }),
 };
 
 export default parseSchema(configSchema);

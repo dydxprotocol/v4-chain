@@ -50,6 +50,27 @@ importers:
       express: 4.18.1
       typescript: 4.7.4
 
+  packages/compliance:
+    specifiers:
+      '@dydxprotocol-indexer/base': workspace:^0.0.1
+      '@dydxprotocol-indexer/dev': workspace:^0.0.1
+      '@types/jest': ^28.1.4
+      axios: ^1.2.1
+      dotenv-flow: ^3.2.0
+      jest: ^28.1.2
+      lodash: ^4.17.21
+      typescript: ^4.7.4
+    dependencies:
+      '@dydxprotocol-indexer/base': link:../base
+      axios: 1.2.1
+      dotenv-flow: 3.2.0
+      lodash: 4.17.21
+    devDependencies:
+      '@dydxprotocol-indexer/dev': link:../dev
+      '@types/jest': 28.1.4
+      jest: 28.1.2
+      typescript: 4.9.5
+
   packages/dev:
     specifiers:
       '@types/jest': ^28.1.4
@@ -386,6 +407,7 @@ importers:
       '@bugsnag/node': ^7.18.0
       '@bugsnag/plugin-express': ^7.18.0
       '@dydxprotocol-indexer/base': workspace:^0.0.1
+      '@dydxprotocol-indexer/compliance': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
       '@dydxprotocol-indexer/redis': workspace:^0.0.1
@@ -434,6 +456,7 @@ importers:
       '@bugsnag/node': 7.18.0
       '@bugsnag/plugin-express': 7.18.0_@bugsnag+core@7.18.0
       '@dydxprotocol-indexer/base': link:../../packages/base
+      '@dydxprotocol-indexer/compliance': link:../../packages/compliance
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/redis': link:../../packages/redis
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
@@ -559,6 +582,7 @@ importers:
   services/roundtable:
     specifiers:
       '@dydxprotocol-indexer/base': workspace:^0.0.1
+      '@dydxprotocol-indexer/compliance': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
       '@dydxprotocol-indexer/kafka': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
@@ -587,6 +611,7 @@ importers:
       uuid: ^8.3.2
     dependencies:
       '@dydxprotocol-indexer/base': link:../../packages/base
+      '@dydxprotocol-indexer/compliance': link:../../packages/compliance
       '@dydxprotocol-indexer/kafka': link:../../packages/kafka
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/redis': link:../../packages/redis
@@ -653,6 +678,7 @@ importers:
   services/socks:
     specifiers:
       '@dydxprotocol-indexer/base': workspace:^0.0.1
+      '@dydxprotocol-indexer/compliance': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
       '@dydxprotocol-indexer/kafka': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
@@ -686,6 +712,7 @@ importers:
       ws: ^8.8.1
     dependencies:
       '@dydxprotocol-indexer/base': link:../../packages/base
+      '@dydxprotocol-indexer/compliance': link:../../packages/compliance
       '@dydxprotocol-indexer/kafka': link:../../packages/kafka
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
@@ -9659,6 +9686,34 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
+  /jest-cli/28.1.2:
+    resolution: {integrity: sha512-l6eoi5Do/IJUXAFL9qRmDiFpBeEJAnjJb1dcd9i/VWfVWbp3mJhuH50dNtX67Ali4Ecvt4eBkWb4hXhPHkAZTw==}
+    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
+    hasBin: true
+    peerDependencies:
+      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
+    peerDependenciesMeta:
+      node-notifier:
+        optional: true
+    dependencies:
+      '@jest/core': 28.1.2
+      '@jest/test-result': 28.1.1
+      '@jest/types': 28.1.1
+      chalk: 4.1.2
+      exit: 0.1.2
+      graceful-fs: 4.2.10
+      import-local: 3.1.0
+      jest-config: 28.1.2
+      jest-util: 28.1.1
+      jest-validate: 28.1.1
+      prompts: 2.4.2
+      yargs: 17.5.1
+    transitivePeerDependencies:
+      - '@types/node'
+      - supports-color
+      - ts-node
+    dev: true
+
   /jest-cli/28.1.2_250642e41d506bccecc9f35ad915bcb5:
     resolution: {integrity: sha512-l6eoi5Do/IJUXAFL9qRmDiFpBeEJAnjJb1dcd9i/VWfVWbp3mJhuH50dNtX67Ali4Ecvt4eBkWb4hXhPHkAZTw==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
@@ -9712,6 +9767,44 @@ packages:
       - '@types/node'
       - supports-color
       - ts-node
+    dev: true
+
+  /jest-config/28.1.2:
+    resolution: {integrity: sha512-g6EfeRqddVbjPVBVY4JWpUY4IvQoFRIZcv4V36QkqzE0IGhEC/VkugFeBMAeUE7PRgC8KJF0yvJNDeQRbamEVA==}
+    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
+    peerDependencies:
+      '@types/node': '*'
+      ts-node: '>=9.0.0'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      ts-node:
+        optional: true
+    dependencies:
+      '@babel/core': 7.18.6
+      '@jest/test-sequencer': 28.1.1
+      '@jest/types': 28.1.1
+      babel-jest: 28.1.2_@babel+core@7.18.6
+      chalk: 4.1.2
+      ci-info: 3.3.2
+      deepmerge: 4.2.2
+      glob: 7.2.3
+      graceful-fs: 4.2.10
+      jest-circus: 28.1.2
+      jest-environment-node: 28.1.2
+      jest-get-type: 28.0.2
+      jest-regex-util: 28.0.2
+      jest-resolve: 28.1.1
+      jest-runner: 28.1.2
+      jest-util: 28.1.1
+      jest-validate: 28.1.1
+      micromatch: 4.0.5
+      parse-json: 5.2.0
+      pretty-format: 28.1.1
+      slash: 3.0.0
+      strip-json-comments: 3.1.1
+    transitivePeerDependencies:
+      - supports-color
     dev: true
 
   /jest-config/28.1.2_250642e41d506bccecc9f35ad915bcb5:
@@ -10104,6 +10197,26 @@ packages:
       '@types/node': 18.0.3
       merge-stream: 2.0.0
       supports-color: 8.1.1
+    dev: true
+
+  /jest/28.1.2:
+    resolution: {integrity: sha512-Tuf05DwLeCh2cfWCQbcz9UxldoDyiR1E9Igaei5khjonKncYdc6LDfynKCEWozK0oLE3GD+xKAo2u8x/0s6GOg==}
+    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
+    hasBin: true
+    peerDependencies:
+      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
+    peerDependenciesMeta:
+      node-notifier:
+        optional: true
+    dependencies:
+      '@jest/core': 28.1.2
+      '@jest/types': 28.1.1
+      import-local: 3.1.0
+      jest-cli: 28.1.2
+    transitivePeerDependencies:
+      - '@types/node'
+      - supports-color
+      - ts-node
     dev: true
 
   /jest/28.1.2_250642e41d506bccecc9f35ad915bcb5:

@@ -11,24 +11,17 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.InitializeForGenesis(ctx)
 
-	// Set each parameter in state.
-	err := k.SetFundingRateClampFactorPpm(ctx, genState.Params.FundingRateClampFactorPpm)
-	if err != nil {
-		panic(err)
-	}
-	err = k.SetPremiumVoteClampFactorPpm(ctx, genState.Params.PremiumVoteClampFactorPpm)
-	if err != nil {
-		panic(err)
-	}
-	err = k.SetMinNumVotesPerSample(ctx, genState.Params.MinNumVotesPerSample)
+	// Set parameters in state.
+	err := k.SetParams(ctx, genState.Params)
 	if err != nil {
 		panic(err)
 	}
 
 	// Create all liquidity tiers.
 	for _, elem := range genState.LiquidityTiers {
-		_, err := k.CreateLiquidityTier(
+		_, err := k.SetLiquidityTier(
 			ctx,
+			elem.Id,
 			elem.Name,
 			elem.InitialMarginPpm,
 			elem.MaintenanceFractionPpm,

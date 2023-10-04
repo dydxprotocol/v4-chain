@@ -1055,15 +1055,6 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 				m.mustRemoveOrder(ctx, otpOrderId)
 			} else if otpOrderId.IsShortTermOrder() {
 				order := operation.GetShortTermOrderPlacement().Order
-				if _, exists := m.operationsToPropose.
-					ShortTermOrderHashToTxBytes[order.GetOrderHash()]; !exists {
-					panic(
-						fmt.Sprintf(
-							"RemoveAndClearOperationsQueue: No TxBytes to remove for Short-Term order %+v",
-							order.GetOrderTextString(),
-						),
-					)
-				}
 				m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 			}
 		case *types.InternalOperation_PreexistingStatefulOrder:
@@ -1297,12 +1288,32 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	// Check if the order being replaced has at least `MinOrderBaseQuantums` of size remaining, otherwise the order
 	// is considered fully filled and cannot be placed/replaced.
 	orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
-	remainingAmount, hasRemainingAmount := m.getOrderRemainingAmount(ctx, order)
+	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
 		return errorsmod.Wrapf(
 			types.ErrOrderFullyFilled,
 			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
 			remainingAmount,
+			order.GetOrderTextString(),
+		)
+	}
+
+	// Immediate-or-cancel and fill-or-kill orders may only be filled once. The remaining size becomes unfillable.
+	// This prevents the case where an IOC order is partially filled multiple times over the course of multiple blocks.
+	if order.RequiresImmediateExecution() && remainingAmount < order.GetBaseQuantums() {
+		// Prevent IOC/FOK orders from replacing partially filled orders.
+		if restingOrderExists {
+			return errorsmod.Wrapf(
+				types.ErrInvalidReplacement,
+				"Cannot replace partially filled order with IOC order. Size: %d, Fill Amount: %d.",
+				order.GetBaseQuantums(),
+				order.GetBaseQuantums()-remainingAmount,
+			)
+		}
+
+		return errorsmod.Wrapf(
+			types.ErrImmediateExecutionOrderAlreadyFilled,
+			"Order: %s",
 			order.GetOrderTextString(),
 		)
 	}
@@ -1336,7 +1347,7 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 	subaccountId := orderId.SubaccountId
 
 	// For the collateralization check, use the remaining amount of the order that is resting on the book.
-	remainingAmount, hasRemainingAmount := m.getOrderRemainingAmount(ctx, order)
+	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount {
 		panic(fmt.Sprintf("addOrderToOrderbookCollateralizationCheck: order has no remaining amount %v", order))
 	}
@@ -1344,9 +1355,8 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 	pendingOpenOrder := types.PendingOpenOrder{
 		RemainingQuantums: remainingAmount,
 		IsBuy:             order.IsBuy(),
-		// This order will be added to the book as a maker order, so it cannot be a taker order.
-		Subticks:   order.GetOrderSubticks(),
-		ClobPairId: order.GetClobPairId(),
+		Subticks:          order.GetOrderSubticks(),
+		ClobPairId:        order.GetClobPairId(),
 	}
 
 	// Temporarily construct the subaccountOpenOrders with a single PendingOpenOrder.
@@ -1383,7 +1393,7 @@ func (m *MemClobPriceTimePriority) mustAddOrderToOrderbook(
 	)
 
 	// Ensure that the order is not fully-filled.
-	if _, hasRemainingQuantums := m.getOrderRemainingAmount(ctx, newOrder); !hasRemainingQuantums {
+	if _, hasRemainingQuantums := m.GetOrderRemainingAmount(ctx, newOrder); !hasRemainingQuantums {
 		panic(fmt.Sprintf("mustAddOrderToOrderbook: order has no remaining amount %+v", newOrder))
 	}
 
@@ -1440,7 +1450,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		takerRemainingSize = newTakerOrder.GetBaseQuantums()
 	} else {
 		var takerHasRemainingSize bool
-		takerRemainingSize, takerHasRemainingSize = m.getOrderRemainingAmount(
+		takerRemainingSize, takerHasRemainingSize = m.GetOrderRemainingAmount(
 			ctx,
 			newTakerOrder.MustGetOrder(),
 		)
@@ -1518,7 +1528,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			continue
 		}
 
-		makerRemainingSize, makerHasRemainingSize := m.getOrderRemainingAmount(ctx, makerOrder.Order)
+		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder.Order)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("mustPerformTakerOrderMatching: maker order has no remaining amount %v", makerOrder.Order))
 		}
@@ -1875,9 +1885,9 @@ func updateResultToOrderStatus(updateResult satypes.UpdateResult) types.OrderSta
 	return types.Undercollateralized
 }
 
-// getOrderRemainingAmount returns the remaining amount of an order (its size minus its filled amount).
+// GetOrderRemainingAmount returns the remaining amount of an order (its size minus its filled amount).
 // It also returns a boolean indicating whether the remaining amount is positive (true) or not (false).
-func (m *MemClobPriceTimePriority) getOrderRemainingAmount(
+func (m *MemClobPriceTimePriority) GetOrderRemainingAmount(
 	ctx sdk.Context,
 	order types.Order,
 ) (
@@ -2033,7 +2043,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 
 	for remainingImpactQuoteQuantums.Sign() > 0 && foundMakerOrder {
 		makerOrder := makerLevelOrder.Value.Order
-		makerRemainingSize, makerHasRemainingSize := m.getOrderRemainingAmount(ctx, makerOrder)
+		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("getImpactPriceSubticks: maker order has no remaining amount (%+v)", makerOrder))
 		}
@@ -2131,7 +2141,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 
 	// Get index price represented in subticks.
 	indexPriceSubticks := types.PriceToSubticks(
-		params.MarketPrice,
+		params.IndexPrice,
 		clobPair,
 		params.BaseAtomicResolution,
 		params.QuoteAtomicResolution,
@@ -2142,7 +2152,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 		return 0, errorsmod.Wrapf(
 			types.ErrZeroIndexPriceForPremiumCalculation,
 			"market = %+v, clobPair = %+v, baseAtomicResolution = %d, quoteAtomicResolution = %d",
-			params.MarketPrice,
+			params,
 			clobPair,
 			params.BaseAtomicResolution,
 			params.QuoteAtomicResolution,

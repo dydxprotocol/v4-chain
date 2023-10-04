@@ -8,6 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -40,15 +41,24 @@ func (k Keeper) CreateMarket(
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
 
 	marketParamStore := k.newMarketParamStore(ctx)
-	marketParamStore.Set(types.MarketKey(marketParam.Id), paramBytes)
+	marketParamStore.Set(lib.Uint32ToBytes(marketParam.Id), paramBytes)
 
 	marketPriceStore := k.newMarketPriceStore(ctx)
-	marketPriceStore.Set(types.MarketKey(marketPrice.Id), priceBytes)
+	marketPriceStore.Set(lib.Uint32ToBytes(marketPrice.Id), priceBytes)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeMarket,
 		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewMarketCreateEvent(
+				marketParam.Id,
+				marketParam.Pair,
+				marketParam.MinPriceChangePpm,
+				marketParam.Exponent,
+			),
+		),
+		indexerevents.MarketEventVersion,
+		indexer_manager.GetBytes(
 			indexerevents.NewMarketCreateEvent(
 				marketParam.Id,
 				marketParam.Pair,
@@ -64,17 +74,24 @@ func (k Keeper) CreateMarket(
 	return marketParam, nil
 }
 
-// IsRecentlyAdded returns true if the market was added recently. Since it takes a few seconds for
-// index prices to populate, we would not consider missing index prices for a recently added market
-// to be an error.
-func (k Keeper) IsRecentlyAdded(marketId uint32) bool {
+// IsRecentlyAvailable returns true if the market was recently made available to the pricefeed daemon. A market is
+// considered recently available either if it was recently created, or if the pricefeed daemon was recently started. If
+// an index price does not exist for a recently available market, the protocol does not consider this an error
+// condition, as it is expected that the pricefeed daemon will eventually provide a price for the market within a
+// few seconds.
+func (k Keeper) IsRecentlyAvailable(ctx sdk.Context, marketId uint32) bool {
 	createdAt, ok := k.marketToCreatedAt[marketId]
 
 	if !ok {
 		return false
 	}
 
-	return k.timeProvider.Now().Sub(createdAt) < types.MarketIsRecentDuration
+	// The comparison condition considers both market age and price daemon warmup time because a market can be
+	// created before or after the daemon starts. We use block height as a proxy for daemon warmup time because
+	// the price daemon is started when the gRPC service comes up, which typically occurs just before the first
+	// block is processed.
+	return k.timeProvider.Now().Sub(createdAt) < types.MarketIsRecentDuration ||
+		ctx.BlockHeight() < types.PriceDaemonInitializationBlocks
 }
 
 // GetAllMarketParamPrices returns a slice of MarketParam, MarketPrice tuples for all markets.

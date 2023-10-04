@@ -1,5 +1,6 @@
 import { CandleMessage_Resolution, ClobPairStatus } from '@dydxprotocol-indexer/v4-protos';
 
+import config from './config';
 import AssetPositionModel from './models/asset-position-model';
 import FillModel from './models/fill-model';
 import OrderModel from './models/order-model';
@@ -9,6 +10,7 @@ import SubaccountModel from './models/subaccount-model';
 import {
   APITimeInForce,
   CandleResolution,
+  Options,
   PerpetualMarketStatus,
   TimeInForce,
 } from './types';
@@ -99,3 +101,8 @@ Record<SpecifiedClobPairStatus, PerpetualMarketStatus> = {
   [ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY]: PerpetualMarketStatus.POST_ONLY,
   [ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING]: PerpetualMarketStatus.INITIALIZING,
 };
+
+export const DEFAULT_POSTGRES_OPTIONS : Options = config.USE_READ_REPLICA
+  ? {
+    readReplica: true,
+  } : {};

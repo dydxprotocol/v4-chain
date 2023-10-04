@@ -16,7 +16,7 @@ import (
 
 // newMarketParamStore creates a new prefix store for MarketParams.
 func (k Keeper) newMarketParamStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketParamKeyPrefix))
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketParamKeyPrefix))
 }
 
 // ModifyMarketParam modifies an existing market param in the store.
@@ -47,12 +47,20 @@ func (k Keeper) ModifyMarketParam(
 	// Store the modified market param.
 	marketParamStore := k.newMarketParamStore(ctx)
 	b := k.cdc.MustMarshal(&marketParam)
-	marketParamStore.Set(types.MarketKey(marketParam.Id), b)
+	marketParamStore.Set(lib.Uint32ToBytes(marketParam.Id), b)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeMarket,
 		indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.NewMarketModifyEvent(
+				marketParam.Id,
+				marketParam.Pair,
+				marketParam.MinPriceChangePpm,
+			),
+		),
+		indexerevents.MarketEventVersion,
+		indexer_manager.GetBytes(
 			indexerevents.NewMarketModifyEvent(
 				marketParam.Id,
 				marketParam.Pair,
@@ -76,7 +84,7 @@ func (k Keeper) GetMarketParam(
 	exists bool,
 ) {
 	marketParamStore := k.newMarketParamStore(ctx)
-	b := marketParamStore.Get(types.MarketKey(id))
+	b := marketParamStore.Get(lib.Uint32ToBytes(id))
 	if b == nil {
 		return types.MarketParam{}, false
 	}

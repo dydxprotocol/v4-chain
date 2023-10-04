@@ -13,12 +13,17 @@ import (
 
 // https://api.kraken.com/0/public/Ticker
 // https://docs.kraken.com/rest/#tag/Market-Data/operation/getTickerInformation
+// KrakenTickerResult is the result of a Kraken API call for a single ticker.
+// KrakentickerResult implements the types.TickerResult interface in util.go.
 type KrakenTickerResult struct {
 	pair            string
 	AskPriceStats   []string `json:"a" validate:"len=3,dive,positive-float-string"`
 	BidPriceStats   []string `json:"b" validate:"len=3,dive,positive-float-string"`
 	ClosePriceStats []string `json:"c" validate:"len=2,dive,positive-float-string"`
 }
+
+// Ensure that KrakenTickerResult implements the TickerResult interface at compile time.
+var _ price_function.Ticker = (*KrakenTickerResult)(nil)
 
 func (ktr KrakenTickerResult) WithPair(pair string) KrakenTickerResult {
 	ktr.pair = pair

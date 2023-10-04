@@ -2,18 +2,8 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "BTCUSDT",
-      "adjustByMarket": "BTC-USD",
+      "ticker": "USDCUSDT",
       "invert": true
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "USDTUSD"
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tUSTUSD",
-      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bitstamp",
@@ -30,10 +20,6 @@
     },
     {
       "exchangeName": "CryptoCom",
-      "ticker": "USDT_USD"
-    },
-    {
-      "exchangeName": "Gate",
       "ticker": "USDT_USD"
     },
     {

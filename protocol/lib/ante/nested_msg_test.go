@@ -9,8 +9,8 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	appmsgs "github.com/dydxprotocol/v4-chain/protocol/app/msgs"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 
 	"github.com/stretchr/testify/require"
@@ -42,11 +42,12 @@ func TestIsNestedMsg_Empty(t *testing.T) {
 }
 
 func TestIsNestedMsg_Invalid(t *testing.T) {
-	allMsgsMinusNested := maps.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
+	allMsgsMinusNested := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
 	for key := range appmsgs.NestedMsgSamples {
 		delete(allMsgsMinusNested, key)
 	}
 	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusNested)
+	require.Len(t, allNonNilSampleMsgs, 89)
 
 	for _, sampleMsg := range allNonNilSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
@@ -57,6 +58,7 @@ func TestIsNestedMsg_Invalid(t *testing.T) {
 
 func TestIsNestedMsg_Valid(t *testing.T) {
 	sampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.NestedMsgSamples)
+	require.Len(t, sampleMsgs, len(appmsgs.NestedMsgSamples)/2)
 	for _, sampleMsg := range sampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
 			require.True(t, ante.IsNestedMsg(sampleMsg.Msg))

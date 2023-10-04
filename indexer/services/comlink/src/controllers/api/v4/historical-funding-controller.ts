@@ -1,5 +1,6 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
+  DEFAULT_POSTGRES_OPTIONS,
   FundingIndexUpdatesColumns,
   FundingIndexUpdatesFromDatabase,
   FundingIndexUpdatesTable,
@@ -19,6 +20,7 @@ import config from '../../../config';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { CheckEffectiveBeforeOrAtSchema, CheckLimitSchema, CheckTickerParamSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -44,7 +46,7 @@ class HistoricalFundingController extends Controller {
   ): Promise<HistoricalFundingResponse> {
     const perpetualMarket: (
       PerpetualMarketFromDatabase | undefined
-    ) = await PerpetualMarketTable.findByTicker(ticker, { readReplica: true });
+    ) = await PerpetualMarketTable.findByTicker(ticker);
 
     if (perpetualMarket === undefined) {
       throw new NotFoundError(`${ticker} not found in markets of type ${MarketType.PERPETUAL}`);
@@ -61,8 +63,8 @@ class HistoricalFundingController extends Controller {
         limit,
       }, [],
       {
+        ...DEFAULT_POSTGRES_OPTIONS,
         orderBy: [[FundingIndexUpdatesColumns.effectiveAtHeight, Ordering.DESC]],
-        readReplica: true,
       },
     );
 
@@ -78,6 +80,7 @@ class HistoricalFundingController extends Controller {
 
 router.get(
   '/:ticker',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckLimitSchema,
   ...CheckTickerParamSchema,

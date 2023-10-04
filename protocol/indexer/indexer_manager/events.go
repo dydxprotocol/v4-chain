@@ -57,6 +57,18 @@ func GetB64EncodedEventMessage(
 	return b64encodedEventMessage
 }
 
+// GetBytes returns the marshaled bytes of the event message.
+func GetBytes(
+	eventMessage proto.Message,
+) []byte {
+	marshaler := &common.MarshalerImpl{}
+	eventMessageBytes, err := marshaler.Marshal(eventMessage)
+	if err != nil {
+		panic(err)
+	}
+	return eventMessageBytes
+}
+
 // GetBytesFromEventData returns the decoded bytes of the base64 event data string.
 func GetBytesFromEventData(
 	event string,
@@ -73,13 +85,17 @@ func addTxnEvent(
 	ctx sdk.Context,
 	subType string,
 	data string,
+	version uint32,
 	storeKey storetypes.StoreKey,
+	dataBytes []byte,
 ) {
 	event := IndexerTendermintEventWrapper{
 		Event: &IndexerTendermintEvent{
 			Subtype:             subType,
 			Data:                data,
+			Version:             version,
 			OrderingWithinBlock: &IndexerTendermintEvent_TransactionIndex{},
+			DataBytes:           dataBytes,
 		},
 		TxnHash: string(lib.GetTxHash(ctx.TxBytes())),
 	}
@@ -93,14 +109,18 @@ func addBlockEvent(
 	data string,
 	storeKey storetypes.StoreKey,
 	blockEvent IndexerTendermintEvent_BlockEvent,
+	version uint32,
+	dataBytes []byte,
 ) {
 	event := IndexerTendermintEventWrapper{
 		Event: &IndexerTendermintEvent{
 			Subtype: subType,
 			Data:    data,
+			Version: version,
 			OrderingWithinBlock: &IndexerTendermintEvent_BlockEvent_{
 				BlockEvent: blockEvent,
 			},
+			DataBytes: dataBytes,
 		},
 	}
 	addEvent(ctx, event, storeKey)

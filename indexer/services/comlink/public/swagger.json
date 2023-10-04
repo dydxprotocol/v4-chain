@@ -1731,7 +1731,7 @@
         "parameters": []
       }
     },
-    "/trades/perpetualMarkets/{ticker}": {
+    "/trades/perpetualMarket/{ticker}": {
       "get": {
         "operationId": "GetTrades",
         "responses": {

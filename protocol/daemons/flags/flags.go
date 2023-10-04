@@ -2,14 +2,12 @@ package flags
 
 import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/spf13/cobra"
 )
 
 // List of CLI flags for Server and Client.
 const (
 	// Flag names
-	FlagGrpcAddress       = "grpc-address"
 	FlagUnixSocketAddress = "unix-socket-address"
 
 	FlagPriceDaemonEnabled     = "price-daemon-enabled"
@@ -22,11 +20,11 @@ const (
 	FlagLiquidationDaemonEnabled             = "liquidation-daemon-enabled"
 	FlagLiquidationDaemonLoopDelayMs         = "liquidation-daemon-loop-delay-ms"
 	FlagLiquidationDaemonSubaccountPageLimit = "liquidation-daemon-subaccount-page-limit"
+	FlagLiquidationDaemonRequestChunkSize    = "liquidation-daemon-request-chunk-size"
 )
 
 type SharedFlags struct {
-	GrpcServerAddress string
-	SocketAddress     string
+	SocketAddress string
 }
 
 type BridgeFlags struct {
@@ -39,6 +37,7 @@ type LiquidationFlags struct {
 	Enabled             bool
 	LoopDelayMs         uint32
 	SubaccountPageLimit uint64
+	RequestChunkSize    uint64
 }
 
 type PriceFlags struct {
@@ -59,8 +58,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 	if defaultDaemonFlags == nil {
 		defaultDaemonFlags = &DaemonFlags{
 			Shared: SharedFlags{
-				SocketAddress:     "/tmp/daemons.sock",
-				GrpcServerAddress: constants.DefaultGrpcEndpoint,
+				SocketAddress: "/tmp/daemons.sock",
 			},
 			Bridge: BridgeFlags{
 				Enabled:        true,
@@ -71,6 +69,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				Enabled:             true,
 				LoopDelayMs:         1_600,
 				SubaccountPageLimit: 1_000,
+				RequestChunkSize:    50,
 			},
 			Price: PriceFlags{
 				Enabled:     true,
@@ -91,11 +90,6 @@ func AddDaemonFlagsToCmd(
 	df := GetDefaultDaemonFlags()
 
 	// Shared Flags.
-	cmd.Flags().String(
-		FlagGrpcAddress,
-		df.Shared.GrpcServerAddress,
-		"Address for the gRPC server",
-	)
 	cmd.Flags().String(
 		FlagUnixSocketAddress,
 		df.Shared.SocketAddress,
@@ -136,6 +130,11 @@ func AddDaemonFlagsToCmd(
 		df.Liquidation.SubaccountPageLimit,
 		"Limit on the number of subaccounts to fetch per query in the Liquidation Daemon task loop.",
 	)
+	cmd.Flags().Uint64(
+		FlagLiquidationDaemonRequestChunkSize,
+		df.Liquidation.RequestChunkSize,
+		"Limit on the number of subaccounts per collateralization check in the Liquidation Daemon task loop.",
+	)
 
 	// Price Daemon.
 	cmd.Flags().Bool(
@@ -158,9 +157,6 @@ func GetDaemonFlagValuesFromOptions(
 	result := GetDefaultDaemonFlags()
 
 	// Shared Flags
-	if v, ok := appOpts.Get(FlagGrpcAddress).(string); ok {
-		result.Shared.GrpcServerAddress = v
-	}
 	if v, ok := appOpts.Get(FlagUnixSocketAddress).(string); ok {
 		result.Shared.SocketAddress = v
 	}
@@ -185,6 +181,9 @@ func GetDaemonFlagValuesFromOptions(
 	}
 	if v, ok := appOpts.Get(FlagLiquidationDaemonSubaccountPageLimit).(uint64); ok {
 		result.Liquidation.SubaccountPageLimit = v
+	}
+	if v, ok := appOpts.Get(FlagLiquidationDaemonRequestChunkSize).(uint64); ok {
+		result.Liquidation.RequestChunkSize = v
 	}
 
 	// Price Daemon.

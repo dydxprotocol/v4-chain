@@ -1,14 +1,15 @@
 package keeper_test
 
 import (
+	"testing"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestNumMessages(t *testing.T) {
@@ -47,7 +48,7 @@ func TestMessage(t *testing.T) {
 		"Not found": {},
 		"Found": {
 			delayedMessage: constants.TestMsg1,
-			expectedMsg:    delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+			expectedMsg:    encoding.EncodeMessageToAny(t, constants.TestMsg1),
 		},
 	}
 	for name, tc := range tests {

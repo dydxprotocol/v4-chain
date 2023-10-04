@@ -2,9 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -19,7 +21,7 @@ import (
 
 var (
 	AcceptedAuthority = authtypes.NewModuleAddress(bridgemoduletypes.ModuleName).String()
-	InvalidAuthority  = "INVALID_AUTHORITY"
+	InvalidAuthority  = authtypes.NewModuleAddress("INVALID_AUTHORITY").String()
 	TestError         = fmt.Errorf("test error")
 	TestMsgId         = uint32(0)
 
@@ -55,7 +57,7 @@ func setupMockWithDelayMessageFailure(ctx sdk.Context, mck *mocks.DelayMsgKeeper
 func TestDelayMessage(t *testing.T) {
 	validDelayMsg := &types.MsgDelayMessage{
 		Authority: AcceptedAuthority,
-		Msg:       delaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+		Msg:       encoding.EncodeMessageToAny(t, constants.TestMsg1),
 	}
 
 	tests := map[string]struct {
@@ -67,17 +69,36 @@ func TestDelayMessage(t *testing.T) {
 			setupMocks: setupMockWithValidReturnValues,
 			msg:        validDelayMsg,
 		},
-		"Panics when signed by invalid authority": {
+		"Fails if msg.ValidateBasic fails": {
+			setupMocks: setupMockWithValidReturnValues,
+			msg:        &types.MsgDelayMessage{},
+			expectedErr: fmt.Errorf(
+				"msg.ValidateBasic failed",
+			),
+		},
+		"Fails if signed by invalid authority": {
 			setupMocks: setupMockWithValidReturnValues,
 			msg: &types.MsgDelayMessage{
 				Authority: InvalidAuthority,
+				Msg:       &codectypes.Any{},
 			},
 			expectedErr: fmt.Errorf(
-				"%v is not recognized as a valid authority for sending delayed messages",
+				"%v is not recognized as a valid authority for sending messages: Invalid input",
 				InvalidAuthority,
 			),
 		},
-		"Panics if DelayMessageByBlocks returns an error": {
+		"Fails if message cannot be unpacked": {
+			setupMocks: setupMockWithValidReturnValues,
+			msg: &types.MsgDelayMessage{
+				Authority: AcceptedAuthority,
+				Msg:       &codectypes.Any{},
+			},
+			expectedErr: fmt.Errorf(
+				"GetMessage for MsgDelayedMessage failed, err = any cached value is nil, delayed messages " +
+					"must be correctly packed any values: Invalid input",
+			),
+		},
+		"Fails if DelayMessageByBlocks returns an error": {
 			setupMocks:  setupMockWithDelayMessageFailure,
 			msg:         validDelayMsg,
 			expectedErr: fmt.Errorf("DelayMessageByBlocks failed, err  = %w", TestError),
@@ -91,16 +112,19 @@ func TestDelayMessage(t *testing.T) {
 			tc.setupMocks(ctx, mockKeeper)
 			goCtx := sdk.WrapSDKContext(ctx)
 
+			// Set up error logging for expected errors.
 			if tc.expectedErr != nil {
-				require.PanicsWithError(
-					t,
-					tc.expectedErr.Error(),
-					func() {
-						_, _ = msgServer.DelayMessage(goCtx, tc.msg)
-					},
-				)
+				logger := &mocks.Logger{}
+				logger.On("Error", mock.Anything, mock.Anything, mock.Anything).Return().Return()
+				mockKeeper.On("Logger", ctx).Return(logger)
+			}
+
+			resp, err := msgServer.DelayMessage(goCtx, tc.msg)
+
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+				require.Nil(t, resp)
 			} else {
-				resp, err := msgServer.DelayMessage(goCtx, tc.msg)
 				require.NoError(t, err)
 				require.Equal(t, DelayMsgResponse, resp)
 			}

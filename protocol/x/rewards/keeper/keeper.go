@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdklog "cosmossdk.io/log"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -90,8 +92,8 @@ func (k Keeper) GetRewardShare(
 	)
 
 	// Check state for the subaccount.
-	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), types.KeyPrefix(types.RewardShareKeyPrefix))
-	b := store.Get(types.RewardShareKey(address))
+	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), []byte(types.RewardShareKeyPrefix))
+	b := store.Get([]byte(address))
 
 	// If RewardShare does not exist in state, return a default value.
 	if b == nil {
@@ -128,7 +130,7 @@ func (k Keeper) AddRewardSharesForFill(
 	lowestMakerFee := k.feeTiersKeeper.GetLowestMakerFee(ctx)
 	maxMakerRebatePpm := lib.Min(int32(0), lowestMakerFee)
 	// Calculate quote_quantums * max_maker_rebate. Result is non-positive.
-	makerRebateMulTakerVolume := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, maxMakerRebatePpm)
+	makerRebateMulTakerVolume := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, maxMakerRebatePpm, false)
 	takerWeight := new(big.Int).Add(
 		bigTakerFeeQuoteQuantums,
 		makerRebateMulTakerVolume,
@@ -179,19 +181,17 @@ func (k Keeper) SetRewardShare(
 	ctx sdk.Context,
 	rewardShare types.RewardShare,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), types.KeyPrefix(types.RewardShareKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), []byte(types.RewardShareKeyPrefix))
 	b := k.cdc.MustMarshal(&rewardShare)
 
-	store.Set(types.RewardShareKey(
-		rewardShare.Address,
-	), b)
+	store.Set([]byte(rewardShare.Address), b)
 }
 
 func (k Keeper) getAllRewardSharesAndTotalWeight(ctx sdk.Context) (
 	list []types.RewardShare,
 	totalWeight *big.Int,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), types.KeyPrefix(types.RewardShareKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), []byte(types.RewardShareKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	totalWeight = big.NewInt(0)
@@ -233,9 +233,9 @@ func (k Keeper) ProcessRewardsForBlock(
 	params := k.GetParams(ctx)
 
 	// Calculate value of `F`.
-	usdcAsset, err := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
-	if err != nil {
-		return fmt.Errorf("failed to get USDC asset: %w", err)
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
+	if !exists {
+		return fmt.Errorf("failed to get USDC asset")
 	}
 	rewardTokenPrice, err := k.pricesKeeper.GetMarketPrice(ctx, params.GetMarketId())
 	if err != nil {
@@ -307,7 +307,7 @@ func (k Keeper) ProcessRewardsForBlock(
 			[]sdk.Coin{
 				{
 					Denom:  params.Denom,
-					Amount: sdk.NewIntFromBigInt(rewardAmountForAddress),
+					Amount: sdkmath.NewIntFromBigInt(rewardAmountForAddress),
 				},
 			},
 		); err != nil {

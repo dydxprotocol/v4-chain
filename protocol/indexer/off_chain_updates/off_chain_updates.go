@@ -8,7 +8,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -327,6 +327,9 @@ func ShouldSendOrderRemovalOnReplay(
 		fallthrough
 	// Order should have already been fully-filled or expired as the current height > GoodTilBlock.
 	case errors.Is(orderError, clobtypes.ErrHeightExceedsGoodTilBlock):
+		fallthrough
+	// Order is not resting on the book if already filled, no need to send a remove.
+	case errors.Is(orderError, clobtypes.ErrImmediateExecutionOrderAlreadyFilled):
 		fallthrough
 	// TODO(IND-199): Resolve edge case where the stateful order which has this error was never included
 	// in a block and then expired. We do want to send the `OrderRemove` message as the order will not

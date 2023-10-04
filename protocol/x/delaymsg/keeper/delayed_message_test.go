@@ -2,17 +2,58 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
+
+// FakeRoutableMsg is a mock sdk.Msg that fools the router into thinking it is a registered message type.
+type FakeRoutableMsg struct {
+	mocks.Msg
+}
+
+// setting XXX_MessageName on the FakeRoutableMsg causes the router to incorrectly return the handler for the
+// registered CompleteBridge message type. This is done so that we can bypass the handler check and trigger
+// the ValidateBasic error.
+func (msg *FakeRoutableMsg) XXX_MessageName() string {
+	return "dydxprotocol.bridge.MsgCompleteBridge"
+}
+
+// implementing XXX_Size along with XXX_Marshal proto interface methods allows us to simulate an encoding failure.
+func (msg *FakeRoutableMsg) XXX_Size() int {
+	return 0
+}
+
+// implementing XXX_Marshal along with XXX_Size proto interface methods allows us to simulate an encoding failure.
+func (msg *FakeRoutableMsg) XXX_Marshal([]byte, bool) ([]byte, error) {
+	return nil, fmt.Errorf("Invalid input")
+}
+
+// routableInvalidSdkMsg returns a mock sdk.Msg that fools the router into thinking it is a registered message type,
+// then fails ValidateBasic.
+func routableInvalidSdkMsg() sdk.Msg {
+	msg := &FakeRoutableMsg{}
+	msg.On("ValidateBasic").Return(fmt.Errorf("Invalid msg"))
+	return msg
+}
+
+// unencodableSdkMsg returns a mock sdk.Msg that fools the router into thinking it is a registered message type,
+// passes ValidateBasic, passes validateSigners, then fails to encode.
+func unencodableSdkMsg() sdk.Msg {
+	msg := &FakeRoutableMsg{}
+	msg.On("ValidateBasic").Return(nil)
+	msg.On("GetSigners").Return([]sdk.AccAddress{authtypes.NewModuleAddress(types.ModuleName)})
+	return msg
+}
 
 func TestDelayMessageByBlocks(t *testing.T) {
 	tests := map[string]struct {
@@ -104,7 +145,7 @@ func TestDelayMessageByBlocks(t *testing.T) {
 			idToDelayedMsg := make(map[uint32]types.DelayedMessage)
 			for i, testDelayedMsg := range tc.testDelayedMsgs {
 				idToDelayedMsg[uint32(i)] = types.DelayedMessage{
-					Msg:         testutildelaymsg.EncodeMessageToAny(t, testDelayedMsg.msg),
+					Msg:         encoding.EncodeMessageToAny(t, testDelayedMsg.msg),
 					BlockHeight: int64(testDelayedMsg.delay),
 				}
 			}
@@ -122,20 +163,38 @@ func TestDelayMessageByBlocks(t *testing.T) {
 	}
 }
 
-func TestDelayMessageByBlocks_NoHandlerFound(t *testing.T) {
-	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
-	_, err := delaymsg.DelayMessageByBlocks(ctx, constants.InvalidMsg, blockDelay1)
-	require.ErrorContains(t, err, "/testpb.TestMsg: Message not recognized by router")
-}
-
-func TestDelayMsgByBlocks_InvalidSigners(t *testing.T) {
-	invalidSignerMsg := &bridgetypes.MsgCompleteBridge{
-		Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
-		Event:     constants.BridgeEvent_Id0_Height0,
+func TestDelayMessageByBlocks_Failures(t *testing.T) {
+	tests := map[string]struct {
+		msg           sdk.Msg
+		expectedError string
+	}{
+		"No handler found": {
+			msg:           constants.NoHandlerMsg,
+			expectedError: "/testpb.TestMsg: Message not recognized by router",
+		},
+		"Message fails ValidateBasic": {
+			msg:           routableInvalidSdkMsg(),
+			expectedError: "message failed basic validation: Invalid msg: Invalid input",
+		},
+		"Message fails validateSigners": {
+			msg: &bridgetypes.MsgCompleteBridge{
+				Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+				Event:     constants.BridgeEvent_Id0_Height0,
+			},
+			expectedError: "message signer must be delaymsg module address: Invalid signer",
+		},
+		"Message fails to encode": {
+			msg:           unencodableSdkMsg(),
+			expectedError: "failed to convert message to Any: Invalid input",
+		},
 	}
-	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
-	_, err := delaymsg.DelayMessageByBlocks(ctx, invalidSignerMsg, blockDelay1)
-	require.ErrorContains(t, err, "message signer must be delaymsg module address: Invalid signer")
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			_, err := delaymsg.DelayMessageByBlocks(ctx, tc.msg, blockDelay1)
+			require.ErrorContains(t, err, tc.expectedError)
+		})
+	}
 }
 
 func TestDeleteMessage_NotFound(t *testing.T) {
@@ -216,7 +275,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 		delaymsg,
 		map[uint32]types.DelayedMessage{
 			0: {
-				Msg:         testutildelaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: 10,
 			},
 		},
@@ -252,7 +311,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 		delaymsg,
 		map[uint32]types.DelayedMessage{
 			1: { // Id incremented.
-				Msg:         testutildelaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: 10,
 			},
 		},
@@ -281,7 +340,7 @@ func TestSetDelayedMessage_Errors(t *testing.T) {
 		"invalid block height": {
 			msg: types.DelayedMessage{
 				Id:          0,
-				Msg:         testutildelaymsg.EncodeMessageToAny(t, constants.TestMsg1),
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: -1,
 			},
 			expErr: fmt.Errorf("failed to delay message: block height -1 is in the past: Invalid input"),

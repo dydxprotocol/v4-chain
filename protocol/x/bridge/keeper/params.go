@@ -5,12 +5,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
-const (
-	eventParamsKey   = "EventParams"
-	proposeParamsKey = "ProposeParams"
-	safetyParamsKey  = "SafetyParams"
-)
-
 // GetEventParams returns the EventParams in state.
 func (k Keeper) GetEventParams(
 	ctx sdk.Context,
@@ -18,7 +12,7 @@ func (k Keeper) GetEventParams(
 	params types.EventParams,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(eventParamsKey))
+	b := store.Get([]byte(types.EventParamsKey))
 	k.cdc.MustUnmarshal(b, &params)
 	return params
 }
@@ -35,7 +29,7 @@ func (k Keeper) UpdateEventParams(
 
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&params)
-	store.Set([]byte(eventParamsKey), b)
+	store.Set([]byte(types.EventParamsKey), b)
 
 	return nil
 }
@@ -47,7 +41,7 @@ func (k Keeper) GetProposeParams(
 	params types.ProposeParams,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(proposeParamsKey))
+	b := store.Get([]byte(types.ProposeParamsKey))
 	k.cdc.MustUnmarshal(b, &params)
 	return params
 }
@@ -64,7 +58,7 @@ func (k Keeper) UpdateProposeParams(
 
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&params)
-	store.Set([]byte(proposeParamsKey), b)
+	store.Set([]byte(types.ProposeParamsKey), b)
 
 	return nil
 }
@@ -76,7 +70,7 @@ func (k Keeper) GetSafetyParams(
 	params types.SafetyParams,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(safetyParamsKey))
+	b := store.Get([]byte(types.SafetyParamsKey))
 	k.cdc.MustUnmarshal(b, &params)
 	return params
 }
@@ -93,7 +87,7 @@ func (k Keeper) UpdateSafetyParams(
 
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&params)
-	store.Set([]byte(safetyParamsKey), b)
+	store.Set([]byte(types.SafetyParamsKey), b)
 
 	return nil
 }

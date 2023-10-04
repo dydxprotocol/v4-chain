@@ -191,6 +191,16 @@ var (
 		41,
 		"perpetual ID is already associated with an existing CLOB pair",
 	)
+	ErrUnexpectedTimeInForce = errorsmod.Register(
+		ModuleName,
+		42,
+		"Unexpected time in force",
+	)
+	ErrOrderHasRemainingSize = errorsmod.Register(
+		ModuleName,
+		43,
+		"Order has remaining size",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(
@@ -320,6 +330,11 @@ var (
 		2003,
 		"Post-only order would cross one or more maker orders",
 	)
+	ErrImmediateExecutionOrderAlreadyFilled = errorsmod.Register(
+		ModuleName,
+		2004,
+		"IOC/FOK order is already filled, remaining size is cancelled.",
+	)
 
 	// Stateful order errors.
 	ErrInvalidOrderFlag = errorsmod.Register(
@@ -332,7 +347,7 @@ var (
 		3001,
 		"Invalid order goodTilBlockTime",
 	)
-	ErrStatefulOrdersCannotRequireImmediateExecution = errorsmod.Register(
+	ErrLongTermOrdersCannotRequireImmediateExecution = errorsmod.Register(
 		ModuleName,
 		3002,
 		"Stateful orders cannot require immediate execution",
@@ -404,6 +419,16 @@ var (
 		4005,
 		"Deleveraged subaccount in proposed deleveraged operation failed deleveraging validation",
 	)
+	ErrInvalidOrderRemoval = errorsmod.Register(
+		ModuleName,
+		4006,
+		"Order Removal is invalid",
+	)
+	ErrInvalidOrderRemovalReason = errorsmod.Register(
+		ModuleName,
+		4007,
+		"Order Removal reason is invalid",
+	)
 
 	// Block rate limit errors.
 	ErrInvalidBlockRateLimitConfig = errorsmod.Register(
@@ -427,6 +452,11 @@ var (
 		ModuleName,
 		6001,
 		"Conditional order trigger subticks is invalid",
+	)
+	ErrConditionalOrderUntriggered = errorsmod.Register(
+		ModuleName,
+		6002,
+		"Conditional order is untriggered",
 	)
 
 	// Errors for unimplemented and disabled functionality.

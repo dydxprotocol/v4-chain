@@ -61,10 +61,10 @@ func setUpTestCase(
 	msgServer types.MsgServer,
 	goCtx context.Context,
 ) {
-	// Initialize Mocks and Context.
+	// Initialize mocks, keepers, and context.
 	mockKeeper = &mocks.SendingKeeper{}
-	ctx, _, _, _, _, _, _, _ := keepertest.SendingKeepers(t)
-	ctx = ctx.WithBlockHeight(25)
+	ks := keepertest.SendingKeepers(t)
+	ctx := ks.Ctx.WithBlockHeight(25)
 
 	// Setup mocks.
 	tc.setupMocks(ctx, mockKeeper)
@@ -253,6 +253,72 @@ func TestWithdrawFromSubaccount(t *testing.T) {
 			// Assert mock expectations.
 			result := mockKeeper.AssertExpectations(t)
 			require.True(t, result)
+		})
+	}
+}
+
+func TestMsgServerSendFromModuleToAccount(t *testing.T) {
+	tests := map[string]struct {
+		// Setup.
+		testMsg    types.MsgSendFromModuleToAccount
+		keeperResp error // mock keeper response
+		// Expectations.
+		expectedResp *types.MsgSendFromModuleToAccountResponse
+		expectedErr  string
+	}{
+		"Success": {
+			testMsg: types.MsgSendFromModuleToAccount{
+				Authority:        constants.GovModuleAccAddressString,
+				SenderModuleName: "community_treasury",
+				Recipient:        constants.AliceAccAddress.String(),
+				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+			},
+			expectedResp: &types.MsgSendFromModuleToAccountResponse{},
+		},
+		"Failure: invalid authority": {
+			testMsg: types.MsgSendFromModuleToAccount{
+				Authority:        "12345",
+				SenderModuleName: "community_treasury",
+				Recipient:        constants.AliceAccAddress.String(),
+				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+			},
+			expectedErr: fmt.Sprintf(
+				"invalid authority %s",
+				"12345",
+			),
+		},
+		"Failure: keeper method returns error": {
+			testMsg: types.MsgSendFromModuleToAccount{
+				Authority:        constants.GovModuleAccAddressString,
+				SenderModuleName: "community_treasury",
+				Recipient:        constants.CarlAccAddress.String(),
+				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+			},
+			keeperResp:  fmt.Errorf("keeper error"),
+			expectedErr: "keeper error",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Initialize Mocks and Context.
+			mockKeeper := &mocks.SendingKeeper{}
+			msgServer := keeper.NewMsgServerImpl(mockKeeper)
+			ks := keepertest.SendingKeepers(t)
+			mockKeeper.On("HasAuthority", tc.testMsg.Authority).Return(
+				ks.SendingKeeper.HasAuthority(tc.testMsg.Authority),
+			)
+			mockKeeper.On("SendFromModuleToAccount", ks.Ctx, &tc.testMsg).Return(tc.keeperResp)
+
+			resp, err := msgServer.SendFromModuleToAccount(sdk.WrapSDKContext(ks.Ctx), &tc.testMsg)
+
+			// Assert msg server response.
+			require.Equal(t, tc.expectedResp, resp)
+			if tc.expectedErr != "" {
+				require.ErrorContains(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

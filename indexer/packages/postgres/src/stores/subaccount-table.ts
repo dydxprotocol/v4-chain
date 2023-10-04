@@ -1,7 +1,7 @@
 import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8 } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import {
   verifyAllRequiredFields,
   setupBaseQuery,
@@ -35,16 +35,19 @@ export async function findAll(
     id,
     address,
     subaccountNumber,
+    updatedBeforeOrAt,
+    updatedOnOrAfter,
     limit,
   }: SubaccountQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<SubaccountFromDatabase[]> {
   verifyAllRequiredFields(
     {
       id,
       address,
       subaccountNumber,
+      updatedBeforeOrAt,
       limit,
     } as QueryConfig,
     requiredFields,
@@ -65,6 +68,14 @@ export async function findAll(
 
   if (subaccountNumber) {
     baseQuery = baseQuery.where(SubaccountColumns.subaccountNumber, subaccountNumber);
+  }
+
+  if (updatedBeforeOrAt) {
+    baseQuery = baseQuery.where(SubaccountColumns.updatedAt, '<=', updatedBeforeOrAt);
+  }
+
+  if (updatedOnOrAfter) {
+    baseQuery = baseQuery.where(SubaccountColumns.updatedAt, '>=', updatedOnOrAfter);
   }
 
   if (options.orderBy !== undefined) {
@@ -128,7 +139,7 @@ export async function create(
 
 export async function findById(
   id: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<SubaccountFromDatabase | undefined> {
   const baseQuery: QueryBuilder<SubaccountModel> = setupBaseQuery<SubaccountModel>(
     SubaccountModel,
