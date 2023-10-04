@@ -147,17 +147,18 @@ func (m *MemClobPriceTimePriority) CreateOrderbook(
 	m.openOrders.createOrderbook(ctx, clobPairId, subticksPerTick, minOrderBaseQuantums)
 }
 
-// CountSubaccountOrders will count all open orders for a given subaccount that match the provided filter.
-func (m *MemClobPriceTimePriority) CountSubaccountOrders(
+// CountSubaccountOrders will count the number of open short-term orders for a given subaccount.
+//
+// Must be invoked with `CheckTx` context.
+func (m *MemClobPriceTimePriority) CountSubaccountShortTermOrders(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
-	filter func(types.OrderId) bool,
 ) (count uint32) {
 	lib.AssertCheckTxMode(ctx)
 	for _, openOrdersPerClob := range m.openOrders.orderbooksMap {
 		for _, openOrdersPerClobAndSide := range openOrdersPerClob.SubaccountOpenClobOrders[subaccountId] {
 			for orderId := range openOrdersPerClobAndSide {
-				if filter(orderId) {
+				if orderId.IsShortTermOrder() {
 					count++
 				}
 			}

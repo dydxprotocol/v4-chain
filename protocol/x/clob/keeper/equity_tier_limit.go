@@ -73,17 +73,10 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 	}
 
 	var equityTierLimits []types.EquityTierLimit
-	var filter func(types.OrderId) bool
 	if order.IsShortTermOrder() {
 		equityTierLimits = k.GetEquityTierLimitConfiguration(ctx).ShortTermOrderEquityTiers
-		filter = func(id types.OrderId) bool {
-			return id.IsShortTermOrder()
-		}
 	} else if order.IsStatefulOrder() {
 		equityTierLimits = k.GetEquityTierLimitConfiguration(ctx).StatefulOrderEquityTiers
-		filter = func(id types.OrderId) bool {
-			return id.IsStatefulOrder()
-		}
 	} else {
 		panic(fmt.Sprintf("Unsupported order type for equity tiers. Order: %+v", order))
 	}
@@ -126,7 +119,7 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 		// If this is `CheckTx` then we must also add the number of uncommitted stateful orders that this validator
 		// is aware of (orders that are part of the mempool but have yet to proposed in a block).
 		equityTierCount = k.GetStatefulOrderCount(ctx, order.OrderId)
-		equityTierCount += k.CountUntriggeredSubaccountOrders(ctx, subaccountId, filter)
+		equityTierCount += k.CountUntriggeredSubaccountStatefulOrders(ctx, subaccountId)
 		if !lib.IsDeliverTxMode(ctx) {
 			equityTierCountMaybeNegative := k.GetUncommittedStatefulOrderCount(ctx, order.OrderId) + int32(equityTierCount)
 			if equityTierCountMaybeNegative < 0 {
@@ -138,16 +131,18 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 						order,
 						equityTierCountMaybeNegative,
 						k.GetStatefulOrderCount(ctx, order.OrderId),
-						k.CountUntriggeredSubaccountOrders(ctx, subaccountId, filter),
+						k.CountUntriggeredSubaccountStatefulOrders(ctx, subaccountId),
 						k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
 					),
 				)
 			}
 			equityTierCount = uint32(equityTierCountMaybeNegative)
 		}
-	} else {
+	}
+
+	if order.IsShortTermOrder() {
 		// For short term orders we just count how many orders exist on the memclob.
-		equityTierCount = k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter)
+		equityTierCount = k.MemClob.CountSubaccountShortTermOrders(ctx, subaccountId)
 	}
 
 	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.
