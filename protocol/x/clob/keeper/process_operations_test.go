@@ -1392,7 +1392,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				cdc := codec.NewProtoCodec(registry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				b := cdc.MustMarshal(&constants.ClobPair_Btc_Paused)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc_Paused.Id), b)
+				store.Set(lib.Bit32ToBytes(constants.ClobPair_Btc_Paused.Id), b)
 			},
 			expectedPanics: "validateInternalOperationAgainstClobPairStatus: ClobPair's status is not supported",
 		},

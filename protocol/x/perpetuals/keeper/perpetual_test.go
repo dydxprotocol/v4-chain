@@ -766,7 +766,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
+	perpetualStore.Set(lib.Bit32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -800,7 +800,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
+	perpetualStore.Set(lib.Bit32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -965,7 +965,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
+	perpetualStore.Set(lib.Bit32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -1129,7 +1129,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
+	perpetualStore.Set(lib.Bit32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -1294,7 +1294,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
+	perpetualStore.Set(lib.Bit32ToBytes(
 		perpetual.Params.Id,
 	), b)
 
@@ -2974,7 +2974,7 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          errorsmod.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          types.ErrBasePositionNotionalIsZero,
 		},
 		"Impact Notional is zero": {
 			id:                     1,
@@ -2983,7 +2983,7 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
-			expectedError:          errorsmod.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          types.ErrImpactNotionalIsZero,
 		},
 	}
 
@@ -3114,7 +3114,7 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          errorsmod.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          types.ErrBasePositionNotionalIsZero,
 		},
 		"Impact Notional is zero": {
 			id:                     1,
@@ -3123,7 +3123,7 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
-			expectedError:          errorsmod.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          types.ErrImpactNotionalIsZero,
 		},
 	}
 

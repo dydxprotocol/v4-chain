@@ -1035,7 +1035,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			skipSetUpUsdc:                       true,
 			subaccountModuleAccBalance:          500,
 			quantums:                            big.NewInt(500),
-			expectedErr:                         errorsmod.Wrap(asstypes.ErrAssetDoesNotExist, lib.Uint32ToString(0)),
+			expectedErr:                         errorsmod.Wrap(asstypes.ErrAssetDoesNotExist, lib.UintToString(uint32(0))),
 			expectedSubaccountsModuleAccBalance: 500,
 			expectedInsuranceFundBalance:        1500,
 			panics:                              true,

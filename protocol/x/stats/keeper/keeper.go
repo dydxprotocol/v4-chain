@@ -110,7 +110,7 @@ func (k Keeper) SetStatsMetadata(ctx sdk.Context, metadata *types.StatsMetadata)
 // if epoch stats aren't found.
 func (k Keeper) GetEpochStatsOrNil(ctx sdk.Context, epoch uint32) *types.EpochStats {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochStatsKeyPrefix))
-	bytes := store.Get(lib.Uint32ToBytes(epoch))
+	bytes := store.Get(lib.Bit32ToBytes(epoch))
 
 	if bytes == nil {
 		return nil
@@ -124,12 +124,12 @@ func (k Keeper) GetEpochStatsOrNil(ctx sdk.Context, epoch uint32) *types.EpochSt
 func (k Keeper) SetEpochStats(ctx sdk.Context, epoch uint32, epochStats *types.EpochStats) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochStatsKeyPrefix))
 	b := k.cdc.MustMarshal(epochStats)
-	store.Set(lib.Uint32ToBytes(epoch), b)
+	store.Set(lib.Bit32ToBytes(epoch), b)
 }
 
 func (k Keeper) deleteEpochStats(ctx sdk.Context, epoch uint32) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochStatsKeyPrefix))
-	store.Delete(lib.Uint32ToBytes(epoch))
+	store.Delete(lib.Bit32ToBytes(epoch))
 }
 
 func (k Keeper) GetUserStats(ctx sdk.Context, address string) *types.UserStats {

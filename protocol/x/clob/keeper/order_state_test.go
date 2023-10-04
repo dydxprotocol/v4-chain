@@ -302,7 +302,7 @@ func TestAddOrdersForPruning_Determinism(t *testing.T) {
 		)
 
 		potentiallyPrunableOrdersBytes := store.Get(
-			lib.Uint32ToBytes(blockHeight),
+			lib.Bit32ToBytes(blockHeight),
 		)
 
 		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -345,7 +345,7 @@ func TestAddOrdersForPruning_DuplicateOrderIds(t *testing.T) {
 	)
 
 	potentiallyPrunableOrdersBytes := store.Get(
-		lib.Uint32ToBytes(blockHeight),
+		lib.Bit32ToBytes(blockHeight),
 	)
 
 	var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -579,7 +579,7 @@ func TestPruning(t *testing.T) {
 
 			for _, blockHeight := range tc.expectedEmptyPotentiallyPrunableOrderBlockHeights {
 				has := blockHeightToPotentiallyPrunableOrdersStore.Has(
-					lib.Uint32ToBytes(blockHeight),
+					lib.Bit32ToBytes(blockHeight),
 				)
 				require.False(t, has)
 			}

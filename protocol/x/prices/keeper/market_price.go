@@ -82,7 +82,7 @@ func (k Keeper) UpdateMarketPrices(
 	for _, marketPrice := range updatedMarketPrices {
 		// Store the modified market price.
 		b := k.cdc.MustMarshal(&marketPrice)
-		marketPriceStore.Set(lib.Uint32ToBytes(marketPrice.Id), b)
+		marketPriceStore.Set(lib.Bit32ToBytes(marketPrice.Id), b)
 
 		// Monitor the last block a market price is updated.
 		telemetry.SetGaugeWithLabels(
@@ -118,9 +118,9 @@ func (k Keeper) GetMarketPrice(
 	id uint32,
 ) (types.MarketPrice, error) {
 	store := k.newMarketPriceStore(ctx)
-	b := store.Get(lib.Uint32ToBytes(id))
+	b := store.Get(lib.Bit32ToBytes(id))
 	if b == nil {
-		return types.MarketPrice{}, errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(id))
+		return types.MarketPrice{}, errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.UintToString(id))
 	}
 
 	var marketPrice = types.MarketPrice{}

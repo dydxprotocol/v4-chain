@@ -48,6 +48,6 @@ func (k Keeper) SetToBeCommittedStatefulOrderCount(
 	store := k.GetToBeCommittedStatefulOrderCountTransientStore(ctx)
 	store.Set(
 		orderId.SubaccountId.MustMarshal(),
-		lib.Int32ToBytes(count),
+		lib.Bit32ToBytes(count),
 	)
 }

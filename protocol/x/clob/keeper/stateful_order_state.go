@@ -197,7 +197,7 @@ func (k Keeper) GetNextStatefulOrderTransactionIndex(ctx sdk.Context) (
 	// index, to ensure that transaction indexes are monotonically increasing.
 	nextTransactionIndexTransientStore.Set(
 		[]byte(types.NextStatefulOrderBlockTransactionIndexKey),
-		lib.Uint32ToBytes(nextStatefulOrderTransactionIndex+1),
+		lib.Bit32ToBytes(nextStatefulOrderTransactionIndex+1),
 	)
 	return nextStatefulOrderTransactionIndex
 }

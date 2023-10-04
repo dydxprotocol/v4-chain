@@ -39,7 +39,7 @@ func (k Keeper) CreatePerpetual(
 	if k.HasPerpetual(ctx, id) {
 		return types.Perpetual{}, errorsmod.Wrap(
 			types.ErrPerpetualAlreadyExists,
-			lib.Uint32ToString(id),
+			lib.UintToString(id),
 		)
 	}
 
@@ -79,7 +79,7 @@ func (k Keeper) HasPerpetual(
 	id uint32,
 ) (found bool) {
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
-	return perpetualStore.Has(lib.Uint32ToBytes(id))
+	return perpetualStore.Has(lib.Bit32ToBytes(id))
 }
 
 func (k Keeper) HasAuthority(authority string) bool {
@@ -153,9 +153,9 @@ func (k Keeper) GetPerpetual(
 ) (val types.Perpetual, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 
-	b := store.Get(lib.Uint32ToBytes(id))
+	b := store.Get(lib.Bit32ToBytes(id))
 	if b == nil {
-		return val, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, lib.Uint32ToString(id))
+		return val, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, lib.UintToString(id))
 	}
 
 	k.cdc.MustUnmarshal(b, &val)
@@ -1100,7 +1100,7 @@ func (k Keeper) setPerpetual(
 ) {
 	b := k.cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(perpetual.Params.Id), b)
+	perpetualStore.Set(lib.Bit32ToBytes(perpetual.Params.Id), b)
 }
 
 // GetPerpetualAndMarketPrice retrieves a Perpetual by its id and its corresponding MarketPrice.
@@ -1161,7 +1161,7 @@ func (k Keeper) validatePerpetual(
 
 	// Validate `liquidityTier` exists.
 	if !k.HasLiquidityTier(ctx, perpetual.Params.LiquidityTier) {
-		return errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.Params.LiquidityTier))
+		return errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.UintToString(perpetual.Params.LiquidityTier))
 	}
 
 	return nil
@@ -1272,7 +1272,7 @@ func (k Keeper) HasLiquidityTier(
 	id uint32,
 ) (found bool) {
 	ltStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
-	return ltStore.Has(lib.Uint32ToBytes(id))
+	return ltStore.Has(lib.Bit32ToBytes(id))
 }
 
 // `SetLiquidityTier` sets a liquidity tier in the store (i.e. updates if `id` exists and creates otherwise).
@@ -1342,9 +1342,9 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 ) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
 
-	b := store.Get(lib.Uint32ToBytes(id))
+	b := store.Get(lib.Bit32ToBytes(id))
 	if b == nil {
-		return liquidityTier, errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(id))
+		return liquidityTier, errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.UintToString(id))
 	}
 
 	k.cdc.MustUnmarshal(b, &liquidityTier)
@@ -1378,7 +1378,7 @@ func (k Keeper) setLiquidityTier(
 ) {
 	b := k.cdc.MustMarshal(&liquidityTier)
 	liquidityTierStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
-	liquidityTierStore.Set(lib.Uint32ToBytes(liquidityTier.Id), b)
+	liquidityTierStore.Set(lib.Bit32ToBytes(liquidityTier.Id), b)
 }
 
 /* === PARAMETERS FUNCTIONS === */

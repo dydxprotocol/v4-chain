@@ -34,20 +34,20 @@ func (k Keeper) ModifyMarketParam(
 	if !exists {
 		return types.MarketParam{}, errorsmod.Wrap(
 			types.ErrMarketParamDoesNotExist,
-			lib.Uint32ToString(marketParam.Id),
+			lib.UintToString(marketParam.Id),
 		)
 	}
 
 	// Validate update is permitted.
 	if marketParam.Exponent != existingParam.Exponent {
 		return types.MarketParam{},
-			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.Uint32ToString(marketParam.Id))
+			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.UintToString(marketParam.Id))
 	}
 
 	// Store the modified market param.
 	marketParamStore := k.newMarketParamStore(ctx)
 	b := k.cdc.MustMarshal(&marketParam)
-	marketParamStore.Set(lib.Uint32ToBytes(marketParam.Id), b)
+	marketParamStore.Set(lib.Bit32ToBytes(marketParam.Id), b)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
@@ -84,7 +84,7 @@ func (k Keeper) GetMarketParam(
 	exists bool,
 ) {
 	marketParamStore := k.newMarketParamStore(ctx)
-	b := marketParamStore.Get(lib.Uint32ToBytes(id))
+	b := marketParamStore.Get(lib.Bit32ToBytes(id))
 	if b == nil {
 		return types.MarketParam{}, false
 	}

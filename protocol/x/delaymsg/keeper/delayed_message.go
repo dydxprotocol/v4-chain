@@ -33,7 +33,7 @@ func (k Keeper) SetNumMessages(
 	numMessages uint32,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte(types.NumDelayedMessagesKey), lib.Uint32ToBytes(numMessages))
+	store.Set([]byte(types.NumDelayedMessagesKey), lib.Bit32ToBytes(numMessages))
 }
 
 // GetMessage returns a message from its id.
@@ -45,7 +45,7 @@ func (k Keeper) GetMessage(
 	found bool,
 ) {
 	store := k.newDelayedMessageStore(ctx)
-	b := store.Get(lib.Uint32ToBytes(id))
+	b := store.Get(lib.Bit32ToBytes(id))
 	if b == nil {
 		return types.DelayedMessage{}, false
 	}
@@ -94,7 +94,7 @@ func (k Keeper) DeleteMessage(
 		)
 	}
 	store := k.newDelayedMessageStore(ctx)
-	store.Delete(lib.Uint32ToBytes(id))
+	store.Delete(lib.Bit32ToBytes(id))
 
 	// Remove message id from block message ids.
 	if err := k.deleteMessageIdFromBlock(ctx, id, delayedMsg.BlockHeight); err != nil {
@@ -125,7 +125,7 @@ func (k Keeper) SetDelayedMessage(
 
 	// Add message to the store.
 	store := k.newDelayedMessageStore(ctx)
-	store.Set(lib.Uint32ToBytes(msg.Id), k.cdc.MustMarshal(msg))
+	store.Set(lib.Bit32ToBytes(msg.Id), k.cdc.MustMarshal(msg))
 
 	// Add message id to the list of message ids for the block.
 	k.addMessageIdToBlock(ctx, msg.Id, msg.BlockHeight)

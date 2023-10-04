@@ -212,7 +212,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 			require.EqualError(
 				t,
 				err,
-				errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(0)).Error(),
+				errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.UintToString(uint32(0))).Error(),
 			)
 
 			// Verify no new market event.

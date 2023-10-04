@@ -115,7 +115,7 @@ func (k Keeper) ModifyAsset(
 	// Get asset
 	asset, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return asset, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+		return asset, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Validate market
@@ -142,12 +142,12 @@ func (k Keeper) ModifyLongInterest(
 	// Get asset
 	asset, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return asset, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+		return asset, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Validate delta
 	if !isIncrease && delta > asset.LongInterest {
-		return asset, errorsmod.Wrap(types.ErrNegativeLongInterest, lib.Uint32ToString(id))
+		return asset, errorsmod.Wrap(types.ErrNegativeLongInterest, lib.UintToString(id))
 	}
 
 	// Modify asset
@@ -168,7 +168,7 @@ func (k Keeper) setAsset(
 ) {
 	b := k.cdc.MustMarshal(&asset)
 	assetStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
-	assetStore.Set(lib.Uint32ToBytes(asset.Id), b)
+	assetStore.Set(lib.Bit32ToBytes(asset.Id), b)
 }
 
 func (k Keeper) GetAsset(
@@ -177,7 +177,7 @@ func (k Keeper) GetAsset(
 ) (val types.Asset, exists bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
 
-	b := store.Get(lib.Uint32ToBytes(id))
+	b := store.Get(lib.Bit32ToBytes(id))
 	if b == nil {
 		return val, false
 	}
@@ -224,7 +224,7 @@ func (k Keeper) GetNetCollateral(
 	// Get asset
 	_, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return big.NewInt(0), errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+		return big.NewInt(0), errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Balance is zero.
@@ -263,7 +263,7 @@ func (k Keeper) GetMarginRequirements(
 	_, exists := k.GetAsset(ctx, id)
 	if !exists {
 		return big.NewInt(0), big.NewInt(0), errorsmod.Wrap(
-			types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+			types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Balance is zero or positive.
@@ -305,7 +305,7 @@ func (k Keeper) ConvertAssetToCoin(
 	asset, exists := k.GetAsset(ctx, assetId)
 	if !exists {
 		return nil, sdk.Coin{}, errorsmod.Wrap(
-			types.ErrAssetDoesNotExist, lib.Uint32ToString(assetId))
+			types.ErrAssetDoesNotExist, lib.UintToString(assetId))
 	}
 
 	if lib.AbsInt32(asset.AtomicResolution) > types.MaxAssetUnitExponentAbs {
@@ -352,7 +352,7 @@ func (k Keeper) IsPositionUpdatable(
 ) {
 	_, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return false, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+		return false, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 	// All existing assets are by default updatable.
 	return true, nil
