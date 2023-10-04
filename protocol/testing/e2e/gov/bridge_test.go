@@ -59,6 +59,7 @@ func TestUpdateEventParams(t *testing.T) {
 				return genesis
 			}).WithTesting(t).Build()
 			ctx := tApp.InitChain()
+			initialEventParams := tApp.App.BridgeKeeper.GetEventParams(ctx)
 
 			// Submit and tally governance proposal that includes `MsgUpdateEventParams`.
 			ctx = testapp.SubmitAndTallyProposal(
@@ -69,6 +70,12 @@ func TestUpdateEventParams(t *testing.T) {
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
+
+			// If governance proposal is supposed to fail submission or execution, verify that
+			// event params are unchanged
+			if tc.expectSubmitProposalFail {
+				require.Equal(t, initialEventParams, tApp.App.BridgeKeeper.GetEventParams(ctx))
+			}
 
 			// If proposal is supposed to pass, verify that event params are updated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
@@ -126,6 +133,7 @@ func TestUpdateProposeParams(t *testing.T) {
 				return genesis
 			}).WithTesting(t).Build()
 			ctx := tApp.InitChain()
+			initialProposeParams := tApp.App.BridgeKeeper.GetProposeParams(ctx)
 
 			// Submit and tally governance proposal that includes `MsgUpdateProposeParams`.
 			ctx = testapp.SubmitAndTallyProposal(
@@ -136,6 +144,12 @@ func TestUpdateProposeParams(t *testing.T) {
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
+
+			// If governance proposal is supposed to fail submission or execution, verify that
+			// propose params are unchanged
+			if tc.expectSubmitProposalFail {
+				require.Equal(t, initialProposeParams, tApp.App.BridgeKeeper.GetProposeParams(ctx))
+			}
 
 			// If proposal is supposed to pass, verify that propose params are updated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
@@ -189,6 +203,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 				return genesis
 			}).WithTesting(t).Build()
 			ctx := tApp.InitChain()
+			initialSafetyParams := tApp.App.BridgeKeeper.GetSafetyParams(ctx)
 
 			// Submit and tally governance proposal that includes `MsgUpdateSafetyParams`.
 			ctx = testapp.SubmitAndTallyProposal(
@@ -199,6 +214,12 @@ func TestUpdateSafetyParams(t *testing.T) {
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
+
+			// If governance proposal is supposed to fail submission or execution, verify that
+			// safety params are unchanged
+			if tc.expectSubmitProposalFail {
+				require.Equal(t, initialSafetyParams, tApp.App.BridgeKeeper.GetSafetyParams(ctx))
+			}
 
 			// If proposal is supposed to pass, verify that safety params are updated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
