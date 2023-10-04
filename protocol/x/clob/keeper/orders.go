@@ -1067,11 +1067,11 @@ func (k Keeper) GetStatePosition(ctx sdk.Context, subaccountId satypes.Subaccoun
 	return position.GetBigQuantums()
 }
 
-// InitStatefulOrdersInMemClob places all stateful orders in state on the memclob, placed in ascending
-// order by time priority.
+// InitStatefulOrders places all stateful orders in state on the memclob, placed in ascending
+// order by time priority and initializes the stateful order count.
 // This is called during app initialization in `app.go`, before any ABCI calls are received
 // and after all MemClob orderbooks are instantiated.
-func (k Keeper) InitStatefulOrdersInMemClob(
+func (k Keeper) InitStatefulOrders(
 	ctx sdk.Context,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -1086,6 +1086,9 @@ func (k Keeper) InitStatefulOrdersInMemClob(
 	// Place each order in the memclob, ignoring errors if they occur.
 	statefulOrders := k.GetAllPlacedStatefulOrders(ctx)
 	for _, statefulOrder := range statefulOrders {
+		// Ensure that the stateful order count is accurately represented in the memstore on restart.
+		k.SetStatefulOrderCount(ctx, statefulOrder.OrderId, k.GetStatefulOrderCount(ctx, statefulOrder.OrderId)+1)
+
 		// First fork the multistore. If `PlaceOrder` fails, we don't want to write to state.
 		placeOrderCtx, writeCache := ctx.CacheContext()
 
@@ -1111,7 +1114,7 @@ func (k Keeper) InitStatefulOrdersInMemClob(
 			// TODO(DEC-847): Revisit this error log once `MsgRemoveOrder` is implemented,
 			// since it should potentially be a panic.
 			k.Logger(ctx).Error(
-				"InitStatefulOrdersInMemClob: PlaceOrder() returned an error",
+				"InitStatefulOrders: PlaceOrder() returned an error",
 				"error",
 				err,
 			)

@@ -1199,7 +1199,7 @@ func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
 	app.ClobKeeper.InitMemClobOrderbooks(checkStateCtx)
 	// Initialize memclob with all existing stateful orders.
 	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
-	app.ClobKeeper.InitStatefulOrdersInMemClob(checkStateCtx)
+	app.ClobKeeper.InitStatefulOrders(checkStateCtx)
 }
 
 // hydrateKeeperInMemoryDataStructures hydrates the keeper with ClobPairId and PerpetualId mapping

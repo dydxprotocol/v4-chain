@@ -146,25 +146,30 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 
 	store, memStore := k.fetchStateStoresForOrder(ctx, orderId)
 
+	// Note that since store reads/writes can cost gas we need to ensure that the number of operations is the
+	// same regardless of whether the memstore has the order or not.
+	count := k.GetStatefulOrderCount(ctx, orderId)
 	if memStore.Has(orderIdBytes) {
-		// Delete the `StatefulOrderPlacement` from state.
-		store.Delete(orderIdBytes)
-
-		// Delete the `StatefulOrderPlacement` from memstore.
-		memStore.Delete(orderIdBytes)
-
-		// Decrement the count.
-		k.SetStatefulOrderCount(ctx, orderId, k.GetStatefulOrderCount(ctx, orderId)-1)
-
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.StatefulOrderRemoved, metrics.Count},
-			1,
-			[]gometrics.Label{
-				metrics.GetLabelForIntValue(metrics.ClobPairId, int(orderId.GetClobPairId())),
-				metrics.GetLabelForBoolValue(metrics.Conditional, orderId.IsConditionalOrder()),
-			},
-		)
+		count--
 	}
+
+	// Delete the `StatefulOrderPlacement` from state.
+	store.Delete(orderIdBytes)
+
+	// Delete the `StatefulOrderPlacement` from memstore.
+	memStore.Delete(orderIdBytes)
+
+	// Set the count.
+	k.SetStatefulOrderCount(ctx, orderId, count)
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.StatefulOrderRemoved, metrics.Count},
+		1,
+		[]gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.ClobPairId, int(orderId.GetClobPairId())),
+			metrics.GetLabelForBoolValue(metrics.Conditional, orderId.IsConditionalOrder()),
+		},
+	)
 }
 
 // GetStatefulOrdersTimeSlice gets a slice of stateful order IDs that expire at `goodTilBlockTime`,
@@ -519,17 +524,16 @@ func (k Keeper) SetStatefulOrderCount(
 	orderId.MustBeStatefulOrder()
 
 	subaccountIdBytes := orderId.SubaccountId.MustMarshal()
-	countBytes := lib.Bit32ToBytes(count)
 
-	store := k.GetStatefulOrderCountStore(ctx)
-	store.Set(
-		subaccountIdBytes,
-		countBytes,
-	)
+	store := k.GetStatefulOrderCountMemStore(ctx)
 
-	memStore := k.GetStatefulOrderCountMemStore(ctx)
-	memStore.Set(
-		subaccountIdBytes,
-		countBytes,
-	)
+	if count == 0 {
+		store.Delete(subaccountIdBytes)
+	} else {
+		countBytes := lib.Bit32ToBytes(count)
+		store.Set(
+			subaccountIdBytes,
+			countBytes,
+		)
+	}
 }

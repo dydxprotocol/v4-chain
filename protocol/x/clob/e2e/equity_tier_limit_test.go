@@ -734,7 +734,7 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 				}
 			}
 
-			// Ensure that any succesful transactions can be delivered.
+			// Ensure that any successful transactions can be delivered.
 			tApp.AdvanceToBlock(lib.MustConvertIntegerToUint32(tApp.GetBlockHeight()+1), testapp.AdvanceToBlockOptions{})
 		})
 	}

@@ -75,17 +75,6 @@ func (k Keeper) GetUncommittedStatefulOrderCountTransientStore(ctx sdk.Context) 
 	)
 }
 
-// GetStatefulOrderCountStore fetches a state store used for creating,
-// reading, updating, and deleting a stateful order count from stores. This represents
-// the number of long term and triggered conditional orders.
-func (k Keeper) GetStatefulOrderCountStore(ctx sdk.Context) prefix.Store {
-	//lib.AssertDeliverTxMode(ctx)
-	return prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.StatefulOrderCountPrefix),
-	)
-}
-
 // GetStatefulOrderCountMemStore fetches a state store used for creating,
 // reading, updating, and deleting a stateful order count from stores. This represents
 // the number of long term and triggered conditional orders.

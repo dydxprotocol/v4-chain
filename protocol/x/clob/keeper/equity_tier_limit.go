@@ -64,7 +64,7 @@ func (k *Keeper) InitializeEquityTierLimit(
 //   - the number of triggered conditional orders.
 //   - the number of untriggered conditional orders.
 //
-// And for `checkState`, we add to the above sum the number of to uncommitted stateful orders in the mempool.
+// And for `checkState`, we add to the above sum the number of uncommitted stateful orders in the mempool.
 func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, order types.Order) error {
 	// Always allow short-term FoK or IoC orders as they will either fill immediately or be cancelled and won't rest on
 	// the book.
@@ -104,11 +104,10 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 
 	equityTierLimit := types.EquityTierLimit{}
 	for _, limit := range equityTierLimits {
-		if netCollateral.Cmp(limit.UsdTncRequired.BigInt()) >= 0 {
-			equityTierLimit = limit
-		} else {
+		if netCollateral.Cmp(limit.UsdTncRequired.BigInt()) < 0 {
 			break
 		}
+		equityTierLimit = limit
 	}
 	// Return immediately if the amount the subaccount can open is 0.
 	if equityTierLimit.Limit == 0 {
@@ -133,16 +132,16 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 
 			if equityTierCount < 0 {
 				panic(
-				    fmt.Errorf(
-					"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
-						"equityTierCount %d, statefulOrderCount %d, untriggeredSubaccountOrders %d, "+
-						"uncommittedStatefulOrderCount %d.",
-					order,
-					equityTierCount,
-					k.GetStatefulOrderCount(ctx, order.OrderId),
-					k.CountUntriggeredSubaccountOrders(ctx, subaccountId, filter),
-					k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
-				    ),
+					fmt.Errorf(
+						"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
+							"equityTierCount %d, statefulOrderCount %d, untriggeredSubaccountOrders %d, "+
+							"uncommittedStatefulOrderCount %d.",
+						order,
+						equityTierCount,
+						k.GetStatefulOrderCount(ctx, order.OrderId),
+						k.CountUntriggeredSubaccountOrders(ctx, subaccountId, filter),
+						k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
+					),
 				)
 			}
 		} else if equityTierCount < 0 {
@@ -156,6 +155,7 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 			))
 		}
 	} else {
+		lib.AssertCheckTxMode(ctx)
 		// For short term orders we just count how many orders exist on the memclob.
 		equityTierCount = int32(k.MemClob.CountSubaccountOrders(ctx, subaccountId, filter))
 
