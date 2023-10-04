@@ -285,8 +285,6 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 	}
 }
 
-// TestUpdatePrice_Failure tests failure scenarios of UpdatePrice. If the failure occurs before the price is converted,
-// errors will log as Info. If the failure occurs after the price is converted, errors will log as Error.
 func TestUpdatePrice_Failure(t *testing.T) {
 	tests := map[string]struct {
 		isPastGracePeriod bool
@@ -312,7 +310,8 @@ func TestUpdatePrice_Failure(t *testing.T) {
 				exchangeToMarketPrices: etmp,
 			}
 
-			// Expect log message if past grace period.
+			// We expect failures to be logged. If the daemon is past the grace period, the failure will be logged as
+			// an error. Otherwise, the failure will be logged as info.
 			logMethod := "Info"
 			if tc.isPastGracePeriod {
 				logMethod = "Error"
