@@ -19,25 +19,48 @@ import (
 func TestSendFromModuleToAccount(t *testing.T) {
 	tests := map[string]struct {
 		msg                      *sendingtypes.MsgSendFromModuleToAccount
+		initialModuleBalance     int64
 		expectedProposalStatus   govtypesv1.ProposalStatus
 		expectSubmitProposalFail bool
 	}{
-		"Success": {
+		"Success: send from module to user account": {
 			msg: &sendingtypes.MsgSendFromModuleToAccount{
 				Authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        constants.AliceAccAddress.String(),
 				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(123)),
 			},
+			initialModuleBalance:   200,
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
-		"Fail: invalid authority": {
+		"Success: send from module to module account": {
+			msg: &sendingtypes.MsgSendFromModuleToAccount{
+				Authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
+				Recipient:        authtypes.NewModuleAddress(vesttypes.CommunityVesterAccountName).String(),
+				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(123)),
+			},
+			initialModuleBalance:   123,
+			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
+		},
+		"Failure: insufficient balance": {
+			msg: &sendingtypes.MsgSendFromModuleToAccount{
+				Authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
+				Recipient:        authtypes.NewModuleAddress(vesttypes.CommunityVesterAccountName).String(),
+				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(124)),
+			},
+			initialModuleBalance:   123,
+			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+		},
+		"Failure: invalid authority": {
 			msg: &sendingtypes.MsgSendFromModuleToAccount{
 				Authority:        authtypes.NewModuleAddress(sendingtypes.ModuleName).String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        constants.AliceAccAddress.String(),
 				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(123)),
 			},
+			initialModuleBalance:     123,
 			expectSubmitProposalFail: true,
 		},
 	}
@@ -53,14 +76,14 @@ func TestSendFromModuleToAccount(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
-				// Initialize sender module with enough balance to send.
+				// Initialize sender module with its initial balance.
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *banktypes.GenesisState) {
 						genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
 							Address: senderModuleAddress.String(),
 							Coins: sdk.Coins{
-								tc.msg.Coin.AddAmount(sdk.NewInt(567)),
+								sdk.NewCoin(tc.msg.Coin.Denom, sdk.NewInt(tc.initialModuleBalance)),
 							},
 						})
 					},
@@ -92,17 +115,17 @@ func TestSendFromModuleToAccount(t *testing.T) {
 				tc.msg.Coin.Denom,
 			)
 
-			// If governance proposal is supposed to fail submission, verify that module and recipient
-			// balances match the ones before proposal submission.
-			if tc.expectSubmitProposalFail {
+			// If governance proposal is supposed to fail submission or execution, verify that module and
+			// recipient balances match the ones before proposal submission.
+			if tc.expectSubmitProposalFail || tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED {
 				require.Equal(t, initialModuleBalance, updatedModuleBalance)
 				require.Equal(t, initialRecipientBalance, updatedRecipientBalance)
 			}
 
 			// If proposal is supposed to pass, verify that module and recipient balances are updated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
-				require.Equal(t, initialModuleBalance.Sub(tc.msg.Coin), updatedModuleBalance)
-				require.Equal(t, initialRecipientBalance.Add(tc.msg.Coin), updatedRecipientBalance)
+				require.True(t, updatedModuleBalance.Equal(initialModuleBalance.Sub(tc.msg.Coin)))
+				require.True(t, updatedRecipientBalance.Equal(initialRecipientBalance.Add(tc.msg.Coin)))
 			}
 		})
 	}
