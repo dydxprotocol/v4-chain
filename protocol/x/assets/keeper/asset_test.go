@@ -267,64 +267,6 @@ func TestModifyAsset_MarketNotFound(t *testing.T) {
 	require.EqualError(t, err, errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, "999").Error())
 }
 
-func TestGetDenomById_Success(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
-	items, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
-	require.NoError(t, err)
-
-	for _, item := range items {
-		denom, err := keeper.GetDenomById(
-			ctx,
-			item.Id,
-		)
-		require.NoError(t, err)
-		require.Equal(t,
-			item.Denom,
-			denom,
-		)
-	}
-}
-
-func TestGetDenomById_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
-
-	_, err := keeper.GetDenomById(
-		ctx,
-		0,
-	)
-	require.EqualError(t, err, errorsmod.Wrap(types.ErrAssetDoesNotExist, "0").Error())
-}
-
-func TestGetIdByDenom_Success(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
-	items, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
-	require.NoError(t, err)
-
-	for _, item := range items {
-		id, err := keeper.GetIdByDenom(ctx,
-			item.Denom,
-		)
-		require.NoError(t, err)
-		require.Equal(t,
-			item.Id,
-			id,
-		)
-	}
-}
-
-func TestGetIdByDenom_NotFound(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
-	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)
-	require.NoError(t, err)
-
-	nonExistingDenom := "non-existent-denom"
-
-	_, err = keeper.GetIdByDenom(ctx,
-		nonExistingDenom,
-	)
-	require.EqualError(t, err, errorsmod.Wrap(types.ErrNoAssetWithDenom, nonExistingDenom).Error())
-}
-
 func TestGetAsset_Success(t *testing.T) {
 	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
 	items, err := createNAssets(t, ctx, keeper, pricesKeeper, 10)

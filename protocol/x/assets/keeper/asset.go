@@ -33,10 +33,6 @@ func (k Keeper) CreateAsset(
 		)
 	}
 
-	if _, exists := k.internalGetIdByDenom(ctx, denom); exists {
-		return types.Asset{}, errorsmod.Wrap(types.ErrAssetDenomAlreadyExists, denom)
-	}
-
 	// Ensure assetId zero is always USDC. This is a protocol-wide invariant.
 	if assetId == types.AssetUsdc.Id && denom != types.AssetUsdc.Denom {
 		return types.Asset{}, types.ErrUsdcMustBeAssetZero
@@ -45,6 +41,14 @@ func (k Keeper) CreateAsset(
 	// Ensure USDC is not created with a non-zero assetId. This is a protocol-wide invariant.
 	if assetId != types.AssetUsdc.Id && denom == types.AssetUsdc.Denom {
 		return types.Asset{}, types.ErrUsdcMustBeAssetZero
+	}
+
+	// Ensure the denom is unique versus existing assets.
+	allAssets := k.GetAllAssets(ctx)
+	for _, asset := range allAssets {
+		if asset.Denom == denom {
+			return types.Asset{}, errorsmod.Wrap(types.ErrAssetDenomAlreadyExists, denom)
+		}
 	}
 
 	// Create the asset
@@ -74,9 +78,6 @@ func (k Keeper) CreateAsset(
 
 	// Store the new asset
 	k.setAsset(ctx, asset)
-
-	// Store the denom-to-asset-id mapping
-	k.setDenomToId(ctx, asset.Denom, asset.Id)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
@@ -168,67 +169,6 @@ func (k Keeper) setAsset(
 	b := k.cdc.MustMarshal(&asset)
 	assetStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
 	assetStore.Set(lib.Uint32ToBytes(asset.Id), b)
-}
-
-func (k Keeper) setDenomToId(
-	ctx sdk.Context,
-	denom string,
-	id uint32,
-) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DenomToIdKeyPrefix))
-	store.Set([]byte(denom), lib.Uint32ToBytes(id))
-}
-
-func (k Keeper) internalGetIdByDenom(
-	ctx sdk.Context,
-	denom string,
-) (
-	id uint32,
-	found bool,
-) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DenomToIdKeyPrefix))
-
-	idBytes := store.Get([]byte(denom))
-	if idBytes == nil {
-		return 0, false
-	}
-
-	return lib.BytesToUint32(idBytes), true
-}
-
-// GetIdByDenom returns the `id` of the asset with a given `denom`.
-// Returns an error if the `denom` does not exist.
-func (k Keeper) GetIdByDenom(
-	ctx sdk.Context,
-	denom string,
-) (
-	id uint32,
-	err error,
-) {
-	id, found := k.internalGetIdByDenom(ctx, denom)
-
-	if !found {
-		return 0, errorsmod.Wrap(types.ErrNoAssetWithDenom, denom)
-	}
-
-	return id, nil
-}
-
-// GetDenomById returns the `denom` of the asset with a given `id`.
-// Returns an error if the `id` does not exist.
-func (k Keeper) GetDenomById(
-	ctx sdk.Context,
-	id uint32,
-) (
-	denom string,
-	err error,
-) {
-	asset, exists := k.GetAsset(ctx, id)
-	if !exists {
-		return "", errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
-	}
-
-	return asset.Denom, nil
 }
 
 func (k Keeper) GetAsset(
