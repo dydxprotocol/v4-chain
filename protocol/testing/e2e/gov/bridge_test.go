@@ -33,7 +33,18 @@ func TestUpdateEventParams(t *testing.T) {
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
-		"Fail: invalid authority": {
+		"Failure: empty eth address": {
+			msg: &bridgetypes.MsgUpdateEventParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: bridgetypes.EventParams{
+					Denom:      genesisEventParams.Denom,
+					EthChainId: genesisEventParams.EthChainId,
+					EthAddress: "",
+				},
+			},
+			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+		},
+		"Failure: invalid authority": {
 			msg: &bridgetypes.MsgUpdateEventParams{
 				Authority: constants.BobAccAddress.String(),
 				Params: bridgetypes.EventParams{
@@ -73,7 +84,7 @@ func TestUpdateEventParams(t *testing.T) {
 
 			// If governance proposal is supposed to fail submission or execution, verify that
 			// event params are unchanged
-			if tc.expectSubmitProposalFail {
+			if tc.expectSubmitProposalFail || tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED {
 				require.Equal(t, initialEventParams, tApp.App.BridgeKeeper.GetEventParams(ctx))
 			}
 
@@ -106,7 +117,43 @@ func TestUpdateProposeParams(t *testing.T) {
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
-		"Fail: invalid authority": {
+		"Failure: negative propose delay duration": {
+			msg: &bridgetypes.MsgUpdateProposeParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: bridgetypes.ProposeParams{
+					MaxBridgesPerBlock:           genesisProposeParams.MaxBridgesPerBlock,
+					ProposeDelayDuration:         -genesisProposeParams.ProposeDelayDuration,
+					SkipRatePpm:                  genesisProposeParams.SkipRatePpm,
+					SkipIfBlockDelayedByDuration: genesisProposeParams.SkipIfBlockDelayedByDuration,
+				},
+			},
+			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+		},
+		"Failure: negative skip if block delayed by duration": {
+			msg: &bridgetypes.MsgUpdateProposeParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: bridgetypes.ProposeParams{
+					MaxBridgesPerBlock:           genesisProposeParams.MaxBridgesPerBlock,
+					ProposeDelayDuration:         genesisProposeParams.ProposeDelayDuration,
+					SkipRatePpm:                  genesisProposeParams.SkipRatePpm,
+					SkipIfBlockDelayedByDuration: -genesisProposeParams.SkipIfBlockDelayedByDuration,
+				},
+			},
+			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+		},
+		"Failure: skip rate ppm out of bounds": {
+			msg: &bridgetypes.MsgUpdateProposeParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: bridgetypes.ProposeParams{
+					MaxBridgesPerBlock:           genesisProposeParams.MaxBridgesPerBlock,
+					ProposeDelayDuration:         genesisProposeParams.ProposeDelayDuration,
+					SkipRatePpm:                  1_000_001, // greater than 1 million.
+					SkipIfBlockDelayedByDuration: genesisProposeParams.SkipIfBlockDelayedByDuration,
+				},
+			},
+			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+		},
+		"Failure: invalid authority": {
 			msg: &bridgetypes.MsgUpdateProposeParams{
 				Authority: constants.AliceAccAddress.String(),
 				Params: bridgetypes.ProposeParams{
@@ -147,7 +194,7 @@ func TestUpdateProposeParams(t *testing.T) {
 
 			// If governance proposal is supposed to fail submission or execution, verify that
 			// propose params are unchanged
-			if tc.expectSubmitProposalFail {
+			if tc.expectSubmitProposalFail || tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED {
 				require.Equal(t, initialProposeParams, tApp.App.BridgeKeeper.GetProposeParams(ctx))
 			}
 
@@ -178,7 +225,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
-		"Fail: invalid authority": {
+		"Failure: invalid authority": {
 			msg: &bridgetypes.MsgUpdateSafetyParams{
 				Authority: constants.AliceAccAddress.String(),
 				Params: bridgetypes.SafetyParams{
