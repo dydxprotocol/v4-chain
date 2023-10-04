@@ -13,7 +13,7 @@ func DefaultParams() Params {
 		TreasuryAccount:  TreasuryAccountName,
 		Denom:            "dv4tnt",
 		DenomExponent:    lib.BaseDenomExponent,
-		MarketId:         11,
+		MarketId:         1,
 		FeeMultiplierPpm: 990_000, // 0.99
 	}
 }
