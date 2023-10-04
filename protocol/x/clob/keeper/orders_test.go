@@ -2103,7 +2103,7 @@ func TestInitStatefulOrders(t *testing.T) {
 				// Write the stateful order placement to state.
 				ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, uint32(i))
 				// Clear the count since we expect InitStatefulOrders to initialize it.
-				ks.ClobKeeper.SetStatefulOrderCount(ks.Ctx, order.OrderId, 0)
+				ks.ClobKeeper.SetStatefulOrderCount(ks.Ctx, order.OrderId.SubaccountId, 0)
 
 				// No more state or memclob updates are required if this is an untriggered
 				// conditional order.
@@ -2117,8 +2117,9 @@ func TestInitStatefulOrders(t *testing.T) {
 					ks.ClobKeeper.MustTriggerConditionalOrder(ks.Ctx, order.OrderId)
 				}
 
-				// Increment the expected count for non-conditional orders and triggered conditional orders.
-				if !order.IsConditionalOrder() || (order.IsConditionalOrder() && tc.isConditionalOrderTriggered[order.OrderId]) {
+				// Increment the expected count for non-conditional stateful orders and triggered conditional orders.
+				if (order.IsStatefulOrder() && !order.IsConditionalOrder()) ||
+					(order.IsConditionalOrder() && tc.isConditionalOrderTriggered[order.OrderId]) {
 					expectedStatefulOrderCounts[order.GetSubaccountId()] = expectedStatefulOrderCounts[order.GetSubaccountId()] + 1
 				}
 
@@ -2145,7 +2146,7 @@ func TestInitStatefulOrders(t *testing.T) {
 					count,
 					ks.ClobKeeper.GetStatefulOrderCount(
 						ks.Ctx,
-						types.OrderId{SubaccountId: subaccountId, OrderFlags: types.OrderIdFlags_LongTerm},
+						subaccountId,
 					),
 				)
 			}

@@ -323,7 +323,8 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 	return triggeredConditionalOrderIds
 }
 
-// CountUntriggeredSubaccountConditionalOrders will count all untriggered conditional orders for a given subaccount.
+// CountUntriggeredSubaccountStatefulOrders will count all untriggered stateful conditional orders for a given
+// subaccount.
 func (k Keeper) CountUntriggeredSubaccountStatefulOrders(ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 ) uint32 {

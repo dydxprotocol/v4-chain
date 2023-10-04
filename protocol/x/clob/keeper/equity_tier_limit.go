@@ -118,7 +118,7 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 		// triggered conditional orders exist in state. We add to that all untriggered conditional orders.
 		// If this is `CheckTx` then we must also add the number of uncommitted stateful orders that this validator
 		// is aware of (orders that are part of the mempool but have yet to proposed in a block).
-		equityTierCount = k.GetStatefulOrderCount(ctx, order.OrderId)
+		equityTierCount = k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)
 		equityTierCount += k.CountUntriggeredSubaccountStatefulOrders(ctx, subaccountId)
 		if !lib.IsDeliverTxMode(ctx) {
 			equityTierCountMaybeNegative := k.GetUncommittedStatefulOrderCount(ctx, order.OrderId) + int32(equityTierCount)
@@ -130,7 +130,7 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 							"uncommittedStatefulOrderCount %d.",
 						order,
 						equityTierCountMaybeNegative,
-						k.GetStatefulOrderCount(ctx, order.OrderId),
+						k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId),
 						k.CountUntriggeredSubaccountStatefulOrders(ctx, subaccountId),
 						k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
 					),

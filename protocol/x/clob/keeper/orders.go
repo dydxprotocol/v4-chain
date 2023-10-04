@@ -1087,7 +1087,11 @@ func (k Keeper) InitStatefulOrders(
 	statefulOrders := k.GetAllPlacedStatefulOrders(ctx)
 	for _, statefulOrder := range statefulOrders {
 		// Ensure that the stateful order count is accurately represented in the memstore on restart.
-		k.SetStatefulOrderCount(ctx, statefulOrder.OrderId, k.GetStatefulOrderCount(ctx, statefulOrder.OrderId)+1)
+		k.SetStatefulOrderCount(
+			ctx,
+			statefulOrder.OrderId.SubaccountId,
+			k.GetStatefulOrderCount(ctx, statefulOrder.OrderId.SubaccountId)+1,
+		)
 
 		// First fork the multistore. If `PlaceOrder` fails, we don't want to write to state.
 		placeOrderCtx, writeCache := ctx.CacheContext()

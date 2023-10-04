@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"sort"
 	"time"
 
@@ -62,8 +63,8 @@ func (k Keeper) SetLongTermOrderPlacement(
 		// Increment the stateful order count.
 		k.SetStatefulOrderCount(
 			ctx,
-			order.OrderId,
-			k.GetStatefulOrderCount(ctx, order.OrderId)+1,
+			order.OrderId.SubaccountId,
+			k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)+1,
 		)
 
 		telemetry.IncrCounterWithLabels(
@@ -148,7 +149,7 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 
 	// Note that since store reads/writes can cost gas we need to ensure that the number of operations is the
 	// same regardless of whether the memstore has the order or not.
-	count := k.GetStatefulOrderCount(ctx, orderId)
+	count := k.GetStatefulOrderCount(ctx, orderId.SubaccountId)
 	if memStore.Has(orderIdBytes) {
 		count--
 	}
@@ -160,7 +161,7 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	memStore.Delete(orderIdBytes)
 
 	// Set the count.
-	k.SetStatefulOrderCount(ctx, orderId, count)
+	k.SetStatefulOrderCount(ctx, orderId.SubaccountId, count)
 
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.StatefulOrderRemoved, metrics.Count},
@@ -492,18 +493,13 @@ func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) sdk.Ite
 
 // GetStatefulOrderCount gets a count of how many stateful orders are written to state for a subaccount. This does not
 // include any untriggered conditional orders.
-//
-// OrderId can be conditional or long term.
 func (k Keeper) GetStatefulOrderCount(
 	ctx sdk.Context,
-	orderId types.OrderId,
+	subaccountId satypes.SubaccountId,
 ) uint32 {
-	// If this is a Short-Term order, panic.
-	orderId.MustBeStatefulOrder()
-
 	store := k.GetStatefulOrderCountMemStore(ctx)
 
-	b := store.Get(orderId.SubaccountId.MustMarshal())
+	b := store.Get(subaccountId.MustMarshal())
 	if b == nil {
 		return 0
 	}
@@ -513,26 +509,19 @@ func (k Keeper) GetStatefulOrderCount(
 
 // SetStatefulOrderCount sets a count of how many stateful orders are written to state. This does not
 // include any untriggered conditional orders.
-//
-// OrderId can be conditional or long term.
 func (k Keeper) SetStatefulOrderCount(
 	ctx sdk.Context,
-	orderId types.OrderId,
+	subaccountId satypes.SubaccountId,
 	count uint32,
 ) {
-	// If this is a Short-Term order, panic.
-	orderId.MustBeStatefulOrder()
-
-	subaccountIdBytes := orderId.SubaccountId.MustMarshal()
-
 	store := k.GetStatefulOrderCountMemStore(ctx)
 
 	if count == 0 {
-		store.Delete(subaccountIdBytes)
+		store.Delete(subaccountId.MustMarshal())
 	} else {
 		countBytes := lib.Bit32ToBytes(count)
 		store.Set(
-			subaccountIdBytes,
+			subaccountId.MustMarshal(),
 			countBytes,
 		)
 	}
