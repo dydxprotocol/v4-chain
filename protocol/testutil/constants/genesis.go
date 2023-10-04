@@ -1348,7 +1348,7 @@ const GenesisState = `{
         "treasury_account":"rewards_treasury",
         "denom":"dv4tnt",
         "denom_exponent":-18,
-        "market_id":1,
+        "market_id":11,
         "fee_multiplier_ppm":990000
       }
     },
