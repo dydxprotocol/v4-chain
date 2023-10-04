@@ -1,5 +1,5 @@
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
-import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+import { ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
@@ -54,6 +54,7 @@ class ComplianceController extends Controller {
     if (complianceData?.blocked) {
       return {
         restricted: true,
+        reason: INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
       };
     }
 
@@ -73,6 +74,7 @@ class ComplianceController extends Controller {
 
     return {
       restricted: complianceData.blocked,
+      reason: complianceData.blocked ? INDEXER_COMPLIANCE_BLOCKED_PAYLOAD : undefined,
     };
   }
 }

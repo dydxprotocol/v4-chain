@@ -1,10 +1,10 @@
 import {
   CountryHeaders,
   isRestrictedCountryHeaders,
+  INDEXER_GEOBLOCKED_PAYLOAD,
 } from '@dydxprotocol-indexer/compliance';
 import express from 'express';
 
-import { INDEXER_GEOBLOCKED_PAYLOAD } from '../constants';
 import { BlockedCode } from '../types';
 import { create4xxResponse } from './helpers';
 
