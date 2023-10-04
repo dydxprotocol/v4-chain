@@ -5,6 +5,7 @@ import {
   parseSchema,
   parseString,
 } from '@dydxprotocol-indexer/base';
+import { complianceConfigSchema } from '@dydxprotocol-indexer/compliance';
 import {
   postgresConfigSchema,
 } from '@dydxprotocol-indexer/postgres';
@@ -14,6 +15,7 @@ export const configSchema = {
   ...baseConfigSchema,
   ...postgresConfigSchema,
   ...redisConfigSchema,
+  ...complianceConfigSchema,
 
   CHAIN_ID: parseString({ default: 'dydxprotocol' }),
   API_LIMIT_V4: parseInteger({

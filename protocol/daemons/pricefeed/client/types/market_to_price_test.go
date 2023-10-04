@@ -1,10 +1,10 @@
 package types_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"testing"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/require"
 )

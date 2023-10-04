@@ -58,7 +58,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: types.ErrAssetZeroNotUsdc,
+			expectedErr: types.ErrUsdcMustBeAssetZero,
 		},
 		"asset[0] is modified usdc": {
 			genState: &types.GenesisState{
@@ -73,7 +73,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: types.ErrAssetZeroNotUsdc,
+			expectedErr: types.ErrUsdcMustBeAssetZero,
 		},
 		"duplicated asset id": {
 			genState: &types.GenesisState{

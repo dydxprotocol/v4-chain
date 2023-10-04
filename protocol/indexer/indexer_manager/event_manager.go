@@ -8,7 +8,7 @@ import (
 
 type IndexerEventManager interface {
 	Enabled() bool
-	AddTxnEvent(ctx sdk.Context, subType string, data string, version uint32)
+	AddTxnEvent(ctx sdk.Context, subType string, data string, version uint32, dataByes []byte)
 	SendOffchainData(message msgsender.Message)
 	SendOnchainData(block *IndexerTendermintBlock)
 	ProduceBlock(ctx sdk.Context) *IndexerTendermintBlock
@@ -18,6 +18,7 @@ type IndexerEventManager interface {
 		data string,
 		blockEvent IndexerTendermintEvent_BlockEvent,
 		version uint32,
+		dataBytes []byte,
 	)
 	ClearEvents(ctx sdk.Context)
 }
@@ -70,9 +71,10 @@ func (i *indexerEventManagerImpl) AddTxnEvent(
 	subType string,
 	data string,
 	version uint32,
+	dataBytes []byte,
 ) {
 	if i.indexerMessageSender.Enabled() {
-		addTxnEvent(ctx, subType, data, version, i.indexerEventsTransientStoreKey)
+		addTxnEvent(ctx, subType, data, version, i.indexerEventsTransientStoreKey, dataBytes)
 	}
 }
 
@@ -92,9 +94,10 @@ func (i *indexerEventManagerImpl) AddBlockEvent(
 	data string,
 	blockEvent IndexerTendermintEvent_BlockEvent,
 	version uint32,
+	dataBytes []byte,
 ) {
 	if i.indexerMessageSender.Enabled() {
-		addBlockEvent(ctx, subType, data, i.indexerEventsTransientStoreKey, blockEvent, version)
+		addBlockEvent(ctx, subType, data, i.indexerEventsTransientStoreKey, blockEvent, version, dataBytes)
 	}
 }
 

@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,6 +22,15 @@ func (msg *MsgSetVestEntry) GetSigners() []sdk.AccAddress {
 }
 
 func (msg *MsgSetVestEntry) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return errorsmod.Wrapf(
+			ErrInvalidAuthority,
+			"authority address is invalid: %v, err = %v",
+			msg.Authority,
+			err,
+		)
+	}
+
 	return msg.Entry.Validate()
 }
 
@@ -37,6 +47,21 @@ func (msg *MsgDeleteVestEntry) GetSigners() []sdk.AccAddress {
 }
 
 func (msg *MsgDeleteVestEntry) ValidateBasic() error {
-	// TODO
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return errorsmod.Wrapf(
+			ErrInvalidAuthority,
+			"authority address is invalid: %v, err = %v",
+			msg.Authority,
+			err,
+		)
+	}
+
+	if msg.VesterAccount == "" {
+		return errorsmod.Wrapf(
+			ErrInvalidVesterAccount,
+			"vester account cannot be empty",
+		)
+	}
+
 	return nil
 }

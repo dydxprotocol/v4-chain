@@ -25,4 +25,9 @@ var (
 		403,
 		"No maker and taker fee combination should result in a net rebate",
 	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		404,
+		"Authority is invalid",
+	)
 )

@@ -1,9 +1,10 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"sort"
+
+	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -94,6 +95,15 @@ func (o *OrderId) Validate() error {
 		return errorsmod.Wrapf(ErrInvalidOrderFlag, "orderId: %v", o)
 	}
 	return nil
+}
+
+// MustMarshal returns the marshaled bytes representation of an OrderId, panic'ing on error.
+func (o *OrderId) MustMarshal() []byte {
+	b, err := o.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 // SortedOrders is type alias for `*OrderId` which supports deterministic

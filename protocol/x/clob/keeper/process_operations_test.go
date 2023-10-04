@@ -14,6 +14,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -1389,11 +1390,9 @@ func TestProcessProposerOperations(t *testing.T) {
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
 				registry := codectypes.NewInterfaceRegistry()
 				cdc := codec.NewProtoCodec(registry)
-				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), types.KeyPrefix(types.ClobPairKeyPrefix))
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				b := cdc.MustMarshal(&constants.ClobPair_Btc_Paused)
-				store.Set(types.ClobPairKey(
-					types.ClobPairId(constants.ClobPair_Btc_Paused.Id),
-				), b)
+				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc_Paused.Id), b)
 			},
 			expectedPanics: "validateInternalOperationAgainstClobPairStatus: ClobPair's status is not supported",
 		},
@@ -1690,6 +1689,7 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
 		).Return().Maybe()
 	}
 
@@ -1748,6 +1748,20 @@ func setupProcessProposerOperationsTestCase(
 					),
 				),
 				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						perpetualId,
+						uint32(i),
+						tc.perpetuals[perpetualId].Params.Ticker,
+						tc.perpetuals[perpetualId].Params.MarketId,
+						clobPair.Status,
+						clobPair.QuantumConversionExponent,
+						tc.perpetuals[perpetualId].Params.AtomicResolution,
+						clobPair.SubticksPerTick,
+						clobPair.StepBaseQuantums,
+						tc.perpetuals[perpetualId].Params.LiquidityTier,
+					),
+				),
 			).Once().Return()
 		}
 
@@ -1915,6 +1929,16 @@ func setupNewMockEventManager(
 					),
 				),
 				indexerevents.OrderFillEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewLiquidationOrderFillEvent(
+						match.MakerOrder.MustGetOrder(),
+						match.TakerOrder,
+						match.FillAmount,
+						match.MakerFee,
+						match.TakerFee,
+						match.TotalFilledTaker,
+					),
+				),
 			).Return()
 
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
@@ -1934,6 +1958,17 @@ func setupNewMockEventManager(
 					),
 				),
 				indexerevents.OrderFillEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewOrderFillEvent(
+						match.MakerOrder.MustGetOrder(),
+						match.TakerOrder.MustGetOrder(),
+						match.FillAmount,
+						match.MakerFee,
+						match.TakerFee,
+						match.TotalFilledMaker,
+						match.TotalFilledTaker,
+					),
+				),
 			).Return()
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
 			matchOrderCallMap[match.TakerOrder.MustGetOrder().OrderId] = call
@@ -1954,6 +1989,14 @@ func setupNewMockEventManager(
 					),
 				),
 				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewStatefulOrderRemovalEvent(
+						removal.OrderRemoval.OrderId,
+						shared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+							removal.OrderRemoval.RemovalReason,
+						),
+					),
+				),
 			).Once().Return()
 		}
 	}

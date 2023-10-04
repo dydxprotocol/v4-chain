@@ -10,6 +10,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestMustMarshal(t *testing.T) {
+	// Success
+	b, _ := constants.Alice_Num0.Marshal()
+	require.Equal(t, b, constants.Alice_Num0.MustMarshal())
+
+	// No panic case. MustMarshal() > Marshal() > MarshalToSizedBuffer() which never returns an error.
+}
+
 func TestSortSubaccountIds(t *testing.T) {
 	tests := map[string]struct {
 		// Parameters.

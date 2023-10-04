@@ -23,7 +23,7 @@ import (
 
 // newMarketPriceStore creates a new prefix store for MarketPrices.
 func (k Keeper) newMarketPriceStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketPriceKeyPrefix))
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketPriceKeyPrefix))
 }
 
 // UpdateMarketPrices updates the prices for markets.
@@ -82,7 +82,7 @@ func (k Keeper) UpdateMarketPrices(
 	for _, marketPrice := range updatedMarketPrices {
 		// Store the modified market price.
 		b := k.cdc.MustMarshal(&marketPrice)
-		marketPriceStore.Set(types.MarketKey(marketPrice.Id), b)
+		marketPriceStore.Set(lib.Uint32ToBytes(marketPrice.Id), b)
 
 		// Monitor the last block a market price is updated.
 		telemetry.SetGaugeWithLabels(
@@ -103,6 +103,9 @@ func (k Keeper) UpdateMarketPrices(
 				update,
 			),
 			indexerevents.MarketEventVersion,
+			indexer_manager.GetBytes(
+				update,
+			),
 		)
 	}
 
@@ -115,7 +118,7 @@ func (k Keeper) GetMarketPrice(
 	id uint32,
 ) (types.MarketPrice, error) {
 	store := k.newMarketPriceStore(ctx)
-	b := store.Get(types.MarketKey(id))
+	b := store.Get(lib.Uint32ToBytes(id))
 	if b == nil {
 		return types.MarketPrice{}, errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(id))
 	}

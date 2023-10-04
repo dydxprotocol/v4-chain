@@ -53,6 +53,9 @@ message IndexerTendermintEvent {
 
   // Version of the event.
   uint32 version = 6;
+
+  // Tendermint event bytes.
+  bytes data_bytes = 7;
 }
 
 // IndexerTendermintBlock contains all the events for the block along with

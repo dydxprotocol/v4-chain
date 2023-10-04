@@ -57,6 +57,9 @@ func (k Keeper) ProcessTransfer(
 			k.GenerateTransferEvent(pendingTransfer),
 		),
 		indexerevents.TransferEventVersion,
+		indexer_manager.GetBytes(
+			k.GenerateTransferEvent(pendingTransfer),
+		),
 	)
 
 	return nil
@@ -123,6 +126,9 @@ func (k Keeper) ProcessDepositToSubaccount(
 				k.GenerateDepositEvent(msgDepositToSubaccount),
 			),
 			indexerevents.TransferEventVersion,
+			indexer_manager.GetBytes(
+				k.GenerateDepositEvent(msgDepositToSubaccount),
+			),
 		)
 	}
 
@@ -187,6 +193,9 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
 			),
 			indexerevents.TransferEventVersion,
+			indexer_manager.GetBytes(
+				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
+			),
 		)
 	}
 
