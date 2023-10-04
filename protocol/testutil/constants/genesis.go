@@ -223,7 +223,7 @@ const GenesisState = `{
         "max_short_term_orders_per_n_blocks": [
           {
             "num_blocks": 1,
-            "limit": 50
+            "limit": 200
           }
         ],
         "max_stateful_orders_per_n_blocks": [
@@ -239,7 +239,7 @@ const GenesisState = `{
         "max_short_term_order_cancellations_per_n_blocks": [
           {
             "num_blocks": 1,
-            "limit": 50
+            "limit": 200
           }
         ]
       },

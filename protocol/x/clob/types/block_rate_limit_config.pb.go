@@ -26,7 +26,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Defines the block rate limits for CLOB specific operations.
 type BlockRateLimitConfiguration struct {
 	// How many short term order attempts (successful and failed) are allowed for
-	// a subaccount per N blocks. Note that the rate limits are applied
+	// an account per N blocks. Note that the rate limits are applied
 	// in an AND fashion such that an order placement must pass all rate limit
 	// configurations.
 	//
@@ -40,7 +40,7 @@ type BlockRateLimitConfiguration struct {
 	// Specifying 0 values disables this rate limit.
 	MaxStatefulOrdersPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,2,rep,name=max_stateful_orders_per_n_blocks,json=maxStatefulOrdersPerNBlocks,proto3" json:"max_stateful_orders_per_n_blocks"`
 	// How many short term order cancellation attempts (successful and failed) are
-	// allowed for a subaccount per N blocks. Note that the rate limits are
+	// allowed for an account per N blocks. Note that the rate limits are
 	// applied in an AND fashion such that an order cancellation must pass all
 	// rate limit configurations.
 	//

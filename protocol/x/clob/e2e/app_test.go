@@ -43,6 +43,16 @@ var (
 		},
 		testapp.DefaultGenesis(),
 	))
+	PlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num1, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		},
+		testapp.DefaultGenesis(),
+	))
 	PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
@@ -87,6 +97,14 @@ var (
 		},
 		20,
 	)
+	CancelOrder_Alice_Num1_Id0_Clob0_GTB20 = *clobtypes.NewMsgCancelOrderShortTerm(
+		clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num1,
+			ClientId:     0,
+			ClobPairId:   0,
+		},
+		20,
+	)
 	PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
@@ -122,12 +140,16 @@ var (
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 		testapp.DefaultGenesis(),
 	))
-	ConditionalPlaceOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
-		constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
+	LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		constants.LongTermOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5,
 		testapp.DefaultGenesis(),
 	))
 	ConditionalPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+		testapp.DefaultGenesis(),
+	))
+	ConditionalPlaceOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
 		testapp.DefaultGenesis(),
 	))
 )

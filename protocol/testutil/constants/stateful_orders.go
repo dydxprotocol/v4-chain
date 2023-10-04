@@ -54,6 +54,18 @@ var (
 		Subticks:     10,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 15},
 	}
+	LongTermOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5 = clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: Alice_Num1,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     5,
+		Subticks:     10,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+	}
 	LongTermOrder_Alice_Num1_Id1_Clob0_Buy02BTC_Price10_GTB15 = clobtypes.Order{
 		OrderId: clobtypes.OrderId{
 			SubaccountId: Alice_Num1,

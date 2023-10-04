@@ -1290,11 +1290,11 @@ function edit_genesis() {
 	# Block Rate Limit
 	# Max 50 short term orders per block
 	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_n_blocks.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_n_blocks.[0].limit' -v '50'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_n_blocks.[0].limit' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_orders_per_n_blocks.[0].num_blocks' -v '1'
 	# Max 50 short term order cancellations per block
 	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_n_blocks.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_n_blocks.[0].limit' -v '50'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_n_blocks.[0].limit' -v '200'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_short_term_order_cancellations_per_n_blocks.[0].num_blocks' -v '1'
 	# Max 2 stateful orders per block
 	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_stateful_orders_per_n_blocks.[]' -v "{}"
