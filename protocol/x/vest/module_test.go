@@ -3,6 +3,10 @@ package vest_test
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,12 +19,10 @@ import (
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest"
 	vest_keeper "github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
+	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func createAppModule(t *testing.T) vest.AppModule {
@@ -219,12 +221,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	vestEntries := keeper.GetAllVestEntries(ctx)
 
-	require.Equal(t, 1, len(vestEntries))
-	require.Equal(t, "rewards_vester", vestEntries[0].VesterAccount)
-	require.Equal(t, "rewards_treasury", vestEntries[0].TreasuryAccount)
-	require.Equal(t, "dv4tnt", vestEntries[0].Denom)
-	require.Equal(t, int64(1694563200), vestEntries[0].StartTime.Unix())
-	require.Equal(t, int64(1697155200), vestEntries[0].EndTime.Unix())
+	require.Equal(t, 2, len(vestEntries))
+	require.Equal(t, vesttypes.DefaultGenesis().VestEntries, vestEntries)
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	require.Equal(t, validGenesisState, string(genesisJson))

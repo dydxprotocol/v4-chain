@@ -80,13 +80,14 @@ func TestGetAllVestEntries(t *testing.T) {
 	gotEntries := k.GetAllVestEntries(ctx)
 	expectedEntries := []types.VestEntry{
 		types.DefaultGenesis().VestEntries[0],
+		types.DefaultGenesis().VestEntries[1],
 		TestValidEntry,
 		TestValidEntry2,
 		TestValidEntry3,
 	}
 
-	// 1 default from genesis + 3 added
-	require.Len(t, gotEntries, 4)
+	// 2 default from genesis + 3 added
+	require.Len(t, gotEntries, 5)
 	for i := range gotEntries {
 		require.Equal(t, expectedEntries[i], gotEntries[i])
 	}

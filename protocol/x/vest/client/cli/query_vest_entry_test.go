@@ -2,6 +2,9 @@ package cli_test
 
 import (
 	"fmt"
+	"strconv"
+	"testing"
+
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -10,8 +13,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
-	"strconv"
-	"testing"
 )
 
 // Prevent strconv unused error
@@ -48,6 +49,17 @@ func setupNetwork(
 func TestQueryVestEntry(t *testing.T) {
 	net, ctx := setupNetwork(t)
 
+	queryAndCheckVestEntry(t, ctx, net, "treausry_vester", types.DefaultGenesis().VestEntries[0])
+	queryAndCheckVestEntry(t, ctx, net, "rewards_vester", types.DefaultGenesis().VestEntries[1])
+}
+
+func queryAndCheckVestEntry(
+	t *testing.T,
+	ctx client.Context,
+	net *network.Network,
+	vester_account string,
+	expectedEntry types.VestEntry,
+) {
 	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryVestEntry(), []string{
 		"rewards_vester",
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag), // specify output format as json
@@ -57,5 +69,5 @@ func TestQueryVestEntry(t *testing.T) {
 	var resp types.QueryVestEntryResponse
 	outBytes := out.Bytes()
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(outBytes, &resp))
-	require.Equal(t, types.DefaultGenesis().VestEntries[0], resp.Entry)
+	require.Equal(t, types.DefaultGenesis().VestEntries[1], resp.Entry)
 }
