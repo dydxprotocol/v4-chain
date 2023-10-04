@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"sort"
 	"time"
 
@@ -21,7 +22,7 @@ import (
 // it was placed. The placed order can either be a conditional order or a long term order.
 // If the order is conditional, it will be placed into the Untriggered Conditional Orders state store.
 // If it is a long term order, it will be placed in the Long Term Order state store.
-// If the `OrderId` doesn't exist then the `to be committed` stateful order count is incremented.
+// If the `OrderId` doesn't exist then the stateful order count is incremented.
 // Note the following:
 // - If a stateful order placement already exists in state with `order.OrderId`, this function will overwrite it.
 // - The `TransactionIndex` field will be set to the next unused transaction index for this block.
@@ -59,11 +60,11 @@ func (k Keeper) SetLongTermOrderPlacement(
 	memStore.Set(orderIdBytes, longTermOrderPlacementBytes)
 
 	if !found {
-		// Increment the `to be committed` stateful order count.
-		k.SetToBeCommittedStatefulOrderCount(
+		// Increment the stateful order count.
+		k.SetStatefulOrderCount(
 			ctx,
-			order.OrderId,
-			k.GetToBeCommittedStatefulOrderCount(ctx, order.OrderId)+1,
+			order.OrderId.SubaccountId,
+			k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)+1,
 		)
 
 		telemetry.IncrCounterWithLabels(
@@ -132,7 +133,8 @@ func (k Keeper) GetLongTermOrderPlacement(
 	return val, true
 }
 
-// DeleteLongTermOrderPlacement deletes a long term order and the placement information from state.
+// DeleteLongTermOrderPlacement deletes a long term order and the placement information from state
+// and decrements the stateful order count if the `orderId` exists.
 // This function is a no-op if no stateful order exists in state with `orderId`.
 func (k Keeper) DeleteLongTermOrderPlacement(
 	ctx sdk.Context,
@@ -145,11 +147,21 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 
 	store, memStore := k.fetchStateStoresForOrder(ctx, orderId)
 
+	// Note that since store reads/writes can cost gas we need to ensure that the number of operations is the
+	// same regardless of whether the memstore has the order or not.
+	count := k.GetStatefulOrderCount(ctx, orderId.SubaccountId)
+	if memStore.Has(orderIdBytes) {
+		count--
+	}
+
 	// Delete the `StatefulOrderPlacement` from state.
 	store.Delete(orderIdBytes)
 
 	// Delete the `StatefulOrderPlacement` from memstore.
 	memStore.Delete(orderIdBytes)
+
+	// Set the count.
+	k.SetStatefulOrderCount(ctx, orderId.SubaccountId, count)
 
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.StatefulOrderRemoved, metrics.Count},
@@ -477,4 +489,40 @@ func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) sdk.Ite
 		[]byte(types.UntriggeredConditionalOrderKeyPrefix),
 	)
 	return sdk.KVStorePrefixIterator(store, []byte{})
+}
+
+// GetStatefulOrderCount gets a count of how many stateful orders are written to state for a subaccount. This does not
+// include any untriggered conditional orders.
+func (k Keeper) GetStatefulOrderCount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+) uint32 {
+	store := k.GetStatefulOrderCountMemStore(ctx)
+
+	b := store.Get(subaccountId.MustMarshal())
+	if b == nil {
+		return 0
+	}
+
+	return lib.BytesToUint32(b)
+}
+
+// SetStatefulOrderCount sets a count of how many stateful orders are written to state. This does not
+// include any untriggered conditional orders.
+func (k Keeper) SetStatefulOrderCount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	count uint32,
+) {
+	store := k.GetStatefulOrderCountMemStore(ctx)
+
+	if count == 0 {
+		store.Delete(subaccountId.MustMarshal())
+	} else {
+		countBytes := lib.Bit32ToBytes(count)
+		store.Set(
+			subaccountId.MustMarshal(),
+			countBytes,
+		)
+	}
 }

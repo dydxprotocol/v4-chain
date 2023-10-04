@@ -94,6 +94,7 @@ func (k Keeper) CancelShortTermOrder(
 //
 // An error will be returned if any of the following conditions are true:
 //   - Standard stateful validation fails.
+//   - Equity tier limit exceeded.
 //   - The memclob itself returns an error.
 //
 // This method will panic if the provided order is not a Short-Term order.
@@ -149,13 +150,6 @@ func (k Keeper) CancelStatefulOrder(
 		// Remove the stateful order from state. Note that if the stateful order did not
 		// exist in state, then it would have failed validation in the previous step.
 		k.MustRemoveStatefulOrder(ctx, msg.OrderId)
-
-		// Decrement the `to be committed` stateful order count.
-		k.SetToBeCommittedStatefulOrderCount(
-			ctx,
-			msg.OrderId,
-			k.GetToBeCommittedStatefulOrderCount(ctx, msg.OrderId)-1,
-		)
 	} else {
 		// Write the stateful order cancellation to uncommitted state. PerformOrderCancellationStatefulValidation will
 		// return an error if the order cancellation already exists which will prevent
@@ -298,8 +292,9 @@ func (k Keeper) ReplayPlaceOrder(
 // calling `PlaceOrder` on the specified memclob.
 //
 // An error will be returned if any of the following conditions are true:
-// - Standard stateful validation fails.
-// - The memclob itself returns an error.
+//   - Standard stateful validation fails.
+//   - The subaccount's equity tier limit is exceeded.
+//   - Placing the stateful order on the memclob returns an error.
 func (k Keeper) placeOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
@@ -330,6 +325,12 @@ func (k Keeper) placeOrder(
 
 	// Perform stateful validation.
 	err = k.PerformStatefulOrderValidation(ctx, &order, blockHeight, true)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// Validate that adding the order wouldn't exceed subaccount equity tier limits.
+	err = k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -1066,11 +1067,11 @@ func (k Keeper) GetStatePosition(ctx sdk.Context, subaccountId satypes.Subaccoun
 	return position.GetBigQuantums()
 }
 
-// InitStatefulOrdersInMemClob places all stateful orders in state on the memclob, placed in ascending
-// order by time priority.
+// InitStatefulOrders places all stateful orders in state on the memclob, placed in ascending
+// order by time priority and initializes the stateful order count.
 // This is called during app initialization in `app.go`, before any ABCI calls are received
 // and after all MemClob orderbooks are instantiated.
-func (k Keeper) InitStatefulOrdersInMemClob(
+func (k Keeper) InitStatefulOrders(
 	ctx sdk.Context,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -1085,6 +1086,13 @@ func (k Keeper) InitStatefulOrdersInMemClob(
 	// Place each order in the memclob, ignoring errors if they occur.
 	statefulOrders := k.GetAllPlacedStatefulOrders(ctx)
 	for _, statefulOrder := range statefulOrders {
+		// Ensure that the stateful order count is accurately represented in the memstore on restart.
+		k.SetStatefulOrderCount(
+			ctx,
+			statefulOrder.OrderId.SubaccountId,
+			k.GetStatefulOrderCount(ctx, statefulOrder.OrderId.SubaccountId)+1,
+		)
+
 		// First fork the multistore. If `PlaceOrder` fails, we don't want to write to state.
 		placeOrderCtx, writeCache := ctx.CacheContext()
 
@@ -1110,7 +1118,7 @@ func (k Keeper) InitStatefulOrdersInMemClob(
 			// TODO(DEC-847): Revisit this error log once `MsgRemoveOrder` is implemented,
 			// since it should potentially be a panic.
 			k.Logger(ctx).Error(
-				"InitStatefulOrdersInMemClob: PlaceOrder() returned an error",
+				"InitStatefulOrders: PlaceOrder() returned an error",
 				"error",
 				err,
 			)

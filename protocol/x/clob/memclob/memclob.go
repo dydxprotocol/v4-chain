@@ -147,16 +147,18 @@ func (m *MemClobPriceTimePriority) CreateOrderbook(
 	m.openOrders.createOrderbook(ctx, clobPairId, subticksPerTick, minOrderBaseQuantums)
 }
 
-// CountSubaccountOrders will count all open orders for a given subaccount that match the provided filter.
-func (m *MemClobPriceTimePriority) CountSubaccountOrders(
+// CountSubaccountOrders will count the number of open short-term orders for a given subaccount.
+//
+// Must be invoked with `CheckTx` context.
+func (m *MemClobPriceTimePriority) CountSubaccountShortTermOrders(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
-	filter func(types.OrderId) bool,
 ) (count uint32) {
+	lib.AssertCheckTxMode(ctx)
 	for _, openOrdersPerClob := range m.openOrders.orderbooksMap {
 		for _, openOrdersPerClobAndSide := range openOrdersPerClob.SubaccountOpenClobOrders[subaccountId] {
 			for orderId := range openOrdersPerClobAndSide {
-				if filter(orderId) {
+				if orderId.IsShortTermOrder() {
 					count++
 				}
 			}
@@ -1198,7 +1200,6 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 //   - The order is not canceled (with an equal-to-or-greater-than `GoodTilBlock` than the new order).
 //   - If the order is replacing another order, then the new order's expiration must not be less than the
 //     existing order's expiration.
-//   - This subaccount has strictly less open orders than the equity tier limit the subaccount qualifies for.
 //
 // Note that it does not perform collateralization checks since that will be done when matching the order (if the order
 // overlaps the book) and when adding the order to the book (if the order has remaining size after matching).
@@ -1257,17 +1258,6 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 
 	if matchedOrderExists && existingMatchedOrder.MustCmpReplacementOrder(&order) >= 0 {
 		return types.ErrInvalidReplacement
-	}
-
-	// If an order with this `OrderId` does not already exist resting on the book for the same side, then
-	// we need to ensure that adding the new order would not exceed any equity tier limits.
-	// Note: The order could already be resting on the book for the same side if this order is a replacement.
-	// Note: The order could already be resting on the book for a different side if this order is a replacement.
-	doesOrderAlreadyExistForSide := restingOrderExists && existingRestingOrder.Side == order.Side
-	if !doesOrderAlreadyExistForSide {
-		if err := m.clobKeeper.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order); err != nil {
-			return err
-		}
 	}
 
 	// If the order is a reduce-only order, we should ensure it does not increase the subaccount's
