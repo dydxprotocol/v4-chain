@@ -596,7 +596,7 @@ func New(
 					daemonFlags,
 					appFlags,
 					logger,
-  				&daemontypes.GrpcClientImpl{},
+					&daemontypes.GrpcClientImpl{},
 				); err != nil {
 					panic(err)
 				}
@@ -639,7 +639,7 @@ func New(
 					daemonFlags,
 					appFlags,
 					logger,
-  				&daemontypes.GrpcClientImpl{},
+					&daemontypes.GrpcClientImpl{},
 				); err != nil {
 					panic(err)
 				}
