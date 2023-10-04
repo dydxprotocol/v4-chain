@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	codec "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +18,17 @@ func (msg *MsgDelayMessage) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic performs basic validation on the message.
 func (msg *MsgDelayMessage) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return errorsmod.Wrap(
+			ErrInvalidAuthority,
+			fmt.Sprintf(
+				"authority '%s' must be a valid bech32 address, but got error '%v'",
+				msg.Authority,
+				err.Error(),
+			),
+		)
+	}
+
 	// Perform basic checks that the encoded message was set.
 	if msg.Msg == nil {
 		return ErrMsgIsNil

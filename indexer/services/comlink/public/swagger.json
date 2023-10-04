@@ -274,6 +274,9 @@
         "properties": {
           "restricted": {
             "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
           }
         },
         "required": [

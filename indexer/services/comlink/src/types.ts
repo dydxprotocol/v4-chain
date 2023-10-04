@@ -385,6 +385,12 @@ export interface Risk {
 
 export interface ComplianceResponse {
   restricted: boolean;
+  reason?: string;
 }
 
 export interface ComplianceRequest extends AddressRequest {}
+
+export enum BlockedCode {
+  GEOBLOCKED = 'GEOBLOCKED',
+  COMPLIANCE_BLOCKED = 'COMPLIANCE_BLOCKED',
+}

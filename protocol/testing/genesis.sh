@@ -22,16 +22,11 @@ DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000000000000000000000 # 1e24
 # Each testnet validator self-delegates 500k whole coins of native token.
 TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000000000000000000000 # 5e23
-# TODO(GENESIS): 11155111 is the chain ID for sepolia testnet.
 ETH_CHAIN_ID=11155111 # sepolia
-# TODO(GENESIS): below is the bridge contract on sepolia testnet.
 # https://sepolia.etherscan.io/address/0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0
 ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0"
-# TODO(GENESIS): verify below balance is desired amount.
 BRIDGE_MODACC_BALANCE=1000000000000000000000000000 # 1e27
-# TODO(GENESIS): determine bridge events to manually include in genesis.
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0 # TODO(CORE-329)
-# TODO(GENESIS): determine bridge events to manually include in genesis.
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=0 # TODO(CORE-329)
 
 function edit_genesis() {
@@ -1497,4 +1492,25 @@ update_genesis_complete_bridge_delay() {
 
 	# Reduce complete bridge delay to 600 blocks.
 	dasel put -t int -f "$GENESIS" '.app_state.bridge.safety_params.delay_blocks' -v "$2"
+}
+
+# Set the denom metadata, which is for human readability.
+set_denom_metadata() {
+	local BASE_DENOM=$1
+	local WHOLE_COIN_DENOM=$2
+	local COIN_NAME=$3
+	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata" -v "[]"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].description" -v "The native token of the network"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units" -v "[]"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[]" -v "{}"
+	# Base denom is the minimum unit of the a token and the denom used by `x/bank`.
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[0].denom" -v "$BASE_DENOM"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[1].denom" -v "$WHOLE_COIN_DENOM"
+	dasel put -t int -f "$GENESIS" ".app_state.bank.denom_metadata.[0].denom_units.[1].exponent" -v 18
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].base" -v "$BASE_DENOM"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].name" -v "$COIN_NAME"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].display" -v "$WHOLE_COIN_DENOM"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.denom_metadata.[0].symbol" -v "$WHOLE_COIN_DENOM"
 }

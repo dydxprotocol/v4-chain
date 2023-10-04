@@ -1,6 +1,7 @@
+import { INDEXER_GEOBLOCKED_PAYLOAD, isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
 import config from '../../src/config';
 import { rejectRestrictedCountries } from '../../src/lib/restrict-countries';
-import { isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
+import { BlockedCode } from '../../src/types';
 
 jest.mock('@dydxprotocol-indexer/compliance');
 
@@ -62,6 +63,14 @@ describe('rejectRestrictedCountries', () => {
 
     rejectRestrictedCountries(req, res, next);
     expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      errors: expect.arrayContaining([
+        {
+          msg: INDEXER_GEOBLOCKED_PAYLOAD,
+          code: BlockedCode.GEOBLOCKED,
+        },
+      ]),
+    }));
     expect(next).not.toHaveBeenCalled();
   });
 });

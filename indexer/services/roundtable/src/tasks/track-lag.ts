@@ -83,10 +83,10 @@ function logAndStatLag(
   earlierBlockData: BlockData,
   lagType: string,
 ): void {
-  const blockLag: string = Big(earlierBlockData.block).minus(laterBlockData.block).toString();
+  const blockLag: string = Big(laterBlockData.block).minus(earlierBlockData.block).toString();
   const timeLagInMilliseconds: number = DateTime
-    .fromISO(earlierBlockData.timestamp)
-    .diff(DateTime.fromISO(laterBlockData.timestamp))
+    .fromISO(laterBlockData.timestamp)
+    .diff(DateTime.fromISO(earlierBlockData.timestamp))
     .milliseconds;
 
   logger.info({

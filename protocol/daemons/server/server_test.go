@@ -14,6 +14,7 @@ import (
 	"net"
 	"os"
 	"testing"
+	"time"
 )
 
 const (
@@ -155,6 +156,50 @@ func TestStart_MixedInvalid(t *testing.T) {
 			)
 		})
 	}
+}
+
+func TestRegisterDaemon_DoesNotPanic(t *testing.T) {
+	grpcServer := &mocks.GrpcServer{}
+	grpcServer.On("Stop").Return().Once()
+	server := server.NewServer(
+		log.NewNopLogger(),
+		grpcServer,
+		&mocks.FileHandler{},
+		grpc.SocketPath,
+		"test",
+	)
+	defer server.Stop()
+
+	require.NotPanics(t, func() {
+		server.ExpectPricefeedDaemon(5 * time.Second)
+	})
+}
+
+func TestRegisterDaemon_DoubleRegistrationPanics(t *testing.T) {
+	grpcServer := &mocks.GrpcServer{}
+	grpcServer.On("Stop").Return().Once()
+	server := server.NewServer(
+		log.NewNopLogger(),
+		grpcServer,
+		&mocks.FileHandler{},
+		grpc.SocketPath,
+		"test",
+	)
+	defer server.Stop()
+
+	// First registration should not panic.
+	require.NotPanics(t, func() {
+		server.ExpectPricefeedDaemon(5 * time.Second)
+	})
+
+	// Second registration should panic.
+	require.PanicsWithError(
+		t,
+		"service pricefeed-daemon already registered",
+		func() {
+			server.ExpectPricefeedDaemon(5 * time.Second)
+		},
+	)
 }
 
 func createServerWithMocks(

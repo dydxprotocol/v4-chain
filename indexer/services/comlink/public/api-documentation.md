@@ -531,7 +531,8 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/screen?address=string',
 
 ```json
 {
-  "restricted": true
+  "restricted": true,
+  "reason": "string"
 }
 ```
 
@@ -2191,7 +2192,8 @@ This operation does not require authentication
 
 ```json
 {
-  "restricted": true
+  "restricted": true,
+  "reason": "string"
 }
 
 ```
@@ -2201,6 +2203,7 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |restricted|boolean|true|none|none|
+|reason|string|false|none|none|
 
 ## OrderSide
 

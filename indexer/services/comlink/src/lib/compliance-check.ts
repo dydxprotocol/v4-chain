@@ -1,8 +1,9 @@
+import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
 
-import { AddressRequest } from '../types';
+import { AddressRequest, BlockedCode } from '../types';
 import { create4xxResponse } from './helpers';
 
 /**
@@ -31,9 +32,9 @@ export async function complianceCheck(
   if (complianceData.length > 0) {
     return create4xxResponse(
       res,
-      // TODO(IND-368): Update default message to send for blocked addresses
-      '',
+      INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
       403,
+      { code: BlockedCode.COMPLIANCE_BLOCKED },
     );
   }
 

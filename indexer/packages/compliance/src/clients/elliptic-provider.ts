@@ -23,7 +23,7 @@ interface ParsedResponse {
 
 export const HOLISTIC: string = 'holistic';
 export const API_PATH: string = '/v2/wallet/synchronous';
-export const API_URI: string = `https://amk-api.elliptic.co${API_PATH}`;
+export const API_URI: string = `https://aml-api.elliptic.co${API_PATH}`;
 export const RISK_SCORE_KEY: string = 'risk_score';
 export const NO_RULES_TRIGGERED_RISK_SCORE: number = -1;
 

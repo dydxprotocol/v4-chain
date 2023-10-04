@@ -1,5 +1,5 @@
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
-import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+import { ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
@@ -15,7 +15,6 @@ import {
 } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
-import { complianceCheck } from '../../../lib/compliance-check';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { getIpAddr, rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
@@ -51,6 +50,14 @@ class ComplianceController extends Controller {
       complianceProvider.provider,
     );
 
+    // Immediately return for blocked addresses, do not refresh
+    if (complianceData?.blocked) {
+      return {
+        restricted: true,
+        reason: INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
+      };
+    }
+
     if (complianceData === undefined || DateTime.fromISO(complianceData.updatedAt) < ageThreshold) {
       await checkRateLimit(this.ipAddress);
       // TODO(IND-369): Use Ellptic client
@@ -67,6 +74,7 @@ class ComplianceController extends Controller {
 
     return {
       restricted: complianceData.blocked,
+      reason: complianceData.blocked ? INDEXER_COMPLIANCE_BLOCKED_PAYLOAD : undefined,
     };
   }
 }
@@ -82,7 +90,6 @@ router.get(
     },
   }),
   handleValidationErrors,
-  complianceCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
