@@ -41,7 +41,7 @@ function generateFakeHandler(parallelizationIds: string[]): FakeHandler {
   const fakeTxId: number = 0;
   const defaultEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-    Uint8Array.from([]),
+    '',
     defaultTransactionIndex,
     defaultEventIndex,
   );

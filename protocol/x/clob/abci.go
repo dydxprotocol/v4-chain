@@ -60,12 +60,6 @@ func EndBlocker(
 				),
 			),
 			indexerevents.StatefulOrderEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewStatefulOrderRemovalEvent(
-					orderId,
-					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-				),
-			),
 		)
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.Expired, metrics.StatefulOrderRemoved, metrics.Count},

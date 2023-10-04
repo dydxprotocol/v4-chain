@@ -61,13 +61,6 @@ func (k Keeper) ModifyMarketParam(
 			),
 		),
 		indexerevents.MarketEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewMarketModifyEvent(
-				marketParam.Id,
-				marketParam.Pair,
-				marketParam.MinPriceChangePpm,
-			),
-		),
 	)
 
 	// Update the in-memory market pair map for labelling metrics.

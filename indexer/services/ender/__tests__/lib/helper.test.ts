@@ -46,7 +46,6 @@ describe('helper', () => {
     const event: IndexerTendermintEvent = {
       ...eventFields,
       subtype: 'order_fill',
-      dataBytes: Uint8Array.from(Buffer.from('data')),
       data: 'data',
       eventIndex: 0,
       version: 1,

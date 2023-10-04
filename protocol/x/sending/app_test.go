@@ -177,19 +177,6 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
 							Version:             indexerevents.SubaccountUpdateEventVersion,
-							DataBytes: indexer_manager.GetBytes(
-								indexerevents.NewSubaccountUpdateEvent(
-									&tc.subaccountId,
-									[]*satypes.PerpetualPosition{},
-									[]*satypes.AssetPosition{
-										{
-											AssetId:  lib.UsdcAssetId,
-											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterDeposit),
-										},
-									},
-									nil, // no funding payment should have occurred
-								),
-							),
 						},
 						{
 							Subtype: indexerevents.SubtypeTransfer,
@@ -204,14 +191,6 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
 							Version:             indexerevents.TransferEventVersion,
-							DataBytes: indexer_manager.GetBytes(
-								indexerevents.NewDepositEvent(
-									tc.accountAccAddress.String(),
-									tc.subaccountId,
-									tc.asset.Id,
-									satypes.BaseQuantums(tc.quantums.Uint64()),
-								),
-							),
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(CheckTx_MsgDepositToSubaccount.GetTx()))},
@@ -387,19 +366,6 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
 							Version:             indexerevents.SubaccountUpdateEventVersion,
-							DataBytes: indexer_manager.GetBytes(
-								indexerevents.NewSubaccountUpdateEvent(
-									&tc.subaccountId,
-									[]*satypes.PerpetualPosition{},
-									[]*satypes.AssetPosition{
-										{
-											AssetId:  lib.UsdcAssetId,
-											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterWithdraw),
-										},
-									},
-									nil, // no funding payment should have occurred
-								),
-							),
 						},
 						{
 							Subtype: indexerevents.SubtypeTransfer,
@@ -414,14 +380,6 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
 							Version:             indexerevents.TransferEventVersion,
-							DataBytes: indexer_manager.GetBytes(
-								indexerevents.NewWithdrawEvent(
-									tc.subaccountId,
-									tc.accountAccAddress.String(),
-									tc.asset.Id,
-									satypes.BaseQuantums(tc.quantums.Uint64()),
-								),
-							),
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(CheckTx_MsgWithdrawFromSubaccount.GetTx()))},

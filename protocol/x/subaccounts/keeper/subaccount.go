@@ -311,17 +311,6 @@ func (k Keeper) UpdateSubaccounts(
 				),
 			),
 			indexerevents.SubaccountUpdateEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewSubaccountUpdateEvent(
-					u.SettledSubaccount.Id,
-					getUpdatedPerpetualPositions(
-						u,
-						fundingPayments,
-					),
-					getUpdatedAssetPositions(u),
-					fundingPayments,
-				),
-			),
 		)
 
 		// Emit an event indicating a funding payment was paid / received for each settled funding

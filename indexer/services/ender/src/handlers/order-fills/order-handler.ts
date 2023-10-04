@@ -26,6 +26,7 @@ import * as pg from 'pg';
 
 import config from '../../config';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
+import { base64StringToBinary } from '../../helpers/encoding-helper';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/translation-helper';
@@ -61,7 +62,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
   }
 
   public async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
-    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
+    const eventDataBinary: Uint8Array = base64StringToBinary(this.indexerTendermintEvent.data);
     const transactionIndex: number = indexerTendermintEventToTransactionIndex(
       this.indexerTendermintEvent,
     );

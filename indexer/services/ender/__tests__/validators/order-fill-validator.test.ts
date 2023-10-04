@@ -18,7 +18,7 @@ import {
   defaultTime,
   defaultTxHash,
 } from '../helpers/constants';
-import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
+import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 import { OrderFillWithLiquidity } from '../../src/lib/translated-types';
 import { Liquidity } from '@dydxprotocol-indexer/postgres';
@@ -190,7 +190,9 @@ function createBlock(
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.ORDER_FILL,
-    OrderFillEventV1.encode(orderFillEvent).finish(),
+    binaryToBase64String(
+      OrderFillEventV1.encode(orderFillEvent).finish(),
+    ),
     0,
     0,
   );

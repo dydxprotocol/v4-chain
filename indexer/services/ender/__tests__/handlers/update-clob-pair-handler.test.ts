@@ -23,6 +23,7 @@ import {
   UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
+  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectPerpetualMarketKafkaMessage,
@@ -69,7 +70,9 @@ describe('update-clob-pair-handler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
-        UpdateClobPairEventV1.encode(defaultUpdateClobPairEvent).finish(),
+        binaryToBase64String(
+          UpdateClobPairEventV1.encode(defaultUpdateClobPairEvent).finish(),
+        ),
         transactionIndex,
         eventIndex,
       );
@@ -155,7 +158,9 @@ function createKafkaMessageFromUpdateClobPairEvent({
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
-      UpdateClobPairEventV1.encode(updatePerpetualEvent).finish(),
+      binaryToBase64String(
+        UpdateClobPairEventV1.encode(updatePerpetualEvent).finish(),
+      ),
       transactionIndex,
       0,
     ),

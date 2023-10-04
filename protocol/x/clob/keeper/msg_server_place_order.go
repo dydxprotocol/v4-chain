@@ -61,11 +61,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 				),
 			),
 			indexerevents.StatefulOrderEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewConditionalOrderPlacementEvent(
-					order,
-				),
-			),
 		)
 		processProposerMatchesEvents.PlacedConditionalOrderIds = append(
 			processProposerMatchesEvents.PlacedConditionalOrderIds,
@@ -81,11 +76,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 				),
 			),
 			indexerevents.StatefulOrderEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewLongTermOrderPlacementEvent(
-					order,
-				),
-			),
 		)
 		processProposerMatchesEvents.PlacedLongTermOrderIds = append(
 			processProposerMatchesEvents.PlacedLongTermOrderIds,

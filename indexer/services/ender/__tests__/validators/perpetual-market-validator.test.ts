@@ -8,6 +8,7 @@ import {
   defaultPerpetualMarketCreateEvent, defaultHeight, defaultTime, defaultTxHash,
 } from '../helpers/constants';
 import {
+  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
 } from '../helpers/indexer-proto-helpers';
@@ -89,7 +90,9 @@ function createBlock(
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.PERPETUAL_MARKET,
-    PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
+    binaryToBase64String(
+      PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
+    ),
     0,
     0,
   );

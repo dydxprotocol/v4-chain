@@ -15,7 +15,7 @@ import {
   defaultTime,
   defaultTxHash,
 } from '../helpers/constants';
-import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
+import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 import Long from 'long';
 
@@ -170,7 +170,9 @@ function createBlock(
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.MARKET,
-    MarketEventV1.encode(marketEvent).finish(),
+    binaryToBase64String(
+      MarketEventV1.encode(marketEvent).finish(),
+    ),
     0,
     0,
   );

@@ -33,6 +33,7 @@ import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
+  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent, expectSubaccountKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
@@ -112,7 +113,9 @@ describe('transferHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        TransferEventV1.encode(defaultTransferEvent).finish(),
+        binaryToBase64String(
+          TransferEventV1.encode(defaultTransferEvent).finish(),
+        ),
         transactionIndex,
         eventIndex,
       );
@@ -485,7 +488,9 @@ function createKafkaMessageFromTransferEvent({
     events.push(
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        TransferEventV1.encode(transferEvent).finish(),
+        binaryToBase64String(
+          TransferEventV1.encode(transferEvent).finish(),
+        ),
         transactionIndex,
         eventIndex,
       ),

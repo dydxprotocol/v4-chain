@@ -91,15 +91,6 @@ func (k Keeper) CreateAsset(
 			),
 		),
 		indexerevents.AssetEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewAssetCreateEvent(
-				assetId,
-				asset.Symbol,
-				asset.HasMarket,
-				asset.MarketId,
-				asset.AtomicResolution,
-			),
-		),
 	)
 
 	return asset, nil

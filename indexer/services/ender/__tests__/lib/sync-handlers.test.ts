@@ -34,23 +34,29 @@ import { KafkaPublisher } from '../../src/lib/kafka-publisher';
 const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
   defaultMarketCreate,
 ).finish());
+const defaultMarketEventData: string = Buffer.from(
+  defaultMarketEventBinary.buffer,
+).toString('base64');
 
 const defaultAssetEventBinary: Uint8Array = Uint8Array.from(AssetCreateEventV1.encode(
   defaultAssetCreateEvent,
 ).finish());
+const defaultAssetEventData: string = Buffer.from(
+  defaultAssetEventBinary.buffer,
+).toString('base64');
 
 describe('syncHandler', () => {
   const defaultTransactionIndex: number = 0;
   const defaultMarketEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.MARKET,
-    defaultMarketEventBinary,
+    defaultMarketEventData,
     defaultTransactionIndex,
     0,
   );
 
   const defaultAssetEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.ASSET,
-    defaultAssetEventBinary,
+    defaultAssetEventData,
     defaultTransactionIndex,
     1,
   );

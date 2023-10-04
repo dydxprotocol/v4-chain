@@ -59,6 +59,7 @@ import {
   expectPerpetualPosition,
   expectDefaultTradeKafkaMessageFromTakerFillId,
   liquidationOrderToOrderSide,
+  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
@@ -169,7 +170,9 @@ describe('LiquidationHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.ORDER_FILL,
-        Uint8Array.from(OrderFillEventV1.encode(defaultLiquidationEvent).finish()),
+        binaryToBase64String(
+          Uint8Array.from(OrderFillEventV1.encode(defaultLiquidationEvent).finish()),
+        ),
         transactionIndex,
         eventIndex,
       );

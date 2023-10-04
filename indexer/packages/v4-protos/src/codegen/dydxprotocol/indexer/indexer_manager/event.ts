@@ -136,9 +136,6 @@ export interface IndexerTendermintEvent {
   /** Version of the event. */
 
   version: number;
-  /** Tendermint event bytes. */
-
-  dataBytes: Uint8Array;
 }
 /**
  * IndexerTendermintEvent contains the base64 encoded event proto emitted from
@@ -167,9 +164,6 @@ export interface IndexerTendermintEventSDKType {
   /** Version of the event. */
 
   version: number;
-  /** Tendermint event bytes. */
-
-  data_bytes: Uint8Array;
 }
 /**
  * IndexerTendermintBlock contains all the events for the block along with
@@ -305,8 +299,7 @@ function createBaseIndexerTendermintEvent(): IndexerTendermintEvent {
     transactionIndex: undefined,
     blockEvent: undefined,
     eventIndex: 0,
-    version: 0,
-    dataBytes: new Uint8Array()
+    version: 0
   };
 }
 
@@ -334,10 +327,6 @@ export const IndexerTendermintEvent = {
 
     if (message.version !== 0) {
       writer.uint32(48).uint32(message.version);
-    }
-
-    if (message.dataBytes.length !== 0) {
-      writer.uint32(58).bytes(message.dataBytes);
     }
 
     return writer;
@@ -376,10 +365,6 @@ export const IndexerTendermintEvent = {
           message.version = reader.uint32();
           break;
 
-        case 7:
-          message.dataBytes = reader.bytes();
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -397,7 +382,6 @@ export const IndexerTendermintEvent = {
     message.blockEvent = object.blockEvent ?? undefined;
     message.eventIndex = object.eventIndex ?? 0;
     message.version = object.version ?? 0;
-    message.dataBytes = object.dataBytes ?? new Uint8Array();
     return message;
   }
 

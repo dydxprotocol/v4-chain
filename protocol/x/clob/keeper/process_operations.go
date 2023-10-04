@@ -419,14 +419,6 @@ func (k Keeper) PersistOrderRemovalToState(
 			),
 		),
 		indexerevents.StatefulOrderEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewStatefulOrderRemovalEvent(
-				orderIdToRemove,
-				indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-					orderRemoval.RemovalReason,
-				),
-			),
-		),
 	)
 
 	telemetry.IncrCounterWithLabels(
@@ -527,17 +519,6 @@ func (k Keeper) PersistMatchOrdersToState(
 				),
 			),
 			indexerevents.OrderFillEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewOrderFillEvent(
-					matchWithOrders.MakerOrder.MustGetOrder(),
-					matchWithOrders.TakerOrder.MustGetOrder(),
-					matchWithOrders.FillAmount,
-					matchWithOrders.MakerFee,
-					matchWithOrders.TakerFee,
-					totalFilledMaker,
-					totalFilledTaker,
-				),
-			),
 		)
 	}
 
@@ -643,16 +624,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 				),
 			),
 			indexerevents.OrderFillEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewLiquidationOrderFillEvent(
-					matchWithOrders.MakerOrder.MustGetOrder(),
-					matchWithOrders.TakerOrder,
-					matchWithOrders.FillAmount,
-					matchWithOrders.MakerFee,
-					matchWithOrders.TakerFee,
-					totalFilledMaker,
-				),
-			),
 		)
 	}
 

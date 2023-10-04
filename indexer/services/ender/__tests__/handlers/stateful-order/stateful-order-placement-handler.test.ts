@@ -32,6 +32,7 @@ import {
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
+  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
@@ -108,7 +109,9 @@ describe('statefulOrderPlacementHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.STATEFUL_ORDER,
-        StatefulOrderEventV1.encode(statefulOrderEvent).finish(),
+        binaryToBase64String(
+          StatefulOrderEventV1.encode(statefulOrderEvent).finish(),
+        ),
         transactionIndex,
         eventIndex,
       );

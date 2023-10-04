@@ -21,7 +21,11 @@ import {
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes, FundingEventMessage } from '../../src/lib/types';
-import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
+import {
+  binaryToBase64String,
+  createIndexerTendermintBlock,
+  createIndexerTendermintEvent,
+} from '../helpers/indexer-proto-helpers';
 import { FundingHandler } from '../../src/handlers/funding-handler';
 import {
   defaultFundingRateEvent,
@@ -82,7 +86,9 @@ describe('fundingHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.FUNDING,
-        FundingEventV1.encode(defaultFundingUpdateSampleEvent).finish(),
+        binaryToBase64String(
+          FundingEventV1.encode(defaultFundingUpdateSampleEvent).finish(),
+        ),
         transactionIndex,
         eventIndex,
       );
@@ -334,7 +340,9 @@ function createKafkaMessageFromFundingEvents({
     events.push(
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.FUNDING,
-        FundingEventV1.encode(fundingEvent).finish(),
+        binaryToBase64String(
+          FundingEventV1.encode(fundingEvent).finish(),
+        ),
         transactionIndex,
         eventIndex,
       ),

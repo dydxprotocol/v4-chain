@@ -124,6 +124,9 @@ describe('on-message', () => {
       defaultSubaccountUpdateEvent,
     ).finish(),
   );
+  const defaultSubaccountUpdateEventData: string = Buffer.from(
+    defaultSubaccountUpdateEventBinary.buffer,
+  ).toString('base64');
 
   const defaultTransferEvent: TransferEventV1 = TransferEventV1.fromPartial({
     sender: {
@@ -144,14 +147,23 @@ describe('on-message', () => {
   const defaultTransferEventBinary: Uint8Array = Uint8Array.from(TransferEventV1.encode(
     defaultTransferEvent,
   ).finish());
+  const defaultTransferEventData: string = Buffer.from(
+    defaultTransferEventBinary.buffer,
+  ).toString('base64');
 
   const defaultFundingEventBinary: Uint8Array = Uint8Array.from(FundingEventV1.encode(
     defaultFundingUpdateSampleEvent,
   ).finish());
+  const defaultFundingEventData: string = Buffer.from(
+    defaultFundingEventBinary.buffer,
+  ).toString('base64');
 
   const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
     defaultMarketModify,
   ).finish());
+  const defaultMarketEventData: string = Buffer.from(
+    defaultMarketEventBinary.buffer,
+  ).toString('base64');
 
   it.each([
     [
@@ -172,7 +184,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex,
         eventIndex,
       ),
@@ -229,7 +241,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex,
         eventIndex,
         0,
@@ -274,7 +286,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        defaultTransferEventBinary,
+        defaultTransferEventData,
         transactionIndex,
         eventIndex,
       ),
@@ -332,7 +344,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.FUNDING,
-        defaultFundingEventBinary,
+        defaultFundingEventData,
         transactionIndex,
         eventIndex,
       ),
@@ -376,7 +388,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex,
         eventIndex,
       ),
@@ -402,13 +414,13 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        defaultTransferEventBinary,
+        defaultTransferEventData,
         transactionIndex,
         eventIndex,
       ),
       createIndexerTendermintEvent(
         'unknown',
-        defaultTransferEventBinary,
+        defaultTransferEventData,
         transactionIndex,
         eventIndex1,
       ),
@@ -453,7 +465,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.MARKET,
-        defaultMarketEventBinary,
+        defaultMarketEventData,
         transactionIndex,
         eventIndex,
       ),
@@ -511,7 +523,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex,
         eventIndex,
       ),
@@ -567,13 +579,13 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex,
         eventIndex,
       ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         blockTransactionIndex,
         eventIndex,
       ),
@@ -634,19 +646,19 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex0,
         eventIndex0,
       ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex0,
         eventIndex1,
       ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex1,
         eventIndex0,
       ),
@@ -709,7 +721,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex,
         eventIndex,
       ),
@@ -768,7 +780,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex,
         eventIndex,
       ),
@@ -825,7 +837,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex,
         eventIndex,
       ),
@@ -857,7 +869,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        defaultSubaccountUpdateEventData,
         transactionIndex,
         eventIndex,
       ),

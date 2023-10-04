@@ -103,9 +103,6 @@ func (k Keeper) UpdateMarketPrices(
 				update,
 			),
 			indexerevents.MarketEventVersion,
-			indexer_manager.GetBytes(
-				update,
-			),
 		)
 	}
 

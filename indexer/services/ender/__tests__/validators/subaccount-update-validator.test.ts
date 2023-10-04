@@ -10,7 +10,7 @@ import { SubaccountUpdateValidator } from '../../src/validators/subaccount-updat
 import {
   defaultEmptySubaccountUpdateEvent, defaultHeight, defaultTime, defaultTxHash,
 } from '../helpers/constants';
-import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
+import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 
 describe('subaccount-update-validator', () => {
@@ -59,7 +59,9 @@ function createBlock(
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-    SubaccountUpdateEventV1.encode(subaccountUpdateEvent).finish(),
+    binaryToBase64String(
+      SubaccountUpdateEventV1.encode(subaccountUpdateEvent).finish(),
+    ),
     0,
     0,
   );

@@ -15,6 +15,7 @@ import {
   defaultTxHash,
 } from '../helpers/constants';
 import {
+  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
 } from '../helpers/indexer-proto-helpers';
@@ -74,7 +75,9 @@ function createBlock(
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.UPDATE_PERPETUAL,
-    UpdatePerpetualEventV1.encode(updatePerpetualEvent).finish(),
+    binaryToBase64String(
+      UpdatePerpetualEventV1.encode(updatePerpetualEvent).finish(),
+    ),
     0,
     0,
   );

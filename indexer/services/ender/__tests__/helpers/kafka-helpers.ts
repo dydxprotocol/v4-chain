@@ -10,7 +10,7 @@ import { KafkaMessage } from 'kafkajs';
 
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import { defaultHeight, defaultTime, defaultTxHash } from './constants';
-import { createIndexerTendermintBlock, createIndexerTendermintEvent } from './indexer-proto-helpers';
+import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from './indexer-proto-helpers';
 
 export function createKafkaMessageFromMarketEvent({
   marketEvents,
@@ -30,7 +30,9 @@ export function createKafkaMessageFromMarketEvent({
     events.push(
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.MARKET,
-        MarketEventV1.encode(marketEvents[eventIndex]).finish(),
+        binaryToBase64String(
+          MarketEventV1.encode(marketEvents[eventIndex]).finish(),
+        ),
         transactionIndex,
         eventIndex,
       ),
@@ -59,7 +61,9 @@ export function createKafkaMessageFromStatefulOrderEvent(
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.STATEFUL_ORDER,
-      StatefulOrderEventV1.encode(event).finish(),
+      binaryToBase64String(
+        StatefulOrderEventV1.encode(event).finish(),
+      ),
       transactionIndex,
       0,
     ),

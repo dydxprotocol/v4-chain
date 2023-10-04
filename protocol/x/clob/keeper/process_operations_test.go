@@ -1689,7 +1689,6 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
-			mock.Anything,
 		).Return().Maybe()
 	}
 
@@ -1748,20 +1747,6 @@ func setupProcessProposerOperationsTestCase(
 					),
 				),
 				indexerevents.PerpetualMarketEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						perpetualId,
-						uint32(i),
-						tc.perpetuals[perpetualId].Params.Ticker,
-						tc.perpetuals[perpetualId].Params.MarketId,
-						clobPair.Status,
-						clobPair.QuantumConversionExponent,
-						tc.perpetuals[perpetualId].Params.AtomicResolution,
-						clobPair.SubticksPerTick,
-						clobPair.StepBaseQuantums,
-						tc.perpetuals[perpetualId].Params.LiquidityTier,
-					),
-				),
 			).Once().Return()
 		}
 
@@ -1929,16 +1914,6 @@ func setupNewMockEventManager(
 					),
 				),
 				indexerevents.OrderFillEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewLiquidationOrderFillEvent(
-						match.MakerOrder.MustGetOrder(),
-						match.TakerOrder,
-						match.FillAmount,
-						match.MakerFee,
-						match.TakerFee,
-						match.TotalFilledTaker,
-					),
-				),
 			).Return()
 
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
@@ -1958,17 +1933,6 @@ func setupNewMockEventManager(
 					),
 				),
 				indexerevents.OrderFillEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewOrderFillEvent(
-						match.MakerOrder.MustGetOrder(),
-						match.TakerOrder.MustGetOrder(),
-						match.FillAmount,
-						match.MakerFee,
-						match.TakerFee,
-						match.TotalFilledMaker,
-						match.TotalFilledTaker,
-					),
-				),
 			).Return()
 			matchOrderCallMap[match.MakerOrder.MustGetOrder().OrderId] = call
 			matchOrderCallMap[match.TakerOrder.MustGetOrder().OrderId] = call
@@ -1989,14 +1953,6 @@ func setupNewMockEventManager(
 					),
 				),
 				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewStatefulOrderRemovalEvent(
-						removal.OrderRemoval.OrderId,
-						shared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-							removal.OrderRemoval.RemovalReason,
-						),
-					),
-				),
 			).Once().Return()
 		}
 	}

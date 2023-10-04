@@ -49,6 +49,7 @@ import {
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../../src/lib/on-message';
 import {
+  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   createKafkaMessageFromOrderFillEvent,
@@ -169,7 +170,9 @@ describe('OrderHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.ORDER_FILL,
-        OrderFillEventV1.encode(defaultOrderEvent).finish(),
+        binaryToBase64String(
+          OrderFillEventV1.encode(defaultOrderEvent).finish(),
+        ),
         transactionIndex,
         eventIndex,
       );

@@ -129,20 +129,6 @@ func TestPlaceOrder_Error(t *testing.T) {
 					),
 				),
 				indexerevents.PerpetualMarketEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						clobtest.MustPerpetualId(clobPair),
-						clobPair.Id,
-						perpetual.Params.Ticker,
-						perpetual.Params.MarketId,
-						clobPair.Status,
-						clobPair.QuantumConversionExponent,
-						perpetual.Params.AtomicResolution,
-						clobPair.SubticksPerTick,
-						clobPair.StepBaseQuantums,
-						perpetual.Params.LiquidityTier,
-					),
-				),
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
@@ -284,20 +270,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 					),
 				),
 				indexerevents.PerpetualMarketEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						perpetual.Params.Ticker,
-						perpetual.Params.MarketId,
-						clobPair.Status,
-						clobPair.QuantumConversionExponent,
-						perpetual.Params.AtomicResolution,
-						clobPair.SubticksPerTick,
-						clobPair.StepBaseQuantums,
-						perpetual.Params.LiquidityTier,
-					),
-				),
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
@@ -322,11 +294,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 						),
 					),
 					indexerevents.StatefulOrderEventVersion,
-					indexer_manager.GetBytes(
-						indexerevents.NewConditionalOrderPlacementEvent(
-							tc.StatefulOrderPlacement,
-						),
-					),
 				).Return().Once()
 			} else {
 				indexerEventManager.On(
@@ -339,11 +306,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 						),
 					),
 					indexerevents.StatefulOrderEventVersion,
-					indexer_manager.GetBytes(
-						indexerevents.NewLongTermOrderPlacementEvent(
-							tc.StatefulOrderPlacement,
-						),
-					),
 				).Return().Once()
 			}
 
