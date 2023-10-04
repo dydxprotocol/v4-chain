@@ -765,3 +765,64 @@ func TestPlaceOrder(t *testing.T) {
 		})
 	}
 }
+
+func TestShortTermOrderReplacements(t *testing.T) {
+	type orderIdExpectations struct {
+		shouldExistOnMemclob bool
+		expectedOrder 	  clobtypes.Order
+		expectedFillAmount uint64
+	}
+	type blockOrdersAndExpectations struct {
+		ordersToPlace []clobtypes.MsgPlaceOrder
+		orderIdsExpectations map[clobtypes.OrderId]orderIdExpectations
+	}
+	tests := map[string]struct {
+		blocks []blockOrdersAndExpectations
+	} {
+		"Success: Replace in same block": {
+			blocks: []blockOrdersAndExpectations{
+				{
+					ordersToPlace: []clobtypes.MsgPlaceOrder{
+						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
+						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB21,
+					},
+					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
+						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB21.Order.OrderId: {
+							shouldExistOnMemclob: true,
+							expectedOrder: PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB21.Order,
+							expectedFillAmount: 0,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder().Build()
+			ctx := tApp.InitChain()
+
+			for i, block := range tc.blocks {
+				for _, order := range block.ordersToPlace {
+					for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, order) {
+						resp := tApp.CheckTx(checkTx)
+						require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+					}
+				}
+
+				ctx = tApp.AdvanceToBlock(uint32(i + 2), testapp.AdvanceToBlockOptions{})
+
+				for orderId, expectations := range block.orderIdsExpectations {
+					order, exists := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
+					require.Equal(t, expectations.shouldExistOnMemclob, exists)
+					if expectations.shouldExistOnMemclob {
+						require.Equal(t, expectations.expectedOrder, order)
+					}
+					_, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
+					require.Equal(t, expectations.expectedFillAmount, uint64(fillAmount))
+				}
+			}
+		})
+	}
+}
