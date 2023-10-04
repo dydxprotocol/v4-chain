@@ -13,20 +13,20 @@ import (
 // - Base position notional is not 0.
 func (liquidityTier LiquidityTier) Validate() error {
 	if liquidityTier.InitialMarginPpm > MaxInitialMarginPpm {
-		return errorsmod.Wrap(ErrInitialMarginPpmExceedsMax, lib.Uint32ToString(liquidityTier.InitialMarginPpm))
+		return errorsmod.Wrap(ErrInitialMarginPpmExceedsMax, lib.UintToString(liquidityTier.InitialMarginPpm))
 	}
 
 	if liquidityTier.MaintenanceFractionPpm > MaxMaintenanceFractionPpm {
 		return errorsmod.Wrap(ErrMaintenanceFractionPpmExceedsMax,
-			lib.Uint32ToString(liquidityTier.MaintenanceFractionPpm))
+			lib.UintToString(liquidityTier.MaintenanceFractionPpm))
 	}
 
 	if liquidityTier.BasePositionNotional == 0 {
-		return errorsmod.Wrap(ErrBasePositionNotionalIsZero, lib.Uint32ToString(0))
+		return ErrBasePositionNotionalIsZero
 	}
 
 	if liquidityTier.ImpactNotional == 0 {
-		return errorsmod.Wrap(ErrImpactNotionalIsZero, lib.Uint32ToString(0))
+		return ErrImpactNotionalIsZero
 	}
 
 	return nil

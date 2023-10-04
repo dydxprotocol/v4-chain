@@ -26,7 +26,7 @@ func (k Keeper) getClobPairStore(
 func clobPairKey(
 	id types.ClobPairId,
 ) []byte {
-	return lib.Uint32ToBytes(id.ToUint32())
+	return lib.Bit32ToBytes(id.ToUint32())
 }
 
 // CreatePerpetualClobPair creates a new perpetual CLOB pair in the store.
