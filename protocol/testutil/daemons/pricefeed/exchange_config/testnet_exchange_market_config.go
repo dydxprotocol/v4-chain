@@ -787,7 +787,8 @@ var (
 					Ticker: "LDO-USDT",
 				},
 				MARKET_USDT_USD: {
-					Ticker: "USDT-USDC",
+					Ticker: "USDC-USDT",
+					Invert: true,
 				},
 				MARKET_XLM_USD: {
 					Ticker:         "XLM-USDT",

@@ -32,7 +32,8 @@
     },
     {
       "exchangeName": "Okx",
-      "ticker": "USDT-USDC"
+      "ticker": "USDC-USDT",
+      "invert": true
     }
   ]
 }
