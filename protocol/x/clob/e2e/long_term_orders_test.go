@@ -302,7 +302,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			},
 			Side:         clobtypes.Order_SIDE_BUY,
 			Quantums:     10_000_000_000, // 1 BTC, assuming atomic resolution of -10
-			Subticks:     500_000_000, // 50k USDC / BTC, assuming QCE of -8
+			Subticks:     500_000_000,    // 50k USDC / BTC, assuming QCE of -8
 			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
 		},
 	)
@@ -333,7 +333,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 1, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_SELL,
-			Quantums:     10_000_000_000, 
+			Quantums:     10_000_000_000,
 			Subticks:     500_000_000,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
 		},
@@ -388,30 +388,30 @@ func TestPlaceLongTermOrder(t *testing.T) {
 	)
 
 	type ordersAndExpectations struct {
-		orderMsgs []clobtypes.MsgPlaceOrder
+		orderMsgs   []clobtypes.MsgPlaceOrder
 		blockHeight uint32
 
-		expectedOffchainMessagesCheckTx []msgsender.Message
+		expectedOffchainMessagesCheckTx    []msgsender.Message
 		expectedOffchainMessagesAfterBlock []msgsender.Message
-		expectedOnchainMessagesAfterBlock []msgsender.Message
+		expectedOnchainMessagesAfterBlock  []msgsender.Message
 	}
 
 	tests := map[string]struct {
 		// Long-term order to track
-		order  clobtypes.Order
+		order clobtypes.Order
 
 		// Orders to place in each block and expectations to verify
 		ordersAndExpectationsPerBlock []ordersAndExpectations
 
 		// Expectations to verify at end of test
 		orderShouldRestOnOrderbook bool
-		expectedOrderFillAmount uint64
-		expectedSubaccounts []satypes.Subaccount
-	} {
+		expectedOrderFillAmount    uint64
+		expectedSubaccounts        []satypes.Subaccount
+	}{
 		"Test placing an order": {
-			order: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
 			orderShouldRestOnOrderbook: true,
-			expectedOrderFillAmount: 0,
+			expectedOrderFillAmount:    0,
 
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
 				{
@@ -469,9 +469,9 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			},
 		},
 		"Test matching an order fully as taker": {
-			order: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
 			orderShouldRestOnOrderbook: false,
-			expectedOrderFillAmount: 0, // order is fully-filled and removed from state
+			expectedOrderFillAmount:    0, // order is fully-filled and removed from state
 
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
 				{
@@ -563,12 +563,12 @@ func TestPlaceLongTermOrder(t *testing.T) {
 											},
 											[]*satypes.AssetPosition{
 												{
-													AssetId:  lib.UsdcAssetId,
+													AssetId: lib.UsdcAssetId,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
 															aliceSubaccount.GetUsdcPosition(),
 															new(big.Int).SetInt64(
-																50_000_000_000 + 25_000_000, // taker fee of .5%
+																50_000_000_000+25_000_000, // taker fee of .5%
 															),
 														),
 													),
@@ -597,12 +597,12 @@ func TestPlaceLongTermOrder(t *testing.T) {
 											},
 											[]*satypes.AssetPosition{
 												{
-													AssetId:  lib.UsdcAssetId,
+													AssetId: lib.UsdcAssetId,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
 															bobSubaccount.GetUsdcPosition(),
 															new(big.Int).SetInt64(
-																50_000_000_000 + 5_500_000, // maker rebate of .110%
+																50_000_000_000+5_500_000, // maker rebate of .110%
 															),
 														),
 													),
@@ -660,9 +660,9 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			},
 		},
 		"Test post-only order placed on the book": {
-			order: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO.Order,
+			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO.Order,
 			orderShouldRestOnOrderbook: true,
-			expectedOrderFillAmount: 0,
+			expectedOrderFillAmount:    0,
 
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
 				{
@@ -715,9 +715,9 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			},
 		},
 		"Test matching an order partially as taker then fully as maker": {
-			order: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order,
+			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order,
 			orderShouldRestOnOrderbook: false,
-			expectedOrderFillAmount: 0, // order is fully-filled and removed from state, resulting in zero fill amount in state
+			expectedOrderFillAmount:    0, // order is fully-filled and removed from state, resulting in zero fill amount in state
 			expectedSubaccounts: []satypes.Subaccount{
 				{
 					Id: &constants.Alice_Num0,
@@ -731,13 +731,13 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					},
 					AssetPositions: []*satypes.AssetPosition{
 						{
-							AssetId:  lib.UsdcAssetId,
+							AssetId: lib.UsdcAssetId,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Sub(
 									aliceSubaccount.GetUsdcPosition(),
 									new(big.Int).SetInt64(
-										50_000_000_000 + 25_000_000 + // taker fee of .5%
-										50_000_000_000 - 5_500_000, // maker rebate of .110%
+										50_000_000_000+25_000_000+ // taker fee of .5%
+											50_000_000_000-5_500_000, // maker rebate of .110%
 									),
 								),
 							),
@@ -846,12 +846,12 @@ func TestPlaceLongTermOrder(t *testing.T) {
 											},
 											[]*satypes.AssetPosition{
 												{
-													AssetId:  lib.UsdcAssetId,
+													AssetId: lib.UsdcAssetId,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
 															aliceSubaccount.GetUsdcPosition(),
 															new(big.Int).SetInt64(
-																50_000_000_000 + 25_000_000, // taker fee of .5%
+																50_000_000_000+25_000_000, // taker fee of .5%
 															),
 														),
 													),
@@ -880,12 +880,12 @@ func TestPlaceLongTermOrder(t *testing.T) {
 											},
 											[]*satypes.AssetPosition{
 												{
-													AssetId:  lib.UsdcAssetId,
+													AssetId: lib.UsdcAssetId,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
 															bobSubaccount.GetUsdcPosition(),
 															new(big.Int).SetInt64(
-																50_000_000_000 + 5_500_000, // maker rebate of .110%
+																50_000_000_000+5_500_000, // maker rebate of .110%
 															),
 														),
 													),
@@ -992,20 +992,20 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													// because they are both fully filled
 													Quantums: dtypes.NewInt(-int64(
 														PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums() +
-														PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums(),
+															PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums(),
 													)),
 													FundingIndex: dtypes.NewInt(0),
 												},
 											},
 											[]*satypes.AssetPosition{
 												{
-													AssetId:  lib.UsdcAssetId,
+													AssetId: lib.UsdcAssetId,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
 															bobSubaccount.GetUsdcPosition(),
 															new(big.Int).SetInt64(
-																50_000_000_000 + 5_500_000 + // maker rebate of .110% from first order
-																50_000_000_000 - 25_000_000, // taker fee of .5% from second order
+																50_000_000_000+5_500_000+ // maker rebate of .110% from first order
+																	50_000_000_000-25_000_000, // taker fee of .5% from second order
 															),
 														),
 													),
@@ -1035,13 +1035,13 @@ func TestPlaceLongTermOrder(t *testing.T) {
 											},
 											[]*satypes.AssetPosition{
 												{
-													AssetId:  lib.UsdcAssetId,
+													AssetId: lib.UsdcAssetId,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
 															aliceSubaccount.GetUsdcPosition(),
 															new(big.Int).SetInt64(
-																50_000_000_000 + 25_000_000 + // taker fee of .5% from first match
-																50_000_000_000 - 5_500_000, // maker rebate of .110% from second match
+																50_000_000_000+25_000_000+ // taker fee of .5% from first match
+																	50_000_000_000-5_500_000, // maker rebate of .110% from second match
 															),
 														),
 													),
@@ -1097,7 +1097,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					)},
 				},
 			},
-	    },
+		},
 	}
 
 	for name, tc := range tests {
