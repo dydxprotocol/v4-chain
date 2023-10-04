@@ -6,7 +6,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	pricefeedconstants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	"github.com/stretchr/testify/mock"
@@ -203,8 +203,8 @@ func TestRegisterDaemon_DoubleRegistrationPanics(t *testing.T) {
 }
 
 func createServerWithMocks(
-	mockGrpcServer lib.GrpcServer,
-	mockFileHandler lib.FileHandler,
+	mockGrpcServer daemontypes.GrpcServer,
+	mockFileHandler daemontypes.FileHandler,
 ) *server.Server {
 	server := server.NewServer(
 		log.NewNopLogger(),

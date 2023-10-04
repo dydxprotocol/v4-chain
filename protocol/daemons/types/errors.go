@@ -12,8 +12,7 @@ const Name = "daemons"
 // daemon errors
 var (
 	// Generic daemon server errors.
-	ErrDaemonMethodNotImplemented    = errorsmod.Register(Name, 1, "Daemon method not implemented")
-	ErrServerNotInitializedCorrectly = errorsmod.Register(Name, 2, "Daemon server not initialized correctly")
+	ErrServerNotInitializedCorrectly = errorsmod.Register(Name, 1, "Daemon server not initialized correctly")
 
 	// PriceFeed daemon service errors will have code 1xxx.
 	ErrPriceFeedInvalidPrice = errorsmod.Register(
