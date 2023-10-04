@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"io"
 	"math/big"
 	"net/http"
