@@ -9,7 +9,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { stats } from '@dydxprotocol-indexer/base';
 import { complianceProvider } from '../../../../src/helpers/compliance/compliance-clients';
-import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+import { ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { DateTime } from 'luxon';
@@ -68,6 +68,7 @@ describe('compliance-controller#V4', () => {
       });
 
       expect(response.body.restricted).toEqual(false);
+      expect(response.reason).toBeUndefined();
       expect(stats.timing).toHaveBeenCalledTimes(1);
       expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
 
@@ -95,6 +96,7 @@ describe('compliance-controller#V4', () => {
         });
 
         expect(response.body.restricted).toEqual(false);
+        expect(response.reason).toBeUndefined();
         expect(stats.timing).toHaveBeenCalledTimes(1);
         expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
 
@@ -117,6 +119,7 @@ describe('compliance-controller#V4', () => {
         });
 
         expect(response.body.restricted).toEqual(true);
+        expect(response.body.reason).toEqual(INDEXER_COMPLIANCE_BLOCKED_PAYLOAD);
         expect(stats.timing).toHaveBeenCalledTimes(1);
         expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
 
@@ -144,6 +147,7 @@ describe('compliance-controller#V4', () => {
         });
 
         expect(response.body.restricted).toEqual(false);
+        expect(response.body.reason).toBeUndefined();
         expect(stats.timing).toHaveBeenCalledTimes(1);
         expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
 
@@ -177,6 +181,7 @@ describe('compliance-controller#V4', () => {
         });
 
         expect(response.body.restricted).toEqual(true);
+        expect(response.body.reason).toEqual(INDEXER_COMPLIANCE_BLOCKED_PAYLOAD);
         expect(stats.timing).toHaveBeenCalledTimes(1);
         expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
 

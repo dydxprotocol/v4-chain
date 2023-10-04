@@ -1,7 +1,6 @@
-import { INDEXER_GEOBLOCKED_PAYLOAD } from '../../src/constants';
+import { INDEXER_GEOBLOCKED_PAYLOAD, isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
 import config from '../../src/config';
 import { rejectRestrictedCountries } from '../../src/lib/restrict-countries';
-import { isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
 import { BlockedCode } from '../../src/types';
 
 jest.mock('@dydxprotocol-indexer/compliance');

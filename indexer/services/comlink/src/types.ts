@@ -385,6 +385,7 @@ export interface Risk {
 
 export interface ComplianceResponse {
   restricted: boolean;
+  reason?: string;
 }
 
 export interface ComplianceRequest extends AddressRequest {}

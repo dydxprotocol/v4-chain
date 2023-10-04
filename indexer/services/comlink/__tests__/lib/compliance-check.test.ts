@@ -11,7 +11,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { blockedComplianceData, nonBlockedComplianceData } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import request from 'supertest';
-import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '../../src/constants';
+import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 
 // Create a router to test the middleware with
 const router: express.Router = express.Router();
