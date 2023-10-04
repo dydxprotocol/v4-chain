@@ -138,7 +138,7 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: "npm"
           cache-dependency-path: '**/package-lock.json'
-      
+
       - name: Install buf
         run: |
           BIN="/usr/local/bin" && \
