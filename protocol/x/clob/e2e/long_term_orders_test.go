@@ -350,7 +350,9 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5),
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+			),
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
 	)
@@ -358,7 +360,9 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5),
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5,
+			),
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5,
 	)
@@ -382,7 +386,9 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO),
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
+			),
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
 	)
@@ -717,7 +723,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		"Test matching an order partially as taker then fully as maker": {
 			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order,
 			orderShouldRestOnOrderbook: false,
-			expectedOrderFillAmount:    0, // order is fully-filled and removed from state, resulting in zero fill amount in state
+			// order is fully-filled and removed from state, resulting in zero fill amount in state
+			expectedOrderFillAmount: 0,
 			expectedSubaccounts: []satypes.Subaccount{
 				{
 					Id: &constants.Alice_Num0,
