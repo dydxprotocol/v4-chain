@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -14,7 +16,15 @@ import (
 func (k msgServer) CreateClobPair(
 	goCtx context.Context,
 	msg *types.MsgCreateClobPair,
-) (*types.MsgCreateClobPairResponse, error) {
+) (resp *types.MsgCreateClobPairResponse, err error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	defer func() {
+		if err != nil {
+			errorlib.LogErrorWithBlockHeight(ctx, err)
+		}
+	}()
+
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -22,8 +32,6 @@ func (k msgServer) CreateClobPair(
 			msg.Authority,
 		)
 	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// TODO(DEC-1535): update this when additional clob pair types are supported.
 	if _, err := k.Keeper.CreatePerpetualClobPair(

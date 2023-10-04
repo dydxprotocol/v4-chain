@@ -8,6 +8,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -16,8 +17,14 @@ import (
 func (m msgServer) CancelOrder(
 	goCtx context.Context,
 	msg *types.MsgCancelOrder,
-) (*types.MsgCancelOrderResponse, error) {
+) (resp *types.MsgCancelOrderResponse, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	defer func() {
+		if err != nil {
+			errorlib.LogErrorWithBlockHeight(ctx, err)
+		}
+	}()
 
 	// 1. If this is a Short-Term order, panic.
 	msg.OrderId.MustBeStatefulOrder()

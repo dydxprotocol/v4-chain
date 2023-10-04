@@ -3,28 +3,27 @@ package keeper
 import (
 	"context"
 
-	errorsmod "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 func (k msgServer) ProposedOperations(
 	goCtx context.Context,
 	msg *types.MsgProposedOperations,
-) (*types.MsgProposedOperationsResponse, error) {
+) (resp *types.MsgProposedOperationsResponse, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	defer func() {
+		if err != nil {
+			errorlib.LogErrorWithBlockHeight(ctx, err)
+		}
+	}()
 
 	if err := k.Keeper.ProcessProposerOperations(
 		ctx,
 		msg.GetOperationsQueue(),
 	); err != nil {
-		err = errorsmod.Wrapf(
-			err,
-			"Block height: %d",
-			ctx.BlockHeight(),
-		)
-		ctx.Logger().Error(err.Error())
 		return nil, err
 	}
 
