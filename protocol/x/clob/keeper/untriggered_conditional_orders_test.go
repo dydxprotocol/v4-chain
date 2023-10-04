@@ -223,12 +223,15 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
 			)
 
-			// There should be exactly zero matches for all these cases since the order should have been removed.
-			orderIdToMatch := tc.conditionalOrderIdsToExpire[0]
-			require.Equal(t, uint32(0), tApp.App.ClobKeeper.CountUntriggeredSubaccountStatefulOrders(
-				ctx,
-				orderIdToMatch.SubaccountId,
-			))
+			require.Equal(
+				t,
+				uint32(len(tc.expectedOrdersToTriggerWhenOraclePriceGTETriggerPrice)+
+					len(tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice)),
+				tApp.App.ClobKeeper.CountUntriggeredSubaccountStatefulOrders(
+					ctx,
+					constants.Alice_Num0,
+				),
+			)
 		})
 	}
 }
