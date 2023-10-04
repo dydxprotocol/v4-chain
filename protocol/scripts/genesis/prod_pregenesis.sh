@@ -36,12 +36,12 @@ NATIVE_TOKEN="adv4tnt"
 NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
 # Human readable name of token.
 COIN_NAME="dYdX Testnet Token"
-# Market ID in the oracle price list for the rwards token.
+# Market ID in the oracle price list for the rewards token.
 REWARDS_TOKEN_MARKET_ID=11
 # The numerical chain ID of the Ethereum chain for bridge daemon to query.
 ETH_CHAIN_ID=1
 # The address of the Ethereum contract for bridge daemon to monitor for logs.
-ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0"
+ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0" # default value points to a Sepolia contract
 # The next event id (the last processed id plus one) of the logs from the Ethereum contract.
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0
 # The Ethereum block height of the most recently processed bridge event.
@@ -57,7 +57,7 @@ REWARDS_VEST_START_TIME="2001-01-01T00:00:00Z"
 # End time of the rewards vesting schedule.
 REWARDS_VEST_END_TIME="2050-01-01T00:00:00Z"
 
-################## Start of required values to be updated ##################
+################## End of required values to be updated ##################
 
 cleanup_tmp_dir() {
 	if [ -d "$TMP_EXCHANGE_CONFIG_JSON_DIR" ]; then
@@ -121,11 +121,15 @@ function overwrite_genesis_production() {
     dasel put -t int -f "$GENESIS" '.app_state.rewards.params.fee_multiplier_ppm' -v '0'
 
     # Vest params
-    # For communmity treasury
+    # For community treasury
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].vester_account' -v "community_vester"
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].treasury_account' -v "community_treasury"
     dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].denom' -v "$NATIVE_TOKEN"
     dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].start_time' -v "$COMMUNITY_VEST_START_TIME"
     dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[0].end_time' -v "$COMMUNITY_VEST_END_TIME"
     # For rewards treasury
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].vester_account' -v "rewards_vester"
+	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].treasury_account' -v "rewards_treasury"
     dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].denom' -v "$NATIVE_TOKEN"
     dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].start_time' -v "$REWARDS_VEST_START_TIME"
     dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].end_time' -v "$REWARDS_VEST_END_TIME"
