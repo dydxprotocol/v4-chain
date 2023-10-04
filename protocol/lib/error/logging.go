@@ -7,7 +7,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -41,13 +40,17 @@ func WrapErrorWithSourceModuleContext(err error, module string) error {
 		WithLogKeyValue(SourceModuleKey, fmt.Sprintf("x/%v", module))
 }
 
-// LogErrorWithBlockHeight logs an error using the cosmos sdk Context's logger, appending the block
-// height to the error message.
-func LogErrorWithBlockHeight(ctx sdk.Context, err error) {
-	err = errorsmod.Wrapf(
-		err,
-		"Block height: %d",
-		ctx.BlockHeight(),
-	)
-	ctx.Logger().Error(err.Error())
+// LogErrorWithBlockHeight logs an error, appending the block height and ABCI callback to the error message.
+func LogErrorWithBlockHeight(logger log.Logger, err error, blockHeight int64, callback string) {
+	if err != nil {
+		err = errorsmod.Wrapf(
+			err,
+			"Block height: %d, Callback: %s",
+			blockHeight,
+			callback,
+		)
+		logger.Error(err.Error())
+	} else {
+		logger.Error("LogErrorWithBlockHeight called with nil error")
+	}
 }

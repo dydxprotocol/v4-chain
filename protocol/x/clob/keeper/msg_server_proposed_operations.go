@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -16,7 +17,7 @@ func (k msgServer) ProposedOperations(
 
 	defer func() {
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(ctx, err)
+			errorlib.LogErrorWithBlockHeight(ctx.Logger(), err, ctx.BlockHeight(), metrics.DeliverTx)
 		}
 	}()
 

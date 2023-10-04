@@ -22,7 +22,7 @@ func (m msgServer) CancelOrder(
 
 	defer func() {
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(ctx, err)
+			errorlib.LogErrorWithBlockHeight(ctx.Logger(), err, ctx.BlockHeight(), metrics.DeliverTx)
 		}
 	}()
 

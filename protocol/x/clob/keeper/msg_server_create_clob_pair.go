@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -21,7 +22,7 @@ func (k msgServer) CreateClobPair(
 
 	defer func() {
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(ctx, err)
+			errorlib.LogErrorWithBlockHeight(ctx.Logger(), err, ctx.BlockHeight(), metrics.DeliverTx)
 		}
 	}()
 
