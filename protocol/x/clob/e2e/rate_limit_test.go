@@ -2,6 +2,7 @@ package clob_test
 
 import (
 	"bytes"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"testing"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -21,8 +22,9 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 		blockRateLimitConifg clobtypes.BlockRateLimitConfiguration
 		firstMsg             sdktypes.Msg
 		secondMsg            sdktypes.Msg
+		expectedRateLimit    bool
 	}{
-		"Short term orders": {
+		"Short term orders with same subaccounts": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
 				MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
@@ -31,10 +33,24 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 					},
 				},
 			},
-			firstMsg:  &PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
-			secondMsg: &PlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB20,
+			firstMsg:          &PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
+			secondMsg:         &PlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB20,
+			expectedRateLimit: true,
 		},
-		"Stateful orders": {
+		"Short term orders with different subaccounts": {
+			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
+				MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 2,
+						Limit:     1,
+					},
+				},
+			},
+			firstMsg:          &PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
+			secondMsg:         &PlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTB20,
+			expectedRateLimit: true,
+		},
+		"Stateful orders with same subaccounts": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
 				MaxStatefulOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
@@ -43,10 +59,24 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 					},
 				},
 			},
-			firstMsg:  &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
-			secondMsg: &LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5,
+			firstMsg:          &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+			secondMsg:         &LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5,
+			expectedRateLimit: true,
 		},
-		"Short term order cancellations": {
+		"Stateful orders with different subaccounts": {
+			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
+				MaxStatefulOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 2,
+						Limit:     1,
+					},
+				},
+			},
+			firstMsg:          &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+			secondMsg:         &LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5,
+			expectedRateLimit: false,
+		},
+		"Short term order cancellations with same subaccounts": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
 				MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
@@ -55,8 +85,22 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 					},
 				},
 			},
-			firstMsg:  &CancelOrder_Alice_Num0_Id0_Clob1_GTB5,
-			secondMsg: &CancelOrder_Alice_Num0_Id0_Clob0_GTB20,
+			firstMsg:          &CancelOrder_Alice_Num0_Id0_Clob1_GTB5,
+			secondMsg:         &CancelOrder_Alice_Num0_Id0_Clob0_GTB20,
+			expectedRateLimit: true,
+		},
+		"Short term order cancellations with different subaccounts": {
+			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
+				MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 2,
+						Limit:     1,
+					},
+				},
+			},
+			firstMsg:          &CancelOrder_Alice_Num0_Id0_Clob1_GTB5,
+			secondMsg:         &CancelOrder_Alice_Num1_Id0_Clob0_GTB20,
+			expectedRateLimit: true,
 		},
 	}
 
@@ -70,6 +114,14 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 						genesisState.BlockRateLimitConfig = tc.blockRateLimitConifg
 					},
 				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						genesisState.Subaccounts = []satypes.Subaccount{
+							constants.Alice_Num0_10_000USD,
+							constants.Alice_Num1_10_000USD,
+						}
+					})
 				return genesis
 			}).WithTesting(t).Build()
 			ctx := tApp.InitChain()
@@ -96,28 +148,32 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			)
 			// Rate limit is 1 over two block, second attempt should be blocked.
 			resp := tApp.CheckTx(secondCheckTx)
-			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
-			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
-			require.Contains(t, resp.Log, "Rate of 2 exceeds configured block rate limit")
+			if tc.expectedRateLimit {
+				require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+				require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
+				require.Contains(t, resp.Log, "Rate of 2 exceeds configured block rate limit")
 
-			// Rate limit of 1 over two blocks should still apply, total should be 3 now (2 in block 2, 1 in block 3).
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
-			resp = tApp.CheckTx(secondCheckTx)
-			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
-			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
-			require.Contains(t, resp.Log, "Rate of 3 exceeds configured block rate limit")
+				// Rate limit of 1 over two blocks should still apply, total should be 3 now (2 in block 2, 1 in block 3).
+				tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+				resp = tApp.CheckTx(secondCheckTx)
+				require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+				require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
+				require.Contains(t, resp.Log, "Rate of 3 exceeds configured block rate limit")
 
-			// Rate limit of 1 over two blocks should still apply, total should be 2 now (1 in block 3, 1 in block 4).
-			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
-			resp = tApp.CheckTx(secondCheckTx)
-			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
-			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
-			require.Contains(t, resp.Log, "Rate of 2 exceeds configured block rate limit")
+				// Rate limit of 1 over two blocks should still apply, total should be 2 now (1 in block 3, 1 in block 4).
+				tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+				resp = tApp.CheckTx(secondCheckTx)
+				require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+				require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
+				require.Contains(t, resp.Log, "Rate of 2 exceeds configured block rate limit")
 
-			// Advancing two blocks should make the total count 0 now and the msg should be accepted.
-			tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
-			resp = tApp.CheckTx(secondCheckTx)
-			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+				// Advancing two blocks should make the total count 0 now and the msg should be accepted.
+				tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
+				resp = tApp.CheckTx(secondCheckTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			} else {
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
 		})
 	}
 }
