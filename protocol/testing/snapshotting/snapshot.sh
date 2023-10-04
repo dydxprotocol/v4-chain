@@ -68,8 +68,6 @@ setup_cosmovisor() {
     export DAEMON_HOME="$HOME/chain/local_node"
 
     cosmovisor init /bin/dydxprotocold
-
-    cp /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/genesis/bin/"
 }
 
 install_prerequisites

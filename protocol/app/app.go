@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -208,6 +209,10 @@ func init() {
 	}
 
 	DefaultNodeHome = filepath.Join(userHomeDir, "."+AppName)
+
+	// Set DefaultPowerReduction to 1e18 to avoid overflow whe calculating
+	// consensus power.
+	sdk.DefaultPowerReduction = lib.PowerReduction
 }
 
 // App extends an ABCI application, but with most of its parameters exported.
@@ -284,6 +289,20 @@ type App struct {
 
 	IndexerEventManager indexer_manager.IndexerEventManager
 	Server              *daemonserver.Server
+
+	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
+	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
+	// delayed until after the gRPC service is initialized so that the gRPC service will be available and the daemons
+	// can correctly operate.
+	startDaemons func()
+}
+
+// assertAppPreconditions assert invariants required for an application to start.
+func assertAppPreconditions() {
+	// Check that the default power reduction is set correctly.
+	if sdk.DefaultPowerReduction.BigInt().Cmp(big.NewInt(1_000_000_000_000_000_000)) != 0 {
+		panic("DefaultPowerReduction is not set correctly")
+	}
 }
 
 // New returns a reference to an initialized blockchain app
@@ -295,6 +314,8 @@ func New(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+	assertAppPreconditions()
+
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.
@@ -554,16 +575,43 @@ func New(
 	bridgeEventManager := bridgedaemontypes.NewBridgeEventManager(timeProvider)
 	app.Server.WithBridgeEventManager(bridgeEventManager)
 
-	// Start server for handling gRPC messages from daemons.
-	go app.Server.Start()
+	// Create a closure for starting daemons and daemon server. Daemon services are delayed until after the gRPC
+	// service is started because daemons depend on the gRPC service being available. If a node is initialized
+	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
+	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
+	// monitoring service will panic.
+	app.startDaemons = func() {
+		// Start server for handling gRPC messages from daemons.
+		go app.Server.Start()
 
-	// Start liquidations client for sending potentially liquidatable subaccounts to the application.
-	if daemonFlags.Liquidation.Enabled {
-		app.Server.ExpectLiquidationsDaemon(
-			daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
-		)
-		go func() {
-			if err := liquidationclient.Start(
+		// Start liquidations client for sending potentially liquidatable subaccounts to the application.
+		if daemonFlags.Liquidation.Enabled {
+			app.Server.ExpectLiquidationsDaemon(
+				daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
+			)
+			go func() {
+				if err := liquidationclient.Start(
+					// The client will use `context.Background` so that it can have a different context from
+					// the main application.
+					context.Background(),
+					daemonFlags,
+					appFlags,
+					logger,
+					&lib.GrpcClientImpl{},
+				); err != nil {
+					panic(err)
+				}
+			}()
+		}
+
+		// Non-validating full-nodes have no need to run the price daemon.
+		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
+			exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
+			app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
+			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
+			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
+			// periodically sent via gRPC to a shared socket with the server.
+			client := pricefeedclient.StartNewClient(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
 				context.Background(),
@@ -571,53 +619,33 @@ func New(
 				appFlags,
 				logger,
 				&lib.GrpcClientImpl{},
-			); err != nil {
-				panic(err)
-			}
-		}()
-	}
+				exchangeStartupConfig,
+				constants.StaticExchangeDetails,
+				&pricefeedclient.SubTaskRunnerImpl{},
+			)
+			stoppable.RegisterServiceForTestCleanup(appFlags.GrpcAddress, client)
+		}
 
-	// Non-validating full-nodes have no need to run the price daemon.
-	if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
-		exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
-		app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
-		// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
-		// are retrieved via third-party APIs like Binance and then are encoded in-memory and
-		// periodically sent via gRPC to a shared socket with the server.
-		client := pricefeedclient.StartNewClient(
-			// The client will use `context.Background` so that it can have a different context from
-			// the main application.
-			context.Background(),
-			daemonFlags,
-			appFlags,
-			logger,
-			&lib.GrpcClientImpl{},
-			exchangeStartupConfig,
-			constants.StaticExchangeDetails,
-			&pricefeedclient.SubTaskRunnerImpl{},
-		)
-		stoppable.RegisterServiceForTestCleanup(appFlags.GrpcAddress, client)
-	}
-
-	// Start Bridge Daemon.
-	// Non-validating full-nodes have no need to run the bridge daemon.
-	if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
-		// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
-		// environments.
-		// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
-		go func() {
-			if err := bridgeclient.Start(
-				// The client will use `context.Background` so that it can have a different context from
-				// the main application.
-				context.Background(),
-				daemonFlags,
-				appFlags,
-				logger,
-				&lib.GrpcClientImpl{},
-			); err != nil {
-				panic(err)
-			}
-		}()
+		// Start Bridge Daemon.
+		// Non-validating full-nodes have no need to run the bridge daemon.
+		if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
+			// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
+			// environments.
+			// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
+			go func() {
+				if err := bridgeclient.Start(
+					// The client will use `context.Background` so that it can have a different context from
+					// the main application.
+					context.Background(),
+					daemonFlags,
+					appFlags,
+					logger,
+					&lib.GrpcClientImpl{},
+				); err != nil {
+					panic(err)
+				}
+			}()
+		}
 	}
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
@@ -1316,6 +1344,9 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	if apiConfig.Swagger {
 		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
 	}
+
+	// Now that the API server has been configured, start the daemons.
+	app.startDaemons()
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.

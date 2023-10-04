@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	pricefeed "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -100,4 +101,7 @@ var (
 			Tickers:      []JsonResponse{bitfinexTicker_Eth9002},
 		},
 	}
+
+	// ValidAuthority is an authority address that passes basic validation.
+	ValidAuthority = authtypes.NewModuleAddress("test").String()
 )

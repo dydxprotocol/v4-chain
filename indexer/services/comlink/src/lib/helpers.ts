@@ -105,9 +105,11 @@ export function create4xxResponse(
   res: express.Response,
   msg: string,
   status: number = 400,
+  additionalParams: object = {},
 ): express.Response {
   return res.status(status).json({
     errors: [{
+      ...additionalParams,
       msg,
     }],
   });

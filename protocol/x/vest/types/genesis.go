@@ -6,17 +6,29 @@ import (
 	rewardstypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
+var (
+	DefaultVestingStartTime = time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC).In(time.UTC)
+	DefaultVestingEndTime   = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC).In(time.UTC)
+)
+
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// TODO(CORE-530): in genesis.sh, overwrite start and end times dynamically for testnets.
 		VestEntries: []VestEntry{
 			{
+				VesterAccount:   CommunityVesterAccountName,
+				TreasuryAccount: CommunityTreasuryAccountName,
+				Denom:           "dv4tnt",
+				StartTime:       DefaultVestingStartTime,
+				EndTime:         DefaultVestingEndTime,
+			},
+			{
 				VesterAccount:   rewardstypes.VesterAccountName,
 				TreasuryAccount: rewardstypes.TreasuryAccountName,
 				Denom:           "dv4tnt",
-				StartTime:       time.Date(2023, 9, 13, 0, 0, 0, 0, time.UTC).In(time.UTC),
-				EndTime:         time.Date(2023, 10, 13, 0, 0, 0, 0, time.UTC).In(time.UTC),
+				StartTime:       DefaultVestingStartTime,
+				EndTime:         DefaultVestingEndTime,
 			},
 		},
 	}

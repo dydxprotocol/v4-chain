@@ -24,6 +24,9 @@ func (dm *DelayedMessage) UnpackInterfaces(unpacker codec.AnyUnpacker) error {
 }
 
 func (dm *DelayedMessage) GetMessage() (sdk.Msg, error) {
+	if dm.Msg == nil {
+		return nil, ErrMsgIsNil
+	}
 	cached := dm.Msg.GetCachedValue()
 	if cached == nil {
 		return nil, fmt.Errorf("any cached value is nil, delayed messages must be correctly packed any values")
