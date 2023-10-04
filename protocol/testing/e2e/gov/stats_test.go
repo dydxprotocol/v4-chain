@@ -17,6 +17,7 @@ import (
 func TestUpdateParams(t *testing.T) {
 	tests := map[string]struct {
 		msg                      *statstypes.MsgUpdateParams
+		expectCheckTxFails       bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 		expectSubmitProposalFail bool
 	}{
@@ -70,6 +71,7 @@ func TestUpdateParams(t *testing.T) {
 				ctx,
 				&tApp,
 				[]sdk.Msg{tc.msg},
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)

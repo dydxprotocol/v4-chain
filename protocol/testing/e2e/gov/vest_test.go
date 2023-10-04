@@ -19,6 +19,7 @@ func TestSetVestEntry(t *testing.T) {
 	tests := map[string]struct {
 		msg                      *vesttypes.MsgSetVestEntry
 		updateExistingVestEntry  bool // whether above msg should update an existing vest entry.
+		expectCheckTxFails       bool
 		expectSubmitProposalFail bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 	}{
@@ -49,7 +50,46 @@ func TestSetVestEntry(t *testing.T) {
 			updateExistingVestEntry: true,
 			expectedProposalStatus:  govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
-		"Fail: invalid authority": {
+		"Failure: vester account is empty": {
+			msg: &vesttypes.MsgSetVestEntry{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Entry: vesttypes.VestEntry{
+					VesterAccount:   "",
+					TreasuryAccount: "random_treasury",
+					Denom:           "dv4tnt",
+					StartTime:       time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC),
+					EndTime:         time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: treasury account is empty": {
+			msg: &vesttypes.MsgSetVestEntry{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Entry: vesttypes.VestEntry{
+					VesterAccount:   "random_vester",
+					TreasuryAccount: "",
+					Denom:           "dv4tnt",
+					StartTime:       time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC),
+					EndTime:         time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: start time after end time": {
+			msg: &vesttypes.MsgSetVestEntry{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Entry: vesttypes.VestEntry{
+					VesterAccount:   "random_vester",
+					TreasuryAccount: "",
+					Denom:           "dv4tnt",
+					StartTime:       time.Date(2023, 10, 1, 0, 0, 0, 1, time.UTC),
+					EndTime:         time.Date(2023, 10, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: invalid authority": {
 			msg: &vesttypes.MsgSetVestEntry{
 				Authority: constants.BobAccAddress.String(),
 				Entry: vesttypes.VestEntry{
@@ -103,13 +143,14 @@ func TestSetVestEntry(t *testing.T) {
 				ctx,
 				&tApp,
 				[]sdk.Msg{tc.msg},
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
 
 			// If governance proposal is supposed to fail submission, verify that vest entries in state
 			// match vest entries before proposal submission.
-			if tc.expectSubmitProposalFail {
+			if tc.expectSubmitProposalFail || tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED {
 				require.Equal(t, initialVestEntries, tApp.App.VestKeeper.GetAllVestEntries(ctx))
 			}
 
@@ -126,6 +167,7 @@ func TestSetVestEntry(t *testing.T) {
 func TestDeleteVestEntry(t *testing.T) {
 	tests := map[string]struct {
 		msg                      *vesttypes.MsgDeleteVestEntry
+		vestEntryExists          bool // whether vest entry in above msg exists.
 		expectSubmitProposalFail bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 	}{
@@ -134,13 +176,22 @@ func TestDeleteVestEntry(t *testing.T) {
 				Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				VesterAccount: "random_vester",
 			},
+			vestEntryExists:        true,
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
-		"Fail: invalid authority": {
+		"Failure: vest entry does not exist": {
+			msg: &vesttypes.MsgDeleteVestEntry{
+				Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				VesterAccount: "random_vester",
+			},
+			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+		},
+		"Failure: invalid authority": {
 			msg: &vesttypes.MsgDeleteVestEntry{
 				Authority:     constants.BobAccAddress.String(),
 				VesterAccount: "random_vester",
 			},
+			vestEntryExists:          true,
 			expectSubmitProposalFail: true,
 		},
 	}
@@ -155,19 +206,22 @@ func TestDeleteVestEntry(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
-				// Initialize vest module with a vest entry that has the same key as the one to be deleted.
+				// If vest entry should exist in state, initialize vest module with a vest entry that
+				// has the same key as the one to be deleted.
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *vesttypes.GenesisState) {
-						genesisState.VestEntries = []vesttypes.VestEntry{
-							{
+						vestEntries := []vesttypes.VestEntry{}
+						if tc.vestEntryExists {
+							vestEntries = append(vestEntries, vesttypes.VestEntry{
 								VesterAccount:   tc.msg.VesterAccount,
 								TreasuryAccount: "random_treasury",
 								Denom:           "dv4tnt",
 								StartTime:       time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC),
 								EndTime:         time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
-							},
+							})
 						}
+						genesisState.VestEntries = vestEntries
 					},
 				)
 				return genesis
@@ -181,13 +235,14 @@ func TestDeleteVestEntry(t *testing.T) {
 				ctx,
 				&tApp,
 				[]sdk.Msg{tc.msg},
+				false,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
 
-			// If governance proposal is supposed to fail submission, verify that vest entries in state
-			// match vest entries before proposal submission.
-			if tc.expectSubmitProposalFail {
+			// If governance proposal is supposed to fail submission or execution, verify that vest
+			// entries in state match vest entries before proposal submission.
+			if tc.expectSubmitProposalFail || tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED {
 				require.Equal(t, initialVestEntries, tApp.App.VestKeeper.GetAllVestEntries(ctx))
 			}
 
