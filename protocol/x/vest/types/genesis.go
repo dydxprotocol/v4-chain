@@ -3,6 +3,7 @@ package types
 import (
 	time "time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	rewardstypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
@@ -19,14 +20,14 @@ func DefaultGenesis() *GenesisState {
 			{
 				VesterAccount:   CommunityVesterAccountName,
 				TreasuryAccount: CommunityTreasuryAccountName,
-				Denom:           "adv4tnt",
+				Denom:           lib.DefaultBaseDenom,
 				StartTime:       DefaultVestingStartTime,
 				EndTime:         DefaultVestingEndTime,
 			},
 			{
 				VesterAccount:   rewardstypes.VesterAccountName,
 				TreasuryAccount: rewardstypes.TreasuryAccountName,
-				Denom:           "adv4tnt",
+				Denom:           lib.DefaultBaseDenom,
 				StartTime:       DefaultVestingStartTime,
 				EndTime:         DefaultVestingEndTime,
 			},
