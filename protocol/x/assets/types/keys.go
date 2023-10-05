@@ -12,5 +12,5 @@ const (
 // State
 const (
 	// AssetKeyPrefix is the prefix to retrieve all Assets
-	AssetKeyPrefix = "Asset/"
+	AssetKeyPrefix = "Asset:"
 )

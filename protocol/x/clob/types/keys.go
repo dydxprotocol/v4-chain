@@ -12,7 +12,7 @@ const (
 	MemStoreKey = "mem_" + ModuleName
 
 	// TransientStoreKey defines the primary module transient store key
-	TransientStoreKey = "transient_" + ModuleName
+	TransientStoreKey = "tmp_" + ModuleName
 )
 
 // Below key prefixes are not explicitly used to read/write to state, but rather used to iterate over
@@ -40,33 +40,33 @@ const (
 	BlockRateLimitConfigKey = "RateLimCfg"
 
 	// ClobPairKeyPrefix is the prefix to retrieve all ClobPair
-	ClobPairKeyPrefix = "Clob/"
+	ClobPairKeyPrefix = "Clob:"
 
 	// OrderAmountFilledKeyPrefix is the prefix to retrieve the fill amount for an order.
-	OrderAmountFilledKeyPrefix = "Filled/"
+	OrderAmountFilledKeyPrefix = "Fill:"
 
 	// BlockHeightToPotentiallyPrunableOrdersPrefix is the prefix to retrieve a list of potentially prunable
 	// short term orders by block height.
-	BlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt/"
+	BlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt:"
 
 	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
 	// expire at a given timestamp, sorted by order ID.
-	StatefulOrdersTimeSlicePrefix = "ExpTm/"
+	StatefulOrdersTimeSlicePrefix = "ExpTm:"
 )
 
 // Store / Memstore
 const (
 	// TriggeredConditionalOrderKeyPrefix is the key to retrieve an triggered conditional order and
 	// information about when it was triggered.
-	TriggeredConditionalOrderKeyPrefix = PlacedStatefulOrderKeyPrefix + "T/"
+	TriggeredConditionalOrderKeyPrefix = PlacedStatefulOrderKeyPrefix + "T:"
 
 	// LongTermOrderPlacementKeyPrefix is the key to retrieve a long term order and information about
 	// when it was placed.
-	LongTermOrderPlacementKeyPrefix = PlacedStatefulOrderKeyPrefix + "L/"
+	LongTermOrderPlacementKeyPrefix = PlacedStatefulOrderKeyPrefix + "L:"
 
 	// UntriggeredConditionalOrderKeyPrefix is the key to retrieve an untriggered conditional order and
 	// information about when it was placed.
-	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "U/"
+	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "U:"
 )
 
 // Memstore
@@ -80,7 +80,7 @@ const (
 const (
 	// SubaccountLiquidationInfoKeyPrefix is the prefix to retrieve the liquidation information
 	// for a subaccount within the last block.
-	SubaccountLiquidationInfoKeyPrefix = "SaLiqInfo/"
+	SubaccountLiquidationInfoKeyPrefix = "SaLiqInfo:"
 
 	// NextStatefulOrderBlockTransactionIndexKey is the transient store key that stores the next
 	// transaction index to use for the next newly-placed stateful order.
@@ -89,22 +89,22 @@ const (
 	// UncommittedStatefulOrderPlacementKeyPrefix is the key to retrieve an uncommitted stateful order and information
 	// about when it was placed. uncommitted orders are orders that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
-	UncommittedStatefulOrderPlacementKeyPrefix = "UncmtLT/"
+	UncommittedStatefulOrderPlacementKeyPrefix = "UncmtLT:"
 
 	// UncommittedStatefulOrderCancellationKeyPrefix is the key to retrieve an uncommitted stateful order cancellation.
 	// uncommitted cancelleations are cancellations that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
-	UncommittedStatefulOrderCancellationKeyPrefix = "UncmtLTCxl/"
+	UncommittedStatefulOrderCancellationKeyPrefix = "UncmtLTCxl:"
 
 	// UncommittedStatefulOrderCountPrefix is the key to retrieve an uncommitted stateful order count.
 	// uncommitted orders are orders that this validator is aware of that have yet to be committed to a block and
 	// are stored in a transient store. This count represents the number of uncommitted stateful
 	// `placements - cancellations`.
-	UncommittedStatefulOrderCountPrefix = "NumUncmtLT/"
+	UncommittedStatefulOrderCountPrefix = "NumUncmtLT:"
 
 	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
 	// represents the number of long term order placements and triggered conditional orders stored in state.
-	StatefulOrderCountPrefix = "NumLT/"
+	StatefulOrderCountPrefix = "NumLT:"
 )
 
 // Module Accounts

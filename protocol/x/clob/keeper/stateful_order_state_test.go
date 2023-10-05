@@ -23,13 +23,13 @@ import (
 func orderToStringId(
 	o types.Order,
 ) string {
-	return string(o.OrderId.MustMarshal())
+	return string(o.OrderId.ToStateKey())
 }
 
 func orderToStringSubaccountId(
 	o types.Order,
 ) string {
-	return string(o.OrderId.SubaccountId.MustMarshal())
+	return string(o.OrderId.SubaccountId.ToStateKey())
 }
 
 // TODO(jonfung) make ticket and remove all conditional orderes
@@ -72,8 +72,8 @@ func TestLongTermOrderInitMemStore_Success(t *testing.T) {
 			},
 		}
 		longTermOrderPlacementBytes := ks.Cdc.MustMarshal(&longTermOrderPlacement)
-		orderIdBytes := order.OrderId.MustMarshal()
-		store.Set(orderIdBytes, longTermOrderPlacementBytes)
+		orderKey := order.OrderId.ToStateKey()
+		store.Set(orderKey, longTermOrderPlacementBytes)
 	}
 
 	// Set some long term orders.
@@ -156,8 +156,8 @@ func TestMustTriggerConditionalOrder(t *testing.T) {
 		orderPlacement types.LongTermOrderPlacement,
 		found bool,
 	) {
-		orderIdBytes := orderId.MustMarshal()
-		bytes := store.Get(orderIdBytes)
+		orderKey := orderId.ToStateKey()
+		bytes := store.Get(orderKey)
 		if bytes == nil {
 			return orderPlacement, false
 		}
