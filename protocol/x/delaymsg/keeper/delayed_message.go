@@ -129,6 +129,16 @@ func (k Keeper) SetDelayedMessage(
 
 	// Add message to the store.
 	store := k.newDelayedMessageStore(ctx)
+
+	// Check for duplicate message id.
+	if store.Get(lib.Uint32ToKey(msg.Id)) != nil {
+		return errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"failed to delay message: message with id %d already exists",
+			msg.Id,
+		)
+	}
+
 	store.Set(lib.Uint32ToKey(msg.Id), k.cdc.MustMarshal(msg))
 
 	// Add message id to the list of message ids for the block.
