@@ -32,7 +32,17 @@ import (
 )
 
 var (
-	Clob_0                                             = MustGetClobPairsFromGenesis(testapp.DefaultGenesis())[0]
+	Clob_0                                            = MustGetClobPairsFromGenesis(testapp.DefaultGenesis())[0]
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
+		},
+		testapp.DefaultGenesis(),
+	))
 	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
@@ -40,6 +50,16 @@ var (
 			Quantums:     5,
 			Subticks:     10,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		},
+		testapp.DefaultGenesis(),
+	))
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB27 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 27},
 		},
 		testapp.DefaultGenesis(),
 	))
@@ -96,6 +116,14 @@ var (
 			ClobPairId:   0,
 		},
 		20,
+	)
+	CancelOrder_Alice_Num0_Id0_Clob0_GTB27 = *clobtypes.NewMsgCancelOrderShortTerm(
+		clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			ClobPairId:   0,
+		},
+		27,
 	)
 	CancelOrder_Alice_Num1_Id0_Clob0_GTB20 = *clobtypes.NewMsgCancelOrderShortTerm(
 		clobtypes.OrderId{
