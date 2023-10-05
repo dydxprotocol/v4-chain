@@ -22,7 +22,8 @@ const (
 
 var (
 	// TestFeeCoins_5Cents is the gas fee offered for test transactions.
-	TestFeeCoins_5Cents             = lib.MustParseCoinsNormalized(TestFee)
+	TestFeeCoins_5Cents = lib.MustParseCoinsNormalized(TestFee)
+	// TestFeeCoins_5Cents_NativeToken is the gas fee offered for test transactions specified in native tokens.
 	TestFeeCoins_5Cents_NativeToken = lib.MustParseCoinsNormalized(TestFeeNativeTokens)
 )
 
