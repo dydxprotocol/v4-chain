@@ -12,11 +12,10 @@ import (
 // A RateLimiter which rate limits types.MsgPlaceOrder.
 //
 // The rate limiting keeps track of short term and stateful orders placed during
-// CheckTx separately from when they are placed during DeliverTx modes.
+// CheckTx.
 type placeOrderRateLimiter struct {
-	checkStateShortTermOrderRateLimiter  RateLimiter[string]
-	checkStateStatefulOrderRateLimiter   RateLimiter[satypes.SubaccountId]
-	deliverStateStatefulOrderRateLimiter RateLimiter[satypes.SubaccountId]
+	checkStateShortTermOrderRateLimiter RateLimiter[string]
+	checkStateStatefulOrderRateLimiter  RateLimiter[satypes.SubaccountId]
 	// The set of rate limited accounts is only stored for telemetry purposes.
 	rateLimitedAccounts map[string]bool
 	// The set of rate limited subaccounts is only stored for telemetry purposes.
@@ -30,8 +29,7 @@ var _ RateLimiter[*types.MsgPlaceOrder] = (*placeOrderRateLimiter)(nil)
 //   - how many short term orders per subaccount (by using satypes.SubaccountId).
 //   - how many stateful order per subaccount (by using satypes.SubaccountId).
 //
-// The rate limiting keeps track of orders placed during CheckTx separately from when they
-// are placed during DeliverTx modes.
+// The rate limiting keeps track of orders only placed during CheckTx.
 //
 // Depending upon the provided types.BlockRateLimitConfiguration, the returned RateLimiter may rely on:
 //   - `ctx.BlockHeight()` in RateLimit to track which block the rate limit should apply to.
@@ -68,23 +66,14 @@ func NewPlaceOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimi
 	}
 	if len(config.MaxStatefulOrdersPerNBlocks) == 0 {
 		r.checkStateStatefulOrderRateLimiter = NewNoOpRateLimiter[satypes.SubaccountId]()
-		r.deliverStateStatefulOrderRateLimiter = NewNoOpRateLimiter[satypes.SubaccountId]()
 	} else if len(config.MaxStatefulOrdersPerNBlocks) == 1 &&
 		config.MaxStatefulOrdersPerNBlocks[0].NumBlocks == 1 {
 		r.checkStateStatefulOrderRateLimiter = NewSingleBlockRateLimiter[satypes.SubaccountId](
 			"MaxStatefulOrdersPerNBlocks",
 			config.MaxStatefulOrdersPerNBlocks[0],
 		)
-		r.deliverStateStatefulOrderRateLimiter = NewSingleBlockRateLimiter[satypes.SubaccountId](
-			"MaxStatefulOrdersPerNBlocks",
-			config.MaxStatefulOrdersPerNBlocks[0],
-		)
 	} else {
 		r.checkStateStatefulOrderRateLimiter = NewMultiBlockRateLimiter[satypes.SubaccountId](
-			"MaxStatefulOrdersPerNBlocks",
-			config.MaxStatefulOrdersPerNBlocks,
-		)
-		r.deliverStateStatefulOrderRateLimiter = NewMultiBlockRateLimiter[satypes.SubaccountId](
 			"MaxStatefulOrdersPerNBlocks",
 			config.MaxStatefulOrdersPerNBlocks,
 		)
@@ -94,33 +83,21 @@ func NewPlaceOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimi
 }
 
 func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOrder) (err error) {
+	// Only perform rate limiting in CheckTx.
 	if lib.IsDeliverTxMode(ctx) {
-		// Short-Term orders don't go through AnteHandler in DeliverTx since they're placed
-		// as part of MsgProposedOperations and don't need to be rate limited since the user
-		// will pay fees.
-		if msg.Order.IsShortTermOrder() {
-			return nil
-		} else {
-			msg.Order.MustBeStatefulOrder()
-			err = r.deliverStateStatefulOrderRateLimiter.RateLimit(
-				// We specifically pass in `height-1` since we want the deliverTx rate limiting to happen
-				// as if the order was placed in the last block so that PruneRateLimits during EndBlocker
-				// doesn't immediately clear it out.
-				ctx.WithBlockHeight(ctx.BlockHeight()-1),
-				msg.Order.OrderId.SubaccountId,
-			)
-		}
-	} else {
-		if msg.Order.IsShortTermOrder() {
-			err = r.checkStateShortTermOrderRateLimiter.RateLimit(
-				ctx,
-				msg.Order.OrderId.SubaccountId.Owner,
-			)
-		} else {
-			msg.Order.MustBeStatefulOrder()
-			err = r.checkStateStatefulOrderRateLimiter.RateLimit(ctx, msg.Order.OrderId.SubaccountId)
-		}
+		return nil
 	}
+
+	if msg.Order.IsShortTermOrder() {
+		err = r.checkStateShortTermOrderRateLimiter.RateLimit(
+			ctx,
+			msg.Order.OrderId.SubaccountId.Owner,
+		)
+	} else {
+		msg.Order.MustBeStatefulOrder()
+		err = r.checkStateStatefulOrderRateLimiter.RateLimit(ctx, msg.Order.OrderId.SubaccountId)
+	}
+
 	if err != nil {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.RateLimit, metrics.PlaceOrder, metrics.Count},
@@ -159,7 +136,6 @@ func (r *placeOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
 	}
 	r.checkStateShortTermOrderRateLimiter.PruneRateLimits(ctx)
 	r.checkStateStatefulOrderRateLimiter.PruneRateLimits(ctx)
-	r.deliverStateStatefulOrderRateLimiter.PruneRateLimits(ctx)
 }
 
 // A RateLimiter which rate limits types.MsgCancelOrder.
@@ -214,10 +190,7 @@ func NewCancelOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLim
 }
 
 func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancelOrder) (err error) {
-	// Short-Term order cancellations don't go through AnteHandler in DeliverTx since they are removed
-	// from the orderbook immediately which prevents them from being matched and we don't perform
-	// any rate limiting on stateful order cancellation since the order must exist in state for it be
-	// accepted and will be rejected otherwise so there is no need to rate limit either of them.
+	// Only perform rate limiting in CheckTx.
 	if lib.IsDeliverTxMode(ctx) {
 		return nil
 	}

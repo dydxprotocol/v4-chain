@@ -1,7 +1,6 @@
 package clob_test
 
 import (
-	"bytes"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"testing"
 
@@ -493,89 +492,6 @@ func TestRateLimitingOrders_StatefulOrderRateLimitsAreAcrossMarkets(t *testing.T
 	tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 	resp = tApp.CheckTx(secondMarketCheckTx)
 	require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-}
-
-func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreRateLimited(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-		genesis = testapp.DefaultGenesis()
-		testapp.UpdateGenesisDocWithAppStateForModule(
-			&genesis,
-			func(genesisState *clobtypes.GenesisState) {
-				genesisState.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{
-					MaxStatefulOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
-						{
-							NumBlocks: 2,
-							Limit:     1,
-						},
-					},
-				}
-			},
-		)
-		return genesis
-	}).WithTesting(t).Build()
-	ctx := tApp.InitChain()
-
-	firstMarketCheckTx := testapp.MustMakeCheckTx(
-		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
-				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5),
-		},
-		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
-	)
-	secondMarketCheckTx := testapp.MustMakeCheckTx(
-		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
-				&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5),
-			AccSequenceNumberForSigning: 2,
-		},
-		&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5,
-	)
-
-	tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
-		DeliverTxsOverride: [][]byte{firstMarketCheckTx.Tx, secondMarketCheckTx.Tx},
-		ValidateDeliverTxs: func(
-			context sdktypes.Context,
-			request abcitypes.RequestDeliverTx,
-			response abcitypes.ResponseDeliverTx,
-			_ int,
-		) (haltChain bool) {
-			if bytes.Equal(request.Tx, firstMarketCheckTx.Tx) {
-				require.Conditionf(t, response.IsOK, "Expected DeliverTx to succeed. Response: %+v", response)
-			} else {
-				require.Conditionf(t, response.IsErr, "Expected DeliverTx to error. Response: %+v", response)
-				require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), response.Code)
-				require.Contains(t, response.Log, "Rate of 2 exceeds configured block rate limit")
-			}
-			return false
-		},
-	})
-
-	// Advance to block 3 which should cause the delivered stateful order to still be rejected from block 2.
-	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-		DeliverTxsOverride: [][]byte{secondMarketCheckTx.Tx},
-		ValidateDeliverTxs: func(
-			ctx sdktypes.Context,
-			request abcitypes.RequestDeliverTx,
-			response abcitypes.ResponseDeliverTx,
-			_ int,
-		) (haltchain bool) {
-			require.Conditionf(t, response.IsErr, "Expected DeliverTx to error. Response: %+v", response)
-			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), response.Code)
-			require.Contains(t, response.Log, "Rate of 3 exceeds configured block rate limit")
-			return false
-		},
-	})
-
-	// Advance to block 4 should clear out the delivered transactions in 2 and 3 allowing them to be
-	// delivered in block 5.
-	tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
-	tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
-		DeliverTxsOverride: [][]byte{secondMarketCheckTx.Tx},
-	})
 }
 
 func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
