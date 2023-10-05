@@ -10,7 +10,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -55,7 +54,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				quantums := r.Uint64()
 				subacct.AssetPositions = []*types.AssetPosition{
 					{
-						AssetId:  lib.UsdcAssetId,
+						AssetId:  asstypes.AssetUsdc.Id,
 						Quantums: dtypes.NewIntFromUint64(quantums),
 					},
 				}

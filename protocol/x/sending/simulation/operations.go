@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -133,7 +134,7 @@ func SimulateMsgCreateTransfer(
 			Transfer: &types.Transfer{
 				Sender:    *senderAccount.GetId(),
 				Recipient: *recipientAccount.GetId(),
-				AssetId:   lib.UsdcAssetId,
+				AssetId:   assettypes.AssetUsdc.Id,
 				Amount:    amountToSend.Uint64(),
 			},
 		}

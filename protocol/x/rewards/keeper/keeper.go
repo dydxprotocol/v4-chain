@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"math/big"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
@@ -234,7 +236,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	params := k.GetParams(ctx)
 
 	// Calculate value of `F`.
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
 	if !exists {
 		return fmt.Errorf("failed to get USDC asset")
 	}
