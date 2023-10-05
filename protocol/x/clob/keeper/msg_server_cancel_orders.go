@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -26,7 +27,7 @@ func (k msgServer) CancelOrder(
 	defer func() {
 		if err != nil {
 			// Gracefully handle the case where the order was already removed from state. 
-			if err == types.ErrStatefulOrderDoesNotExist {
+			if errors.Is(err, types.ErrStatefulOrderDoesNotExist) {
 				processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
 				removedOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 				if _, found := removedOrderIds[msg.GetOrderId()]; found {
