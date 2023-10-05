@@ -58,6 +58,10 @@ function edit_genesis() {
 		INITIAL_CLOB_PAIR_STATUS='STATUS_ACTIVE'
 	fi
 
+	# Consensus params
+	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '4194304'
+	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
+
 	# Update crisis module.
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
 

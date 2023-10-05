@@ -113,10 +113,6 @@ function overwrite_genesis_production() {
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_vote_quorum' -v 'false' 
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_vote_veto' -v 'true'
 
-	# Consensus params
-	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '4194304'
-	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
-
 	# Rewards params
 	dasel put -t string -f "$GENESIS" '.app_state.rewards.params.denom' -v "$NATIVE_TOKEN"
 	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.fee_multiplier_ppm' -v '0'
