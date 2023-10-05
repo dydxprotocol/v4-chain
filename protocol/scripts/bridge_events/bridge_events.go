@@ -32,6 +32,7 @@ Usage:
 
 	go run scripts/bridge_events/bridge_events.go \
 		-denom <token_denom> \
+		-totalsupply <total_supply> \
 		-rpc <rpc_node_url> \
 		-address <bridge_contract_address> \
 		-toblock <last_block_inclusive>
@@ -42,10 +43,11 @@ func main() {
 	// ------------ FLAGS ------------
 
 	// Get flags.
-	var denom, rpcNode, bridgeAddress string
+	var denom, totalSupply, rpcNode, bridgeAddress string
 	var toBlock int64
 	var verbose bool
 	flag.StringVar(&denom, "denom", "adv4tnt", "token denom")
+	flag.StringVar(&totalSupply, "totalsupply", "1000000000000000000000000000", "token's total supply (base 10)")
 	flag.StringVar(&rpcNode, "rpc", "https://eth-sepolia.g.alchemy.com/v2/demo", "rpc node url")
 	flag.StringVar(&bridgeAddress, "address", "0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0", "bridge address")
 	flag.Int64Var(&toBlock, "toblock", 100_000_000, "last block (inclusive)")
@@ -55,10 +57,18 @@ func main() {
 	// Print the flags used for the user
 	fmt.Println("Using the following configuration (modifiable via flags):")
 	fmt.Println("denom:", denom)
+	fmt.Println("totalsupply:", totalSupply)
 	fmt.Println("rpc:", rpcNode)
 	fmt.Println("address:", bridgeAddress)
 	fmt.Println("toblock:", toBlock)
 	fmt.Println()
+
+	// ------------ INPUT VALIDATION ------------
+	// Validate `-totalsupply`.
+	totalSupplyBigInt, ok := new(big.Int).SetString(totalSupply, 10)
+	if !ok {
+		log.Fatal("invalid total supply")
+	}
 
 	// ------------ LOGIC ------------
 
@@ -95,12 +105,16 @@ func main() {
 		EthBlockHeight: 0,
 	}
 	balances := make(map[string]*big.Int)
+	totalAmountBridged := big.NewInt(0)
 
 	// Iterate over each event and populate the above fields
 	for _, log := range logs {
 		event := libeth.BridgeLogToEvent(log, denom)
 		aei.NextId = lib.Max(aei.NextId, event.Id)
 		aei.EthBlockHeight = lib.Max(aei.EthBlockHeight, log.BlockNumber)
+
+		// Add amount to total bridged amount.
+		totalAmountBridged.Add(totalAmountBridged, event.Coin.Amount.BigInt())
 
 		// Get the current balance of the account.
 		v, exists := balances[event.Address]
@@ -115,6 +129,13 @@ func main() {
 	// ------------ OUTPUT ------------
 
 	cdc := app.GetEncodingConfig().Codec
+
+	// Print total amount bridged.
+	fmt.Printf("Total amount bridged: %s\n", totalAmountBridged.String())
+
+	// Print bridge module account remaining balance.
+	bridgeModAccBalance := totalSupplyBigInt.Sub(totalSupplyBigInt, totalAmountBridged)
+	fmt.Printf("Remaining bridge module account balance: %s\n", bridgeModAccBalance.String())
 
 	// Print x/bridge event params.
 	eventParams := bridgetypes.EventParams{
