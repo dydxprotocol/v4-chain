@@ -22,7 +22,7 @@ func (k msgServer) CreateClobPair(
 
 	defer func() {
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(ctx.Logger(), err, ctx.BlockHeight(), metrics.DeliverTx)
+			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
 		}
 	}()
 

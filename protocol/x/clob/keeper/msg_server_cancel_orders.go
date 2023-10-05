@@ -14,7 +14,7 @@ import (
 )
 
 // CancelOrder performs order cancellation functionality for stateful orders.
-func (m msgServer) CancelOrder(
+func (k msgServer) CancelOrder(
 	goCtx context.Context,
 	msg *types.MsgCancelOrder,
 ) (resp *types.MsgCancelOrderResponse, err error) {
@@ -22,7 +22,7 @@ func (m msgServer) CancelOrder(
 
 	defer func() {
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(ctx.Logger(), err, ctx.BlockHeight(), metrics.DeliverTx)
+			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
 		}
 	}()
 
@@ -32,22 +32,22 @@ func (m msgServer) CancelOrder(
 	// 2. Cancel the order on the ClobKeeper which is responsible for:
 	//   - stateful cancellation validation.
 	//   - removing the order from state and the memstore.
-	if err := m.Keeper.CancelStatefulOrder(ctx, msg); err != nil {
+	if err := k.Keeper.CancelStatefulOrder(ctx, msg); err != nil {
 		return nil, err
 	}
 
 	// 3. Update `ProcessProposerMatchesEvents` with the new stateful order cancellation.
-	processProposerMatchesEvents := m.Keeper.GetProcessProposerMatchesEvents(ctx)
+	processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
 
 	processProposerMatchesEvents.PlacedStatefulCancellationOrderIds = append(
 		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
 		msg.OrderId,
 	)
 
-	m.Keeper.MustSetProcessProposerMatchesEvents(ctx, processProposerMatchesEvents)
+	k.Keeper.MustSetProcessProposerMatchesEvents(ctx, processProposerMatchesEvents)
 
 	// 4. Add the relevant on-chain Indexer event for the cancellation.
-	m.Keeper.GetIndexerEventManager().AddTxnEvent(
+	k.Keeper.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeStatefulOrder,
 		indexer_manager.GetB64EncodedEventMessage(

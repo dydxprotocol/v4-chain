@@ -18,12 +18,15 @@ import (
 // PlaceOrder is the entry point for stateful `MsgPlaceOrder` messages executed in `runMsgs` during `DeliverTx`.
 // This handler is only invoked for stateful orders due to the filtering logic in the mempool in our CometBFT fork.
 // TODO (CLOB-646) - Support stateful order replacements.
-func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (resp *types.MsgPlaceOrderResponse, err error) {
+func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
+	resp *types.MsgPlaceOrderResponse,
+	err error,
+) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	defer func() {
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(ctx.Logger(), err, ctx.BlockHeight(), metrics.DeliverTx)
+			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
 		}
 	}()
 
