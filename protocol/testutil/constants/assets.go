@@ -11,6 +11,8 @@ import (
 const (
 	// TestFee is the gas fee offered for test transactions.
 	TestFee = "50000" + asstypes.UusdcDenom // 5 cents
+	// TestFeeNativeTokens is the gas fee offered for test transactions specified in native tokens.
+	TestFeeNativeTokens = "50000000000000000adv4tnt" // .05 of native token in adv4tnt denom
 	// TestGasLimit is the gas limit used for test transactions.
 	// It's set to a larger amount such that the transaction never runs out of gas.
 	TestGasLimit = 1_000_000
@@ -20,7 +22,8 @@ const (
 
 var (
 	// TestFeeCoins_5Cents is the gas fee offered for test transactions.
-	TestFeeCoins_5Cents = lib.MustParseCoinsNormalized(TestFee)
+	TestFeeCoins_5Cents             = lib.MustParseCoinsNormalized(TestFee)
+	TestFeeCoins_5Cents_NativeToken = lib.MustParseCoinsNormalized(TestFeeNativeTokens)
 )
 
 // BigNegMaxUint64 returns a `big.Int` that is set to -math.MaxUint64.
