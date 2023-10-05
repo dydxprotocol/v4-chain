@@ -9,7 +9,7 @@ import (
 // RateLimitCancelOrder passes order cancellations with valid clob pairs to `cancelOrderRateLimiter`.
 // The rate limiting is only performed during `CheckTx` and `ReCheckTx`.
 func (k *Keeper) RateLimitCancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
-	// Only rate limit during `CheckTx` and `ReCheckTx`
+	// Only rate limit during `CheckTx` and `ReCheckTx`.
 	if lib.IsDeliverTxMode(ctx) {
 		return nil
 	}
@@ -38,7 +38,7 @@ func (k *Keeper) RateLimitCancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder
 // RateLimitPlaceOrder passes orders with valid clob pairs to `placeOrderRateLimiter`.
 // The rate limiting is only performed during `CheckTx` and `ReCheckTx`.
 func (k *Keeper) RateLimitPlaceOrder(ctx sdk.Context, msg *types.MsgPlaceOrder) error {
-	// Only rate limit during `CheckTx` and `ReCheckTx`
+	// Only rate limit during `CheckTx` and `ReCheckTx`.
 	if lib.IsDeliverTxMode(ctx) {
 		return nil
 	}
