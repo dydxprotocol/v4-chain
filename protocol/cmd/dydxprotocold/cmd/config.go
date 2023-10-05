@@ -6,6 +6,7 @@ import (
 	tmcfg "github.com/cometbft/cometbft/config"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 const (
@@ -84,7 +85,11 @@ func initTendermintConfig() *tmcfg.Config {
 
 	// Mempool config.
 	cfg.Mempool.Version = "v1"
-	cfg.Mempool.CacheSize = 20000
+	// We specifically are using a number greater than max QPS (currently set at 5000) * ShortBlockWindow to prevent
+	// a replay attack that is possible with short-term order placements and cancellations. The attack would consume
+	// a users rate limit if the entry is evicted from the mempool cache as it would be possible for the transaction
+	// to go through `CheckTx` again causing it to hit rate limit code against the users account.
+	cfg.Mempool.CacheSize = 5000 * int(clobtypes.ShortBlockWindow)
 	cfg.Mempool.Size = 50000
 	cfg.Mempool.TTLNumBlocks = 20 //nolint:staticcheck
 	cfg.Mempool.KeepInvalidTxsInCache = true
