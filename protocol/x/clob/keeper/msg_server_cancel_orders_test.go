@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -69,13 +70,14 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	mockLogger := &mocks.Logger{}
 	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
 	mockLogger.On("Info",
-		errorsmod.Wrap(
+		errorsmod.Wrapf(
+			types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder,
+			"Error: %s",
 			errorsmod.Wrapf(
 				types.ErrStatefulOrderDoesNotExist,
 				"Order Id to cancel does not exist. OrderId : %+v",
 				orderToCancel.OrderId,
-			),
-			"MsgCancelOrder failed DeliverTx because the order was already removed from state",
+			).Error(),
 		).Error(),
 	).Return()
 	ctx = ctx.WithLogger(mockLogger)
@@ -86,7 +88,8 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	})
 
 	// MsgCancelOrder will fail because the order is not in state, but it should not log an error because
-	// because the order is present in ProcessProposerMatchesEvents.RemovedStatefulOrderIds
+	// because the order is present in ProcessProposerMatchesEvents.RemovedStatefulOrderIds. This will log
+	// an info message instead.
 	ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 		ctx,
 		types.ProcessProposerMatchesEvents{BlockHeight: 2, RemovedStatefulOrderIds: []types.OrderId{orderToCancel.OrderId}},
@@ -94,6 +97,35 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 
 	_, err := msgServer.CancelOrder(ctx, &orderToCancel)
 	require.ErrorIs(t, err, types.ErrStatefulOrderDoesNotExist)
+	mockLogger.AssertExpectations(t)
+}
+
+func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
+	memClob := &mocks.MemClob{}
+	memClob.On("SetClobKeeper", mock.Anything).Return()
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
+
+	orderToCancel := constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15
+
+	ctx := ks.Ctx.WithBlockHeight(2)
+	mockLogger := &mocks.Logger{}
+	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
+	mockLogger.On(
+		"Error", 
+		fmt.Sprintf("Block height: 2, Callback: deliver_tx: %s", types.ErrTimeExceedsGoodTilBlockTime.Error()),
+	).Return()
+	ctx = ctx.WithLogger(mockLogger)
+	ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
+	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+		Height:    2,
+		Timestamp: time.Unix(int64(20), 0),
+	})
+
+	// MsgCancelOrder will fail because the GTBT of the cancellation message is lower than the current block time.
+	// This should log an error.
+	_, err := msgServer.CancelOrder(ctx, &orderToCancel)
+	require.ErrorIs(t, err, types.ErrTimeExceedsGoodTilBlockTime)
 	mockLogger.AssertExpectations(t)
 }
 

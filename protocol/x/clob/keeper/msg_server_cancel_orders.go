@@ -26,15 +26,29 @@ func (k msgServer) CancelOrder(
 
 	defer func() {
 		if err != nil {
-			// Gracefully handle the case where the order was already removed from state.
+			// Gracefully handle the case where the order was already removed from state. This can happen if an Order
+			// Removal Operation was included in the same block as the MsgCancelOrder. By the time we try to cancel
+			// the order, it has already been removed from state due to errors encountered while matching.
+			// TODO(CLOB-778): Prevent invalid MsgCancelOrder messages from being included in the block.
 			if errors.Is(err, types.ErrStatefulOrderDoesNotExist) {
 				processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
 				removedOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 				if _, found := removedOrderIds[msg.GetOrderId()]; found {
+					telemetry.IncrCounterWithLabels(
+						[]string{
+							types.ModuleName,
+							metrics.StatefulCancellationMsgHandlerFailure,
+							metrics.StatefulOrderAlreadyRemoved,
+							metrics.Count,
+						},
+						1,
+						msg.OrderId.GetOrderIdLabels(),
+					)
 					k.Keeper.Logger(ctx).Info(
-						errorsmod.Wrap(
-							err,
-							"MsgCancelOrder failed DeliverTx because the order was already removed from state",
+						errorsmod.Wrapf(
+							types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder,
+							"Error: %s",
+							err.Error(),
 						).Error(),
 					)
 					return
