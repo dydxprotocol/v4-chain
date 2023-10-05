@@ -940,6 +940,12 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				// If an order removal for this order is found in the ops queue, then we should not attempt to
 				// place the order. Any generated matches would fail in DeliverTx as the order would be missing from
 				// state (due to the order removal being processed).
+				telemetry.IncrCounter(
+					1,
+					types.ModuleName,
+					metrics.ReplayOperations,
+					metrics.SkipStatefulReplayPlaceOrder,
+				)
 				continue
 			}
 
