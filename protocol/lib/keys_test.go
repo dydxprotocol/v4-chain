@@ -37,6 +37,7 @@ func TestUint32ToKey(t *testing.T) {
 		})
 	}
 }
+
 func TestUint32ToKey_Lexicographically(t *testing.T) {
 	require.Equal(t, -1, bytes.Compare(Uint32ToKey(0), Uint32ToKey(15)))
 	require.Equal(t, -1, bytes.Compare(Uint32ToKey(14), Uint32ToKey(21)))

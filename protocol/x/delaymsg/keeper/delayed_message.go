@@ -25,9 +25,9 @@ func (k Keeper) GetNumMessages(
 ) uint32 {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get([]byte(types.NumDelayedMessagesKey))
-	var genericUint32 generic.Uint32
-	k.cdc.MustUnmarshal(b, &genericUint32)
-	return genericUint32.Value
+	var result generic.Uint32
+	k.cdc.MustUnmarshal(b, &result)
+	return result.Value
 }
 
 // SetNumMessages sets the number of messages in the store.
@@ -36,8 +36,8 @@ func (k Keeper) SetNumMessages(
 	numMessages uint32,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	var proto = generic.Uint32{Value: numMessages}
-	store.Set([]byte(types.NumDelayedMessagesKey), k.cdc.MustMarshal(&proto))
+	value := generic.Uint32{Value: numMessages}
+	store.Set([]byte(types.NumDelayedMessagesKey), k.cdc.MustMarshal(&value))
 }
 
 // GetMessage returns a message from its id.
