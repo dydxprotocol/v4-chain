@@ -15,43 +15,12 @@ const (
 	TransientStoreKey = "transient_" + ModuleName
 )
 
-const (
-	// ProcessProposerMatchesEventsKey is the key to retrieve information about how to update
-	// memclob state based on the latest block.
-	ProcessProposerMatchesEventsKey = "ProposerEvents"
-
-	// SubaccountLiquidationInfoKeyPrefix is the prefix to retrieve the liquidation information
-	// for a subaccount within the last block.
-	SubaccountLiquidationInfoKeyPrefix = "SaLiqInfo/"
-
-	// LiquidationsConfigKey is the key to retrieve the liquidations config.
-	LiquidationsConfigKey = "LiqCfg"
-
-	// EquityTierLimitConfigKey is the key to retrieve the equity tier limit configuration.
-	EquityTierLimitConfigKey = "EqTierLimCfg"
-
-	// BlockRateLimitConfigKey is the key to retrieve the block rate limit configuration.
-	BlockRateLimitConfigKey = "RateLimCfg"
-
-	// ClobPairKeyPrefix is the prefix to retrieve all ClobPair
-	ClobPairKeyPrefix = "Clob/"
-)
-
-const (
-	// OrderAmountFilledKeyPrefix is the prefix to retrieve the fill amount for an order.
-	OrderAmountFilledKeyPrefix = "Filled/"
-
-	// BlockHeightToPotentiallyPrunableOrdersPrefix is the prefix to retrieve a list of potentially prunable orders
-	// by block height.
-	BlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt/"
-)
-
 // Below key prefixes are not explicitly used to read/write to state, but rather used to iterate over
 // certain groups of items stored in state.
 const (
 	// StatefulOrderKeyPrefix is the prefix key for all long term orders and all conditional orders,
 	// both triggered and untriggered.
-	StatefulOrderKeyPrefix = "SOP/"
+	StatefulOrderKeyPrefix = "SO/"
 
 	// PlacedStatefulOrderKeyPrefix is the prefix key for placed long term orders and triggered
 	// conditional orders. It represents all stateful orders that should be placed upon the memclob
@@ -59,27 +28,60 @@ const (
 	PlacedStatefulOrderKeyPrefix = StatefulOrderKeyPrefix + "P/"
 )
 
+// State
+const (
+	// LiquidationsConfigKey is the key to retrieve the liquidations config.
+	LiquidationsConfigKey = "LiqCfg"
+
+	// EquityTierLimitConfigKey is the key to retrieve the equity tier limit configuration.
+	EquityTierLimitConfigKey = "EqTierCfg"
+
+	// BlockRateLimitConfigKey is the key to retrieve the block rate limit configuration.
+	BlockRateLimitConfigKey = "RateLimCfg"
+
+	// ClobPairKeyPrefix is the prefix to retrieve all ClobPair
+	ClobPairKeyPrefix = "Clob/"
+
+	// OrderAmountFilledKeyPrefix is the prefix to retrieve the fill amount for an order.
+	OrderAmountFilledKeyPrefix = "Filled/"
+
+	// BlockHeightToPotentiallyPrunableOrdersPrefix is the prefix to retrieve a list of potentially prunable
+	// short term orders by block height.
+	BlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt/"
+
+	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
+	// expire at a given timestamp, sorted by order ID.
+	StatefulOrdersTimeSlicePrefix = "ExpTm/"
+)
+
 // Store / Memstore
 const (
 	// TriggeredConditionalOrderKeyPrefix is the key to retrieve an triggered conditional order and
 	// information about when it was triggered.
-	TriggeredConditionalOrderKeyPrefix = PlacedStatefulOrderKeyPrefix + "C/"
+	TriggeredConditionalOrderKeyPrefix = PlacedStatefulOrderKeyPrefix + "T/"
 
 	// LongTermOrderPlacementKeyPrefix is the key to retrieve a long term order and information about
 	// when it was placed.
-	LongTermOrderPlacementKeyPrefix = PlacedStatefulOrderKeyPrefix + "LT/"
+	LongTermOrderPlacementKeyPrefix = PlacedStatefulOrderKeyPrefix + "L/"
 
 	// UntriggeredConditionalOrderKeyPrefix is the key to retrieve an untriggered conditional order and
 	// information about when it was placed.
-	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "Untrig/"
+	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "U/"
+)
 
-	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
-	// expire at a given timestamp, sorted by order ID.
-	StatefulOrdersTimeSlicePrefix = "ExpTime/"
+// Memstore
+const (
+	// ProcessProposerMatchesEventsKey is the key to retrieve information about how to update
+	// memclob state based on the latest block.
+	ProcessProposerMatchesEventsKey = "ProposerEvents"
 )
 
 // Transient Store
 const (
+	// SubaccountLiquidationInfoKeyPrefix is the prefix to retrieve the liquidation information
+	// for a subaccount within the last block.
+	SubaccountLiquidationInfoKeyPrefix = "SaLiqInfo/"
+
 	// NextStatefulOrderBlockTransactionIndexKey is the transient store key that stores the next
 	// transaction index to use for the next newly-placed stateful order.
 	NextStatefulOrderBlockTransactionIndexKey = "NextTxIdx"
