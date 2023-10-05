@@ -28,10 +28,10 @@ const (
 	LiquidationsConfigKey = "LiqCfg"
 
 	// EquityTierLimitConfigKey is the key to retrieve the equity tier limit configuration.
-	EquityTierLimitConfigKey = "EqTierLim"
+	EquityTierLimitConfigKey = "EqTierLimCfg"
 
 	// BlockRateLimitConfigKey is the key to retrieve the block rate limit configuration.
-	BlockRateLimitConfigKey = "RateLim"
+	BlockRateLimitConfigKey = "RateLimCfg"
 
 	// ClobPairKeyPrefix is the prefix to retrieve all ClobPair
 	ClobPairKeyPrefix = "Clob/"
@@ -43,7 +43,7 @@ const (
 
 	// BlockHeightToPotentiallyPrunableOrdersPrefix is the prefix to retrieve a list of potentially prunable orders
 	// by block height.
-	BlockHeightToPotentiallyPrunableOrdersPrefix = "HgtToPrunable/"
+	BlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt/"
 )
 
 // Below key prefixes are not explicitly used to read/write to state, but rather used to iterate over
@@ -87,22 +87,22 @@ const (
 	// UncommittedStatefulOrderPlacementKeyPrefix is the key to retrieve an uncommitted stateful order and information
 	// about when it was placed. uncommitted orders are orders that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
-	UncommittedStatefulOrderPlacementKeyPrefix = StatefulOrderKeyPrefix + "U/LT/"
+	UncommittedStatefulOrderPlacementKeyPrefix = "UncmtLT/"
 
 	// UncommittedStatefulOrderCancellationKeyPrefix is the key to retrieve an uncommitted stateful order cancellation.
 	// uncommitted cancelleations are cancellations that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
-	UncommittedStatefulOrderCancellationKeyPrefix = "SOC/U/LT/"
+	UncommittedStatefulOrderCancellationKeyPrefix = "UncmtLTCxl/"
 
 	// UncommittedStatefulOrderCountPrefix is the key to retrieve an uncommitted stateful order count.
 	// uncommitted orders are orders that this validator is aware of that have yet to be committed to a block and
 	// are stored in a transient store. This count represents the number of uncommitted stateful
 	// `placements - cancellations`.
-	UncommittedStatefulOrderCountPrefix = "Ct/U/LT/"
+	UncommittedStatefulOrderCountPrefix = "NumUncmtLT/"
 
 	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
 	// represents the number of long term order placements and triggered conditional orders stored in state.
-	StatefulOrderCountPrefix = "Ct/LT/"
+	StatefulOrderCountPrefix = "NumLT/"
 )
 
 // Module Accounts
