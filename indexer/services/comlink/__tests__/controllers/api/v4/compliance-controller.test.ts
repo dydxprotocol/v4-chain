@@ -16,8 +16,8 @@ import { DateTime } from 'luxon';
 import config from '../../../../src/config';
 import { getIpAddr } from '../../../../src/lib/utils';
 
-jest.mock('../../../../src/lib/rate-limit', () => ({
-  ...jest.requireActual('../../../../src/lib/rate-limit'),
+jest.mock('../../../../src/lib/utils', () => ({
+  ...jest.requireActual('../../../../src/lib/utils'),
   getIpAddr: jest.fn(),
 }));
 
