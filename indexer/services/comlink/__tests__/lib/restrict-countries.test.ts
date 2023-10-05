@@ -2,6 +2,7 @@ import { INDEXER_GEOBLOCKED_PAYLOAD, isRestrictedCountryHeaders } from '@dydxpro
 import config from '../../src/config';
 import { rejectRestrictedCountries } from '../../src/lib/restrict-countries';
 import { BlockedCode } from '../../src/types';
+import * as utils from '../../src/lib/utils';
 
 jest.mock('@dydxprotocol-indexer/compliance');
 
@@ -12,6 +13,8 @@ const restrictedHeaders = {
 const nonRestrictedHeaders = {
   'cf-ipcountry': 'SA',
 };
+
+const internalIp: string = '3.125.3.24';
 
 describe('rejectRestrictedCountries', () => {
   let isRestrictedCountrySpy: jest.SpyInstance;
@@ -72,5 +75,17 @@ describe('rejectRestrictedCountries', () => {
       ]),
     }));
     expect(next).not.toHaveBeenCalled();
+  });
+
+  it('does not check headers for internal indexer ip address', () => {
+    // restricted ipcountry
+    req.headers = restrictedHeaders;
+    isRestrictedCountrySpy.mockReturnValueOnce(true);
+    jest.spyOn(utils, 'getIpAddr').mockReturnValue(internalIp);
+    jest.spyOn(utils, 'isIndexerIp').mockImplementation((ip: string): boolean => ip === internalIp);
+
+    rejectRestrictedCountries(req, res, next);
+    expect(res.status).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalled();
   });
 });
