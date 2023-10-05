@@ -27,6 +27,7 @@ func TestRemoveOrder_PanicsIfNotExists(t *testing.T) {
 
 func TestRemoveOrderIfFilled(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	tests := map[string]struct {
 		// State.
 		existingOrders []types.Order
@@ -385,6 +386,7 @@ func TestRemoveOrderIfFilled(t *testing.T) {
 
 func TestRemoveOrder(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	tests := map[string]struct {
 		// State.
 		existingOrders []types.Order

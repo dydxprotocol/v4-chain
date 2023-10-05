@@ -85,6 +85,8 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	ctx sdk.Context,
 	msgCancelOrder *types.MsgCancelOrder,
 ) (offchainUpdates *types.OffchainUpdates, err error) {
+	lib.AssertCheckTxMode(ctx)
+
 	orderIdToCancel := msgCancelOrder.GetOrderId()
 
 	// Stateful orders are not expected here.
@@ -180,6 +182,7 @@ func (m *MemClobPriceTimePriority) GetCancelOrder(
 	ctx sdk.Context,
 	orderId types.OrderId,
 ) (tilBlock uint32, found bool) {
+	lib.AssertCheckTxMode(ctx)
 	return m.cancels.get(orderId)
 }
 
@@ -204,6 +207,7 @@ func (m *MemClobPriceTimePriority) GetSubaccountOrders(
 	subaccountId satypes.SubaccountId,
 	side types.Order_Side,
 ) (openOrders []types.Order, err error) {
+	lib.AssertCheckTxMode(ctx)
 	return m.openOrders.getSubaccountOrders(
 		ctx,
 		clobPairId,
@@ -404,6 +408,8 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
+	lib.AssertCheckTxMode(ctx)
+
 	// Perform invariant checks that the orderbook is not crossed after `PlaceOrder` finishes execution.
 	defer func() {
 		orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
@@ -668,6 +674,8 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
+	lib.AssertCheckTxMode(ctx)
+
 	// Attempt to match the liquidation order against the orderbook.
 	// TODO(DEC-1157): Update liquidations flow to send off-chain indexer messages.
 	liquidationOrderStatus, offchainUpdates, _, err := m.matchOrder(ctx, &liquidationOrder)
@@ -693,6 +701,8 @@ func (m *MemClobPriceTimePriority) DeleverageSubaccount(
 	quantumsDeleveraged *big.Int,
 	err error,
 ) {
+	lib.AssertCheckTxMode(ctx)
+
 	fills, deltaQuantumsRemaining := m.clobKeeper.OffsetSubaccountPerpetualPosition(
 		ctx,
 		subaccountId,
@@ -839,6 +849,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	shortTermOrderTxBytes map[types.OrderHash][]byte,
 	existingOffchainUpdates *types.OffchainUpdates,
 ) *types.OffchainUpdates {
+	lib.AssertCheckTxMode(ctx)
+
 	// Recover from any panics that occur during replay operations.
 	// This could happen in cases where i.e. A subaccount balance overflowed
 	// during a match. We don't want to halt the entire chain in this case.
@@ -987,6 +999,8 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 	placeOrderOffchainUpdates *types.OffchainUpdates,
 	existingOffchainUpdates *types.OffchainUpdates,
 ) *types.OffchainUpdates {
+	lib.AssertCheckTxMode(ctx)
+
 	orderId := order.OrderId
 	if err != nil {
 		var loggerString string
@@ -1038,6 +1052,8 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 	ctx sdk.Context,
 	localValidatorOperationsQueue []types.InternalOperation,
 ) {
+	lib.AssertCheckTxMode(ctx)
+
 	// Clear the OTP. This will also remove nonces for every operation in `operationsQueueCopy`.
 	m.operationsToPropose.ClearOperationsQueue()
 
@@ -1089,6 +1105,8 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	removedStatefulOrderIds []types.OrderId,
 	existingOffchainUpdates *types.OffchainUpdates,
 ) *types.OffchainUpdates {
+	lib.AssertCheckTxMode(ctx)
+
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
 
 	// Remove all fully-filled order IDs from the memclob if they exist.
@@ -1731,6 +1749,8 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 func (m *MemClobPriceTimePriority) SetMemclobGauges(
 	ctx sdk.Context,
 ) {
+	lib.AssertCheckTxMode(ctx)
+
 	// Set gauges for each orderbook.
 	for clobPairId, orderbook := range m.openOrders.orderbooksMap {
 		// Set gauge for total open orders on each orderbook.

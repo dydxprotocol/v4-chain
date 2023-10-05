@@ -935,7 +935,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				}
 
 				_, orderStatus, _, err := ks.ClobKeeper.AddPreexistingStatefulOrder(
-					ctx,
+					ctx.WithIsCheckTx(true),
 					&order,
 					blockHeight,
 					memClob,
@@ -966,7 +966,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			orderSizeOptimisticallyFilledFromMatching,
 				orderStatus,
 				_,
-				err := ks.ClobKeeper.AddPreexistingStatefulOrder(ctx, &tc.order, blockHeight, memClob)
+				err := ks.ClobKeeper.AddPreexistingStatefulOrder(ctx.WithIsCheckTx(true), &tc.order, blockHeight, memClob)
 
 			// Verify test expectations.
 			require.ErrorIs(t, err, tc.expectedErr)
