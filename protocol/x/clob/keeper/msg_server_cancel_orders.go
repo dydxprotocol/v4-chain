@@ -3,11 +3,14 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -22,6 +25,20 @@ func (k msgServer) CancelOrder(
 
 	defer func() {
 		if err != nil {
+			// Gracefully handle the case where the order was already removed from state. 
+			if err == types.ErrStatefulOrderDoesNotExist {
+				processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
+				removedOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
+				if _, found := removedOrderIds[msg.GetOrderId()]; found {
+					k.Keeper.Logger(ctx).Info(
+						errorsmod.Wrap(
+							err,
+							"MsgCancelOrder failed DeliverTx because the order was already removed from state",
+						).Error(),
+					)
+					return
+				}
+			}
 			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
 		}
 	}()
