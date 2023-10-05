@@ -52,6 +52,11 @@ function edit_genesis() {
 		DELAY_MSG_JSON_DIR="delaymsg_config"
 	fi
 
+	INITIAL_CLOB_PAIR_STATUS="$6"
+		if [ -z "$INITIAL_CLOB_PAIR_STATUS" ]; then
+		# Default to initialie clob pairs as active.
+		INITIAL_CLOB_PAIR_STATUS='STATUS_ACTIVE'
+	fi
 
 	# Update crisis module.
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
@@ -1007,7 +1012,7 @@ function edit_genesis() {
 	# Clob: BTC-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].id' -v '0'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[0].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[0].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].perpetual_clob_metadata.perpetual_id' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[0].subticks_per_tick' -v '100000'
@@ -1016,7 +1021,7 @@ function edit_genesis() {
 	# Clob: ETH-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].id' -v '1'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[1].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[1].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].perpetual_clob_metadata.perpetual_id' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[1].subticks_per_tick' -v '100000'
@@ -1025,7 +1030,7 @@ function edit_genesis() {
 	# Clob: LINK-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].id' -v '2'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[2].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[2].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].perpetual_clob_metadata.perpetual_id' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].subticks_per_tick' -v '1000000'
@@ -1034,7 +1039,7 @@ function edit_genesis() {
 	# Clob: MATIC-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].id' -v '3'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[3].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[3].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].perpetual_clob_metadata.perpetual_id' -v '3'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].subticks_per_tick' -v '1000000'
@@ -1043,7 +1048,7 @@ function edit_genesis() {
 	# Clob: CRV-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].id' -v '4'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[4].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[4].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].perpetual_clob_metadata.perpetual_id' -v '4'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[4].subticks_per_tick' -v '1000000'
@@ -1052,7 +1057,7 @@ function edit_genesis() {
 	# Clob: SOL-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].id' -v '5'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[5].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[5].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].perpetual_clob_metadata.perpetual_id' -v '5'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[5].subticks_per_tick' -v '1000000'
@@ -1061,7 +1066,7 @@ function edit_genesis() {
 	# Clob: ADA-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].id' -v '6'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[6].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[6].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].perpetual_clob_metadata.perpetual_id' -v '6'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[6].subticks_per_tick' -v '1000000'
@@ -1070,7 +1075,7 @@ function edit_genesis() {
 	# Clob: AVAX-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].id' -v '7'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[7].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[7].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].perpetual_clob_metadata.perpetual_id' -v '7'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[7].subticks_per_tick' -v '1000000'
@@ -1079,7 +1084,7 @@ function edit_genesis() {
 	# Clob: FIL-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].id' -v '8'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[8].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[8].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].perpetual_clob_metadata.perpetual_id' -v '8'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[8].subticks_per_tick' -v '1000000'
@@ -1088,7 +1093,7 @@ function edit_genesis() {
 	# Clob: LTC-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].id' -v '9'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[9].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[9].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].perpetual_clob_metadata.perpetual_id' -v '9'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[9].subticks_per_tick' -v '1000000'
@@ -1097,7 +1102,7 @@ function edit_genesis() {
 	# Clob: DOGE-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].id' -v '10'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[10].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[10].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].perpetual_clob_metadata.perpetual_id' -v '10'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[10].subticks_per_tick' -v '1000000'
@@ -1106,7 +1111,7 @@ function edit_genesis() {
 	# Clob: ATOM-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].id' -v '11'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[11].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[11].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].perpetual_clob_metadata.perpetual_id' -v '11'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[11].subticks_per_tick' -v '1000000'
@@ -1115,7 +1120,7 @@ function edit_genesis() {
 	# Clob: DOT-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].id' -v '12'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[12].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[12].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].perpetual_clob_metadata.perpetual_id' -v '12'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[12].subticks_per_tick' -v '1000000'
@@ -1124,7 +1129,7 @@ function edit_genesis() {
 	# Clob: UNI-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].id' -v '13'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[13].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[13].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].perpetual_clob_metadata.perpetual_id' -v '13'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[13].subticks_per_tick' -v '1000000'
@@ -1133,7 +1138,7 @@ function edit_genesis() {
 	# Clob: BCH-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].id' -v '14'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[14].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[14].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].perpetual_clob_metadata.perpetual_id' -v '14'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[14].subticks_per_tick' -v '1000000'
@@ -1142,7 +1147,7 @@ function edit_genesis() {
 	# Clob: TRX-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].id' -v '15'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[15].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[15].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].perpetual_clob_metadata.perpetual_id' -v '15'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[15].subticks_per_tick' -v '1000000'
@@ -1151,7 +1156,7 @@ function edit_genesis() {
 	# Clob: NEAR-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].id' -v '16'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[16].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[16].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].perpetual_clob_metadata.perpetual_id' -v '16'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[16].subticks_per_tick' -v '1000000'
@@ -1160,7 +1165,7 @@ function edit_genesis() {
 	# Clob: MKR-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].id' -v '17'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[17].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[17].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].perpetual_clob_metadata.perpetual_id' -v '17'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[17].subticks_per_tick' -v '1000000'
@@ -1169,7 +1174,7 @@ function edit_genesis() {
 	# Clob: XLM-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].id' -v '18'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[18].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[18].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].perpetual_clob_metadata.perpetual_id' -v '18'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[18].subticks_per_tick' -v '1000000'
@@ -1178,7 +1183,7 @@ function edit_genesis() {
 	# Clob: ETC-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].id' -v '19'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[19].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[19].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].perpetual_clob_metadata.perpetual_id' -v '19'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[19].subticks_per_tick' -v '1000000'
@@ -1187,7 +1192,7 @@ function edit_genesis() {
 	# Clob: COMP-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].id' -v '20'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[20].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[20].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].perpetual_clob_metadata.perpetual_id' -v '20'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[20].subticks_per_tick' -v '1000000'
@@ -1196,7 +1201,7 @@ function edit_genesis() {
 	# Clob: WLD-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].id' -v '21'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[21].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[21].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].perpetual_clob_metadata.perpetual_id' -v '21'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[21].subticks_per_tick' -v '1000000'
@@ -1205,7 +1210,7 @@ function edit_genesis() {
 	# Clob: APE-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].id' -v '22'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[22].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[22].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].perpetual_clob_metadata.perpetual_id' -v '22'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[22].subticks_per_tick' -v '1000000'
@@ -1214,7 +1219,7 @@ function edit_genesis() {
 	# Clob: APT-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].id' -v '23'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[23].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[23].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].perpetual_clob_metadata.perpetual_id' -v '23'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[23].subticks_per_tick' -v '1000000'
@@ -1223,7 +1228,7 @@ function edit_genesis() {
 	# Clob: ARB-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].id' -v '24'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[24].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[24].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].perpetual_clob_metadata.perpetual_id' -v '24'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[24].subticks_per_tick' -v '1000000'
@@ -1232,7 +1237,7 @@ function edit_genesis() {
 	# Clob: BLUR-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].id' -v '25'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[25].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[25].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].perpetual_clob_metadata.perpetual_id' -v '25'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[25].subticks_per_tick' -v '1000000'
@@ -1241,7 +1246,7 @@ function edit_genesis() {
 	# Clob: LDO-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].id' -v '26'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[26].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[26].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].perpetual_clob_metadata.perpetual_id' -v '26'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[26].subticks_per_tick' -v '1000000'
@@ -1250,7 +1255,7 @@ function edit_genesis() {
 	# Clob: OP-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].id' -v '27'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[27].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[27].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].perpetual_clob_metadata.perpetual_id' -v '27'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[27].subticks_per_tick' -v '1000000'
@@ -1259,7 +1264,7 @@ function edit_genesis() {
 	# Clob: PEPE-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].id' -v '28'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[28].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[28].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].perpetual_clob_metadata.perpetual_id' -v '28'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[28].subticks_per_tick' -v '1000000'
@@ -1268,7 +1273,7 @@ function edit_genesis() {
 	# Clob: SEI-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].id' -v '29'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[29].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[29].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].perpetual_clob_metadata.perpetual_id' -v '29'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[29].subticks_per_tick' -v '1000000'
@@ -1277,7 +1282,7 @@ function edit_genesis() {
 	# Clob: SHIB-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].id' -v '30'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[30].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[30].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].perpetual_clob_metadata.perpetual_id' -v '30'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[30].subticks_per_tick' -v '1000000'
@@ -1286,7 +1291,7 @@ function edit_genesis() {
 	# Clob: SUI-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].id' -v '31'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[31].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[31].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].perpetual_clob_metadata.perpetual_id' -v '31'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[31].subticks_per_tick' -v '1000000'
@@ -1295,7 +1300,7 @@ function edit_genesis() {
 	# Clob: XRP-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].id' -v '32'
-	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[32].status' -v 'STATUS_ACTIVE'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[32].status' -v "$INITIAL_CLOB_PAIR_STATUS"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].perpetual_clob_metadata.perpetual_id' -v '32'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].subticks_per_tick' -v '1000000'

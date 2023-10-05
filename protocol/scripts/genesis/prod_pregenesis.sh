@@ -170,7 +170,7 @@ create_pregenesis_file() {
 	echo "Copying exchange config jsons to $TMP_EXCHANGE_CONFIG_JSON_DIR"
 	cp -R ./daemons/pricefeed/client/constants/testdata $TMP_EXCHANGE_CONFIG_JSON_DIR
 
-	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config"
+	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config" "STATUS_INITIALIZING"
 	overwrite_genesis_production
 }
 
