@@ -1,0 +1,16 @@
+syntax = "proto3";
+package dydxprotocol.generic;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/generic/types";
+
+// Uint32 is a proto to hold a single uint32 value.
+message Uint32 { uint32 value = 1; }
+
+// Uint64 is a proto to hold a single uint64 value.
+message Uint64 { uint64 value = 1; }
+
+// Int32 is a proto to hold a single sint32 value.
+message Int32 { sint32 value = 1; }
+
+// Int64 is a proto to hold a single sint64 value.
+message Int64 { sint64 value = 1; }

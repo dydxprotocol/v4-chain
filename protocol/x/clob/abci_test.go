@@ -77,7 +77,7 @@ func assertFillAmountAndPruneState(
 		)
 
 		potentiallyPrunableOrdersBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-			lib.Bit32ToBytes(blockHeight),
+			lib.Uint32ToKey(blockHeight),
 		)
 
 		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}

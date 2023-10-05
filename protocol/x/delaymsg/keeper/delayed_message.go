@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	generic "github.com/dydxprotocol/v4-chain/protocol/generic/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
@@ -23,8 +24,10 @@ func (k Keeper) GetNumMessages(
 	ctx sdk.Context,
 ) uint32 {
 	store := ctx.KVStore(k.storeKey)
-	var numMessagesBytes = store.Get([]byte(types.NumDelayedMessagesKey))
-	return lib.BytesToUint32(numMessagesBytes)
+	b := store.Get([]byte(types.NumDelayedMessagesKey))
+	var result generic.Uint32
+	k.cdc.MustUnmarshal(b, &result)
+	return result.Value
 }
 
 // SetNumMessages sets the number of messages in the store.
@@ -33,7 +36,8 @@ func (k Keeper) SetNumMessages(
 	numMessages uint32,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte(types.NumDelayedMessagesKey), lib.Bit32ToBytes(numMessages))
+	value := generic.Uint32{Value: numMessages}
+	store.Set([]byte(types.NumDelayedMessagesKey), k.cdc.MustMarshal(&value))
 }
 
 // GetMessage returns a message from its id.
@@ -45,7 +49,7 @@ func (k Keeper) GetMessage(
 	found bool,
 ) {
 	store := k.newDelayedMessageStore(ctx)
-	b := store.Get(lib.Bit32ToBytes(id))
+	b := store.Get(lib.Uint32ToKey(id))
 	if b == nil {
 		return types.DelayedMessage{}, false
 	}
@@ -94,7 +98,7 @@ func (k Keeper) DeleteMessage(
 		)
 	}
 	store := k.newDelayedMessageStore(ctx)
-	store.Delete(lib.Bit32ToBytes(id))
+	store.Delete(lib.Uint32ToKey(id))
 
 	// Remove message id from block message ids.
 	if err := k.deleteMessageIdFromBlock(ctx, id, delayedMsg.BlockHeight); err != nil {
@@ -115,7 +119,7 @@ func (k Keeper) SetDelayedMessage(
 ) (
 	err error,
 ) {
-	if msg.BlockHeight < ctx.BlockHeight() {
+	if msg.BlockHeight < lib.MustConvertIntegerToUint32(ctx.BlockHeight()) {
 		return errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"failed to delay message: block height %d is in the past",
@@ -125,7 +129,7 @@ func (k Keeper) SetDelayedMessage(
 
 	// Add message to the store.
 	store := k.newDelayedMessageStore(ctx)
-	store.Set(lib.Bit32ToBytes(msg.Id), k.cdc.MustMarshal(msg))
+	store.Set(lib.Uint32ToKey(msg.Id), k.cdc.MustMarshal(msg))
 
 	// Add message id to the list of message ids for the block.
 	k.addMessageIdToBlock(ctx, msg.Id, msg.BlockHeight)
@@ -204,7 +208,7 @@ func (k Keeper) DelayMessageByBlocks(
 	delayedMessage := types.DelayedMessage{
 		Id:          nextId,
 		Msg:         anyMsg,
-		BlockHeight: blockHeight,
+		BlockHeight: lib.MustConvertIntegerToUint32(blockHeight),
 	}
 
 	err = k.SetDelayedMessage(ctx, &delayedMessage)

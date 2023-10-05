@@ -121,7 +121,7 @@ func request_Query_BlockMessageIds_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "block_height")
 	}
 
-	protoReq.BlockHeight, err = runtime.Int64(val)
+	protoReq.BlockHeight, err = runtime.Uint32(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "block_height", err)
@@ -148,7 +148,7 @@ func local_request_Query_BlockMessageIds_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "block_height")
 	}
 
-	protoReq.BlockHeight, err = runtime.Int64(val)
+	protoReq.BlockHeight, err = runtime.Uint32(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "block_height", err)
