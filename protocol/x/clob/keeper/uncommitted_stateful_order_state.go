@@ -26,7 +26,7 @@ func (k Keeper) GetUncommittedStatefulOrderPlacement(
 
 	store := k.GetUncommittedStatefulOrderPlacementTransientStore(ctx)
 
-	b := store.Get(orderId.MustMarshal())
+	b := store.Get(orderId.ToStateKey())
 	if b == nil {
 		return val, false
 	}
@@ -47,7 +47,7 @@ func (k Keeper) GetUncommittedStatefulOrderCancellation(
 
 	store := k.GetUncommittedStatefulOrderCancellationTransientStore(ctx)
 
-	b := store.Get(orderId.MustMarshal())
+	b := store.Get(orderId.ToStateKey())
 	if b == nil {
 		return val, false
 	}
@@ -70,7 +70,7 @@ func (k Keeper) GetUncommittedStatefulOrderCount(
 
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
 
-	b := store.Get(orderId.SubaccountId.MustMarshal())
+	b := store.Get(orderId.SubaccountId.ToStateKey())
 	result := generic.Int32{Value: 0}
 	if b != nil {
 		k.cdc.MustUnmarshal(b, &result)
@@ -94,7 +94,7 @@ func (k Keeper) SetUncommittedStatefulOrderCount(
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
 	value := generic.Int32{Value: count}
 	store.Set(
-		orderId.SubaccountId.MustMarshal(),
+		orderId.SubaccountId.ToStateKey(),
 		k.cdc.MustMarshal(&value),
 	)
 }
@@ -118,11 +118,10 @@ func (k Keeper) MustAddUncommittedStatefulOrderPlacement(ctx sdk.Context, msg *t
 		Order: msg.Order,
 	}
 
-	orderIdBytes := orderId.MustMarshal()
-	b := k.cdc.MustMarshal(&longTermOrderPlacement)
-
 	store := k.GetUncommittedStatefulOrderPlacementTransientStore(ctx)
-	store.Set(orderIdBytes, b)
+	orderKey := orderId.ToStateKey()
+	b := k.cdc.MustMarshal(&longTermOrderPlacement)
+	store.Set(orderKey, b)
 
 	k.SetUncommittedStatefulOrderCount(
 		ctx,
@@ -146,11 +145,10 @@ func (k Keeper) MustAddUncommittedStatefulOrderCancellation(ctx sdk.Context, msg
 		panic(fmt.Sprintf("MustAddUncommittedStatefulOrderPlacement: order cancellation %v already exists", orderId))
 	}
 
-	orderIdBytes := orderId.MustMarshal()
-	b := k.cdc.MustMarshal(msg)
-
 	store := k.GetUncommittedStatefulOrderCancellationTransientStore(ctx)
-	store.Set(orderIdBytes, b)
+	orderKey := orderId.ToStateKey()
+	b := k.cdc.MustMarshal(msg)
+	store.Set(orderKey, b)
 
 	k.SetUncommittedStatefulOrderCount(
 		ctx,

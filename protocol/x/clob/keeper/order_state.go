@@ -75,7 +75,7 @@ func (k Keeper) SetOrderFillAmount(
 
 	// Write `orderFillStateBytes` to state.
 	store.Set(
-		orderId.MustMarshal(),
+		orderId.ToStateKey(),
 		orderFillStateBytes,
 	)
 
@@ -87,7 +87,7 @@ func (k Keeper) SetOrderFillAmount(
 
 	// Write `orderFillStateBytes` to memStore.
 	memStore.Set(
-		orderId.MustMarshal(),
+		orderId.ToStateKey(),
 		orderFillStateBytes,
 	)
 }
@@ -111,7 +111,7 @@ func (k Keeper) GetOrderFillAmount(
 
 	// Retrieve the `OrderFillState` bytes from the store.
 	orderFillStateBytes := memPrefixStore.Get(
-		orderId.MustMarshal(),
+		orderId.ToStateKey(),
 	)
 
 	// If the `OrderFillState` does not exist, early return.
@@ -241,14 +241,14 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
-	orderAmountFilledStore.Delete(orderId.MustMarshal())
+	orderAmountFilledStore.Delete(orderId.ToStateKey())
 
 	// Delete the fill amount from the mem store.
 	memStore := prefix.NewStore(
 		ctx.KVStore(k.memKey),
 		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
-	memStore.Delete(orderId.MustMarshal())
+	memStore.Delete(orderId.ToStateKey())
 }
 
 // PruneStateFillAmountsForShortTermOrders prunes Short-Term order fill amounts from state that are pruneable
