@@ -2529,17 +2529,6 @@ func TestAddPremiums_NonExistingPerpetuals(t *testing.T) {
 	}
 }
 
-func TestModifyOpenInterest_NotImplemented(t *testing.T) {
-	pc := keepertest.PerpetualsKeepers(t)
-	_, err := pc.PerpetualsKeeper.ModifyOpenInterest(
-		pc.Ctx,
-		0,
-		true,
-		0,
-	)
-	require.ErrorIs(t, err, types.ErrNotImplementedOpenInterest)
-}
-
 func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 	testDuration := uint32(60)
 	testCurrentEpoch := uint32(5)

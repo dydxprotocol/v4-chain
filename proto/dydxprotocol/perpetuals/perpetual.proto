@@ -17,10 +17,6 @@ message Perpetual {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
-
-  // The total open-interest of the perpetual used for
-  // bookkeeping purposes. In base quantums.
-  uint64 open_interest = 3;
 }
 
 // PerpetualParams represents the parameters of a perpetual on the dYdX

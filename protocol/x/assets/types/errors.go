@@ -7,7 +7,6 @@ import errorsmod "cosmossdk.io/errors"
 // x/assets module sentinel errors
 var (
 	ErrAssetDoesNotExist            = errorsmod.Register(ModuleName, 1, "Asset does not exist")
-	ErrNegativeLongInterest         = errorsmod.Register(ModuleName, 2, "LongInterest cannot be negative")
 	ErrNoAssetWithDenom             = errorsmod.Register(ModuleName, 3, "No asset found associated with given denom")
 	ErrAssetDenomAlreadyExists      = errorsmod.Register(ModuleName, 4, "Existing asset found with the same denom")
 	ErrAssetIdAlreadyExists         = errorsmod.Register(ModuleName, 5, "Existing asset found with the same asset id")
