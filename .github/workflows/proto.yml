@@ -2,6 +2,7 @@ name: Protobuf
 on:  # yamllint disable-line rule:truthy
   pull_request:
     paths:
+      # Keep in sync with below
       # The protos themselves
       - '**.proto'
       # Any generated code
@@ -19,6 +20,20 @@ on:  # yamllint disable-line rule:truthy
       - main
       - 'release/protocol/v0.[0-9]+.x'  # e.g. release/protocol/v0.1.x
       - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
+    paths:
+      # Keep in sync with above
+      # The protos themselves
+      - '**.proto'
+      # Any generated code
+      - '**.pb.go'
+      - '**.pb.gw.go'
+      - 'indexer/packages/v4-protos/**'
+      # Code that affects generation
+      - 'v4-proto-py/**'
+      - 'v4-proto-js/**'
+      - 'proto/**'
+      - 'indexer/package.json'
+      - 'protocol/scripts/protoc**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}

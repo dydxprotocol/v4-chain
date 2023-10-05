@@ -8,6 +8,8 @@ on:  # yamllint disable-line rule:truthy
       - main
       - 'release/indexer/v0.[0-9]+.x'  # e.g. release/indexer/v0.1.x
       - 'release/indexer/v[0-9]+.x'  # e.g. release/indexer/v1.x
+    paths:
+      - 'indexer/**'
 jobs:
   run_command:
     runs-on: ubuntu-latest
