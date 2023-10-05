@@ -12,21 +12,21 @@ const (
 // State
 const (
 	// PerpetualKeyPrefix is the prefix to retrieve all Perpetual
-	PerpetualKeyPrefix = "perpetual/"
+	PerpetualKeyPrefix = "Perp/"
 
 	// PremiumVotesKey is the key to retrieve `PremiumStore` object
 	// that represents existing premium sample votes during the current
 	// `funding-sample` epoch.
-	PremiumVotesKey = "premium_votes"
+	PremiumVotesKey = "PremVotes"
 
 	// PremiumSamplesKey is the key to retrieve `PremiumStore` object
 	// that represents existing premium samples during the current
 	// `funding-tick` epoch.
-	PremiumSamplesKey = "premium_samples"
+	PremiumSamplesKey = "PremSamples"
 
 	// LiquidityTierKeyPrefix is the prefix to retrieve all `LiquidityTier`s.
-	LiquidityTierKeyPrefix = "liquidity_tier/"
+	LiquidityTierKeyPrefix = "LiqTier/"
 
 	// ParamsKey is the key to retrieve all params for the module.
-	ParamsKey = "params"
+	ParamsKey = "Params"
 )

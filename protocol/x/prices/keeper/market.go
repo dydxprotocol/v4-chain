@@ -41,10 +41,10 @@ func (k Keeper) CreateMarket(
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
 
 	marketParamStore := k.newMarketParamStore(ctx)
-	marketParamStore.Set(lib.Bit32ToBytes(marketParam.Id), paramBytes)
+	marketParamStore.Set(lib.Uint32ToKey(marketParam.Id), paramBytes)
 
 	marketPriceStore := k.newMarketPriceStore(ctx)
-	marketPriceStore.Set(lib.Bit32ToBytes(marketPrice.Id), priceBytes)
+	marketPriceStore.Set(lib.Uint32ToKey(marketPrice.Id), priceBytes)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,

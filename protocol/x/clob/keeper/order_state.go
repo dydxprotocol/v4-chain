@@ -138,7 +138,7 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 
 	// Retrieve the `PotentiallyPrunableOrders` bytes from the store.
 	potentiallyPrunableOrdersBytes := store.Get(
-		lib.Bit32ToBytes(prunableBlockHeight),
+		lib.Uint32ToKey(prunableBlockHeight),
 	)
 
 	var potentiallyPrunableOrdersSet = make(map[types.OrderId]bool)
@@ -178,7 +178,7 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 
 	// Write `prunableOrders` to state for the appropriate block height.
 	store.Set(
-		lib.Bit32ToBytes(prunableBlockHeight),
+		lib.Uint32ToKey(prunableBlockHeight),
 		potentiallyPrunableOrdersBytes,
 	)
 }
@@ -196,7 +196,7 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 
 	// Retrieve the raw bytes of the `prunableOrders`.
 	potentiallyPrunableOrderBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-		lib.Bit32ToBytes(blockHeight),
+		lib.Uint32ToKey(blockHeight),
 	)
 
 	// If there are no prunable orders for this block, then there is nothing to do. Early return.
@@ -226,7 +226,7 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 
 	// Delete the key for prunable orders at this block height.
 	blockHeightToPotentiallyPrunableOrdersStore.Delete(
-		lib.Bit32ToBytes(blockHeight),
+		lib.Uint32ToKey(blockHeight),
 	)
 
 	return prunedOrderIds

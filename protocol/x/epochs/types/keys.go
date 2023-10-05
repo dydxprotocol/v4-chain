@@ -12,5 +12,5 @@ const (
 // State
 const (
 	// EpochInfoKeyPrefix is the prefix to retrieve all EpochInfo
-	EpochInfoKeyPrefix = "epoch_info/"
+	EpochInfoKeyPrefix = "Info/"
 )

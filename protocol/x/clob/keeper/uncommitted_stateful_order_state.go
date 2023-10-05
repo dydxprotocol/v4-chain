@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	generic "github.com/dydxprotocol/v4-chain/protocol/generic/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -70,11 +71,11 @@ func (k Keeper) GetUncommittedStatefulOrderCount(
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
 
 	b := store.Get(orderId.SubaccountId.MustMarshal())
-	if b == nil {
-		return 0
+	result := generic.Int32{Value: 0}
+	if b != nil {
+		k.cdc.MustUnmarshal(b, &result)
 	}
-
-	return lib.BytesToInt32(b)
+	return result.Value
 }
 
 // SetUncommittedStatefulOrderCount sets a count of uncommitted stateful orders for the associated subaccount.
@@ -91,9 +92,10 @@ func (k Keeper) SetUncommittedStatefulOrderCount(
 	orderId.MustBeStatefulOrder()
 
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
+	value := generic.Int32{Value: count}
 	store.Set(
 		orderId.SubaccountId.MustMarshal(),
-		lib.Bit32ToBytes(count),
+		k.cdc.MustMarshal(&value),
 	)
 }
 

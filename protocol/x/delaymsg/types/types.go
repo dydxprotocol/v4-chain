@@ -48,7 +48,7 @@ type DelayMsgKeeper interface {
 	// Block message ids
 	GetBlockMessageIds(
 		ctx sdk.Context,
-		blockHeight int64,
+		blockHeight uint32,
 	) (
 		blockMessageIds BlockMessageIds,
 		found bool,

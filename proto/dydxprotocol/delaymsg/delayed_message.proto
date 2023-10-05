@@ -14,5 +14,5 @@ message DelayedMessage {
   google.protobuf.Any msg = 2;
 
   // The block height at which the message should be executed.
-  sint64 block_height = 3;
+  uint32 block_height = 3;
 }

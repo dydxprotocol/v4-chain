@@ -18,10 +18,10 @@ const (
 // State
 const (
 	// RewardShareKeyPrefix is the prefix to retrieve reward shares for all addresses.
-	RewardShareKeyPrefix = "reward_shares/"
+	RewardShareKeyPrefix = "Shares/"
 
 	// ParamsKey is the key for the params
-	ParamsKey = "params"
+	ParamsKey = "Params"
 )
 
 // Module accounts

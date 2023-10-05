@@ -3,10 +3,10 @@ package cli
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/spf13/cobra"
 )
@@ -97,7 +97,7 @@ func CmdQueryBlockMessageIds() *cobra.Command {
 
 			argId := args[0]
 
-			id, err := strconv.ParseInt(argId, 10, 64)
+			id, err := strconv.ParseUint(argId, 10, 32)
 			if err != nil {
 				return err
 			}
@@ -105,7 +105,7 @@ func CmdQueryBlockMessageIds() *cobra.Command {
 			res, err := queryClient.BlockMessageIds(
 				context.Background(),
 				&types.QueryBlockMessageIdsRequest{
-					BlockHeight: id,
+					BlockHeight: uint32(id),
 				},
 			)
 			if err != nil {

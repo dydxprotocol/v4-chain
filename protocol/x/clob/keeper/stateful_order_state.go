@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"sort"
 	"time"
 
@@ -11,9 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	generic "github.com/dydxprotocol/v4-chain/protocol/generic/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // TODO(CLOB-739) Rename all functions in this file to StatefulOrder instead of LongTermOrder
@@ -194,24 +195,26 @@ func (k Keeper) GetStatefulOrdersTimeSlice(ctx sdk.Context, goodTilBlockTime tim
 
 // GetNextStatefulOrderTransactionIndex returns the next stateful order block transaction index
 // to be used, defeaulting to zero if not set. It then increments the transaction index by one.
-func (k Keeper) GetNextStatefulOrderTransactionIndex(ctx sdk.Context) (
-	nextStatefulOrderTransactionIndex uint32,
-) {
+func (k Keeper) GetNextStatefulOrderTransactionIndex(ctx sdk.Context) uint32 {
+	// Get the existing value
 	nextTransactionIndexTransientStore := k.getTransientStore(ctx)
-	nextStatefulOrderTransactionIndexBytes := nextTransactionIndexTransientStore.Get(
+	b := nextTransactionIndexTransientStore.Get(
 		[]byte(types.NextStatefulOrderBlockTransactionIndexKey),
 	)
-	nextStatefulOrderTransactionIndex = uint32(0)
-	if nextStatefulOrderTransactionIndexBytes != nil {
-		nextStatefulOrderTransactionIndex = lib.BytesToUint32(nextStatefulOrderTransactionIndexBytes)
+	index := generic.Uint32{Value: 0}
+	if b != nil {
+		k.cdc.MustUnmarshal(b, &index)
 	}
+	oldValue := index.Value
+
 	// Set the next stateful order transaction index to be one greater than the current transaction
 	// index, to ensure that transaction indexes are monotonically increasing.
+	index.Value = oldValue + 1
 	nextTransactionIndexTransientStore.Set(
 		[]byte(types.NextStatefulOrderBlockTransactionIndexKey),
-		lib.Bit32ToBytes(nextStatefulOrderTransactionIndex+1),
+		k.cdc.MustMarshal(&index),
 	)
-	return nextStatefulOrderTransactionIndex
+	return oldValue
 }
 
 // MustTriggerConditionalOrder triggers an untriggered conditional order. The conditional order must
@@ -500,11 +503,11 @@ func (k Keeper) GetStatefulOrderCount(
 	store := k.GetStatefulOrderCountMemStore(ctx)
 
 	b := store.Get(subaccountId.MustMarshal())
-	if b == nil {
-		return 0
+	result := generic.Uint32{Value: 0}
+	if b != nil {
+		k.cdc.MustUnmarshal(b, &result)
 	}
-
-	return lib.BytesToUint32(b)
+	return result.Value
 }
 
 // SetStatefulOrderCount sets a count of how many stateful orders are written to state. This does not
@@ -519,10 +522,10 @@ func (k Keeper) SetStatefulOrderCount(
 	if count == 0 {
 		store.Delete(subaccountId.MustMarshal())
 	} else {
-		countBytes := lib.Bit32ToBytes(count)
+		result := generic.Uint32{Value: count}
 		store.Set(
 			subaccountId.MustMarshal(),
-			countBytes,
+			k.cdc.MustMarshal(&result),
 		)
 	}
 }

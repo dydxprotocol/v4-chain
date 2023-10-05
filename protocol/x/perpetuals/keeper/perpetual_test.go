@@ -766,9 +766,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Bit32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
@@ -800,9 +798,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Bit32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad LiquidityTier should return an error.
 	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
@@ -965,9 +961,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Bit32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, err := pc.PerpetualsKeeper.GetNetNotional(
@@ -1129,9 +1123,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Bit32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, err := pc.PerpetualsKeeper.GetNotionalInBaseQuantums(
@@ -1294,9 +1286,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Bit32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, err := pc.PerpetualsKeeper.GetNetCollateral(
