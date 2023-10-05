@@ -936,6 +936,13 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
+			if m.operationsToPropose.IsOrderRemovalInOperationsQueue(statefulOrderPlacement.Order.OrderId) {
+				// If an order removal for this order is found in the ops queue, then we should not attempt to
+				// place the order. Any generated matches would fail in DeliverTx as the order would be missing from
+				// state (due to the order removal being processed).
+				continue
+			}
+
 			// Note that we use `memclob.PlaceOrder` here, this will skip writing the stateful order placement to state.
 			// TODO(DEC-998): Research whether it's fine for two post-only orders to be matched. Currently they are dropped.
 			_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(
