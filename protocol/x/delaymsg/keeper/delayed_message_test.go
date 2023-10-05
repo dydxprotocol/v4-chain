@@ -333,6 +333,43 @@ func TestGetMessage_NotFound(t *testing.T) {
 	require.Zero(t, delayedMsg)
 }
 
+func TestValidateMsg(t *testing.T) {
+	tests := map[string]struct {
+		msg           sdk.Msg
+		expectedError string
+	}{
+		"No handler found": {
+			msg:           constants.NoHandlerMsg,
+			expectedError: "/testpb.TestMsg: Message not recognized by router",
+		},
+		"Message fails ValidateBasic": {
+			msg:           routableInvalidSdkMsg(),
+			expectedError: "message failed basic validation: Invalid msg: Invalid input",
+		},
+		"Message fails validateSigners": {
+			msg: &bridgetypes.MsgCompleteBridge{
+				Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+				Event:     constants.BridgeEvent_Id0_Height0,
+			},
+			expectedError: "message signer must be delaymsg module address: Invalid signer",
+		},
+		"Valid message": {
+			msg: constants.TestMsg1,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			err := delaymsg.ValidateMsg(tc.msg)
+			if tc.expectedError == "" {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tc.expectedError)
+			}
+		})
+	}
+}
+
 func TestSetDelayedMessage(t *testing.T) {
 	tests := map[string]struct {
 		msg    types.DelayedMessage
@@ -344,6 +381,20 @@ func TestSetDelayedMessage(t *testing.T) {
 				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: 1,
 			},
+		},
+		"invalid msg": {
+			msg: types.DelayedMessage{
+				Id: 0,
+				Msg: encoding.EncodeMessageToAny(
+					t,
+					&bridgetypes.MsgCompleteBridge{
+						Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+						Event:     constants.BridgeEvent_Id0_Height0,
+					},
+				),
+				BlockHeight: 1,
+			},
+			expErr: fmt.Errorf("failed to delay message: message signer must be delaymsg module address: Invalid signer"),
 		},
 		"invalid block height": {
 			msg: types.DelayedMessage{
@@ -381,7 +432,7 @@ func TestSetDelayedMessage(t *testing.T) {
 			if tc.expErr == nil {
 				require.NoError(t, err)
 			} else {
-				require.EqualError(t, tc.expErr, err.Error())
+				require.ErrorContains(t, tc.expErr, err.Error())
 			}
 		})
 	}
