@@ -14,7 +14,7 @@ import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { DateTime } from 'luxon';
 import config from '../../../../src/config';
-import { getIpAddr } from '../../../../src/lib/rate-limit';
+import { getIpAddr } from '../../../../src/lib/utils';
 
 jest.mock('../../../../src/lib/rate-limit', () => ({
   ...jest.requireActual('../../../../src/lib/rate-limit'),
