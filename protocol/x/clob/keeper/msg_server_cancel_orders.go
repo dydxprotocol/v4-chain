@@ -2,12 +2,16 @@ package keeper
 
 import (
 	"context"
+	"errors"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -22,6 +26,34 @@ func (k msgServer) CancelOrder(
 
 	defer func() {
 		if err != nil {
+			// Gracefully handle the case where the order was already removed from state. This can happen if an Order
+			// Removal Operation was included in the same block as the MsgCancelOrder. By the time we try to cancel
+			// the order, it has already been removed from state due to errors encountered while matching.
+			// TODO(CLOB-778): Prevent invalid MsgCancelOrder messages from being included in the block.
+			if errors.Is(err, types.ErrStatefulOrderDoesNotExist) {
+				processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
+				removedOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
+				if _, found := removedOrderIds[msg.GetOrderId()]; found {
+					telemetry.IncrCounterWithLabels(
+						[]string{
+							types.ModuleName,
+							metrics.StatefulCancellationMsgHandlerFailure,
+							metrics.StatefulOrderAlreadyRemoved,
+							metrics.Count,
+						},
+						1,
+						msg.OrderId.GetOrderIdLabels(),
+					)
+					k.Keeper.Logger(ctx).Info(
+						errorsmod.Wrapf(
+							types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder,
+							"Error: %s",
+							err.Error(),
+						).Error(),
+					)
+					return
+				}
+			}
 			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
 		}
 	}()
