@@ -147,7 +147,7 @@ function overwrite_genesis_public_testnet() {
 	dasel put -t string -f "$GENESIS" '.app_state.staking.params.bond_denom' -v "$NATIVE_TOKEN"
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.max_validators' -v '100'
 	dasel put -t string -f "$GENESIS" '.app_state.staking.params.min_commission_rate' -v '0.05' # 5%
-	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '259200s' # 3 days
+	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '1814400s' # 21 days
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.max_entries' -v '7'
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.historical_entries' -v '10000'
 
