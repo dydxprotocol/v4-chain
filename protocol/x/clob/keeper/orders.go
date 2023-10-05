@@ -583,16 +583,35 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 			)
 		}
 	} else {
-		goodTilBlock := msgCancelOrder.GetGoodTilBlock()
-		// Return an error if `goodTilBlock` is in the past.
-		if goodTilBlock < blockHeight {
-			return types.ErrHeightExceedsGoodTilBlock
+		if err := k.validateGoodTilBlock(msgCancelOrder.GetGoodTilBlock(), blockHeight); err != nil {
+			return err
 		}
+	}
+	return nil
+}
 
-		// Return an error if `goodTilBlock` is further into the future than `ShortBlockWindow`.
-		if goodTilBlock > types.ShortBlockWindow+blockHeight {
-			return types.ErrGoodTilBlockExceedsShortBlockWindow
-		}
+// validateGoodTilBlock validates that the good til block (GTB) is within valid bounds, specifically
+// blockHeight <= GTB <= blockHeight + ShortBlockWindow.
+func (k Keeper) validateGoodTilBlock(goodTilBlock uint32, blockHeight uint32) error {
+	// Return an error if `goodTilBlock` is in the past.
+	if goodTilBlock < blockHeight {
+		return errorsmod.Wrapf(
+			types.ErrHeightExceedsGoodTilBlock,
+			"GoodTilBlock %v is less than the current blockHeight %v",
+			goodTilBlock,
+			blockHeight,
+		)
+	}
+
+	// Return an error if `goodTilBlock` is further into the future than `ShortBlockWindow`.
+	if goodTilBlock > types.ShortBlockWindow+blockHeight {
+		return errorsmod.Wrapf(
+			types.ErrGoodTilBlockExceedsShortBlockWindow,
+			"The GoodTilBlock %v exceeds the current blockHeight %v plus ShortBlockWindow %v",
+			goodTilBlock,
+			blockHeight,
+			types.ShortBlockWindow,
+		)
 	}
 	return nil
 }
@@ -673,27 +692,8 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	if order.OrderId.IsShortTermOrder() {
-		goodTilBlock := order.GetGoodTilBlock()
-
-		// Return an error if `goodTilBlock` is in the past.
-		if goodTilBlock < blockHeight {
-			return errorsmod.Wrapf(
-				types.ErrHeightExceedsGoodTilBlock,
-				"GoodTilBlock %v is less than the current blockHeight %v",
-				goodTilBlock,
-				blockHeight,
-			)
-		}
-
-		// Return an error if `goodTilBlock` is further into the future than `ShortBlockWindow`.
-		if goodTilBlock > types.ShortBlockWindow+blockHeight {
-			return errorsmod.Wrapf(
-				types.ErrGoodTilBlockExceedsShortBlockWindow,
-				"The GoodTilBlock %v exceeds the current blockHeight %v plus ShortBlockWindow %v",
-				goodTilBlock,
-				blockHeight,
-				types.ShortBlockWindow,
-			)
+		if err := k.validateGoodTilBlock(order.GetGoodTilBlock(), blockHeight); err != nil {
+			return err
 		}
 	} else {
 		goodTilBlockTimeUnix := order.GetGoodTilBlockTime()
