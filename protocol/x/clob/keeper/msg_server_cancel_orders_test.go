@@ -91,7 +91,7 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 		ctx,
 		types.ProcessProposerMatchesEvents{BlockHeight: 2, RemovedStatefulOrderIds: []types.OrderId{orderToCancel.OrderId}},
 	)
-	
+
 	_, err := msgServer.CancelOrder(ctx, &orderToCancel)
 	require.ErrorIs(t, err, types.ErrStatefulOrderDoesNotExist)
 	mockLogger.AssertExpectations(t)

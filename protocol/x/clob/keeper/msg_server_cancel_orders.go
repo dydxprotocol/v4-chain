@@ -26,7 +26,7 @@ func (k msgServer) CancelOrder(
 
 	defer func() {
 		if err != nil {
-			// Gracefully handle the case where the order was already removed from state. 
+			// Gracefully handle the case where the order was already removed from state.
 			if errors.Is(err, types.ErrStatefulOrderDoesNotExist) {
 				processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
 				removedOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
