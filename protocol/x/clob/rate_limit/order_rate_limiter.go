@@ -83,10 +83,7 @@ func NewPlaceOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimi
 }
 
 func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOrder) (err error) {
-	// Only perform rate limiting in CheckTx.
-	if lib.IsDeliverTxMode(ctx) {
-		return nil
-	}
+	lib.AssertDeliverTxMode(ctx)
 
 	if msg.Order.IsShortTermOrder() {
 		err = r.checkStateShortTermOrderRateLimiter.RateLimit(
@@ -190,10 +187,7 @@ func NewCancelOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLim
 }
 
 func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancelOrder) (err error) {
-	// Only perform rate limiting in CheckTx.
-	if lib.IsDeliverTxMode(ctx) {
-		return nil
-	}
+	lib.AssertDeliverTxMode(ctx)
 
 	if msg.OrderId.IsShortTermOrder() {
 		err = r.checkStateShortTermRateLimiter.RateLimit(
