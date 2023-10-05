@@ -112,7 +112,7 @@ func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
 	mockLogger := &mocks.Logger{}
 	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
 	mockLogger.On(
-		"Error", 
+		"Error",
 		fmt.Sprintf("Block height: 2, Callback: deliver_tx: %s", types.ErrTimeExceedsGoodTilBlockTime.Error()),
 	).Return()
 	ctx = ctx.WithLogger(mockLogger)
