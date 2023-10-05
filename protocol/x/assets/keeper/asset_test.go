@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
@@ -326,7 +325,7 @@ func TestGetNetCollateral(t *testing.T) {
 
 	netCollateral, err := keeper.GetNetCollateral(
 		ctx,
-		lib.UsdcAssetId,
+		types.AssetUsdc.Id,
 		new(big.Int).SetInt64(100),
 	)
 	require.NoError(t, err)
@@ -354,7 +353,7 @@ func TestGetMarginRequirements(t *testing.T) {
 
 	initial, maintenance, err := keeper.GetMarginRequirements(
 		ctx,
-		lib.UsdcAssetId,
+		types.AssetUsdc.Id,
 		new(big.Int).SetInt64(100),
 	)
 	require.NoError(t, err)
@@ -558,7 +557,7 @@ func TestIsPositionUpdatable(t *testing.T) {
 	require.NoError(t, keepertest.CreateUsdcAsset(ctx, keeper))
 
 	// Check Usdc asset is updatable.
-	updatable, err := keeper.IsPositionUpdatable(ctx, lib.UsdcAssetId)
+	updatable, err := keeper.IsPositionUpdatable(ctx, types.AssetUsdc.Id)
 	require.NoError(t, err)
 	require.True(t, updatable)
 

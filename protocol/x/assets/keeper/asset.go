@@ -201,7 +201,7 @@ func (k Keeper) GetNetCollateral(
 	bigNetCollateralQuoteQuantums *big.Int,
 	err error,
 ) {
-	if id == lib.UsdcAssetId {
+	if id == types.AssetUsdc.Id {
 		return new(big.Int).Set(bigQuantums), nil
 	}
 
@@ -239,7 +239,7 @@ func (k Keeper) GetMarginRequirements(
 	err error,
 ) {
 	// QuoteBalance does not contribute to any margin requirements.
-	if id == lib.UsdcAssetId {
+	if id == types.AssetUsdc.Id {
 		return big.NewInt(0), big.NewInt(0), nil
 	}
 
