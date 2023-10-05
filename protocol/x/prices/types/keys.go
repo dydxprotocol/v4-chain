@@ -12,8 +12,8 @@ const (
 // State
 const (
 	// MarketParamKeyPrefix is the prefix to retrieve all MarketParams
-	MarketParamKeyPrefix = "market_param/"
+	MarketParamKeyPrefix = "Param/"
 
 	// MarketPriceKeyPrefix is the prefix to retrieve all MarketPrices
-	MarketPriceKeyPrefix = "market_price/"
+	MarketPriceKeyPrefix = "Price/"
 )

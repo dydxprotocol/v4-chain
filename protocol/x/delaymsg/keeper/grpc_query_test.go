@@ -119,9 +119,3 @@ func TestBlockMessageIds(t *testing.T) {
 		})
 	}
 }
-
-func TestBlockMessageIds_InvalidHeight(t *testing.T) {
-	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
-	_, err := delaymsg.BlockMessageIds(sdk.WrapSDKContext(ctx), &types.QueryBlockMessageIdsRequest{BlockHeight: -1})
-	require.ErrorContains(t, err, "invalid block height")
-}

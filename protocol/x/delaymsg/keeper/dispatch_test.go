@@ -75,7 +75,7 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 }
 
 func setupMockKeeperNoMessages(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{}, false).Once()
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{}, false).Once()
 }
 
 func HandlerSuccess(_ sdk.Context, _ sdk.Msg) (*sdk.Result, error) {
@@ -108,7 +108,7 @@ func mockPanickingRouter(ctx sdk.Context) *mocks.MsgRouter {
 }
 
 func setupMockKeeperMessageNotFound(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 
@@ -143,7 +143,7 @@ func setupMockKeeperMessageNotFound(t *testing.T, ctx sdk.Context, k *mocks.Dela
 }
 
 func setupMockKeeperExecutionFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 
@@ -184,7 +184,7 @@ func setupMockKeeperExecutionFailure(t *testing.T, ctx sdk.Context, k *mocks.Del
 }
 
 func setupMockKeeperMessageHandlerPanic(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 
@@ -225,7 +225,7 @@ func setupMockKeeperMessageHandlerPanic(t *testing.T, ctx sdk.Context, k *mocks.
 }
 
 func setupMockKeeperDecodeFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 
@@ -266,7 +266,7 @@ func setupMockKeeperDecodeFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayM
 }
 
 func setupMockKeeperDeletionFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 

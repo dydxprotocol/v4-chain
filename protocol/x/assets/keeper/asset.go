@@ -168,7 +168,7 @@ func (k Keeper) setAsset(
 ) {
 	b := k.cdc.MustMarshal(&asset)
 	assetStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
-	assetStore.Set(lib.Bit32ToBytes(asset.Id), b)
+	assetStore.Set(lib.Uint32ToKey(asset.Id), b)
 }
 
 func (k Keeper) GetAsset(
@@ -177,7 +177,7 @@ func (k Keeper) GetAsset(
 ) (val types.Asset, exists bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
 
-	b := store.Get(lib.Bit32ToBytes(id))
+	b := store.Get(lib.Uint32ToKey(id))
 	if b == nil {
 		return val, false
 	}

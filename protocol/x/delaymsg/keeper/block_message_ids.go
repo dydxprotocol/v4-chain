@@ -16,17 +16,13 @@ func (k Keeper) newBlockMessageIdsStore(ctx sdk.Context) prefix.Store {
 // GetBlockMessageIds gets the ids of delayed messages to execute at a given block.
 func (k Keeper) GetBlockMessageIds(
 	ctx sdk.Context,
-	blockHeight int64,
+	blockHeight uint32,
 ) (
 	blockMessageIds types.BlockMessageIds,
 	found bool,
 ) {
-	if blockHeight < 0 {
-		return types.BlockMessageIds{}, false
-	}
-
 	store := k.newBlockMessageIdsStore(ctx)
-	b := store.Get(lib.Bit64ToBytes(blockHeight))
+	b := store.Get(lib.Uint32ToKey(blockHeight))
 
 	if b == nil {
 		return types.BlockMessageIds{}, false
@@ -43,11 +39,11 @@ func (k Keeper) GetBlockMessageIds(
 func (k Keeper) addMessageIdToBlock(
 	ctx sdk.Context,
 	id uint32,
-	blockHeight int64,
+	blockHeight uint32,
 ) {
 	store := k.newBlockMessageIdsStore(ctx)
 	var blockMessageIds types.BlockMessageIds
-	key := lib.Bit64ToBytes(blockHeight)
+	key := lib.Uint32ToKey(blockHeight)
 	if b := store.Get(key); b != nil {
 		k.cdc.MustUnmarshal(b, &blockMessageIds)
 		blockMessageIds.Ids = append(blockMessageIds.Ids, id)
@@ -66,7 +62,7 @@ func (k Keeper) addMessageIdToBlock(
 func (k Keeper) deleteMessageIdFromBlock(
 	ctx sdk.Context,
 	id uint32,
-	blockHeight int64,
+	blockHeight uint32,
 ) (
 	err error,
 ) {
@@ -91,11 +87,11 @@ func (k Keeper) deleteMessageIdFromBlock(
 
 		// If the remaining list of ids is empty, go ahead and delete the BlockMessageIds from the store.
 		if len(blockMessageIds.Ids) == 0 {
-			k.newBlockMessageIdsStore(ctx).Delete(lib.Bit64ToBytes(blockHeight))
+			k.newBlockMessageIdsStore(ctx).Delete(lib.Uint32ToKey(blockHeight))
 		} else {
 			// Otherwise, update the BlockMessageIds to have the id of this delayed message removed.
 			k.newBlockMessageIdsStore(ctx).Set(
-				lib.Bit64ToBytes(blockHeight),
+				lib.Uint32ToKey(blockHeight),
 				k.cdc.MustMarshal(&blockMessageIds),
 			)
 		}

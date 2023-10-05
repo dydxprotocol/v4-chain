@@ -12,5 +12,5 @@ const (
 // State
 const (
 	// PerpetualFeeParamsKey defines the key for the PerpetualFeeParams
-	PerpetualFeeParamsKey = "perpetual_fee_params"
+	PerpetualFeeParamsKey = "PerpParams"
 )

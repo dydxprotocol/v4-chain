@@ -271,7 +271,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	delayedMessage, found := keeper.GetMessage(ctx, 1)
 	require.True(t, found)
 	require.Equal(t, uint32(1), delayedMessage.Id)
-	require.Equal(t, int64(100), delayedMessage.BlockHeight)
+	require.Equal(t, uint32(100), delayedMessage.BlockHeight)
 	require.Equal(t, testutildelaymsg.CreateTestAnyMsg(t), delayedMessage.Msg)
 
 	blockIds, found := keeper.GetBlockMessageIds(ctx, 100)

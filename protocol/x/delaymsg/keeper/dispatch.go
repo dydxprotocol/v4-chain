@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/abci"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
@@ -10,7 +11,7 @@ import (
 // the messages. If there are no delayed messages scheduled for this block, this function does nothing. It is
 // expected that this function is called at the end of every block.
 func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
-	blockMessageIds, found := k.GetBlockMessageIds(ctx, ctx.BlockHeight())
+	blockMessageIds, found := k.GetBlockMessageIds(ctx, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
 
 	// If there are no delayed messages scheduled for this block, return.
 	if !found {
