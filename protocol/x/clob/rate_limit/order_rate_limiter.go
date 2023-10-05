@@ -29,7 +29,8 @@ var _ RateLimiter[*types.MsgPlaceOrder] = (*placeOrderRateLimiter)(nil)
 //   - how many short term orders per subaccount (by using satypes.SubaccountId).
 //   - how many stateful order per subaccount (by using satypes.SubaccountId).
 //
-// The rate limiting keeps track of orders only placed during CheckTx.
+// The rate limiting must only be used during `CheckTx` because the rate limiting information is not recovered
+// on application restart preventing it from being deterministic during `DeliverTx`.
 //
 // Depending upon the provided types.BlockRateLimitConfiguration, the returned RateLimiter may rely on:
 //   - `ctx.BlockHeight()` in RateLimit to track which block the rate limit should apply to.
@@ -83,10 +84,7 @@ func NewPlaceOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimi
 }
 
 func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOrder) (err error) {
-	// Only perform rate limiting in CheckTx.
-	if lib.IsDeliverTxMode(ctx) {
-		return nil
-	}
+	lib.AssertCheckTxMode(ctx)
 
 	if msg.Order.IsShortTermOrder() {
 		err = r.checkStateShortTermOrderRateLimiter.RateLimit(
@@ -153,7 +151,8 @@ var _ RateLimiter[*types.MsgCancelOrder] = (*cancelOrderRateLimiter)(nil)
 // types.BlockRateLimitConfiguration. The rate limiter currently supports limiting based upon:
 //   - how many short term order cancellations per subaccount (by using satypes.SubaccountId).
 //
-// The rate limiting keeps track of order cancellations placed during CheckTx.
+// The rate limiting must only be used during `CheckTx` because the rate limiting information is not recovered
+// on application restart preventing it from being deterministic during `DeliverTx`.
 //
 // Depending upon the provided types.BlockRateLimitConfiguration, the returned RateLimiter may rely on:
 //   - `ctx.BlockHeight()` in RateLimit to track which block the rate limit should apply to.
@@ -190,10 +189,7 @@ func NewCancelOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLim
 }
 
 func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancelOrder) (err error) {
-	// Only perform rate limiting in CheckTx.
-	if lib.IsDeliverTxMode(ctx) {
-		return nil
-	}
+	lib.AssertCheckTxMode(ctx)
 
 	if msg.OrderId.IsShortTermOrder() {
 		err = r.checkStateShortTermRateLimiter.RateLimit(
