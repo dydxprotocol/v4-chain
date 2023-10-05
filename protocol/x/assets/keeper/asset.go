@@ -33,9 +33,23 @@ func (k Keeper) CreateAsset(
 		)
 	}
 
-	// Ensure assetId zero is always USDC. This is a protocol-wide invariant.
-	if assetId == types.AssetUsdc.Id && denom != types.AssetUsdc.Denom {
-		return types.Asset{}, types.ErrUsdcMustBeAssetZero
+	if assetId == types.AssetUsdc.Id {
+		// Ensure assetId zero is always USDC. This is a protocol-wide invariant.
+		if denom != types.AssetUsdc.Denom {
+			return types.Asset{}, types.ErrUsdcMustBeAssetZero
+		}
+
+		// Confirm that USDC asset has the expected denom exponent (-6).
+		// This is an important invariant before coin-to-quote-quantum conversion
+		// is correctly implemented. See CLOB-871 for details.
+		if denomExponent != types.AssetUsdc.DenomExponent {
+			return types.Asset{}, errorsmod.Wrapf(
+				types.ErrUnexpectedUsdcDenomExponent,
+				"expected = %v, actual = %v",
+				types.AssetUsdc.DenomExponent,
+				denomExponent,
+			)
+		}
 	}
 
 	// Ensure USDC is not created with a non-zero assetId. This is a protocol-wide invariant.
