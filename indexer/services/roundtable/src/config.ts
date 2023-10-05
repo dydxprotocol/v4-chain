@@ -56,7 +56,7 @@ export const configSchema = {
     default: 2 * ONE_MINUTE_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_ORDERBOOK_INSTRUMENTATION: parseInteger({
-    default: FIVE_MINUTES_IN_MILLISECONDS,
+    default: 5 * ONE_SECOND_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_CANCEL_STALE_ORDERS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
