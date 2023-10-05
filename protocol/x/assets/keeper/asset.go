@@ -39,6 +39,9 @@ func (k Keeper) CreateAsset(
 			return types.Asset{}, types.ErrUsdcMustBeAssetZero
 		}
 
+		// Confirm that USDC asset has the expected denom exponent (-6).
+		// This is an important invariant before coin-to-quote-quantum conversion
+		// is correctly implemented (CLOB-871).
 		if denomExponent != types.AssetUsdc.DenomExponent {
 			return types.Asset{}, errorsmod.Wrapf(
 				types.ErrUnexpectedUsdcDenomExponent,
