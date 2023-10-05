@@ -840,7 +840,7 @@
         {
           "base_position_notional": 1000000000,
           "id": 3,
-          "impact_notional": 2500000000,
+          "impact_notional": 500000000,
           "initial_margin_ppm": 1000000,
           "maintenance_fraction_ppm": 200000,
           "name": "Safety"
