@@ -121,12 +121,15 @@ func (k Keeper) SetDelayedMessage(
 ) {
 	// Unpack the message and validate it.
 	// For messages that are being set from genesis state, we need to unpack the Any type to hydrate the cached value.
-	msg.UnpackInterfaces(k.cdc)
+	if err = msg.UnpackInterfaces(k.cdc); err != nil {
+		return err
+	}
+
 	sdkMsg, err := msg.GetMessage()
 	if err != nil {
 		return errorsmod.Wrapf(
 			types.ErrInvalidInput,
-			"failed to delay message: %v",
+			"failed to delay msg: failed to get message with error '%v'",
 			err,
 		)
 	}
@@ -134,7 +137,7 @@ func (k Keeper) SetDelayedMessage(
 	if err := k.ValidateMsg(sdkMsg); err != nil {
 		return errorsmod.Wrapf(
 			types.ErrInvalidInput,
-			"failed to delay message: %v",
+			"failed to delay message: failed to validate with error '%v'",
 			err,
 		)
 	}
@@ -221,7 +224,6 @@ func (k Keeper) DelayMessageByBlocks(
 	id uint32,
 	err error,
 ) {
-	nextId := k.GetNumMessages(ctx)
 	blockHeight, err := lib.AddUint32(ctx.BlockHeight(), blockDelay)
 	if err != nil {
 		return 0, errorsmod.Wrapf(
@@ -240,6 +242,7 @@ func (k Keeper) DelayMessageByBlocks(
 		)
 	}
 
+	nextId := k.GetNumMessages(ctx)
 	delayedMessage := types.DelayedMessage{
 		Id:          nextId,
 		Msg:         anyMsg,
