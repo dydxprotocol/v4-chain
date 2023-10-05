@@ -5,9 +5,9 @@
 [Describe how this PR was tested (if applicable)]
 
 ### Author/Reviewer Checklist
-- Add an entry to `protocol/CHANGELOG.md` and/or `indexer/CHANGELOG.md` (if applicable).
-- If this PR has changes that modify the way state is read or written, require state migration, or change app hash, manually add the `state-breaking` label.
-- If this PR isn't state-breaking but has changes that modify behavior in `PrepareProposal`or `ProcessProposal`, manually add the label `proposal-breaking`.
-- If this PR is one of many that implement a specific feature, manually label them all `feature:[feature-name]`.
-- If you wish to for mergify-bot to automatically create a PR to backport your change to a release branch, manually add the label `backport/[branch-name]`.
-- Manually add any of the following labels: `refactor`, `chore`, `bug`.
+- [ ] If this change affects functionality (features, bug fixes, breaking changes, etc.), update `protocol/CHANGELOG.md` and/or `indexer/CHANGELOG.md` appropriately.
+- [ ] If this PR has changes that result in a different app state given the same prior state and transaction list, manually add the `state-breaking` label.
+- [ ] If this PR isn't state-breaking but has changes that modify behavior in `PrepareProposal` or `ProcessProposal`, manually add the label `proposal-breaking`.
+- [ ] If this PR is one of many that implement a specific feature, manually label them all `feature:[feature-name]`.
+- [ ] If you wish to for mergify-bot to automatically create a PR to backport your change to a release branch, manually add the label `backport/[branch-name]`.
+- [ ] Manually add any of the following labels: `refactor`, `chore`, `bug`.
