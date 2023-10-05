@@ -83,7 +83,7 @@ func TestCreateAsset_MarketNotFound(t *testing.T) {
 	require.Len(t, keeper.GetAllAssets(ctx), 0)
 }
 
-func TestCreateAsset_UsdcMustBeAssetZero(t *testing.T) {
+func TestCreateAsset_InvalidUsdcAsset(t *testing.T) {
 	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
 
 	// Throws error when creating an asset with id 0 that's not USDC.
@@ -114,6 +114,22 @@ func TestCreateAsset_UsdcMustBeAssetZero(t *testing.T) {
 		int32(-1),
 	)
 	require.ErrorIs(t, err, types.ErrUsdcMustBeAssetZero)
+
+	// Does not create an asset.
+	require.Len(t, keeper.GetAllAssets(ctx), 0)
+
+	// Throws error when creating asset USDC with id other than 0.
+	_, err = keeper.CreateAsset(
+		ctx,
+		0,
+		constants.Usdc.Symbol, // symbol
+		constants.Usdc.Denom,  // denom
+		-9,                    // denomExponent
+		true,
+		uint32(999),
+		int32(-1),
+	)
+	require.ErrorIs(t, err, types.ErrUnexpectedUsdcDenomExponent)
 
 	// Does not create an asset.
 	require.Len(t, keeper.GetAllAssets(ctx), 0)
