@@ -494,6 +494,52 @@ func TestRateLimitingOrders_StatefulOrderRateLimitsAreAcrossMarkets(t *testing.T
 	require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 }
 
+func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *clobtypes.GenesisState) {
+				genesisState.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{
+					MaxStatefulOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+						{
+							NumBlocks: 2,
+							Limit:     1,
+						},
+					},
+				}
+			},
+		)
+		return genesis
+	}).WithTesting(t).Build()
+	ctx := tApp.InitChain()
+
+	firstMarketCheckTx := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5),
+		},
+		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+	)
+	secondMarketCheckTx := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5),
+			AccSequenceNumberForSigning: 2,
+		},
+		&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5,
+	)
+
+	// We expect both to be accepted even though the rate limit is 1.
+	tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{firstMarketCheckTx.Tx, secondMarketCheckTx.Tx},
+	})
+}
+
 func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 	tests := map[string]struct {
 		blockRateLimitConfig clobtypes.BlockRateLimitConfiguration
