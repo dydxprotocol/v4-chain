@@ -50,25 +50,6 @@ func (k Keeper) GetAllOrderFillStates(ctx sdk.Context) (fillStates []OrderIdFill
 	return fillStates
 }
 
-// GetOrdersFilledDuringLatestBlock returns a list of `OrderIds` filled during the latest block.
-// If no orders were filled during the last block, returns an empty slice.
-func (k Keeper) GetOrdersFilledDuringLatestBlock(ctx sdk.Context) []types.OrderId {
-	// Retrieve an instance of the memory store.
-	memStore := ctx.KVStore(k.memKey)
-
-	// Retrieve the `ordersFilledDuringLatestBlock` bytes from the store.
-	ordersFilledDuringLatestBlockBytes := memStore.Get(
-		[]byte(types.OrdersFilledDuringLatestBlockKey),
-	)
-
-	// Unmarshal the `ordersFilledDuringLatestBlock` into a struct.
-	var ordersFilledDuringLatestBlock types.OrdersFilledDuringLatestBlock
-	k.cdc.MustUnmarshal(ordersFilledDuringLatestBlockBytes, &ordersFilledDuringLatestBlock)
-
-	// Return the `OrderIds` filled during the latest block.
-	return ordersFilledDuringLatestBlock.OrderIds
-}
-
 // SetOrderFillAmount writes the total `fillAmount` and `prunableBlockHeight` of an order to on-chain state.
 // TODO(DEC-1219): Determine whether we should continue using `OrderFillState` proto for stateful orders.
 func (k Keeper) SetOrderFillAmount(

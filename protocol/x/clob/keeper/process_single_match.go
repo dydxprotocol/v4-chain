@@ -469,7 +469,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 	newTotalFillAmount satypes.BaseQuantums,
 	curPruneableBlockHeight uint32,
 ) *types.OffchainUpdates {
-	// Note that stateful orders are never pruned by `BlockHeight`, so we set the value to `MaxUInt32` here.
+	// Note that stateful orders are never pruned by `BlockHeight`, so we set the value to `math.MaxUint32` here.
 	pruneableBlockHeight := uint32(math.MaxUint32)
 	offchainUpdates := types.NewOffchainUpdates()
 
