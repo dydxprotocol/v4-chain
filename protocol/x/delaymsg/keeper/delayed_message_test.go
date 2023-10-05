@@ -332,3 +332,57 @@ func TestGetMessage_NotFound(t *testing.T) {
 	require.False(t, found)
 	require.Zero(t, delayedMsg)
 }
+
+func TestSetDelayedMessage(t *testing.T) {
+	tests := map[string]struct {
+		msg    types.DelayedMessage
+		expErr error
+	}{
+		"Success": {
+			msg: types.DelayedMessage{
+				Id:          0,
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
+				BlockHeight: 1,
+			},
+		},
+		"invalid block height": {
+			msg: types.DelayedMessage{
+				Id:          0,
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
+				BlockHeight: 0,
+			},
+			expErr: fmt.Errorf("failed to delay message: block height 0 is in the past: Invalid input"),
+		},
+		"duplicate id": {
+			msg: types.DelayedMessage{
+				Id:          1,
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
+				BlockHeight: 1,
+			},
+			expErr: fmt.Errorf("failed to delay message: message with id 1 already exists: Invalid input"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+
+			// Add a message to the store to test for duplicate message id insertion.
+			err := delaymsg.SetDelayedMessage(ctx, &types.DelayedMessage{
+				Id:          1,
+				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
+				BlockHeight: 0,
+			})
+			require.NoError(t, err)
+
+			// Setup block height to test past message.
+			ctx = ctx.WithBlockHeight(1)
+
+			err = delaymsg.SetDelayedMessage(ctx, &tc.msg)
+			if tc.expErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, tc.expErr, err.Error())
+			}
+		})
+	}
+}
