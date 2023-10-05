@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -37,7 +38,7 @@ func (k Keeper) getValidSubaccountUpdatesForTransfer(
 				SubaccountId: subaccountId,
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          lib.UsdcAssetId,
+						AssetId:          assettypes.AssetUsdc.Id,
 						BigQuantumsDelta: bigBalanceDelta,
 					},
 				},
@@ -93,7 +94,7 @@ func (k Keeper) TransferFundsFromSubaccountToModule(
 	quantums *big.Int,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
-	if assetId != lib.UsdcAssetId {
+	if assetId != assettypes.AssetUsdc.Id {
 		return types.ErrAssetTransferThroughBankNotImplemented
 	}
 
@@ -154,7 +155,7 @@ func (k Keeper) TransferFundsFromModuleToSubaccount(
 	quantums *big.Int,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
-	if assetId != lib.UsdcAssetId {
+	if assetId != assettypes.AssetUsdc.Id {
 		return types.ErrAssetTransferThroughBankNotImplemented
 	}
 
@@ -213,7 +214,7 @@ func (k Keeper) DepositFundsFromAccountToSubaccount(
 	quantums *big.Int,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
-	if assetId != lib.UsdcAssetId {
+	if assetId != assettypes.AssetUsdc.Id {
 		return types.ErrAssetTransferThroughBankNotImplemented
 	}
 
@@ -270,7 +271,7 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 	quantums *big.Int,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
-	if assetId != lib.UsdcAssetId {
+	if assetId != assettypes.AssetUsdc.Id {
 		return types.ErrAssetTransferThroughBankNotImplemented
 	}
 
@@ -325,7 +326,7 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 	quantums *big.Int,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
-	if assetId != lib.UsdcAssetId {
+	if assetId != assettypes.AssetUsdc.Id {
 		return types.ErrAssetTransferThroughBankNotImplemented
 	}
 
@@ -382,7 +383,7 @@ func (k Keeper) TransferInsuranceFundPayments(
 
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
-		lib.UsdcAssetId,
+		assettypes.AssetUsdc.Id,
 		new(big.Int).Abs(insuranceFundDelta),
 	)
 	if err != nil {
