@@ -118,7 +118,7 @@ func TestCreateAsset_InvalidUsdcAsset(t *testing.T) {
 	// Does not create an asset.
 	require.Len(t, keeper.GetAllAssets(ctx), 0)
 
-	// Throws error when creating asset USDC with id other than 0.
+	// Throws error when creating asset USDC with unexpected denom exponent.
 	_, err = keeper.CreateAsset(
 		ctx,
 		0,
