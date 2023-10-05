@@ -38,7 +38,6 @@ const GenesisState = `{
           "denom_exponent": "-6",
           "has_market": false,
           "id": 0,
-          "long_interest": 0,
           "market_id": 0,
           "symbol": "USDC"
         }

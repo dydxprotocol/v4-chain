@@ -60,7 +60,6 @@ func (k Keeper) CreateAsset(
 		HasMarket:        hasMarket,
 		MarketId:         marketId,
 		AtomicResolution: atomicResolution,
-		LongInterest:     0,
 	}
 
 	// Validate market
@@ -130,35 +129,6 @@ func (k Keeper) ModifyAsset(
 	// Store the modified asset
 	k.setAsset(ctx, asset)
 
-	return asset, nil
-}
-
-func (k Keeper) ModifyLongInterest(
-	ctx sdk.Context,
-	id uint32,
-	isIncrease bool,
-	delta uint64,
-) (types.Asset, error) {
-	// Get asset
-	asset, exists := k.GetAsset(ctx, id)
-	if !exists {
-		return asset, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
-	}
-
-	// Validate delta
-	if !isIncrease && delta > asset.LongInterest {
-		return asset, errorsmod.Wrap(types.ErrNegativeLongInterest, lib.UintToString(id))
-	}
-
-	// Modify asset
-	if isIncrease {
-		asset.LongInterest += delta
-	} else {
-		asset.LongInterest -= delta
-	}
-
-	// Store the modified asset
-	k.setAsset(ctx, asset)
 	return asset, nil
 }
 

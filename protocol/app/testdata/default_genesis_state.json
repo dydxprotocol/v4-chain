@@ -9,8 +9,7 @@
         "denom_exponent": -6,
         "has_market": false,
         "market_id": 0,
-        "atomic_resolution": -6,
-        "long_interest": "0"
+        "atomic_resolution": -6
       }
     ]
   },

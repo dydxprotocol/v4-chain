@@ -54,7 +54,6 @@ func (k Keeper) CreatePerpetual(
 			LiquidityTier:     liquidityTier,
 		},
 		FundingIndex: dtypes.ZeroInt(),
-		OpenInterest: types.DefaultOpenInterest,
 	}
 
 	if err := k.validatePerpetual(
@@ -1083,15 +1082,6 @@ func (k Keeper) SetEmptyPremiumVotes(
 		types.PremiumStore{},
 		types.PremiumVotesKey,
 	)
-}
-
-func (k Keeper) ModifyOpenInterest(
-	ctx sdk.Context,
-	id uint32,
-	isIncrease bool,
-	deltaBaseQuantums uint64,
-) (newOpenInterestBaseQuantums uint64, err error) {
-	return 0, types.ErrNotImplementedOpenInterest
 }
 
 func (k Keeper) setPerpetual(

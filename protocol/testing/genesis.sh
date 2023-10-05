@@ -71,7 +71,6 @@ function edit_genesis() {
 	dasel put -t bool -f "$GENESIS" '.app_state.assets.assets.[0].has_market' -v 'false'
 	dasel put -t int -f "$GENESIS" '.app_state.assets.assets.[0].market_id' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.assets.assets.[0].atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.assets.assets.[0].long_interest' -v '0'
 
 	# Update bridge module.
 	dasel put -t string -f "$GENESIS" '.app_state.bridge.event_params.denom' -v "$NATIVE_TOKEN"
