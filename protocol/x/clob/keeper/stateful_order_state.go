@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"sort"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // TODO(CLOB-739) Rename all functions in this file to StatefulOrder instead of LongTermOrder
@@ -503,11 +503,11 @@ func (k Keeper) GetStatefulOrderCount(
 	store := k.GetStatefulOrderCountMemStore(ctx)
 
 	b := store.Get(subaccountId.MustMarshal())
-	if b == nil {
-		return 0
+	result := generic.Uint32{Value: 0}
+	if b != nil {
+		k.cdc.MustUnmarshal(b, &result)
 	}
-
-	return lib.BytesToUint32(b)
+	return result.Value
 }
 
 // SetStatefulOrderCount sets a count of how many stateful orders are written to state. This does not
@@ -522,10 +522,10 @@ func (k Keeper) SetStatefulOrderCount(
 	if count == 0 {
 		store.Delete(subaccountId.MustMarshal())
 	} else {
-		countBytes := lib.Bit32ToBytes(count)
+		result := generic.Uint32{Value: count}
 		store.Set(
 			subaccountId.MustMarshal(),
-			countBytes,
+			k.cdc.MustMarshal(&result),
 		)
 	}
 }
