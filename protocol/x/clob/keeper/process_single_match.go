@@ -3,7 +3,6 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -469,8 +468,8 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 	newTotalFillAmount satypes.BaseQuantums,
 	curPruneableBlockHeight uint32,
 ) *types.OffchainUpdates {
-	// Note that stateful orders are never pruned by `BlockHeight`, so we set the value to `MaxUInt32` here.
-	pruneableBlockHeight := uint32(math.MaxUint32)
+	// Note that stateful orders are never pruned by `BlockHeight`, so we set the value to `0` here.
+	pruneableBlockHeight := uint32(0)
 	offchainUpdates := types.NewOffchainUpdates()
 
 	if !order.IsStatefulOrder() {
