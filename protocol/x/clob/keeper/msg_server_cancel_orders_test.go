@@ -96,7 +96,7 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	)
 
 	_, err := msgServer.CancelOrder(ctx, &orderToCancel)
-	require.ErrorIs(t, err, types.ErrStatefulOrderDoesNotExist)
+	require.ErrorIs(t, err, types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder)
 	mockLogger.AssertExpectations(t)
 }
 
