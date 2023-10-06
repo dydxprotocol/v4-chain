@@ -1,5 +1,4 @@
 name: Protocol Pregenesis Up-to-date
-# Lint runs all linting jobs.
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
@@ -20,6 +19,8 @@ concurrency:
 jobs:
   check-pregenesis-up-to-date:
     runs-on: ubuntu-latest
+    container:
+      image: alpine:latest
     defaults:
       run:
         working-directory: ./protocol
