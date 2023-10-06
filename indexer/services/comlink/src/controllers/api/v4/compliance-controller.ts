@@ -51,6 +51,13 @@ class ComplianceController extends Controller {
       complianceProvider.provider,
     );
 
+    if (complianceData !== undefined) {
+      stats.increment(
+        `${config.SERVICE_NAME}.${controllerName}.compliance_data_cache_hit`,
+        { provider: complianceProvider.provider },
+      );
+    }
+
     // Immediately return for blocked addresses, do not refresh
     if (complianceData?.blocked) {
       return {
@@ -61,7 +68,19 @@ class ComplianceController extends Controller {
 
     if (complianceData === undefined || DateTime.fromISO(complianceData.updatedAt) < ageThreshold) {
       await checkRateLimit(this.ipAddress);
-      // TODO(IND-369): Use Ellptic client
+
+      if (complianceData === undefined) {
+        stats.increment(
+          `${config.SERVICE_NAME}.${controllerName}.compliance_data_cache_miss`,
+          { provder: complianceProvider.provider },
+        );
+      } else {
+        stats.increment(
+          `${config.SERVICE_NAME}.${controllerName}.refresh_compliance_data_cache`,
+          { provider: complianceProvider.provider },
+        );
+      }
+
       const response:
       ComplianceClientResponse = await complianceProvider.client.getComplianceResponse(
         address,
@@ -111,6 +130,10 @@ router.get(
       return res.send(response);
     } catch (error) {
       if (error instanceof TooManyRequestsError) {
+        stats.increment(
+          `${config.SERVICE_NAME}.${controllerName}.compliance_screen_rate_limited_attempts`,
+          { provider: complianceProvider.provider },
+        );
         return create4xxResponse(
           res,
           'Too many requests',
