@@ -25,9 +25,9 @@ TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000000000000000000000 # 5e23
 ETH_CHAIN_ID=11155111 # sepolia
 # https://sepolia.etherscan.io/address/0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0
 ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0"
-BRIDGE_MODACC_BALANCE=1000000000000000000000000000 # 1e27
-BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0
-BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=0
+TOTAL_NATIVE_TOKEN_SUPPLY=1000000000000000000000000000 # 1e27
+BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=5
+BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=4322136
 
 function edit_genesis() {
 	GENESIS=$1/genesis.json
@@ -966,19 +966,21 @@ function edit_genesis() {
 	dydx_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/dydx_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$dydx_exchange_config_json"
 
-
+	bridge_module_account_balance=$TOTAL_NATIVE_TOKEN_SUPPLY
 	total_accounts_quote_balance=0
 	acct_idx=0
-	# Update subaccounts module for load testing accounts.
+	# Update subaccounts module for load testing accounts and update bridge module account balance.
 	for acct in "${INPUT_TEST_ACCOUNTS[@]}"; do
 		add_subaccount "$GENESIS" "$acct_idx" "$acct" "$DEFAULT_SUBACCOUNT_QUOTE_BALANCE"
 		total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_SUBACCOUNT_QUOTE_BALANCE))
+		bridge_module_account_balance=$(echo "$bridge_module_account_balance - $TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE" | bc)
 		acct_idx=$(($acct_idx + 1))
 	done
-	# Update subaccounts module for faucet accounts.
+	# Update subaccounts module for faucet accounts and update bridge module account balance.
 	for acct in "${INPUT_FAUCET_ACCOUNTS[@]}"; do
 		add_subaccount "$GENESIS" "$acct_idx" "$acct" "$DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET"
 		total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET))
+		bridge_module_account_balance=$(echo "$bridge_module_account_balance - $TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE" | bc)
 		acct_idx=$(($acct_idx + 1))
 	done
 
@@ -1007,7 +1009,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${BRIDGE_MODACC_ADDR}"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${NATIVE_TOKEN}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "${BRIDGE_MODACC_BALANCE}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "${bridge_module_account_balance}"
 
 	# Use ATOM-USD as test oracle price of the reward token.
 	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v '11'
