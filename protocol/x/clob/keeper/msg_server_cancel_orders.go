@@ -44,14 +44,14 @@ func (k msgServer) CancelOrder(
 						1,
 						msg.OrderId.GetOrderIdLabels(),
 					)
-					k.Keeper.Logger(ctx).Info(
-						errorsmod.Wrapf(
-							types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder,
-							"Error: %s",
-							err.Error(),
-						).Error(),
+					err = errorsmod.Wrapf(
+						types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder,
+						"Error: %s",
+						err.Error(),
 					)
-					return
+					k.Keeper.Logger(ctx).Info(
+						err.Error(),
+					)
 				}
 			}
 			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "CancelOrder", msg)

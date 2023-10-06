@@ -134,12 +134,19 @@ func (k Keeper) CancelStatefulOrder(
 ) (err error) {
 	defer func() {
 		if err != nil {
-			callback := metrics.GetCallbackMetricFromCtx(ctx)
 			telemetry.IncrCounterWithLabels(
 				[]string{types.ModuleName, metrics.CancelStatefulOrder, metrics.Error, metrics.Count},
 				1,
 				[]gometrics.Label{
-					metrics.GetLabelForStringValue(metrics.Callback, callback),
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		} else {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.CancelStatefulOrder, metrics.Success, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
 				},
 			)
 		}
