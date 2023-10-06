@@ -557,8 +557,9 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		previousBlockTime := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp
 
 		prevBlockHeight := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Height
-		if lib.IsDeliverTxMode(ctx) && prevBlockHeight != uint32(ctx.BlockHeight()-1) {
-			panic(
+		currBlockHeight := uint32(ctx.BlockHeight())
+		if lib.IsDeliverTxMode(ctx) && prevBlockHeight != currBlockHeight-1 {
+			k.Logger(ctx).Error(
 				fmt.Sprintf(
 					"PerformOrderCancellationStatefulValidation: prev block height is not one below current block height"+
 						"in DeliverTx. Prev: %d, Current: %d", prevBlockHeight, ctx.BlockHeight(),
@@ -567,8 +568,8 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		}
 
 		// CheckTx or ReCheckTx
-		if !lib.IsDeliverTxMode(ctx) && prevBlockHeight != uint32(ctx.BlockHeight()) {
-			panic(
+		if !lib.IsDeliverTxMode(ctx) && currBlockHeight > 1 && prevBlockHeight != currBlockHeight {
+			k.Logger(ctx).Error(
 				fmt.Sprintf(
 					"PerformOrderCancellationStatefulValidation: prev block height is not equal to current block height"+
 						"in CheckTx/ReCheckTx. Prev: %d, Current: %d", prevBlockHeight, ctx.BlockHeight(),

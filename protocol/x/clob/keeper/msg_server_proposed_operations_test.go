@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +31,15 @@ func TestProposedOperations(t *testing.T) {
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
 				mck.On("ProcessProposerOperations", ctx, operationsQueue).Return(testError)
 				mockLogger := &mocks.Logger{}
-				mockLogger.On("Error", "Block height: 20, Callback: deliver_tx: error").Return()
+				mockLogger.On(
+					"Error",
+					fmt.Sprintf(
+						"Block height: 20, Handler: ProposedOperations, Callback: deliver_tx, Msg: %+v: error",
+						&types.MsgProposedOperations{
+							OperationsQueue: make([]types.OperationRaw, 0),
+						},
+					),
+				).Return()
 				mck.On("Logger", ctx).Return(mockLogger)
 			},
 			expectedErr: testError,

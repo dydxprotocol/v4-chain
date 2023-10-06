@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -67,6 +67,7 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	orderToCancel := constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15
 
 	ctx := ks.Ctx.WithBlockHeight(2)
+	ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	mockLogger := &mocks.Logger{}
 	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
 	mockLogger.On("Info",
@@ -83,7 +84,7 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	ctx = ctx.WithLogger(mockLogger)
 	ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-		Height:    2,
+		Height:    1,
 		Timestamp: time.Unix(int64(2), 0),
 	})
 
@@ -109,22 +110,28 @@ func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
 	orderToCancel := constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15
 
 	ctx := ks.Ctx.WithBlockHeight(2)
+	ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	mockLogger := &mocks.Logger{}
 	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
-	mockLogger.On(
-		"Error",
-		fmt.Sprintf("Block height: 2, Callback: deliver_tx: %s", types.ErrTimeExceedsGoodTilBlockTime.Error()),
-	).Return()
+	err := errorsmod.Wrapf(
+		types.ErrTimeExceedsGoodTilBlockTime,
+		"Block height: %d, Handler: %s, Callback: %s, Msg: %+v",
+		2,
+		"CancelOrder",
+		metrics.DeliverTx,
+		&orderToCancel,
+	)
+	mockLogger.On("Error", err.Error()).Return()
 	ctx = ctx.WithLogger(mockLogger)
 	ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-		Height:    2,
+		Height:    1,
 		Timestamp: time.Unix(int64(20), 0),
 	})
 
 	// MsgCancelOrder will fail because the GTBT of the cancellation message is lower than the current block time.
 	// This should log an error.
-	_, err := msgServer.CancelOrder(ctx, &orderToCancel)
+	_, err = msgServer.CancelOrder(ctx, &orderToCancel)
 	require.ErrorIs(t, err, types.ErrTimeExceedsGoodTilBlockTime)
 	mockLogger.AssertExpectations(t)
 }
@@ -163,7 +170,7 @@ func TestCancelOrder_Error(t *testing.T) {
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-				Height:    2,
+				Height:    1,
 				Timestamp: time.Unix(int64(2), 0),
 			})
 
@@ -204,7 +211,7 @@ func TestCancelOrder_Success(t *testing.T) {
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-				Height:    2,
+				Height:    1,
 				Timestamp: time.Unix(int64(2), 0),
 			})
 
