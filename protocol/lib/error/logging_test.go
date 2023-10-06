@@ -7,6 +7,7 @@ import (
 	liberror "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestWrapErrorWithSourceModuleContext_ErrorWithLogContext(t *testing.T) {
@@ -43,10 +44,11 @@ func TestLogDeliverTxError(t *testing.T) {
 	// Expect that the block height will be appended to the error message.
 	logger.On(
 		"Error",
-		fmt.Sprintf(
-			"Block height: 123, Handler: foobar, Callback: deliver_tx, Msg: %+v: test error",
-			&types.MsgCancelOrder{},
-		),
+		[]interface{}{
+			"test error",
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		}...,
 	).Return()
 
 	liberror.LogDeliverTxError(logger, err, 123, "foobar", &types.MsgCancelOrder{})

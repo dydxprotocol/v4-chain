@@ -11,7 +11,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -113,15 +112,14 @@ func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
 	ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	mockLogger := &mocks.Logger{}
 	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
-	err := errorsmod.Wrapf(
-		types.ErrTimeExceedsGoodTilBlockTime,
-		"Block height: %d, Handler: %s, Callback: %s, Msg: %+v",
-		2,
-		"CancelOrder",
-		metrics.DeliverTx,
-		&orderToCancel,
-	)
-	mockLogger.On("Error", err.Error()).Return()
+	mockLogger.On(
+		"Error",
+		[]interface{}{
+			types.ErrTimeExceedsGoodTilBlockTime.Error(),
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		}...,
+	).Return()
 	ctx = ctx.WithLogger(mockLogger)
 	ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
@@ -131,7 +129,7 @@ func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
 
 	// MsgCancelOrder will fail because the GTBT of the cancellation message is lower than the current block time.
 	// This should log an error.
-	_, err = msgServer.CancelOrder(ctx, &orderToCancel)
+	_, err := msgServer.CancelOrder(ctx, &orderToCancel)
 	require.ErrorIs(t, err, types.ErrTimeExceedsGoodTilBlockTime)
 	mockLogger.AssertExpectations(t)
 }

@@ -20,6 +20,7 @@ const (
 	Latency          = "latency"
 	Matched          = "matched"
 	MessageType      = "message_type"
+	Msg              = "msg"
 	Negative         = "negative"
 	No               = "no"
 	NonDeterministic = "non_deterministic"
