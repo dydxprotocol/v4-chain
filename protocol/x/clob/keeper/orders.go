@@ -202,12 +202,19 @@ func (k Keeper) PlaceStatefulOrder(
 ) (err error) {
 	defer func() {
 		if err != nil {
-			callback := metrics.GetCallbackMetricFromCtx(ctx)
 			telemetry.IncrCounterWithLabels(
 				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Error, metrics.Count},
 				1,
 				[]gometrics.Label{
-					metrics.GetLabelForStringValue(metrics.Callback, callback),
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		} else {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Success, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
 				},
 			)
 		}
@@ -555,27 +562,22 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		currBlockHeight := uint32(ctx.BlockHeight())
 		if lib.IsDeliverTxMode(ctx) && prevBlockHeight != currBlockHeight-1 {
 			k.Logger(ctx).Error(
-				fmt.Sprintf(
-					"PerformOrderCancellationStatefulValidation: prev block height is not one below current block height"+
-						"in DeliverTx. Prev: %d, Current: %d, MsgCancelOrder: %+v",
-					prevBlockHeight,
-					currBlockHeight,
-					msgCancelOrder,
-				),
+				"PerformOrderCancellationStatefulValidation: prev block height is not one below"+
+					"current block height in DeliverTx",
+				"previousBlockHeight", prevBlockHeight,
+				"currentBlockHeight", currBlockHeight,
+				"msgCancelOrder", msgCancelOrder,
 			)
 		}
 
 		// CheckTx or ReCheckTx
 		if !lib.IsDeliverTxMode(ctx) && currBlockHeight > 1 && prevBlockHeight != currBlockHeight {
 			k.Logger(ctx).Error(
-				fmt.Sprintf(
-					"PerformOrderCancellationStatefulValidation: prev block height is not equal to current block height"+
-						"Callback: %s Prev: %d, Current: %d, MsgCancelOrder: %+v",
-					metrics.GetCallbackMetricFromCtx(ctx),
-					prevBlockHeight,
-					currBlockHeight,
-					msgCancelOrder,
-				),
+				"PerformOrderCancellationStatefulValidation: prev block height is not equal to current block height"+
+					metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx),
+				"previousBlockHeight", prevBlockHeight,
+				"currentBlockHeight", currBlockHeight,
+				"msgCancelOrder", msgCancelOrder,
 			)
 		}
 
