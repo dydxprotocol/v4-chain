@@ -54,7 +54,7 @@ func (k msgServer) CancelOrder(
 					return
 				}
 			}
-			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "CancelOrder", msg)
 		}
 	}()
 

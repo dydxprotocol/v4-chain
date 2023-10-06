@@ -6,6 +6,7 @@ import (
 
 	liberror "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 func TestWrapErrorWithSourceModuleContext_ErrorWithLogContext(t *testing.T) {
@@ -35,25 +36,31 @@ func TestLogErrorWithOptionalContext_PlainError(t *testing.T) {
 	logger.AssertExpectations(t)
 }
 
-func TestLogErrorWithBlockHeight(t *testing.T) {
+func TestLogDeliverTxError(t *testing.T) {
 	logger := &mocks.Logger{}
 	err := fmt.Errorf("test error")
 
 	// Expect that the block height will be appended to the error message.
-	logger.On("Error", "Block height: 123, Callback: foobar: test error").Return()
+	logger.On(
+		"Error",
+		fmt.Sprintf(
+			"Block height: 123, Handler: foobar, Callback: deliver_tx, Msg: %+v: test error",
+			&types.MsgCancelOrder{},
+		),
+	).Return()
 
-	liberror.LogErrorWithBlockHeight(logger, err, 123, "foobar")
+	liberror.LogDeliverTxError(logger, err, 123, "foobar", &types.MsgCancelOrder{})
 
 	logger.AssertExpectations(t)
 }
 
-func TestLogErrorWithBlockHeight_NilError(t *testing.T) {
+func TestLogDeliverTxError_NilError(t *testing.T) {
 	logger := &mocks.Logger{}
 
 	// Expect that the block height will be appended to the error message.
 	logger.On("Error", "LogErrorWithBlockHeight called with nil error").Return()
 
-	liberror.LogErrorWithBlockHeight(logger, nil, 123, "foobar")
+	liberror.LogDeliverTxError(logger, nil, 123, "foobar", &types.MsgCancelOrder{})
 
 	logger.AssertExpectations(t)
 }
