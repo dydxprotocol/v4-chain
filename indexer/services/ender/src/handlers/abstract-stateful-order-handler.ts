@@ -5,6 +5,7 @@ import {
   PerpetualMarketFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { IndexerOrderId, IndexerOrder, IndexerOrder_Side } from '@dydxprotocol-indexer/v4-protos';
+import { DateTime } from 'luxon';
 
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../constants';
 import { getPrice, getSize } from '../lib/helper';
@@ -28,6 +29,8 @@ export abstract class AbstractStatefulOrderHandler<T> extends Handler<T> {
     const orderUpdateObject: OrderUpdateObject = {
       id: orderId,
       status,
+      updatedAt: DateTime.fromJSDate(this.block.time!).toISO(),
+      updatedAtHeight: this.block.height.toString(),
     };
 
     const order: OrderFromDatabase | undefined = await OrderTable.update(
@@ -79,6 +82,8 @@ export abstract class AbstractStatefulOrderHandler<T> extends Handler<T> {
       createdAtHeight: this.block.height.toString(),
       clientMetadata: order.clientMetadata.toString(),
       triggerPrice,
+      updatedAt: DateTime.fromJSDate(this.block.time!).toISO(),
+      updatedAtHeight: this.block.height.toString(),
     };
 
     return OrderTable.upsert(orderToCreate, { txId: this.txId });

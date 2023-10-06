@@ -339,6 +339,8 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: defaultHeight.toString(),
       });
 
       const takerOrderSize: string = '0.001'; // quantums in human = 1e7 * 1e-10 = 1e-3
@@ -357,6 +359,8 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: defaultHeight.toString(),
       });
 
       const eventId: Buffer = TendermintEventTable.createEventId(
@@ -604,6 +608,8 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
           clientMetadata: '0',
+          updatedAt: defaultDateTime.toISO(),
+          updatedAtHeight: defaultHeight.toString(),
         }),
         // taker order
         OrderTable.create({
@@ -622,6 +628,8 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
+          updatedAt: defaultDateTime.toISO(),
+          updatedAtHeight: defaultHeight.toString(),
         }),
       ]);
 
@@ -709,6 +717,8 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: defaultHeight.toString(),
       });
 
       const takerOrderSize: string = '0.1002'; // quantums in human = (1e9 + 2e6) * 1e-10 = 0.1002
@@ -727,6 +737,8 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: defaultHeight.toString(),
       });
 
       const eventId: Buffer = TendermintEventTable.createEventId(
@@ -947,6 +959,8 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
 
     // This size should be in fixed-point notation rather than exponential notation (1e-9)
@@ -966,6 +980,8 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
 
     const eventId: Buffer = TendermintEventTable.createEventId(
@@ -1154,6 +1170,8 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
 
     const takerOrderSize: string = '0.1'; // quantums in human = 1e1 * 1e-2 = 1e-1
@@ -1172,6 +1190,8 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
 
     const eventId: Buffer = TendermintEventTable.createEventId(

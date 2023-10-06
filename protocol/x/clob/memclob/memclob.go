@@ -207,7 +207,6 @@ func (m *MemClobPriceTimePriority) GetSubaccountOrders(
 	subaccountId satypes.SubaccountId,
 	side types.Order_Side,
 ) (openOrders []types.Order, err error) {
-	lib.AssertCheckTxMode(ctx)
 	return m.openOrders.getSubaccountOrders(
 		ctx,
 		clobPairId,

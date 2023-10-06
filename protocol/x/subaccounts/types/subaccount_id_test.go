@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMustMarshal(t *testing.T) {
+func TestToStateKey(t *testing.T) {
 	// Success
 	b, _ := constants.Alice_Num0.Marshal()
-	require.Equal(t, b, constants.Alice_Num0.MustMarshal())
+	require.Equal(t, b, constants.Alice_Num0.ToStateKey())
 
 	// No panic case. MustMarshal() > Marshal() > MarshalToSizedBuffer() which never returns an error.
 }

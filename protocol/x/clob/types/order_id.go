@@ -97,8 +97,10 @@ func (o *OrderId) Validate() error {
 	return nil
 }
 
-// MustMarshal returns the marshaled bytes representation of an OrderId, panic'ing on error.
-func (o *OrderId) MustMarshal() []byte {
+// ToStateKey returns a bytes representation of a OrderId for use as a state key.
+// The key uses the proto marshaling of the object such that it can be unmarshalled in
+// the same way if it needs to be.
+func (o *OrderId) ToStateKey() []byte {
 	b, err := o.Marshal()
 	if err != nil {
 		panic(err)

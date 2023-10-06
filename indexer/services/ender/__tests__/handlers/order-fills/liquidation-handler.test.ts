@@ -305,6 +305,8 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: defaultHeight.toString(),
       });
 
       // No orders should exist for the liquidated account since none are created, and there
@@ -454,6 +456,8 @@ describe('LiquidationHandler', () => {
         goodTilBlock: existingGoodTilBlock,
         goodTilBlockTime: existingGoodTilBlockTime,
         clientMetadata: '0',
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: '0',
       };
 
       await Promise.all([
@@ -535,6 +539,8 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: defaultHeight.toString(),
       });
 
       const eventId: Buffer = TendermintEventTable.createEventId(
@@ -701,6 +707,8 @@ describe('LiquidationHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
 
     const eventId: Buffer = TendermintEventTable.createEventId(

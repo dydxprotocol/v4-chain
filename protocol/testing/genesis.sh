@@ -58,6 +58,10 @@ function edit_genesis() {
 		INITIAL_CLOB_PAIR_STATUS='STATUS_ACTIVE'
 	fi
 
+	# Consensus params
+	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '4194304'
+	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
+
 	# Update crisis module.
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
 
@@ -126,7 +130,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].initial_margin_ppm' -v '1000000' # 100%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].maintenance_fraction_ppm' -v '200000' # 20% of IM
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].base_position_notional' -v '1000000000' # 1_000 USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].impact_notional' -v '500000000' # 500 USDC (500 / 100%)
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].impact_notional' -v '2500000000' # 2_500 USDC (2_500 USDC / 100%)
 
 	# Params.
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.params.funding_rate_clamp_factor_ppm' -v '6000000' # 600 % (same as 75% on hourly rate)

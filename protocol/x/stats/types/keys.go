@@ -6,7 +6,7 @@ const (
 	ModuleName = "stats"
 
 	// TransientStoreKey defines the primary module transient store key
-	TransientStoreKey = "transient_" + ModuleName
+	TransientStoreKey = "tmp_" + ModuleName
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
@@ -15,10 +15,10 @@ const (
 // State
 const (
 	// EpochStatsKeyPrefix is the prefix to retrieve the EpochStats for a given epoch
-	EpochStatsKeyPrefix = "Epoch/"
+	EpochStatsKeyPrefix = "Epoch:"
 
 	// UserStatsKeyPrefix is the prefix to retrieve the UserStats for a given user
-	UserStatsKeyPrefix = "User/"
+	UserStatsKeyPrefix = "User:"
 
 	// StatsMetadataKey is the key to get the StatsMetadata for the module
 	StatsMetadataKey = "Metadata"
