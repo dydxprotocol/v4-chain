@@ -58,6 +58,12 @@ function edit_genesis() {
 		INITIAL_CLOB_PAIR_STATUS='STATUS_ACTIVE'
 	fi
 
+	REWARDS_VESTER_ACCOUNT_BALANCE="$7"
+	if [ -z "$REWARDS_VESTER_ACCOUNT_BALANCE" ]; then
+		# Default to 1e12.
+		REWARDS_VESTER_ACCOUNT_BALANCE="1000000000000"
+	fi
+
 	# Consensus params
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '4194304'
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
@@ -966,7 +972,8 @@ function edit_genesis() {
 	dydx_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/dydx_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$dydx_exchange_config_json"
 
-	bridge_module_account_balance=$TOTAL_NATIVE_TOKEN_SUPPLY
+	# Initialize bridge module account balance as total native token supply minus rewards vester account balance.
+	bridge_module_account_balance=$(echo "$TOTAL_NATIVE_TOKEN_SUPPLY - $REWARDS_VESTER_ACCOUNT_BALANCE" | bc)
 	total_accounts_quote_balance=0
 	acct_idx=0
 	# Update subaccounts module for load testing accounts and update bridge module account balance.
@@ -1001,7 +1008,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${REWARDS_VESTER_ACCOUNT_ADDR}"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${REWARD_TOKEN}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "1000000000000" # 1e12
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "$REWARDS_VESTER_ACCOUNT_BALANCE"
 	next_bank_idx=$(($next_bank_idx+1))
 
 	# Initialize bank balance of bridge module account.

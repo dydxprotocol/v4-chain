@@ -188,7 +188,7 @@ create_pregenesis_file() {
 	# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 	# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
 	# Note: `edit_genesis` must be called before `add-genesis-account`.
-	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config" ""
+	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config" "" ""
 	overwrite_genesis_public_testnet
 
 	FAUCET_BALANCE="${FAUCET_STAKE_BALANCE}$NATIVE_TOKEN"
