@@ -997,12 +997,12 @@ function edit_genesis() {
 	fi
 
 	# Initialize bank balance for reward vester account.
-	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${REWARDS_VESTER_ACCOUNT_ADDR}"
-	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${REWARD_TOKEN}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "1000000000000" # 1e12
-	next_bank_idx=$(($next_bank_idx+1))
+	# dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
+	# dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${REWARDS_VESTER_ACCOUNT_ADDR}"
+	# dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
+	# dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${REWARD_TOKEN}"
+	# dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "1000000000000" # 1e12
+	# next_bank_idx=$(($next_bank_idx+1))
 
 	# Initialize bank balance of bridge module account.
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"

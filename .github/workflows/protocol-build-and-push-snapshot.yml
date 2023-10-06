@@ -1,8 +1,10 @@
 name: Protocol Build & Push Image to AWS ECR
 
 on:  # yamllint disable-line rule:truthy
+  pull_request:
   push:
     branches:
+      - td/setup*
       - main
       - 'release/[a-z]+/0.[0-9]+.x'  # e.g. release/protocol/v0.1.x
       - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/protocol/v1.x
