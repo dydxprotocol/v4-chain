@@ -1,7 +1,10 @@
 #!/bin/bash
 # This script checks that the 
-
+echo "Installing dasel..."
+apk add dasel jq
+echo "Building binary..."
 make build
+echo "Running prod_pregenesis.sh..."
 ./scripts/genesis/prod_pregenesis.sh build/dydxprotocold
 
 diff_output=$(diff "/tmp/prod-chain/.dydxprotocol/config/genesis.json" "./scripts/genesis/sample_pregenesis.json")
