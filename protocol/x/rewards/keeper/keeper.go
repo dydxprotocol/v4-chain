@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -168,7 +169,11 @@ func (k Keeper) AddRewardShareToAddress(
 	weight *big.Int,
 ) error {
 	if weight.Cmp(lib.BigInt0()) <= 0 {
-		return fmt.Errorf("reward share weight must be positive")
+		return errorsmod.Wrapf(
+			types.ErrNonpositiveWeight,
+			"Invalid weight %v",
+			weight.String(),
+		)
 	}
 
 	// Get existing reward share. If no previous reward share, 0 weight is returned.
@@ -191,7 +196,11 @@ func (k Keeper) SetRewardShare(
 	rewardShare types.RewardShare,
 ) error {
 	if rewardShare.Weight.BigInt().Cmp(lib.BigInt0()) <= 0 {
-		return fmt.Errorf("reward share weight must be positive")
+		return errorsmod.Wrapf(
+			types.ErrNonpositiveWeight,
+			"Invalid weight %v",
+			rewardShare.Weight.String(),
+		)
 	}
 
 	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), []byte(types.RewardShareKeyPrefix))

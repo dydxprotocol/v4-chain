@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -63,6 +64,20 @@ func TestRewardShareStorage_Exists(t *testing.T) {
 	require.Equal(t, val, k.GetRewardShare(ctx, TestAddress1))
 }
 
+func TestSetRewardShare_FailsWithNonpositiveWeight(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RewardsKeeper
+
+	val := types.RewardShare{
+		Address: TestAddress1,
+		Weight:  dtypes.NewInt(0),
+	}
+
+	err := k.SetRewardShare(ctx, val)
+	require.ErrorContains(t, err, "Invalid weight 0: weight must be positive")
+}
+
 func TestAddRewardShareToAddress(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
 
@@ -70,6 +85,7 @@ func TestAddRewardShareToAddress(t *testing.T) {
 		prevRewardShare     *types.RewardShare // nil if no previous share
 		newWeight           *big.Int
 		expectedRewardShare types.RewardShare
+		expectedErr         error
 	}{
 		"no previous share": {
 			prevRewardShare: nil,
@@ -90,6 +106,14 @@ func TestAddRewardShareToAddress(t *testing.T) {
 				Weight:  dtypes.NewInt(100_500),
 			},
 		},
+		"fails with non-positive weight": {
+			newWeight:   big.NewInt(0),
+			expectedErr: fmt.Errorf("Invalid weight 0: weight must be positive"),
+			expectedRewardShare: types.RewardShare{
+				Address: TestAddress1,
+				Weight:  dtypes.NewInt(0),
+			},
+		},
 	}
 
 	// Run tests.
@@ -105,7 +129,11 @@ func TestAddRewardShareToAddress(t *testing.T) {
 			}
 
 			err := k.AddRewardShareToAddress(ctx, TestAddress1, tc.newWeight)
-			require.NoError(t, err)
+			if tc.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			}
 
 			// Check the new reward share.
 			require.Equal(t, tc.expectedRewardShare, k.GetRewardShare(ctx, TestAddress1))
