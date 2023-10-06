@@ -1,6 +1,9 @@
 name: Protocol Build & Push Image to AWS ECR
 
 on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - 'protocol/**'
   push:
     branches:
       - main
