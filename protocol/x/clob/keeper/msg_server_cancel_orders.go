@@ -52,6 +52,7 @@ func (k msgServer) CancelOrder(
 					k.Keeper.Logger(ctx).Info(
 						err.Error(),
 					)
+					return
 				}
 			}
 			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "CancelOrder", msg)
