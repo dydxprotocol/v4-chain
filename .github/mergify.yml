@@ -13,3 +13,11 @@ pull_request_rules:
       backport:
         branches:
           - release/protocol/v0.3.x
+  - name: backport to release/protocol/v1.x branch
+    conditions:
+      - base=main
+      - label=backport/v1.x
+    actions:
+      backport:
+        branches:
+          - release/protocol/v1.x
