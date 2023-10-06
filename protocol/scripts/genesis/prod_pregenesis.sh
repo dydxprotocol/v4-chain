@@ -6,6 +6,7 @@ set -eo pipefail
 # The script must be run from the root of the `v4-chain` repo.
 #
 # example usage:
+# $ make build
 # $ ./scripts/genesis/prod_pregenesis.sh ./build/dydxprotocold
 
 # Check for missing required arguments
