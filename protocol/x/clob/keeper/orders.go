@@ -7,6 +7,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	gometrics "github.com/armon/go-metrics"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -130,18 +131,36 @@ func (k Keeper) PlaceShortTermOrder(
 func (k Keeper) CancelStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgCancelOrder,
-) error {
+) (err error) {
+	defer func() {
+		if err != nil {
+			callback := metrics.DeliverTx
+			if ctx.IsCheckTx() {
+				callback = metrics.CheckTx
+			}
+			if ctx.IsReCheckTx() {
+				callback = metrics.ReCheckTx
+			}
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.CancelStatefulOrder, metrics.Error, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, callback),
+				},
+			)
+		}
+	}()
+
 	// 1. If this is a Short-Term order, panic.
 	msg.OrderId.MustBeStatefulOrder()
 
 	// 2. Perform stateful validation on the order cancellation.
-	err := k.PerformOrderCancellationStatefulValidation(
+	if err := k.PerformOrderCancellationStatefulValidation(
 		ctx,
 		msg,
 		// Note that the blockHeight is not used during stateful order cancellation validation.
 		0,
-	)
-	if err != nil {
+	); err != nil {
 		return err
 	}
 
@@ -179,7 +198,26 @@ func (k Keeper) CancelStatefulOrder(
 func (k Keeper) PlaceStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
-) error {
+) (err error) {
+	defer func() {
+		if err != nil {
+			callback := metrics.DeliverTx
+			if ctx.IsCheckTx() {
+				callback = metrics.CheckTx
+			}
+			if ctx.IsReCheckTx() {
+				callback = metrics.ReCheckTx
+			}
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Error, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, callback),
+				},
+			)
+		}
+	}()
+
 	// 1. Ensure the order is not a Short-Term order.
 	order := msg.Order
 	order.OrderId.MustBeStatefulOrder()
@@ -516,8 +554,29 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 ) error {
 	orderIdToCancel := msgCancelOrder.GetOrderId()
 	if orderIdToCancel.IsStatefulOrder() {
-		cancelGoodTilBlockTime := msgCancelOrder.GetGoodTilBlockTime()
 		previousBlockTime := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp
+		
+		prevBlockHeight := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Height
+		if lib.IsDeliverTxMode(ctx) && prevBlockHeight != uint32(ctx.BlockHeight() - 1){
+			panic(
+				fmt.Sprintf(
+					"PerformOrderCancellationStatefulValidation: prev block height is not one below current block height" +
+					"in DeliverTx. Prev: %d, Current: %d", prevBlockHeight, ctx.BlockHeight(),
+				),
+			)
+		}
+
+		// CheckTx or ReCheckTx
+		if !lib.IsDeliverTxMode(ctx) && prevBlockHeight != uint32(ctx.BlockHeight()){
+			panic(
+				fmt.Sprintf(
+					"PerformOrderCancellationStatefulValidation: prev block height is not equal to current block height" +
+					"in CheckTx/ReCheckTx. Prev: %d, Current: %d", prevBlockHeight, ctx.BlockHeight(),
+				),
+			)
+		}
+
+		cancelGoodTilBlockTime := msgCancelOrder.GetGoodTilBlockTime()
 
 		// Return an error if `goodTilBlockTime` is less than previous block's blockTime
 		if cancelGoodTilBlockTime <= lib.MustConvertIntegerToUint32(previousBlockTime.Unix()) {
