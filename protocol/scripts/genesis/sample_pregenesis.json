@@ -44,14 +44,14 @@
               "denom": "asample"
             },
             {
-              "denom": "asample",
+              "denom": "sample",
               "exponent": 18
             }
           ],
           "description": "The native token of the network",
-          "display": "asample",
+          "display": "sample",
           "name": "Sample Coin Name",
-          "symbol": "asample"
+          "symbol": "sample"
         }
       ],
       "params": {

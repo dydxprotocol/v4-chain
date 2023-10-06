@@ -34,7 +34,7 @@ CHAIN_ID="dydx-sample-1"
 # Base denomination of the native token. Usually comes with a prefix "u-", "a-" to indicate unit.
 NATIVE_TOKEN="asample"
 # Denomination of the native token in whole coins.
-NATIVE_TOKEN_WHOLE_COIN="asample"
+NATIVE_TOKEN_WHOLE_COIN="sample" 
 # Human readable name of token.
 COIN_NAME="Sample Coin Name"
 # Market ID in the oracle price list for the rewards token.
