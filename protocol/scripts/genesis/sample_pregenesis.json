@@ -77,7 +77,7 @@
       },
       "event_params": {
         "denom": "adv4tnt",
-        "eth_address": "0exampleaddress",
+        "eth_address": "0xsampleaddress",
         "eth_chain_id": 1
       },
       "propose_params": {

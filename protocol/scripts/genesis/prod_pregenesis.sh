@@ -42,7 +42,7 @@ REWARDS_TOKEN_MARKET_ID=1
 # The numerical chain ID of the Ethereum chain for bridge daemon to query.
 ETH_CHAIN_ID=1
 # The address of the Ethereum contract for bridge daemon to monitor for logs.
-ETH_BRIDGE_ADDRESS="0exampleaddress" # default value points to a Sepolia contract
+ETH_BRIDGE_ADDRESS="0xsampleaddress" # default value points to a Sepolia contract
 # The next event id (the last processed id plus one) of the logs from the Ethereum contract.
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0
 # The Ethereum block height of the most recently processed bridge event.
