@@ -198,6 +198,8 @@ create_validators() {
 		dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
 		# reduced voting period
 		dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s' 
+		# update oracle market for rewards
+		dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v '1000001'
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
 			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
