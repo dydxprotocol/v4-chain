@@ -1,4 +1,4 @@
-name: Protocol Lint
+name: Protocol Pregenesis Up-to-date
 # Lint runs all linting jobs.
 
 on:  # yamllint disable-line rule:truthy
