@@ -10,6 +10,7 @@ setup(
     author_email="contact@dydx.exchange",
     description="Protos for dYdX v4 protocol",
     packages = find_namespace_packages(),
+    include_package_data=True,  # Include files specified in MANIFEST.in
     install_requires=required,
     license_files = ("LICENSE"),
     python_requires=">=3.8",
