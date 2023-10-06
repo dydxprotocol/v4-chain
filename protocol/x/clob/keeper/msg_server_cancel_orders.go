@@ -25,6 +25,7 @@ func (k msgServer) CancelOrder(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	defer func() {
+		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.CancelOrder, metrics.DeliverTx)
 		if err != nil {
 			// Gracefully handle the case where the order was already removed from state. This can happen if an Order
 			// Removal Operation was included in the same block as the MsgCancelOrder. By the time we try to cancel
