@@ -58,7 +58,8 @@ func TestRewardShareStorage_Exists(t *testing.T) {
 		Weight:  dtypes.NewInt(12_345_678),
 	}
 
-	k.SetRewardShare(ctx, val)
+	err := k.SetRewardShare(ctx, val)
+	require.NoError(t, err)
 	require.Equal(t, val, k.GetRewardShare(ctx, TestAddress1))
 }
 
@@ -99,10 +100,12 @@ func TestAddRewardShareToAddress(t *testing.T) {
 			k := tApp.App.RewardsKeeper
 
 			if tc.prevRewardShare != nil {
-				k.SetRewardShare(ctx, *tc.prevRewardShare)
+				err := k.SetRewardShare(ctx, *tc.prevRewardShare)
+				require.NoError(t, err)
 			}
 
-			k.AddRewardShareToAddress(ctx, TestAddress1, tc.newWeight)
+			err := k.AddRewardShareToAddress(ctx, TestAddress1, tc.newWeight)
+			require.NoError(t, err)
 
 			// Check the new reward share.
 			require.Equal(t, tc.expectedRewardShare, k.GetRewardShare(ctx, TestAddress1))
@@ -247,10 +250,12 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			require.NoError(t, err)
 
 			if tc.prevTakerRewardShare != nil {
-				k.SetRewardShare(ctx, *tc.prevTakerRewardShare)
+				err := k.SetRewardShare(ctx, *tc.prevTakerRewardShare)
+				require.NoError(t, err)
 			}
 			if tc.prevMakerRewardShare != nil {
-				k.SetRewardShare(ctx, *tc.prevMakerRewardShare)
+				err := k.SetRewardShare(ctx, *tc.prevMakerRewardShare)
+				require.NoError(t, err)
 			}
 
 			k.AddRewardSharesForFill(
@@ -648,7 +653,8 @@ func TestProcessRewardsForBlock(t *testing.T) {
 			require.NoError(t, err)
 
 			for _, rewardShare := range tc.rewardShares {
-				k.AddRewardShareToAddress(ctx, rewardShare.Address, rewardShare.Weight.BigInt())
+				err := k.AddRewardShareToAddress(ctx, rewardShare.Address, rewardShare.Weight.BigInt())
+				require.NoError(t, err)
 			}
 
 			err = k.ProcessRewardsForBlock(ctx)
