@@ -19,6 +19,10 @@ import { ClientAndProvider } from '../../src/helpers/compliance-clients';
 import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
 import { DateTime } from 'luxon';
 
+interface ComplianceClientResponseWithNull extends Omit<ComplianceClientResponse, 'riskScore'> {
+  riskScore: string | undefined | null;
+}
+
 describe('update-compliance-data', () => {
   let mockProvider: ClientAndProvider;
 
@@ -199,6 +203,41 @@ describe('update-compliance-data', () => {
         address: testConstants.defaultAddress,
         blocked: true,
         riskScore,
+      },
+      mockProvider.provider,
+    );
+
+    expectGaugeStats({
+      activeAddresses: 1,
+      newAddresses: 0,
+      oldAddresses: 0,
+      addressesScreened: 1,
+      upserted: 1,
+    },
+    mockProvider.provider,
+    );
+    expectTimingStats(mockProvider.provider);
+  });
+
+  it('succeeds with an active address to update, undefined risk-score', async () => {
+    // Seed database with compliance data older than the age threshold for active addresses
+    await setupComplianceData(config.MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS * 2);
+
+    setupMockProvider(
+      mockProvider,
+      { [testConstants.defaultAddress]: { blocked: true, riskScore: undefined } },
+    );
+
+    await updateComplianceDataTask(mockProvider);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
+    expect(complianceData).toHaveLength(1);
+    expectUpdatedCompliance(
+      complianceData[0],
+      {
+        address: testConstants.defaultAddress,
+        blocked: true,
+        riskScore: null,
       },
       mockProvider.provider,
     );
@@ -529,7 +568,7 @@ async function setupSubaccounts(
 
 function setupMockProvider(
   clientAndProvider: ClientAndProvider,
-  expectedResponses: {[address: string]: {blocked: boolean, riskScore: string}},
+  expectedResponses: {[address: string]: {blocked: boolean, riskScore: string | undefined }},
 ): void {
   // eslint-disable-next-line no-param-reassign
   clientAndProvider.client.getComplianceResponse = jest.fn().mockImplementation(
@@ -549,7 +588,7 @@ function setupMockProvider(
 
 function expectUpdatedCompliance(
   complianceData: ComplianceDataFromDatabase,
-  complianceClientResponse: ComplianceClientResponse,
+  complianceClientResponse: ComplianceClientResponseWithNull,
   provider: string,
 ): void {
   expect(complianceData).toEqual(expect.objectContaining({
