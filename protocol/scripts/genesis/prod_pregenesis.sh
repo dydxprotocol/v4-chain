@@ -19,6 +19,8 @@ fi
 # Capture the required argument
 DYDX_BINARY="$1"
 
+source "./testing/genesis.sh"
+
 TMP_CHAIN_DIR="/tmp/prod-chain"
 TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/prod-exchange_config"
 NINE_ZEROS="000000000"
@@ -26,27 +28,25 @@ EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
 BRIDGE_MODACC_BALANCE="1$NINE_ZEROS$EIGHTEEN_ZEROS" # 1e27
 BRIDGE_MODACC_ADDR="dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"
 
-source "./testing/genesis.sh"
-
 # TODO(GENESIS): Update below values before running this script. Sample values are shown.
 ################## Start of required values to be updated ##################
-CHAIN_ID="dydx-1"
+CHAIN_ID="dydx-sample-1"
 # Base denomination of the native token. Usually comes with a prefix "u-", "a-" to indicate unit.
-NATIVE_TOKEN="adv4tnt"
+NATIVE_TOKEN="asample"
 # Denomination of the native token in whole coins.
-NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
+NATIVE_TOKEN_WHOLE_COIN="sample" 
 # Human readable name of token.
-COIN_NAME="dYdX Testnet Token"
+COIN_NAME="Sample Coin Name"
 # Market ID in the oracle price list for the rewards token.
-REWARDS_TOKEN_MARKET_ID=11
+REWARDS_TOKEN_MARKET_ID=1
 # The numerical chain ID of the Ethereum chain for bridge daemon to query.
-ETH_CHAIN_ID=1
+ETH_CHAIN_ID=9
 # The address of the Ethereum contract for bridge daemon to monitor for logs.
-ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0" # default value points to a Sepolia contract
+ETH_BRIDGE_ADDRESS="0xsampleaddress" # default value points to a Sepolia contract
 # The next event id (the last processed id plus one) of the logs from the Ethereum contract.
-BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0
+BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=99
 # The Ethereum block height of the most recently processed bridge event.
-BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=0
+BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=99999
 # Genesis time of the chain.
 GENESIS_TIME="2023-12-31T00:00:00Z"
 # Start time of the community vesting schedule.
@@ -116,6 +116,7 @@ function overwrite_genesis_production() {
 	# Rewards params
 	dasel put -t string -f "$GENESIS" '.app_state.rewards.params.denom' -v "$NATIVE_TOKEN"
 	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.fee_multiplier_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v "$REWARDS_TOKEN_MARKET_ID"
 
 	# Vest params
 	# For community treasury

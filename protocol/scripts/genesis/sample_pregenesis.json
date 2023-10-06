@@ -31,27 +31,27 @@
           "coins": [
             {
               "amount": "1000000000000000000000000000",
-              "denom": "adv4tnt"
+              "denom": "asample"
             }
           ]
         }
       ],
       "denom_metadata": [
         {
-          "base": "adv4tnt",
+          "base": "asample",
           "denom_units": [
             {
-              "denom": "adv4tnt"
+              "denom": "asample"
             },
             {
-              "denom": "dv4tnt",
+              "denom": "sample",
               "exponent": 18
             }
           ],
           "description": "The native token of the network",
-          "display": "dv4tnt",
-          "name": "dYdX Testnet Token",
-          "symbol": "dv4tnt"
+          "display": "sample",
+          "name": "Sample Coin Name",
+          "symbol": "sample"
         }
       ],
       "params": {
@@ -72,13 +72,13 @@
     },
     "bridge": {
       "acknowledged_event_info": {
-        "eth_block_height": 0,
-        "next_id": 0
+        "eth_block_height": 99999,
+        "next_id": 99
       },
       "event_params": {
-        "denom": "adv4tnt",
-        "eth_address": "0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0",
-        "eth_chain_id": 1
+        "denom": "asample",
+        "eth_address": "0xsampleaddress",
+        "eth_chain_id": 9
       },
       "propose_params": {
         "max_bridges_per_block": 10,
@@ -526,7 +526,7 @@
     "crisis": {
       "constant_fee": {
         "amount": "1000000000000000000",
-        "denom": "adv4tnt"
+        "denom": "asample"
       }
     },
     "delaymsg": {
@@ -765,7 +765,7 @@
         "min_deposit": [
           {
             "amount": "10000000000000000000000",
-            "denom": "adv4tnt"
+            "denom": "asample"
           }
         ],
         "min_initial_deposit_ratio": "0.000000000000000000",
@@ -1646,10 +1646,10 @@
     },
     "rewards": {
       "params": {
-        "denom": "adv4tnt",
+        "denom": "asample",
         "denom_exponent": -18,
         "fee_multiplier_ppm": 0,
-        "market_id": 11,
+        "market_id": 1,
         "treasury_account": "rewards_treasury"
       }
     },
@@ -1671,7 +1671,7 @@
       "last_total_power": "0",
       "last_validator_powers": [],
       "params": {
-        "bond_denom": "adv4tnt",
+        "bond_denom": "asample",
         "historical_entries": 10000,
         "max_entries": 7,
         "max_validators": 60,
@@ -1703,14 +1703,14 @@
     "vest": {
       "vest_entries": [
         {
-          "denom": "adv4tnt",
+          "denom": "asample",
           "end_time": "2050-01-01T00:00:00Z",
           "start_time": "2001-01-01T00:00:00Z",
           "treasury_account": "community_treasury",
           "vester_account": "community_vester"
         },
         {
-          "denom": "adv4tnt",
+          "denom": "asample",
           "end_time": "2050-01-01T00:00:00Z",
           "start_time": "2001-01-01T00:00:00Z",
           "treasury_account": "rewards_treasury",
@@ -1719,7 +1719,7 @@
       ]
     }
   },
-  "chain_id": "dydx-1",
+  "chain_id": "dydx-sample-1",
   "consensus_params": {
     "block": {
       "max_bytes": "4194304",
