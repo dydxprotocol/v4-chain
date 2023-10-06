@@ -132,9 +132,15 @@ function overwrite_genesis_production() {
 	dasel put -t string -f "$GENESIS" '.app_state.vest.vest_entries.[1].end_time' -v "$REWARDS_VEST_END_TIME"
 
 	# Delayed message params
-	# By default, no delayed messages at genesis.
-	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.num_messages' -v '0'
+	# Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.num_messages' -v '1'
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages' -v "[]"
+	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
+	delaymsg=$(cat "$DELAY_MSG_JSON_DIR/perpetual_fee_params_msg.json" | jq -c '.')
+	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].msg' -v "$delaymsg"
+	# Schedule the message to execute in ~120 days (at 1.5s per block)
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6912000'
 
 	# Bridge module params.
 	dasel put -t string -f "$GENESIS" '.app_state.bridge.event_params.denom' -v "$NATIVE_TOKEN"
