@@ -12,7 +12,7 @@ import { seedData } from '../helpers/mock-generators';
 
 // NOTE: If a model is modified for a migration then these
 // tests must be skipped until the following migration
-describe('Test new migration', () => {
+describe.skip('Test new migration', () => {
   beforeEach(async () => {
     await migrate();
   });

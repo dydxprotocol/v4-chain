@@ -23,6 +23,8 @@ import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
+  defaultDateTime,
+  defaultHeight,
   defaultMakerOrder,
   defaultPreviousHeight,
   defaultTime,
@@ -149,6 +151,8 @@ describe('conditionalOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     expectTimingStats();
     expectOrderSubaccountKafkaMessage(
@@ -180,6 +184,8 @@ describe('conditionalOrderPlacementHandler', () => {
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultOrder),
       createdAtHeight: '1',
       clientMetadata: '0',
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
@@ -206,6 +212,8 @@ describe('conditionalOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     expectTimingStats();
     expectOrderSubaccountKafkaMessage(
