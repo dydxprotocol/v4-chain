@@ -227,6 +227,10 @@ describe('compliance-controller#V4', () => {
         errorMsg: 'Too many requests',
         expectedStatus: 429,
       });
+      expect(stats.increment).toHaveBeenCalledWith(
+        'comlink.compliance-controller.compliance_screen_rate_limited_attempts',
+        { provider: complianceProvider.provider },
+      );
     });
 
     it('Get /screen with multiple new address globally gets rate-limited', async () => {
@@ -244,6 +248,10 @@ describe('compliance-controller#V4', () => {
         errorMsg: 'Too many requests',
         expectedStatus: 429,
       });
+      expect(stats.increment).toHaveBeenCalledWith(
+        'comlink.compliance-controller.compliance_screen_rate_limited_attempts',
+        { provider: complianceProvider.provider },
+      );
     });
   });
 });
