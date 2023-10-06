@@ -38,11 +38,11 @@ NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
 # Human readable name of token.
 COIN_NAME="dYdX Testnet Token"
 # Market ID in the oracle price list for the rewards token.
-REWARDS_TOKEN_MARKET_ID=11
+REWARDS_TOKEN_MARKET_ID=1
 # The numerical chain ID of the Ethereum chain for bridge daemon to query.
 ETH_CHAIN_ID=1
 # The address of the Ethereum contract for bridge daemon to monitor for logs.
-ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0" # default value points to a Sepolia contract
+ETH_BRIDGE_ADDRESS="0exampleaddress" # default value points to a Sepolia contract
 # The next event id (the last processed id plus one) of the logs from the Ethereum contract.
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=0
 # The Ethereum block height of the most recently processed bridge event.
@@ -116,6 +116,7 @@ function overwrite_genesis_production() {
 	# Rewards params
 	dasel put -t string -f "$GENESIS" '.app_state.rewards.params.denom' -v "$NATIVE_TOKEN"
 	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.fee_multiplier_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v "$REWARDS_TOKEN_MARKET_ID"
 
 	# Vest params
 	# For community treasury

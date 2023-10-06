@@ -77,7 +77,7 @@
       },
       "event_params": {
         "denom": "adv4tnt",
-        "eth_address": "0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0",
+        "eth_address": "0exampleaddress",
         "eth_chain_id": 1
       },
       "propose_params": {
@@ -1649,7 +1649,7 @@
         "denom": "adv4tnt",
         "denom_exponent": -18,
         "fee_multiplier_ppm": 0,
-        "market_id": 11,
+        "market_id": 1,
         "treasury_account": "rewards_treasury"
       }
     },

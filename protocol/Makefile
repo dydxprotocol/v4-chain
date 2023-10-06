@@ -401,3 +401,16 @@ update-swagger-docs: statik
 	fi
 
 .PHONY: update-swagger-docs
+
+###############################################################################
+###                           Sample Prengenesis                            ###
+###############################################################################
+
+# Run at `./protocol` directory.
+update-sample-pregenesis:
+	make build
+	./scripts/genesis/prod_pregenesis.sh build/dydxprotocold
+	cp /tmp/prod-chain/.dydxprotocol/config/genesis.json ./scripts/genesis/sample_pregenesis.json
+	@echo "Updated ./scripts/genesis/sample_pregenesis.json"
+
+.PHONY: update-sample-pregenesis
