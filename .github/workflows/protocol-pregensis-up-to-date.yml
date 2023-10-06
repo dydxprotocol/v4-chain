@@ -26,6 +26,7 @@ jobs:
         working-directory: ./protocol
     steps:
       - uses: actions/checkout@v3
-      - name: Ensure sample pregenesis is up-to-date
+      - name: Configure directory
         run: git config --global --add safe.directory /__w/v4-chain/v4-chain
+      - name: Ensure sample pregenesis is up-to-date
         run: ./scripts/genesis/check_sample_pregenesis_uptodate.sh
