@@ -70,6 +70,10 @@ describe('compliance-controller#V4', () => {
       expect(response.body.restricted).toEqual(false);
       expect(response.reason).toBeUndefined();
       expect(stats.timing).toHaveBeenCalledTimes(1);
+      expect(stats.increment).toHaveBeenCalledWith(
+        'comlink.compliance-controller.compliance_data_cache_miss',
+        { provider: complianceProvider.provider },
+      );
       expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
 
       data = await ComplianceTable.findAll({}, [], {});

@@ -72,7 +72,7 @@ class ComplianceController extends Controller {
       if (complianceData === undefined) {
         stats.increment(
           `${config.SERVICE_NAME}.${controllerName}.compliance_data_cache_miss`,
-          { provder: complianceProvider.provider },
+          { provider: complianceProvider.provider },
         );
       } else {
         stats.increment(
