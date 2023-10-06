@@ -5,7 +5,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -25,7 +24,13 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	defer func() {
-		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.PlaceOrder, metrics.DeliverTx)
+		metrics.IncrSuccessOrErrorCounter(
+			err,
+			types.ModuleName,
+			metrics.PlaceOrder,
+			metrics.DeliverTx,
+			msg.Order.GetOrderLabels()...,
+		)
 		if err != nil {
 			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
 		}
@@ -108,12 +113,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	k.Keeper.MustSetProcessProposerMatchesEvents(
 		ctx,
 		processProposerMatchesEvents,
-	)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.StatefulOrderMsgHandlerSuccess, metrics.Count},
-		1,
-		order.GetOrderLabels(),
 	)
 
 	return &types.MsgPlaceOrderResponse{}, nil

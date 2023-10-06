@@ -25,7 +25,13 @@ func (k msgServer) CancelOrder(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	defer func() {
-		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.CancelOrder, metrics.DeliverTx)
+		metrics.IncrSuccessOrErrorCounter(
+			err,
+			types.ModuleName,
+			metrics.CancelOrder,
+			metrics.DeliverTx,
+			msg.OrderId.GetOrderIdLabels()...,
+		)
 		if err != nil {
 			// Gracefully handle the case where the order was already removed from state. This can happen if an Order
 			// Removal Operation was included in the same block as the MsgCancelOrder. By the time we try to cancel
@@ -96,12 +102,6 @@ func (k msgServer) CancelOrder(
 				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 			),
 		),
-	)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.StatefulCancellationMsgHandlerSuccess, metrics.Count},
-		1,
-		msg.OrderId.GetOrderIdLabels(),
 	)
 
 	return &types.MsgCancelOrderResponse{}, nil
