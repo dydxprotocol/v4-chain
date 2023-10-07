@@ -274,7 +274,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 func TestProcessRewardsForBlock(t *testing.T) {
 	testRewardTokenMarketId := uint32(33)
 	testRewardTokenMarket := "test-market"
-	// TODO(): Update test to -18 denom for consistency with prod.
+	// TODO(CORE-645): Update test to -18 denom for consistency with prod.
 	TestRewardTokenDenomExp := int32(-6)
 
 	tokenPrice2Usdc := pricestypes.MarketPrice{
@@ -428,7 +428,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 			},
 			tokenPrice: tokenPrice2Usdc,
 			treasuryAccountBalance: sdkmath.NewIntFromBigInt(
-				lib.Int64MulPow10(2_000_123, 18), // ~2000123 million full coin.
+				lib.Int64MulPow10(2_000_123, 18), //~2_000_123 full coin.
 			), // 1000 full coins
 			feeMultiplierPpm: 990_000, // 99%
 			expectedBalances: []banktypes.Balance{
@@ -459,7 +459,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 						Denom: TestRewardTokenDenom,
 						Amount: sdkmath.NewIntFromBigInt(
 							big_testutil.MustFirst(new(big.Int).SetString("2000122999999998078137750", 10)),
-						), // ~2000122 full coins
+						), // ~2_000_122.9 full coins
 					}},
 				},
 			},
