@@ -7,6 +7,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	gometrics "github.com/armon/go-metrics"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -130,18 +131,37 @@ func (k Keeper) PlaceShortTermOrder(
 func (k Keeper) CancelStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgCancelOrder,
-) error {
+) (err error) {
+	defer func() {
+		if err != nil {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.CancelStatefulOrder, metrics.Error, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		} else {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.CancelStatefulOrder, metrics.Success, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		}
+	}()
+
 	// 1. If this is a Short-Term order, panic.
 	msg.OrderId.MustBeStatefulOrder()
 
 	// 2. Perform stateful validation on the order cancellation.
-	err := k.PerformOrderCancellationStatefulValidation(
+	if err := k.PerformOrderCancellationStatefulValidation(
 		ctx,
 		msg,
 		// Note that the blockHeight is not used during stateful order cancellation validation.
 		0,
-	)
-	if err != nil {
+	); err != nil {
 		return err
 	}
 
@@ -179,7 +199,27 @@ func (k Keeper) CancelStatefulOrder(
 func (k Keeper) PlaceStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
-) error {
+) (err error) {
+	defer func() {
+		if err != nil {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Error, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		} else {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Success, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		}
+	}()
+
 	// 1. Ensure the order is not a Short-Term order.
 	order := msg.Order
 	order.OrderId.MustBeStatefulOrder()
@@ -516,17 +556,41 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 ) error {
 	orderIdToCancel := msgCancelOrder.GetOrderId()
 	if orderIdToCancel.IsStatefulOrder() {
+		previousBlockInfo := k.blockTimeKeeper.GetPreviousBlockInfo(ctx)
+
+		prevBlockHeight := previousBlockInfo.Height
+		currBlockHeight := uint32(ctx.BlockHeight())
+		if lib.IsDeliverTxMode(ctx) && prevBlockHeight != currBlockHeight-1 {
+			k.Logger(ctx).Error(
+				"PerformOrderCancellationStatefulValidation: prev block height is not one below"+
+					"current block height in DeliverTx",
+				"previousBlockHeight", prevBlockHeight,
+				"currentBlockHeight", currBlockHeight,
+				"msgCancelOrder", msgCancelOrder,
+			)
+		}
+
+		// CheckTx or ReCheckTx
+		if !lib.IsDeliverTxMode(ctx) && currBlockHeight > 1 && prevBlockHeight != currBlockHeight {
+			k.Logger(ctx).Error(
+				"PerformOrderCancellationStatefulValidation: prev block height is not equal to current block height"+
+					metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx),
+				"previousBlockHeight", prevBlockHeight,
+				"currentBlockHeight", currBlockHeight,
+				"msgCancelOrder", msgCancelOrder,
+			)
+		}
+
 		cancelGoodTilBlockTime := msgCancelOrder.GetGoodTilBlockTime()
-		previousBlockTime := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp
 
 		// Return an error if `goodTilBlockTime` is less than previous block's blockTime
-		if cancelGoodTilBlockTime <= lib.MustConvertIntegerToUint32(previousBlockTime.Unix()) {
+		if cancelGoodTilBlockTime <= lib.MustConvertIntegerToUint32(previousBlockInfo.Timestamp.Unix()) {
 			return types.ErrTimeExceedsGoodTilBlockTime
 		}
 
 		// Return an error if `goodTilBlockTime` is further into the future
 		// than the previous block time plus `StatefulOrderTimeWindow`.
-		endTime := previousBlockTime.Add(types.StatefulOrderTimeWindow)
+		endTime := previousBlockInfo.Timestamp.Add(types.StatefulOrderTimeWindow)
 		if cancelGoodTilBlockTime > lib.MustConvertIntegerToUint32(endTime.Unix()) {
 			return errorsmod.Wrapf(
 				types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,

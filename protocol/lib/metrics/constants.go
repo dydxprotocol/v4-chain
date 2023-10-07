@@ -20,6 +20,7 @@ const (
 	Latency          = "latency"
 	Matched          = "matched"
 	MessageType      = "message_type"
+	Msg              = "msg"
 	Negative         = "negative"
 	No               = "no"
 	NonDeterministic = "non_deterministic"
@@ -33,6 +34,7 @@ const (
 	ValidateBasic    = "validate_basic"
 	Yes              = "yes"
 	CheckTx          = "check_tx"
+	ReCheckTx        = "recheck_tx"
 	DeliverTx        = "deliver_tx"
 	ProcessProposal  = "process_proposal"
 
@@ -131,6 +133,7 @@ const (
 	PlaceOrder                                   = "place_order"
 	PlaceOrderAccounts                           = "place_order_accounts"
 	PlaceOrderSubaccounts                        = "place_order_subaccounts"
+	PlaceStatefulOrder                           = "place_stateful_order"
 	ProcessMatches                               = "process_matches"
 	ProcessOperations                            = "process_operations"
 	Proposer                                     = "proposer"
