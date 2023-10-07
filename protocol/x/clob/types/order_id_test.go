@@ -16,7 +16,7 @@ import (
 // `OrderFlags` is greater than one byte (proto varints are encoded with 7 bits per byte).
 const numOrderIdFlagsTestCases = 129
 
-func TestMustMarshal(t *testing.T) {
+func TestToStateKey(t *testing.T) {
 	// Success
 	b, _ := constants.OrderId_Alice_Num0_ClientId0_Clob0.Marshal()
 	require.Equal(t, b, constants.OrderId_Alice_Num0_ClientId0_Clob0.ToStateKey())
