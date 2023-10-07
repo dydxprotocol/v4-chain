@@ -274,9 +274,12 @@ func (k Keeper) ProcessRewardsForBlock(
 	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), bigIntRewardTokenAmount)
 	// Measure distributed token amount.
 	telemetry.SetGauge(
-		float32(tokensToDistribute.Int64()),
+		float32(new(big.Int).Div(
+			tokensToDistribute,
+			lib.BigPow10(18),
+		).Int64()),
+		metrics.DistributedRewardTokens_1e18,
 		types.ModuleName,
-		metrics.DistributedRewardTokens,
 	)
 	if tokensToDistribute.Sign() == 0 {
 		// Nothing to distribute. This can happen either when there is no reward token in the treasury account,
@@ -333,9 +336,14 @@ func (k Keeper) ProcessRewardsForBlock(
 		params.Denom,
 	)
 	telemetry.SetGauge(
-		float32(remainingTreasuryBalance.Amount.Int64()),
+		float32(
+			new(big.Int).Div(
+				remainingTreasuryBalance.Amount.BigInt(),
+				lib.BigPow10(18),
+			).Int64(),
+		),
 		types.ModuleName,
-		metrics.TreasuryBalanceAfterDistribution,
+		metrics.TreasuryBalanceAfterDistribution_1e18,
 	)
 
 	return nil

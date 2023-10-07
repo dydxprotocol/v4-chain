@@ -202,11 +202,11 @@ const (
 	PremiumType                  = "premium_type"
 
 	// Rewards.
-	GetRewardShare                   = "get_reward_share"
-	ProcessRewardsForBlock           = "process_rewards_for_block"
-	TotalRewardShareWeight           = "total_reward_share_weight"
-	DistributedRewardTokens          = "distributed_reward_tokens"
-	TreasuryBalanceAfterDistribution = "treasury_balance_after_distribution"
+	GetRewardShare                        = "get_reward_share"
+	ProcessRewardsForBlock                = "process_rewards_for_block"
+	TotalRewardShareWeight                = "total_reward_share_weight"
+	DistributedRewardTokens_1e18          = "distributed_reward_tokens_1e18"
+	TreasuryBalanceAfterDistribution_1e18 = "treasury_balance_after_distribution_1e18"
 
 	// Vest.
 	GetVestEntry               = "get_vest_entry"
