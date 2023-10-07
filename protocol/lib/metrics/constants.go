@@ -209,12 +209,12 @@ const (
 	TreasuryBalanceAfterDistribution = "treasury_balance_after_distribution"
 
 	// Vest.
-	GetVestEntry          = "get_vest_entry"
-	VestAmount            = "vest_amount"
-	BalanceAfterVestEvent = "balance_after_vest_event"
-	VesterAccount         = "vester_account"
-	ProcessVesting        = "process_vesting"
-	AccountTransfer       = "account_transfer"
+	GetVestEntry               = "get_vest_entry"
+	VestAmount_1e15            = "vest_amount_1e15"
+	BalanceAfterVestEvent_1e18 = "balance_after_vest_event_1e18"
+	VesterAccount              = "vester_account"
+	ProcessVesting             = "process_vesting"
+	AccountTransfer            = "account_transfer"
 
 	// Block Time.
 	BlockTimeMs = "block_time_ms"

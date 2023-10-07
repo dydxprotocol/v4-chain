@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"math/big"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -147,15 +148,27 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 
 		// Report vest amount.
 		telemetry.SetGaugeWithLabels(
-			[]string{types.ModuleName, metrics.VestAmount},
-			float32(vestAmount.Int64()),
+			// Log vested amount in 1e15 (1000th of a full coin).
+			[]string{types.ModuleName, metrics.VestAmount_1e15},
+			float32(
+				new(big.Int).Div(
+					vestAmount.BigInt(),
+					lib.BigPow10(15),
+				).Int64(),
+			),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 		// Report vester account balance after vest event.
 		balanceAfterVest := k.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(entry.VesterAccount), entry.Denom)
+		// Log remaining vester balance in 1e18 (full coin).
 		telemetry.SetGaugeWithLabels(
-			[]string{types.ModuleName, metrics.BalanceAfterVestEvent},
-			float32(balanceAfterVest.Amount.Int64()),
+			[]string{types.ModuleName, metrics.BalanceAfterVestEvent_1e18},
+			float32(
+				new(big.Int).Div(
+					balanceAfterVest.Amount.BigInt(),
+					lib.BigPow10(18),
+				).Int64(),
+			),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 	}

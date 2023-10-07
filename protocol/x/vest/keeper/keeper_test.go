@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/big"
 	"testing"
 	"time"
 
@@ -9,7 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	rewardstypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -97,6 +101,8 @@ func TestProcessVesting(t *testing.T) {
 	testVestTokenDenom := "testdenom"
 	testVesterAccount := rewardstypes.VesterAccountName
 	testTreasuryAccount := rewardstypes.TreasuryAccountName
+	testPrevBlockTime := time.Date(2023, 11, 5, 8, 55, 20, 0, time.UTC).In(time.UTC)
+	testCurrBlockTime := time.Date(2023, 11, 5, 8, 55, 22, 0, time.UTC).In(time.UTC)
 
 	for name, tc := range map[string]struct {
 		vesterBalance           sdkmath.Int
@@ -149,6 +155,30 @@ func TestProcessVesting(t *testing.T) {
 			// (1001 - 1000) / (2000 - 1000) * 1_000_000 = 1_000
 			expectedTreasuryBalance: sdkmath.NewInt(2_000),
 			expectedVesterBalance:   sdkmath.NewInt(1_998_000),
+		},
+		"vesting in progress, realistic values, start_time < prev_block_time < block_time < end_time": {
+			vesterBalance: sdkmath.NewIntFromBigInt(
+				lib.Int64MulPow10(20_000_000, 18), // 20 million full coin, 2e26 in base denom.
+			),
+			vestEntry: types.VestEntry{
+				VesterAccount:   testVesterAccount,
+				TreasuryAccount: testTreasuryAccount,
+				Denom:           testVestTokenDenom,
+				StartTime:       types.DefaultVestingStartTime,
+				EndTime:         types.DefaultVestingEndTime,
+			},
+			prevBlockTime: testPrevBlockTime,
+			blockTime:     testCurrBlockTime,
+			expectedTreasuryBalance: sdkmath.NewIntFromBigInt(
+				big_testutil.MustFirst(
+					new(big.Int).SetString("1095437830069111172", 10), // 1.09e18
+				),
+			),
+			expectedVesterBalance: sdkmath.NewIntFromBigInt(
+				big_testutil.MustFirst(
+					new(big.Int).SetString("19999998904562169930888828", 10), // 1.99e25
+				),
+			),
 		},
 		"vesting in progress, start_time < prev_block_time < block_time < end_time, rounds down": {
 			vesterBalance: sdkmath.NewInt(2_005_000),
@@ -258,6 +288,10 @@ func TestProcessVesting(t *testing.T) {
 
 			k.ProcessVesting(ctx.WithBlockTime(tc.blockTime))
 
+			fmt.Printf("expected: %v", tApp.App.BankKeeper.GetBalance(
+				ctx, authtypes.NewModuleAddress(testVesterAccount),
+				testVestTokenDenom,
+			).Amount.String())
 			require.Equal(t,
 				tc.expectedVesterBalance,
 				tApp.App.BankKeeper.GetBalance(
