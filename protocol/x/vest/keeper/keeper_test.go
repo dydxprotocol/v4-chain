@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -288,10 +287,6 @@ func TestProcessVesting(t *testing.T) {
 
 			k.ProcessVesting(ctx.WithBlockTime(tc.blockTime))
 
-			fmt.Printf("expected: %v", tApp.App.BankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(testVesterAccount),
-				testVestTokenDenom,
-			).Amount.String())
 			require.Equal(t,
 				tc.expectedVesterBalance,
 				tApp.App.BankKeeper.GetBalance(
