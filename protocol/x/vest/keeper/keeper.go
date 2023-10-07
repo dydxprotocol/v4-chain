@@ -148,12 +148,12 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 
 		// Report vest amount.
 		telemetry.SetGaugeWithLabels(
-			// Log vested amount in 1e15 (1000th of a full coin).
-			[]string{types.ModuleName, metrics.VestAmount_1e15},
+			// Log vested amount in 1e18 (full coin).
+			[]string{types.ModuleName, metrics.VestAmount_1e18},
 			float32(
 				new(big.Int).Div(
 					vestAmount.BigInt(),
-					lib.BigPow10(15),
+					lib.BigPow10(18),
 				).Int64(),
 			),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},

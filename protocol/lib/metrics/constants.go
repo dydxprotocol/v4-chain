@@ -210,7 +210,7 @@ const (
 
 	// Vest.
 	GetVestEntry               = "get_vest_entry"
-	VestAmount_1e15            = "vest_amount_1e15"
+	VestAmount_1e18            = "vest_amount_1e18"
 	BalanceAfterVestEvent_1e18 = "balance_after_vest_event_1e18"
 	VesterAccount              = "vester_account"
 	ProcessVesting             = "process_vesting"
