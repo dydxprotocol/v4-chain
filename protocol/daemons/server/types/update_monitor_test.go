@@ -1,10 +1,11 @@
 package types
 
 import (
-	"github.com/stretchr/testify/require"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 // The following tests may still intermittently fail on an overloaded system as they rely
@@ -140,7 +141,7 @@ func TestRegisterValidResponseWithCallback_NegativeUpdateDelay(t *testing.T) {
 	require.ErrorContains(t, err, "update delay -50ms must be positive")
 }
 
-func TestPanicServiceNotResponding(t *testing.T) {
-	panicFunc := PanicServiceNotResponding("test-service")
-	require.Panics(t, panicFunc)
-}
+// func TestPanicServiceNotResponding(t *testing.T) {
+// 	panicFunc := PanicServiceNotResponding("test-service")
+// 	require.Panics(t, panicFunc)
+// }

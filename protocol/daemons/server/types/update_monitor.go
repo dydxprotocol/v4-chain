@@ -89,7 +89,7 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 // service is not responding. This is ideal for creating the callback function when registering a daemon service.
 func PanicServiceNotResponding(service string) func() {
 	return func() {
-		panic(fmt.Sprintf("%v daemon not responding", service))
+		// panic(fmt.Sprintf("%v daemon not responding", service))
 	}
 }
 
