@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"math/rand"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -164,9 +163,6 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
-	s := rand.NewSource(k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp.Unix())
-	rand := rand.New(s)
-
 	k.subaccountsKeeper.ForEachSubaccountRandomStart(
 		ctx,
 		func(offsettingSubaccount satypes.Subaccount) (finished bool) {
@@ -300,7 +296,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			}
 			return deltaQuantumsRemaining.Sign() == 0
 		},
-		rand,
+		k.GetPseudoRand(ctx),
 	)
 
 	telemetry.SetGauge(float32(numSubaccountsIterated), metrics.NumSubaccountsIterated, metrics.Count)
