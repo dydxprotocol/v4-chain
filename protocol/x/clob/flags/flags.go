@@ -2,7 +2,6 @@ package flags
 
 import (
 	"fmt"
-	"math"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cobra"
@@ -32,8 +31,8 @@ const (
 
 // Default values.
 const (
-	DefaultMaxLiquidationOrdersPerBlock    = math.MaxUint32
-	DefaultMaxDeleveragingAttemptsPerBlock = 35
+	DefaultMaxLiquidationOrdersPerBlock    = 100
+	DefaultMaxDeleveragingAttemptsPerBlock = 5
 
 	DefaultMevTelemetryEnabled    = false
 	DefaultMevTelemetryHost       = ""
