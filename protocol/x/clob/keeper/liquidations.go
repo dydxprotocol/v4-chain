@@ -633,10 +633,15 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 
 	var perpetualPosition *satypes.PerpetualPosition
 
-	for _, position := range subaccount.PerpetualPositions {
-		// Note that this could run in O(n^2) time. This is fine for now because we have less than a hundred
-		// perpetuals and only liquidate once per subaccount per block. This means that the position with smallest
-		// id will be liquidated first.
+	// Randomly (with deterministic seeding) select a perpetual position. This is done by iterating through
+	// the slice at-most-once starting at a random index.
+	// Note that this could run in O(n^2) time. This is fine for now because we have less than a hundred
+	// perpetuals and only liquidate once per subaccount per block.
+	numPositions := len(subaccount.PerpetualPositions)
+	indexOffset := k.GetPseudoRand(ctx).Intn(numPositions)
+	for i := 0; i < numPositions; i++ {
+		ppi := (i + indexOffset) % numPositions
+		position := subaccount.PerpetualPositions[ppi]
 		if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
 			perpetualPosition = position
 			break
