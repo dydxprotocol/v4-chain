@@ -37,7 +37,10 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	liquidationOrdersForSorting := make([]types.LiquidationOrder, 0)
 	numSubaccounts := len(subaccountIds)
 	numLiqOrders := lib.Min(numSubaccounts, int(k.MaxLiquidationOrdersPerBlock))
-	indexOffset := pseudoRand.Intn(numSubaccounts)
+	indexOffset := 0
+	if numSubaccounts > 0 {
+		indexOffset = pseudoRand.Intn(numSubaccounts)
+	}
 	for i := 0; i < numLiqOrders; i++ {
 		index := (i + indexOffset) % numSubaccounts
 		subaccountId := subaccountIds[index]
