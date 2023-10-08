@@ -111,12 +111,13 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			if numAttemptedDeleveraging < k.MaxDeleveragingAttemptsPerBlock {
 				// The liquidation order was unfilled. Try to deleverage the subaccount.
 				subaccountId := liquidationOrder.GetSubaccountId()
-				deltaQuantums := liquidationOrder.GetDeltaQuantums()
+				subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 
 				// Get a pseudorandom perpetualId from the list of open positions.
-				subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 				positions := subaccount.GetPerpetualPositions()
-				perpetualId := positions[pseudoRand.Intn(len(positions))].PerpetualId
+				position := positions[pseudoRand.Intn(len(positions))]
+				perpetualId := position.PerpetualId
+				deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
 
 				_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 				if err != nil {
