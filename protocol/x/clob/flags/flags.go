@@ -31,7 +31,7 @@ const (
 
 // Default values.
 const (
-	DefaultMaxLiquidationOrdersPerBlock    = 100
+	DefaultMaxLiquidationOrdersPerBlock    = 20
 	DefaultMaxDeleveragingAttemptsPerBlock = 5
 
 	DefaultMevTelemetryEnabled    = false

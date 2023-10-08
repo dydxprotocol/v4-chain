@@ -29,9 +29,21 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 ) error {
 	lib.AssertCheckTxMode(ctx)
 
+	pseudoRand := k.GetPseudoRand(ctx)
+
 	// Get the liquidation order for each subaccount.
+	// Process at-most `MaxLiquidationOrdersPerBlock` subaccounts, starting from a pseudorandom location
+	// in the slice.
 	liquidationOrdersForSorting := make([]types.LiquidationOrder, 0)
-	for _, subaccountId := range subaccountIds {
+	numSubaccounts := len(subaccountIds)
+	numLiqOrders := lib.Min(numSubaccounts, int(k.MaxLiquidationOrdersPerBlock))
+	indexOffset := 0
+	if numSubaccounts > 0 {
+		indexOffset = pseudoRand.Intn(numSubaccounts)
+	}
+	for i := 0; i < numLiqOrders; i++ {
+		index := (i + indexOffset) % numSubaccounts
+		subaccountId := subaccountIds[index]
 		// If attempting to liquidate a subaccount returns an error, panic.
 		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
 		if err != nil {
@@ -60,7 +72,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	numFilledLiquidations := uint32(0)
 	numAttemptedDeleveraging := uint32(0)
-	for i := 0; numFilledLiquidations < k.MaxLiquidationOrdersPerBlock && i < len(liquidationOrdersForSorting); i++ {
+	for i := 0; i < len(liquidationOrdersForSorting); i++ {
 		liquidationOrderSubaccountId := liquidationOrdersForSorting[i].GetSubaccountId()
 
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
@@ -99,8 +111,12 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			if numAttemptedDeleveraging < k.MaxDeleveragingAttemptsPerBlock {
 				// The liquidation order was unfilled. Try to deleverage the subaccount.
 				subaccountId := liquidationOrder.GetSubaccountId()
-				perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
 				deltaQuantums := liquidationOrder.GetDeltaQuantums()
+
+				// Get a pseudorandom perpetualId from the list of open positions.
+				subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+				positions := subaccount.GetPerpetualPositions()
+				perpetualId := positions[pseudoRand.Intn(len(positions))].PerpetualId
 
 				_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 				if err != nil {
@@ -604,15 +620,10 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 
 	var perpetualPosition *satypes.PerpetualPosition
 
-	// Randomly (with deterministic seeding) select a perpetual position. This is done by iterating through
-	// the slice at-most-once starting at a random index.
-	// Note that this could run in O(n^2) time. This is fine for now because we have less than a hundred
-	// perpetuals and only liquidate once per subaccount per block.
-	numPositions := len(subaccount.PerpetualPositions)
-	indexOffset := k.GetPseudoRand(ctx).Intn(numPositions)
-	for i := 0; i < numPositions; i++ {
-		ppi := (i + indexOffset) % numPositions
-		position := subaccount.PerpetualPositions[ppi]
+	for _, position := range subaccount.PerpetualPositions {
+		// Note that this could run in O(n^2) time. This is fine for now because we have less than a hundred
+		// perpetuals and only liquidate once per subaccount per block. This means that the position with smallest
+		// id will be liquidated first.
 		if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
 			perpetualPosition = position
 			break
