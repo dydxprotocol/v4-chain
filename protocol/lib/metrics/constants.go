@@ -282,6 +282,7 @@ const (
 	NumSubaccountsIterated         = "num_subaccounts_iterated"
 	NotEnoughPositionToFullyOffset = "not_enough_position_to_fully_offset"
 	NonOverlappingBankruptcyPrices = "non_overlapping_bankruptcy_prices"
+	NoOpenPositionOnOppositeSide   = "no_open_position_on_opposite_side"
 
 	// Pricefeed Daemon.
 	Exchange                                = "exchange"
