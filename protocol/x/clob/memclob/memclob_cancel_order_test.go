@@ -18,6 +18,7 @@ import (
 
 func TestShortTermCancelOrder_CancelAlreadyExists(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	memclob := NewMemClobPriceTimePriority(true)
 	memclob.SetClobKeeper(testutil_memclob.NewFakeMemClobKeeper())
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
@@ -44,6 +45,7 @@ func TestShortTermCancelOrder_CancelAlreadyExists(t *testing.T) {
 
 func TestShortTermCancelOrder_OrdersTilBlockExceedsCancels(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	memClobKeeper := testutil_memclob.NewFakeMemClobKeeper()
 	memclob := NewMemClobPriceTimePriority(true)
 	memclob.SetClobKeeper(memClobKeeper)
@@ -90,6 +92,7 @@ func TestCancelOrder_PanicsOnStatefulOrder(t *testing.T) {
 	memclob := NewMemClobPriceTimePriority(true)
 	orderId := constants.LongTermOrderId_Alice_Num0_ClientId0_Clob0
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 
 	expectedError := fmt.Sprintf(
 		"MustBeShortTermOrder: called with stateful order ID (%+v)",
@@ -104,6 +107,7 @@ func TestCancelOrder_PanicsOnStatefulOrder(t *testing.T) {
 
 func TestCancelOrder(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	tests := map[string]struct {
 		// State.
 		existingOrders  []types.Order
@@ -331,6 +335,7 @@ func TestCancelOrder_Telemetry(t *testing.T) {
 	require.NotNil(t, m)
 
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	memclob := NewMemClobPriceTimePriority(true)
 	memclob.SetClobKeeper(testutil_memclob.NewFakeMemClobKeeper())
 

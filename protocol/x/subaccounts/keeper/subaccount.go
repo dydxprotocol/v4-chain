@@ -26,7 +26,7 @@ import (
 // Note that empty subaccounts are removed from state.
 func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	key := subaccount.Id.MustMarshal()
+	key := subaccount.Id.ToStateKey()
 
 	if len(subaccount.PerpetualPositions) == 0 && len(subaccount.AssetPositions) == 0 {
 		if store.Has(key) {
@@ -52,7 +52,7 @@ func (k Keeper) GetSubaccount(
 
 	// Check state for the subaccount.
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	b := store.Get(id.MustMarshal())
+	b := store.Get(id.ToStateKey())
 
 	// If subaccount does not exist in state, return a default value.
 	if b == nil {
@@ -299,17 +299,6 @@ func (k Keeper) UpdateSubaccounts(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeSubaccountUpdate,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewSubaccountUpdateEvent(
-					u.SettledSubaccount.Id,
-					getUpdatedPerpetualPositions(
-						u,
-						fundingPayments,
-					),
-					getUpdatedAssetPositions(u),
-					fundingPayments,
-				),
-			),
 			indexerevents.SubaccountUpdateEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewSubaccountUpdateEvent(

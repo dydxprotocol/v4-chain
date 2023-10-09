@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -55,13 +56,13 @@ func (p *PendingUpdates) ConvertToUpdates() []satypes.Update {
 			assetUpdates = append(assetUpdates, assetUpdate)
 		}
 
-		if _, exists := pendingAssetUpdates[lib.UsdcAssetId]; !exists {
-			pendingAssetUpdates[lib.UsdcAssetId] = new(big.Int)
+		if _, exists := pendingAssetUpdates[assettypes.AssetUsdc.Id]; !exists {
+			pendingAssetUpdates[assettypes.AssetUsdc.Id] = new(big.Int)
 		}
 
 		// Subtract quote balance delta with total fees paid by subaccount.
-		pendingAssetUpdates[lib.UsdcAssetId].Sub(
-			pendingAssetUpdates[lib.UsdcAssetId],
+		pendingAssetUpdates[assettypes.AssetUsdc.Id].Sub(
+			pendingAssetUpdates[assettypes.AssetUsdc.Id],
 			p.subaccountFee[subaccountId],
 		)
 
@@ -123,10 +124,10 @@ func (p *PendingUpdates) AddPerpetualFill(
 		subaccountAssetUpdates = make(map[uint32]*big.Int)
 		p.subaccountAssetUpdates[subaccountId] = subaccountAssetUpdates
 	}
-	quoteBalanceUpdate, exists = subaccountAssetUpdates[lib.UsdcAssetId]
+	quoteBalanceUpdate, exists = subaccountAssetUpdates[assettypes.AssetUsdc.Id]
 	if !exists {
 		quoteBalanceUpdate = big.NewInt(0)
-		subaccountAssetUpdates[lib.UsdcAssetId] = quoteBalanceUpdate
+		subaccountAssetUpdates[assettypes.AssetUsdc.Id] = quoteBalanceUpdate
 	}
 
 	subaccountPerpetualUpdates, exists = p.subaccountPerpetualUpdates[subaccountId]

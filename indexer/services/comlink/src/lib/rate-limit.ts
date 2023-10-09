@@ -5,7 +5,7 @@ import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 
 import config from '../config';
 import { create4xxResponse } from './helpers';
-import { isIndexerIp } from './utils';
+import { getIpAddr, isIndexerIp } from './utils';
 
 const INTERNAL_REQUEST_POINTS: number = 0;
 const EXTERNAL_REQUEST_POINTS: number = 1;
@@ -71,22 +71,6 @@ export function rateLimiterMiddleware(
 
     return next();
   };
-}
-
-export function getIpAddr(req: express.Request): string | undefined {
-  const {
-    'cf-connecting-ip': cloudflareIP,
-    'x-forwarded-for': loadBalancerHeader,
-  } = req.headers as {
-    'cf-connecting-ip'?: string,
-    'x-forwarded-for'?: string,
-  };
-
-  // get ip address
-  const loadBalancerIPs: string[] | undefined = loadBalancerHeader?.replace(/\s/g, '').split(',');
-  const firstLoadBalancerIP: string | undefined = loadBalancerIPs?.[0];
-
-  return cloudflareIP || firstLoadBalancerIP;
 }
 
 export function getPointCost(

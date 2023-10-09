@@ -1,9 +1,10 @@
 package bridge_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"testing"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
@@ -17,7 +18,7 @@ import (
 )
 
 const (
-	TEST_DENOM = "dv4tnt"
+	TEST_DENOM = "adv4tnt"
 )
 
 func TestBridge_Success(t *testing.T) {
@@ -311,7 +312,7 @@ func TestBridge_AcknowledgedEventIdGreaterThanRecognizedEventId(t *testing.T) {
 		BridgeEvents: []bridgetypes.BridgeEvent{
 			{
 				Id:             reiResponse.Info.NextId,
-				Coin:           sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+				Coin:           sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
 				Address:        constants.BobAccAddress.String(),
 				EthBlockHeight: 234,
 			},

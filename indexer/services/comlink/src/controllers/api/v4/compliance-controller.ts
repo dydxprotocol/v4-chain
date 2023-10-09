@@ -1,5 +1,5 @@
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
-import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+import { ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
@@ -16,8 +16,9 @@ import {
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
-import { getIpAddr, rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
+import { getIpAddr } from '../../../lib/utils';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { ComplianceRequest, ComplianceResponse } from '../../../types';
@@ -50,16 +51,36 @@ class ComplianceController extends Controller {
       complianceProvider.provider,
     );
 
+    if (complianceData !== undefined) {
+      stats.increment(
+        `${config.SERVICE_NAME}.${controllerName}.compliance_data_cache_hit`,
+        { provider: complianceProvider.provider },
+      );
+    }
+
     // Immediately return for blocked addresses, do not refresh
     if (complianceData?.blocked) {
       return {
         restricted: true,
+        reason: INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
       };
     }
 
     if (complianceData === undefined || DateTime.fromISO(complianceData.updatedAt) < ageThreshold) {
       await checkRateLimit(this.ipAddress);
-      // TODO(IND-369): Use Ellptic client
+
+      if (complianceData === undefined) {
+        stats.increment(
+          `${config.SERVICE_NAME}.${controllerName}.compliance_data_cache_miss`,
+          { provider: complianceProvider.provider },
+        );
+      } else {
+        stats.increment(
+          `${config.SERVICE_NAME}.${controllerName}.refresh_compliance_data_cache`,
+          { provider: complianceProvider.provider },
+        );
+      }
+
       const response:
       ComplianceClientResponse = await complianceProvider.client.getComplianceResponse(
         address,
@@ -73,6 +94,7 @@ class ComplianceController extends Controller {
 
     return {
       restricted: complianceData.blocked,
+      reason: complianceData.blocked ? INDEXER_COMPLIANCE_BLOCKED_PAYLOAD : undefined,
     };
   }
 }
@@ -108,6 +130,10 @@ router.get(
       return res.send(response);
     } catch (error) {
       if (error instanceof TooManyRequestsError) {
+        stats.increment(
+          `${config.SERVICE_NAME}.${controllerName}.compliance_screen_rate_limited_attempts`,
+          { provider: complianceProvider.provider },
+        );
         return create4xxResponse(
           res,
           'Too many requests',

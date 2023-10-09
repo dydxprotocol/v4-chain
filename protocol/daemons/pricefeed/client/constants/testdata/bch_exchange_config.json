@@ -6,17 +6,13 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "BCH/USD"
+      "exchangeName": "Bybit",
+      "ticker": "BCHUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
       "ticker": "BCH-USD"
-    },
-    {
-      "exchangeName": "CryptoCom",
-      "ticker": "BCH_USD",
-      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Gate",
@@ -35,6 +31,11 @@
     {
       "exchangeName": "Kucoin",
       "ticker": "BCH-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "BCH_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

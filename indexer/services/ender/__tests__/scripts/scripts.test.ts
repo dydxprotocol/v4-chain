@@ -53,6 +53,10 @@ describe('SQL Function Tests', () => {
     await dbHelpers.clearData();
   });
 
+  afterEach(async () => {
+    await dbHelpers.clearData();
+  });
+
   afterAll(async () => {
     await dbHelpers.teardown();
     jest.resetAllMocks();

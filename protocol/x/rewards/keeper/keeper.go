@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdklog "cosmossdk.io/log"
@@ -19,6 +21,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
@@ -233,7 +236,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	params := k.GetParams(ctx)
 
 	// Calculate value of `F`.
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
 	if !exists {
 		return fmt.Errorf("failed to get USDC asset")
 	}
@@ -244,7 +247,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	allRewardShares, totalRewardWeight := k.getAllRewardSharesAndTotalWeight(ctx)
 	// Measure total reward weight.
 	telemetry.SetGauge(
-		float32(totalRewardWeight.Int64()),
+		metrics.GetMetricValueFromBigInt(totalRewardWeight),
 		types.ModuleName,
 		metrics.TotalRewardShareWeight,
 	)
@@ -271,7 +274,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), bigIntRewardTokenAmount)
 	// Measure distributed token amount.
 	telemetry.SetGauge(
-		float32(tokensToDistribute.Int64()),
+		metrics.GetMetricValueFromBigInt(tokensToDistribute),
 		types.ModuleName,
 		metrics.DistributedRewardTokens,
 	)
@@ -290,7 +293,7 @@ func (k Keeper) ProcessRewardsForBlock(
 				share.Weight.BigInt(),
 			),
 			totalRewardWeight,
-		) // big.Div() rounds down, so sum of actual distributed tokens will not exeed `tokensToDistribute`
+		) // big.Div() rounds down, so sum of actual distributed tokens will not exceed `tokensToDistribute`
 
 		if rewardAmountForAddress.Sign() == 0 {
 			// Nothing to distribute to this address. This will only happen due to rounding.
@@ -311,11 +314,14 @@ func (k Keeper) ProcessRewardsForBlock(
 				},
 			},
 		); err != nil {
-			panic(
-				fmt.Errorf(
-					"failed to send reward tokens from treasury (%s) to address %s: %w",
-					params.TreasuryAccount, share.Address, err,
-				),
+			k.Logger(ctx).Error(
+				"Failed to send reward tokens from treasury account to address",
+				"treasury_account",
+				params.TreasuryAccount,
+				"address",
+				share.Address,
+				constants.ErrorLogKey,
+				err,
 			)
 		}
 	}
@@ -327,7 +333,7 @@ func (k Keeper) ProcessRewardsForBlock(
 		params.Denom,
 	)
 	telemetry.SetGauge(
-		float32(remainingTreasuryBalance.Amount.Int64()),
+		metrics.GetMetricValueFromBigInt(remainingTreasuryBalance.Amount.BigInt()),
 		types.ModuleName,
 		metrics.TreasuryBalanceAfterDistribution,
 	)

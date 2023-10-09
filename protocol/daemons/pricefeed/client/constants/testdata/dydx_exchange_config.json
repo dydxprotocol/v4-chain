@@ -1,0 +1,34 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "DYDXUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "DYDXUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "DYDX_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "DYDX-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "DYDX_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "DYDX-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

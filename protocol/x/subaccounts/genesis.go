@@ -19,14 +19,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeSubaccountUpdate,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewSubaccountUpdateEvent(
-					elem.Id,
-					elem.PerpetualPositions,
-					elem.AssetPositions,
-					nil,
-				),
-			),
 			indexerevents.SubaccountUpdateEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewSubaccountUpdateEvent(

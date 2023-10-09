@@ -20,8 +20,14 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Kraken",
-      "ticker": "XETCZUSD"
+      "exchangeName": "Kucoin",
+      "ticker": "ETC-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "ETC_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",

@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"encoding/json"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"io"
 	"math/big"
 	"net/http"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	gometrics "github.com/armon/go-metrics"
@@ -551,7 +552,7 @@ func New(
 	app.Server = daemonserver.NewServer(
 		logger,
 		grpc.NewServer(),
-		&lib.FileHandlerImpl{},
+		&daemontypes.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
 		appFlags.GrpcAddress,
 	)
@@ -595,7 +596,7 @@ func New(
 					daemonFlags,
 					appFlags,
 					logger,
-					&lib.GrpcClientImpl{},
+					&daemontypes.GrpcClientImpl{},
 				); err != nil {
 					panic(err)
 				}
@@ -616,7 +617,7 @@ func New(
 				daemonFlags,
 				appFlags,
 				logger,
-				&lib.GrpcClientImpl{},
+				&daemontypes.GrpcClientImpl{},
 				exchangeStartupConfig,
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
@@ -638,7 +639,7 @@ func New(
 					daemonFlags,
 					appFlags,
 					logger,
-					&lib.GrpcClientImpl{},
+					&daemontypes.GrpcClientImpl{},
 				); err != nil {
 					panic(err)
 				}
@@ -1199,7 +1200,7 @@ func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
 	app.ClobKeeper.InitMemClobOrderbooks(checkStateCtx)
 	// Initialize memclob with all existing stateful orders.
 	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
-	app.ClobKeeper.InitStatefulOrdersInMemClob(checkStateCtx)
+	app.ClobKeeper.InitStatefulOrders(checkStateCtx)
 }
 
 // hydrateKeeperInMemoryDataStructures hydrates the keeper with ClobPairId and PerpetualId mapping

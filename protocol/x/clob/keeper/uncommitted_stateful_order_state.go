@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	generic "github.com/dydxprotocol/v4-chain/protocol/generic/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -25,7 +26,7 @@ func (k Keeper) GetUncommittedStatefulOrderPlacement(
 
 	store := k.GetUncommittedStatefulOrderPlacementTransientStore(ctx)
 
-	b := store.Get(orderId.MustMarshal())
+	b := store.Get(orderId.ToStateKey())
 	if b == nil {
 		return val, false
 	}
@@ -46,7 +47,7 @@ func (k Keeper) GetUncommittedStatefulOrderCancellation(
 
 	store := k.GetUncommittedStatefulOrderCancellationTransientStore(ctx)
 
-	b := store.Get(orderId.MustMarshal())
+	b := store.Get(orderId.ToStateKey())
 	if b == nil {
 		return val, false
 	}
@@ -69,12 +70,12 @@ func (k Keeper) GetUncommittedStatefulOrderCount(
 
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
 
-	b := store.Get(orderId.SubaccountId.MustMarshal())
-	if b == nil {
-		return 0
+	b := store.Get(orderId.SubaccountId.ToStateKey())
+	result := generic.Int32{Value: 0}
+	if b != nil {
+		k.cdc.MustUnmarshal(b, &result)
 	}
-
-	return lib.BytesToInt32(b)
+	return result.Value
 }
 
 // SetUncommittedStatefulOrderCount sets a count of uncommitted stateful orders for the associated subaccount.
@@ -91,9 +92,10 @@ func (k Keeper) SetUncommittedStatefulOrderCount(
 	orderId.MustBeStatefulOrder()
 
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
+	value := generic.Int32{Value: count}
 	store.Set(
-		orderId.SubaccountId.MustMarshal(),
-		lib.Int32ToBytes(count),
+		orderId.SubaccountId.ToStateKey(),
+		k.cdc.MustMarshal(&value),
 	)
 }
 
@@ -116,11 +118,10 @@ func (k Keeper) MustAddUncommittedStatefulOrderPlacement(ctx sdk.Context, msg *t
 		Order: msg.Order,
 	}
 
-	orderIdBytes := orderId.MustMarshal()
-	b := k.cdc.MustMarshal(&longTermOrderPlacement)
-
 	store := k.GetUncommittedStatefulOrderPlacementTransientStore(ctx)
-	store.Set(orderIdBytes, b)
+	orderKey := orderId.ToStateKey()
+	b := k.cdc.MustMarshal(&longTermOrderPlacement)
+	store.Set(orderKey, b)
 
 	k.SetUncommittedStatefulOrderCount(
 		ctx,
@@ -144,11 +145,10 @@ func (k Keeper) MustAddUncommittedStatefulOrderCancellation(ctx sdk.Context, msg
 		panic(fmt.Sprintf("MustAddUncommittedStatefulOrderPlacement: order cancellation %v already exists", orderId))
 	}
 
-	orderIdBytes := orderId.MustMarshal()
-	b := k.cdc.MustMarshal(msg)
-
 	store := k.GetUncommittedStatefulOrderCancellationTransientStore(ctx)
-	store.Set(orderIdBytes, b)
+	orderKey := orderId.ToStateKey()
+	b := k.cdc.MustMarshal(msg)
+	store.Set(orderKey, b)
 
 	k.SetUncommittedStatefulOrderCount(
 		ctx,

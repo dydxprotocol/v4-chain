@@ -14,12 +14,12 @@ const (
 	MaxPriceChangePpm = uint32(10_000)
 	// 10^6 quantums == 1 USD.
 	QuoteCurrencyAtomicResolution = int32(-6)
-	UsdcAssetId                   = uint32(0)
 
 	ZeroUint64 = uint64(0)
 
 	// 10^BaseDenomExponent denotes how much full coin is represented by 1 base denom.
 	BaseDenomExponent = -18
+	DefaultBaseDenom  = "adv4tnt"
 )
 
 // PowerReduction defines the default power reduction value for staking.

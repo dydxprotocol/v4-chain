@@ -553,6 +553,10 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 				}
 			}
 
+			if tc.advanceBlock {
+				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			}
+
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.secondOrder)) {
 				resp := tApp.CheckTx(tx)
 				if tc.expectError {
@@ -565,8 +569,8 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 				}
 			}
 
-			// Ensure that any succesful transactions can be delivered.
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			// Ensure that any successful transactions can be delivered.
+			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 		})
 	}
 }
@@ -730,7 +734,7 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 				}
 			}
 
-			// Ensure that any succesful transactions can be delivered.
+			// Ensure that any successful transactions can be delivered.
 			tApp.AdvanceToBlock(lib.MustConvertIntegerToUint32(tApp.GetBlockHeight()+1), testapp.AdvanceToBlockOptions{})
 		})
 	}
@@ -1029,7 +1033,7 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.extraOrder)) {
@@ -1042,8 +1046,8 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 				}
 			}
 
-			// Ensure that any succesful transactions can be delivered.
-			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			// Ensure that any successful transactions can be delivered.
+			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 		})
 	}
 }

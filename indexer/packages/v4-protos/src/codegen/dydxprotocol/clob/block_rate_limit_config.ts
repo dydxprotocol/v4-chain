@@ -5,7 +5,7 @@ import { DeepPartial } from "../../helpers";
 export interface BlockRateLimitConfiguration {
   /**
    * How many short term order attempts (successful and failed) are allowed for
-   * a subaccount per N blocks. Note that the rate limits are applied
+   * an account per N blocks. Note that the rate limits are applied
    * in an AND fashion such that an order placement must pass all rate limit
    * configurations.
    * 
@@ -29,7 +29,7 @@ export interface BlockRateLimitConfiguration {
 export interface BlockRateLimitConfigurationSDKType {
   /**
    * How many short term order attempts (successful and failed) are allowed for
-   * a subaccount per N blocks. Note that the rate limits are applied
+   * an account per N blocks. Note that the rate limits are applied
    * in an AND fashion such that an order placement must pass all rate limit
    * configurations.
    * 

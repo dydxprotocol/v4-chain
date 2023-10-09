@@ -6,12 +6,13 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "CoinbasePro",
-      "ticker": "MATIC-USD"
+      "exchangeName": "Bybit",
+      "ticker": "MATICUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "MATIC_USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "MATIC-USD"
     },
     {
       "exchangeName": "Gate",
@@ -24,8 +25,17 @@
       "adjustByMarket": "USDT-USD"
     },
     {
+      "exchangeName": "Kraken",
+      "ticker": "MATICUSD"
+    },
+    {
       "exchangeName": "Kucoin",
       "ticker": "MATIC-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "MATIC_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

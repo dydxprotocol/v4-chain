@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/spf13/cast"
@@ -53,7 +53,7 @@ Note, the '--from' flag is ignored as it is implied from [sender_key_or_address]
 					Owner:  argRecipientOwner,
 					Number: argRecipientNumber,
 				},
-				lib.UsdcAssetId,
+				assettypes.AssetUsdc.Id,
 				argAmount,
 			)
 

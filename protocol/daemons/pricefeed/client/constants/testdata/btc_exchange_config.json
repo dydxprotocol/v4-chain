@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "BTC/USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "BTCUSDT",
       "adjustByMarket": "USDT-USD"
@@ -19,12 +15,18 @@
       "ticker": "BTC-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "BTC_USD"
+      "exchangeName": "Huobi",
+      "ticker": "btcusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
       "ticker": "XXBTZUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "BTC-USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Mexc",

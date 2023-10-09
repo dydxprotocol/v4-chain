@@ -4,9 +4,10 @@ package cli_test
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"strconv"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -121,7 +122,7 @@ func TestShowClobPair(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			args := []string{
-				lib.Uint32ToString(tc.id),
+				lib.UintToString(tc.id),
 			}
 			args = append(args, tc.args...)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowClobPair(), args)

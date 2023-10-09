@@ -38,15 +38,16 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=PerpetualsKeeper --dir=./x/perpetuals/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=SendingKeeper --dir=./x/sending/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=SubaccountsKeeper --dir=./x/subaccounts/types --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=FileHandler --dir=./lib --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=GrpcServer --dir=./lib --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=GrpcClient --dir=./lib --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=FileHandler --dir=./daemons/types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=GrpcServer --dir=./daemons/types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=GrpcClient --dir=./daemons/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=TimeProvider --dir=./lib/time --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=Marshaler --dir=./indexer/common --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=QueryClient --dir=./testutil/grpc --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=QueryServer --dir=./testutil/grpc --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ExchangeQueryHandler --dir=./daemons/pricefeed/client/handler --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=RequestHandler --dir=./lib --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=RequestHandler --dir=./daemons/types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=ExchangeToMarketPrices --dir=./daemons/pricefeed/client/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=IndexerMessageSender --dir=./indexer --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PerpetualsClobKeeper --dir=x/perpetuals/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=IndexerEventManager --dir=./indexer/indexer_manager --recursive --output=./mocks

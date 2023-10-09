@@ -1392,7 +1392,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				cdc := codec.NewProtoCodec(registry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				b := cdc.MustMarshal(&constants.ClobPair_Btc_Paused)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc_Paused.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc_Paused.Id), b)
 			},
 			expectedPanics: "validateInternalOperationAgainstClobPairStatus: ClobPair's status is not supported",
 		},
@@ -1733,20 +1733,6 @@ func setupProcessProposerOperationsTestCase(
 			mockIndexerEventManager.On("AddTxnEvent",
 				mock.Anything,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						perpetualId,
-						uint32(i),
-						tc.perpetuals[perpetualId].Params.Ticker,
-						tc.perpetuals[perpetualId].Params.MarketId,
-						clobPair.Status,
-						clobPair.QuantumConversionExponent,
-						tc.perpetuals[perpetualId].Params.AtomicResolution,
-						clobPair.SubticksPerTick,
-						clobPair.StepBaseQuantums,
-						tc.perpetuals[perpetualId].Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -1918,16 +1904,6 @@ func setupNewMockEventManager(
 			call := mockIndexerEventManager.On("AddTxnEvent",
 				mock.Anything,
 				indexerevents.SubtypeOrderFill,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewLiquidationOrderFillEvent(
-						match.MakerOrder.MustGetOrder(),
-						match.TakerOrder,
-						match.FillAmount,
-						match.MakerFee,
-						match.TakerFee,
-						match.TotalFilledTaker,
-					),
-				),
 				indexerevents.OrderFillEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewLiquidationOrderFillEvent(
@@ -1946,17 +1922,6 @@ func setupNewMockEventManager(
 			call := mockIndexerEventManager.On("AddTxnEvent",
 				mock.Anything,
 				indexerevents.SubtypeOrderFill,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewOrderFillEvent(
-						match.MakerOrder.MustGetOrder(),
-						match.TakerOrder.MustGetOrder(),
-						match.FillAmount,
-						match.MakerFee,
-						match.TakerFee,
-						match.TotalFilledMaker,
-						match.TotalFilledTaker,
-					),
-				),
 				indexerevents.OrderFillEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewOrderFillEvent(
@@ -1980,14 +1945,6 @@ func setupNewMockEventManager(
 			mockIndexerEventManager.On("AddTxnEvent",
 				mock.Anything,
 				indexerevents.SubtypeStatefulOrder,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewStatefulOrderRemovalEvent(
-						removal.OrderRemoval.OrderId,
-						shared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-							removal.OrderRemoval.RemovalReason,
-						),
-					),
-				),
 				indexerevents.StatefulOrderEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewStatefulOrderRemovalEvent(
