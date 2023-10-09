@@ -23,8 +23,6 @@ source "./testing/genesis.sh"
 
 TMP_CHAIN_DIR="/tmp/prod-chain"
 TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/prod-exchange_config"
-NINE_ZEROS="000000000"
-EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
 BRIDGE_MODACC_BALANCE="1$NINE_ZEROS$EIGHTEEN_ZEROS" # 1e27
 BRIDGE_MODACC_ADDR="dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"
 

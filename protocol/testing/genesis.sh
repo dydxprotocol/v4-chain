@@ -6,6 +6,9 @@ set -eo pipefail
 # If you are making a change to genesis which is _required_ for the chain to function,
 # then that change probably belongs in `DefaultGenesis` for the module, and not here.
 
+NINE_ZEROS="000000000"
+EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
+
 # Address of the `subaccounts` module account.
 # Obtained from `authtypes.NewModuleAddress(subaccounttypes.ModuleName)`.
 SUBACCOUNTS_MODACC_ADDR="dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6"
@@ -19,13 +22,13 @@ NATIVE_TOKEN="adv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 # Each testnet validator has 1 million whole coins of native token.
-TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000000000000000000000 # 1e24
+TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000$EIGHTEEN_ZEROS # 1e24
 # Each testnet validator self-delegates 500k whole coins of native token.
-TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000000000000000000000 # 5e23
+TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000$EIGHTEEN_ZEROS # 5e23
 ETH_CHAIN_ID=11155111 # sepolia
 # https://sepolia.etherscan.io/address/0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0
 ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0"
-TOTAL_NATIVE_TOKEN_SUPPLY=1000000000000000000000000000 # 1e27
+TOTAL_NATIVE_TOKEN_SUPPLY=1000000000$EIGHTEEN_ZEROS # 1e27
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=5
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=4322136
 
@@ -1001,7 +1004,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${REWARDS_VESTER_ACCOUNT_ADDR}"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${REWARD_TOKEN}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "1000000000000" # 1e12
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "10000000$EIGHTEEN_ZEROS" # 10 million full coins
 	next_bank_idx=$(($next_bank_idx+1))
 
 	# Initialize bank balance of bridge module account.
