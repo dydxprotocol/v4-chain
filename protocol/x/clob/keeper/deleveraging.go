@@ -326,15 +326,12 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			1,
 			types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count,
 		)
-		k.Logger(ctx).Error(
-			errorsmod.Wrapf(
-				types.ErrPositionCannotBeFullyOffset,
-				"OffsetSubaccountPerpetualPosition: Not enough position to fully offset position, "+
-					"subaccount = (%+v), perpetual = (%d), quantums remaining = (%+v)",
-				liquidatedSubaccountId,
-				perpetualId,
-				deltaQuantumsRemaining.String(),
-			).Error(),
+		k.Logger(ctx).Debug(
+			"OffsetSubaccountPerpetualPosition: Not enough positions to fully offset position",
+			"subaccount", liquidatedSubaccountId,
+			"perpetual", perpetualId,
+			"deltaQuantumsTotal", deltaQuantumsTotal.String(),
+			"deltaQuantumsRemaining", deltaQuantumsRemaining.String(),
 		)
 		// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
 	}
