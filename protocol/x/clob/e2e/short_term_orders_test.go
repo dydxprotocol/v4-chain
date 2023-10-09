@@ -767,6 +767,13 @@ func TestPlaceOrder(t *testing.T) {
 }
 
 func TestShortTermOrderReplacements(t *testing.T) {
+	order := PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20
+	fok_replacement := order
+	fok_replacement.Order.GoodTilOneof = &clobtypes.Order_GoodTilBlock{GoodTilBlock: 21}
+	fok_replacement.Order.TimeInForce = clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL
+	ioc_replacement := fok_replacement
+	ioc_replacement.Order.TimeInForce = clobtypes.Order_TIME_IN_FORCE_IOC
+
 	type orderIdExpectations struct {
 		shouldExistOnMemclob bool
 		expectedOrder 	  clobtypes.Order
@@ -1066,6 +1073,36 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				},
 			},
 		},
+		"Success: Replacing order with FOK which does not fully match results in order being removed from the book": {
+			blocks: []blockOrdersAndExpectations{
+				{
+					ordersToPlace: []clobtypes.MsgPlaceOrder{
+						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
+						fok_replacement,
+					},
+					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
+						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
+							shouldExistOnMemclob: false,
+						},
+					},
+				},
+			},
+		},
+		"Success: Replacing order with IOC which does not fully match results in order being removed from the book": {
+			blocks: []blockOrdersAndExpectations{
+				{
+					ordersToPlace: []clobtypes.MsgPlaceOrder{
+						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
+						fok_replacement,
+					},
+					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
+						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
+							shouldExistOnMemclob: false,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -1080,8 +1117,6 @@ func TestShortTermOrderReplacements(t *testing.T) {
 					}
 				}
 
-				ctx = tApp.AdvanceToBlock(uint32(i + 2), testapp.AdvanceToBlockOptions{})
-
 				for orderId, expectations := range block.orderIdsExpectations {
 					order, exists := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
 					require.Equal(t, expectations.shouldExistOnMemclob, exists)
@@ -1091,6 +1126,8 @@ func TestShortTermOrderReplacements(t *testing.T) {
 					_, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
 					require.Equal(t, expectations.expectedFillAmount, uint64(fillAmount))
 				}
+
+				ctx = tApp.AdvanceToBlock(uint32(i + 2), testapp.AdvanceToBlockOptions{})
 			}
 		})
 	}
