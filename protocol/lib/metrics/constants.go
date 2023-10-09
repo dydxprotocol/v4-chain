@@ -202,19 +202,19 @@ const (
 	PremiumType                  = "premium_type"
 
 	// Rewards.
-	GetRewardShare                        = "get_reward_share"
-	ProcessRewardsForBlock                = "process_rewards_for_block"
-	TotalRewardShareWeight                = "total_reward_share_weight"
-	DistributedRewardTokens_1e18          = "distributed_reward_tokens_1e18"
-	TreasuryBalanceAfterDistribution_1e18 = "treasury_balance_after_distribution_1e18"
+	GetRewardShare                   = "get_reward_share"
+	ProcessRewardsForBlock           = "process_rewards_for_block"
+	TotalRewardShareWeight           = "total_reward_share_weight"
+	DistributedRewardTokens          = "distributed_reward_tokens"
+	TreasuryBalanceAfterDistribution = "treasury_balance_after_distribution"
 
 	// Vest.
-	GetVestEntry               = "get_vest_entry"
-	VestAmount_1e18            = "vest_amount_1e18"
-	BalanceAfterVestEvent_1e18 = "balance_after_vest_event_1e18"
-	VesterAccount              = "vester_account"
-	ProcessVesting             = "process_vesting"
-	AccountTransfer            = "account_transfer"
+	GetVestEntry          = "get_vest_entry"
+	VestAmount            = "vest_amount"
+	BalanceAfterVestEvent = "balance_after_vest_event"
+	VesterAccount         = "vester_account"
+	ProcessVesting        = "process_vesting"
+	AccountTransfer       = "account_transfer"
 
 	// Block Time.
 	BlockTimeMs = "block_time_ms"

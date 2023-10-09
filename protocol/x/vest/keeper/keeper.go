@@ -148,27 +148,15 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 
 		// Report vest amount.
 		telemetry.SetGaugeWithLabels(
-			// Log vested amount in 1e18 (full coin).
-			[]string{types.ModuleName, metrics.VestAmount_1e18},
-			float32(
-				new(big.Int).Div(
-					vestAmount.BigInt(),
-					lib.BigPow10(18),
-				).Int64(),
-			),
+			[]string{types.ModuleName, metrics.VestAmount},
+			metrics.GetMetricValueFromBigInt(vestAmount.BigInt()),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 		// Report vester account balance after vest event.
 		balanceAfterVest := k.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(entry.VesterAccount), entry.Denom)
-		// Log remaining vester balance in 1e18 (full coin).
 		telemetry.SetGaugeWithLabels(
-			[]string{types.ModuleName, metrics.BalanceAfterVestEvent_1e18},
-			float32(
-				new(big.Int).Div(
-					balanceAfterVest.Amount.BigInt(),
-					lib.BigPow10(18),
-				).Int64(),
-			),
+			[]string{types.ModuleName, metrics.BalanceAfterVestEvent},
+			metrics.GetMetricValueFromBigInt(balanceAfterVest.Amount.BigInt()),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 	}
