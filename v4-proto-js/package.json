@@ -24,7 +24,7 @@
     "transpile": "(cd .. && make proto-export-deps && rm -rf .proto-export-deps/cosmos/autocli) && rm -rf src/ && telescope transpile --protoDirs ../.proto-export-deps --outPath ./src/codegen --no-includeAminos --includeLCDClients --includeRPCClients"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "repository": {
     "type": "git",

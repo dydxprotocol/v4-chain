@@ -32,7 +32,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 			msg.Order.GetOrderLabels()...,
 		)
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "PlaceOrder", msg)
 		}
 	}()
 
@@ -72,11 +72,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 		k.Keeper.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewConditionalOrderPlacementEvent(
-					order,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewConditionalOrderPlacementEvent(
@@ -92,11 +87,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 		k.Keeper.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewLongTermOrderPlacementEvent(
-					order,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewLongTermOrderPlacementEvent(

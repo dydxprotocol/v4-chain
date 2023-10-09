@@ -199,10 +199,9 @@ func GetLiquidityTierUpsertEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeLiquidityTier {
 			continue
 		}
-		bytes := indexer_manager.GetBytesFromEventData(event.Data)
 		unmarshaler := common.UnmarshalerImpl{}
 		var liquidityTierEvent indexerevents.LiquidityTierUpsertEventV1
-		err := unmarshaler.Unmarshal(bytes, &liquidityTierEvent)
+		err := unmarshaler.Unmarshal(event.DataBytes, &liquidityTierEvent)
 		if err != nil {
 			panic(err)
 		}

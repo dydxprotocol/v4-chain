@@ -23,11 +23,9 @@ message IndexerEventsStoreValue {
 // the V4 application as well as additional metadata to determine the ordering
 // of the event within the block and the subtype of the event.
 message IndexerTendermintEvent {
+  reserved 2;
   // Subtype of the event e.g. "order_fill", "subaccount_update", etc.
   string subtype = 1;
-  // Base64 encoded proto from the Tendermint event.
-  // TODO(DEC-1720): Change to bytes post-migration.
-  string data = 2;
   // enum to specify that the IndexerTendermintEvent is a block event.
   enum BlockEvent {
     // Default value. This value is invalid and unused.

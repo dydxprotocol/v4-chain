@@ -51,17 +51,18 @@ func (k msgServer) CancelOrder(
 						1,
 						msg.OrderId.GetOrderIdLabels(),
 					)
+					err = errorsmod.Wrapf(
+						types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder,
+						"Error: %s",
+						err.Error(),
+					)
 					k.Keeper.Logger(ctx).Info(
-						errorsmod.Wrapf(
-							types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder,
-							"Error: %s",
-							err.Error(),
-						).Error(),
+						err.Error(),
 					)
 					return
 				}
 			}
-			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "CancelOrder", msg)
 		}
 	}()
 
@@ -89,12 +90,6 @@ func (k msgServer) CancelOrder(
 	k.Keeper.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeStatefulOrder,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewStatefulOrderRemovalEvent(
-				msg.OrderId,
-				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
-			),
-		),
 		indexerevents.StatefulOrderEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewStatefulOrderRemovalEvent(

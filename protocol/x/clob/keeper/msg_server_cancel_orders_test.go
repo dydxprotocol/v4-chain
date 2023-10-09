@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -67,6 +66,7 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	orderToCancel := constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15
 
 	ctx := ks.Ctx.WithBlockHeight(2)
+	ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	mockLogger := &mocks.Logger{}
 	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
 	mockLogger.On("Info",
@@ -83,7 +83,7 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	ctx = ctx.WithLogger(mockLogger)
 	ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-		Height:    2,
+		Height:    1,
 		Timestamp: time.Unix(int64(2), 0),
 	})
 
@@ -96,7 +96,7 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	)
 
 	_, err := msgServer.CancelOrder(ctx, &orderToCancel)
-	require.ErrorIs(t, err, types.ErrStatefulOrderDoesNotExist)
+	require.ErrorIs(t, err, types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder)
 	mockLogger.AssertExpectations(t)
 }
 
@@ -109,16 +109,21 @@ func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
 	orderToCancel := constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15
 
 	ctx := ks.Ctx.WithBlockHeight(2)
+	ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	mockLogger := &mocks.Logger{}
 	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
 	mockLogger.On(
 		"Error",
-		fmt.Sprintf("Block height: 2, Callback: deliver_tx: %s", types.ErrTimeExceedsGoodTilBlockTime.Error()),
+		[]interface{}{
+			types.ErrTimeExceedsGoodTilBlockTime.Error(),
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		}...,
 	).Return()
 	ctx = ctx.WithLogger(mockLogger)
 	ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-		Height:    2,
+		Height:    1,
 		Timestamp: time.Unix(int64(20), 0),
 	})
 
@@ -163,7 +168,7 @@ func TestCancelOrder_Error(t *testing.T) {
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-				Height:    2,
+				Height:    1,
 				Timestamp: time.Unix(int64(2), 0),
 			})
 
@@ -204,7 +209,7 @@ func TestCancelOrder_Success(t *testing.T) {
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-				Height:    2,
+				Height:    1,
 				Timestamp: time.Unix(int64(2), 0),
 			})
 
@@ -213,12 +218,6 @@ func TestCancelOrder_Success(t *testing.T) {
 				"AddTxnEvent",
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewStatefulOrderRemovalEvent(
-						tc.StatefulOrderPlacement.GetOrderId(),
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
-					),
-				),
 				indexerevents.StatefulOrderEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewStatefulOrderRemovalEvent(

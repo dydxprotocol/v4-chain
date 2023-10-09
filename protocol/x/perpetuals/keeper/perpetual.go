@@ -121,15 +121,6 @@ func (k Keeper) ModifyPerpetual(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeUpdatePerpetual,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewUpdatePerpetualEventV1(
-				perpetual.Params.Id,
-				perpetual.Params.Ticker,
-				perpetual.Params.MarketId,
-				perpetual.Params.AtomicResolution,
-				perpetual.Params.LiquidityTier,
-			),
-		),
 		indexerevents.UpdatePerpetualEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewUpdatePerpetualEventV1(
@@ -328,9 +319,6 @@ func (k Keeper) processPremiumVotesIntoSamples(
 	k.indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewPremiumSamplesEvent(newSamplesForEvent),
-		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.FundingValuesEventVersion,
 		indexer_manager.GetBytes(
@@ -726,9 +714,6 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 	k.indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewFundingRatesAndIndicesEvent(newFundingRatesAndIndicesForEvent),
-		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.FundingValuesEventVersion,
 		indexer_manager.GetBytes(
@@ -1301,15 +1286,6 @@ func (k Keeper) SetLiquidityTier(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeLiquidityTier,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewLiquidityTierUpsertEvent(
-				id,
-				name,
-				initialMarginPpm,
-				maintenanceFractionPpm,
-				basePositionNotional,
-			),
-		),
 		indexerevents.LiquidityTierEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewLiquidityTierUpsertEvent(

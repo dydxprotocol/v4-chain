@@ -61,15 +61,6 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeUpdateClobPair,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewUpdateClobPairEvent(
-							clobPair.GetClobPairId(),
-							types.ClobPair_STATUS_ACTIVE,
-							clobPair.QuantumConversionExponent,
-							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
-							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
-						),
-					),
 					indexerevents.UpdateClobPairEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewUpdateClobPairEvent(

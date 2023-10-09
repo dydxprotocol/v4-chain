@@ -11,6 +11,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -272,6 +273,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 func TestProcessRewardsForBlock(t *testing.T) {
 	testRewardTokenMarketId := uint32(33)
 	testRewardTokenMarket := "test-market"
+	// TODO(CORE-645): Update test to -18 denom for consistency with prod.
 	TestRewardTokenDenomExp := int32(-6)
 
 	tokenPrice2Usdc := pricestypes.MarketPrice{
@@ -408,51 +410,55 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				ZeroTreasuryAccountBalance,
 			},
 		},
-		"three reward shares, enough treasury balance, fee multipler = 0.99": {
+		"three reward shares, enough treasury balance, fee multipler = 0.99, realistic numbers": {
 			rewardShares: []types.RewardShare{
 				{
 					Address: TestAddress1,
-					Weight:  dtypes.NewInt(1_000_000), // $1 weight of fee
+					Weight:  dtypes.NewInt(1_025_590_000), // $1025.59 weight of fee
 				},
 				{
 					Address: TestAddress2,
-					Weight:  dtypes.NewInt(2_000_000), // $2 weight of fee
+					Weight:  dtypes.NewInt(2_021_300_000), // $2021.3 weight of fee
 				},
 				{
 					Address: TestAddress3,
-					Weight:  dtypes.NewInt(3_000_000), // $3 weight of fee
+					Weight:  dtypes.NewInt(835_660_000), // $835.66 weight of fee
 				},
 			},
-			tokenPrice:             tokenPrice2Usdc,
-			treasuryAccountBalance: sdkmath.NewInt(1_000_000_000), // 1000 full coins
-			feeMultiplierPpm:       990_000,                       // 99%
+			tokenPrice: tokenPrice2Usdc,
+			treasuryAccountBalance: sdkmath.NewIntFromBigInt(
+				big_testutil.Int64MulPow10(2_000_123, 18), //~2_000_123 full coin.
+			), // 1000 full coins
+			feeMultiplierPpm: 990_000, // 99%
 			expectedBalances: []banktypes.Balance{
 				{
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdkmath.NewInt(495_000), // $1 weight / $2 price * 99% = 0.495 full coin
+						Amount: sdkmath.NewInt(507_667_050), // $1 weight / $2 price * 99% = 0.495 full coin
 					}},
 				},
 				{
 					Address: TestAddress2,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdkmath.NewInt(990_000), // $2 weight / $2 price * 99% = 0.99 full coin
+						Amount: sdkmath.NewInt(1_000_543_500), // $2021.3 weight / $2 price * 99% ~= 1000 full coin
 					}},
 				},
 				{
 					Address: TestAddress3,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdkmath.NewInt(1_485_000), // $3 weight / $2 price * 99% = 1.485 full coin
+						Amount: sdkmath.NewInt(413_651_700), // $835.66 weight / $2 price * 99% ~= 413 full coin
 					}},
 				},
 				{
 					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
 					Coins: []sdk.Coin{{
-						Denom:  TestRewardTokenDenom,
-						Amount: sdkmath.NewInt(997_030_000), // 997.03 full coins
+						Denom: TestRewardTokenDenom,
+						Amount: sdkmath.NewIntFromBigInt(
+							big_testutil.MustFirst(new(big.Int).SetString("2000122999999998078137750", 10)),
+						), // ~2_000_122.9 full coins
 					}},
 				},
 			},

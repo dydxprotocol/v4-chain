@@ -299,17 +299,6 @@ func (k Keeper) UpdateSubaccounts(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeSubaccountUpdate,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewSubaccountUpdateEvent(
-					u.SettledSubaccount.Id,
-					getUpdatedPerpetualPositions(
-						u,
-						fundingPayments,
-					),
-					getUpdatedAssetPositions(u),
-					fundingPayments,
-				),
-			),
 			indexerevents.SubaccountUpdateEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewSubaccountUpdateEvent(

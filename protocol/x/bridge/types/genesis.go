@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	"time"
 )
 
 // DefaultGenesis returns the default bridge genesis state.
@@ -14,9 +14,9 @@ func DefaultGenesis() *GenesisState {
 		},
 		ProposeParams: ProposeParams{
 			MaxBridgesPerBlock:           10,
-			ProposeDelayDuration:         time.MustParseDuration("60s"),
+			ProposeDelayDuration:         60 * time.Second,
 			SkipRatePpm:                  800_000, // 80%
-			SkipIfBlockDelayedByDuration: time.MustParseDuration("5s"),
+			SkipIfBlockDelayedByDuration: 5 * time.Second,
 		},
 		SafetyParams: SafetyParams{
 			IsDisabled:  false,
