@@ -61,13 +61,13 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				Params: types.DowntimeParams{
 					Durations: []time.Duration{
-						1,
+						5 * time.Second,
+						1 * time.Second,
 					},
-					ClockDriftGracePeriodDuration: -1,
 				},
 			},
 			expErr:    true,
-			expErrMsg: "Durations must be positive",
+			expErrMsg: "Durations must be in ascending order by length",
 		},
 	}
 
