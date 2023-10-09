@@ -144,10 +144,9 @@ func GetSubaccountUpdateEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeSubaccountUpdate {
 			continue
 		}
-		bytes := indexer_manager.GetBytesFromEventData(event.Data)
 		unmarshaler := common.UnmarshalerImpl{}
 		var subaccountUpdate indexerevents.SubaccountUpdateEventV1
-		err := unmarshaler.Unmarshal(bytes, &subaccountUpdate)
+		err := unmarshaler.Unmarshal(event.DataBytes, &subaccountUpdate)
 		if err != nil {
 			panic(err)
 		}

@@ -114,20 +114,6 @@ func TestPlaceOrder_Error(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						clobtest.MustPerpetualId(clobPair),
-						clobPair.Id,
-						perpetual.Params.Ticker,
-						perpetual.Params.MarketId,
-						clobPair.Status,
-						clobPair.QuantumConversionExponent,
-						perpetual.Params.AtomicResolution,
-						clobPair.SubticksPerTick,
-						clobPair.StepBaseQuantums,
-						perpetual.Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -269,20 +255,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						perpetual.Params.Ticker,
-						perpetual.Params.MarketId,
-						clobPair.Status,
-						clobPair.QuantumConversionExponent,
-						perpetual.Params.AtomicResolution,
-						clobPair.SubticksPerTick,
-						clobPair.StepBaseQuantums,
-						perpetual.Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -316,11 +288,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 					"AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewConditionalOrderPlacementEvent(
-							tc.StatefulOrderPlacement,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewConditionalOrderPlacementEvent(
@@ -333,11 +300,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 					"AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewLongTermOrderPlacementEvent(
-							tc.StatefulOrderPlacement,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewLongTermOrderPlacementEvent(

@@ -109,10 +109,9 @@ func GetAssetCreateEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeAsset {
 			continue
 		}
-		bytes := indexer_manager.GetBytesFromEventData(event.Data)
 		unmarshaler := common.UnmarshalerImpl{}
 		var assetEvent indexerevents.AssetCreateEventV1
-		err := unmarshaler.Unmarshal(bytes, &assetEvent)
+		err := unmarshaler.Unmarshal(event.DataBytes, &assetEvent)
 		if err != nil {
 			panic(err)
 		}
