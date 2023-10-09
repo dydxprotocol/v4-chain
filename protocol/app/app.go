@@ -3,14 +3,15 @@ package app
 import (
 	"context"
 	"encoding/json"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"io"
 	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
@@ -1166,6 +1167,24 @@ func New(
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
+
+	// Report out app version and git commit. This will be run when validators restart.
+	version := version.NewInfo()
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.AppInfo},
+		1,
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
+			metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
+		},
+	)
+	app.Logger().Info(
+		"App instantiated",
+		metrics.AppVersion,
+		version.Version,
+		metrics.GitCommit,
+		version.GitCommit,
+	)
 
 	return app
 }
