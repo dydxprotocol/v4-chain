@@ -275,8 +275,8 @@ func (k Keeper) ProcessRewardsForBlock(
 	// Measure distributed token amount.
 	telemetry.SetGauge(
 		metrics.GetMetricValueFromBigInt(tokensToDistribute),
-		metrics.DistributedRewardTokens,
 		types.ModuleName,
+		metrics.DistributedRewardTokens,
 	)
 	if tokensToDistribute.Sign() == 0 {
 		// Nothing to distribute. This can happen either when there is no reward token in the treasury account,
