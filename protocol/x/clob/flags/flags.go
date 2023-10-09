@@ -10,8 +10,9 @@ import (
 
 // A struct containing the values of all flags.
 type ClobFlags struct {
-	MaxLiquidationOrdersPerBlock    uint32
-	MaxDeleveragingAttemptsPerBlock uint32
+	MaxLiquidationOrdersPerBlock        uint32
+	MaxDeleveragingAttemptsPerBlock     uint32
+	MaxDeleveragingSubaccountsToIterate uint32
 
 	MevTelemetryEnabled    bool
 	MevTelemetryHost       string
@@ -21,8 +22,9 @@ type ClobFlags struct {
 // List of CLI flags.
 const (
 	// Liquidations and deleveraging.
-	MaxLiquidationOrdersPerBlock    = "max-liquidation-orders-per-block"
-	MaxDeleveragingAttemptsPerBlock = "max-deleveraging-attempts-per-block"
+	MaxLiquidationOrdersPerBlock        = "max-liquidation-orders-per-block"
+	MaxDeleveragingAttemptsPerBlock     = "max-deleveraging-attempts-per-block"
+	MaxDeleveragingSubaccountsToIterate = "max-deleveraging-subaccounts-to-iterate"
 
 	// Mev.
 	MevTelemetryEnabled    = "mev-telemetry-enabled"
@@ -32,8 +34,9 @@ const (
 
 // Default values.
 const (
-	DefaultMaxLiquidationOrdersPerBlock    = 20
-	DefaultMaxDeleveragingAttemptsPerBlock = 5
+	DefaultMaxLiquidationOrdersPerBlock        = 20
+	DefaultMaxDeleveragingAttemptsPerBlock     = 5
+	DefaultMaxDeleveragingSubaccountsToIterate = 500
 
 	DefaultMevTelemetryEnabled    = false
 	DefaultMevTelemetryHost       = ""
@@ -60,6 +63,14 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 			DefaultMaxDeleveragingAttemptsPerBlock,
 		),
 	)
+	cmd.Flags().Uint32(
+		MaxDeleveragingSubaccountsToIterate,
+		DefaultMaxDeleveragingSubaccountsToIterate,
+		fmt.Sprintf(
+			"Sets the maximum number of subaccounts iterated for each deleveraging event. Default = %d",
+			DefaultMaxDeleveragingSubaccountsToIterate,
+		),
+	)
 	cmd.Flags().Bool(
 		MevTelemetryEnabled,
 		DefaultMevTelemetryEnabled,
@@ -79,11 +90,12 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 
 func GetDefaultClobFlags() ClobFlags {
 	return ClobFlags{
-		MaxLiquidationOrdersPerBlock:    DefaultMaxLiquidationOrdersPerBlock,
-		MaxDeleveragingAttemptsPerBlock: DefaultMaxDeleveragingAttemptsPerBlock,
-		MevTelemetryEnabled:             DefaultMevTelemetryEnabled,
-		MevTelemetryHost:                DefaultMevTelemetryHost,
-		MevTelemetryIdentifier:          DefaultMevTelemetryIdentifier,
+		MaxLiquidationOrdersPerBlock:        DefaultMaxLiquidationOrdersPerBlock,
+		MaxDeleveragingAttemptsPerBlock:     DefaultMaxDeleveragingAttemptsPerBlock,
+		MaxDeleveragingSubaccountsToIterate: DefaultMaxDeleveragingSubaccountsToIterate,
+		MevTelemetryEnabled:                 DefaultMevTelemetryEnabled,
+		MevTelemetryHost:                    DefaultMevTelemetryHost,
+		MevTelemetryIdentifier:              DefaultMevTelemetryIdentifier,
 	}
 }
 
@@ -124,6 +136,10 @@ func GetClobFlagValuesFromOptions(
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.MaxDeleveragingAttemptsPerBlock = v
 		}
+	}
+
+	if v, ok := appOpts.Get(MaxDeleveragingSubaccountsToIterate).(uint32); ok {
+		result.MaxDeleveragingSubaccountsToIterate = v
 	}
 
 	return result

@@ -161,18 +161,26 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	)
 
 	numSubaccountsIterated := 0
+	numSubaccountsWithNonOverlappingBankruptcyPrices := 0
+	numSubaccountsWithNoOpenPositionOnOppositeSide := 0
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
 	k.subaccountsKeeper.ForEachSubaccountRandomStart(
 		ctx,
 		func(offsettingSubaccount satypes.Subaccount) (finished bool) {
+			// Iterate at most `MaxDeleveragingSubaccountsToIterate` subaccounts.
+			if numSubaccountsIterated >= int(k.MaxDeleveragingSubaccountsToIterate) {
+				return true
+			}
+
 			numSubaccountsIterated++
 			offsettingPosition, _ := offsettingSubaccount.GetPerpetualPositionForId(perpetualId)
 			bigOffsettingPositionQuantums := offsettingPosition.GetBigQuantums()
 
 			// Skip subaccounts that do not have a position in the opposite direction as the liquidated subaccount.
 			if deltaQuantumsRemaining.Sign() != bigOffsettingPositionQuantums.Sign() {
+				numSubaccountsWithNoOpenPositionOnOppositeSide++
 				return false
 			}
 
@@ -276,7 +284,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					return false
 				}
 
-				k.Logger(ctx).Info(
+				k.Logger(ctx).Debug(
 					"Encountered error when processing deleveraging",
 					"error", err,
 					"blockHeight", ctx.BlockHeight(),
@@ -290,17 +298,25 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"offsettingBankruptcyPriceQuoteQuantums", offsettingBankruptcyPrice,
 					"offsettingTnc", offsettingTnc,
 				)
-				telemetry.IncrCounter(
-					1,
-					types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
-				)
+				numSubaccountsWithNonOverlappingBankruptcyPrices++
 			}
 			return deltaQuantumsRemaining.Sign() == 0
 		},
 		k.GetPseudoRand(ctx),
 	)
 
-	telemetry.SetGauge(float32(numSubaccountsIterated), metrics.NumSubaccountsIterated, metrics.Count)
+	telemetry.IncrCounter(
+		float32(numSubaccountsIterated),
+		types.ModuleName, metrics.Deleveraging, metrics.NumSubaccountsIterated, metrics.Count,
+	)
+	telemetry.IncrCounter(
+		float32(numSubaccountsWithNonOverlappingBankruptcyPrices),
+		types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
+	)
+	telemetry.IncrCounter(
+		float32(numSubaccountsWithNoOpenPositionOnOppositeSide),
+		types.ModuleName, metrics.Deleveraging, metrics.NoOpenPositionOnOppositeSide, metrics.Count,
+	)
 
 	if deltaQuantumsRemaining.Sign() == 0 {
 		// Deleveraging was successful.
