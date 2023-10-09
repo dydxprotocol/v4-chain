@@ -1,5 +1,5 @@
 import * as _m0 from "protobufjs/minimal";
-import { Long, DeepPartial } from "../../helpers";
+import { DeepPartial } from "../../helpers";
 /** Asset defines a single exchangable asset. */
 
 export interface Asset {
@@ -48,9 +48,6 @@ export interface Asset {
    */
 
   atomicResolution: number;
-  /** The total positive balance across the exchange. */
-
-  longInterest: Long;
 }
 /** Asset defines a single exchangable asset. */
 
@@ -100,9 +97,6 @@ export interface AssetSDKType {
    */
 
   atomic_resolution: number;
-  /** The total positive balance across the exchange. */
-
-  long_interest: Long;
 }
 
 function createBaseAsset(): Asset {
@@ -113,8 +107,7 @@ function createBaseAsset(): Asset {
     denomExponent: 0,
     hasMarket: false,
     marketId: 0,
-    atomicResolution: 0,
-    longInterest: Long.UZERO
+    atomicResolution: 0
   };
 }
 
@@ -146,10 +139,6 @@ export const Asset = {
 
     if (message.atomicResolution !== 0) {
       writer.uint32(56).sint32(message.atomicResolution);
-    }
-
-    if (!message.longInterest.isZero()) {
-      writer.uint32(64).uint64(message.longInterest);
     }
 
     return writer;
@@ -192,10 +181,6 @@ export const Asset = {
           message.atomicResolution = reader.sint32();
           break;
 
-        case 8:
-          message.longInterest = (reader.uint64() as Long);
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -214,7 +199,6 @@ export const Asset = {
     message.hasMarket = object.hasMarket ?? false;
     message.marketId = object.marketId ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
-    message.longInterest = object.longInterest !== undefined && object.longInterest !== null ? Long.fromValue(object.longInterest) : Long.UZERO;
     return message;
   }
 

@@ -22,7 +22,7 @@ func (p *PerpetualParams) Validate() error {
 	if defaultFundingPpm > MaxDefaultFundingPpmAbs {
 		return errorsmod.Wrap(
 			ErrDefaultFundingPpmMagnitudeExceedsMax,
-			lib.Int32ToString(p.DefaultFundingPpm))
+			lib.IntToString(p.DefaultFundingPpm))
 	}
 
 	return nil

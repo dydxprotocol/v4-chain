@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,6 +19,68 @@ import (
 	rewardskeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
+
+func RewardsKeepers(
+	t testing.TB,
+) (
+	ctx sdk.Context,
+	rewardsKeeper *rewardskeeper.Keeper,
+	feetiersKeeper *feetierskeeper.Keeper,
+	bankKeeper bankkeeper.Keeper,
+	assetsKeeper *assetskeeper.Keeper,
+	pricesKeeper *priceskeeper.Keeper,
+	storeKey storetypes.StoreKey,
+) {
+	ctx = initKeepers(t, func(
+		db *tmdb.MemDB,
+		registry codectypes.InterfaceRegistry,
+		cdc *codec.ProtoCodec,
+		stateStore storetypes.CommitMultiStore,
+		transientStoreKey storetypes.StoreKey,
+	) []GenesisInitializer {
+		// Define necessary keepers here for unit tests
+		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		// Mock time provider response for market creation.
+		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+		assetsKeeper, _ = createAssetsKeeper(
+			stateStore,
+			db,
+			cdc,
+			pricesKeeper,
+			transientStoreKey,
+			true,
+		)
+		statsKeeper, _ := createStatsKeeper(
+			stateStore,
+			epochsKeeper,
+			db,
+			cdc,
+		)
+		feetiersKeeper, _ = createFeeTiersKeeper(
+			stateStore,
+			statsKeeper,
+			db,
+			cdc,
+		)
+		rewardsKeeper, storeKey = createRewardsKeeper(
+			stateStore,
+			assetsKeeper,
+			bankKeeper,
+			feetiersKeeper,
+			pricesKeeper,
+			db,
+			cdc,
+		)
+
+		return []GenesisInitializer{
+			pricesKeeper,
+			assetsKeeper,
+			feetiersKeeper,
+			statsKeeper,
+		}
+	})
+	return ctx, rewardsKeeper, feetiersKeeper, bankKeeper, assetsKeeper, pricesKeeper, storeKey
+}
 
 func createRewardsKeeper(
 	stateStore storetypes.CommitMultiStore,

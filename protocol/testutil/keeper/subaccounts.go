@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"math/big"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -18,8 +19,8 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perpskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
@@ -111,7 +112,7 @@ func CreateUsdcAssetPosition(
 ) []*types.AssetPosition {
 	return []*types.AssetPosition{
 		{
-			AssetId:  lib.UsdcAssetId,
+			AssetId:  assettypes.AssetUsdc.Id,
 			Quantums: dtypes.NewIntFromBigInt(quoteBalance),
 		},
 	}
@@ -122,7 +123,7 @@ func CreateUsdcAssetUpdate(
 ) []types.AssetUpdate {
 	return []types.AssetUpdate{
 		{
-			AssetId:          lib.UsdcAssetId,
+			AssetId:          assettypes.AssetUsdc.Id,
 			BigQuantumsDelta: deltaQuoteBalance,
 		},
 	}

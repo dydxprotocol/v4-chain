@@ -350,8 +350,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				 "default_funding_ppm":0,
 				 "liquidity_tier":0
 			  },
-			  "funding_index":"0",
-			  "open_interest":"0"
+			  "funding_index":"0"
 		   }
 		],
 		"liquidity_tiers":[

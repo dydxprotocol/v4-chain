@@ -13,10 +13,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 
@@ -282,7 +282,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 			Owner:  recipient,
 			Number: uint32(0),
 		},
-		AssetId: lib.UsdcAssetId,
+		AssetId: assettypes.AssetUsdc.Id,
 		Amount:  500_000_000, // $500
 	}
 	err = ks.SendingKeeper.ProcessTransfer(ks.Ctx, &transfer)
@@ -328,7 +328,7 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 			msg: types.MsgDepositToSubaccount{
 				Sender:    "1234567", // bad address string
 				Recipient: constants.Alice_Num0,
-				AssetId:   lib.UsdcAssetId,
+				AssetId:   assettypes.AssetUsdc.Id,
 				Quantums:  750_000_000,
 			},
 			expectedErrContains: "decoding bech32 failed",
@@ -413,7 +413,7 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 			msg: types.MsgWithdrawFromSubaccount{
 				Sender:    constants.Alice_Num0,
 				Recipient: "1234567", // bad address string
-				AssetId:   lib.UsdcAssetId,
+				AssetId:   assettypes.AssetUsdc.Id,
 				Quantums:  750_000_000,
 			},
 			expectedErrContains: "decoding bech32 failed",
@@ -586,7 +586,7 @@ func TestSendFromModuleToAccount_InvalidMsg(t *testing.T) {
 		Authority:        constants.GovModuleAccAddressString,
 		SenderModuleName: "",
 		Recipient:        constants.AliceAccAddress.String(),
-		Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+		Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
 	}
 
 	ks := keepertest.SendingKeepers(t)
@@ -599,7 +599,7 @@ func TestSendFromModuleToAccount_NonExistentSenderModule(t *testing.T) {
 		Authority:        constants.GovModuleAccAddressString,
 		SenderModuleName: "nonexistent",
 		Recipient:        constants.AliceAccAddress.String(),
-		Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+		Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
 	}
 
 	// Calling SendFromModuleToAccount with a non-existent sender module will panic.

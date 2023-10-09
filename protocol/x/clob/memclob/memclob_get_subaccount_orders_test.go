@@ -13,6 +13,7 @@ import (
 
 func TestGetSubaccountOrders(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	tests := map[string]struct {
 		// State.
 		memclobOrders []types.Order
@@ -235,6 +236,7 @@ func TestGetSubaccountOrders(t *testing.T) {
 
 func TestGetSubaccountOrders_OrderNotFoundPanics(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.openOrders.orderbooksMap[0] = &types.Orderbook{
 		SubaccountOpenClobOrders: map[satypes.SubaccountId]map[types.Order_Side]map[types.OrderId]bool{

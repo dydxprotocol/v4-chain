@@ -77,7 +77,7 @@ func assertFillAmountAndPruneState(
 		)
 
 		potentiallyPrunableOrdersBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-			lib.Uint32ToBytes(blockHeight),
+			lib.Uint32ToKey(blockHeight),
 		)
 
 		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -822,9 +822,9 @@ func TestEndBlocker_Success(t *testing.T) {
 				// TODO(CLOB-746) Once R/W methods are created, substitute those methods here.
 				triggeredConditionalOrderMemstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 				untriggeredConditionalOrderMemstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
-				exists := triggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.MustMarshal())
+				exists := triggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.True(t, exists)
-				exists = untriggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.MustMarshal())
+				exists = untriggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.False(t, exists)
 			}
 

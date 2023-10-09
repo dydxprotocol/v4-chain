@@ -18,7 +18,7 @@ const (
 // State
 const (
 	// VestEntryKeyPrefix is the prefix used when storing a VestEntry in the state.
-	VestEntryKeyPrefix = "vest_entry/"
+	VestEntryKeyPrefix = "Entry:"
 )
 
 // Module accounts

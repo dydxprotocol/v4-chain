@@ -24,8 +24,8 @@
       "ticker": "UNIUSD"
     },
     {
-      "exchangeName": "Mexc",
-      "ticker": "UNI_USDT",
+      "exchangeName": "Kucoin",
+      "ticker": "UNI-USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

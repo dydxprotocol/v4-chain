@@ -274,6 +274,9 @@
         "properties": {
           "restricted": {
             "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
           }
         },
         "required": [
@@ -646,6 +649,12 @@
             "type": "boolean"
           },
           "ticker": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "updatedAtHeight": {
             "type": "string"
           }
         },

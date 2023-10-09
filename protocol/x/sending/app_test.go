@@ -170,7 +170,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 									[]*satypes.PerpetualPosition{},
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assetstypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterDeposit),
 										},
 									},
@@ -212,7 +212,7 @@ func TestMsgDepositToSubaccount_NonExistentAccount(t *testing.T) {
 	msgDepositToSubaccount := sendingtypes.MsgDepositToSubaccount{
 		Sender:    randomAccount.Address.String(),
 		Recipient: constants.Alice_Num1,
-		AssetId:   lib.UsdcAssetId,
+		AssetId:   assetstypes.AssetUsdc.Id,
 		Quantums:  uint64(1_000_000),
 	}
 
@@ -359,7 +359,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 									[]*satypes.PerpetualPosition{},
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assetstypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterWithdraw),
 										},
 									},
@@ -404,7 +404,7 @@ func TestMsgWithdrawFromSubaccount_NonExistentSubaccount(t *testing.T) {
 			Number: 0,
 		},
 		Recipient: constants.AliceAccAddress.String(),
-		AssetId:   lib.UsdcAssetId,
+		AssetId:   assetstypes.AssetUsdc.Id,
 		Quantums:  uint64(1_000_000),
 	}
 

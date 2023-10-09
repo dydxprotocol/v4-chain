@@ -18,6 +18,7 @@ import (
 	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -166,7 +167,7 @@ func TestPlaceOrder(t *testing.T) {
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
 										},
 									},
@@ -193,7 +194,7 @@ func TestPlaceOrder(t *testing.T) {
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
 										},
 									},
@@ -325,7 +326,7 @@ func TestPlaceOrder(t *testing.T) {
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
 										},
 									},
@@ -352,7 +353,7 @@ func TestPlaceOrder(t *testing.T) {
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
 										},
 									},
@@ -484,7 +485,7 @@ func TestPlaceOrder(t *testing.T) {
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
 										},
 									},
@@ -511,7 +512,7 @@ func TestPlaceOrder(t *testing.T) {
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
 										},
 									},

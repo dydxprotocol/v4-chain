@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	DefaultOpenInterest = 0
 	// Clamp factor for 8-hour funding rate is by default 600%.
 	DefaultFundingRateClampFactorPpm = 6 * lib.OneMillion
 	// Clamp factor for premium vote is by default 6_000%.

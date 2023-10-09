@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (
@@ -25,9 +26,9 @@ var (
 	expectedBlock2MessageIds = []uint32{2, 4, 5}
 )
 
-func TestGetBlockMessageIds_NegativeBlockHeight(t *testing.T) {
+func TestGetBlockMessageIds_ZeroBlockHeight(t *testing.T) {
 	ctx, delaymsg, _, _, _, _ := keeper.DelayMsgKeepers(t)
-	_, found := delaymsg.GetBlockMessageIds(ctx, -1)
+	_, found := delaymsg.GetBlockMessageIds(ctx, 0)
 	require.False(t, found)
 }
 

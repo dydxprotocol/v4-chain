@@ -39,13 +39,6 @@ type ProductKeeper interface {
 
 type AssetsKeeper interface {
 	ProductKeeper
-	GetDenomById(
-		ctx sdk.Context,
-		id uint32,
-	) (
-		denom string,
-		err error,
-	)
 	ConvertAssetToCoin(
 		ctx sdk.Context,
 		assetId uint32,

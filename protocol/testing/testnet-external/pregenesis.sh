@@ -147,7 +147,7 @@ function overwrite_genesis_public_testnet() {
 	dasel put -t string -f "$GENESIS" '.app_state.staking.params.bond_denom' -v "$NATIVE_TOKEN"
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.max_validators' -v '100'
 	dasel put -t string -f "$GENESIS" '.app_state.staking.params.min_commission_rate' -v '0.05' # 5%
-	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '259200s' # 3 days
+	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '1036800s' # 12 days
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.max_entries' -v '7'
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.historical_entries' -v '10000'
 
@@ -188,7 +188,7 @@ create_pregenesis_file() {
 	# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 	# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
 	# Note: `edit_genesis` must be called before `add-genesis-account`.
-	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config"
+	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config" ""
 	overwrite_genesis_public_testnet
 
 	FAUCET_BALANCE="${FAUCET_STAKE_BALANCE}$NATIVE_TOKEN"

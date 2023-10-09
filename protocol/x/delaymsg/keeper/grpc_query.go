@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 
@@ -64,10 +65,6 @@ func (k Keeper) BlockMessageIds(
 ) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	if req.BlockHeight < 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid block height")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

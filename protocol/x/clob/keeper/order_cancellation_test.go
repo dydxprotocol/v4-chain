@@ -130,7 +130,7 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 	ctx := ks.Ctx.WithIsCheckTx(true)
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-		Height:    1,
+		Height:    14,
 		Timestamp: time.Unix(int64(50), 0),
 	})
 

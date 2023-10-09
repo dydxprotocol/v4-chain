@@ -41,7 +41,4 @@ message Asset {
   // then an `asset_position` with `base_quantums = 1e8` is equivalent to
   // a position size of one full coin.
   sint32 atomic_resolution = 7;
-
-  // The total positive balance across the exchange.
-  uint64 long_interest = 8;
 }

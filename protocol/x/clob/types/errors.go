@@ -387,6 +387,11 @@ var (
 		3009,
 		"Stateful order was previously removed and therefore cannot be placed",
 	)
+	ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder = errorsmod.Register(
+		ModuleName,
+		3010,
+		"Stateful order cancellation failed because the order was already removed from state",
+	)
 
 	// Operations Queue validation errors
 	ErrInvalidMsgProposedOperations = errorsmod.Register(

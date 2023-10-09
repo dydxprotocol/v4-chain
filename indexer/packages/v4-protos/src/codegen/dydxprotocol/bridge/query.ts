@@ -2,7 +2,7 @@ import { EventParams, EventParamsSDKType, ProposeParams, ProposeParamsSDKType, S
 import { BridgeEventInfo, BridgeEventInfoSDKType } from "./bridge_event_info";
 import { MsgCompleteBridge, MsgCompleteBridgeSDKType } from "./tx";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial, Long } from "../../helpers";
+import { DeepPartial } from "../../helpers";
 /** QueryEventParamsRequest is a request type for the EventParams RPC method. */
 
 export interface QueryEventParamsRequest {}
@@ -161,7 +161,7 @@ export interface QueryDelayedCompleteBridgeMessagesResponseSDKType {
 
 export interface DelayedCompleteBridgeMessage {
   message?: MsgCompleteBridge;
-  blockHeight: Long;
+  blockHeight: number;
 }
 /**
  * DelayedCompleteBridgeMessage is a message type for the response of
@@ -171,7 +171,7 @@ export interface DelayedCompleteBridgeMessage {
 
 export interface DelayedCompleteBridgeMessageSDKType {
   message?: MsgCompleteBridgeSDKType;
-  block_height: Long;
+  block_height: number;
 }
 
 function createBaseQueryEventParamsRequest(): QueryEventParamsRequest {
@@ -662,7 +662,7 @@ export const QueryDelayedCompleteBridgeMessagesResponse = {
 function createBaseDelayedCompleteBridgeMessage(): DelayedCompleteBridgeMessage {
   return {
     message: undefined,
-    blockHeight: Long.ZERO
+    blockHeight: 0
   };
 }
 
@@ -672,8 +672,8 @@ export const DelayedCompleteBridgeMessage = {
       MsgCompleteBridge.encode(message.message, writer.uint32(10).fork()).ldelim();
     }
 
-    if (!message.blockHeight.isZero()) {
-      writer.uint32(16).int64(message.blockHeight);
+    if (message.blockHeight !== 0) {
+      writer.uint32(16).uint32(message.blockHeight);
     }
 
     return writer;
@@ -693,7 +693,7 @@ export const DelayedCompleteBridgeMessage = {
           break;
 
         case 2:
-          message.blockHeight = (reader.int64() as Long);
+          message.blockHeight = reader.uint32();
           break;
 
         default:
@@ -708,7 +708,7 @@ export const DelayedCompleteBridgeMessage = {
   fromPartial(object: DeepPartial<DelayedCompleteBridgeMessage>): DelayedCompleteBridgeMessage {
     const message = createBaseDelayedCompleteBridgeMessage();
     message.message = object.message !== undefined && object.message !== null ? MsgCompleteBridge.fromPartial(object.message) : undefined;
-    message.blockHeight = object.blockHeight !== undefined && object.blockHeight !== null ? Long.fromValue(object.blockHeight) : Long.ZERO;
+    message.blockHeight = object.blockHeight ?? 0;
     return message;
   }
 

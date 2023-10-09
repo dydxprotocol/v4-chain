@@ -36,7 +36,13 @@ func TestGenesis(t *testing.T) {
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
 					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
-							Limit:     50,
+							Limit:     200,
+							NumBlocks: 1,
+						},
+					},
+					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
+						{
+							Limit:     200,
 							NumBlocks: 1,
 						},
 					},

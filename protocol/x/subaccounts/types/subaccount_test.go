@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -158,7 +158,7 @@ func TestGetSubaccountQuoteBalance(t *testing.T) {
 				Id: &constants.Carl_Num0,
 				AssetPositions: []*types.AssetPosition{
 					{
-						AssetId:  lib.UsdcAssetId,
+						AssetId:  assettypes.AssetUsdc.Id,
 						Quantums: dtypes.NewInt(-599_000_000), // $599
 					},
 				},
@@ -223,7 +223,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			newQuoteBalance: big.NewInt(-10_000_000_000),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
-					AssetId:  lib.UsdcAssetId,
+					AssetId:  assettypes.AssetUsdc.Id,
 					Quantums: dtypes.NewInt(-10_000_000_000), // $10,000
 				},
 			},
@@ -233,7 +233,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			newQuoteBalance: new(big.Int).SetUint64(math.MaxUint64),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
-					AssetId:  lib.UsdcAssetId,
+					AssetId:  assettypes.AssetUsdc.Id,
 					Quantums: dtypes.NewIntFromUint64(math.MaxUint64),
 				},
 			},
@@ -243,7 +243,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			newQuoteBalance: constants.BigNegMaxUint64(),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
-					AssetId:  lib.UsdcAssetId,
+					AssetId:  assettypes.AssetUsdc.Id,
 					Quantums: dtypes.NewIntFromBigInt(constants.BigNegMaxUint64()),
 				},
 			},

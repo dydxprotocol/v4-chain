@@ -33,18 +33,36 @@ func (k Keeper) CreateAsset(
 		)
 	}
 
-	if _, exists := k.internalGetIdByDenom(ctx, denom); exists {
-		return types.Asset{}, errorsmod.Wrap(types.ErrAssetDenomAlreadyExists, denom)
-	}
+	if assetId == types.AssetUsdc.Id {
+		// Ensure assetId zero is always USDC. This is a protocol-wide invariant.
+		if denom != types.AssetUsdc.Denom {
+			return types.Asset{}, types.ErrUsdcMustBeAssetZero
+		}
 
-	// Ensure assetId zero is always USDC. This is a protocol-wide invariant.
-	if assetId == types.AssetUsdc.Id && denom != types.AssetUsdc.Denom {
-		return types.Asset{}, types.ErrUsdcMustBeAssetZero
+		// Confirm that USDC asset has the expected denom exponent (-6).
+		// This is an important invariant before coin-to-quote-quantum conversion
+		// is correctly implemented. See CLOB-871 for details.
+		if denomExponent != types.AssetUsdc.DenomExponent {
+			return types.Asset{}, errorsmod.Wrapf(
+				types.ErrUnexpectedUsdcDenomExponent,
+				"expected = %v, actual = %v",
+				types.AssetUsdc.DenomExponent,
+				denomExponent,
+			)
+		}
 	}
 
 	// Ensure USDC is not created with a non-zero assetId. This is a protocol-wide invariant.
 	if assetId != types.AssetUsdc.Id && denom == types.AssetUsdc.Denom {
 		return types.Asset{}, types.ErrUsdcMustBeAssetZero
+	}
+
+	// Ensure the denom is unique versus existing assets.
+	allAssets := k.GetAllAssets(ctx)
+	for _, asset := range allAssets {
+		if asset.Denom == denom {
+			return types.Asset{}, errorsmod.Wrap(types.ErrAssetDenomAlreadyExists, denom)
+		}
 	}
 
 	// Create the asset
@@ -56,7 +74,6 @@ func (k Keeper) CreateAsset(
 		HasMarket:        hasMarket,
 		MarketId:         marketId,
 		AtomicResolution: atomicResolution,
-		LongInterest:     0,
 	}
 
 	// Validate market
@@ -74,9 +91,6 @@ func (k Keeper) CreateAsset(
 
 	// Store the new asset
 	k.setAsset(ctx, asset)
-
-	// Store the denom-to-asset-id mapping
-	k.setDenomToId(ctx, asset.Denom, asset.Id)
 
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
@@ -105,7 +119,7 @@ func (k Keeper) ModifyAsset(
 	// Get asset
 	asset, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return asset, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+		return asset, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Validate market
@@ -123,103 +137,13 @@ func (k Keeper) ModifyAsset(
 	return asset, nil
 }
 
-func (k Keeper) ModifyLongInterest(
-	ctx sdk.Context,
-	id uint32,
-	isIncrease bool,
-	delta uint64,
-) (types.Asset, error) {
-	// Get asset
-	asset, exists := k.GetAsset(ctx, id)
-	if !exists {
-		return asset, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
-	}
-
-	// Validate delta
-	if !isIncrease && delta > asset.LongInterest {
-		return asset, errorsmod.Wrap(types.ErrNegativeLongInterest, lib.Uint32ToString(id))
-	}
-
-	// Modify asset
-	if isIncrease {
-		asset.LongInterest += delta
-	} else {
-		asset.LongInterest -= delta
-	}
-
-	// Store the modified asset
-	k.setAsset(ctx, asset)
-	return asset, nil
-}
-
 func (k Keeper) setAsset(
 	ctx sdk.Context,
 	asset types.Asset,
 ) {
 	b := k.cdc.MustMarshal(&asset)
 	assetStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
-	assetStore.Set(lib.Uint32ToBytes(asset.Id), b)
-}
-
-func (k Keeper) setDenomToId(
-	ctx sdk.Context,
-	denom string,
-	id uint32,
-) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DenomToIdKeyPrefix))
-	store.Set([]byte(denom), lib.Uint32ToBytes(id))
-}
-
-func (k Keeper) internalGetIdByDenom(
-	ctx sdk.Context,
-	denom string,
-) (
-	id uint32,
-	found bool,
-) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DenomToIdKeyPrefix))
-
-	idBytes := store.Get([]byte(denom))
-	if idBytes == nil {
-		return 0, false
-	}
-
-	return lib.BytesToUint32(idBytes), true
-}
-
-// GetIdByDenom returns the `id` of the asset with a given `denom`.
-// Returns an error if the `denom` does not exist.
-func (k Keeper) GetIdByDenom(
-	ctx sdk.Context,
-	denom string,
-) (
-	id uint32,
-	err error,
-) {
-	id, found := k.internalGetIdByDenom(ctx, denom)
-
-	if !found {
-		return 0, errorsmod.Wrap(types.ErrNoAssetWithDenom, denom)
-	}
-
-	return id, nil
-}
-
-// GetDenomById returns the `denom` of the asset with a given `id`.
-// Returns an error if the `id` does not exist.
-func (k Keeper) GetDenomById(
-	ctx sdk.Context,
-	id uint32,
-) (
-	denom string,
-	err error,
-) {
-	asset, exists := k.GetAsset(ctx, id)
-	if !exists {
-		return "", errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
-	}
-
-	return asset.Denom, nil
+	assetStore.Set(lib.Uint32ToKey(asset.Id), b)
 }
 
 func (k Keeper) GetAsset(
@@ -228,7 +152,7 @@ func (k Keeper) GetAsset(
 ) (val types.Asset, exists bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AssetKeyPrefix))
 
-	b := store.Get(lib.Uint32ToBytes(id))
+	b := store.Get(lib.Uint32ToKey(id))
 	if b == nil {
 		return val, false
 	}
@@ -268,14 +192,14 @@ func (k Keeper) GetNetCollateral(
 	bigNetCollateralQuoteQuantums *big.Int,
 	err error,
 ) {
-	if id == lib.UsdcAssetId {
+	if id == types.AssetUsdc.Id {
 		return new(big.Int).Set(bigQuantums), nil
 	}
 
 	// Get asset
 	_, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return big.NewInt(0), errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+		return big.NewInt(0), errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Balance is zero.
@@ -306,7 +230,7 @@ func (k Keeper) GetMarginRequirements(
 	err error,
 ) {
 	// QuoteBalance does not contribute to any margin requirements.
-	if id == lib.UsdcAssetId {
+	if id == types.AssetUsdc.Id {
 		return big.NewInt(0), big.NewInt(0), nil
 	}
 
@@ -314,7 +238,7 @@ func (k Keeper) GetMarginRequirements(
 	_, exists := k.GetAsset(ctx, id)
 	if !exists {
 		return big.NewInt(0), big.NewInt(0), errorsmod.Wrap(
-			types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+			types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Balance is zero or positive.
@@ -356,7 +280,7 @@ func (k Keeper) ConvertAssetToCoin(
 	asset, exists := k.GetAsset(ctx, assetId)
 	if !exists {
 		return nil, sdk.Coin{}, errorsmod.Wrap(
-			types.ErrAssetDoesNotExist, lib.Uint32ToString(assetId))
+			types.ErrAssetDoesNotExist, lib.UintToString(assetId))
 	}
 
 	if lib.AbsInt32(asset.AtomicResolution) > types.MaxAssetUnitExponentAbs {
@@ -403,7 +327,7 @@ func (k Keeper) IsPositionUpdatable(
 ) {
 	_, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return false, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.Uint32ToString(id))
+		return false, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 	// All existing assets are by default updatable.
 	return true, nil

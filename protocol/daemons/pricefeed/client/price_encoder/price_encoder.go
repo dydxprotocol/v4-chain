@@ -381,7 +381,7 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 		} else {
 			// Log error if there are errors in the ingested buffered channel prices.
 			p.logger.Error(
-				"Failed to update exchange price in price daemon priceEncoder",
+				FailedToUpdateExchangePrice,
 				"error",
 				response.Err,
 				"exchangeId",

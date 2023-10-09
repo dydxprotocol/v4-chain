@@ -2,17 +2,27 @@ package keeper
 
 import (
 	"context"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 func (k msgServer) UpdateClobPair(
 	goCtx context.Context,
 	msg *types.MsgUpdateClobPair,
-) (*types.MsgUpdateClobPairResponse, error) {
+) (resp *types.MsgUpdateClobPairResponse, err error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	defer func() {
+		if err != nil {
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "UpdateClobPair", msg)
+		}
+	}()
+
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -21,7 +31,6 @@ func (k msgServer) UpdateClobPair(
 		)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.Keeper.UpdateClobPair(
 		ctx,
 		msg.GetClobPair(),

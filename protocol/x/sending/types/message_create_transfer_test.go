@@ -3,9 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -81,7 +81,7 @@ func TestMsgCreateTransfer_ValidateBasic(t *testing.T) {
 				Transfer: &types.Transfer{
 					Sender:    constants.Carl_Num0,
 					Recipient: constants.Carl_Num0,
-					AssetId:   lib.UsdcAssetId,
+					AssetId:   assettypes.AssetUsdc.Id,
 					Amount:    uint64(500_000_000),
 				},
 			},
@@ -105,7 +105,7 @@ func TestMsgCreateTransfer_ValidateBasic(t *testing.T) {
 				Transfer: &types.Transfer{
 					Sender:    constants.Carl_Num0,
 					Recipient: constants.Dave_Num0,
-					AssetId:   lib.UsdcAssetId,
+					AssetId:   assettypes.AssetUsdc.Id,
 					Amount:    uint64(0),
 				},
 			},

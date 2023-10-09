@@ -302,7 +302,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 				require.Equal(t, initPerpetuals, tApp.App.PerpetualsKeeper.GetAllPerpetuals(ctx))
 				require.Equal(t, initClobPairs, tApp.App.ClobKeeper.GetAllClobPairs(ctx))
 			case govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED:
-				// Proposal passed and succesfully executed, check states are updated.
+				// Proposal passed and successfully executed, check states are updated.
 				// Check market
 				marketParam, exists := tApp.App.PricesKeeper.GetMarketParam(ctx, testMarketParam.Param.Id)
 				require.True(t, exists)

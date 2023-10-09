@@ -18,6 +18,7 @@ import (
 
 func TestGetPremiumPrice(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	tests := map[string]struct {
 		// State.
 		placedMatchableOrders []types.MatchableOrder
