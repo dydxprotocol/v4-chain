@@ -13,7 +13,7 @@ type updateMetadata struct {
 }
 
 // UpdateMonitor monitors the update frequency of daemon services. If a daemon service does not respond within
-// the maximum acceptable update delay set when the daemon is registered, the monitor will panic and halt the
+// the maximum acceptable update delay set when the daemon is registered, the monitor will log an error and halt the
 // protocol. This was judged to be the best solution for network performance because it prevents any validator from
 // participating in the network at all if a daemon service is not responding.
 type UpdateMonitor struct {
@@ -113,7 +113,7 @@ func LogErrorServiceNotResponding(service string, logger log.Logger) func() {
 }
 
 // RegisterDaemonService registers a new daemon service with the update frequency monitor. If the daemon service
-// fails to respond within the maximum acceptable update delay, the monitor will execute a panic and halt the protocol.
+// fails to respond within the maximum acceptable update delay, the monitor will log an error.
 // This method is synchronized. The method an error if the daemon service was already registered or the monitor has
 // already been stopped.
 func (ufm *UpdateMonitor) RegisterDaemonService(
