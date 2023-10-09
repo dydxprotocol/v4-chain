@@ -6,6 +6,9 @@ set -eo pipefail
 # If you are making a change to genesis which is _required_ for the chain to function,
 # then that change probably belongs in `DefaultGenesis` for the module, and not here.
 
+NINE_ZEROS="000000000"
+EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
+
 # Address of the `subaccounts` module account.
 # Obtained from `authtypes.NewModuleAddress(subaccounttypes.ModuleName)`.
 SUBACCOUNTS_MODACC_ADDR="dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6"
@@ -1001,7 +1004,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${REWARDS_VESTER_ACCOUNT_ADDR}"
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${REWARD_TOKEN}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "1000000000000" # 1e12
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "10000000$EIGHTEEN_ZEROS" # 10 million full coins
 	next_bank_idx=$(($next_bank_idx+1))
 
 	# Initialize bank balance of bridge module account.
