@@ -7,8 +7,8 @@ import (
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 
 	"github.com/stretchr/testify/require"
 )
@@ -208,7 +208,7 @@ func TestGetMetricValueFromBigInt(t *testing.T) {
 			expected: float32(1.8446744e+19),
 		},
 		"overflow: 1234567 * 1e24": {
-			input:    lib.Int64MulPow10(1234567, 24), // 1234567 * 1e24
+			input:    big_testutil.Int64MulPow10(1234567, 24), // 1234567 * 1e24
 			expected: float32(1.234567e+30),
 		},
 	}

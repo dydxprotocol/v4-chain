@@ -10,7 +10,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -428,7 +427,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 			},
 			tokenPrice: tokenPrice2Usdc,
 			treasuryAccountBalance: sdkmath.NewIntFromBigInt(
-				lib.Int64MulPow10(2_000_123, 18), //~2_000_123 full coin.
+				big_testutil.Int64MulPow10(2_000_123, 18), //~2_000_123 full coin.
 			), // 1000 full coins
 			feeMultiplierPpm: 990_000, // 99%
 			expectedBalances: []banktypes.Balance{

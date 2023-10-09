@@ -264,16 +264,3 @@ func warmCache() map[uint64]*big.Int {
 
 	return bigExponentValues
 }
-
-// Int64MulPow10 returns the result of `val * 10^exponent`, in *big.Int.
-func Int64MulPow10(
-	val int64,
-	exponent uint64,
-) (
-	result *big.Int,
-) {
-	return new(big.Int).Mul(
-		big.NewInt(val),
-		BigPow10(exponent),
-	)
-}

@@ -1,10 +1,11 @@
-package lib
+package lib_test
 
 import (
 	"math"
 	"math/big"
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 )
 
@@ -89,7 +90,7 @@ func TestBaseToQuoteQuantums(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			quoteQuantums := BaseToQuoteQuantums(
+			quoteQuantums := lib.BaseToQuoteQuantums(
 				tc.bigBaseQuantums,
 				tc.baseCurrencyAtomicResolution,
 				tc.priceValue,
@@ -188,7 +189,7 @@ func TestQuoteToBaseQuantums(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			baseQuantums := QuoteToBaseQuantums(
+			baseQuantums := lib.QuoteToBaseQuantums(
 				tc.bigQuoteQuantums,
 				tc.baseCurrencyAtomicResolution,
 				tc.priceValue,

@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -157,7 +156,7 @@ func TestProcessVesting(t *testing.T) {
 		},
 		"vesting in progress, realistic values, start_time < prev_block_time < block_time < end_time": {
 			vesterBalance: sdkmath.NewIntFromBigInt(
-				lib.Int64MulPow10(20_000_000, 18), // 20 million full coin, 2e26 in base denom.
+				big_testutil.Int64MulPow10(20_000_000, 18), // 20 million full coin, 2e26 in base denom.
 			),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
