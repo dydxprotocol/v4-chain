@@ -247,7 +247,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	allRewardShares, totalRewardWeight := k.getAllRewardSharesAndTotalWeight(ctx)
 	// Measure total reward weight.
 	telemetry.SetGauge(
-		float32(totalRewardWeight.Int64()),
+		metrics.GetMetricValueFromBigInt(totalRewardWeight),
 		types.ModuleName,
 		metrics.TotalRewardShareWeight,
 	)
