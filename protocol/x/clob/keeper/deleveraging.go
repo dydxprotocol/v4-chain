@@ -8,6 +8,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -219,70 +220,70 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			} else {
 				// If an error is returned, it's likely because the subaccounts' bankruptcy prices do not overlap.
 				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
-				liquidatedBankruptcyPrice, bankruptcyPriceError := k.GetBankruptcyPriceInQuoteQuantums(
-					ctx,
-					liquidatedSubaccountId,
-					perpetualId,
-					deltaQuantums,
-				)
-				if bankruptcyPriceError != nil {
-					k.Logger(ctx).Error(
-						"error when getting bankruptcy price for liquidated subaccount",
-						"error", bankruptcyPriceError,
-						"blockHeight", ctx.BlockHeight(),
-						"checkTx", ctx.IsCheckTx(),
-						"perpetualId", perpetualId,
-						"deltaQuantums", deltaQuantums,
-					)
-					return false
-				}
-				liquidatedTnc, _, _, tncErr := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
-					ctx, satypes.Update{SubaccountId: *liquidatedSubaccount.Id},
-				)
-				if tncErr != nil {
-					k.Logger(ctx).Error(
-						"error when getting TNC for liquidated subaccount",
-						"error", tncErr,
-						"blockHeight", ctx.BlockHeight(),
-						"checkTx", ctx.IsCheckTx(),
-						"perpetualId", perpetualId,
-						"deltaQuantums", deltaQuantums,
-					)
-					return false
-				}
+				// liquidatedBankruptcyPrice, bankruptcyPriceError := k.GetBankruptcyPriceInQuoteQuantums(
+				// 	ctx,
+				// 	liquidatedSubaccountId,
+				// 	perpetualId,
+				// 	deltaQuantums,
+				// )
+				// if bankruptcyPriceError != nil {
+				// 	k.Logger(ctx).Error(
+				// 		"error when getting bankruptcy price for liquidated subaccount",
+				// 		"error", bankruptcyPriceError,
+				// 		"blockHeight", ctx.BlockHeight(),
+				// 		"checkTx", ctx.IsCheckTx(),
+				// 		"perpetualId", perpetualId,
+				// 		"deltaQuantums", deltaQuantums,
+				// 	)
+				// 	return false
+				// }
+				// liquidatedTnc, _, _, tncErr := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+				// 	ctx, satypes.Update{SubaccountId: *liquidatedSubaccount.Id},
+				// )
+				// if tncErr != nil {
+				// 	k.Logger(ctx).Error(
+				// 		"error when getting TNC for liquidated subaccount",
+				// 		"error", tncErr,
+				// 		"blockHeight", ctx.BlockHeight(),
+				// 		"checkTx", ctx.IsCheckTx(),
+				// 		"perpetualId", perpetualId,
+				// 		"deltaQuantums", deltaQuantums,
+				// 	)
+				// 	return false
+				// }
 
 				offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, *offsettingSubaccount.Id)
-				offsettingBankruptcyPrice, bankruptcyPriceError := k.GetBankruptcyPriceInQuoteQuantums(
-					ctx,
-					*offsettingSubaccount.Id,
-					perpetualId,
-					new(big.Int).Neg(deltaQuantums),
-				)
-				if bankruptcyPriceError != nil {
-					k.Logger(ctx).Error(
-						"error when getting bankruptcy price for offsetting subaccount",
-						"error", bankruptcyPriceError,
-						"blockHeight", ctx.BlockHeight(),
-						"checkTx", ctx.IsCheckTx(),
-						"perpetualId", perpetualId,
-						"deltaQuantums", deltaQuantums,
-					)
-					return false
-				}
-				offsettingTnc, _, _, tncErr := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
-					ctx, satypes.Update{SubaccountId: *offsettingSubaccount.Id},
-				)
-				if tncErr != nil {
-					k.Logger(ctx).Error(
-						"error when getting TNC for offsetting subaccount",
-						"error", tncErr,
-						"blockHeight", ctx.BlockHeight(),
-						"checkTx", ctx.IsCheckTx(),
-						"perpetualId", perpetualId,
-						"deltaQuantums", deltaQuantums,
-					)
-					return false
-				}
+				// offsettingBankruptcyPrice, bankruptcyPriceError := k.GetBankruptcyPriceInQuoteQuantums(
+				// 	ctx,
+				// 	*offsettingSubaccount.Id,
+				// 	perpetualId,
+				// 	new(big.Int).Neg(deltaQuantums),
+				// )
+				// if bankruptcyPriceError != nil {
+				// 	k.Logger(ctx).Error(
+				// 		"error when getting bankruptcy price for offsetting subaccount",
+				// 		"error", bankruptcyPriceError,
+				// 		"blockHeight", ctx.BlockHeight(),
+				// 		"checkTx", ctx.IsCheckTx(),
+				// 		"perpetualId", perpetualId,
+				// 		"deltaQuantums", deltaQuantums,
+				// 	)
+				// 	return false
+				// }
+				// offsettingTnc, _, _, tncErr := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+				// 	ctx, satypes.Update{SubaccountId: *offsettingSubaccount.Id},
+				// )
+				// if tncErr != nil {
+				// 	k.Logger(ctx).Error(
+				// 		"error when getting TNC for offsetting subaccount",
+				// 		"error", tncErr,
+				// 		"blockHeight", ctx.BlockHeight(),
+				// 		"checkTx", ctx.IsCheckTx(),
+				// 		"perpetualId", perpetualId,
+				// 		"deltaQuantums", deltaQuantums,
+				// 	)
+				// 	return false
+				// }
 
 				k.Logger(ctx).Debug(
 					"Encountered error when processing deleveraging",
@@ -291,12 +292,12 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"checkTx", ctx.IsCheckTx(),
 					"perpetualId", perpetualId,
 					"deltaQuantums", deltaQuantums,
-					"liquidatedSubaccount", fmt.Sprintf("%+v", liquidatedSubaccount),
-					"liquidatedBankruptcyPriceQuoteQuantums", liquidatedBankruptcyPrice,
-					"liquidatedTnc", liquidatedTnc,
-					"offsettingSubaccount", fmt.Sprintf("%+v", offsettingSubaccount),
-					"offsettingBankruptcyPriceQuoteQuantums", offsettingBankruptcyPrice,
-					"offsettingTnc", offsettingTnc,
+					"liquidatedSubaccount", log.NewLazySprintf("%+v", liquidatedSubaccount),
+					// "liquidatedBankruptcyPriceQuoteQuantums", liquidatedBankruptcyPrice,
+					// "liquidatedTnc", liquidatedTnc,
+					"offsettingSubaccount", log.NewLazySprintf("%+v", offsettingSubaccount),
+					// "offsettingBankruptcyPriceQuoteQuantums", offsettingBankruptcyPrice,
+					// "offsettingTnc", offsettingTnc,
 				)
 				numSubaccountsWithNonOverlappingBankruptcyPrices++
 			}
@@ -327,15 +328,12 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			1,
 			types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count,
 		)
-		k.Logger(ctx).Error(
-			errorsmod.Wrapf(
-				types.ErrPositionCannotBeFullyOffset,
-				"OffsetSubaccountPerpetualPosition: Not enough position to fully offset position, "+
-					"subaccount = (%+v), perpetual = (%d), quantums remaining = (%+v)",
-				liquidatedSubaccountId,
-				perpetualId,
-				deltaQuantumsRemaining.String(),
-			).Error(),
+		k.Logger(ctx).Debug(
+			"OffsetSubaccountPerpetualPosition: Not enough positions to fully offset position",
+			"subaccount", liquidatedSubaccountId,
+			"perpetual", perpetualId,
+			"deltaQuantumsTotal", deltaQuantumsTotal.String(),
+			"deltaQuantumsRemaining", deltaQuantumsRemaining.String(),
 		)
 		// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
 	}
