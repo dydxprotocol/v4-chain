@@ -1,5 +1,8 @@
 #!/bin/bash
-# This script checks that the 
+# This script checks `sample_pregenesis.json` is up to date with the result of running `prod_pregenesis.sh`.
+# Usage: % ./scripts/genesis/check_sample_pregenesis_uptodate.sh
+# Currently can only be run locally on macOS.
+# TODO(CORE-632): Make this script work on CI.
 echo "Installing dasel..."
 apk add dasel jq
 echo "Building binary..."
