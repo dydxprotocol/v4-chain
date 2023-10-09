@@ -17,9 +17,6 @@ import (
 
 var ExpectedEvent0 = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeOrderFill,
-	Data: indexer_manager.GetB64EncodedEventMessage(
-		&OrderFillEvent,
-	),
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{
 		TransactionIndex: 0,
 	},
@@ -32,9 +29,6 @@ var ExpectedEvent0 = indexer_manager.IndexerTendermintEvent{
 
 var ExpectedEvent1 = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeSubaccountUpdate,
-	Data: indexer_manager.GetB64EncodedEventMessage(
-		&SubaccountEvent,
-	),
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{
 		TransactionIndex: 0,
 	},
@@ -47,9 +41,6 @@ var ExpectedEvent1 = indexer_manager.IndexerTendermintEvent{
 
 var ExpectedEvent2 = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeTransfer,
-	Data: indexer_manager.GetB64EncodedEventMessage(
-		&TransferEvent,
-	),
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{
 		TransactionIndex: 1,
 	},
@@ -62,9 +53,6 @@ var ExpectedEvent2 = indexer_manager.IndexerTendermintEvent{
 
 var ExpectedEvent3 = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeFundingValues,
-	Data: indexer_manager.GetB64EncodedEventMessage(
-		&FundingRateAndIndexEvent,
-	),
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	},
@@ -77,9 +65,6 @@ var ExpectedEvent3 = indexer_manager.IndexerTendermintEvent{
 
 var ExpectedEvent4 = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeFundingValues,
-	Data: indexer_manager.GetB64EncodedEventMessage(
-		&FundingPremiumSampleEvent,
-	),
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	},
@@ -92,9 +77,6 @@ var ExpectedEvent4 = indexer_manager.IndexerTendermintEvent{
 
 var ExpectedEvent5 = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeFundingValues,
-	Data: indexer_manager.GetB64EncodedEventMessage(
-		&FundingPremiumSampleEvent,
-	),
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
 	},
@@ -107,9 +89,6 @@ var ExpectedEvent5 = indexer_manager.IndexerTendermintEvent{
 
 var ExpectedEvent6 = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeFundingValues,
-	Data: indexer_manager.GetB64EncodedEventMessage(
-		&FundingRateAndIndexEvent,
-	),
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
 		BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
 	},
@@ -170,9 +149,6 @@ func TestProduceBlockBasicTxnEvent(t *testing.T) {
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeOrderFill,
-		indexer_manager.GetB64EncodedEventMessage(
-			&OrderFillEvent,
-		),
 		EventVersion,
 		indexer_manager.GetBytes(
 			&OrderFillEvent,
@@ -201,9 +177,6 @@ func TestProduceBlockBasicBlockEvent(t *testing.T) {
 	indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
-		indexer_manager.GetB64EncodedEventMessage(
-			&FundingRateAndIndexEvent,
-		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		EventVersion,
 		indexer_manager.GetBytes(
@@ -233,9 +206,6 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeOrderFill,
-		indexer_manager.GetB64EncodedEventMessage(
-			&OrderFillEvent,
-		),
 		EventVersion,
 		indexer_manager.GetBytes(
 			&OrderFillEvent,
@@ -244,9 +214,6 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeSubaccountUpdate,
-		indexer_manager.GetB64EncodedEventMessage(
-			&SubaccountEvent,
-		),
 		EventVersion,
 		indexer_manager.GetBytes(
 			&SubaccountEvent,
@@ -256,9 +223,6 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeTransfer,
-		indexer_manager.GetB64EncodedEventMessage(
-			&TransferEvent,
-		),
 		EventVersion,
 		indexer_manager.GetBytes(
 			&TransferEvent,
@@ -292,9 +256,6 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeOrderFill,
-		indexer_manager.GetB64EncodedEventMessage(
-			&OrderFillEvent,
-		),
 		EventVersion,
 		indexer_manager.GetBytes(
 			&OrderFillEvent,
@@ -303,9 +264,6 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeSubaccountUpdate,
-		indexer_manager.GetB64EncodedEventMessage(
-			&SubaccountEvent,
-		),
 		EventVersion,
 		indexer_manager.GetBytes(
 			&SubaccountEvent,
@@ -315,9 +273,6 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeTransfer,
-		indexer_manager.GetB64EncodedEventMessage(
-			&TransferEvent,
-		),
 		EventVersion,
 		indexer_manager.GetBytes(
 			&TransferEvent,
@@ -326,9 +281,6 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
-		indexer_manager.GetB64EncodedEventMessage(
-			&FundingRateAndIndexEvent,
-		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		EventVersion,
 		indexer_manager.GetBytes(
@@ -338,9 +290,6 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
-		indexer_manager.GetB64EncodedEventMessage(
-			&FundingPremiumSampleEvent,
-		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		EventVersion,
 		indexer_manager.GetBytes(
@@ -350,9 +299,6 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
-		indexer_manager.GetB64EncodedEventMessage(
-			&FundingPremiumSampleEvent,
-		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
 		EventVersion,
 		indexer_manager.GetBytes(
@@ -362,9 +308,6 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
-		indexer_manager.GetB64EncodedEventMessage(
-			&FundingRateAndIndexEvent,
-		),
 		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_BEGIN_BLOCK,
 		EventVersion,
 		indexer_manager.GetBytes(
@@ -403,9 +346,6 @@ func TestClearEvents(t *testing.T) {
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeOrderFill,
-		indexer_manager.GetB64EncodedEventMessage(
-			&OrderFillEvent,
-		),
 		EventVersion,
 		indexer_manager.GetBytes(
 			&OrderFillEvent,

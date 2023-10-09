@@ -12,11 +12,11 @@ const (
 // State
 const (
 	// BlockMessageIdsPrefix is the prefix to retrieve all BlockMessageIds for a given block height.
-	BlockMessageIdsPrefix = "block_message_ids/"
+	BlockMessageIdsPrefix = "BlockMsgIds:"
 
 	// DelayedMessageKeyPrefix is the prefix to retrieve all DelayedMessages.
-	DelayedMessageKeyPrefix = "delayed_message/"
+	DelayedMessageKeyPrefix = "Msg:"
 
 	// NumDelayedMessagesKey is the prefix to retrieve the number of DelayedMessages.
-	NumDelayedMessagesKey = "num_delayed_messages"
+	NumDelayedMessagesKey = "NumMsgs"
 )

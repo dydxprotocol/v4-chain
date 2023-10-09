@@ -36,7 +36,13 @@ func TestGenesis(t *testing.T) {
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
 					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
-							Limit:     50,
+							Limit:     200,
+							NumBlocks: 1,
+						},
+					},
+					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
+						{
+							Limit:     200,
 							NumBlocks: 1,
 						},
 					},
@@ -437,20 +443,6 @@ func TestGenesis(t *testing.T) {
 					mockIndexerEventManager.On("AddTxnEvent",
 						ctx,
 						indexerevents.SubtypePerpetualMarket,
-						indexer_manager.GetB64EncodedEventMessage(
-							indexerevents.NewPerpetualMarketCreateEvent(
-								perpetualId,
-								uint32(i),
-								perpetual.Params.Ticker,
-								perpetual.Params.MarketId,
-								clobPair.Status,
-								clobPair.QuantumConversionExponent,
-								perpetual.Params.AtomicResolution,
-								clobPair.SubticksPerTick,
-								clobPair.StepBaseQuantums,
-								perpetual.Params.LiquidityTier,
-							),
-						),
 						indexerevents.PerpetualMarketEventVersion,
 						indexer_manager.GetBytes(
 							indexerevents.NewPerpetualMarketCreateEvent(

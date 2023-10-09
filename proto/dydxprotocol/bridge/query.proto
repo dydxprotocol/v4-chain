@@ -116,5 +116,5 @@ message QueryDelayedCompleteBridgeMessagesResponse {
 // and the block height at which it will execute.
 message DelayedCompleteBridgeMessage {
   MsgCompleteBridge message = 1 [ (gogoproto.nullable) = false ];
-  int64 block_height = 2;
+  uint32 block_height = 2;
 }

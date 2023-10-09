@@ -1,9 +1,9 @@
+import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
 
-import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '../constants';
-import { AddressRequest } from '../types';
+import { AddressRequest, BlockedCode } from '../types';
 import { create4xxResponse } from './helpers';
 
 /**
@@ -34,6 +34,7 @@ export async function complianceCheck(
       res,
       INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
       403,
+      { code: BlockedCode.COMPLIANCE_BLOCKED },
     );
   }
 

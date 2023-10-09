@@ -10,11 +10,6 @@
       "ticker": "COMP-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "COMP_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Gate",
       "ticker": "COMP_USDT",
       "adjustByMarket": "USDT-USD"
@@ -22,6 +17,11 @@
     {
       "exchangeName": "Kraken",
       "ticker": "COMPUSD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "COMP_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",

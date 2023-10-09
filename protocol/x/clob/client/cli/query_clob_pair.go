@@ -5,8 +5,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -53,7 +53,7 @@ func CmdShowClobPair() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			argId, err := lib.StringToUint32(args[0])
+			argId, err := cast.ToUint32E(args[0])
 			if err != nil {
 				return err
 			}

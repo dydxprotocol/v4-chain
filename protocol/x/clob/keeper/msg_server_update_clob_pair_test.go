@@ -56,20 +56,11 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				clobPair := constants.ClobPair_Btc
 				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
 				b := cdc.MustMarshal(&clobPair)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeUpdateClobPair,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewUpdateClobPairEvent(
-							clobPair.GetClobPairId(),
-							types.ClobPair_STATUS_ACTIVE,
-							clobPair.QuantumConversionExponent,
-							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
-							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
-						),
-					),
 					indexerevents.UpdateClobPairEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewUpdateClobPairEvent(
@@ -108,7 +99,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				clobPair := constants.ClobPair_Btc
 				clobPair.Status = types.ClobPair_STATUS_ACTIVE
 				b := cdc.MustMarshal(&clobPair)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairStatusTransition,
 		},
@@ -153,7 +144,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: govtypes.ErrInvalidSigner,
 		},
@@ -180,7 +171,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
@@ -207,7 +198,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
@@ -234,7 +225,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
@@ -261,7 +252,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},

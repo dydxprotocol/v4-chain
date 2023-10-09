@@ -37,6 +37,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import Long from 'long';
+import { DateTime } from 'luxon';
 
 import {
   generateFillSubaccountMessage,
@@ -317,6 +318,8 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
       goodTilBlock: protocolTranslations.getGoodTilBlock(order)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(order),
       clientMetadata: order.clientMetadata.toString(),
+      updatedAt: DateTime.fromJSDate(this.block.time!).toISO(),
+      updatedAtHeight: this.block.height.toString(),
     };
 
     return OrderTable.upsert(orderToCreate, { txId: this.txId });

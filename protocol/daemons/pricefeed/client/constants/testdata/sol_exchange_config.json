@@ -15,10 +15,6 @@
       "ticker": "SOL-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "SOL_USD"
-    },
-    {
       "exchangeName": "Huobi",
       "ticker": "solusdt",
       "adjustByMarket": "USDT-USD"

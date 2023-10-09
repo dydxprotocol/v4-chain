@@ -8,7 +8,7 @@ import (
 )
 
 func TestBinanceUrl(t *testing.T) {
-	require.Equal(t, "https://data.binance.com/api/v3/ticker/24hr", binance.BinanceDetails.Url)
+	require.Equal(t, "https://data-api.binance.vision/api/v3/ticker/24hr", binance.BinanceDetails.Url)
 }
 
 func TestBinanceUsUrl(t *testing.T) {

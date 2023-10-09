@@ -9,15 +9,15 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { stats } from '@dydxprotocol-indexer/base';
 import { complianceProvider } from '../../../../src/helpers/compliance/compliance-clients';
-import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+import { ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { DateTime } from 'luxon';
 import config from '../../../../src/config';
-import { getIpAddr } from '../../../../src/lib/rate-limit';
+import { getIpAddr } from '../../../../src/lib/utils';
 
-jest.mock('../../../../src/lib/rate-limit', () => ({
-  ...jest.requireActual('../../../../src/lib/rate-limit'),
+jest.mock('../../../../src/lib/utils', () => ({
+  ...jest.requireActual('../../../../src/lib/utils'),
   getIpAddr: jest.fn(),
 }));
 
@@ -68,7 +68,12 @@ describe('compliance-controller#V4', () => {
       });
 
       expect(response.body.restricted).toEqual(false);
+      expect(response.reason).toBeUndefined();
       expect(stats.timing).toHaveBeenCalledTimes(1);
+      expect(stats.increment).toHaveBeenCalledWith(
+        'comlink.compliance-controller.compliance_data_cache_miss',
+        { provider: complianceProvider.provider },
+      );
       expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
 
       data = await ComplianceTable.findAll({}, [], {});
@@ -95,7 +100,12 @@ describe('compliance-controller#V4', () => {
         });
 
         expect(response.body.restricted).toEqual(false);
+        expect(response.reason).toBeUndefined();
         expect(stats.timing).toHaveBeenCalledTimes(1);
+        expect(stats.increment).toHaveBeenCalledWith(
+          'comlink.compliance-controller.compliance_data_cache_hit',
+          { provider: complianceProvider.provider },
+        );
         expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
 
         data = await ComplianceTable.findAll({}, [], {});
@@ -117,7 +127,12 @@ describe('compliance-controller#V4', () => {
         });
 
         expect(response.body.restricted).toEqual(true);
+        expect(response.body.reason).toEqual(INDEXER_COMPLIANCE_BLOCKED_PAYLOAD);
         expect(stats.timing).toHaveBeenCalledTimes(1);
+        expect(stats.increment).toHaveBeenCalledWith(
+          'comlink.compliance-controller.compliance_data_cache_hit',
+          { provider: complianceProvider.provider },
+        );
         expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
 
         data = await ComplianceTable.findAll({}, [], {});
@@ -144,7 +159,16 @@ describe('compliance-controller#V4', () => {
         });
 
         expect(response.body.restricted).toEqual(false);
+        expect(response.body.reason).toBeUndefined();
         expect(stats.timing).toHaveBeenCalledTimes(1);
+        expect(stats.increment).toHaveBeenCalledWith(
+          'comlink.compliance-controller.compliance_data_cache_hit',
+          { provider: complianceProvider.provider },
+        );
+        expect(stats.increment).toHaveBeenCalledWith(
+          'comlink.compliance-controller.refresh_compliance_data_cache',
+          { provider: complianceProvider.provider },
+        );
         expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(1);
 
         data = await ComplianceTable.findAll({}, [], {});
@@ -177,7 +201,12 @@ describe('compliance-controller#V4', () => {
         });
 
         expect(response.body.restricted).toEqual(true);
+        expect(response.body.reason).toEqual(INDEXER_COMPLIANCE_BLOCKED_PAYLOAD);
         expect(stats.timing).toHaveBeenCalledTimes(1);
+        expect(stats.increment).toHaveBeenCalledWith(
+          'comlink.compliance-controller.compliance_data_cache_hit',
+          { provider: complianceProvider.provider },
+        );
         expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(0);
 
         data = await ComplianceTable.findAll({}, [], {});
@@ -202,6 +231,10 @@ describe('compliance-controller#V4', () => {
         errorMsg: 'Too many requests',
         expectedStatus: 429,
       });
+      expect(stats.increment).toHaveBeenCalledWith(
+        'comlink.compliance-controller.compliance_screen_rate_limited_attempts',
+        { provider: complianceProvider.provider },
+      );
     });
 
     it('Get /screen with multiple new address globally gets rate-limited', async () => {
@@ -219,6 +252,10 @@ describe('compliance-controller#V4', () => {
         errorMsg: 'Too many requests',
         expectedStatus: 429,
       });
+      expect(stats.increment).toHaveBeenCalledWith(
+        'comlink.compliance-controller.compliance_screen_rate_limited_attempts',
+        { provider: complianceProvider.provider },
+      );
     });
   });
 });

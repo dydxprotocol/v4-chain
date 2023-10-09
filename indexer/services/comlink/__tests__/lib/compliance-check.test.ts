@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { RequestMethod } from '../../src/types';
+import { BlockedCode, RequestMethod } from '../../src/types';
 import Server from '../../src/request-helpers/server';
 import { sendRequestToApp } from '../helpers/helpers';
 import { complianceCheck } from '../../src/lib/compliance-check';
@@ -11,7 +11,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { blockedComplianceData, nonBlockedComplianceData } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import request from 'supertest';
-import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '../../src/constants';
+import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 
 // Create a router to test the middleware with
 const router: express.Router = express.Router();
@@ -124,6 +124,7 @@ describe('compliance-check', () => {
     expect(response.body).toEqual(expect.objectContaining({
       errors: expect.arrayContaining([{
         msg: INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
+        code: BlockedCode.COMPLIANCE_BLOCKED,
       }]),
     }));
   });

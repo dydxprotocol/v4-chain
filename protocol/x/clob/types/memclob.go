@@ -31,10 +31,9 @@ type MemClob interface {
 		ctx sdk.Context,
 		clobPair ClobPair,
 	)
-	CountSubaccountOrders(
+	CountSubaccountShortTermOrders(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
-		filter func(OrderId) bool,
 	) uint32
 	GetOperationsToReplay(
 		ctx sdk.Context,

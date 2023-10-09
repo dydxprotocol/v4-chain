@@ -118,12 +118,6 @@ export interface IndexerEventsStoreValueSDKType {
 export interface IndexerTendermintEvent {
   /** Subtype of the event e.g. "order_fill", "subaccount_update", etc. */
   subtype: string;
-  /**
-   * Base64 encoded proto from the Tendermint event.
-   * TODO(DEC-1720): Change to bytes post-migration.
-   */
-
-  data: string;
   transactionIndex?: number;
   blockEvent?: IndexerTendermintEvent_BlockEvent;
   /**
@@ -149,12 +143,6 @@ export interface IndexerTendermintEvent {
 export interface IndexerTendermintEventSDKType {
   /** Subtype of the event e.g. "order_fill", "subaccount_update", etc. */
   subtype: string;
-  /**
-   * Base64 encoded proto from the Tendermint event.
-   * TODO(DEC-1720): Change to bytes post-migration.
-   */
-
-  data: string;
   transaction_index?: number;
   block_event?: IndexerTendermintEvent_BlockEventSDKType;
   /**
@@ -301,7 +289,6 @@ export const IndexerEventsStoreValue = {
 function createBaseIndexerTendermintEvent(): IndexerTendermintEvent {
   return {
     subtype: "",
-    data: "",
     transactionIndex: undefined,
     blockEvent: undefined,
     eventIndex: 0,
@@ -314,10 +301,6 @@ export const IndexerTendermintEvent = {
   encode(message: IndexerTendermintEvent, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.subtype !== "") {
       writer.uint32(10).string(message.subtype);
-    }
-
-    if (message.data !== "") {
-      writer.uint32(18).string(message.data);
     }
 
     if (message.transactionIndex !== undefined) {
@@ -356,10 +339,6 @@ export const IndexerTendermintEvent = {
           message.subtype = reader.string();
           break;
 
-        case 2:
-          message.data = reader.string();
-          break;
-
         case 3:
           message.transactionIndex = reader.uint32();
           break;
@@ -392,7 +371,6 @@ export const IndexerTendermintEvent = {
   fromPartial(object: DeepPartial<IndexerTendermintEvent>): IndexerTendermintEvent {
     const message = createBaseIndexerTendermintEvent();
     message.subtype = object.subtype ?? "";
-    message.data = object.data ?? "";
     message.transactionIndex = object.transactionIndex ?? undefined;
     message.blockEvent = object.blockEvent ?? undefined;
     message.eventIndex = object.eventIndex ?? 0;

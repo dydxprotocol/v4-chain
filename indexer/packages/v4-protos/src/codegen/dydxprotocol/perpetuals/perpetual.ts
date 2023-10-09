@@ -1,5 +1,5 @@
 import * as _m0 from "protobufjs/minimal";
-import { Long, DeepPartial } from "../../helpers";
+import { DeepPartial, Long } from "../../helpers";
 /** Perpetual represents a perpetual on the dYdX exchange. */
 
 export interface Perpetual {
@@ -11,12 +11,6 @@ export interface Perpetual {
    */
 
   fundingIndex: Uint8Array;
-  /**
-   * The total open-interest of the perpetual used for
-   * bookkeeping purposes. In base quantums.
-   */
-
-  openInterest: Long;
 }
 /** Perpetual represents a perpetual on the dYdX exchange. */
 
@@ -29,12 +23,6 @@ export interface PerpetualSDKType {
    */
 
   funding_index: Uint8Array;
-  /**
-   * The total open-interest of the perpetual used for
-   * bookkeeping purposes. In base quantums.
-   */
-
-  open_interest: Long;
 }
 /**
  * PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -268,8 +256,7 @@ export interface LiquidityTierSDKType {
 function createBasePerpetual(): Perpetual {
   return {
     params: undefined,
-    fundingIndex: new Uint8Array(),
-    openInterest: Long.UZERO
+    fundingIndex: new Uint8Array()
   };
 }
 
@@ -281,10 +268,6 @@ export const Perpetual = {
 
     if (message.fundingIndex.length !== 0) {
       writer.uint32(18).bytes(message.fundingIndex);
-    }
-
-    if (!message.openInterest.isZero()) {
-      writer.uint32(24).uint64(message.openInterest);
     }
 
     return writer;
@@ -307,10 +290,6 @@ export const Perpetual = {
           message.fundingIndex = reader.bytes();
           break;
 
-        case 3:
-          message.openInterest = (reader.uint64() as Long);
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -324,7 +303,6 @@ export const Perpetual = {
     const message = createBasePerpetual();
     message.params = object.params !== undefined && object.params !== null ? PerpetualParams.fromPartial(object.params) : undefined;
     message.fundingIndex = object.fundingIndex ?? new Uint8Array();
-    message.openInterest = object.openInterest !== undefined && object.openInterest !== null ? Long.fromValue(object.openInterest) : Long.UZERO;
     return message;
   }
 

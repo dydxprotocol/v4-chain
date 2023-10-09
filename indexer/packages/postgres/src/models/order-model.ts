@@ -8,6 +8,7 @@ import {
 } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import {
+  IsoString,
   OrderSide,
   OrderStatus,
   OrderType,
@@ -71,6 +72,8 @@ export default class OrderModel extends BaseModel {
         'createdAtHeight',
         'clientMetadata',
         'triggerPrice',
+        'updatedAt',
+        'updatedAtHeight',
       ],
       properties: {
         id: { type: 'string', format: 'uuid' },
@@ -91,6 +94,8 @@ export default class OrderModel extends BaseModel {
         createdAtHeight: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
         clientMetadata: { type: 'string', pattern: IntegerPattern },
         triggerPrice: { type: ['string', 'null'], default: null, pattern: NonNegativeNumericPattern },
+        updatedAt: { type: 'string', format: 'date-time' },
+        updatedAtHeight: { type: 'string', pattern: IntegerPattern },
       },
     };
   }
@@ -121,6 +126,8 @@ export default class OrderModel extends BaseModel {
       createdAtHeight: 'string',
       clientMetadata: 'string',
       triggerPrice: 'string',
+      updatedAt: 'date-time',
+      updatedAtHeight: 'string',
     };
   }
 
@@ -161,4 +168,8 @@ export default class OrderModel extends BaseModel {
   clientMetadata!: string;
 
   triggerPrice?: string;
+
+  updatedAt!: IsoString;
+
+  updatedAtHeight!: string;
 }

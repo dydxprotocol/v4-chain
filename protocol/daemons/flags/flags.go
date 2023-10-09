@@ -23,27 +23,42 @@ const (
 	FlagLiquidationDaemonRequestChunkSize    = "liquidation-daemon-request-chunk-size"
 )
 
+// Shared flags contains configuration flags shared by all daemons.
 type SharedFlags struct {
+	// SocketAddress is the location of the unix socket to communicate with the daemon gRPC service.
 	SocketAddress string
 }
 
+// BridgeFlags contains configuration flags for the Bridge Daemon.
 type BridgeFlags struct {
-	Enabled        bool
-	LoopDelayMs    uint32
+	// Enabled toggles the bridge daemon on or off.
+	Enabled bool
+	// LoopDelayMs configures the update frequency of the bridge daemon.
+	LoopDelayMs uint32
+	// EthRpcEndpoint is the endpoint for the Ethereum node where bridge data is queried.
 	EthRpcEndpoint string
 }
 
+// LiquidationFlags contains configuration flags for the Liquidation Daemon.
 type LiquidationFlags struct {
-	Enabled             bool
-	LoopDelayMs         uint32
+	// Enabled toggles the liquidation daemon on or off.
+	Enabled bool
+	// LoopDelayMs configures the update frequency of the liquidation daemon.
+	LoopDelayMs uint32
+	// SubaccountPageLimit configures the pagination limit for fetching subaccounts.
 	SubaccountPageLimit uint64
 	RequestChunkSize    uint64
 }
 
+// PriceFlags contains configuration flags for the Price Daemon.
 type PriceFlags struct {
-	Enabled     bool
+	// Enabled toggles the price daemon on or off.
+	Enabled bool
+	// LoopDelayMs configures the update frequency of the price daemon.
 	LoopDelayMs uint32
 }
+
+// DaemonFlags contains the collected configuration flags for all daemons.
 type DaemonFlags struct {
 	Shared      SharedFlags
 	Bridge      BridgeFlags
@@ -53,7 +68,7 @@ type DaemonFlags struct {
 
 var defaultDaemonFlags *DaemonFlags
 
-// Returns the default values for the Daemon Flags using a singleton pattern.
+// GetDefaultDaemonFlags returns the default values for the Daemon Flags using a singleton pattern.
 func GetDefaultDaemonFlags() DaemonFlags {
 	if defaultDaemonFlags == nil {
 		defaultDaemonFlags = &DaemonFlags{
@@ -80,7 +95,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 	return *defaultDaemonFlags
 }
 
-// AddSharedPriceFeedFlagsToCmd adds the required flags to instantiate a server and client for
+// AddDaemonFlagsToCmd adds the required flags to instantiate a server and client for
 // price updates. These flags should be applied to the `start` command V4 Cosmos application.
 // E.g. `dydxprotocold start --price-daemon-enabled=true --unix-socket-address $(unix_socket_address)`
 func AddDaemonFlagsToCmd(

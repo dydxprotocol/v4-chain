@@ -704,6 +704,7 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 func TestPlaceOrder_PreexistingStatefulOrder(t *testing.T) {
 	// Setup memclob state and test expectations.
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	longTermOrder := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
 	collateralizationCheck := map[int]testutil_memclob.CollateralizationCheck{
 		0: {

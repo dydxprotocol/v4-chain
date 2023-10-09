@@ -6,10 +6,6 @@
       "invert": true
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "USDT/USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "USDCUSDT",
       "invert": true
@@ -17,10 +13,6 @@
     {
       "exchangeName": "CoinbasePro",
       "ticker": "USDT-USD"
-    },
-    {
-      "exchangeName": "CryptoCom",
-      "ticker": "USDT_USD"
     },
     {
       "exchangeName": "Huobi",
@@ -40,8 +32,7 @@
     },
     {
       "exchangeName": "Okx",
-      "ticker": "BTC-USDT",
-      "adjustByMarket": "BTC-USD",
+      "ticker": "USDC-USDT",
       "invert": true
     }
   ]

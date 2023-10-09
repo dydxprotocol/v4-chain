@@ -104,6 +104,5 @@ var (
 	)
 
 	// Errors for Not Implemented
-	ErrNotImplementedFunding      = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")
-	ErrNotImplementedOpenInterest = errorsmod.Register(ModuleName, 1002, "Not Implemented: Perpetuals Open Interest")
+	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")
 )

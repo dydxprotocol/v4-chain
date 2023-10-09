@@ -237,7 +237,7 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 					authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
 					types.ModuleName,
 					constants.AliceAccAddress.String(),
-					sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+					sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
 				),
 				100,
 			)
@@ -254,7 +254,7 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 
 			// Construct expected responses.
 			delayMsgAuthority := authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String()
-			blockOfExecution := int64(k.GetSafetyParams(ctx).DelayBlocks) + ctx.BlockHeight()
+			blockOfExecution := k.GetSafetyParams(ctx).DelayBlocks + uint32(ctx.BlockHeight())
 			expectedMsgs := make([]types.DelayedCompleteBridgeMessage, 0)
 			expectedMsgsByAddress := make(map[string][]types.DelayedCompleteBridgeMessage)
 			for _, event := range tc.events {

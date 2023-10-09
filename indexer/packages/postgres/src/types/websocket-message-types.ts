@@ -115,6 +115,8 @@ export interface OrderSubaccountMessageContents {
   goodTilBlock?: string;
   goodTilBlockTime?: string;
   triggerPrice?: string;
+  updatedAt?: IsoString;
+  updatedAtHeight?: string;
 
   // This will only be filled if the order was removed
   removalReason?: string;

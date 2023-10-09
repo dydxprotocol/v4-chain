@@ -410,14 +410,6 @@ func (k Keeper) PersistOrderRemovalToState(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeStatefulOrder,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewStatefulOrderRemovalEvent(
-				orderIdToRemove,
-				indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-					orderRemoval.RemovalReason,
-				),
-			),
-		),
 		indexerevents.StatefulOrderEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewStatefulOrderRemovalEvent(
@@ -515,17 +507,6 @@ func (k Keeper) PersistMatchOrdersToState(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewOrderFillEvent(
-					matchWithOrders.MakerOrder.MustGetOrder(),
-					matchWithOrders.TakerOrder.MustGetOrder(),
-					matchWithOrders.FillAmount,
-					matchWithOrders.MakerFee,
-					matchWithOrders.TakerFee,
-					totalFilledMaker,
-					totalFilledTaker,
-				),
-			),
 			indexerevents.OrderFillEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewOrderFillEvent(
@@ -632,16 +613,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewLiquidationOrderFillEvent(
-					matchWithOrders.MakerOrder.MustGetOrder(),
-					matchWithOrders.TakerOrder,
-					matchWithOrders.FillAmount,
-					matchWithOrders.MakerFee,
-					matchWithOrders.TakerFee,
-					totalFilledMaker,
-				),
-			),
 			indexerevents.OrderFillEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewLiquidationOrderFillEvent(

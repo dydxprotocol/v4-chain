@@ -160,20 +160,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
-								indexerevents.NewSubaccountUpdateEvent(
-									&tc.subaccountId,
-									[]*satypes.PerpetualPosition{},
-									[]*satypes.AssetPosition{
-										{
-											AssetId:  lib.UsdcAssetId,
-											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterDeposit),
-										},
-									},
-									nil, // no funding payment should have occurred
-								),
-							),
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
 							Version:             indexerevents.SubaccountUpdateEventVersion,
@@ -183,7 +170,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 									[]*satypes.PerpetualPosition{},
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assetstypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterDeposit),
 										},
 									},
@@ -192,15 +179,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 							),
 						},
 						{
-							Subtype: indexerevents.SubtypeTransfer,
-							Data: indexer_manager.GetB64EncodedEventMessage(
-								indexerevents.NewDepositEvent(
-									tc.accountAccAddress.String(),
-									tc.subaccountId,
-									tc.asset.Id,
-									satypes.BaseQuantums(tc.quantums.Uint64()),
-								),
-							),
+							Subtype:             indexerevents.SubtypeTransfer,
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
 							Version:             indexerevents.TransferEventVersion,
@@ -233,7 +212,7 @@ func TestMsgDepositToSubaccount_NonExistentAccount(t *testing.T) {
 	msgDepositToSubaccount := sendingtypes.MsgDepositToSubaccount{
 		Sender:    randomAccount.Address.String(),
 		Recipient: constants.Alice_Num1,
-		AssetId:   lib.UsdcAssetId,
+		AssetId:   assetstypes.AssetUsdc.Id,
 		Quantums:  uint64(1_000_000),
 	}
 
@@ -370,20 +349,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
-								indexerevents.NewSubaccountUpdateEvent(
-									&tc.subaccountId,
-									[]*satypes.PerpetualPosition{},
-									[]*satypes.AssetPosition{
-										{
-											AssetId:  lib.UsdcAssetId,
-											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterWithdraw),
-										},
-									},
-									nil, // no funding payment should have occurred
-								),
-							),
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
 							Version:             indexerevents.SubaccountUpdateEventVersion,
@@ -393,7 +359,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 									[]*satypes.PerpetualPosition{},
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assetstypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterWithdraw),
 										},
 									},
@@ -402,15 +368,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 							),
 						},
 						{
-							Subtype: indexerevents.SubtypeTransfer,
-							Data: indexer_manager.GetB64EncodedEventMessage(
-								indexerevents.NewWithdrawEvent(
-									tc.subaccountId,
-									tc.accountAccAddress.String(),
-									tc.asset.Id,
-									satypes.BaseQuantums(tc.quantums.Uint64()),
-								),
-							),
+							Subtype:             indexerevents.SubtypeTransfer,
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
 							Version:             indexerevents.TransferEventVersion,
@@ -446,7 +404,7 @@ func TestMsgWithdrawFromSubaccount_NonExistentSubaccount(t *testing.T) {
 			Number: 0,
 		},
 		Recipient: constants.AliceAccAddress.String(),
-		AssetId:   lib.UsdcAssetId,
+		AssetId:   assetstypes.AssetUsdc.Id,
 		Quantums:  uint64(1_000_000),
 	}
 

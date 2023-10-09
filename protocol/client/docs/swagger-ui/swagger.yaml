@@ -624,8 +624,8 @@ paths:
                   propose_delay_duration:
                     type: string
                     description: >-
-                      The minimum amount of nanoseconds to wait between a
-                      finalized bridge and
+                      The minimum duration to wait between a finalized bridge
+                      and
 
                       proposing it. This allows other validators to have enough
                       time to
@@ -21171,6 +21171,11 @@ paths:
   /cosmos/distribution/v1beta1/community_pool:
     get:
       summary: CommunityPool queries the community pool coins.
+      description: >-
+        Deprecated: Prefer to use x/protocolpool module's CommunityPool rpc
+        method.
+
+        Since: cosmos-sdk 0.50
       operationId: CommunityPool
       responses:
         '200':
@@ -21202,6 +21207,11 @@ paths:
               Query/CommunityPool
 
               RPC method.
+
+
+              Deprecated
+
+              Since: cosmos-sdk 0.50
         default:
           description: An unexpected error response.
           schema:
@@ -42642,14 +42652,10 @@ definitions:
           in-order to smooth out the flow of events.
       propose_delay_duration:
         type: string
-        description: >-
-          The minimum amount of nanoseconds to wait between a finalized bridge
-          and
-
+        description: |-
+          The minimum duration to wait between a finalized bridge and
           proposing it. This allows other validators to have enough time to
-
           also recognize its occurence. Therefore the bridge daemon should
-
           pool for new finalized events at least as often as this parameter.
       skip_rate_ppm:
         type: integer
@@ -42783,14 +42789,10 @@ definitions:
               in-order to smooth out the flow of events.
           propose_delay_duration:
             type: string
-            description: >-
-              The minimum amount of nanoseconds to wait between a finalized
-              bridge and
-
+            description: |-
+              The minimum duration to wait between a finalized bridge and
               proposing it. This allows other validators to have enough time to
-
               also recognize its occurence. Therefore the bridge daemon should
-
               pool for new finalized events at least as often as this parameter.
           skip_rate_ppm:
             type: integer
@@ -53641,6 +53643,11 @@ definitions:
       Query/CommunityPool
 
       RPC method.
+
+
+      Deprecated
+
+      Since: cosmos-sdk 0.50
   cosmos.distribution.v1beta1.QueryDelegationRewardsResponse:
     type: object
     properties:
@@ -60716,11 +60723,10 @@ definitions:
        - SIGN_MODE_TEXTUAL: SIGN_MODE_TEXTUAL is a future signing mode that will verify some
       human-readable textual representation on top of the binary representation
 
-      from SIGN_MODE_DIRECT. It is currently experimental, and should be used
+      from SIGN_MODE_DIRECT.
 
-      for testing purposes only, until Textual is fully released. Please follow
 
-      the tracking issue https://github.com/cosmos/cosmos-sdk/issues/11970.
+      Since: cosmos-sdk 0.50
        - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
       SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not
 
@@ -62627,14 +62633,10 @@ definitions:
               human-readable textual representation on top of the binary
               representation
 
-              from SIGN_MODE_DIRECT. It is currently experimental, and should be
-              used
+              from SIGN_MODE_DIRECT.
 
-              for testing purposes only, until Textual is fully released. Please
-              follow
 
-              the tracking issue
-              https://github.com/cosmos/cosmos-sdk/issues/11970.
+              Since: cosmos-sdk 0.50
                - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
               SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode
               does not
@@ -62749,13 +62751,10 @@ definitions:
           human-readable textual representation on top of the binary
           representation
 
-          from SIGN_MODE_DIRECT. It is currently experimental, and should be
-          used
+          from SIGN_MODE_DIRECT.
 
-          for testing purposes only, until Textual is fully released. Please
-          follow
 
-          the tracking issue https://github.com/cosmos/cosmos-sdk/issues/11970.
+          Since: cosmos-sdk 0.50
            - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
           SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does
           not

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -9,6 +10,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -16,8 +18,17 @@ import (
 // PlaceOrder is the entry point for stateful `MsgPlaceOrder` messages executed in `runMsgs` during `DeliverTx`.
 // This handler is only invoked for stateful orders due to the filtering logic in the mempool in our CometBFT fork.
 // TODO (CLOB-646) - Support stateful order replacements.
-func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (*types.MsgPlaceOrderResponse, error) {
+func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
+	resp *types.MsgPlaceOrderResponse,
+	err error,
+) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	defer func() {
+		if err != nil {
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "PlaceOrder", msg)
+		}
+	}()
 
 	// 1. Ensure the order is not a Short-Term order.
 	order := msg.GetOrder()
@@ -55,11 +66,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 		k.Keeper.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewConditionalOrderPlacementEvent(
-					order,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewConditionalOrderPlacementEvent(
@@ -75,11 +81,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 		k.Keeper.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewLongTermOrderPlacementEvent(
-					order,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewLongTermOrderPlacementEvent(

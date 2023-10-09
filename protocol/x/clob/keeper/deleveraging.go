@@ -14,6 +14,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -65,7 +66,7 @@ func (k Keeper) GetInsuranceFundBalance(
 ) (
 	balance *big.Int,
 ) {
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
 	if !exists {
 		panic("GetInsuranceFundBalance: Usdc asset not found in state")
 	}
@@ -399,7 +400,7 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          lib.UsdcAssetId,
+					AssetId:          assettypes.AssetUsdc.Id,
 					BigQuantumsDelta: deleveragedSubaccountQuoteBalanceDelta,
 				},
 			},
@@ -415,7 +416,7 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          lib.UsdcAssetId,
+					AssetId:          assettypes.AssetUsdc.Id,
 					BigQuantumsDelta: offsettingSubaccountQuoteBalanceDelta,
 				},
 			},

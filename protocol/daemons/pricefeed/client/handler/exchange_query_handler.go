@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"strings"
 	"time"
 
@@ -34,7 +35,7 @@ type ExchangeQueryHandler interface {
 		exchangeQueryDetails *types.ExchangeQueryDetails,
 		exchangeConfig *types.MutableExchangeMarketConfig,
 		marketIds []types.MarketId,
-		requestHandler lib.RequestHandler,
+		requestHandler daemontypes.RequestHandler,
 		marketPriceExponent map[types.MarketId]types.Exponent,
 	) (marketPriceTimestamps []*types.MarketPriceTimestamp, unavailableMarkets map[types.MarketId]error, err error)
 }
@@ -54,7 +55,7 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	exchangeQueryDetails *types.ExchangeQueryDetails,
 	exchangeConfig *types.MutableExchangeMarketConfig,
 	marketIds []types.MarketId,
-	requestHandler lib.RequestHandler,
+	requestHandler daemontypes.RequestHandler,
 	marketPriceExponent map[types.MarketId]types.Exponent,
 ) (marketPriceTimestamps []*types.MarketPriceTimestamp, unavailableMarkets map[types.MarketId]error, err error) {
 	// Measure latency to run query function per exchange.
