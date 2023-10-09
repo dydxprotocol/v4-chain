@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"math/big"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	libeth "github.com/dydxprotocol/v4-chain/protocol/lib/eth"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
