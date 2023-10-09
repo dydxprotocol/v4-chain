@@ -3,8 +3,6 @@
 # Usage: % ./scripts/genesis/check_sample_pregenesis_uptodate.sh
 # Currently can only be run locally on macOS.
 # TODO(CORE-632): Make this script work on CI.
-echo "Installing dasel..."
-apk add dasel jq
 echo "Building binary..."
 make build
 echo "Running prod_pregenesis.sh..."
