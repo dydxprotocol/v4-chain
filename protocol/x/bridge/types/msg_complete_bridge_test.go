@@ -23,9 +23,15 @@ func TestMsgCompleteBridge_ValidateBasic(t *testing.T) {
 		"Success": {
 			msg: *constants.TestMsg1,
 		},
-		"Failure: Invalid authority": {
+		"Failure: Empty authority": {
 			msg: types.MsgCompleteBridge{
 				Authority: "",
+			},
+			expectedErr: types.ErrInvalidAuthority,
+		},
+		"Failure: Not an address": {
+			msg: types.MsgCompleteBridge{
+				Authority: "invalid",
 			},
 			expectedErr: types.ErrInvalidAuthority,
 		},
