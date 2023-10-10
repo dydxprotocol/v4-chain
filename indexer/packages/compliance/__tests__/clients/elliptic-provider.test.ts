@@ -102,7 +102,7 @@ describe('elliptic-provider', () => {
       );
       expect(complianceData).toEqual({
         address: defaultAddress,
-        riskScore: (config.ELLIPTIC_RISK_SCORE_THRESHOLD + 1).toFixed(),
+        riskScore: (config.ELLIPTIC_RISK_SCORE_THRESHOLD).toFixed(),
         blocked: true,
       });
     });
