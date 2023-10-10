@@ -749,9 +749,9 @@ func (k Keeper) GetNetNotional(
 	bigNetNotionalQuoteQuantums *big.Int,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
+	defer metrics.ModuleMeasureSinceNowWithSampling(
 		types.ModuleName,
-		time.Now(),
+		0.01,
 		metrics.GetNetNotional,
 		metrics.Latency,
 	)
