@@ -119,6 +119,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	liquidationclient "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
+	metricsclient "github.com/dydxprotocol/v4-chain/protocol/daemons/metrics/client"
 	pricefeedclient "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
@@ -646,6 +647,20 @@ func New(
 				}
 			}()
 		}
+
+		// Start the Metrics Daemon.
+		// The metrics daemon is purely used for observability.
+		go func() {
+			app.Server.ExpectMetricsDaemon(
+				daemonservertypes.MaximumAcceptableUpdateDelay(metricsclient.METRICS_DAEMON_LOOP_DELAY_MS),
+			)
+			metricsclient.Start(
+				// The client will use `context.Background` so that it can have a different context from
+				// the main application.
+				context.Background(),
+				logger,
+			)
+		}()
 	}
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
