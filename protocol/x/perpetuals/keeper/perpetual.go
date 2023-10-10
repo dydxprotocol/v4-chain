@@ -846,9 +846,10 @@ func (k Keeper) GetMarginRequirements(
 	bigMaintenanceMarginQuoteQuantums *big.Int,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
+	defer metrics.ModuleMeasureSinceWithSampling(
 		types.ModuleName,
 		time.Now(),
+		0.01,
 		metrics.GetMarginRequirements,
 		metrics.Latency,
 	)
@@ -1116,9 +1117,10 @@ func (k Keeper) GetPerpetualAndMarketPrice(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (types.Perpetual, pricestypes.MarketPrice, error) {
-	defer telemetry.ModuleMeasureSince(
+	defer metrics.ModuleMeasureSinceWithSampling(
 		types.ModuleName,
 		time.Now(),
+		0.01,
 		metrics.GetPerpetualAndMarketPrice,
 		metrics.Latency,
 	)
