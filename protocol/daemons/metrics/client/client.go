@@ -25,7 +25,6 @@ func Start(
 	logger log.Logger,
 ) {
 	ticker := time.NewTicker(time.Duration(METRICS_DAEMON_LOOP_DELAY_MS) * time.Millisecond)
-	// TODO prometheus flag enable
 	defer ticker.Stop()
 	for ; true; <-ticker.C {
 		RunMetricsDaemonTaskLoop(

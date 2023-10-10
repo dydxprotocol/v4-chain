@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math"
 	"math/big"
 	"net/http"
 	"os"
@@ -650,9 +651,11 @@ func New(
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability.
 		go func() {
+			// Don't panic if metrics daemon has delay. Use maximum value.
 			app.Server.ExpectMetricsDaemon(
-				daemonservertypes.MaximumAcceptableUpdateDelay(metricsclient.METRICS_DAEMON_LOOP_DELAY_MS),
+				daemonservertypes.MaximumAcceptableUpdateDelay(math.MaxUint32),
 			)
+			// TODO prometheus flag enable
 			metricsclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
