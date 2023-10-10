@@ -55,16 +55,19 @@ func Start(
 		}
 	}()
 
+	// Initialize gRPC clients from query connection and daemon server connection.
 	queryClient := bridgetypes.NewQueryClient(queryConn)
 	serviceClient := api.NewBridgeServiceClient(daemonConn)
 
+	// Initialize an Ethereum client from an RPC endpoint.
 	ethClient, err := ethclient.Dial(flags.Bridge.EthRpcEndpoint)
 	if err != nil {
-		logger.Error("Failed to establish connection to Ethereum Node", "error", err)
+		logger.Error("Failed to establish connection to Ethereum node", "error", err)
 		return err
 	}
 	defer func() { ethClient.Close() }()
 
+	// Run the main task loop at an interval.
 	ticker := time.NewTicker(time.Duration(flags.Bridge.LoopDelayMs) * time.Millisecond)
 	for ; true; <-ticker.C {
 		if err := RunBridgeDaemonTaskLoop(
@@ -84,7 +87,7 @@ func Start(
 
 // RunBridgeDaemonTaskLoop does the following:
 // 1) Fetches configuration information by querying the gRPC server.
-// 2) Fetches Ethereum events from a configured node.
+// 2) Fetches Ethereum events from a configured Ethereum client.
 // 3) Sends newly-recognized bridge events to the gRPC server.
 func RunBridgeDaemonTaskLoop(
 	ctx context.Context,
@@ -100,7 +103,15 @@ func RunBridgeDaemonTaskLoop(
 		metrics.Latency,
 	)
 
-	// Fetch parameters from x/bridge module.
+	// Fetch parameters from x/bridge module. Relevant ones to bridge daemon are:
+	// - EventParams
+	//   - ChainId: Ethereum chain ID that bridge contract resides on.
+	//   - EthAddress: Address of the bridge contract to query events from.
+	// - ProposeParams
+	//   - MaxBridgesPerBlock: Number of bridge events to query for.
+	// - RecognizedEventInfo
+	//   - EthBlockHeight: Ethereum block height from which to start querying events.
+	//   - NextId: Next bridge event ID to query for.
 	eventParams, err := queryClient.EventParams(ctx, &bridgetypes.QueryEventParamsRequest{})
 	if err != nil {
 		return err
@@ -146,7 +157,7 @@ func RunBridgeDaemonTaskLoop(
 	)
 
 	// Parse logs into bridge events.
-	newBridgeEvents := []bridgetypes.BridgeEvent{}
+	newBridgeEvents := make([]bridgetypes.BridgeEvent, 0, len(logs))
 	for _, log := range logs {
 		newBridgeEvents = append(
 			newBridgeEvents,
@@ -161,20 +172,21 @@ func RunBridgeDaemonTaskLoop(
 		return err
 	}
 
-	// Success
+	// Success.
 	return nil
 }
 
-// getFilterQuery returns a FilterQuery for fetching logs for the next `numIds`
-// bridge events after block height `fromBlock` and before current finalized
-// block height.
+// getFilterQuery returns a query to fetch logs of bridge events with following filters:
+// - logs are emitted by contract at address `contractAddressHex`.
+// - block height is between `fromBlock` and current finalized block height (both inclusive).
+// - event IDs are sequential integers between `firstId` and `firstId + numIds - 1` (both inclusive).
 func getFilterQuery(
 	contractAddressHex string,
 	fromBlock uint64,
 	firstId uint32,
 	numIds uint32,
 ) eth.FilterQuery {
-	// Generate bytes32 of the next x ids.
+	// Generate `ethcommon.Hash`s of the next `numIds` event IDs.
 	eventIdHashes := make([]ethcommon.Hash, numIds)
 	for i := uint32(0); i < numIds; i++ {
 		h := ethcommon.BigToHash(big.NewInt(int64(firstId + i)))
