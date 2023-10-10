@@ -23,7 +23,7 @@ const (
 
 func TestBridge_Success(t *testing.T) {
 	tests := map[string]struct {
-		// Setup.
+		/* --- Setup --- */
 		// bridge events.
 		bridgeEvents []bridgetypes.BridgeEvent
 		// propose params.
@@ -33,7 +33,7 @@ func TestBridge_Success(t *testing.T) {
 		// block time to advance to.
 		blockTime time.Time
 
-		// Expectations.
+		/* --- Expectations --- */
 		// whether bridge tx should have non-empty bridge events.
 		expectNonEmptyBridgeTx bool
 	}{
@@ -54,7 +54,25 @@ func TestBridge_Success(t *testing.T) {
 			blockTime:              time.Now(),
 			expectNonEmptyBridgeTx: true,
 		},
-		"Success: 4 bridge event, delay 27 blocks": {
+		"Success: 2 bridge events, delay 0 blocks": {
+			bridgeEvents: []bridgetypes.BridgeEvent{
+				constants.BridgeEvent_Id0_Height0,
+				constants.BridgeEvent_Id1_Height0,
+			},
+			proposeParams: bridgetypes.ProposeParams{
+				MaxBridgesPerBlock:           2,
+				ProposeDelayDuration:         0,
+				SkipRatePpm:                  0, // do not skip proposing bridge events.
+				SkipIfBlockDelayedByDuration: time.Second * 10,
+			},
+			safetyParams: bridgetypes.SafetyParams{
+				IsDisabled:  false,
+				DelayBlocks: 0,
+			},
+			blockTime:              time.Now(),
+			expectNonEmptyBridgeTx: true,
+		},
+		"Success: 4 bridge events, delay 27 blocks": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
 				constants.BridgeEvent_Id0_Height0,
 				constants.BridgeEvent_Id1_Height0,
@@ -151,15 +169,20 @@ func TestBridge_Success(t *testing.T) {
 			require.NoError(t, error)
 			require.Equal(t, &api.AddBridgeEventsResponse{}, res)
 
-			// Verify that balances have not changed at the block right before the one where complete
-			// bridge messages should be executed, which is `DelayBlocks+2` because
+			// 'MsgCompleteBridge's should be executed at block height `DelayBlocks+2` because
 			// 1. Bridge events are recognized by server at block 1.
 			// 2. Bridge events are proposed at block 2 and complete bridge messages are delayed for
 			//    `DelayBlocks` number of blocks.
 			// 3. Complete bridge messages are executed at block `DelayBlocks+2`.
-			ctx = tApp.AdvanceToBlock(tc.safetyParams.DelayBlocks+1, testapp.AdvanceToBlockOptions{
-				BlockTime: tc.blockTime.Add(-time.Second * 1),
-			})
+			blockHeightOfBridgeCompletion := tc.safetyParams.DelayBlocks + 2
+
+			// Advance to block right before bridge completion, if necessary.
+			if blockHeightOfBridgeCompletion-1 > uint32(ctx.BlockHeight()) {
+				ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion-1, testapp.AdvanceToBlockOptions{
+					BlockTime: tc.blockTime.Add(-time.Second * 1),
+				})
+			}
+			// Verify that balances have not changed yet.
 			for _, event := range tc.bridgeEvents {
 				balance := tApp.App.BankKeeper.GetBalance(
 					ctx,
@@ -169,9 +192,9 @@ func TestBridge_Success(t *testing.T) {
 				require.Equal(t, initialBalances[event.Address], balance)
 			}
 
-			// Verify that balances are updated, if bridge events were proposed, at the block where
-			// complete bridge messages are executed.
-			ctx = tApp.AdvanceToBlock(tc.safetyParams.DelayBlocks+2, testapp.AdvanceToBlockOptions{
+			// Verify that balances are updated, if bridge events were proposed, at the block of
+			// bridge completion.
+			ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion, testapp.AdvanceToBlockOptions{
 				BlockTime: tc.blockTime,
 			})
 			for _, event := range tc.bridgeEvents {
@@ -195,12 +218,26 @@ func TestBridge_REJECT(t *testing.T) {
 	e1 := constants.BridgeEvent_Id1_Height0
 
 	tests := map[string]struct {
-		// bridge events.
+		// bridge events to propose.
 		bridgeEvents []bridgetypes.BridgeEvent
 		// whether bridging is disabled.
 		bridgingDisabled bool
 	}{
-		"Bad coin": {
+		"Bad coin denom": {
+			bridgeEvents: []bridgetypes.BridgeEvent{
+				constants.BridgeEvent_Id0_Height0,
+				{
+					Id: e1.Id,
+					Coin: sdk.NewCoin(
+						e1.Coin.Denom+"a", // bad denom.
+						e1.Coin.Amount,
+					),
+					Address:        e1.Address,
+					EthBlockHeight: e1.EthBlockHeight,
+				},
+			},
+		},
+		"Bad coin amount": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
 				constants.BridgeEvent_Id0_Height0,
 				{
@@ -211,6 +248,34 @@ func TestBridge_REJECT(t *testing.T) {
 					),
 					Address:        e1.Address,
 					EthBlockHeight: e1.EthBlockHeight,
+				},
+			},
+		},
+		"Bad address": {
+			bridgeEvents: []bridgetypes.BridgeEvent{
+				constants.BridgeEvent_Id0_Height0,
+				{
+					Id: e1.Id,
+					Coin: sdk.NewCoin(
+						e1.Coin.Denom,
+						e1.Coin.Amount,
+					),
+					Address:        e1.Address + "a", // bad address.
+					EthBlockHeight: e1.EthBlockHeight,
+				},
+			},
+		},
+		"Bad eth block height": {
+			bridgeEvents: []bridgetypes.BridgeEvent{
+				constants.BridgeEvent_Id0_Height0,
+				{
+					Id: e1.Id,
+					Coin: sdk.NewCoin(
+						e1.Coin.Denom,
+						e1.Coin.Amount,
+					),
+					Address:        e1.Address,
+					EthBlockHeight: e1.EthBlockHeight + 1, // bad eth block height.
 				},
 			},
 		},
