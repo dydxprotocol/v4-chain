@@ -5,6 +5,7 @@ import (
 	"math"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -96,24 +97,34 @@ func GetClobFlagValuesFromOptions(
 	result := GetDefaultClobFlags()
 
 	// Populate the flags if they exist.
-	if v, ok := appOpts.Get(MevTelemetryEnabled).(bool); ok {
-		result.MevTelemetryEnabled = v
+	if option := appOpts.Get(MevTelemetryEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.MevTelemetryEnabled = v
+		}
 	}
 
-	if v, ok := appOpts.Get(MevTelemetryHost).(string); ok {
-		result.MevTelemetryHost = v
+	if option := appOpts.Get(MevTelemetryHost); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.MevTelemetryHost = v
+		}
 	}
 
-	if v, ok := appOpts.Get(MevTelemetryIdentifier).(string); ok {
-		result.MevTelemetryIdentifier = v
+	if option := appOpts.Get(MevTelemetryIdentifier); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.MevTelemetryIdentifier = v
+		}
 	}
 
-	if v, ok := appOpts.Get(MaxLiquidationOrdersPerBlock).(uint32); ok {
-		result.MaxLiquidationOrdersPerBlock = v
+	if option := appOpts.Get(MaxLiquidationOrdersPerBlock); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.MaxLiquidationOrdersPerBlock = v
+		}
 	}
 
-	if v, ok := appOpts.Get(MaxDeleveragingAttemptsPerBlock).(uint32); ok {
-		result.MaxDeleveragingAttemptsPerBlock = v
+	if option := appOpts.Get(MaxDeleveragingAttemptsPerBlock); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.MaxDeleveragingAttemptsPerBlock = v
+		}
 	}
 
 	return result

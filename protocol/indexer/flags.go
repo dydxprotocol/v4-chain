@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -63,8 +64,9 @@ func AddIndexerFlagsToCmd(cmd *cobra.Command) {
 func GetIndexerFlagValuesFromOptions(
 	appOpts servertypes.AppOptions,
 ) IndexerFlags {
-	kafkaConnStr, ok := appOpts.Get(FlagKafkaConnStr).(string)
-	if !ok {
+	option := appOpts.Get(FlagKafkaConnStr)
+	kafkaConnStr, err := cast.ToStringE(option)
+	if option == nil || err != nil {
 		return IndexerFlags{
 			KafkaAddrs:       []string{},
 			MaxRetries:       DefaultMaxRetries,
@@ -72,8 +74,8 @@ func GetIndexerFlagValuesFromOptions(
 		}
 	}
 
-	maxRetries := appOpts.Get(FlagKafkaMaxRetry).(int)
-	sendOffchainData := appOpts.Get(FlagSendOffchainData).(bool)
+	maxRetries := cast.ToInt(appOpts.Get(FlagKafkaMaxRetry))
+	sendOffchainData := cast.ToBool(appOpts.Get(FlagSendOffchainData))
 
 	var kafkaAddrs []string
 	if kafkaConnStr == "" {
