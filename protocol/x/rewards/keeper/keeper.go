@@ -141,22 +141,26 @@ func (k Keeper) AddRewardSharesForFill(
 	)
 	if takerWeight.Cmp(lib.BigInt0()) > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
-		_ = k.AddRewardShareToAddress(
+		if err := k.AddRewardShareToAddress(
 			ctx,
 			takerAddress,
 			takerWeight,
-		)
+		); err != nil {
+			k.Logger(ctx).Error("Failed to add rewards share to address", constants.ErrorLogKey, err)
+		}
 	}
 
 	// Process reward weight for maker.
 	makerWeight := new(big.Int).Set(bigMakerFeeQuoteQuantums)
 	if makerWeight.Cmp(lib.BigInt0()) > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
-		_ = k.AddRewardShareToAddress(
+		if err := k.AddRewardShareToAddress(
 			ctx,
 			makerAddress,
 			makerWeight,
-		)
+		); err != nil {
+			k.Logger(ctx).Error("Failed to add rewards share to address", constants.ErrorLogKey, err)
+		}
 	}
 }
 
