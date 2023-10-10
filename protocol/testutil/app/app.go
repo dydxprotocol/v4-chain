@@ -112,8 +112,8 @@ type AdvanceToBlockOptions struct {
 // with the option to override specific flags.
 func DefaultTestApp(customFlags map[string]interface{}) *app.App {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", customFlags)
-	logger := appOptions.Get(LoggerInstanceForTest).(log.Logger)
-	if logger == nil {
+	logger, ok := appOptions.Get(LoggerInstanceForTest).(log.Logger)
+	if !ok {
 		logger = log.TestingLogger()
 	}
 	db := dbm.NewMemDB()

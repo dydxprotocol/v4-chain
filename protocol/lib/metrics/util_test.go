@@ -14,7 +14,7 @@ import (
 )
 
 func TestIncrCountMetricWithLabels(t *testing.T) {
-	defer gometrics.Shutdown()
+	t.Cleanup(gometrics.Shutdown)
 
 	conf := gometrics.DefaultConfig("testService")
 	sink := gometrics.NewInmemSink(time.Hour, time.Hour)
@@ -220,7 +220,7 @@ func TestGetMetricValueFromBigInt(t *testing.T) {
 }
 
 func TestModuleMeasureSinceWithLabels(t *testing.T) {
-	defer gometrics.Shutdown()
+	t.Cleanup(gometrics.Shutdown)
 
 	conf := gometrics.DefaultConfig("testService")
 	sink := gometrics.NewInmemSink(time.Hour, time.Hour)

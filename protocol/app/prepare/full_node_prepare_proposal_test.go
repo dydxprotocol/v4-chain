@@ -17,7 +17,7 @@ import (
 // TestFullNodePrepareProposalHandler test that the full-node PrepareProposal handler always returns
 // an empty result.
 func TestFullNodePrepareProposalHandler(t *testing.T) {
-	defer gometrics.Shutdown()
+	t.Cleanup(gometrics.Shutdown)
 
 	conf := gometrics.DefaultConfig("testService")
 	sink := gometrics.NewInmemSink(time.Hour, time.Hour)
@@ -57,6 +57,11 @@ func TestFullNodePrepareProposalHandler(t *testing.T) {
 			found = true
 		}
 	}
-	require.True(t, found)
-	require.Contains(t, logBuffer.String(), "This validator may be incorrectly running in full-node mode!")
+	require.True(t, found, "Expected metric not found")
+	require.Contains(
+		t,
+		logBuffer.String(),
+		"This validator may be incorrectly running in full-node mode!",
+		"Expected log message not found",
+	)
 }
