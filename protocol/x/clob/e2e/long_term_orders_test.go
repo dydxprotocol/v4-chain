@@ -442,7 +442,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Time:   ctx.BlockTime(),
 							Events: []*indexer_manager.IndexerTendermintEvent{
 								{
-									Subtype: indexerevents.SubtypeStatefulOrder,
+									Subtype:             indexerevents.SubtypeStatefulOrder,
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 									EventIndex:          0,
 									Version:             indexerevents.StatefulOrderEventVersion,
@@ -527,7 +527,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Time:   ctx.BlockTime(),
 							Events: []*indexer_manager.IndexerTendermintEvent{
 								{
-									Subtype: indexerevents.SubtypeStatefulOrder,
+									Subtype:             indexerevents.SubtypeStatefulOrder,
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 									EventIndex:          0,
 									Version:             indexerevents.StatefulOrderEventVersion,
@@ -690,7 +690,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Time:   ctx.BlockTime(),
 							Events: []*indexer_manager.IndexerTendermintEvent{
 								{
-									Subtype: indexerevents.SubtypeStatefulOrder,
+									Subtype:             indexerevents.SubtypeStatefulOrder,
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 									EventIndex:          0,
 									Version:             indexerevents.StatefulOrderEventVersion,
@@ -801,7 +801,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Time:   ctx.BlockTime(),
 							Events: []*indexer_manager.IndexerTendermintEvent{
 								{
-									Subtype: indexerevents.SubtypeStatefulOrder,
+									Subtype:             indexerevents.SubtypeStatefulOrder,
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 									EventIndex:          0,
 									Version:             indexerevents.StatefulOrderEventVersion,
