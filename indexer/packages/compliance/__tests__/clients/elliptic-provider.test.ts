@@ -40,7 +40,7 @@ describe('elliptic-provider', () => {
     expect(headers).toEqual({
       headers: {
         'x-access-key': 'default_elliptic_api_key',
-        'x-access-sign': 'R4UGA98pd6XaA6rsrmPhNefg9cm9QSBjzFj+KNQJrZE=',
+        'x-access-sign': 'ihaI6NUlY4QZ3co7fV0jLH4XYCHELKQ/nt1Q5XRN2no=',
         'x-access-timestamp': 1698192000000,
       },
     });
@@ -96,7 +96,7 @@ describe('elliptic-provider', () => {
 
   describe('getComplianceResponse', () => {
     it('gets compliance response for blocked user', async () => {
-      axiosMock.mockResolvedValueOnce(getMockResponse(config.ELLIPTIC_RISK_SCORE_THRESHOLD + 1));
+      axiosMock.mockResolvedValueOnce(getMockResponse(config.ELLIPTIC_RISK_SCORE_THRESHOLD));
       const complianceData: ComplianceClientResponse = await provider.getComplianceResponse(
         defaultAddress,
       );
