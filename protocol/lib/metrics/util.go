@@ -50,17 +50,18 @@ func GetMetricValueFromBigInt(i *big.Int) float32 {
 	return r
 }
 
-// ModuleMeasureSinceNowWithSampling samples latency metrics given the sample rate. This is intended
+// ModuleMeasureSinceWithSampling samples latency metrics given the sample rate. This is intended
 // to be used in hot code paths.
-func ModuleMeasureSinceNowWithSampling(
+func ModuleMeasureSinceWithSampling(
 	module string,
+	time time.Time,
 	sampleRate float64,
 	keys ...string,
 ) {
 	if rand.Float64() < sampleRate {
 		telemetry.ModuleMeasureSince(
 			module,
-			time.Now(),
+			time,
 			keys...,
 		)
 	}
