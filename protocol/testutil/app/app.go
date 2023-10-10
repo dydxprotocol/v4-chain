@@ -52,6 +52,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const (
+	LoggerInstanceForTest = "logger-instance-for-test"
+)
+
 // MustMakeCheckTxOptions is a struct containing options for MustMakeCheckTx.* functions.
 type MustMakeCheckTxOptions struct {
 	// AccAddressForSigning is the account that's used to sign the transaction.
@@ -108,7 +112,10 @@ type AdvanceToBlockOptions struct {
 // with the option to override specific flags.
 func DefaultTestApp(customFlags map[string]interface{}) *app.App {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", customFlags)
-	logger := log.TestingLogger()
+	logger := appOptions.Get(LoggerInstanceForTest).(log.Logger)
+	if logger == nil {
+		logger = log.TestingLogger()
+	}
 	db := dbm.NewMemDB()
 	dydxApp := app.New(
 		logger,
