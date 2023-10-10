@@ -74,11 +74,11 @@ func ModuleMeasureSinceWithLabels(
 // if the context is not CheckTx or ReCheckTx. This function is unable to account for other callbacks like
 // PrepareCheckState or EndBlocker.
 func GetCallbackMetricFromCtx(ctx sdk.Context) string {
-	if ctx.IsCheckTx() {
-		return CheckTx
-	}
 	if ctx.IsReCheckTx() {
 		return ReCheckTx
+	}
+	if ctx.IsCheckTx() {
+		return CheckTx
 	}
 
 	return DeliverTx
