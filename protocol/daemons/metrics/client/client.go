@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"runtime/debug"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
@@ -25,6 +26,7 @@ func Start(
 ) {
 	ticker := time.NewTicker(time.Duration(METRICS_DAEMON_LOOP_DELAY_MS) * time.Millisecond)
 	// TODO prometheus flag enable
+	defer ticker.Stop()
 	for ; true; <-ticker.C {
 		RunMetricsDaemonTaskLoop(
 			ctx,
@@ -41,9 +43,11 @@ func RunMetricsDaemonTaskLoop(
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Error(
-				"panic when reporting metrics form metrics daemon",
+				"panic when reporting metrics from metrics daemon",
 				"panic",
 				r,
+				"stack",
+				string(debug.Stack()),
 			)
 		}
 	}()

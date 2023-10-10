@@ -1,10 +1,6 @@
 package server
 
 import (
-	"net"
-	"syscall"
-	"time"
-
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -16,6 +12,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"net"
+	"syscall"
+	"time"
 )
 
 // Server struct defines the shared gRPC server for all daemons.
