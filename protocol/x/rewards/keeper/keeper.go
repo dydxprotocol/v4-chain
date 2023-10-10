@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -139,21 +140,27 @@ func (k Keeper) AddRewardSharesForFill(
 		makerRebateMulTakerVolume,
 	)
 	if takerWeight.Cmp(lib.BigInt0()) > 0 {
-		k.AddRewardShareToAddress(
+		// We aren't concerned with errors here because we've already validated the weight is positive.
+		if err := k.AddRewardShareToAddress(
 			ctx,
 			takerAddress,
 			takerWeight,
-		)
+		); err != nil {
+			k.Logger(ctx).Error("Failed to add rewards share to address", constants.ErrorLogKey, err)
+		}
 	}
 
 	// Process reward weight for maker.
 	makerWeight := new(big.Int).Set(bigMakerFeeQuoteQuantums)
 	if makerWeight.Cmp(lib.BigInt0()) > 0 {
-		k.AddRewardShareToAddress(
+		// We aren't concerned with errors here because we've already validated the weight is positive.
+		if err := k.AddRewardShareToAddress(
 			ctx,
 			makerAddress,
 			makerWeight,
-		)
+		); err != nil {
+			k.Logger(ctx).Error("Failed to add rewards share to address", constants.ErrorLogKey, err)
+		}
 	}
 }
 
@@ -164,7 +171,15 @@ func (k Keeper) AddRewardShareToAddress(
 	ctx sdk.Context,
 	address string,
 	weight *big.Int,
-) {
+) error {
+	if weight.Cmp(lib.BigInt0()) <= 0 {
+		return errorsmod.Wrapf(
+			types.ErrNonpositiveWeight,
+			"Invalid weight %v",
+			weight.String(),
+		)
+	}
+
 	// Get existing reward share. If no previous reward share, 0 weight is returned.
 	rewardShare := k.GetRewardShare(ctx, address)
 	newWeight := new(big.Int).Add(
@@ -173,7 +188,7 @@ func (k Keeper) AddRewardShareToAddress(
 	)
 
 	// Set the new reward share.
-	k.SetRewardShare(ctx, types.RewardShare{
+	return k.SetRewardShare(ctx, types.RewardShare{
 		Address: address,
 		Weight:  dtypes.NewIntFromBigInt(newWeight),
 	})
@@ -183,11 +198,20 @@ func (k Keeper) AddRewardShareToAddress(
 func (k Keeper) SetRewardShare(
 	ctx sdk.Context,
 	rewardShare types.RewardShare,
-) {
+) error {
+	if rewardShare.Weight.BigInt().Cmp(lib.BigInt0()) <= 0 {
+		return errorsmod.Wrapf(
+			types.ErrNonpositiveWeight,
+			"Invalid weight %v",
+			rewardShare.Weight.String(),
+		)
+	}
+
 	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), []byte(types.RewardShareKeyPrefix))
 	b := k.cdc.MustMarshal(&rewardShare)
 
 	store.Set([]byte(rewardShare.Address), b)
+	return nil
 }
 
 func (k Keeper) getAllRewardSharesAndTotalWeight(ctx sdk.Context) (
