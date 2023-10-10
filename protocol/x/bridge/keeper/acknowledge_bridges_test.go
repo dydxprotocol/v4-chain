@@ -14,7 +14,8 @@ import (
 func TestAcknowledgeBridges(t *testing.T) {
 	tests := map[string]struct {
 		// Bridge events to acknowledge.
-		bridgeEvents []types.BridgeEvent
+		bridgeEvents     []types.BridgeEvent
+		bridgingDisabled bool
 
 		// Expected AcknowledgedEventInfo.
 		expectedAEI types.BridgeEventInfo
@@ -45,12 +46,23 @@ func TestAcknowledgeBridges(t *testing.T) {
 				EthBlockHeight: 0,
 			},
 		},
+		"Error: bridging disabled": {
+			bridgeEvents: []types.BridgeEvent{
+				constants.BridgeEvent_Id55_Height15,
+			},
+			bridgingDisabled: true,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Initialize context, keeper, and mockDelayMsgKeeper.
 			ctx, bridgeKeeper, _, _, _, _, mockDelayMsgKeeper := keepertest.BridgeKeepers(t)
+			err := bridgeKeeper.UpdateSafetyParams(ctx, types.SafetyParams{
+				IsDisabled:  tc.bridgingDisabled,
+				DelayBlocks: bridgeKeeper.GetSafetyParams(ctx).DelayBlocks,
+			})
+			require.NoError(t, err)
 			for i := range tc.bridgeEvents {
 				mockDelayMsgKeeper.On(
 					"DelayMessageByBlocks",
@@ -59,16 +71,31 @@ func TestAcknowledgeBridges(t *testing.T) {
 					mock.Anything,
 				).Return(uint32(i), nil).Once()
 			}
+			initialAei := bridgeKeeper.GetAcknowledgedEventInfo(ctx)
 
-			err := bridgeKeeper.AcknowledgeBridges(ctx, tc.bridgeEvents)
-			require.NoError(t, err)
+			// Invoke AcknowledgeBridges.
+			err = bridgeKeeper.AcknowledgeBridges(ctx, tc.bridgeEvents)
 
-			// Assert expected AcknowledgedEventInfo.
-			aei := bridgeKeeper.GetAcknowledgedEventInfo(ctx)
-			require.Equal(t, tc.expectedAEI, aei)
+			if tc.bridgingDisabled { // bridging is disabled.
+				// Verify that AcknowledgeBridges returns ErrBridgingDisabled.
+				require.ErrorIs(t, err, types.ErrBridgingDisabled)
 
-			// Assert mock expectations.
-			mockDelayMsgKeeper.AssertExpectations(t)
+				// Verify that no messages were delayed.
+				mockDelayMsgKeeper.AssertNotCalled(t, "DelayMessageByBlocks")
+
+				// Verify that AcknowledgedEventInfo was not updated.
+				require.Equal(t, initialAei, bridgeKeeper.GetAcknowledgedEventInfo(ctx))
+			} else { // briding is not disabled.
+				// Verify that AcknowledgeBridges returns no error.
+				require.NoError(t, err)
+
+				// Assert expected AcknowledgedEventInfo.
+				aei := bridgeKeeper.GetAcknowledgedEventInfo(ctx)
+				require.Equal(t, tc.expectedAEI, aei)
+
+				// Assert mock expectations.
+				mockDelayMsgKeeper.AssertExpectations(t)
+			}
 		})
 	}
 }
@@ -83,6 +110,7 @@ func TestGetAcknowledgeBridges(t *testing.T) {
 		proposeParams         types.ProposeParams
 		bridgeEventsToAdd     []types.BridgeEvent
 		acknowledgedEventInfo types.BridgeEventInfo
+		bridgingDisabled      bool
 
 		// Expectations.
 		expectedMsg *types.MsgAcknowledgeBridges
@@ -204,6 +232,29 @@ func TestGetAcknowledgeBridges(t *testing.T) {
 				Events: []types.BridgeEvent{},
 			},
 		},
+		"No event is proposed when bridging is diabled": {
+			blockTimestamp: timeNow,
+			eventTimestamp: timeNow.Add(-time.Second * 2),
+			proposeParams: types.ProposeParams{
+				SkipRatePpm:                  0,           // do not skip based on pseudo-randomness.
+				SkipIfBlockDelayedByDuration: time.Second, // do not skip based on time.
+				MaxBridgesPerBlock:           3,           // propose up to 3 events per block.
+				ProposeDelayDuration:         time.Second, // propose events recognized at least one second ago.
+			},
+			bridgeEventsToAdd: []types.BridgeEvent{
+				constants.BridgeEvent_Id0_Height0,
+				constants.BridgeEvent_Id1_Height0,
+				constants.BridgeEvent_Id2_Height1,
+			},
+			acknowledgedEventInfo: types.BridgeEventInfo{
+				NextId:         0,
+				EthBlockHeight: 0,
+			},
+			bridgingDisabled: true,
+			expectedMsg: &types.MsgAcknowledgeBridges{
+				Events: []types.BridgeEvent{},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -213,6 +264,11 @@ func TestGetAcknowledgeBridges(t *testing.T) {
 			err := bridgeKeeper.SetAcknowledgedEventInfo(ctx, tc.acknowledgedEventInfo)
 			require.NoError(t, err)
 			err = bridgeKeeper.UpdateProposeParams(ctx, tc.proposeParams)
+			require.NoError(t, err)
+			err = bridgeKeeper.UpdateSafetyParams(ctx, types.SafetyParams{
+				IsDisabled:  tc.bridgingDisabled,
+				DelayBlocks: bridgeKeeper.GetSafetyParams(ctx).DelayBlocks,
+			})
 			require.NoError(t, err)
 			mockTimeProvider.On("Now").Return(tc.eventTimestamp).Once()
 			err = bridgeEventManager.AddBridgeEvents(tc.bridgeEventsToAdd)

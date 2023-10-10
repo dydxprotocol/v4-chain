@@ -23,6 +23,12 @@ func (k Keeper) CompleteBridge(
 		metrics.Latency,
 	)
 
+	// Do not complete bridge if bridging is disabled.
+	safetyParams := k.GetSafetyParams(ctx)
+	if safetyParams.IsDisabled {
+		return types.ErrBridgingDisabled
+	}
+
 	// Convert bridge address string to sdk.AccAddress.
 	bridgeAccAddress, err := sdk.AccAddressFromBech32(bridge.Address)
 	if err != nil {
