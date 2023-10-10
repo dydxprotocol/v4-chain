@@ -464,6 +464,191 @@ export function fieldOptions_JSTypeToJSON(object: FieldOptions_JSType): string {
   }
 }
 /**
+ * If set to RETENTION_SOURCE, the option will be omitted from the binary.
+ * Note: as of January 2023, support for this is in progress and does not yet
+ * have an effect (b/264593489).
+ */
+
+export enum FieldOptions_OptionRetention {
+  RETENTION_UNKNOWN = 0,
+  RETENTION_RUNTIME = 1,
+  RETENTION_SOURCE = 2,
+  UNRECOGNIZED = -1,
+}
+/**
+ * If set to RETENTION_SOURCE, the option will be omitted from the binary.
+ * Note: as of January 2023, support for this is in progress and does not yet
+ * have an effect (b/264593489).
+ */
+
+export enum FieldOptions_OptionRetentionSDKType {
+  RETENTION_UNKNOWN = 0,
+  RETENTION_RUNTIME = 1,
+  RETENTION_SOURCE = 2,
+  UNRECOGNIZED = -1,
+}
+export function fieldOptions_OptionRetentionFromJSON(object: any): FieldOptions_OptionRetention {
+  switch (object) {
+    case 0:
+    case "RETENTION_UNKNOWN":
+      return FieldOptions_OptionRetention.RETENTION_UNKNOWN;
+
+    case 1:
+    case "RETENTION_RUNTIME":
+      return FieldOptions_OptionRetention.RETENTION_RUNTIME;
+
+    case 2:
+    case "RETENTION_SOURCE":
+      return FieldOptions_OptionRetention.RETENTION_SOURCE;
+
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return FieldOptions_OptionRetention.UNRECOGNIZED;
+  }
+}
+export function fieldOptions_OptionRetentionToJSON(object: FieldOptions_OptionRetention): string {
+  switch (object) {
+    case FieldOptions_OptionRetention.RETENTION_UNKNOWN:
+      return "RETENTION_UNKNOWN";
+
+    case FieldOptions_OptionRetention.RETENTION_RUNTIME:
+      return "RETENTION_RUNTIME";
+
+    case FieldOptions_OptionRetention.RETENTION_SOURCE:
+      return "RETENTION_SOURCE";
+
+    case FieldOptions_OptionRetention.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+/**
+ * This indicates the types of entities that the field may apply to when used
+ * as an option. If it is unset, then the field may be freely used as an
+ * option on any kind of entity. Note: as of January 2023, support for this is
+ * in progress and does not yet have an effect (b/264593489).
+ */
+
+export enum FieldOptions_OptionTargetType {
+  TARGET_TYPE_UNKNOWN = 0,
+  TARGET_TYPE_FILE = 1,
+  TARGET_TYPE_EXTENSION_RANGE = 2,
+  TARGET_TYPE_MESSAGE = 3,
+  TARGET_TYPE_FIELD = 4,
+  TARGET_TYPE_ONEOF = 5,
+  TARGET_TYPE_ENUM = 6,
+  TARGET_TYPE_ENUM_ENTRY = 7,
+  TARGET_TYPE_SERVICE = 8,
+  TARGET_TYPE_METHOD = 9,
+  UNRECOGNIZED = -1,
+}
+/**
+ * This indicates the types of entities that the field may apply to when used
+ * as an option. If it is unset, then the field may be freely used as an
+ * option on any kind of entity. Note: as of January 2023, support for this is
+ * in progress and does not yet have an effect (b/264593489).
+ */
+
+export enum FieldOptions_OptionTargetTypeSDKType {
+  TARGET_TYPE_UNKNOWN = 0,
+  TARGET_TYPE_FILE = 1,
+  TARGET_TYPE_EXTENSION_RANGE = 2,
+  TARGET_TYPE_MESSAGE = 3,
+  TARGET_TYPE_FIELD = 4,
+  TARGET_TYPE_ONEOF = 5,
+  TARGET_TYPE_ENUM = 6,
+  TARGET_TYPE_ENUM_ENTRY = 7,
+  TARGET_TYPE_SERVICE = 8,
+  TARGET_TYPE_METHOD = 9,
+  UNRECOGNIZED = -1,
+}
+export function fieldOptions_OptionTargetTypeFromJSON(object: any): FieldOptions_OptionTargetType {
+  switch (object) {
+    case 0:
+    case "TARGET_TYPE_UNKNOWN":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_UNKNOWN;
+
+    case 1:
+    case "TARGET_TYPE_FILE":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_FILE;
+
+    case 2:
+    case "TARGET_TYPE_EXTENSION_RANGE":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_EXTENSION_RANGE;
+
+    case 3:
+    case "TARGET_TYPE_MESSAGE":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_MESSAGE;
+
+    case 4:
+    case "TARGET_TYPE_FIELD":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_FIELD;
+
+    case 5:
+    case "TARGET_TYPE_ONEOF":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_ONEOF;
+
+    case 6:
+    case "TARGET_TYPE_ENUM":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_ENUM;
+
+    case 7:
+    case "TARGET_TYPE_ENUM_ENTRY":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_ENUM_ENTRY;
+
+    case 8:
+    case "TARGET_TYPE_SERVICE":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_SERVICE;
+
+    case 9:
+    case "TARGET_TYPE_METHOD":
+      return FieldOptions_OptionTargetType.TARGET_TYPE_METHOD;
+
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return FieldOptions_OptionTargetType.UNRECOGNIZED;
+  }
+}
+export function fieldOptions_OptionTargetTypeToJSON(object: FieldOptions_OptionTargetType): string {
+  switch (object) {
+    case FieldOptions_OptionTargetType.TARGET_TYPE_UNKNOWN:
+      return "TARGET_TYPE_UNKNOWN";
+
+    case FieldOptions_OptionTargetType.TARGET_TYPE_FILE:
+      return "TARGET_TYPE_FILE";
+
+    case FieldOptions_OptionTargetType.TARGET_TYPE_EXTENSION_RANGE:
+      return "TARGET_TYPE_EXTENSION_RANGE";
+
+    case FieldOptions_OptionTargetType.TARGET_TYPE_MESSAGE:
+      return "TARGET_TYPE_MESSAGE";
+
+    case FieldOptions_OptionTargetType.TARGET_TYPE_FIELD:
+      return "TARGET_TYPE_FIELD";
+
+    case FieldOptions_OptionTargetType.TARGET_TYPE_ONEOF:
+      return "TARGET_TYPE_ONEOF";
+
+    case FieldOptions_OptionTargetType.TARGET_TYPE_ENUM:
+      return "TARGET_TYPE_ENUM";
+
+    case FieldOptions_OptionTargetType.TARGET_TYPE_ENUM_ENTRY:
+      return "TARGET_TYPE_ENUM_ENTRY";
+
+    case FieldOptions_OptionTargetType.TARGET_TYPE_SERVICE:
+      return "TARGET_TYPE_SERVICE";
+
+    case FieldOptions_OptionTargetType.TARGET_TYPE_METHOD:
+      return "TARGET_TYPE_METHOD";
+
+    case FieldOptions_OptionTargetType.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+/**
  * Is this method side-effect-free (or safe in HTTP parlance), or idempotent,
  * or neither? HTTP based RPC implementation may choose GET verb for safe
  * methods, and PUT verb for idempotent methods instead of the default POST.
@@ -532,6 +717,74 @@ export function methodOptions_IdempotencyLevelToJSON(object: MethodOptions_Idemp
   }
 }
 /**
+ * Represents the identified object's effect on the element in the original
+ * .proto file.
+ */
+
+export enum GeneratedCodeInfo_Annotation_Semantic {
+  /** NONE - There is no effect or the effect is indescribable. */
+  NONE = 0,
+
+  /** SET - The element is set or otherwise mutated. */
+  SET = 1,
+
+  /** ALIAS - An alias to the element is returned. */
+  ALIAS = 2,
+  UNRECOGNIZED = -1,
+}
+/**
+ * Represents the identified object's effect on the element in the original
+ * .proto file.
+ */
+
+export enum GeneratedCodeInfo_Annotation_SemanticSDKType {
+  /** NONE - There is no effect or the effect is indescribable. */
+  NONE = 0,
+
+  /** SET - The element is set or otherwise mutated. */
+  SET = 1,
+
+  /** ALIAS - An alias to the element is returned. */
+  ALIAS = 2,
+  UNRECOGNIZED = -1,
+}
+export function generatedCodeInfo_Annotation_SemanticFromJSON(object: any): GeneratedCodeInfo_Annotation_Semantic {
+  switch (object) {
+    case 0:
+    case "NONE":
+      return GeneratedCodeInfo_Annotation_Semantic.NONE;
+
+    case 1:
+    case "SET":
+      return GeneratedCodeInfo_Annotation_Semantic.SET;
+
+    case 2:
+    case "ALIAS":
+      return GeneratedCodeInfo_Annotation_Semantic.ALIAS;
+
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return GeneratedCodeInfo_Annotation_Semantic.UNRECOGNIZED;
+  }
+}
+export function generatedCodeInfo_Annotation_SemanticToJSON(object: GeneratedCodeInfo_Annotation_Semantic): string {
+  switch (object) {
+    case GeneratedCodeInfo_Annotation_Semantic.NONE:
+      return "NONE";
+
+    case GeneratedCodeInfo_Annotation_Semantic.SET:
+      return "SET";
+
+    case GeneratedCodeInfo_Annotation_Semantic.ALIAS:
+      return "ALIAS";
+
+    case GeneratedCodeInfo_Annotation_Semantic.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+/**
  * The protocol compiler can output a FileDescriptorSet containing the .proto
  * files it parses.
  */
@@ -582,10 +835,15 @@ export interface FileDescriptorProto {
   sourceCodeInfo?: SourceCodeInfo;
   /**
    * The syntax of the proto file.
-   * The supported values are "proto2" and "proto3".
+   * The supported values are "proto2", "proto3", and "editions".
+   * 
+   * If `edition` is present, this value must be "editions".
    */
 
   syntax: string;
+  /** The edition of the proto file, which is an opaque string. */
+
+  edition: string;
 }
 /** Describes a complete .proto file. */
 
@@ -622,10 +880,15 @@ export interface FileDescriptorProtoSDKType {
   source_code_info?: SourceCodeInfoSDKType;
   /**
    * The syntax of the proto file.
-   * The supported values are "proto2" and "proto3".
+   * The supported values are "proto2", "proto3", and "editions".
+   * 
+   * If `edition` is present, this value must be "editions".
    */
 
   syntax: string;
+  /** The edition of the proto file, which is an opaque string. */
+
+  edition: string;
 }
 /** Describes a message type. */
 
@@ -747,7 +1010,6 @@ export interface FieldDescriptorProto {
    * For booleans, "true" or "false".
    * For strings, contains the default text contents (not escaped in any way).
    * For bytes, contains the C escaped value.  All bytes >= 128 are escaped.
-   * TODO(kenton):  Base-64 encode?
    */
 
   defaultValue: string;
@@ -766,6 +1028,31 @@ export interface FieldDescriptorProto {
 
   jsonName: string;
   options?: FieldOptions;
+  /**
+   * If true, this is a proto3 "optional". When a proto3 field is optional, it
+   * tracks presence regardless of field type.
+   * 
+   * When proto3_optional is true, this field must be belong to a oneof to
+   * signal to old proto3 clients that presence is tracked for this field. This
+   * oneof is known as a "synthetic" oneof, and this field must be its sole
+   * member (each proto3 optional field gets its own synthetic oneof). Synthetic
+   * oneofs exist in the descriptor only, and do not generate any API. Synthetic
+   * oneofs must be ordered after all "real" oneofs.
+   * 
+   * For message fields, proto3_optional doesn't create any semantic change,
+   * since non-repeated message fields always track presence. However it still
+   * indicates the semantic detail of whether the user wrote "optional" or not.
+   * This can be useful for round-tripping the .proto file. For consistency we
+   * give message fields a synthetic oneof also, even though it is not required
+   * to track presence. This is especially important because the parser can't
+   * tell if a field is a message or an enum, so it must always create a
+   * synthetic oneof.
+   * 
+   * Proto2 optional fields do not set this flag, because they already indicate
+   * optional with `LABEL_OPTIONAL`.
+   */
+
+  proto3Optional: boolean;
 }
 /** Describes a field within a message. */
 
@@ -799,7 +1086,6 @@ export interface FieldDescriptorProtoSDKType {
    * For booleans, "true" or "false".
    * For strings, contains the default text contents (not escaped in any way).
    * For bytes, contains the C escaped value.  All bytes >= 128 are escaped.
-   * TODO(kenton):  Base-64 encode?
    */
 
   default_value: string;
@@ -818,6 +1104,31 @@ export interface FieldDescriptorProtoSDKType {
 
   json_name: string;
   options?: FieldOptionsSDKType;
+  /**
+   * If true, this is a proto3 "optional". When a proto3 field is optional, it
+   * tracks presence regardless of field type.
+   * 
+   * When proto3_optional is true, this field must be belong to a oneof to
+   * signal to old proto3 clients that presence is tracked for this field. This
+   * oneof is known as a "synthetic" oneof, and this field must be its sole
+   * member (each proto3 optional field gets its own synthetic oneof). Synthetic
+   * oneofs exist in the descriptor only, and do not generate any API. Synthetic
+   * oneofs must be ordered after all "real" oneofs.
+   * 
+   * For message fields, proto3_optional doesn't create any semantic change,
+   * since non-repeated message fields always track presence. However it still
+   * indicates the semantic detail of whether the user wrote "optional" or not.
+   * This can be useful for round-tripping the .proto file. For consistency we
+   * give message fields a synthetic oneof also, even though it is not required
+   * to track presence. This is especially important because the parser can't
+   * tell if a field is a message or an enum, so it must always create a
+   * synthetic oneof.
+   * 
+   * Proto2 optional fields do not set this flag, because they already indicate
+   * optional with `LABEL_OPTIONAL`.
+   */
+
+  proto3_optional: boolean;
 }
 /** Describes a oneof. */
 
@@ -978,19 +1289,19 @@ export interface FileOptions {
    */
   javaPackage: string;
   /**
-   * If set, all the classes from the .proto file are wrapped in a single
-   * outer class with the given name.  This applies to both Proto1
-   * (equivalent to the old "--one_java_file" option) and Proto2 (where
-   * a .proto always translates to a single class, but you may want to
-   * explicitly choose the class name).
+   * Controls the name of the wrapper Java class generated for the .proto file.
+   * That class will always contain the .proto file's getDescriptor() method as
+   * well as any top-level extensions defined in the .proto file.
+   * If java_multiple_files is disabled, then all the other classes from the
+   * .proto file will be nested inside the single wrapper outer class.
    */
 
   javaOuterClassname: string;
   /**
-   * If set true, then the Java code generator will generate a separate .java
+   * If enabled, then the Java code generator will generate a separate .java
    * file for each top-level message, enum, and service defined in the .proto
-   * file.  Thus, these types will *not* be nested inside the outer class
-   * named by java_outer_classname.  However, the outer class will still be
+   * file.  Thus, these types will *not* be nested inside the wrapper class
+   * named by java_outer_classname.  However, the wrapper class will still be
    * generated to contain the file's getDescriptor() method as well as any
    * top-level extensions defined in the file.
    */
@@ -1112,19 +1423,19 @@ export interface FileOptionsSDKType {
    */
   java_package: string;
   /**
-   * If set, all the classes from the .proto file are wrapped in a single
-   * outer class with the given name.  This applies to both Proto1
-   * (equivalent to the old "--one_java_file" option) and Proto2 (where
-   * a .proto always translates to a single class, but you may want to
-   * explicitly choose the class name).
+   * Controls the name of the wrapper Java class generated for the .proto file.
+   * That class will always contain the .proto file's getDescriptor() method as
+   * well as any top-level extensions defined in the .proto file.
+   * If java_multiple_files is disabled, then all the other classes from the
+   * .proto file will be nested inside the single wrapper outer class.
    */
 
   java_outer_classname: string;
   /**
-   * If set true, then the Java code generator will generate a separate .java
+   * If enabled, then the Java code generator will generate a separate .java
    * file for each top-level message, enum, and service defined in the .proto
-   * file.  Thus, these types will *not* be nested inside the outer class
-   * named by java_outer_classname.  However, the outer class will still be
+   * file.  Thus, these types will *not* be nested inside the wrapper class
+   * named by java_outer_classname.  However, the wrapper class will still be
    * generated to contain the file's getDescriptor() method as well as any
    * top-level extensions defined in the file.
    */
@@ -1275,6 +1586,10 @@ export interface MessageOptions {
 
   deprecated: boolean;
   /**
+   * NOTE: Do not set the option in .proto files. Always use the maps syntax
+   * instead. The option should only be implicitly set by the proto compiler
+   * parser.
+   * 
    * Whether the message is an automatically generated map entry type for the
    * maps field.
    * 
@@ -1292,13 +1607,25 @@ export interface MessageOptions {
    * use a native map in the target language to hold the keys and values.
    * The reflection APIs in such implementations still need to work as
    * if the field is a repeated message field.
-   * 
-   * NOTE: Do not set the option in .proto files. Always use the maps syntax
-   * instead. The option should only be implicitly set by the proto compiler
-   * parser.
    */
 
   mapEntry: boolean;
+  /**
+   * Enable the legacy handling of JSON field name conflicts.  This lowercases
+   * and strips underscored from the fields before comparison in proto3 only.
+   * The new behavior takes `json_name` into account and applies to proto2 as
+   * well.
+   * 
+   * This should only be used as a temporary measure against broken builds due
+   * to the change in behavior for JSON field name conflicts.
+   * 
+   * TODO(b/261750190) This is legacy behavior we plan to remove once downstream
+   * teams have had time to migrate.
+   */
+
+  /** @deprecated */
+
+  deprecatedLegacyJsonFieldConflicts: boolean;
   /** The parser stores options it doesn't recognize here. See above. */
 
   uninterpretedOption: UninterpretedOption[];
@@ -1341,6 +1668,10 @@ export interface MessageOptionsSDKType {
 
   deprecated: boolean;
   /**
+   * NOTE: Do not set the option in .proto files. Always use the maps syntax
+   * instead. The option should only be implicitly set by the proto compiler
+   * parser.
+   * 
    * Whether the message is an automatically generated map entry type for the
    * maps field.
    * 
@@ -1358,13 +1689,25 @@ export interface MessageOptionsSDKType {
    * use a native map in the target language to hold the keys and values.
    * The reflection APIs in such implementations still need to work as
    * if the field is a repeated message field.
-   * 
-   * NOTE: Do not set the option in .proto files. Always use the maps syntax
-   * instead. The option should only be implicitly set by the proto compiler
-   * parser.
    */
 
   map_entry: boolean;
+  /**
+   * Enable the legacy handling of JSON field name conflicts.  This lowercases
+   * and strips underscored from the fields before comparison in proto3 only.
+   * The new behavior takes `json_name` into account and applies to proto2 as
+   * well.
+   * 
+   * This should only be used as a temporary measure against broken builds due
+   * to the change in behavior for JSON field name conflicts.
+   * 
+   * TODO(b/261750190) This is legacy behavior we plan to remove once downstream
+   * teams have had time to migrate.
+   */
+
+  /** @deprecated */
+
+  deprecated_legacy_json_field_conflicts: boolean;
   /** The parser stores options it doesn't recognize here. See above. */
 
   uninterpreted_option: UninterpretedOptionSDKType[];
@@ -1419,7 +1762,6 @@ export interface FieldOptions {
    * call from multiple threads concurrently, while non-const methods continue
    * to require exclusive access.
    * 
-   * 
    * Note that implementations may choose not to check required fields within
    * a lazy sub-message.  That is, calling IsInitialized() on the outer message
    * may return true even if the inner message has missing required fields.
@@ -1430,9 +1772,19 @@ export interface FieldOptions {
    * implementation must either *always* check its required fields, or *never*
    * check its required fields, regardless of whether or not the message has
    * been parsed.
+   * 
+   * As of May 2022, lazy verifies the contents of the byte stream during
+   * parsing.  An invalid byte stream will cause the overall parsing to fail.
    */
 
   lazy: boolean;
+  /**
+   * unverified_lazy does no correctness checks on the byte stream. This should
+   * only be used where lazy with verification is prohibitive for performance
+   * reasons.
+   */
+
+  unverifiedLazy: boolean;
   /**
    * Is this field deprecated?
    * Depending on the target platform, this can emit Deprecated annotations
@@ -1444,6 +1796,14 @@ export interface FieldOptions {
   /** For Google-internal migration only. Do not use. */
 
   weak: boolean;
+  /**
+   * Indicate that the field value should not be printed out when using debug
+   * formats, e.g. when the field contains sensitive credentials.
+   */
+
+  debugRedact: boolean;
+  retention: FieldOptions_OptionRetention;
+  target: FieldOptions_OptionTargetType;
   /** The parser stores options it doesn't recognize here. See above. */
 
   uninterpretedOption: UninterpretedOption[];
@@ -1498,7 +1858,6 @@ export interface FieldOptionsSDKType {
    * call from multiple threads concurrently, while non-const methods continue
    * to require exclusive access.
    * 
-   * 
    * Note that implementations may choose not to check required fields within
    * a lazy sub-message.  That is, calling IsInitialized() on the outer message
    * may return true even if the inner message has missing required fields.
@@ -1509,9 +1868,19 @@ export interface FieldOptionsSDKType {
    * implementation must either *always* check its required fields, or *never*
    * check its required fields, regardless of whether or not the message has
    * been parsed.
+   * 
+   * As of May 2022, lazy verifies the contents of the byte stream during
+   * parsing.  An invalid byte stream will cause the overall parsing to fail.
    */
 
   lazy: boolean;
+  /**
+   * unverified_lazy does no correctness checks on the byte stream. This should
+   * only be used where lazy with verification is prohibitive for performance
+   * reasons.
+   */
+
+  unverified_lazy: boolean;
   /**
    * Is this field deprecated?
    * Depending on the target platform, this can emit Deprecated annotations
@@ -1523,6 +1892,14 @@ export interface FieldOptionsSDKType {
   /** For Google-internal migration only. Do not use. */
 
   weak: boolean;
+  /**
+   * Indicate that the field value should not be printed out when using debug
+   * formats, e.g. when the field contains sensitive credentials.
+   */
+
+  debug_redact: boolean;
+  retention: FieldOptions_OptionRetentionSDKType;
+  target: FieldOptions_OptionTargetTypeSDKType;
   /** The parser stores options it doesn't recognize here. See above. */
 
   uninterpreted_option: UninterpretedOptionSDKType[];
@@ -1549,6 +1926,18 @@ export interface EnumOptions {
    */
 
   deprecated: boolean;
+  /**
+   * Enable the legacy handling of JSON field name conflicts.  This lowercases
+   * and strips underscored from the fields before comparison in proto3 only.
+   * The new behavior takes `json_name` into account and applies to proto2 as
+   * well.
+   * TODO(b/261750190) Remove this legacy behavior once downstream teams have
+   * had time to migrate.
+   */
+
+  /** @deprecated */
+
+  deprecatedLegacyJsonFieldConflicts: boolean;
   /** The parser stores options it doesn't recognize here. See above. */
 
   uninterpretedOption: UninterpretedOption[];
@@ -1567,6 +1956,18 @@ export interface EnumOptionsSDKType {
    */
 
   deprecated: boolean;
+  /**
+   * Enable the legacy handling of JSON field name conflicts.  This lowercases
+   * and strips underscored from the fields before comparison in proto3 only.
+   * The new behavior takes `json_name` into account and applies to proto2 as
+   * well.
+   * TODO(b/261750190) Remove this legacy behavior once downstream teams have
+   * had time to migrate.
+   */
+
+  /** @deprecated */
+
+  deprecated_legacy_json_field_conflicts: boolean;
   /** The parser stores options it doesn't recognize here. See above. */
 
   uninterpreted_option: UninterpretedOptionSDKType[];
@@ -1695,8 +2096,8 @@ export interface UninterpretedOptionSDKType {
  * The name of the uninterpreted option.  Each string represents a segment in
  * a dot-separated name.  is_extension is true iff a segment represents an
  * extension (denoted with parentheses in options specs in .proto files).
- * E.g.,{ ["foo", false], ["bar.baz", true], ["qux", false] } represents
- * "foo.(bar.baz).qux".
+ * E.g.,{ ["foo", false], ["bar.baz", true], ["moo", false] } represents
+ * "foo.(bar.baz).moo".
  */
 
 export interface UninterpretedOption_NamePart {
@@ -1707,8 +2108,8 @@ export interface UninterpretedOption_NamePart {
  * The name of the uninterpreted option.  Each string represents a segment in
  * a dot-separated name.  is_extension is true iff a segment represents an
  * extension (denoted with parentheses in options specs in .proto files).
- * E.g.,{ ["foo", false], ["bar.baz", true], ["qux", false] } represents
- * "foo.(bar.baz).qux".
+ * E.g.,{ ["foo", false], ["bar.baz", true], ["moo", false] } represents
+ * "foo.(bar.baz).moo".
  */
 
 export interface UninterpretedOption_NamePartSDKType {
@@ -1827,8 +2228,8 @@ export interface SourceCodeInfo_Location {
    * location.
    * 
    * Each element is a field number or an index.  They form a path from
-   * the root FileDescriptorProto to the place where the definition.  For
-   * example, this path:
+   * the root FileDescriptorProto to the place where the definition occurs.
+   * For example, this path:
    *   [ 4, 3, 2, 7, 1 ]
    * refers to:
    *   file.message_type(3)  // 4, 3
@@ -1885,13 +2286,13 @@ export interface SourceCodeInfo_Location {
    *   // Comment attached to baz.
    *   // Another line attached to baz.
    * 
-   *   // Comment attached to qux.
+   *   // Comment attached to moo.
    *   //
-   *   // Another line attached to qux.
-   *   optional double qux = 4;
+   *   // Another line attached to moo.
+   *   optional double moo = 4;
    * 
    *   // Detached comment for corge. This is not leading or trailing comments
-   *   // to qux or corge because there are blank lines separating it from
+   *   // to moo or corge because there are blank lines separating it from
    *   // both.
    * 
    *   // Detached comment for corge paragraph 2.
@@ -1917,8 +2318,8 @@ export interface SourceCodeInfo_LocationSDKType {
    * location.
    * 
    * Each element is a field number or an index.  They form a path from
-   * the root FileDescriptorProto to the place where the definition.  For
-   * example, this path:
+   * the root FileDescriptorProto to the place where the definition occurs.
+   * For example, this path:
    *   [ 4, 3, 2, 7, 1 ]
    * refers to:
    *   file.message_type(3)  // 4, 3
@@ -1975,13 +2376,13 @@ export interface SourceCodeInfo_LocationSDKType {
    *   // Comment attached to baz.
    *   // Another line attached to baz.
    * 
-   *   // Comment attached to qux.
+   *   // Comment attached to moo.
    *   //
-   *   // Another line attached to qux.
-   *   optional double qux = 4;
+   *   // Another line attached to moo.
+   *   optional double moo = 4;
    * 
    *   // Detached comment for corge. This is not leading or trailing comments
-   *   // to qux or corge because there are blank lines separating it from
+   *   // to moo or corge because there are blank lines separating it from
    *   // both.
    * 
    *   // Detached comment for corge paragraph 2.
@@ -2044,11 +2445,12 @@ export interface GeneratedCodeInfo_Annotation {
   begin: number;
   /**
    * Identifies the ending offset in bytes in the generated code that
-   * relates to the identified offset. The end offset should be one past
+   * relates to the identified object. The end offset should be one past
    * the last relevant byte (so the length of the text = end - begin).
    */
 
   end: number;
+  semantic: GeneratedCodeInfo_Annotation_Semantic;
 }
 export interface GeneratedCodeInfo_AnnotationSDKType {
   /**
@@ -2067,11 +2469,12 @@ export interface GeneratedCodeInfo_AnnotationSDKType {
   begin: number;
   /**
    * Identifies the ending offset in bytes in the generated code that
-   * relates to the identified offset. The end offset should be one past
+   * relates to the identified object. The end offset should be one past
    * the last relevant byte (so the length of the text = end - begin).
    */
 
   end: number;
+  semantic: GeneratedCodeInfo_Annotation_SemanticSDKType;
 }
 
 function createBaseFileDescriptorSet(): FileDescriptorSet {
@@ -2132,7 +2535,8 @@ function createBaseFileDescriptorProto(): FileDescriptorProto {
     extension: [],
     options: undefined,
     sourceCodeInfo: undefined,
-    syntax: ""
+    syntax: "",
+    edition: ""
   };
 }
 
@@ -2191,6 +2595,10 @@ export const FileDescriptorProto = {
 
     if (message.syntax !== "") {
       writer.uint32(98).string(message.syntax);
+    }
+
+    if (message.edition !== "") {
+      writer.uint32(106).string(message.edition);
     }
 
     return writer;
@@ -2271,6 +2679,10 @@ export const FileDescriptorProto = {
           message.syntax = reader.string();
           break;
 
+        case 13:
+          message.edition = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2294,6 +2706,7 @@ export const FileDescriptorProto = {
     message.options = object.options !== undefined && object.options !== null ? FileOptions.fromPartial(object.options) : undefined;
     message.sourceCodeInfo = object.sourceCodeInfo !== undefined && object.sourceCodeInfo !== null ? SourceCodeInfo.fromPartial(object.sourceCodeInfo) : undefined;
     message.syntax = object.syntax ?? "";
+    message.edition = object.edition ?? "";
     return message;
   }
 
@@ -2610,7 +3023,8 @@ function createBaseFieldDescriptorProto(): FieldDescriptorProto {
     defaultValue: "",
     oneofIndex: 0,
     jsonName: "",
-    options: undefined
+    options: undefined,
+    proto3Optional: false
   };
 }
 
@@ -2654,6 +3068,10 @@ export const FieldDescriptorProto = {
 
     if (message.options !== undefined) {
       FieldOptions.encode(message.options, writer.uint32(66).fork()).ldelim();
+    }
+
+    if (message.proto3Optional === true) {
+      writer.uint32(136).bool(message.proto3Optional);
     }
 
     return writer;
@@ -2708,6 +3126,10 @@ export const FieldDescriptorProto = {
           message.options = FieldOptions.decode(reader, reader.uint32());
           break;
 
+        case 17:
+          message.proto3Optional = reader.bool();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2729,6 +3151,7 @@ export const FieldDescriptorProto = {
     message.oneofIndex = object.oneofIndex ?? 0;
     message.jsonName = object.jsonName ?? "";
     message.options = object.options !== undefined && object.options !== null ? FieldOptions.fromPartial(object.options) : undefined;
+    message.proto3Optional = object.proto3Optional ?? false;
     return message;
   }
 
@@ -3405,6 +3828,7 @@ function createBaseMessageOptions(): MessageOptions {
     noStandardDescriptorAccessor: false,
     deprecated: false,
     mapEntry: false,
+    deprecatedLegacyJsonFieldConflicts: false,
     uninterpretedOption: []
   };
 }
@@ -3425,6 +3849,10 @@ export const MessageOptions = {
 
     if (message.mapEntry === true) {
       writer.uint32(56).bool(message.mapEntry);
+    }
+
+    if (message.deprecatedLegacyJsonFieldConflicts === true) {
+      writer.uint32(88).bool(message.deprecatedLegacyJsonFieldConflicts);
     }
 
     for (const v of message.uninterpretedOption) {
@@ -3459,6 +3887,10 @@ export const MessageOptions = {
           message.mapEntry = reader.bool();
           break;
 
+        case 11:
+          message.deprecatedLegacyJsonFieldConflicts = reader.bool();
+          break;
+
         case 999:
           message.uninterpretedOption.push(UninterpretedOption.decode(reader, reader.uint32()));
           break;
@@ -3478,6 +3910,7 @@ export const MessageOptions = {
     message.noStandardDescriptorAccessor = object.noStandardDescriptorAccessor ?? false;
     message.deprecated = object.deprecated ?? false;
     message.mapEntry = object.mapEntry ?? false;
+    message.deprecatedLegacyJsonFieldConflicts = object.deprecatedLegacyJsonFieldConflicts ?? false;
     message.uninterpretedOption = object.uninterpretedOption?.map(e => UninterpretedOption.fromPartial(e)) || [];
     return message;
   }
@@ -3490,8 +3923,12 @@ function createBaseFieldOptions(): FieldOptions {
     packed: false,
     jstype: 1,
     lazy: false,
+    unverifiedLazy: false,
     deprecated: false,
     weak: false,
+    debugRedact: false,
+    retention: 1,
+    target: 1,
     uninterpretedOption: []
   };
 }
@@ -3514,12 +3951,28 @@ export const FieldOptions = {
       writer.uint32(40).bool(message.lazy);
     }
 
+    if (message.unverifiedLazy === true) {
+      writer.uint32(120).bool(message.unverifiedLazy);
+    }
+
     if (message.deprecated === true) {
       writer.uint32(24).bool(message.deprecated);
     }
 
     if (message.weak === true) {
       writer.uint32(80).bool(message.weak);
+    }
+
+    if (message.debugRedact === true) {
+      writer.uint32(128).bool(message.debugRedact);
+    }
+
+    if (message.retention !== 1) {
+      writer.uint32(136).int32(message.retention);
+    }
+
+    if (message.target !== 1) {
+      writer.uint32(144).int32(message.target);
     }
 
     for (const v of message.uninterpretedOption) {
@@ -3554,12 +4007,28 @@ export const FieldOptions = {
           message.lazy = reader.bool();
           break;
 
+        case 15:
+          message.unverifiedLazy = reader.bool();
+          break;
+
         case 3:
           message.deprecated = reader.bool();
           break;
 
         case 10:
           message.weak = reader.bool();
+          break;
+
+        case 16:
+          message.debugRedact = reader.bool();
+          break;
+
+        case 17:
+          message.retention = (reader.int32() as any);
+          break;
+
+        case 18:
+          message.target = (reader.int32() as any);
           break;
 
         case 999:
@@ -3581,8 +4050,12 @@ export const FieldOptions = {
     message.packed = object.packed ?? false;
     message.jstype = object.jstype ?? 1;
     message.lazy = object.lazy ?? false;
+    message.unverifiedLazy = object.unverifiedLazy ?? false;
     message.deprecated = object.deprecated ?? false;
     message.weak = object.weak ?? false;
+    message.debugRedact = object.debugRedact ?? false;
+    message.retention = object.retention ?? 1;
+    message.target = object.target ?? 1;
     message.uninterpretedOption = object.uninterpretedOption?.map(e => UninterpretedOption.fromPartial(e)) || [];
     return message;
   }
@@ -3638,6 +4111,7 @@ function createBaseEnumOptions(): EnumOptions {
   return {
     allowAlias: false,
     deprecated: false,
+    deprecatedLegacyJsonFieldConflicts: false,
     uninterpretedOption: []
   };
 }
@@ -3650,6 +4124,10 @@ export const EnumOptions = {
 
     if (message.deprecated === true) {
       writer.uint32(24).bool(message.deprecated);
+    }
+
+    if (message.deprecatedLegacyJsonFieldConflicts === true) {
+      writer.uint32(48).bool(message.deprecatedLegacyJsonFieldConflicts);
     }
 
     for (const v of message.uninterpretedOption) {
@@ -3676,6 +4154,10 @@ export const EnumOptions = {
           message.deprecated = reader.bool();
           break;
 
+        case 6:
+          message.deprecatedLegacyJsonFieldConflicts = reader.bool();
+          break;
+
         case 999:
           message.uninterpretedOption.push(UninterpretedOption.decode(reader, reader.uint32()));
           break;
@@ -3693,6 +4175,7 @@ export const EnumOptions = {
     const message = createBaseEnumOptions();
     message.allowAlias = object.allowAlias ?? false;
     message.deprecated = object.deprecated ?? false;
+    message.deprecatedLegacyJsonFieldConflicts = object.deprecatedLegacyJsonFieldConflicts ?? false;
     message.uninterpretedOption = object.uninterpretedOption?.map(e => UninterpretedOption.fromPartial(e)) || [];
     return message;
   }
@@ -4239,7 +4722,8 @@ function createBaseGeneratedCodeInfo_Annotation(): GeneratedCodeInfo_Annotation 
     path: [],
     sourceFile: "",
     begin: 0,
-    end: 0
+    end: 0,
+    semantic: 1
   };
 }
 
@@ -4263,6 +4747,10 @@ export const GeneratedCodeInfo_Annotation = {
 
     if (message.end !== 0) {
       writer.uint32(32).int32(message.end);
+    }
+
+    if (message.semantic !== 1) {
+      writer.uint32(40).int32(message.semantic);
     }
 
     return writer;
@@ -4302,6 +4790,10 @@ export const GeneratedCodeInfo_Annotation = {
           message.end = reader.int32();
           break;
 
+        case 5:
+          message.semantic = (reader.int32() as any);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -4317,6 +4809,7 @@ export const GeneratedCodeInfo_Annotation = {
     message.sourceFile = object.sourceFile ?? "";
     message.begin = object.begin ?? 0;
     message.end = object.end ?? 0;
+    message.semantic = object.semantic ?? 1;
     return message;
   }
 

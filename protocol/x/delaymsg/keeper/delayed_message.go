@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	generic "github.com/dydxprotocol/v4-chain/protocol/generic/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
@@ -25,7 +25,7 @@ func (k Keeper) GetNumMessages(
 ) uint32 {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get([]byte(types.NumDelayedMessagesKey))
-	var result generic.Uint32
+	var result gogotypes.UInt32Value
 	k.cdc.MustUnmarshal(b, &result)
 	return result.Value
 }
@@ -36,7 +36,7 @@ func (k Keeper) SetNumMessages(
 	numMessages uint32,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	value := generic.Uint32{Value: numMessages}
+	value := gogotypes.UInt32Value{Value: numMessages}
 	store.Set([]byte(types.NumDelayedMessagesKey), k.cdc.MustMarshal(&value))
 }
 

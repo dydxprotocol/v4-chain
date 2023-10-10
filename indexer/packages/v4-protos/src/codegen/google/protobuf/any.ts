@@ -25,8 +25,12 @@ import { DeepPartial } from "../../helpers";
  *     if (any.is(Foo.class)) {
  *       foo = any.unpack(Foo.class);
  *     }
+ *     // or ...
+ *     if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+ *       foo = any.unpack(Foo.getDefaultInstance());
+ *     }
  * 
- *  Example 3: Pack and unpack a message in Python.
+ * Example 3: Pack and unpack a message in Python.
  * 
  *     foo = Foo(...)
  *     any = Any()
@@ -36,13 +40,16 @@ import { DeepPartial } from "../../helpers";
  *       any.Unpack(foo)
  *       ...
  * 
- *  Example 4: Pack and unpack a message in Go
+ * Example 4: Pack and unpack a message in Go
  * 
  *      foo := &pb.Foo{...}
- *      any, err := ptypes.MarshalAny(foo)
+ *      any, err := anypb.New(foo)
+ *      if err != nil {
+ *        ...
+ *      }
  *      ...
  *      foo := &pb.Foo{}
- *      if err := ptypes.UnmarshalAny(any, foo); err != nil {
+ *      if err := any.UnmarshalTo(foo); err != nil {
  *        ...
  *      }
  * 
@@ -52,9 +59,8 @@ import { DeepPartial } from "../../helpers";
  * in the type URL, for example "foo.bar.com/x/y.z" will yield type
  * name "y.z".
  * 
- * 
  * JSON
- * ====
+ * 
  * The JSON representation of an `Any` value uses the regular
  * representation of the deserialized, embedded message, with an
  * additional field `@type` which contains the type URL. Example:
@@ -142,8 +148,12 @@ export interface Any {
  *     if (any.is(Foo.class)) {
  *       foo = any.unpack(Foo.class);
  *     }
+ *     // or ...
+ *     if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+ *       foo = any.unpack(Foo.getDefaultInstance());
+ *     }
  * 
- *  Example 3: Pack and unpack a message in Python.
+ * Example 3: Pack and unpack a message in Python.
  * 
  *     foo = Foo(...)
  *     any = Any()
@@ -153,13 +163,16 @@ export interface Any {
  *       any.Unpack(foo)
  *       ...
  * 
- *  Example 4: Pack and unpack a message in Go
+ * Example 4: Pack and unpack a message in Go
  * 
  *      foo := &pb.Foo{...}
- *      any, err := ptypes.MarshalAny(foo)
+ *      any, err := anypb.New(foo)
+ *      if err != nil {
+ *        ...
+ *      }
  *      ...
  *      foo := &pb.Foo{}
- *      if err := ptypes.UnmarshalAny(any, foo); err != nil {
+ *      if err := any.UnmarshalTo(foo); err != nil {
  *        ...
  *      }
  * 
@@ -169,9 +182,8 @@ export interface Any {
  * in the type URL, for example "foo.bar.com/x/y.z" will yield type
  * name "y.z".
  * 
- * 
  * JSON
- * ====
+ * 
  * The JSON representation of an `Any` value uses the regular
  * representation of the deserialized, embedded message, with an
  * additional field `@type` which contains the type URL. Example:
