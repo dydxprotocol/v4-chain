@@ -19,8 +19,9 @@ func (k msgServer) UpdateClobPair(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	defer func() {
+		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.UpdateClobPair, metrics.DeliverTx)
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "UpdateClobPair", msg)
 		}
 	}()
 

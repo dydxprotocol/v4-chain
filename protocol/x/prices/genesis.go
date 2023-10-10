@@ -29,9 +29,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeMarket,
-			indexer_manager.GetB64EncodedEventMessage(
-				update,
-			),
 			indexerevents.MarketEventVersion,
 			indexer_manager.GetBytes(
 				update,

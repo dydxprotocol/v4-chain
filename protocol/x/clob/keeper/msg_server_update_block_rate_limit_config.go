@@ -20,8 +20,9 @@ func (k msgServer) UpdateBlockRateLimitConfiguration(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	defer func() {
+		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.UpdateBlockRateLimitConfiguration, metrics.DeliverTx)
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "UpdateBlockRateLimitConfiguration", msg)
 		}
 	}()
 

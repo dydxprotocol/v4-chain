@@ -20,8 +20,9 @@ func (k msgServer) UpdateLiquidationsConfig(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	defer func() {
+		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.UpdateLiquidationsConfig, metrics.DeliverTx)
 		if err != nil {
-			errorlib.LogErrorWithBlockHeight(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), metrics.DeliverTx)
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "UpdateLiquidationsConfig", msg)
 		}
 	}()
 

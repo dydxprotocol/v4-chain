@@ -1,8 +1,6 @@
 package indexer_manager
 
 import (
-	"encoding/base64"
-
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,21 +40,6 @@ func getIndexerEvents(ctx sdk.Context, storeKey storetypes.StoreKey) []*IndexerT
 	return events.Events
 }
 
-// GetB64EncodedEventMessage returns the base64 encoded event message.
-// TODO(DEC-1720): Deprecate this function once we change the underlying proto to use bytes.
-func GetB64EncodedEventMessage(
-	eventMessage proto.Message,
-) string {
-	marshaler := &common.MarshalerImpl{}
-	eventMessageBytes, err := marshaler.Marshal(eventMessage)
-	if err != nil {
-		panic(err)
-	}
-
-	b64encodedEventMessage := base64.StdEncoding.EncodeToString(eventMessageBytes)
-	return b64encodedEventMessage
-}
-
 // GetBytes returns the marshaled bytes of the event message.
 func GetBytes(
 	eventMessage proto.Message,
@@ -69,22 +52,10 @@ func GetBytes(
 	return eventMessageBytes
 }
 
-// GetBytesFromEventData returns the decoded bytes of the base64 event data string.
-func GetBytesFromEventData(
-	event string,
-) []byte {
-	bytes, err := base64.StdEncoding.DecodeString(event)
-	if err != nil {
-		panic(err)
-	}
-	return bytes
-}
-
 // addTxnEvent adds a transaction event to the context's transient store of indexer events.
 func addTxnEvent(
 	ctx sdk.Context,
 	subType string,
-	data string,
 	version uint32,
 	storeKey storetypes.StoreKey,
 	dataBytes []byte,
@@ -92,7 +63,6 @@ func addTxnEvent(
 	event := IndexerTendermintEventWrapper{
 		Event: &IndexerTendermintEvent{
 			Subtype:             subType,
-			Data:                data,
 			Version:             version,
 			OrderingWithinBlock: &IndexerTendermintEvent_TransactionIndex{},
 			DataBytes:           dataBytes,
@@ -106,7 +76,6 @@ func addTxnEvent(
 func addBlockEvent(
 	ctx sdk.Context,
 	subType string,
-	data string,
 	storeKey storetypes.StoreKey,
 	blockEvent IndexerTendermintEvent_BlockEvent,
 	version uint32,
@@ -115,7 +84,6 @@ func addBlockEvent(
 	event := IndexerTendermintEventWrapper{
 		Event: &IndexerTendermintEvent{
 			Subtype: subType,
-			Data:    data,
 			Version: version,
 			OrderingWithinBlock: &IndexerTendermintEvent_BlockEvent_{
 				BlockEvent: blockEvent,

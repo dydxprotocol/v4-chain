@@ -1014,20 +1014,6 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	indexerEventManager.On("AddTxnEvent",
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				0,
-				0,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.QuantumConversionExponent,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-				constants.ClobPair_Btc.SubticksPerTick,
-				constants.ClobPair_Btc.StepBaseQuantums,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-			),
-		),
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
@@ -1082,20 +1068,6 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	indexerEventManager.On("AddTxnEvent",
 		ks.Ctx,
 		indexerevents.SubtypePerpetualMarket,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				0,
-				0,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.QuantumConversionExponent,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-				constants.ClobPair_Btc.SubticksPerTick,
-				constants.ClobPair_Btc.StepBaseQuantums,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-			),
-		),
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
@@ -1826,20 +1798,6 @@ func TestGetStatePosition_Success(t *testing.T) {
 				indexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewPerpetualMarketCreateEvent(
-							perpetualId,
-							uint32(i),
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.Ticker,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketId,
-							cp.Status,
-							cp.QuantumConversionExponent,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.AtomicResolution,
-							cp.SubticksPerTick,
-							cp.StepBaseQuantums,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
-						),
-					),
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
@@ -2053,20 +2011,6 @@ func TestInitStatefulOrders(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-						constants.ClobPair_Btc.Status,
-						constants.ClobPair_Btc.QuantumConversionExponent,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-						constants.ClobPair_Btc.SubticksPerTick,
-						constants.ClobPair_Btc.StepBaseQuantums,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -2215,20 +2159,6 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-						constants.ClobPair_Btc.Status,
-						constants.ClobPair_Btc.QuantumConversionExponent,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-						constants.ClobPair_Btc.SubticksPerTick,
-						constants.ClobPair_Btc.StepBaseQuantums,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(

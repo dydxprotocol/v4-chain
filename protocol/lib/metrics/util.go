@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
@@ -15,6 +17,32 @@ func IncrCountMetricWithLabels(module string, metric string, labels ...gometrics
 		[]string{module, metric, Count},
 		1,
 		labels,
+	)
+}
+
+// IncrSuccessOrErrorCounter increments either the success or error counter for a given handler
+// based on whether the given error is nil or not. This function is intended to be called in a
+// defer block at the top of any function which returns an error.
+func IncrSuccessOrErrorCounter(err error, module string, handler string, callback string, labels ...gometrics.Label) {
+	successOrError := Success
+	if err != nil {
+		successOrError = Error
+	}
+
+	telemetry.IncrCounterWithLabels(
+		[]string{
+			module,
+			handler,
+			successOrError,
+			Count,
+		},
+		1,
+		append(
+			[]gometrics.Label{
+				GetLabelForStringValue(Callback, callback),
+			},
+			labels...,
+		),
 	)
 }
 
@@ -66,4 +94,18 @@ func ModuleMeasureSinceWithLabels(
 			labels...,
 		),
 	)
+}
+
+// GetCallbackMetricFromCtx determines the callback metric based on the context. Note that DeliverTx is implied
+// if the context is not CheckTx or ReCheckTx. This function is unable to account for other callbacks like
+// PrepareCheckState or EndBlocker.
+func GetCallbackMetricFromCtx(ctx sdk.Context) string {
+	if ctx.IsReCheckTx() {
+		return ReCheckTx
+	}
+	if ctx.IsCheckTx() {
+		return CheckTx
+	}
+
+	return DeliverTx
 }

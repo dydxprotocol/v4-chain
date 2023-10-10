@@ -247,7 +247,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	allRewardShares, totalRewardWeight := k.getAllRewardSharesAndTotalWeight(ctx)
 	// Measure total reward weight.
 	telemetry.SetGauge(
-		float32(totalRewardWeight.Int64()),
+		metrics.GetMetricValueFromBigInt(totalRewardWeight),
 		types.ModuleName,
 		metrics.TotalRewardShareWeight,
 	)
@@ -274,7 +274,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), bigIntRewardTokenAmount)
 	// Measure distributed token amount.
 	telemetry.SetGauge(
-		float32(tokensToDistribute.Int64()),
+		metrics.GetMetricValueFromBigInt(tokensToDistribute),
 		types.ModuleName,
 		metrics.DistributedRewardTokens,
 	)
@@ -333,7 +333,7 @@ func (k Keeper) ProcessRewardsForBlock(
 		params.Denom,
 	)
 	telemetry.SetGauge(
-		float32(remainingTreasuryBalance.Amount.Int64()),
+		metrics.GetMetricValueFromBigInt(remainingTreasuryBalance.Amount.BigInt()),
 		types.ModuleName,
 		metrics.TreasuryBalanceAfterDistribution,
 	)

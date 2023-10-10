@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"math/big"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -148,14 +149,14 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 		// Report vest amount.
 		telemetry.SetGaugeWithLabels(
 			[]string{types.ModuleName, metrics.VestAmount},
-			float32(vestAmount.Int64()),
+			metrics.GetMetricValueFromBigInt(vestAmount.BigInt()),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 		// Report vester account balance after vest event.
 		balanceAfterVest := k.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(entry.VesterAccount), entry.Denom)
 		telemetry.SetGaugeWithLabels(
 			[]string{types.ModuleName, metrics.BalanceAfterVestEvent},
-			float32(balanceAfterVest.Amount.Int64()),
+			metrics.GetMetricValueFromBigInt(balanceAfterVest.Amount.BigInt()),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 	}

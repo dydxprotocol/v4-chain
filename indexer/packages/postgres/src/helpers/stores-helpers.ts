@@ -110,10 +110,10 @@ export function setBulkRowsForUpdate<T extends string>({
 }): string[] {
   return objectArray.map((object) => columns.map((col) => {
     if (stringColumns && stringColumns.includes(col)) {
-      return `'${object[col]}'`;
+      return `'${castNull(object[col])}'`;
     }
     if (numericColumns && numericColumns.includes(col)) {
-      return `${_.get(object, col)}`;
+      return `${castNull(_.get(object, col))}`;
     }
     if (bigintColumns && bigintColumns.includes(col)) {
       return castValue(object[col] as number | undefined | null, 'bigint');
@@ -128,10 +128,22 @@ export function setBulkRowsForUpdate<T extends string>({
       return castBinaryValue(object[col] as Buffer | null | undefined);
     }
     if (booleanColumns && booleanColumns.includes(col)) {
-      return `${object[col]}`;
+      return `${castNull(object[col])}`;
     }
     throw new Error(`Unsupported column for bulk update: ${col}`);
   }).join(', '));
+}
+
+/**
+ * If the value is null || undefined, return 'NULL'
+ */
+function castNull(
+  value: Buffer | string | number | boolean | null | undefined,
+): string {
+  if (value === null || value === undefined) {
+    return 'NULL';
+  }
+  return `${value}`;
 }
 
 /**

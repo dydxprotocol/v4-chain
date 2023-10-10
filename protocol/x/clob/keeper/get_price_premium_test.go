@@ -170,20 +170,6 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			mockIndexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						perpetualId,
-						0,
-						perpetual.Params.Ticker,
-						perpetual.Params.MarketId,
-						tc.args.clobPair.Status,
-						tc.args.clobPair.QuantumConversionExponent,
-						perpetual.Params.AtomicResolution,
-						tc.args.clobPair.SubticksPerTick,
-						tc.args.clobPair.StepBaseQuantums,
-						perpetual.Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
