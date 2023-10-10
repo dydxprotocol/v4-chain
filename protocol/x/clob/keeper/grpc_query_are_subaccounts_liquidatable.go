@@ -24,7 +24,7 @@ func (k Keeper) AreSubaccountsLiquidatable(
 
 	results := make([]types.AreSubaccountsLiquidatableResponse_Result, len(req.SubaccountIds))
 	for i, subaccountId := range req.SubaccountIds {
-		isLiquidatable, err := k.IsLiquidatable(ctx, subaccountId)
+		isLiquidatable, err := k.IsLiquidatableCached(ctx, subaccountId)
 
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
