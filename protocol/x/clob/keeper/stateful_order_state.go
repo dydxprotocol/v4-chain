@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	generic "github.com/dydxprotocol/v4-chain/protocol/generic/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -201,7 +201,7 @@ func (k Keeper) GetNextStatefulOrderTransactionIndex(ctx sdk.Context) uint32 {
 	b := nextTransactionIndexTransientStore.Get(
 		[]byte(types.NextStatefulOrderBlockTransactionIndexKey),
 	)
-	index := generic.Uint32{Value: 0}
+	index := gogotypes.UInt32Value{Value: 0}
 	if b != nil {
 		k.cdc.MustUnmarshal(b, &index)
 	}
@@ -503,7 +503,7 @@ func (k Keeper) GetStatefulOrderCount(
 	store := k.GetStatefulOrderCountMemStore(ctx)
 
 	b := store.Get(subaccountId.ToStateKey())
-	result := generic.Uint32{Value: 0}
+	result := gogotypes.UInt32Value{Value: 0}
 	if b != nil {
 		k.cdc.MustUnmarshal(b, &result)
 	}
@@ -522,7 +522,7 @@ func (k Keeper) SetStatefulOrderCount(
 	if count == 0 {
 		store.Delete(subaccountId.ToStateKey())
 	} else {
-		result := generic.Uint32{Value: count}
+		result := gogotypes.UInt32Value{Value: count}
 		store.Set(
 			subaccountId.ToStateKey(),
 			k.cdc.MustMarshal(&result),
