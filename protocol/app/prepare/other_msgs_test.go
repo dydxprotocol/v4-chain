@@ -29,7 +29,7 @@ var (
 func TestGetGroupMsgOther(t *testing.T) {
 	tests := map[string]struct {
 		txs      [][]byte
-		maxBytes int64
+		maxBytes uint64
 
 		expectedTxsInclude   [][]byte
 		expectedTxsRemainder [][]byte

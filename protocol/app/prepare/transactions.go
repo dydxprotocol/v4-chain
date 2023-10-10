@@ -20,8 +20,8 @@ type PrepareProposalTxs struct {
 	// Bytes.
 	// In general, there's no need to check for int64 overflow given that it would require
 	// exabytes of memory to hit the max int64 value in bytes.
-	MaxBytes  int64
-	UsedBytes int64
+	MaxBytes  uint64
+	UsedBytes uint64
 }
 
 // NewPrepareProposalTxs returns a new `PrepareProposalTxs` given the request.
@@ -33,16 +33,15 @@ func NewPrepareProposalTxs(
 	}
 
 	return PrepareProposalTxs{
-		MaxBytes:  req.MaxTxBytes,
-		UsedBytes: 0,
+		MaxBytes: uint64(req.MaxTxBytes),
 	}, nil
 }
 
 // SetUpdateMarketPricesTx sets the tx used for updating market prices.
 func (t *PrepareProposalTxs) SetUpdateMarketPricesTx(tx []byte) error {
-	oldBytes := int64(len(t.UpdateMarketPricesTx))
-	newBytes := int64(len(tx))
-	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
+	oldBytes := uint64(len(t.UpdateMarketPricesTx))
+	newBytes := uint64(len(tx))
+	if err := t.updateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
 	t.UpdateMarketPricesTx = tx
@@ -51,9 +50,9 @@ func (t *PrepareProposalTxs) SetUpdateMarketPricesTx(tx []byte) error {
 
 // SetAddPremiumVotesTx sets the tx used for adding premium votes.
 func (t *PrepareProposalTxs) SetAddPremiumVotesTx(tx []byte) error {
-	oldBytes := int64(len(t.AddPremiumVotesTx))
-	newBytes := int64(len(tx))
-	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
+	oldBytes := uint64(len(t.AddPremiumVotesTx))
+	newBytes := uint64(len(tx))
+	if err := t.updateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
 	t.AddPremiumVotesTx = tx
@@ -62,9 +61,9 @@ func (t *PrepareProposalTxs) SetAddPremiumVotesTx(tx []byte) error {
 
 // SetProposedOperationsTx sets the tx used for order operations.
 func (t *PrepareProposalTxs) SetProposedOperationsTx(tx []byte) error {
-	oldBytes := int64(len(t.ProposedOperationsTx))
-	newBytes := int64(len(tx))
-	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
+	oldBytes := uint64(len(t.ProposedOperationsTx))
+	newBytes := uint64(len(tx))
+	if err := t.updateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
 	t.ProposedOperationsTx = tx
@@ -73,9 +72,9 @@ func (t *PrepareProposalTxs) SetProposedOperationsTx(tx []byte) error {
 
 // SetAcknowledgeBridgesTx sets the tx used for acknowledging bridges.
 func (t *PrepareProposalTxs) SetAcknowledgeBridgesTx(tx []byte) error {
-	oldBytes := int64(len(t.AcknowledgeBridgesTx))
-	newBytes := int64(len(tx))
-	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
+	oldBytes := uint64(len(t.AcknowledgeBridgesTx))
+	newBytes := uint64(len(tx))
+	if err := t.updateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
 	t.AcknowledgeBridgesTx = tx
@@ -84,9 +83,9 @@ func (t *PrepareProposalTxs) SetAcknowledgeBridgesTx(tx []byte) error {
 
 // AddOtherTxs adds txs to the "other" tx category.
 func (t *PrepareProposalTxs) AddOtherTxs(allTxs [][]byte) error {
-	bytesToAdd := int64(0)
+	bytesToAdd := uint64(0)
 	for _, tx := range allTxs {
-		txSize := int64(len(tx))
+		txSize := uint64(len(tx))
 		if txSize == 0 {
 			return fmt.Errorf("Cannot add zero length tx: %v", tx)
 		}
@@ -97,7 +96,7 @@ func (t *PrepareProposalTxs) AddOtherTxs(allTxs [][]byte) error {
 		return errors.New("No txs to add.")
 	}
 
-	if err := t.UpdateUsedBytes(0, bytesToAdd); err != nil {
+	if err := t.updateUsedBytes(0, bytesToAdd); err != nil {
 		return err
 	}
 
@@ -105,17 +104,13 @@ func (t *PrepareProposalTxs) AddOtherTxs(allTxs [][]byte) error {
 	return nil
 }
 
-// UpdateUsedBytes updates the used bytes field. This returns an error if the num used bytes
+// updateUsedBytes updates the used bytes field. This returns an error if the num used bytes
 // exceeds the max byte limit.
-func (t *PrepareProposalTxs) UpdateUsedBytes(
-	bytesToRemove int64,
-	bytesToAdd int64,
+func (t *PrepareProposalTxs) updateUsedBytes(
+	bytesToRemove uint64,
+	bytesToAdd uint64,
 ) error {
-	if bytesToRemove < 0 || bytesToAdd < 0 {
-		return errors.New("Invalid bytes to remove/add")
-	}
-
-	if t.UsedBytes-bytesToRemove < 0 {
+	if t.UsedBytes < bytesToRemove {
 		return errors.New("Result cannot be negative")
 	}
 
@@ -129,7 +124,7 @@ func (t *PrepareProposalTxs) UpdateUsedBytes(
 }
 
 // GetAvailableBytes returns the available bytes for the proposal.
-func (t *PrepareProposalTxs) GetAvailableBytes() int64 {
+func (t *PrepareProposalTxs) GetAvailableBytes() uint64 {
 	return t.MaxBytes - t.UsedBytes
 }
 

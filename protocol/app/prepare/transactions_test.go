@@ -25,8 +25,8 @@ func Test_NewPrepareProposalTransactions_Success(t *testing.T) {
 	ppt, err := prepare.NewPrepareProposalTxs(req)
 
 	require.NoError(t, err)
-	require.Equal(t, int64(123), ppt.MaxBytes)
-	require.Equal(t, int64(0), ppt.UsedBytes)
+	require.Equal(t, uint64(123), ppt.MaxBytes)
+	require.Equal(t, uint64(0), ppt.UsedBytes)
 
 	require.Nil(t, ppt.UpdateMarketPricesTx)
 	require.Nil(t, ppt.AddPremiumVotesTx)
@@ -66,7 +66,7 @@ func setterTestCases(t *testing.T, tFunc TestFunction) {
 		tx []byte
 
 		expectedTx        []byte
-		expectedUsedBytes int64
+		expectedUsedBytes uint64
 		expectedErr       error
 	}{
 		"input is nil": {
@@ -100,8 +100,8 @@ func setterTestCases(t *testing.T, tFunc TestFunction) {
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, int64(4), ppt.MaxBytes)
-			require.Equal(t, int64(0), ppt.UsedBytes)
+			require.Equal(t, uint64(4), ppt.MaxBytes)
+			require.Equal(t, uint64(0), ppt.UsedBytes)
 
 			err = setterTestHelper(tFunc, &ppt, tc.tx)
 
@@ -153,7 +153,7 @@ func Test_AddOtherTxs(t *testing.T) {
 		additionalTxs [][]byte
 
 		expectedTxs           [][]byte
-		expectedUsedBytes     int64
+		expectedUsedBytes     uint64
 		expectedErr           error
 		expectedAdditionalErr error
 	}{
@@ -207,8 +207,8 @@ func Test_AddOtherTxs(t *testing.T) {
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, int64(4), ppt.MaxBytes)
-			require.Equal(t, int64(0), ppt.UsedBytes)
+			require.Equal(t, uint64(4), ppt.MaxBytes)
+			require.Equal(t, uint64(0), ppt.UsedBytes)
 
 			// initial txs.
 			err = ppt.AddOtherTxs(tc.txs)
@@ -232,78 +232,6 @@ func Test_AddOtherTxs(t *testing.T) {
 	}
 }
 
-func Test_UpdateUsedBytes(t *testing.T) {
-	tests := map[string]struct {
-		usedBytes     int64
-		bytesToRemove int64
-		bytesToAdd    int64
-
-		expectedErr error
-	}{
-		"Valid: replaced > add": {
-			usedBytes:     4,
-			bytesToRemove: 4,
-			bytesToAdd:    2,
-		},
-		"Valid: replaced = add": {
-			usedBytes:     5,
-			bytesToRemove: 3,
-			bytesToAdd:    3,
-		},
-		"Valid: replaced < add": {
-			usedBytes:     5,
-			bytesToRemove: 3,
-			bytesToAdd:    5,
-		},
-		"Neg: bytes to remove": {
-			usedBytes:     5,
-			bytesToRemove: -1,
-			bytesToAdd:    1,
-			expectedErr:   errors.New("Invalid bytes to remove/add"),
-		},
-		"Neg: bytes to add": {
-			usedBytes:     5,
-			bytesToRemove: 1,
-			bytesToAdd:    -1,
-			expectedErr:   errors.New("Invalid bytes to remove/add"),
-		},
-		"Cannot be Negative": {
-			usedBytes:     0,
-			bytesToRemove: 3,
-			bytesToAdd:    2,
-			expectedErr:   errors.New("Result cannot be negative"),
-		},
-		"Exceeds max": {
-			usedBytes:     0,
-			bytesToRemove: 0,
-			bytesToAdd:    11,
-			expectedErr:   errors.New("Exceeds max: max=10, used=0, adding=11"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ppt, err := prepare.NewPrepareProposalTxs(
-				abci.RequestPrepareProposal{
-					MaxTxBytes: 10,
-				},
-			)
-			require.NoError(t, err)
-			require.Equal(t, int64(10), ppt.MaxBytes)
-			require.Equal(t, int64(0), ppt.UsedBytes)
-
-			ppt.UsedBytes = tc.usedBytes
-
-			err = ppt.UpdateUsedBytes(tc.bytesToRemove, tc.bytesToAdd)
-			if tc.expectedErr != nil {
-				require.ErrorContains(t, err, tc.expectedErr.Error())
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
-}
-
 func Test_GetAvailableBytes(t *testing.T) {
 	tests := map[string]struct {
 		pricesTx           []byte
@@ -312,11 +240,10 @@ func Test_GetAvailableBytes(t *testing.T) {
 		otherTxs           [][]byte
 		otherAdditionalTxs [][]byte
 
-		expectedUsedBytes  int64
-		expectedAvailBytes int64
+		expectedUsedBytes  uint64
+		expectedAvailBytes uint64
 	}{
 		"inputs are nil": {
-			expectedUsedBytes:  0,
 			expectedAvailBytes: 10,
 		},
 		"inputs are empty": {
@@ -359,8 +286,8 @@ func Test_GetAvailableBytes(t *testing.T) {
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, int64(10), ppt.MaxBytes)
-			require.Equal(t, int64(0), ppt.UsedBytes)
+			require.Equal(t, uint64(10), ppt.MaxBytes)
+			require.Equal(t, uint64(0), ppt.UsedBytes)
 
 			err = ppt.SetUpdateMarketPricesTx(tc.pricesTx)
 			require.NoError(t, err)
@@ -503,8 +430,8 @@ func Test_GetTxsInOrder(t *testing.T) {
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, int64(11), ppt.MaxBytes)
-			require.Equal(t, int64(0), ppt.UsedBytes)
+			require.Equal(t, uint64(11), ppt.MaxBytes)
+			require.Equal(t, uint64(0), ppt.UsedBytes)
 
 			err = ppt.SetUpdateMarketPricesTx(tc.pricesTx)
 			require.NoError(t, err)
