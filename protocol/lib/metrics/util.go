@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"math/big"
+	"math/rand"
 	"strconv"
 	"time"
 
@@ -47,6 +48,23 @@ func GetLabelForStringValue(labelName string, labelValue string) gometrics.Label
 func GetMetricValueFromBigInt(i *big.Int) float32 {
 	r, _ := new(big.Float).SetInt(i).Float32()
 	return r
+}
+
+// ModuleMeasureSinceWithSampling samples latency metrics given the sample rate. This is intended
+// to be used in hot code paths.
+func ModuleMeasureSinceWithSampling(
+	module string,
+	start time.Time,
+	sampleRate float64,
+	keys ...string,
+) {
+	if rand.Float64() < sampleRate {
+		telemetry.ModuleMeasureSince(
+			module,
+			start,
+			keys...,
+		)
+	}
 }
 
 // ModuleMeasureSinceWithLabels provides a short hand method for emitting a time measure
