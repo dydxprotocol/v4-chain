@@ -119,6 +119,29 @@ func (k Keeper) SetDelayedMessage(
 ) (
 	err error,
 ) {
+	// Unpack the message and validate it.
+	// For messages that are being set from genesis state, we need to unpack the Any type to hydrate the cached value.
+	if err = msg.UnpackInterfaces(k.cdc); err != nil {
+		return err
+	}
+
+	sdkMsg, err := msg.GetMessage()
+	if err != nil {
+		return errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"failed to delay msg: failed to get message with error '%v'",
+			err,
+		)
+	}
+
+	if err := k.ValidateMsg(sdkMsg); err != nil {
+		return errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"failed to delay message: failed to validate with error '%v'",
+			err,
+		)
+	}
+
 	if msg.BlockHeight < lib.MustConvertIntegerToUint32(ctx.BlockHeight()) {
 		return errorsmod.Wrapf(
 			types.ErrInvalidInput,
@@ -166,6 +189,32 @@ func validateSigners(msg sdk.Msg) error {
 	return nil
 }
 
+// ValidateMsg validates that a message is routable, passes ValidateBasic, and has the expected signer.
+func (k Keeper) ValidateMsg(msg sdk.Msg) error {
+	handler := k.router.Handler(msg)
+	// If the message type is not routable, return an error.
+	if handler == nil {
+		return errorsmod.Wrapf(
+			types.ErrMsgIsUnroutable,
+			sdk.MsgTypeURL(msg),
+		)
+	}
+
+	if err := msg.ValidateBasic(); err != nil {
+		return errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"message failed basic validation: %v",
+			err,
+		)
+	}
+
+	if err := validateSigners(msg); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DelayMessageByBlocks registers an sdk.Msg to be executed after blockDelay blocks.
 func (k Keeper) DelayMessageByBlocks(
 	ctx sdk.Context,
@@ -175,28 +224,6 @@ func (k Keeper) DelayMessageByBlocks(
 	id uint32,
 	err error,
 ) {
-	handler := k.router.Handler(msg)
-	// If the message type is not routable, return an error.
-	if handler == nil {
-		return 0, errorsmod.Wrapf(
-			types.ErrMsgIsUnroutable,
-			sdk.MsgTypeURL(msg),
-		)
-	}
-
-	if err := msg.ValidateBasic(); err != nil {
-		return 0, errorsmod.Wrapf(
-			types.ErrInvalidInput,
-			"message failed basic validation: %v",
-			err,
-		)
-	}
-
-	if err := validateSigners(msg); err != nil {
-		return 0, err
-	}
-
-	nextId := k.GetNumMessages(ctx)
 	blockHeight, err := lib.AddUint32(ctx.BlockHeight(), blockDelay)
 	if err != nil {
 		return 0, errorsmod.Wrapf(
@@ -215,6 +242,7 @@ func (k Keeper) DelayMessageByBlocks(
 		)
 	}
 
+	nextId := k.GetNumMessages(ctx)
 	delayedMessage := types.DelayedMessage{
 		Id:          nextId,
 		Msg:         anyMsg,
