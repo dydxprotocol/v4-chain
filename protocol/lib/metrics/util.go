@@ -20,6 +20,32 @@ func IncrCountMetricWithLabels(module string, metric string, labels ...gometrics
 	)
 }
 
+// IncrSuccessOrErrorCounter increments either the success or error counter for a given handler
+// based on whether the given error is nil or not. This function is intended to be called in a
+// defer block at the top of any function which returns an error.
+func IncrSuccessOrErrorCounter(err error, module string, handler string, callback string, labels ...gometrics.Label) {
+	successOrError := Success
+	if err != nil {
+		successOrError = Error
+	}
+
+	telemetry.IncrCounterWithLabels(
+		[]string{
+			module,
+			handler,
+			successOrError,
+			Count,
+		},
+		1,
+		append(
+			[]gometrics.Label{
+				GetLabelForStringValue(Callback, callback),
+			},
+			labels...,
+		),
+	)
+}
+
 // NewBinaryStringLabel returns a metrics label with a value of "yes" or "no" depending on the condition.
 func NewBinaryStringLabel(metricName string, condition bool) gometrics.Label {
 	labelValue := No
