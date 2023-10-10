@@ -286,6 +286,31 @@ func (k Keeper) IsLiquidatable(
 	return isLiquidatable, nil
 }
 
+func (k Keeper) IsLiquidatableCached(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+) (
+	bool,
+	error,
+) {
+	bigNetCollateral,
+		_,
+		bigMaintenanceMargin,
+		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirementsCached(
+		ctx,
+		satypes.Update{SubaccountId: subaccountId},
+	)
+	if err != nil {
+		return false, err
+	}
+
+	// The subaccount is liquidatable if both of the following are true:
+	// - The maintenance margin requirements are greater than zero (note that they can never be negative).
+	// - The maintenance margin requirements are greater than the subaccount's net collateral.
+	isLiquidatable := bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
+	return isLiquidatable, nil
+}
+
 // Returns the bankruptcy-price of a subaccount’s position delta in quote quantums.
 // Note that the result `deltaQuoteQuantums` is signed and always rounded towards
 // positive infinity so that closing the position at the rounded bankruptcy price

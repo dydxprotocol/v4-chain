@@ -31,6 +31,15 @@ type SubaccountsKeeper interface {
 		bigMaintenanceMargin *big.Int,
 		err error,
 	)
+	GetNetCollateralAndMarginRequirementsCached(
+		ctx sdk.Context,
+		update satypes.Update,
+	) (
+		bigNetCollateral *big.Int,
+		bigInitialMargin *big.Int,
+		bigMaintenanceMargin *big.Int,
+		err error,
+	)
 	GetSubaccount(
 		ctx sdk.Context,
 		id satypes.SubaccountId,

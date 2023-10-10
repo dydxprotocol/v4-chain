@@ -329,6 +329,72 @@ func (k Keeper) GetMarginRequirements(
 	return big.NewInt(0), big.NewInt(0), types.ErrNotImplementedMargin
 }
 
+func (k Keeper) GetNetCollateralCached(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigNetCollateralQuoteQuantums *big.Int,
+	err error,
+) {
+	if id == lib.UsdcAssetId {
+		return new(big.Int).Set(bigQuantums), nil
+	}
+
+	// Get asset
+	_, err = k.GetAsset(ctx, id)
+	if err != nil {
+		return big.NewInt(0), err
+	}
+
+	// Balance is zero.
+	if bigQuantums.BitLen() == 0 {
+		return big.NewInt(0), nil
+	}
+
+	// Balance is positive.
+	// TODO(DEC-581): add multi-collateral support.
+	if bigQuantums.Sign() == 1 {
+		return big.NewInt(0), types.ErrNotImplementedMulticollateral
+	}
+
+	// Balance is negative.
+	// TODO(DEC-582): add margin-trading support.
+	return big.NewInt(0), types.ErrNotImplementedMargin
+}
+
+// GetMarginRequirements returns the initial and maintenance margin-
+// requirements for a given position size for a given assetId.
+func (k Keeper) GetMarginRequirementsCached(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigInitialMarginQuoteQuantums *big.Int,
+	bigMaintenanceMarginQuoteQuantums *big.Int,
+	err error,
+) {
+	// QuoteBalance does not contribute to any margin requirements.
+	if id == lib.UsdcAssetId {
+		return big.NewInt(0), big.NewInt(0), nil
+	}
+
+	// Get asset
+	_, err = k.GetAsset(ctx, id)
+	if err != nil {
+		return big.NewInt(0), big.NewInt(0), err
+	}
+
+	// Balance is zero or positive.
+	if bigQuantums.Sign() >= 0 {
+		return big.NewInt(0), big.NewInt(0), nil
+	}
+
+	// Balance is negative.
+	// TODO(DEC-582): margin-trading
+	return big.NewInt(0), big.NewInt(0), types.ErrNotImplementedMargin
+}
+
 // ConvertAssetToCoin converts the given `assetId` and `quantums` used in `x/asset`,
 // to an `sdk.Coin` in correspoding `denom` and `amount` used in `x/bank`.
 // Also outputs `convertedQuantums` which has the equal value as converted `sdk.Coin`.

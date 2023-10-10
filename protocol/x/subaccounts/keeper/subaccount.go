@@ -655,6 +655,34 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 	)
 }
 
+func (k Keeper) GetNetCollateralAndMarginRequirementsCached(
+	ctx sdk.Context,
+	update types.Update,
+) (
+	bigNetCollateral *big.Int,
+	bigInitialMargin *big.Int,
+	bigMaintenanceMargin *big.Int,
+	err error,
+) {
+	subaccount := k.GetSubaccount(ctx, update.SubaccountId)
+
+	settledSubaccount, _, err := k.getSettledSubaccount(ctx, subaccount)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	settledUpdate := settledUpdate{
+		SettledSubaccount: settledSubaccount,
+		AssetUpdates:      update.AssetUpdates,
+		PerpetualUpdates:  update.PerpetualUpdates,
+	}
+
+	return k.internalGetNetCollateralAndMarginRequirementsCached(
+		ctx,
+		settledUpdate,
+	)
+}
+
 // internalGetNetCollateralAndMarginRequirements returns the total net collateral, total initial margin
 // requirement, and total maintenance margin requirement for the `Subaccount` as if unsettled funding
 // of existing positions were settled, and the `bigQuoteBalanceDeltaQuantums`, `assetUpdates`, and
@@ -721,6 +749,91 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		bigInitialMarginRequirements,
 			bigMaintenanceMarginRequirements,
 			err := pk.GetMarginRequirements(ctx, id, bigQuantums)
+		if err != nil {
+			return err
+		}
+
+		bigInitialMargin.Add(bigInitialMargin, bigInitialMarginRequirements)
+		bigMaintenanceMargin.Add(bigMaintenanceMargin, bigMaintenanceMarginRequirements)
+
+		return nil
+	}
+
+	// Iterate over all assets and updates and calculate change to net collateral and margin requirements.
+	for _, size := range assetSizes {
+		err := calculate(k.assetsKeeper, size)
+		if err != nil {
+			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+		}
+	}
+
+	// Iterate over all perpetuals and updates and calculate change to net collateral and margin requirements.
+	// TODO(DEC-110): `perp.GetSettlement()`, factor in unsettled funding.
+	for _, size := range perpetualSizes {
+		err := calculate(k.perpetualsKeeper, size)
+		if err != nil {
+			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+		}
+	}
+
+	return bigNetCollateral, bigInitialMargin, bigMaintenanceMargin, nil
+}
+
+func (k Keeper) internalGetNetCollateralAndMarginRequirementsCached(
+	ctx sdk.Context,
+	settledUpdate settledUpdate,
+) (
+	bigNetCollateral *big.Int,
+	bigInitialMargin *big.Int,
+	bigMaintenanceMargin *big.Int,
+	err error,
+) {
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.GetNetCollateralAndMarginRequirements,
+		metrics.Latency,
+	)
+
+	// Initialize return values.
+	bigNetCollateral = big.NewInt(0)
+	bigInitialMargin = big.NewInt(0)
+	bigMaintenanceMargin = big.NewInt(0)
+
+	// Merge updates and assets.
+	assetSizes, err := applyUpdatesToPositions(
+		settledUpdate.SettledSubaccount.AssetPositions,
+		settledUpdate.AssetUpdates,
+	)
+	if err != nil {
+		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+	}
+
+	// Merge updates and perpetuals.
+	perpetualSizes, err := applyUpdatesToPositions(
+		settledUpdate.SettledSubaccount.PerpetualPositions,
+		settledUpdate.PerpetualUpdates,
+	)
+	if err != nil {
+		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+	}
+
+	// The calculate function increments `netCollateral`, `initialMargin`, and `maintenanceMargin`
+	// given a `ProductKeeper` and a `PositionSize`.
+	calculate := func(pk types.ProductKeeper, size types.PositionSize) error {
+		id := size.GetId()
+		bigQuantums := size.GetBigQuantums()
+
+		bigNetCollateralQuoteQuantums, err := pk.GetNetCollateralCached(ctx, id, bigQuantums)
+		if err != nil {
+			return err
+		}
+
+		bigNetCollateral.Add(bigNetCollateral, bigNetCollateralQuoteQuantums)
+
+		bigInitialMarginRequirements,
+			bigMaintenanceMarginRequirements,
+			err := pk.GetMarginRequirementsCached(ctx, id, bigQuantums)
 		if err != nil {
 			return err
 		}

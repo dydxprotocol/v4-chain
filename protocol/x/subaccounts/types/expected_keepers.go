@@ -28,6 +28,23 @@ type ProductKeeper interface {
 		bigMaintenanceMarginQuoteQuantums *big.Int,
 		err error,
 	)
+	GetNetCollateralCached(
+		ctx sdk.Context,
+		id uint32,
+		bigQuantums *big.Int,
+	) (
+		bigNetCollateralQuoteQuantums *big.Int,
+		err error,
+	)
+	GetMarginRequirementsCached(
+		ctx sdk.Context,
+		id uint32,
+		bigQuantums *big.Int,
+	) (
+		bigInitialMarginQuoteQuantums *big.Int,
+		bigMaintenanceMarginQuoteQuantums *big.Int,
+		err error,
+	)
 	IsPositionUpdatable(
 		ctx sdk.Context,
 		id uint32,

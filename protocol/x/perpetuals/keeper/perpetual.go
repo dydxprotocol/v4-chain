@@ -771,6 +771,29 @@ func (k Keeper) GetNetNotional(
 	return bigQuoteQuantums, nil
 }
 
+func (k Keeper) GetNetNotionalCached(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigNetNotionalQuoteQuantums *big.Int,
+	err error,
+) {
+	perpetual, marketPrice, err := k.GetPerpetualAndMarketPriceCached(ctx, id)
+	if err != nil {
+		return new(big.Int), err
+	}
+
+	bigQuoteQuantums := lib.BaseToQuoteQuantums(
+		bigQuantums,
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
+	return bigQuoteQuantums, nil
+}
+
 // GetNotionalInBaseQuantums returns the net notional in base quantums, which can be represented
 // by the following equation:
 // `quoteQuantums * 10^baseAtomicResolution / (marketPrice * 10^marketExponent * 10^quoteAtomicResolution)`.
@@ -824,6 +847,18 @@ func (k Keeper) GetNetCollateral(
 	return k.GetNetNotional(ctx, id, bigQuantums)
 }
 
+func (k Keeper) GetNetCollateralCached(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigNetCollateralQuoteQuantums *big.Int,
+	err error,
+) {
+	// The net collateral is equal to the net open notional.
+	return k.GetNetNotionalCached(ctx, id, bigQuantums)
+}
+
 // GetMarginRequirements returns initial and maintenance margin requirements in quote quantums, given the position
 // size in base quantums.
 //
@@ -859,6 +894,51 @@ func (k Keeper) GetMarginRequirements(
 	}
 	// Get perpetual's liquidity tier.
 	liquidityTier, err := k.GetLiquidityTier(ctx, perpetual.Params.LiquidityTier)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Always consider the magnitude of the position regardless of whether it is long/short.
+	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
+
+	bigQuoteQuantums := lib.BaseToQuoteQuantums(
+		bigAbsQuantums,
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
+	// Initial margin requirement quote quantums = size in quote quantums * adjusted initial margin PPM.
+	bigInitialMarginQuoteQuantums = liquidityTier.GetAdjustedInitialMarginQuoteQuantums(bigQuoteQuantums)
+
+	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
+	bigMaintenanceMarginQuoteQuantums = lib.BigRatRound(
+		lib.BigRatMulPpm(
+			new(big.Rat).SetInt(bigInitialMarginQuoteQuantums),
+			liquidityTier.MaintenanceFractionPpm,
+		),
+		true,
+	)
+
+	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
+}
+
+func (k Keeper) GetMarginRequirementsCached(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigInitialMarginQuoteQuantums *big.Int,
+	bigMaintenanceMarginQuoteQuantums *big.Int,
+	err error,
+) {
+	// Get perpetual and market price.
+	perpetual, marketPrice, err := k.GetPerpetualAndMarketPriceCached(ctx, id)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Get perpetual's liquidity tier.
+	liquidityTier, err := k.GetLiquidityTierCached(ctx, perpetual.Params.LiquidityTier)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1149,6 +1229,48 @@ func (k Keeper) GetPerpetualAndMarketPrice(
 	return perpetual, marketPrice, nil
 }
 
+func (k Keeper) GetPerpetualAndMarketPriceCached(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (types.Perpetual, pricestypes.MarketPrice, error) {
+	perpetualKey := fmt.Sprintf("p-%d", perpetualId)
+	perpetual, ok := ctx.Value(perpetualKey).(types.Perpetual)
+
+	if !ok {
+		// Get perpetual.
+		perpetual, err := k.GetPerpetual(ctx, perpetualId)
+		if err != nil {
+			return perpetual, pricestypes.MarketPrice{}, err
+		}
+		ctx.WithValue(perpetualKey, perpetual)
+	}
+
+	// Get market price.
+	marketPriceKey := fmt.Sprintf("m-%d", perpetual.Params.MarketId)
+	marketPrice, ok := ctx.Value(marketPriceKey).(pricestypes.MarketPrice)
+
+	if !ok {
+		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId)
+		if err != nil {
+			if errorsmod.IsOf(err, pricestypes.ErrMarketPriceDoesNotExist) {
+				return perpetual, marketPrice, errorsmod.Wrap(
+					types.ErrMarketDoesNotExist,
+					fmt.Sprintf(
+						"Market ID %d does not exist on perpetual ID %d",
+						perpetual.Params.MarketId,
+						perpetual.Params.Id,
+					),
+				)
+			} else {
+				return perpetual, marketPrice, err
+			}
+		}
+		ctx.WithValue(marketPriceKey, marketPrice)
+	}
+
+	return perpetual, marketPrice, nil
+}
+
 // Performs the following validation (stateful and stateless) on a `Perpetual`
 // structs fields, returning an error if any conditions are false:
 // - MarketId is not a valid market.
@@ -1347,6 +1469,27 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 	}
 
 	k.cdc.MustUnmarshal(b, &liquidityTier)
+	return liquidityTier, nil
+}
+
+func (k Keeper) GetLiquidityTierCached(ctx sdk.Context, id uint32) (
+	liquidityTier types.LiquidityTier,
+	err error,
+) {
+	key := fmt.Sprintf("l-%d", id)
+	liquidityTier, ok := ctx.Value(key).(types.LiquidityTier)
+
+	if !ok {
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LiquidityTierKeyPrefix))
+
+		b := store.Get(types.LiquidityTierKey(id))
+		if b == nil {
+			return liquidityTier, errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(id))
+		}
+
+		k.cdc.MustUnmarshal(b, &liquidityTier)
+		ctx.WithValue(key, liquidityTier)
+	}
 	return liquidityTier, nil
 }
 
