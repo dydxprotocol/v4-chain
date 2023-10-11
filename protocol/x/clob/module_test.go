@@ -52,7 +52,7 @@ func getValidGenesisStr() string {
 	gs += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[{"limit":0,"usd_tnc_required":"0"},`
 	gs += `{"limit":1,"usd_tnc_required":"20"},{"limit":5,"usd_tnc_required":"100"},`
 	gs += `{"limit":10,"usd_tnc_required":"1000"},{"limit":100,"usd_tnc_required":"10000"},`
-	gs += `{"limit":200,"usd_tnc_required":"100000"}],"stateful_order_equity_tiers":[`
+	gs += `{"limit":1000,"usd_tnc_required":"100000"}],"stateful_order_equity_tiers":[`
 	gs += `{"limit":0,"usd_tnc_required":"0"},{"limit":1,"usd_tnc_required":"20"},`
 	gs += `{"limit":5,"usd_tnc_required":"100"},{"limit":10,"usd_tnc_required":"1000"},`
 	gs += `{"limit":100,"usd_tnc_required":"10000"},{"limit":200,"usd_tnc_required":"100000"}]}}`
@@ -400,7 +400,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				},
 				{
 					UsdTncRequired: dtypes.NewInt(100000),
-					Limit:          200,
+					Limit:          1000,
 				},
 			},
 			StatefulOrderEquityTiers: []clob_types.EquityTierLimit{
@@ -450,7 +450,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[{"limit":0,"usd_tnc_required":"0"},`
 	expected += `{"limit":1,"usd_tnc_required":"20"},{"limit":5,"usd_tnc_required":"100"},`
 	expected += `{"limit":10,"usd_tnc_required":"1000"},{"limit":100,"usd_tnc_required":"10000"},`
-	expected += `{"limit":200,"usd_tnc_required":"100000"}],"stateful_order_equity_tiers":[`
+	expected += `{"limit":1000,"usd_tnc_required":"100000"}],"stateful_order_equity_tiers":[`
 	expected += `{"limit":0,"usd_tnc_required":"0"},{"limit":1,"usd_tnc_required":"20"},`
 	expected += `{"limit":5,"usd_tnc_required":"100"},{"limit":10,"usd_tnc_required":"1000"},`
 	expected += `{"limit":100,"usd_tnc_required":"10000"},{"limit":200,"usd_tnc_required":"100000"}]}}`
