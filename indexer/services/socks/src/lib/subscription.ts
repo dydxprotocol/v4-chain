@@ -504,7 +504,7 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED`,
+          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           transformResponse: (res) => res,
         }),
@@ -519,6 +519,10 @@ export class Subscriptions {
       // such subaccounts can be subscribed to and events can be sent when the subaccounts are
       // indexed to an existing subscription.
       if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 404) {
+        return EMPTY_INITIAL_RESPONSE;
+      }
+      // A 403 means the user is blocked due to compliance issues
+      if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 403) {
         return EMPTY_INITIAL_RESPONSE;
       }
       throw error;
