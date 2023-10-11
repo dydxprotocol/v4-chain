@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"math/rand"
 	"sort"
 	"time"
 
@@ -730,6 +731,9 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 // Note that longs are positive, and shorts are negative.
 // Returns an error if a perpetual with `id` does not exist or if the `perpetual.Params.MarketId` does
 // not exist.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
 func (k Keeper) GetNetNotional(
 	ctx sdk.Context,
 	id uint32,
@@ -738,12 +742,14 @@ func (k Keeper) GetNetNotional(
 	bigNetNotionalQuoteQuantums *big.Int,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetNetNotional,
-		metrics.Latency,
-	)
+	if rand.Float64() < 0.01 {
+		defer telemetry.ModuleMeasureSince(
+			types.ModuleName,
+			time.Now(),
+			metrics.GetNetNotional,
+			metrics.Latency,
+		)
+	}
 
 	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
 	if err != nil {
@@ -826,6 +832,9 @@ func (k Keeper) GetNetCollateral(
 //
 // Returns an error if a perpetual with `id`, `perpetual.Params.MarketId`, or
 // `perpetual.Params.LiquidityTier` does not exist.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
 func (k Keeper) GetMarginRequirements(
 	ctx sdk.Context,
 	id uint32,
@@ -835,12 +844,15 @@ func (k Keeper) GetMarginRequirements(
 	bigMaintenanceMarginQuoteQuantums *big.Int,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetMarginRequirements,
-		metrics.Latency,
-	)
+	if rand.Float64() < 0.01 {
+		defer telemetry.ModuleMeasureSince(
+			types.ModuleName,
+			time.Now(),
+			metrics.GetMarginRequirements,
+			metrics.Latency,
+		)
+	}
+
 	// Get perpetual and market price.
 	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
 	if err != nil {
@@ -1079,16 +1091,21 @@ func (k Keeper) setPerpetual(
 }
 
 // GetPerpetualAndMarketPrice retrieves a Perpetual by its id and its corresponding MarketPrice.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
 func (k Keeper) GetPerpetualAndMarketPrice(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (types.Perpetual, pricestypes.MarketPrice, error) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetPerpetualAndMarketPrice,
-		metrics.Latency,
-	)
+	if rand.Float64() < 0.01 {
+		defer telemetry.ModuleMeasureSince(
+			types.ModuleName,
+			time.Now(),
+			metrics.GetPerpetualAndMarketPrice,
+			metrics.Latency,
+		)
+	}
 
 	// Get perpetual.
 	perpetual, err := k.GetPerpetual(ctx, perpetualId)

@@ -39,16 +39,21 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 }
 
 // GetSubaccount returns a subaccount from its index.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
 func (k Keeper) GetSubaccount(
 	ctx sdk.Context,
 	id types.SubaccountId,
 ) (val types.Subaccount) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetSubaccount,
-		metrics.Latency,
-	)
+	if rand.Float64() < 0.01 {
+		defer telemetry.ModuleMeasureSince(
+			types.ModuleName,
+			time.Now(),
+			metrics.GetSubaccount,
+			metrics.Latency,
+		)
+	}
 
 	// Check state for the subaccount.
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
