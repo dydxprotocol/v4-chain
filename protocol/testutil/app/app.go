@@ -18,20 +18,19 @@ import (
 	"github.com/cometbft/cometbft/mempool"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	sdkproto "github.com/cosmos/gogoproto/proto"
-
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	sdkproto "github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -47,7 +46,6 @@ import (
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -108,7 +106,10 @@ type AdvanceToBlockOptions struct {
 // with the option to override specific flags.
 func DefaultTestApp(customFlags map[string]interface{}) *app.App {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", customFlags)
-	logger := log.TestingLogger()
+	logger, ok := appOptions.Get(testlog.LoggerInstanceForTest).(log.Logger)
+	if !ok {
+		logger, _ = testlog.TestLogger()
+	}
 	db := dbm.NewMemDB()
 	dydxApp := app.New(
 		logger,
