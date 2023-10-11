@@ -161,9 +161,9 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		metrics.OffsettingSubaccountPerpetualPosition,
 	)
 
-	numSubaccountsIterated := 0
-	numSubaccountsWithNonOverlappingBankruptcyPrices := 0
-	numSubaccountsWithNoOpenPositionOnOppositeSide := 0
+	numSubaccountsIterated := uint32(0)
+	numSubaccountsWithNonOverlappingBankruptcyPrices := uint32(0)
+	numSubaccountsWithNoOpenPositionOnOppositeSide := uint32(0)
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
@@ -171,7 +171,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		ctx,
 		func(offsettingSubaccount satypes.Subaccount) (finished bool) {
 			// Iterate at most `MaxDeleveragingSubaccountsToIterate` subaccounts.
-			if numSubaccountsIterated >= int(k.MaxDeleveragingSubaccountsToIterate) {
+			if numSubaccountsIterated >= k.Flags.MaxDeleveragingSubaccountsToIterate {
 				return true
 			}
 

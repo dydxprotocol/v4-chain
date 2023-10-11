@@ -44,9 +44,7 @@ type (
 
 		memStoreInitialized *atomic.Bool
 
-		MaxLiquidationOrdersPerBlock        uint32
-		MaxDeleveragingAttemptsPerBlock     uint32
-		MaxDeleveragingSubaccountsToIterate uint32
+		Flags flags.ClobFlags
 
 		mevTelemetryConfig MevTelemetryConfig
 
@@ -109,11 +107,9 @@ func NewKeeper(
 			Host:       clobFlags.MevTelemetryHost,
 			Identifier: clobFlags.MevTelemetryIdentifier,
 		},
-		MaxLiquidationOrdersPerBlock:        clobFlags.MaxLiquidationOrdersPerBlock,
-		MaxDeleveragingAttemptsPerBlock:     clobFlags.MaxDeleveragingAttemptsPerBlock,
-		MaxDeleveragingSubaccountsToIterate: clobFlags.MaxDeleveragingSubaccountsToIterate,
-		placeOrderRateLimiter:               placeOrderRateLimiter,
-		cancelOrderRateLimiter:              cancelOrderRateLimiter,
+		Flags:                  clobFlags,
+		placeOrderRateLimiter:  placeOrderRateLimiter,
+		cancelOrderRateLimiter: cancelOrderRateLimiter,
 	}
 
 	// Provide the keeper to the MemClob.

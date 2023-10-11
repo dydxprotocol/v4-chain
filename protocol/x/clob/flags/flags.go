@@ -10,7 +10,7 @@ import (
 
 // A struct containing the values of all flags.
 type ClobFlags struct {
-	MaxLiquidationOrdersPerBlock        uint32
+	MaxLiquidationAttemptsPerBlock      uint32
 	MaxDeleveragingAttemptsPerBlock     uint32
 	MaxDeleveragingSubaccountsToIterate uint32
 
@@ -22,7 +22,7 @@ type ClobFlags struct {
 // List of CLI flags.
 const (
 	// Liquidations and deleveraging.
-	MaxLiquidationOrdersPerBlock        = "max-liquidation-orders-per-block"
+	MaxLiquidationAttemptsPerBlock      = "max-liquidation-attempts-per-block"
 	MaxDeleveragingAttemptsPerBlock     = "max-deleveraging-attempts-per-block"
 	MaxDeleveragingSubaccountsToIterate = "max-deleveraging-subaccounts-to-iterate"
 
@@ -34,8 +34,8 @@ const (
 
 // Default values.
 const (
-	DefaultMaxLiquidationOrdersPerBlock        = 20
-	DefaultMaxDeleveragingAttemptsPerBlock     = 5
+	DefaultMaxLiquidationAttemptsPerBlock      = 50
+	DefaultMaxDeleveragingAttemptsPerBlock     = 10
 	DefaultMaxDeleveragingSubaccountsToIterate = 500
 
 	DefaultMevTelemetryEnabled    = false
@@ -48,11 +48,11 @@ const (
 // E.g. `dydxprotocold start --non-validating-full-node true`.
 func AddClobFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Uint32(
-		MaxLiquidationOrdersPerBlock,
-		DefaultMaxLiquidationOrdersPerBlock,
+		MaxLiquidationAttemptsPerBlock,
+		DefaultMaxLiquidationAttemptsPerBlock,
 		fmt.Sprintf(
 			"Sets the maximum number of liquidation orders to process per block. Default = %d",
-			DefaultMaxLiquidationOrdersPerBlock,
+			DefaultMaxLiquidationAttemptsPerBlock,
 		),
 	)
 	cmd.Flags().Uint32(
@@ -90,7 +90,7 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 
 func GetDefaultClobFlags() ClobFlags {
 	return ClobFlags{
-		MaxLiquidationOrdersPerBlock:        DefaultMaxLiquidationOrdersPerBlock,
+		MaxLiquidationAttemptsPerBlock:      DefaultMaxLiquidationAttemptsPerBlock,
 		MaxDeleveragingAttemptsPerBlock:     DefaultMaxDeleveragingAttemptsPerBlock,
 		MaxDeleveragingSubaccountsToIterate: DefaultMaxDeleveragingSubaccountsToIterate,
 		MevTelemetryEnabled:                 DefaultMevTelemetryEnabled,
@@ -126,9 +126,9 @@ func GetClobFlagValuesFromOptions(
 		}
 	}
 
-	if option := appOpts.Get(MaxLiquidationOrdersPerBlock); option != nil {
+	if option := appOpts.Get(MaxLiquidationAttemptsPerBlock); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
-			result.MaxLiquidationOrdersPerBlock = v
+			result.MaxLiquidationAttemptsPerBlock = v
 		}
 	}
 
