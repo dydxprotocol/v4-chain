@@ -12,6 +12,8 @@
 * [#469](https://github.com/dydxprotocol/v4-chain/pull/469) Added a reason field to `/screen` endpoint to display a reason for blocking an address.
   
 ### Bug Fixes
+* [#579](https://github.com/dydxprotocol/v4-chain/pull/579) Fixed bug where open short-term orders were not being returned in the initial payload when subscribing to the v4_subaccounts channel.
+
 * [#552](https://github.com/dydxprotocol/v4-chain/pull/552) Fixed bug with Elliptic compliance client where the API key was incorrectly used instead of the API secret to generate the auth headers for the Elliptic request.
 
 * [#528](https://github.com/dydxprotocol/v4-chain/pull/528) Fixed bug with bulk SQL queries with nullable numeric / string / boolean values.
