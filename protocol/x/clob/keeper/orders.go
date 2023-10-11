@@ -457,22 +457,31 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 		if !exists {
 			// Order does not exist in state and therefore should not be placed. This indicates the order was cancelled
 			// or expired.
-			expiredOrCancelledStatefulOrderIds := append(
-				processProposerMatchesEvents.ExpiredStatefulOrderIds,
-				processProposerMatchesEvents.PlacedStatefulCancellationOrderIds...,
-			)
-			for _, expiredOrCancelledOrderId := range expiredOrCancelledStatefulOrderIds {
-				if orderId == expiredOrCancelledOrderId {
-					continue
+			isExpired := false
+			for _, expiredOrderId := range processProposerMatchesEvents.ExpiredStatefulOrderIds {
+				if orderId == expiredOrderId {
+					isExpired = true
+					break
 				}
 			}
-			panic(
-				fmt.Sprintf(
-					"PlaceStatefulOrdersFromLastBlock: Order does not exist in state and is not expired or cancelled. " +
-					"OrderId: %+v",
-					orderId,
-				),
-			)
+
+			isCanceled := false
+			for _, cancelledOrderId := range processProposerMatchesEvents.PlacedStatefulCancellationOrderIds {
+				if orderId == cancelledOrderId {
+					isCanceled = true
+					break
+				}
+			}
+
+			if isExpired || isCanceled {
+				panic(
+					fmt.Sprintf(
+						"PlaceStatefulOrdersFromLastBlock: Order does not exist in state and is not expired or cancelled. " +
+						"OrderId: %+v",
+						orderId,
+					),
+				)
+			}
 		}
 
 		order := orderPlacement.GetOrder()
