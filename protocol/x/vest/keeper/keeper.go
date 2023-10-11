@@ -47,7 +47,7 @@ func NewKeeper(
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
-		authorities:     lib.SliceToSet(authorities),
+		authorities:     lib.UniqueSliceToSet(authorities),
 	}
 }
 

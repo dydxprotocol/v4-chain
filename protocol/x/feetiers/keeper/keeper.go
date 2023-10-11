@@ -34,7 +34,7 @@ func NewKeeper(
 		cdc:         cdc,
 		statsKeeper: statsKeeper,
 		storeKey:    storeKey,
-		authorities: lib.SliceToSet(authorities),
+		authorities: lib.UniqueSliceToSet(authorities),
 	}
 }
 

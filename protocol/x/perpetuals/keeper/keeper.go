@@ -40,7 +40,7 @@ func NewKeeper(
 		pricesKeeper:        pricesKeeper,
 		epochsKeeper:        epochsKeeper,
 		indexerEventManager: indexerEventsManager,
-		authorities:         lib.SliceToSet(authorities),
+		authorities:         lib.UniqueSliceToSet(authorities),
 	}
 }
 
