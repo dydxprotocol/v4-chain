@@ -138,8 +138,10 @@ func GetClobFlagValuesFromOptions(
 		}
 	}
 
-	if v, ok := appOpts.Get(MaxDeleveragingSubaccountsToIterate).(uint32); ok {
-		result.MaxDeleveragingSubaccountsToIterate = v
+	if option := appOpts.Get(MaxDeleveragingSubaccountsToIterate); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.MaxDeleveragingSubaccountsToIterate = v
+		}
 	}
 
 	return result
