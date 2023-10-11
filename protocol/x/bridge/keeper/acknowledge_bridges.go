@@ -21,8 +21,7 @@ func (k Keeper) GetAcknowledgeBridges(
 	blockTimestamp time.Time,
 ) (msg *types.MsgAcknowledgeBridges) {
 	// Do not propose bridge events if bridging is disabled.
-	safetyParams := k.GetSafetyParams(ctx)
-	if safetyParams.IsDisabled {
+	if k.GetSafetyParams(ctx).IsDisabled {
 		return &types.MsgAcknowledgeBridges{
 			Events: []types.BridgeEvent{},
 		}

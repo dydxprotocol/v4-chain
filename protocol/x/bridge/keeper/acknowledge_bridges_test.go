@@ -85,7 +85,7 @@ func TestAcknowledgeBridges(t *testing.T) {
 
 				// Verify that AcknowledgedEventInfo was not updated.
 				require.Equal(t, initialAei, bridgeKeeper.GetAcknowledgedEventInfo(ctx))
-			} else { // briding is not disabled.
+			} else { // bridging is not disabled.
 				// Verify that AcknowledgeBridges returns no error.
 				require.NoError(t, err)
 
@@ -232,7 +232,7 @@ func TestGetAcknowledgeBridges(t *testing.T) {
 				Events: []types.BridgeEvent{},
 			},
 		},
-		"No event is proposed when bridging is diabled": {
+		"No event is proposed when bridging is disabled": {
 			blockTimestamp: timeNow,
 			eventTimestamp: timeNow.Add(-time.Second * 2),
 			proposeParams: types.ProposeParams{
