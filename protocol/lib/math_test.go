@@ -111,7 +111,7 @@ func TestAddToUint32(t *testing.T) {
 	}
 }
 
-func TestDivisionUint32RoundUp(t *testing.T) {
+func TestMustDivideUint32RoundUp(t *testing.T) {
 	tests := map[string]struct {
 		x              uint32
 		y              uint32
@@ -135,7 +135,7 @@ func TestDivisionUint32RoundUp(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.DivisionUint32RoundUp(tc.x, tc.y)
+			result := lib.MustDivideUint32RoundUp(tc.x, tc.y)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}

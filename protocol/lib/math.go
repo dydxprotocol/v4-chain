@@ -21,6 +21,8 @@ func Uint64LinearInterpolate(v0 uint64, v1 uint64, cPpm uint32) (uint64, error) 
 	if cPpm > OneMillion {
 		return 0, fmt.Errorf("uint64 interpolation requires 0 <= cPpm <= 1_000_000, but received cPpm value of %v", cPpm)
 	}
+	// Note: Uint64MulPpm panics if the multiplication overflows an int64, but we've already prevented that from
+	// happening by checking that cPpm <= 1_000_000.
 	absDelta := Uint64MulPpm(AbsDiffUint64(v0, v1), cPpm)
 	if v0 > v1 {
 		return v0 - absDelta, nil
@@ -40,8 +42,9 @@ func AddUint32(a int64, b uint32) (int64, error) {
 	return sum, nil
 }
 
-// DivisionUint32RoundUp returns the result of x/y, rounded up.
-func DivisionUint32RoundUp(x, y uint32) uint32 {
+// MustDivideUint32RoundUp returns the result of x/y, rounded up.
+// Note: this method will panic if y == 0.
+func MustDivideUint32RoundUp(x, y uint32) uint32 {
 	// Cast to uint64 so that equation below can't overflow.
 	uint64X := uint64(x)
 	uint64Y := uint64(y)
@@ -63,6 +66,8 @@ func Min[T constraints.Ordered](x, y T) T {
 	return x
 }
 
+// BigIntMulPpm multiplies an int64 by a scaling factor represented in parts per million. If the integer overflows,
+// this method panics.
 func Int64MulPpm(x int64, ppm uint32) int64 {
 	xMulPpm := BigIntMulPpm(big.NewInt(x), ppm)
 
@@ -73,8 +78,8 @@ func Int64MulPpm(x int64, ppm uint32) int64 {
 	return xMulPpm.Int64()
 }
 
-// Uint64MulPpm multiplies a uint64 value by a scaling factor represented in ppm. If the integer overflows,
-// this method panics.
+// Uint64MulPpm multiplies a uint64 value by a scaling factor represented in parts per million. If the integer
+// overflows, this method panics.
 func Uint64MulPpm(x uint64, ppm uint32) uint64 {
 	xMulPpm := BigIntMulPpm(new(big.Int).SetUint64(x), ppm)
 
@@ -108,7 +113,8 @@ func AbsDiffUint64(x uint64, y uint64) uint64 {
 	return y - x
 }
 
-// AvgInt32 returns average of the input int32 array. Result is rounded towards zero.
+// AvgInt32 returns average of the input int32 array. Result is rounded towards zero. Note: this method panics if
+// the input array length exceeds AvgInt32MaxArrayLength, or if the result causes an int32 overflow.
 func AvgInt32(nums []int32) int32 {
 	sum := int64(0)
 
