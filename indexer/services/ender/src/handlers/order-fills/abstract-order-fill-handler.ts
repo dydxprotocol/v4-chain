@@ -291,6 +291,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
   }
 
   /**
+   * Upsert the an order based on the event processed by the handler
    * @param isCanceled - if the order is in the CanceledOrderCache, always false for liquidiation
    * orders
    */
@@ -342,14 +343,14 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
    * The obvious case is if totalFilled >= size, then the order status should always be `FILLED`.
    * The difficult case is if totalFilled < size after a fill, then we need to keep the following
    * cases in mind:
-   * - Stateful Orders - All cancelations are onchain events, so the order can be `OPEN` or
-   *   `BEST_EFFORT_CANCELED` if the order is in the CanceledOrdersCache.
-   * - Shortterm FOK - FOK orders can never be `OPEN`, since they don't rest on the orderbook, so
-   *   totalFilled cannot be < size.
-   * - Shortterm IOC - Protocol guarantees that an IOC order will only ever be filled in a single
-   *   block, so status should be `CANCELED`.
-   * - Shortterm Limit & Postonly - If the order is in the CanceledOrdersCache, then it should be
-   *   set to `BEST_EFFORT_CANCELED`, otherwise `OPEN`.
+   * 1. Stateful Orders - All cancelations are on-chain events, so the order can be `OPEN` or
+   *    `BEST_EFFORT_CANCELED` if the order is in the CanceledOrdersCache.
+   * 2. Short-term FOK - FOK orders can never be `OPEN`, since they don't rest on the orderbook, so
+   *    totalFilled cannot be < size.
+   * 3. Short-term IOC - Protocol guarantees that an IOC order will only ever be filled in a single
+   *    block, so status should be `CANCELED`.
+   * 4. Short-term Limit & Post-only - If the order is in the CanceledOrdersCache, then it should be
+   *    set to `BEST_EFFORT_CANCELED`, otherwise `OPEN`.
    * @param isCanceled - if the order is in the CanceledOrderCache, always false for liquidiation
    * orders
    */
@@ -362,12 +363,12 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
   ): OrderStatus {
     if (Big(totalFilled).gte(size)) {
       return OrderStatus.FILLED;
-    } else if (orderFlags === ORDER_FLAG_LONG_TERM) {
+    } else if (orderFlags === ORDER_FLAG_LONG_TERM) { // 1. Stateful Order
       if (isCanceled) {
         return OrderStatus.BEST_EFFORT_CANCELED;
       }
       return OrderStatus.OPEN;
-    } else if (timeInForce === TimeInForce.FOK) {
+    } else if (timeInForce === TimeInForce.FOK) { // 2. Short-term FOK
       logger.error({
         at: 'orderFillHandler#getOrderStatus',
         message: 'FOK orders should never be partially filled',
@@ -376,9 +377,9 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
         eventIndex: this.indexerTendermintEvent.eventIndex,
       });
       return OrderStatus.CANCELED;
-    } else if (timeInForce === TimeInForce.IOC) {
+    } else if (timeInForce === TimeInForce.IOC) { // 3. Short-term IOC
       return OrderStatus.CANCELED;
-    } else if (isCanceled) { // GTT/Limit & Postonly
+    } else if (isCanceled) { // 4. Short-term Limit & Post-only
       return OrderStatus.BEST_EFFORT_CANCELED;
     }
     return OrderStatus.OPEN;
