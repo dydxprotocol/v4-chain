@@ -482,6 +482,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 					),
 				)
 			}
+			continue
 		}
 
 		order := orderPlacement.GetOrder()
