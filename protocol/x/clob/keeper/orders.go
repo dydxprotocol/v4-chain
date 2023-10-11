@@ -167,6 +167,10 @@ func (k Keeper) CancelStatefulOrder(
 
 	// 3. Update uncommitted or committed state depending on whether we are in `checkTx` or `deliverTx`.
 	if lib.IsDeliverTxMode(ctx) {
+		k.Logger(ctx).Info(
+			"CancelStatefulOrder: Removing stateful order from state",
+			metrics.OrderId, msg.OrderId,
+		)
 		// Remove the stateful order from state. Note that if the stateful order did not
 		// exist in state, then it would have failed validation in the previous step.
 		k.MustRemoveStatefulOrder(ctx, msg.OrderId)
@@ -477,8 +481,10 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 				panic(
 					fmt.Sprintf(
 						"PlaceStatefulOrdersFromLastBlock: Order does not exist in state and is not expired or cancelled. "+
-							"OrderId: %+v",
+							"OrderId: %+v, PPME Cancellations: %+v, PPME Expirations: %+v",
 						orderId,
+						processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
+						processProposerMatchesEvents.ExpiredStatefulOrderIds,
 					),
 				)
 			}
