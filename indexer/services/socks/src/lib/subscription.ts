@@ -521,11 +521,6 @@ export class Subscriptions {
       if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 404) {
         return EMPTY_INITIAL_RESPONSE;
       }
-      // A 403 means the user is blocked due to compliance issues
-      if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 403) {
-        return EMPTY_INITIAL_RESPONSE;
-      }
-      throw error;
     }
   }
 
