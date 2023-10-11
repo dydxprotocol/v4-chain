@@ -23,6 +23,222 @@ import (
 // LiquidateSubaccountsAgainstOrderbook takes a list of subaccount IDs and liquidates them against
 // the orderbook. It will liquidate as many subaccounts as possible up to the maximum number of
 // liquidations per block.
+func (k Keeper) LiquidateSubaccountsAgainstOrderbookRev2(
+	ctx sdk.Context,
+	subaccountIds []satypes.SubaccountId,
+) error {
+	lib.AssertCheckTxMode(ctx)
+
+	// Get the liquidation order for each subaccount.
+	liquidationOrdersForSorting := make([]types.LiquidationOrder, 0)
+	for _, subaccountId := range subaccountIds {
+		// If attempting to liquidate a subaccount returns an error, panic.
+		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
+		if err != nil {
+			// Subaccount might not always be liquidatable since liquidation daemon runs
+			// in a separate goroutine and is not always in sync with the application.
+			// Therefore, if subaccount is not liquidatable, continue.
+			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				telemetry.IncrCounter(1, metrics.MaybeGetLiquidationOrder, metrics.SubaccountsNotLiquidatable, metrics.Count)
+				continue
+			}
+
+			// Return unexpected errors.
+			return err
+		}
+
+		liquidationOrdersForSorting = append(liquidationOrdersForSorting, *liquidationOrder)
+	}
+
+	// Sort liquidation orders. The most underwater accounts should be liquidated first.
+	// These orders are only used for sorting. When we match these orders here in PrepareCheckState,
+	// liquidation matches will be put into the Operations Queue. However, when we process liquidations,
+	// we will generate a new liquidation order for each subaccount because previous liquidation orders
+	// can alter quantity sizes of subsequent liquidation orders.
+	k.SortLiquidationOrders(ctx, liquidationOrdersForSorting)
+
+	// Attempt to place each liquidation order and perform deleveraging if necessary.
+	numFilledLiquidations := uint32(0)
+	numAttemptedDeleveraging := uint32(0)
+	for i := 0; numFilledLiquidations < k.MaxLiquidationOrdersPerBlock && i < len(liquidationOrdersForSorting); i++ {
+		liquidationOrderSubaccountId := liquidationOrdersForSorting[i].GetSubaccountId()
+
+		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
+		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, liquidationOrderSubaccountId)
+		if err != nil {
+			// Subaccount might not always be liquidatable if previous liquidation orders
+			// improves the net collateral of this subaccount.
+			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				continue
+			}
+
+			// Return unexpected errors.
+			return err
+		}
+
+		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
+		if err != nil {
+			k.Logger(ctx).Error(
+				fmt.Sprintf(
+					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
+					liquidationOrder,
+					err,
+				),
+			)
+			return err
+		}
+
+		// Keep a count of partially and fully filled liquidations for this block.
+		if optimisticallyFilledQuantums > 0 {
+			numFilledLiquidations++
+		}
+
+		if optimisticallyFilledQuantums == 0 {
+			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
+
+			if numAttemptedDeleveraging < k.MaxDeleveragingAttemptsPerBlock {
+				// The liquidation order was unfilled. Try to deleverage the subaccount.
+				subaccountId := liquidationOrder.GetSubaccountId()
+				perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
+				deltaQuantums := liquidationOrder.GetDeltaQuantums()
+
+				_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+				if err != nil {
+					k.Logger(ctx).Error(
+						"Failed to deleverage subaccount.",
+						"subaccount", subaccountId,
+						"perpetualId", perpetualId,
+						"deltaQuantums", deltaQuantums,
+						"error", err,
+					)
+					return err
+				}
+				numAttemptedDeleveraging++
+			}
+		}
+	}
+
+	telemetry.IncrCounter(
+		float32(numFilledLiquidations),
+		types.ModuleName,
+		metrics.PrepareCheckState,
+		metrics.NumMatchedLiquidationOrders,
+	)
+
+	return nil
+}
+
+// LiquidateSubaccountsAgainstOrderbook takes a list of subaccount IDs and liquidates them against
+// the orderbook. It will liquidate as many subaccounts as possible up to the maximum number of
+// liquidations per block.
+func (k Keeper) LiquidateSubaccountsAgainstOrderbookRev1(
+	ctx sdk.Context,
+	subaccountIds []satypes.SubaccountId,
+) error {
+	lib.AssertCheckTxMode(ctx)
+
+	// Get the liquidation order for each subaccount.
+	liquidationOrdersForSorting := make([]types.LiquidationOrder, 0)
+	for _, subaccountId := range subaccountIds {
+		// If attempting to liquidate a subaccount returns an error, panic.
+		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
+		if err != nil {
+			// Subaccount might not always be liquidatable since liquidation daemon runs
+			// in a separate goroutine and is not always in sync with the application.
+			// Therefore, if subaccount is not liquidatable, continue.
+			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				telemetry.IncrCounter(1, metrics.MaybeGetLiquidationOrder, metrics.SubaccountsNotLiquidatable, metrics.Count)
+				continue
+			}
+
+			// Return unexpected errors.
+			return err
+		}
+
+		liquidationOrdersForSorting = append(liquidationOrdersForSorting, *liquidationOrder)
+	}
+
+	// Sort liquidation orders. The most underwater accounts should be liquidated first.
+	// These orders are only used for sorting. When we match these orders here in PrepareCheckState,
+	// liquidation matches will be put into the Operations Queue. However, when we process liquidations,
+	// we will generate a new liquidation order for each subaccount because previous liquidation orders
+	// can alter quantity sizes of subsequent liquidation orders.
+	k.SortLiquidationOrders(ctx, liquidationOrdersForSorting)
+
+	// Attempt to place each liquidation order and perform deleveraging if necessary.
+	numFilledLiquidations := uint32(0)
+	numAttemptedDeleveraging := uint32(0)
+	for i := 0; numFilledLiquidations < k.MaxLiquidationOrdersPerBlock && i < len(liquidationOrdersForSorting); i++ {
+		liquidationOrderSubaccountId := liquidationOrdersForSorting[i].GetSubaccountId()
+
+		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
+		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, liquidationOrderSubaccountId)
+		if err != nil {
+			// Subaccount might not always be liquidatable if previous liquidation orders
+			// improves the net collateral of this subaccount.
+			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				continue
+			}
+
+			// Return unexpected errors.
+			return err
+		}
+
+		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
+		if err != nil {
+			k.Logger(ctx).Error(
+				fmt.Sprintf(
+					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
+					liquidationOrder,
+					err,
+				),
+			)
+			return err
+		}
+
+		// Keep a count of partially and fully filled liquidations for this block.
+		if optimisticallyFilledQuantums > 0 {
+			numFilledLiquidations++
+		}
+
+		if optimisticallyFilledQuantums == 0 {
+			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
+
+			if numAttemptedDeleveraging < k.MaxDeleveragingAttemptsPerBlock {
+				// The liquidation order was unfilled. Try to deleverage the subaccount.
+				subaccountId := liquidationOrder.GetSubaccountId()
+				perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
+				deltaQuantums := liquidationOrder.GetDeltaQuantums()
+
+				_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+				if err != nil {
+					k.Logger(ctx).Error(
+						"Failed to deleverage subaccount.",
+						"subaccount", subaccountId,
+						"perpetualId", perpetualId,
+						"deltaQuantums", deltaQuantums,
+						"error", err,
+					)
+					return err
+				}
+				numAttemptedDeleveraging++
+			}
+		}
+	}
+
+	telemetry.IncrCounter(
+		float32(numFilledLiquidations),
+		types.ModuleName,
+		metrics.PrepareCheckState,
+		metrics.NumMatchedLiquidationOrders,
+	)
+
+	return nil
+}
+
+// LiquidateSubaccountsAgainstOrderbook takes a list of subaccount IDs and liquidates them against
+// the orderbook. It will liquidate as many subaccounts as possible up to the maximum number of
+// liquidations per block.
 func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	ctx sdk.Context,
 	subaccountIds []satypes.SubaccountId,
