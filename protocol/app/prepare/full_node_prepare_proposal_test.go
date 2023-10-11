@@ -1,16 +1,15 @@
 package prepare_test
 
 import (
-	"bytes"
 	"testing"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,15 +18,15 @@ import (
 func TestFullNodePrepareProposalHandler(t *testing.T) {
 	t.Cleanup(gometrics.Shutdown)
 
-	conf := gometrics.DefaultConfig("testService")
+	conf := gometrics.DefaultConfig("service")
 	sink := gometrics.NewInmemSink(time.Hour, time.Hour)
 	_, err := gometrics.NewGlobal(conf, sink)
 	require.NoError(t, err)
 
-	var logBuffer bytes.Buffer
+	logger, logBuffer := testlog.TestLogger()
 	appOpts := map[string]interface{}{
 		flags.NonValidatingFullNodeFlag: true,
-		testApp.LoggerInstanceForTest:   log.TestingLoggerWithOutput(&logBuffer),
+		testlog.LoggerInstanceForTest:   logger,
 	}
 	tApp := testApp.NewTestAppBuilder().WithTesting(t).WithAppCreatorFn(testApp.DefaultTestAppCreatorFn(appOpts)).Build()
 
@@ -45,7 +44,7 @@ func TestFullNodePrepareProposalHandler(t *testing.T) {
 		metrics.RLock()
 		defer metrics.RUnlock()
 
-		if metric, ok := metrics.Counters["testService.prepare_proposal.handler.error.count;detail=prepare_proposal_txs"]; ok {
+		if metric, ok := metrics.Counters["service.prepare_proposal.handler.error.count;detail=prepare_proposal_txs"]; ok {
 			require.Equal(t,
 				[]gometrics.Label{{
 					Name:  "detail",
