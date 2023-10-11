@@ -3,16 +3,16 @@ package client_test
 import (
 	"errors"
 	"fmt"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"math/big"
 	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client"
 	d_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -24,6 +24,7 @@ import (
 func TestStart_TcpConnectionFails(t *testing.T) {
 	errorMsg := "Failed to create connection"
 
+	// Mock the gRPC client to return an error when creating a TCP connection.
 	mockGrpcClient := &mocks.GrpcClient{}
 	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(nil, errors.New(errorMsg))
 
@@ -46,6 +47,10 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	errorMsg := "Failed to create connection"
 
+	// Mock the gRPC client to
+	// - return a successful TCP connection.
+	// - return an error when creating a gRPC connection.
+	// - successfully close the TCP connection.
 	mockGrpcClient := &mocks.GrpcClient{}
 	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(grpc.GrpcConn, nil)
 	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(nil, errors.New(errorMsg))
@@ -64,7 +69,10 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	)
 	mockGrpcClient.AssertCalled(t, "NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint)
 	mockGrpcClient.AssertCalled(t, "NewGrpcConnection", grpc.Ctx, grpc.SocketPath)
+
+	// Assert that the connection from NewTcpConnection is closed.
 	mockGrpcClient.AssertNumberOfCalls(t, "CloseConnection", 1)
+	mockGrpcClient.AssertCalled(t, "CloseConnection", grpc.GrpcConn)
 }
 
 func TestRunBridgeDaemonTaskLoop(t *testing.T) {
