@@ -10,6 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	modifiedPrice        = uint64(2500000000)
+	modifiedMinExchanges = uint32(2)
+	addedMarketParam     = constants.TestMarketParams[2]
+	addedMarketPrice     = constants.TestMarketPrices[2]
+)
+
 func TestExportGenesis(t *testing.T) {
 	tests := map[string]struct {
 		genesisState *types.GenesisState
@@ -42,9 +49,45 @@ func TestExportGenesis(t *testing.T) {
 	}
 }
 
+func TestExportGenesis_WithMutation(t *testing.T) {
+	ctx, k, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+	prices.InitGenesis(ctx, *k, *types.DefaultGenesis())
+
+	modifiedMarketParam := types.DefaultGenesis().MarketParams[0]
+	modifiedMarketParam.MinExchanges = modifiedMinExchanges
+
+	// Add a new market.
+	_, err := k.CreateMarket(ctx, addedMarketParam, addedMarketPrice)
+	require.NoError(t, err)
+
+	// Modify a param.
+	_, err = k.ModifyMarketParam(ctx, modifiedMarketParam)
+	require.NoError(t, err)
+
+	// Update a market price.
+	err = k.UpdateMarketPrices(ctx, []*types.MsgUpdateMarketPrices_MarketPrice{
+		{
+			MarketId: 1,
+			Price:    modifiedPrice,
+		},
+	})
+	require.NoError(t, err)
+
+	expectedExportGenesis := types.DefaultGenesis()
+	expectedExportGenesis.MarketParams = append(expectedExportGenesis.MarketParams, addedMarketParam)
+	expectedExportGenesis.MarketPrices = append(expectedExportGenesis.MarketPrices, addedMarketPrice)
+	expectedExportGenesis.MarketParams[0].MinExchanges = modifiedMinExchanges
+	expectedExportGenesis.MarketPrices[1].Price = modifiedPrice
+
+	// Verify expected exported genesis state matches input.
+	exportedState := prices.ExportGenesis(ctx, *k)
+	require.Equal(t, expectedExportGenesis, exportedState)
+}
+
 // invalidGenesis returns a genesis state that doesn't pass validation.
 func invalidGenesis() types.GenesisState {
-	genesisState := constants.Prices_DefaultGenesisState
+	genesisState := *types.DefaultGenesis()
 	// Create a genesis state with a market price that doesn't match ids the market param in the same list position.
 	genesisState.MarketPrices[0].Id = genesisState.MarketParams[0].Id + 1
 	return genesisState
