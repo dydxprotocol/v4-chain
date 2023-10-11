@@ -72,6 +72,10 @@ func (k Keeper) ProcessProposerOperations(
 
 			// If the order is fully filled, remove it from state.
 			if orderStateFillAmount == orderPlacement.Order.GetBaseQuantums() {
+				k.Logger(ctx).Info(
+					"ProcessProposerOperations: Removing fully filled order from state.",
+					metrics.OrderId, orderId,
+				)
 				k.MustRemoveStatefulOrder(ctx, orderId)
 				telemetry.IncrCounterWithLabels(
 					[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
@@ -402,6 +406,11 @@ func (k Keeper) PersistOrderRemovalToState(
 			"PersistOrderRemovalToState: Unrecognized order removal type",
 		)
 	}
+
+	k.Logger(ctx).Info(
+		"PersistOrderRemovalToState: Removing Order Removal order from state.",
+		metrics.OrderId, orderIdToRemove,
+	)
 
 	// Remove the stateful order from state.
 	k.MustRemoveStatefulOrder(ctx, orderIdToRemove)
