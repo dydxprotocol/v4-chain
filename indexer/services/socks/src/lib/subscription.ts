@@ -521,6 +521,7 @@ export class Subscriptions {
       if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 404) {
         return EMPTY_INITIAL_RESPONSE;
       }
+      throw error;
     }
   }
 
