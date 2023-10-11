@@ -1278,8 +1278,8 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		if _, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, orderId); !found {
 			panic(
 				fmt.Sprintf(
-					"validateNewOrder: Attempted to place a stateful order that does not exist in state. " +
-					"OrderId: %+v, Callback: %+v",
+					"validateNewOrder: Attempted to place a stateful order that does not exist in state. "+
+						"OrderId: %+v, Callback: %+v",
 					orderId,
 					metrics.GetCallbackMetricFromCtx(ctx),
 				),

@@ -476,8 +476,8 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 			if isExpired || isCanceled {
 				panic(
 					fmt.Sprintf(
-						"PlaceStatefulOrdersFromLastBlock: Order does not exist in state and is not expired or cancelled. " +
-						"OrderId: %+v",
+						"PlaceStatefulOrdersFromLastBlock: Order does not exist in state and is not expired or cancelled. "+
+							"OrderId: %+v",
 						orderId,
 					),
 				)
