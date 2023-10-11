@@ -45,7 +45,8 @@ func RatPow10(exponent int32) *big.Rat {
 	return result
 }
 
-// BigIntMulPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`.
+// BigIntMulPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`. This method rounds towards
+// zero.
 func BigIntMulPpm(input *big.Int, ppm uint32) *big.Int {
 	result := new(big.Int)
 	result.Mul(input, big.NewInt(int64(ppm)))
