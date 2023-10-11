@@ -453,10 +453,26 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 		orderId.MustBeStatefulOrder()
 
 		orderPlacement, exists := k.GetLongTermOrderPlacement(ctx, orderId)
+		processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
 		if !exists {
-			// Order does not exist in state and therefore should not be placed. This likely
-			// indicates that the order was cancelled.
-			continue
+			// Order does not exist in state and therefore should not be placed. This indicates the order was cancelled
+			// or expired.
+			expiredOrCancelledStatefulOrderIds := append(
+				processProposerMatchesEvents.ExpiredStatefulOrderIds,
+				processProposerMatchesEvents.PlacedStatefulCancellationOrderIds...,
+			)
+			for _, expiredOrCancelledOrderId := range expiredOrCancelledStatefulOrderIds {
+				if orderId == expiredOrCancelledOrderId {
+					continue
+				}
+			}
+			panic(
+				fmt.Sprintf(
+					"PlaceStatefulOrdersFromLastBlock: Order does not exist in state and is not expired or cancelled. " +
+					"OrderId: %+v",
+					orderId,
+				),
+			)
 		}
 
 		order := orderPlacement.GetOrder()
@@ -466,6 +482,14 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 			&order,
 			0,
 			k.MemClob,
+		)
+
+		metrics.IncrSuccessOrErrorCounter(
+			err,
+			types.ModuleName,
+			metrics.PlaceStatefulOrdersFromLastBlock,
+			metrics.CheckTx,
+			orderId.GetOrderIdLabels()...,
 		)
 
 		if err != nil {

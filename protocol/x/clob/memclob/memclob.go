@@ -1275,6 +1275,20 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		}
 	}
 
+	if orderId.IsStatefulOrder() {
+		// Confirm the order exists in state
+		if _, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, orderId); !found {
+			panic(
+				fmt.Sprintf(
+					"validateNewOrder: Attempted to place a stateful order that does not exist in state. " +
+					"OrderId: %+v, Callback: %+v",
+					orderId,
+					metrics.GetCallbackMetricFromCtx(ctx),
+				),
+			)
+		}
+	}
+
 	existingRestingOrder, restingOrderExists := m.openOrders.getOrder(ctx, orderId)
 	existingMatchedOrder, matchedOrderExists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
 

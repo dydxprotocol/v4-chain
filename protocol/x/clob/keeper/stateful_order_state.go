@@ -153,6 +153,12 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	orderKey := orderId.ToStateKey()
 	if memStore.Has(orderKey) {
 		count--
+	} else {
+		k.Logger(ctx).Error(
+			"DeleteLongTermOrderPlacement: order does not exist in memstore",
+			metrics.OrderId, orderId,
+			metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx),
+		)
 	}
 
 	// Delete the `StatefulOrderPlacement` from state.
