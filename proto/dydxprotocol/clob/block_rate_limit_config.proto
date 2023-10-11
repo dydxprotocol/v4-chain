@@ -16,8 +16,8 @@ message BlockRateLimitConfiguration {
   repeated MaxPerNBlocksRateLimit max_short_term_orders_per_n_blocks = 1
       [ (gogoproto.nullable) = false ];
 
-  // How many stateful order attempts (successful and failed) are allowed for a
-  // subaccount per N blocks. Note that the rate limits are applied
+  // How many stateful order attempts (successful and failed) are allowed for
+  // an account per N blocks. Note that the rate limits are applied
   // in an AND fashion such that an order placement must pass all rate limit
   // configurations.
   //

@@ -133,7 +133,6 @@ const (
 	OrderSide                                    = "order_side"
 	PlaceOrder                                   = "place_order"
 	PlaceOrderAccounts                           = "place_order_accounts"
-	PlaceOrderSubaccounts                        = "place_order_subaccounts"
 	PlaceStatefulOrder                           = "place_stateful_order"
 	ProcessMatches                               = "process_matches"
 	ProcessOperations                            = "process_operations"
