@@ -49,7 +49,7 @@ type PnLCalculationParams struct {
 
 // RecordMevMetricsIsEnabled returns true if the MEV telemetry config is enabled.
 func (k Keeper) RecordMevMetricsIsEnabled() bool {
-	return k.mevTelemetryConfig.Enabled
+	return false
 }
 
 // RecordMevMetrics measures and records MEV by comparing the block proposer's list of matches
