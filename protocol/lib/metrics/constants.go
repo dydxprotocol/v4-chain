@@ -131,6 +131,7 @@ const (
 	OrderConflictsWithClobPairStatus             = "order_conflicts_with_clob_pair_status"
 	OrderFlag                                    = "order_flag"
 	OrderSide                                    = "order_side"
+	OrderId                                      = "order_id"
 	PlaceOrder                                   = "place_order"
 	PlaceOrderAccounts                           = "place_order_accounts"
 	PlaceOrderSubaccounts                        = "place_order_subaccounts"

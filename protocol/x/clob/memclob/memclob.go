@@ -935,6 +935,17 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
+			if m.operationsToPropose.IsOrderRemovalInOperationsQueue(statefulOrderPlacement.Order.OrderId) {
+				// If an order removal for this order is found in the ops queue, we have encountered an error. A
+				// stateful order should not be on the book if it hasn't been replayed yet which means it should not
+				// be possible for an order removal to precede a stateful order placement.
+				m.clobKeeper.Logger(ctx).Error(
+					"ReplayOperations: Order removal found in operations queue for a stateful order which was not replayed yet.",
+					metrics.OrderId, statefulOrderPlacement.Order.OrderId,
+				)
+				continue
+			}
+
 			// Note that we use `memclob.PlaceOrder` here, this will skip writing the stateful order placement to state.
 			// TODO(DEC-998): Research whether it's fine for two post-only orders to be matched. Currently they are dropped.
 			_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(
