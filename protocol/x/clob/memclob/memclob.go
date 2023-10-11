@@ -936,14 +936,12 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			}
 
 			if m.operationsToPropose.IsOrderRemovalInOperationsQueue(statefulOrderPlacement.Order.OrderId) {
-				// If an order removal for this order is found in the ops queue, then we should not attempt to
-				// place the order. Any generated matches would fail in DeliverTx as the order would be missing from
-				// state (due to the order removal being processed).
-				telemetry.IncrCounter(
-					1,
-					types.ModuleName,
-					metrics.ReplayOperations,
-					metrics.SkipStatefulReplayPlaceOrder,
+				// If an order removal for this order is found in the ops queue, we have encountered an error. A
+				// stateful order should not be on the book if it hasn't been replayed yet which means it should not
+				// be possible for an order removal to precede a stateful order placement.
+				m.clobKeeper.Logger(ctx).Error(
+					"ReplayOperations: Order removal found in operations queue for a stateful order which was not replayed yet.",
+					metrics.OrderId, statefulOrderPlacement.Order.OrderId,
 				)
 				continue
 			}
