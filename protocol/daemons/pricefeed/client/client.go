@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
@@ -49,6 +50,26 @@ type Client struct {
 
 	// Ensure stop only executes one time.
 	stopDaemon sync.Once
+
+	// isHealthy indicates whether the daemon is healthy - i.e., it is actively running and calculating prices.
+	// The daemon is considered healthy after startup is complete and while it is producing non-empty price updates.
+	isHealthy atomic.Bool
+}
+
+// Ensure Client implements the DaemonClient interface.
+var _ daemontypes.DaemonClient = (*Client)(nil)
+
+// HealthCheck returns an error if the daemon is unhealthy.
+// The daemon is considered unhealthy if it either failed to initialize or is producing empty price updates.
+// This method is synchronized by isHealthy, which is an atomic.Bool.
+func (c *Client) HealthCheck(_ context.Context) error {
+	if !c.isHealthy.Load() {
+		return errors.New(
+			"pricefeed daemon is unhealthy - it either failed to initialize or is producing empty price updates",
+		)
+	}
+
+	return nil
 }
 
 func newClient() *Client {
@@ -91,7 +112,16 @@ func (c *Client) Stop() {
 		}
 
 		c.runningSubtasksWaitGroup.Wait()
+		c.isHealthy.Store(false)
 	})
+}
+
+// completeStartup signals that the daemon has finished startup. This method is synchronized by the daemonStartup
+// WaitGroup. Modifications to isHealthy are thread-safe.
+func (c *Client) completeStartup() {
+	c.daemonStartup.Done()
+	// Set isHealthy to true after startup is complete.
+	c.isHealthy.Store(true)
 }
 
 // start begins a job that:
@@ -245,7 +275,7 @@ func (c *Client) start(ctx context.Context,
 	// Now that all persistent subtasks have been started and all tickers and stop channels are created,
 	// signal that the startup process is complete. This needs to be called before entering the
 	// price updater loop, which loops indefinitely until the daemon is stopped.
-	c.daemonStartup.Done()
+	c.completeStartup()
 
 	pricefeedClient := api.NewPriceFeedServiceClient(daemonConn)
 	subTaskRunner.StartPriceUpdater(
