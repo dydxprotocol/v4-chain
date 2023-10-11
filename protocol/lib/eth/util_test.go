@@ -34,7 +34,7 @@ func TestGetBridgeEventAbi(t *testing.T) {
 	}
 	wg.Wait()
 
-	// Call the function one more timr.
+	// Call the function one more time.
 	// Ensure that the pointer is non-nil and equal to all other pointers.
 	expected := libeth.GetBridgeEventAbi()
 	require.NotNil(t, expected)
