@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	subTaskRunnerImpl = SubTaskRunnerImpl{}
+	subTaskRunnerImpl = newClient()
 )
 
 // FakeSubTaskRunner acts as a dummy struct replacing `SubTaskRunner` that simply advances the
@@ -336,7 +336,6 @@ func TestStop(t *testing.T) {
 		&daemontypes.GrpcClientImpl{},
 		constants.TestExchangeQueryConfigs,
 		constants.TestExchangeIdToExchangeQueryDetails,
-		&SubTaskRunnerImpl{},
 	)
 
 	// Stop the daemon.
