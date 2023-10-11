@@ -1,9 +1,11 @@
 package eth
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"strings"
+	"sync"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
@@ -14,33 +16,41 @@ import (
 	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 )
 
-var bridgeEventAbi *ethabi.ABI
-
 const (
-	MIN_ADDRESS_BYTES = 20
-	MAX_ADDRESS_BYTES = 32
+	MinAddrLen = 20
+	MaxAddrLen = 32
 )
 
+// ABI Singleton and mutex.
+var bridgeEventAbi *ethabi.ABI
+var once sync.Once
+
 // getBridgeEventAbi returns the ABI (application binary interface) for the Bridge contract.
-func getBridgeEventAbi() *ethabi.ABI {
-	// Initialize the singleton if it does not exist.
-	if bridgeEventAbi == nil {
+func GetBridgeEventAbi() *ethabi.ABI {
+	// Initialize the singleton in a thread-safe way.
+	once.Do(func() {
 		bridgeAbi, err := ethabi.JSON(strings.NewReader(constants.BridgeEventABI))
 		if err != nil {
 			panic(err)
 		}
 		bridgeEventAbi = &bridgeAbi
+	})
+
+	// This could happen if the initialization fails in another thread.
+	if bridgeEventAbi == nil {
+		panic("getBridgeEventAbi: bridgeEventAbi not initialized")
 	}
+
 	return bridgeEventAbi
 }
 
-// padOrTruncateAddress right-pads an address with zeros if it's shorter than `MIN_ADDRESS_BYTES` or
-// takes the first `MAX_ADDRESS_BYTES` if it's longer than that.
-func padOrTruncateAddress(address []byte) []byte {
-	if len(address) > MAX_ADDRESS_BYTES {
-		return address[:MAX_ADDRESS_BYTES]
-	} else if len(address) < MIN_ADDRESS_BYTES {
-		return append(address, make([]byte, MIN_ADDRESS_BYTES-len(address))...)
+// PadOrTruncateAddress right-pads an address with zeros if it's shorter than `minAddrLen` or
+// takes the first `maxAddrLen` if it's longer than that.
+func PadOrTruncateAddress(address []byte) []byte {
+	if len(address) > MaxAddrLen {
+		return address[:MaxAddrLen]
+	} else if len(address) < MinAddrLen {
+		return append(address, make([]byte, MinAddrLen-len(address))...)
 	}
 	return address
 }
@@ -60,12 +70,12 @@ func BridgeLogToEvent(
 	id := lib.MustConvertIntegerToUint32(log.Topics[1].Big().Uint64())
 
 	// Unpack the data.
-	bridgeEventData, err := getBridgeEventAbi().Unpack("Bridge", log.Data)
+	bridgeEventData, err := GetBridgeEventAbi().Unpack("Bridge", log.Data)
 	if err != nil {
 		panic(err)
 	}
 	amount := bridgeEventData[0].(*big.Int)
-	address := padOrTruncateAddress(bridgeEventData[2].([]byte))
+	address := PadOrTruncateAddress(bridgeEventData[2].([]byte))
 
 	// Unused daemon fields.
 	// bridgeEventData[1] is the Ethereum address that sent the tokens
