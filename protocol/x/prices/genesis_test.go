@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestInitExportGenesis(t *testing.T) {
+func TestExportGenesis(t *testing.T) {
 	tests := map[string]struct {
 		genesisState *types.GenesisState
 	}{
