@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
@@ -29,12 +30,12 @@ func (k Keeper) UpdateSmoothedPrices(
 			continue
 		}
 
-		smoothed, ok := k.marketToSmoothedPrices.GetSmoothedPrice(marketParam.Id)
+		smoothedPrice, ok := k.marketToSmoothedPrices.GetSmoothedPrice(marketParam.Id)
 		if !ok {
-			smoothed = indexPrice
+			smoothedPrice = indexPrice
 		}
 		update, err := linearInterpolateFunc(
-			smoothed,
+			smoothedPrice,
 			indexPrice,
 			types.PriceSmoothingPpm,
 		)

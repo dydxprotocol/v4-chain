@@ -24,6 +24,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
+	// Generate indexer events.
 	priceUpdateIndexerEvents := keeper.GenerateMarketPriceUpdateIndexerEvents(genState.MarketPrices)
 	for _, update := range priceUpdateIndexerEvents {
 		k.GetIndexerEventManager().AddTxnEvent(
