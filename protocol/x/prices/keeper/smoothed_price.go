@@ -15,12 +15,12 @@ func (k Keeper) UpdateSmoothedPrices(ctx sdk.Context) error {
 	indexPrices := k.indexPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
 
 	for market, indexPrice := range indexPrices {
-		smoothed, ok := k.marketToSmoothedPrices.GetSmoothedPrice(market)
+		smoothedPrice, ok := k.marketToSmoothedPrices.GetSmoothedPrice(market)
 		if !ok {
-			smoothed = indexPrice
+			smoothedPrice = indexPrice
 		}
 		update, err := lib.Uint64LinearInterpolate(
-			smoothed,
+			smoothedPrice,
 			indexPrice,
 			types.PriceSmoothingPpm,
 		)
