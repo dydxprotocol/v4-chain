@@ -14,4 +14,6 @@ func TestModuleKeys(t *testing.T) {
 
 func TestStateKeys(t *testing.T) {
 	require.Equal(t, "DowntimeParams", types.DowntimeParamsKey)
+	require.Equal(t, "AllDowntimeInfo", types.AllDowntimeInfoKey)
+	require.Equal(t, "PreviousBlockInfo", types.PreviousBlockInfoKey)
 }
