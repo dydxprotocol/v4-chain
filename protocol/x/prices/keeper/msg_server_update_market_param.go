@@ -16,7 +16,23 @@ import (
 func (k msgServer) UpdateMarketParam(
 	goCtx context.Context,
 	msg *types.MsgUpdateMarketParam,
-) (*types.MsgUpdateMarketParamResponse, error) {
+) (
+	response *types.MsgUpdateMarketParamResponse,
+	err error,
+) {
+	// Increment the appropriate success/error counter when the function finishes.
+	defer func() {
+		success := metrics.Success
+		if err != nil {
+			success = metrics.Error
+		}
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.UpdateMarketParam, success},
+			1,
+			[]gometrics.Label{pricefeedmetrics.GetLabelForMarketId(msg.MarketParam.Id)},
+		)
+	}()
+
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -27,16 +43,9 @@ func (k msgServer) UpdateMarketParam(
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := k.Keeper.ModifyMarketParam(ctx, msg.MarketParam); err != nil {
+	if _, err = k.Keeper.ModifyMarketParam(ctx, msg.MarketParam); err != nil {
 		return nil, err
 	}
 
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.UpdateMarketParam, metrics.Success},
-		1,
-		[]gometrics.Label{
-			pricefeedmetrics.GetLabelForMarketId(msg.MarketParam.Id),
-		},
-	)
 	return &types.MsgUpdateMarketParamResponse{}, nil
 }

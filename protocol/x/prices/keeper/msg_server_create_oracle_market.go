@@ -16,7 +16,23 @@ import (
 func (k msgServer) CreateOracleMarket(
 	goCtx context.Context,
 	msg *types.MsgCreateOracleMarket,
-) (*types.MsgCreateOracleMarketResponse, error) {
+) (
+	response *types.MsgCreateOracleMarketResponse,
+	err error,
+) {
+	// Increment the appropriate success/error counter when the function finishes.
+	defer func() {
+		success := metrics.Success
+		if err != nil {
+			success = metrics.Error
+		}
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.CreateOracleMarket, success},
+			1,
+			[]gometrics.Label{pricefeedmetrics.GetLabelForMarketId(msg.Params.Id)},
+		)
+	}()
+
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -35,16 +51,9 @@ func (k msgServer) CreateOracleMarket(
 		Exponent: msg.Params.Exponent,
 		Price:    0,
 	}
-	if _, err := k.Keeper.CreateMarket(ctx, msg.Params, zeroMarketPrice); err != nil {
+	if _, err = k.Keeper.CreateMarket(ctx, msg.Params, zeroMarketPrice); err != nil {
 		return nil, err
 	}
 
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.CreateOracleMarket, metrics.Success},
-		1,
-		[]gometrics.Label{
-			pricefeedmetrics.GetLabelForMarketId(msg.Params.Id),
-		},
-	)
 	return &types.MsgCreateOracleMarketResponse{}, nil
 }
