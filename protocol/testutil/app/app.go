@@ -302,7 +302,7 @@ func (tApp TestAppBuilder) Build() TestApp {
 //
 // Note that TestApp.CheckTx is thread safe. All other methods are not thread safe.
 type TestApp struct {
-	// Should only be used to fetch read only state, all mutations should preferrably happen through Genesis state,
+	// Should only be used to fetch read only state, all mutations should preferably happen through Genesis state,
 	// TestApp.CheckTx, and block proposals.
 	// TODO(CLOB-545): Hide App and copy the pointers to keepers to be prevent incorrect usage of App.CheckTx over
 	// TestApp.CheckTx.

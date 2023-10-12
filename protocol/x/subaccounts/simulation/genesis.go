@@ -87,7 +87,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 // assigning the total supply of USDC to the balance of the `subaccounts` module.
 // This is necessary as the protocol assumes that that the sum of quantums in all USDC
 // AssetPositions is <= the total USDC balance of the subaccounts module, and `panic`s
-// will occur when transfering fees to the `fee-collector` module during order processing
+// will occur when transferring fees to the `fee-collector` module during order processing
 // if this is not true.
 // This method assumes that USDC as a `Coin` in the bank module does not yet exist.
 func updateBankModuleGenesisState(
