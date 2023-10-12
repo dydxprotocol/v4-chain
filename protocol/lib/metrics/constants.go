@@ -225,6 +225,7 @@ const (
 	BlockTimeMs = "block_time_ms"
 
 	// Prices.
+	CreateOracleMarket                           = "create_oracle_market"
 	CurrentMarketPrices                          = "current_market_prices"
 	GetValidMarketPriceUpdates                   = "get_valid_market_price_updates"
 	IndexPriceDoesNotExist                       = "index_price_does_not_exist"
@@ -241,6 +242,7 @@ const (
 	RecentSmoothedPriceDoesNotMeetMinPriceChange = "recent_smoothed_price_doesnt_meet_min_price_change"
 	RecentSmoothedPriceCrossesOraclePrice        = "recent_smoothed_price_crosses_old_price"
 	StatefulPriceUpdateValidation                = "stateful_price_update_validation"
+	UpdateMarketParam                            = "update_market_param"
 	UpdateMarketPrices                           = "update_market_prices"
 	UpdateSmoothedPrices                         = "update_smoothed_prices"
 
