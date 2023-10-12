@@ -582,7 +582,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 
 	// Use the ratio between funding-tick and funding-sample durations
 	// as minimum number of samples required to get a premium rate.
-	minSampleRequiredForPremiumRate := lib.DivisionUint32RoundUp(
+	minSampleRequiredForPremiumRate := lib.MustDivideUint32RoundUp(
 		fundingTickEpochInfo.Duration,
 		fundingSampleEpochInfo.Duration,
 	)
